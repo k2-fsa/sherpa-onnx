@@ -103,8 +103,8 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = model_->SubsamplingFactor();
     const auto &decoder_result = s->GetResult();
-    bool has_language_tag = !language_tag_token_ids_.empty() &&
-                            ContainsLanguageTag(decoder_result);
+    bool has_language_tag =
+        !language_tag_token_ids_.empty() && ContainsLanguageTag(decoder_result);
     auto r = has_language_tag
                  ? Convert(FilterLanguageTags(decoder_result), symbol_table_,
                            frame_shift_ms, subsampling_factor,
@@ -150,6 +150,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     s->SetStates(model_->GetEncoderInitStates());
 
     s->SetNeMoDecoderStates(model_->GetDecoderInitStates());
+    s->SetNeMoDecoderOut(nullptr);
 
     // Note: We only update counters. The underlying audio samples
     // are not discarded.
@@ -283,8 +284,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     bool filter_ys_probs = src.ys_probs.size() == src.tokens.size();
     bool filter_lm_probs = src.lm_probs.size() == src.tokens.size();
-    bool filter_context_scores =
-        src.context_scores.size() == src.tokens.size();
+    bool filter_context_scores = src.context_scores.size() == src.tokens.size();
 
     if (filter_ys_probs) {
       ans.ys_probs.reserve(src.ys_probs.size());

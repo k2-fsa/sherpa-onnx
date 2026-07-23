@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -102,6 +103,13 @@ for a list of pre-trained models to download.
     po.PrintUsage();
     fprintf(stderr, "Error! Please provide at lease 1 wav file\n");
     SHERPA_ONNX_EXIT(EXIT_FAILURE);
+  }
+
+  if (!std::isfinite(left_padding_second) ||
+      !std::isfinite(right_padding_second) || left_padding_second < 0 ||
+      right_padding_second < 0) {
+    fprintf(stderr, "Padding must be finite and non-negative\n");
+    return -1;
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
