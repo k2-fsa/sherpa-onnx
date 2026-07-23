@@ -91,7 +91,8 @@ in your own Cargo project, see
 | 46 | [zipformer_transducer_simulate_streaming_microphone](#example-46-simulated-streaming-asr-with-zipformer-transducer-japanese-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone |
 | 47 | [qwen3_asr_simulate_streaming_microphone](#example-47-simulated-streaming-asr-with-qwen3-asr-and-vad-from-microphone) | Simulated streaming ASR with Qwen3 ASR and VAD from microphone |
 | 48 | [whisper](#example-48-asr-with-non-streaming-whisper) | Non-streaming ASR with Whisper (multilingual) |
-| 49 | [ten_vad_remove_silence](#example-49-remove-silences-from-a-file-using-ten-vad) | Remove silences from an audio file using ten-vad |
+| 49 | [funasr_nano](#example-49-asr-with-non-streaming-funasr-nano) | Non-streaming ASR with FunASR Nano |
+| 50 | [ten_vad_remove_silence](#example-50-remove-silences-from-a-file-using-ten-vad) | Remove silences from an audio file using ten-vad |
 
 ## Run it
 
@@ -424,7 +425,13 @@ Qwen3 ASR recognizer on each detected segment.
 ./run-whisper.sh
 ```
 
-### Example 49: Remove silences from a file using ten-vad
+### Example 49: ASR with non-streaming FunASR Nano
+
+```bash
+./run-funasr-nano.sh
+```
+
+### Example 50: Remove silences from a file using ten-vad
 
 ```bash
 ./run-ten-vad-remove-silence.sh
