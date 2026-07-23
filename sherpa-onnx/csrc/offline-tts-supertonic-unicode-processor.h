@@ -29,6 +29,12 @@ class SupertonicUnicodeProcessor {
                std::vector<float> *text_mask_flat,
                std::vector<int64_t> *text_mask_shape) const;
 
+  // Decompose a single codepoint the way NFKD does. Hangul syllables are
+  // decomposed algorithmically; everything else uses the generated table
+  // in offline-tts-supertonic-nfkd-table.h. Exposed for testing.
+  static void DecomposeCodepoint(uint32_t codepoint,
+                                 std::vector<uint16_t> *output);
+
  private:
   std::string PreprocessText(const std::string &text,
                              const std::string &lang) const;

@@ -29,17 +29,6 @@ static Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
   return decoder_input;
 }
 
-static std::vector<Ort::Value> BuildStateViews(
-    std::vector<Ort::Value> *states) {
-  std::vector<Ort::Value> ans;
-  ans.reserve(states->size());
-  for (auto &v : *states) {
-    ans.push_back(View(&v));
-  }
-
-  return ans;
-}
-
 static void DecodeOne(const float *encoder_out, int32_t num_rows,
                       int32_t num_cols, OnlineTransducerNeMoModel *model,
                       float blank_penalty, OnlineStream *s) {
@@ -51,20 +40,22 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
 
   auto &r = s->GetResult();
 
-  Ort::Value decoder_out{nullptr};
-
   auto decoder_input = BuildDecoderInput(
       r.tokens.empty() ? blank_id : r.tokens.back(), model->Allocator());
 
+  Ort::Value &last_decoder_out = s->GetNeMoDecoderOut();
   std::vector<Ort::Value> &last_decoder_states = s->GetNeMoDecoderStates();
 
-  std::vector<Ort::Value> tmp_decoder_states;
-  tmp_decoder_states = BuildStateViews(&last_decoder_states);
-
   // decoder_output_pair.second returns the next decoder state
-  std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair =
-      model->RunDecoder(std::move(decoder_input),
-                        std::move(tmp_decoder_states));
+  std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair;
+
+  if (!last_decoder_out) {
+    decoder_output_pair = model->RunDecoder(std::move(decoder_input),
+                                            std::move(last_decoder_states));
+  } else {
+    decoder_output_pair.first = std::move(last_decoder_out);
+    decoder_output_pair.second = std::move(last_decoder_states);
+  }
 
   std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
 
@@ -106,9 +97,8 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
     }
   }
 
-  if (emitted) {
-    s->SetNeMoDecoderStates(std::move(decoder_output_pair.second));
-  }
+  s->SetNeMoDecoderOut(std::move(decoder_output_pair.first));
+  s->SetNeMoDecoderStates(std::move(decoder_output_pair.second));
 
   r.frame_offset += num_rows;
 }

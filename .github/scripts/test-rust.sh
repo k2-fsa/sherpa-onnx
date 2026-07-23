@@ -84,6 +84,8 @@ rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8
 
 ./run-silero-vad-remove-silence.sh
 
+./run-ten-vad-remove-silence.sh
+
 ./run-nemo-parakeet-en.sh
 ./run-zipformer-vi.sh
 ./run-zipformer-zh-en.sh

@@ -158,10 +158,18 @@ class OfflineFireRedAsrModel::Impl {
         std::move(decoder_input[4]), std::move(decoder_input[5])};
   }
 
-  std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache() {
+  std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache(int32_t alloc_len) {
+    if (fixed_cache_len_ > 0) {
+      // Some models (e.g., FireRedASR v1) hard-code the cache length in the
+      // decoder graph. We have to follow the model in that case.
+      alloc_len = fixed_cache_len_;
+    } else if (alloc_len <= 0 || alloc_len > meta_data_.max_len) {
+      alloc_len = meta_data_.max_len;
+    }
+
     int32_t batch_size = 1;
     std::array<int64_t, 5> shape{meta_data_.num_decoder_layers, batch_size,
-                                 meta_data_.max_len, meta_data_.num_head,
+                                 alloc_len, meta_data_.num_head,
                                  meta_data_.head_dim};
 
     Ort::Value n_layer_self_k_cache = Ort::Value::CreateTensor<float>(
@@ -248,6 +256,20 @@ class OfflineFireRedAsrModel::Impl {
 
     GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
                    &decoder_output_names_ptr_);
+
+    // Detect whether the cache length is hard-coded in the model, e.g.,
+    // FireRedASR v1 uses 1024 while FireRedASR2 uses a dynamic length.
+    for (size_t i = 0; i != decoder_input_names_.size(); ++i) {
+      if (decoder_input_names_[i] == "in_n_layer_self_k_cache") {
+        auto shape = decoder_sess_->GetInputTypeInfo(i)
+                         .GetTensorTypeAndShapeInfo()
+                         .GetShape();
+        if (shape.size() >= 3 && shape[2] > 0) {
+          fixed_cache_len_ = static_cast<int32_t>(shape[2]);
+        }
+        break;
+      }
+    }
   }
 
   void InitCudaIOBinding() {
@@ -288,6 +310,10 @@ class OfflineFireRedAsrModel::Impl {
   std::vector<const char *> decoder_output_names_ptr_;
 
   OfflineFireRedAsrModelMetaData meta_data_;
+
+  // If > 0, the decoder model hard-codes the KV cache length (e.g.,
+  // FireRedASR v1 uses 1024); 0 means the length is dynamic.
+  int32_t fixed_cache_len_ = 0;
 };
 
 OfflineFireRedAsrModel::OfflineFireRedAsrModel(const OfflineModelConfig &config)
@@ -320,8 +346,8 @@ OfflineFireRedAsrModel::ForwardDecoder(Ort::Value tokens,
 }
 
 std::pair<Ort::Value, Ort::Value>
-OfflineFireRedAsrModel::GetInitialSelfKVCache() const {
-  return impl_->GetInitialSelfKVCache();
+OfflineFireRedAsrModel::GetInitialSelfKVCache(int32_t alloc_len) const {
+  return impl_->GetInitialSelfKVCache(alloc_len);
 }
 
 OrtAllocator *OfflineFireRedAsrModel::Allocator() const {
