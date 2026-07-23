@@ -2055,7 +2055,8 @@ const SherpaOnnxWave *SherpaOnnxReadWaveFromBinaryData(const char *data,
   int32_t sample_rate = -1;
   bool is_ok = false;
 
-  std::istringstream is(std::string(data, n));
+  std::stringstream is(std::ios::in | std::ios::out | std::ios::binary);
+  is.write(data, n);
 
   std::vector<float> samples = sherpa_onnx::ReadWave(is, &sample_rate, &is_ok);
   if (!is_ok) {
