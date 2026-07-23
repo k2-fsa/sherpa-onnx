@@ -11,13 +11,15 @@ namespace sherpa_onnx {
 
 class Timer {
  public:
-  Timer();
+  explicit Timer(bool debug = true);
   ~Timer();
 
   void Reset() const;
 
   // Return time in seconds
   double Elapsed() const;
+
+  void Log(const char *tag) const;
 
  private:
   class Impl;

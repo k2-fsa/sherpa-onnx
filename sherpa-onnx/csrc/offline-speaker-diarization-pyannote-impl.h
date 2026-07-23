@@ -18,6 +18,7 @@
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
+#include "sherpa-onnx/csrc/timer.h"
 
 namespace sherpa_onnx {
 
@@ -96,12 +97,16 @@ class OfflineSpeakerDiarizationPyannoteImpl
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
       void *callback_arg = nullptr) const override {
+    Timer total_timer(config_.segmentation.debug);
+    Timer segmentation_timer(config_.segmentation.debug);
     std::vector<Matrix2D> segmentations = RunSpeakerSegmentationModel(audio, n);
     // segmentations[i] is for chunk_i
     // Each matrix is of shape (num_frames, num_powerset_classes)
     if (segmentations.empty()) {
+      // Timings are intentionally not logged since n can be non-positive.
       return {};
     }
+    segmentation_timer.Log("OfflineSpeakerDiarization: segmentation");
 
     std::vector<Matrix2DInt32> labels;
     labels.reserve(segmentations.size());
@@ -117,7 +122,14 @@ class OfflineSpeakerDiarizationPyannoteImpl
         callback(1, 1, callback_arg);
       }
 
-      return HandleOneChunkSpecialCase(labels[0], n);
+      OfflineSpeakerDiarizationResult result =
+          HandleOneChunkSpecialCase(labels[0], n);
+
+      if (config_.segmentation.debug) {
+        LogTotal(static_cast<float>(total_timer.Elapsed()), n);
+      }
+
+      return result;
     }
 
     // labels[i] is a 0-1 matrix of shape (num_frames, num_speakers)
@@ -126,6 +138,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
     Int32RowVector speakers_per_frame = ComputeSpeakersPerFrame(labels);
 
     if (speakers_per_frame.maxCoeff() == 0) {
+      if (config_.segmentation.debug) {
+        LogTotal(static_cast<float>(total_timer.Elapsed()), n);
+      }
       SHERPA_ONNX_LOGE("No speakers found in the audio samples");
       return {};
     }
@@ -138,9 +153,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
     std::vector<int32_t> valid_indexes;
     valid_indexes.reserve(chunk_speaker_samples_list_pair.second.size());
 
+    Timer embedding_timer(config_.segmentation.debug);
     Matrix2D embeddings =
         ComputeEmbeddings(audio, n, chunk_speaker_samples_list_pair.second,
                           &valid_indexes, std::move(callback), callback_arg);
+    embedding_timer.Log("OfflineSpeakerDiarization: embedding");
 
     if (valid_indexes.size() != chunk_speaker_samples_list_pair.second.size()) {
       std::vector<Int32Pair> chunk_speaker_pair;
@@ -167,10 +184,15 @@ class OfflineSpeakerDiarizationPyannoteImpl
       chunk_speaker_samples_list_pair.second = std::move(sample_indexes);
     }
 
+    Timer clustering_timer(config_.segmentation.debug);
     std::vector<int32_t> cluster_labels = clustering_->Cluster(
         &embeddings(0, 0), embeddings.rows(), embeddings.cols());
+    clustering_timer.Log("OfflineSpeakerDiarization: clustering");
 
     if (cluster_labels.empty()) {
+      if (config_.segmentation.debug) {
+        LogTotal(static_cast<float>(total_timer.Elapsed()), n);
+      }
       SHERPA_ONNX_LOGE("No speakers found in the audio samples");
       return {};
     }
@@ -191,10 +213,29 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     auto result = ComputeResult(final_labels);
 
+    if (config_.segmentation.debug) {
+      LogTotal(static_cast<float>(total_timer.Elapsed()), n);
+    }
+
     return result;
   }
 
  private:
+  void LogTotal(float total_seconds, int32_t num_samples) const {
+    float audio_duration = static_cast<float>(num_samples) / SampleRate();
+
+#if __OHOS__
+    SHERPA_ONNX_LOGE(
+        "OfflineSpeakerDiarization: total %{public}.3f s, audio "
+        "%{public}.3f s, RTF %{public}.3f",
+        total_seconds, audio_duration, total_seconds / audio_duration);
+#else
+    SHERPA_ONNX_LOGE(
+        "OfflineSpeakerDiarization: total %.3f s, audio %.3f s, RTF %.3f",
+        total_seconds, audio_duration, total_seconds / audio_duration);
+#endif
+  }
+
   void Init() { InitPowersetMapping(); }
 
   // see also
