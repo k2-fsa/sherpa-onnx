@@ -6,9 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <algorithm>
-#include <clocale>
-#include <cwctype>
 #include <string>
 #include <vector>
 
@@ -39,31 +36,6 @@ static int32_t RecordCallback(const void *input_buffer,
 static void Handler(int32_t /*sig*/) {
   stop = true;
   fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
-}
-
-static std::string tolowerUnicode(const std::string &input_str) {
-  // Use system locale
-  std::setlocale(LC_ALL, "");
-
-  // From char string to wchar string
-  std::wstring input_wstr(input_str.size() + 1, '\0');
-  std::mbstowcs(&input_wstr[0], input_str.c_str(), input_str.size());
-  std::wstring lowercase_wstr;
-
-  for (wchar_t wc : input_wstr) {
-    if (std::iswupper(wc)) {
-      lowercase_wstr += std::towlower(wc);
-    } else {
-      lowercase_wstr += wc;
-    }
-  }
-
-  // Back to char string
-  std::string lowercase_str(input_str.size() + 1, '\0');
-  std::wcstombs(&lowercase_str[0], lowercase_wstr.c_str(),
-                lowercase_wstr.size());
-
-  return lowercase_str;
 }
 
 int32_t main(int32_t argc, char *argv[]) {
@@ -164,7 +136,10 @@ for a list of pre-trained models to download.
 
     if (!text.empty() && last_text != text) {
       last_text = text;
-      display.Print(segment_index, tolowerUnicode(text));
+      // Print raw model text (same as sherpa-onnx file decode). Do not force
+      // lowercase here; tokens.txt case must stay consistent across sources.
+      // See https://github.com/k2-fsa/sherpa-onnx/issues/3621
+      display.Print(segment_index, text);
       fflush(stderr);
     }
 
