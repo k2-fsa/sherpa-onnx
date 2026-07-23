@@ -12,36 +12,29 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 
+// Auto-detect current OS and architecture
+val osName = System.getProperty("os.name").lowercase()
+val osArch = System.getProperty("os.arch").lowercase()
+
+val targetNativeClassifier = when {
+    osName.contains("mac") || osName.contains("darwin") -> {
+        if (osArch == "aarch64" || osArch == "arm64") "osx-aarch64" else "osx-x64"
+    }
+    osName.contains("linux") -> {
+        if (osArch == "aarch64" || osArch == "arm64") "linux-aarch64" else "linux-x64"
+    }
+    osName.contains("win") -> "win-x64"
+    else -> throw GradleException("Unsupported OS: $osName, Arch: $osArch")
+}
+
+println("--> Auto-detected platform native lib: $targetNativeClassifier")
+
 dependencies {
-    // ============================================================
-    // Approach 1: Simple — one dependency pulls in everything.
-    // ============================================================
-    // implementation("com.github.k2-fsa:sherpa-onnx:refactor-jar-SNAPSHOT")
-
-    // ============================================================
-    // Approach 2 (recommended): Multi-module — split JVM API and
-    // native libs so you only ship the platform you need.
-    // ============================================================
-
-    // 1. JVM core API Jar
+    // 1. JVM core API
     implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:refactor-jar-SNAPSHOT")
 
-    // 2. Platform native lib — uncomment ONE for your target platform
-
-    // macOS ARM64 (Apple Silicon)
-    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:refactor-jar-SNAPSHOT")
-
-    // macOS x64 (Intel)
-    // implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-x64:refactor-jar-SNAPSHOT")
-
-    // Linux x64
-    // implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-x64:refactor-jar-SNAPSHOT")
-
-    // Linux ARM64
-    // implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-aarch64:refactor-jar-SNAPSHOT")
-
-    // Windows x64
-    // implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-x64:refactor-jar-SNAPSHOT")
+    // 2. Platform native lib (auto-detected)
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-$targetNativeClassifier:refactor-jar-SNAPSHOT")
 }
 
 java {
