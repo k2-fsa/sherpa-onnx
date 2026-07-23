@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -83,10 +83,19 @@ for a list of pre-trained models to download.
   sherpa_onnx::OnlineRecognizerConfig config;
   std::string language;
 
+  float left_padding_second = 0.5;
+  float right_padding_second = 0.8;
+
   config.Register(&po);
   po.Register("language", &language,
               "Per-stream language hint for prompt-conditioned multilingual "
               "models, e.g., en, fr, ja, or auto. Empty means auto.");
+
+  po.Register("left-padding", &left_padding_second,
+              "Number of seconds for left padding");
+
+  po.Register("right-padding", &right_padding_second,
+              "Number of seconds for right padding");
 
   po.Read(argc, argv);
   if (po.NumArgs() < 1) {
@@ -117,7 +126,7 @@ for a list of pre-trained models to download.
     int32_t sampling_rate = -1;
 
     bool is_ok = false;
-    const std::vector<float> samples =
+    std::vector<float> samples =
         sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
 
     if (!is_ok) {
@@ -132,13 +141,15 @@ for a list of pre-trained models to download.
       s->SetOption("language", language);
     }
 
-    std::vector<float> left_paddings(static_cast<int>(0.3 * sampling_rate));
+    std::vector<float> left_paddings(
+        static_cast<int>(left_padding_second * sampling_rate), 0);
     s->AcceptWaveform(sampling_rate, left_paddings.data(),
                       left_paddings.size());
 
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-    std::vector<float> tail_paddings(static_cast<int>(0.8 * sampling_rate));
+    std::vector<float> tail_paddings(
+        static_cast<int>(right_padding_second * sampling_rate), 0);
     // Note: We can call AcceptWaveform() multiple times.
     s->AcceptWaveform(sampling_rate, tail_paddings.data(),
                       tail_paddings.size());
