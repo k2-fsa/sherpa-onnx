@@ -832,6 +832,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     packed-sequence-test.cc
     pad-sequence-test.cc
     regex-lang-test.cc
+    session-test.cc
     slice-test.cc
     stack-test.cc
     text-utils-test.cc
