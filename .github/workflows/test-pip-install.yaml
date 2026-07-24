@@ -25,29 +25,29 @@ jobs:
   test_pip_install:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
     strategy:
       fail-fast: false
       matrix:
         # See https://github.com/actions/runner-images
         include:
-          - os: ubuntu-22.04
+          # Linux x64
+          - os: ubuntu-latest
             python-version: "3.8"
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             python-version: "3.9"
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             python-version: "3.10"
           - os: ubuntu-latest
             python-version: "3.11"
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
             python-version: "3.12"
           - os: ubuntu-latest
             python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
 
-          - os: ubuntu-24.04-arm
-            python-version: "3.8"
-          - os: ubuntu-24.04-arm
-            python-version: "3.9"
+          # Linux arm64
           - os: ubuntu-24.04-arm
             python-version: "3.10"
           - os: ubuntu-24.04-arm
@@ -56,27 +56,30 @@ jobs:
             python-version: "3.12"
           - os: ubuntu-24.04-arm
             python-version: "3.13"
+          - os: ubuntu-24.04-arm
+            python-version: "3.14"
 
+          # macOS x64
           - os: macos-15-intel
             python-version: "3.8"
-
           - os: macos-15-intel
             python-version: "3.9"
-          - os: macos-15-intel
-            python-version: "3.10"
-          - os: macos-15-intel
-            python-version: "3.11"
 
+          # macOS arm64
           - os: macos-14
-            python-version: "3.12"
+            python-version: "3.10"
           - os: macos-14
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.12"
+          - os: macos-latest
             python-version: "3.13"
 
+          # Windows x64
           - os: windows-2022
             python-version: "3.8"
           - os: windows-2022
             python-version: "3.9"
-
           - os: windows-2022
             python-version: "3.10"
           - os: windows-2022
@@ -85,6 +88,41 @@ jobs:
             python-version: "3.12"
           - os: windows-2022
             python-version: "3.13"
+          - os: windows-2022
+            python-version: "3.14"
+
+          # Windows arm64
+          - os: windows-11-arm
+            python-version: "3.11"
+          - os: windows-11-arm
+            python-version: "3.12"
+          - os: windows-11-arm
+            python-version: "3.13"
+          - os: windows-11-arm
+            python-version: "3.14"
+
+          # Windows x86
+          - os: windows-2022
+            python-version: "3.8"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.9"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.10"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.11"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.12"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.13"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.14"
+            architecture: x86
 
     steps:
       - uses: actions/checkout@v4
@@ -101,11 +139,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
 
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          pip install --verbose -U sherpa-onnx sherpa-onnx-core sherpa-onnx-bin
+          pip install --verbose -U sherpa-onnx sherpa-onnx-core sherpa-onnx-bin || \
+            pip install --verbose -U sherpa-onnx sherpa-onnx-core sherpa-onnx-bin -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
 
       - name: Test sherpa-onnx-bin
         shell: bash

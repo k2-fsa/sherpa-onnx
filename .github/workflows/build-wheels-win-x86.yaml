@@ -1,4 +1,4 @@
-name: build-wheels-win32
+name: build-wheels-win-x86
 
 on:
   push:
@@ -16,7 +16,7 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-win32-${{ github.ref }}
+  group: build-wheels-win-x86-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -239,9 +239,9 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload /d/tmp/wheels/*.whl
+          twine upload --skip-existing --verbose /d/tmp/wheels/*.whl
 
-  build_wheels_win32:
+  build_wheels_win_x86:
     needs: [core, test]
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
@@ -328,4 +328,4 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload ./wheelhouse/*.whl
+          twine upload --skip-existing --verbose ./wheelhouse/*.whl

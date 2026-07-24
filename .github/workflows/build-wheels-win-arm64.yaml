@@ -1,4 +1,4 @@
-name: build-wheels-win64
+name: build-wheels-win-arm64
 
 on:
   push:
@@ -16,7 +16,7 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-win64-${{ github.ref }}
+  group: build-wheels-win-arm64-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022]
+        os: [windows-11-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -42,20 +42,26 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install Python dependencies
         shell: bash
         run: |
           python3 -m pip install wheel twine==5.0.0 setuptools
 
+      - name: sccache
+        uses: mozilla-actions/sccache-action@v0.0.7
+
       - name: Configure CMake
         shell: bash
         run: |
+          export CMAKE_C_COMPILER_LAUNCHER=sccache
+          export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+
           mkdir build
           cd build
           cmake \
-            -A x64 \
+            -A ARM64 \
             -D SHERPA_ONNX_ENABLE_TTS=ON \
             -D CMAKE_BUILD_TYPE=Release \
             -D BUILD_SHARED_LIBS=ON \
@@ -97,7 +103,7 @@ jobs:
           cp -v ./install/include/sherpa-onnx/c-api/*.h ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
 
           pushd ../scripts/wheel/sherpa-onnx-core
-          python3 setup.py bdist_wheel --plat-name=win_amd64
+          python3 setup.py bdist_wheel --plat-name=win_arm64
 
           ls -lh dist
 
@@ -109,7 +115,7 @@ jobs:
           cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
 
           pushd ../scripts/wheel/sherpa-onnx-bin
-          python3 setup.py bdist_wheel --plat-name=win_amd64
+          python3 setup.py bdist_wheel --plat-name=win_arm64
 
           ls -lh dist
 
@@ -124,7 +130,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-core-win-x64
+          name: wheels-core-win-arm64
           path: ./wheelhouse/*.whl
 
       - name: Show wheels
@@ -144,33 +150,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022]
+        os: [windows-11-arm]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Retrieve artifact from Windows x64
+      - name: Retrieve artifact from Windows arm64
         uses: actions/download-artifact@v4
         with:
-          name: wheels-core-win-x64
+          name: wheels-core-win-arm64
           path: /tmp/wheels
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Show
         shell: bash
         run: |
-          ls -lh /d/tmp/wheels
+          ls -lh /c/tmp/wheels
 
       - name: Install
         shell: bash
         run: |
-          python3 -m pip install /d/tmp/wheels/*.whl
+          python3 -m pip install /c/tmp/wheels/*.whl
 
       - name: Show version
         shell: bash
@@ -223,7 +229,7 @@ jobs:
 
             mkdir -p $d
 
-            cp -v /d/tmp/wheels/*.whl $d/
+            cp -v /c/tmp/wheels/*.whl $d/
 
             git status
             git add .
@@ -231,7 +237,6 @@ jobs:
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI ${{ github.event.inputs.publish_sherpa_onnx_bin }}
-        if: ${{ (github.event.inputs.publish_sherpa_onnx_bin || 'true') == 'true' }}
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
@@ -240,17 +245,18 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload /d/tmp/wheels/*.whl
+          twine upload --skip-existing --verbose /c/tmp/wheels/*.whl
 
-  build_wheels_win64:
-    needs: [core, test]
+  build_wheels_win_arm64:
+    # needs: [core, test]
+    # if: always()
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        os: [windows-11-arm]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v4
@@ -335,10 +341,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           python3 -m pip install --upgrade pip
-          if [[ ${{ matrix.python-version }} == "3.7" ]]; then
-            python3 -m pip install wheel twine setuptools
-          else
-            python3 -m pip install wheel twine==5.0.0 setuptools
-          fi
+          python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload ./wheelhouse/*.whl
+          twine upload --skip-existing --verbose ./wheelhouse/*.whl

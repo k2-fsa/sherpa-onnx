@@ -5,9 +5,11 @@ on:
     branches:
       - master
       - python
+      - wheel-win-arm64
     paths:
       - '.github/workflows/run-python-test.yaml'
       - '.github/scripts/test-python.sh'
+      - '.github/scripts/test-speaker-recognition-python.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'python-api-examples/**'
@@ -17,6 +19,7 @@ on:
     paths:
       - '.github/workflows/run-python-test.yaml'
       - '.github/scripts/test-python.sh'
+      - '.github/scripts/test-speaker-recognition-python.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'python-api-examples/**'
@@ -29,19 +32,22 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  PYTHONIOENCODING: utf-8
+
 jobs:
   run-python-test:
-    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Linux x64
           - os: ubuntu-latest
             python-version: "3.8"
           - os: ubuntu-latest
             python-version: "3.9"
-
           - os: ubuntu-latest
             python-version: "3.10"
           - os: ubuntu-latest
@@ -52,6 +58,83 @@ jobs:
             python-version: "3.13"
           - os: ubuntu-latest
             python-version: "3.14"
+
+          # Linux arm64
+          - os: ubuntu-24.04-arm
+            python-version: "3.10"
+          - os: ubuntu-24.04-arm
+            python-version: "3.11"
+          - os: ubuntu-24.04-arm
+            python-version: "3.12"
+          - os: ubuntu-24.04-arm
+            python-version: "3.13"
+          - os: ubuntu-24.04-arm
+            python-version: "3.14"
+
+          # macOS x64
+          - os: macos-15-intel
+            python-version: "3.8"
+          - os: macos-15-intel
+            python-version: "3.9"
+
+          # macOS arm64
+          - os: macos-14
+            python-version: "3.10"
+          - os: macos-14
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.13"
+
+          # Windows x64
+          - os: windows-2022
+            python-version: "3.8"
+          - os: windows-2022
+            python-version: "3.9"
+          - os: windows-2022
+            python-version: "3.10"
+          - os: windows-2022
+            python-version: "3.11"
+          - os: windows-2022
+            python-version: "3.12"
+          - os: windows-2022
+            python-version: "3.13"
+          - os: windows-2022
+            python-version: "3.14"
+
+          # Windows arm64
+          - os: windows-11-arm
+            python-version: "3.11"
+          - os: windows-11-arm
+            python-version: "3.12"
+          - os: windows-11-arm
+            python-version: "3.13"
+          - os: windows-11-arm
+            python-version: "3.14"
+
+          # Windows x86
+          - os: windows-2022
+            python-version: "3.8"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.9"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.10"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.11"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.12"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.13"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.14"
+            architecture: x86
 
     steps:
       - uses: actions/checkout@v4
@@ -67,93 +150,137 @@ jobs:
       - name: Display OS version
         shell: bash
         run: |
-          uname -a
-          find "/etc" -maxdepth 1 -type f -name "*version" -exec head -n 100 {} \;
+          uname -a || true
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            find "/etc" -maxdepth 1 -type f -name "*version" -exec head -n 100 {} \; || true
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            sw_vers || true
+          fi
 
       - name: ccache
+        if: runner.os != 'Windows'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-python-${{ matrix.python-version }}
+
+      - name: sccache (Windows)
+        if: runner.os == 'Windows'
+        uses: mozilla-actions/sccache-action@v0.0.7
+
+      - name: Set up MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
 
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile librosa
+          python3 -m pip install --upgrade pip numpy pypinyin soundfile
           python3 -m pip install wheel twine setuptools
 
-      - uses: afoley587/setup-ffmpeg@main
-        id: setup-ffmpeg
-        with:
-          ffmpeg-version: release
-          architecture: ''
-          github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
+      - name: Install librosa (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade librosa
 
-      - name: Install ninja
+      - name: Install ninja (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           sudo apt-get install ninja-build
 
-      - name: Display ninja version
+      - name: Display ninja version (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           ninja --version
           ninja --help || true
           which ninja
 
-      - name: Display site packages dir
+      - name: Display site packages dir (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           python3 -c 'import site; print(site.getsitepackages())'
           p=$(python3 -c 'import site; print(site.getsitepackages())')
           echo "p: $p"
 
-      - name: Install patchelf
+      - name: Install patchelf (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           sudo apt-get update -q
           sudo apt-get install -q -y patchelf
           patchelf --help
 
-      - name: Build sherpa-onnx
+      - name: Build sherpa-onnx (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          if [[ "${{ runner.os }}" != "Windows" ]]; then
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          fi
           cmake --version
           export SHERPA_ONNX_CMAKE_ARGS="-G Ninja -DCMAKE_BUILD_TYPE=Release"
           export SHERPA_ONNX_MAKE_ARGS="-j 6"
 
           python3 setup.py bdist_wheel
 
-      - name: Patch wheels
+      - name: Patch wheels (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           mkdir ./dist2
           sudo ./scripts/wheel/patch_wheel.py --in-dir ./dist --out-dir ./dist2
 
-      - name: Install sherpa-onnx
+      - name: Install sherpa-onnx (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           ls -lh dist2
 
           python3 -m pip install ./dist2/*.whl
 
+      - name: Build and install sherpa-onnx (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          python3 -m pip install .
+
+      - name: Build and install sherpa-onnx (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          export CMAKE_C_COMPILER_LAUNCHER=sccache
+          export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+
+          python3 -m pip install .
+
       - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
         with:
           name: ${{ matrix.os }}-${{ matrix.python-version }}-whl
           path: ./dist
 
       - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
         with:
           name: ${{ matrix.os }}-${{ matrix.python-version }}-whl-patched
           path: ./dist2
 
-      - name: Show dependencies
+      - name: Show dependencies (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           cd dist
@@ -166,7 +293,8 @@ jobs:
 
           readelf -d sherpa_onnx-*.data/data/bin/sherpa-onnx
 
-      - name: Show dependencies (patched)
+      - name: Show dependencies - patched (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           cd dist2
@@ -179,7 +307,8 @@ jobs:
 
           readelf -d sherpa_onnx-*.data/data/bin/sherpa-onnx
 
-      - name: Test sherpa-onnx
+      - name: Test sherpa-onnx (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           export OS=${{ matrix.os }}
@@ -196,9 +325,17 @@ jobs:
           .github/scripts/test-python.sh
           .github/scripts/test-speaker-recognition-python.sh
 
+      - name: Test sherpa-onnx (macOS/Windows)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: |
+          export OS=${{ matrix.os }}
+          .github/scripts/test-python.sh
+          .github/scripts/test-speaker-recognition-python.sh
+
       - uses: actions/upload-artifact@v4
         with:
-          name: source-separation-${{ matrix.os }}-${{ matrix.python-version }}-whl
+          name: source-separation-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./source-separation
 
       - uses: actions/upload-artifact@v4
