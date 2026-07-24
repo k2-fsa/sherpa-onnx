@@ -1,15 +1,14 @@
-// Copyright (c) 2026 Xiaomi Corporation
-//
-// This file demonstrates how to use non-streaming Paraformer with
+// This example demonstrates how to use non-streaming Paraformer with
 // sherpa-onnx's Rust API for offline speech recognition.
 //
-// See ../README.md for how to run it.
+// Run it from the rust-api-examples directory with:
+//   ./run-paraformer.sh
 
 use clap::Parser;
 use sherpa_onnx::{
     OfflineParaformerModelConfig, OfflineRecognizer, OfflineRecognizerConfig, Wave,
 };
-use std::time::Instant;
+use std::{process, time::Instant};
 
 /// Paraformer offline ASR example
 #[derive(Parser, Debug)]
@@ -44,7 +43,11 @@ fn main() {
     let args = Args::parse();
 
     let wave = Wave::read(&args.wav).expect("Failed to read WAV file");
-    let audio_duration = wave.samples().len() as f64 / wave.sample_rate() as f64;
+    let audio_duration = if wave.sample_rate() > 0 && !wave.samples().is_empty() {
+        wave.samples().len() as f64 / wave.sample_rate() as f64
+    } else {
+        0.0
+    };
 
     let mut recognizer_config = OfflineRecognizerConfig::default();
 
@@ -79,7 +82,11 @@ fn main() {
         println!("Decoded text: {}", result.text);
 
         let total_time = creation_elapsed + recognition_elapsed;
-        let rtf = recognition_elapsed / audio_duration;
+        let rtf = if audio_duration > 0.0 {
+            recognition_elapsed / audio_duration
+        } else {
+            0.0
+        };
 
         println!("\n=== Performance Summary ===");
         println!("Audio duration        : {:.3} seconds", audio_duration);
@@ -96,5 +103,6 @@ fn main() {
         );
     } else {
         eprintln!("Failed to get recognition result");
+        process::exit(1);
     }
 }
