@@ -38,6 +38,9 @@ jobs:
           - os: windows-2022
             arch: "x64"
 
+          - os: windows-11-arm
+            arch: "arm64"
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -145,6 +148,26 @@ jobs:
           ls -lh $dst
           rm -rf $src*
 
+      - name: Download libs windows-11-arm arm64
+        if: ${{ matrix.os == 'windows-11-arm' && matrix.arch == 'arm64' }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/sherpa-onnx-v$SHERPA_ONNX_VERSION-win-arm64-jni.tar.bz2
+          tar xvf ./*.tar.bz2
+
+          src=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-arm64-jni
+          ls -lh $src
+          ls -lh $src/lib
+          dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/win-arm64
+
+          mkdir -p $dst
+          cp -v $src/lib/onnxruntime.dll $dst/
+          cp -v $src/lib/sherpa-onnx-jni.dll $dst/
+
+          ls -lh $dst
+          rm -rf $src*
+
       - name: Create java jar (source code)
         shell: bash
         run: |
@@ -183,6 +206,8 @@ jobs:
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "windows-2022" && $arch == "x64" ]]; then
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "windows-11-arm" && $arch == "arm64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-win-arm64-$SHERPA_ONNX_VERSION.jar
           else
             echo "Unknown os $os with arch $arch"
           fi
@@ -270,6 +295,8 @@ jobs:
             native_jar=sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "windows-2022" && $arch == "x64" ]]; then
             native_jar=sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "windows-11-arm" && $arch == "arm64" ]]; then
+            native_jar=sherpa-onnx-native-lib-win-arm64-$SHERPA_ONNX_VERSION.jar
           else
             echo "Unknown os $os with arch $arch"
           fi
@@ -277,7 +304,7 @@ jobs:
           echo "native_jar: $native_jar"
           ls -lh sherpa-onnx/java-api/$native_jar
 
-          if [[ ${{ matrix.os }} == "windows-2022" ]]; then
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
             SEP=";"
           else
             SEP=":"
