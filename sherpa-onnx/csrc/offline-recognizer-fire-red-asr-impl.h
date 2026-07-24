@@ -121,8 +121,11 @@ class OfflineRecognizerFireRedAsrImpl : public OfflineRecognizerImpl {
 
     auto cross_kv = model_->ForwardEncoder(std::move(x), std::move(x_len));
 
+    int32_t max_token_per_second = s->GetOptionInt("max_token_per_second", 6);
+
     auto results = decoder_->Decode(std::move(cross_kv.first),
-                                    std::move(cross_kv.second), num_frames);
+                                    std::move(cross_kv.second), num_frames,
+                                    max_token_per_second);
 
     auto r = Convert(results[0], symbol_table_);
 

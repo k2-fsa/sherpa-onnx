@@ -27,12 +27,14 @@ class OfflineFireRedAsrDecoder {
    *                              (num_decoder_layers, N, T, d_model).
    * @param n_layer_cross_v       A 4-D tensor of shape
    *                              (num_decoder_layers, N, T, d_model).
+   * @param num_feature_frames    Number of feature frames in the input audio.
+   * @param max_token_per_second  Maximum tokens generated per second of audio.
    *
    * @return Return a vector of size `N` containing the decoded results.
    */
   virtual std::vector<OfflineFireRedAsrDecoderResult> Decode(
       Ort::Value n_layer_cross_k, Ort::Value n_layer_cross_v,
-      int32_t num_feature_frames) = 0;
+      int32_t num_feature_frames, int32_t max_token_per_second) = 0;
 };
 
 }  // namespace sherpa_onnx
