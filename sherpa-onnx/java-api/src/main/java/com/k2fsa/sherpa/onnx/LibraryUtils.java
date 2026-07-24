@@ -95,6 +95,20 @@ public class LibraryUtils {
                     System.out.printf("Loading from: %s\n", libInDir.getAbsolutePath());
                 }
 
+                // Load onnxruntime first to avoid picking up a system version
+                if (Objects.equals(detectedOS, "osx")) {
+                    File onnxruntimeFile = new File(nativeDir, "libonnxruntime.1.27.0.dylib");
+                    if (onnxruntimeFile.exists()) {
+                        System.load(onnxruntimeFile.getAbsolutePath());
+                    }
+                } else {
+                    String onnxLibFileName = System.mapLibraryName("onnxruntime");
+                    File onnxruntimeFile = new File(nativeDir, onnxLibFileName);
+                    if (onnxruntimeFile.exists()) {
+                        System.load(onnxruntimeFile.getAbsolutePath());
+                    }
+                }
+
                 System.load(libInDir.getAbsolutePath());
                 return true;
             }

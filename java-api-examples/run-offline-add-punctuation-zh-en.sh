@@ -11,6 +11,6 @@ if [ ! -f ./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   ./OfflineAddPunctuation.java

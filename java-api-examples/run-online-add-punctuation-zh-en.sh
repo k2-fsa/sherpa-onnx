@@ -11,6 +11,6 @@ if [ ! -f ./sherpa-onnx-online-punct-en-2024-08-06/model.int8.onnx ]; then
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   ./OnlineAddPunctuation.java

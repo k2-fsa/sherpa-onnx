@@ -11,6 +11,6 @@ if [[ ! -f "./catt_eo_model_onnx/encoder.onnx" || ! -f "./catt_eo_model_onnx/dec
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   ./OfflineAddDiacritics.java
