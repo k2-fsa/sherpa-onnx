@@ -510,6 +510,22 @@ Supertonic text frontend ported to Rust. See also
 diacritics in the Supertonic frontend for Romanian, Czech, Polish, Hungarian,
 Turkish, Vietnamese, and other non-English Latin-script languages.
 
+### [Domia](https://github.com/domia-ai/domia-core)
+
+> Domia is an open-source local AI companion you talk to, living entirely on
+> hardware you own. Each Domia is its own character, with a distinct
+> personality, voice, emotional state, and memory of you and its place — and it
+> acts, not just talks: skills connect it to the real world over MCP, Home
+> Assistant included. Domia nodes form a local peer-to-peer mesh that shares
+> speech and reasoning compute, while room satellites bring each companion into
+> the spaces where you live without giving up its identity. No cloud, no
+> accounts, and no data leaving your network.
+
+Domia runs sherpa-onnx in-process for keyword spotting, voice activity
+detection, streaming and offline speech recognition, and text-to-speech.
+Speech engines and models are selected through per-companion configuration,
+making it easy to match supported sherpa-onnx models to different hardware.
+
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
