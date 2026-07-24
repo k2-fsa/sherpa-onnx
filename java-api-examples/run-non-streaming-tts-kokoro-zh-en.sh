@@ -14,6 +14,6 @@ if [ ! -f ./kokoro-multi-lang-v1_0/model.onnx ]; then
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   NonStreamingTtsKokoroZhEn.java

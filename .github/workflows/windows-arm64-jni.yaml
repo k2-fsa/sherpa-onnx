@@ -1,26 +1,26 @@
-name: windows-x64-jni
+name: windows-arm64-jni
 
 on:
   push:
     branches:
-      - jni
+      - win-arm64-2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
 concurrency:
-  group: windows-x64-jni-${{ github.ref }}
+  group: windows-arm64-jni-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  windows_x64_jni:
-    name: windows x64 jni
+  windows_arm64_jni:
+    name: windows arm64 jni
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022]
+        os: [windows-11-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
           mkdir build
           cd build
           cmake \
-            -A x64 \
+            -A ARM64 \
             -DBUILD_SHARED_LIBS=ON \
             -D SHERPA_ONNX_ENABLE_JNI=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
@@ -70,7 +70,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-jni-windows-x64
+          name: release-jni-windows-arm64
           path: build/install/*
 
       - name: Copy files
@@ -78,14 +78,14 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-jni
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64-jni
           mkdir -p $dst
 
           cp -a build/install/lib $dst/ || true
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - name: Release pre-compiled binaries and libs for Windows x64
+      - name: Release pre-compiled binaries and libs for Windows arm64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
@@ -93,7 +93,7 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
 
-      - name: Release pre-compiled binaries and libs for Windows x64
+      - name: Release pre-compiled binaries and libs for Windows arm64
         if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:

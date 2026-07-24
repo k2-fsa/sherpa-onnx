@@ -29,7 +29,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-14]
+        include:
+          - os: ubuntu-latest
+
+          - os: ubuntu-24.04-arm
+
+          - os: macos-latest
+
+          - os: macos-14
+
+          - os: windows-2022
+            arch: x64
+
+          - os: windows-11-arm
+            arch: ARM64
 
     steps:
       - uses: actions/checkout@v4
@@ -43,9 +56,18 @@ jobs:
           git diff .
 
       - name: ccache
+        if: runner.os != 'Windows'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-java
+
+      - name: sccache (Windows)
+        if: runner.os == 'Windows'
+        uses: mozilla-actions/sccache-action@v0.0.7
+
+      - name: Set up MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: OS info
         shell: bash
@@ -84,13 +106,23 @@ jobs:
       - name:  Build sherpa-onnx (C++)
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            export CMAKE_C_COMPILER_LAUNCHER=sccache
+            export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          else
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          fi
 
           mkdir build
           cd build
 
+          cmake_args=""
+          if [[ "${{ matrix.arch }}" != "" ]]; then
+            cmake_args="-A ${{ matrix.arch }}"
+          fi
+
           cmake \
+            $cmake_args \
             -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
             -DSHERPA_ONNX_ENABLE_TESTS=OFF \
             -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -99,10 +131,22 @@ jobs:
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             -DBUILD_ESPEAK_NG_EXE=OFF \
             -DSHERPA_ONNX_ENABLE_JNI=ON \
+            -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
-            make -j4
-            ls -lh lib
+          cmake --build . --config Release
+          cmake --build . --config Release --target install
+
+      - name: Copy libs to build/lib
+        shell: bash
+        run: |
+          mkdir -p build/lib
+          cp -fv build/install/lib/*.dll build/lib/ || true
+          cp -fv build/install/lib/*.lib build/lib/ || true
+          cp -fv build/install/lib/*.so build/lib/ || true
+          cp -fv build/install/lib/*.dylib build/lib/ || true
+
+          ls -lh build/lib/
 
       - name:  Run java version test
         shell: bash
@@ -111,6 +155,7 @@ jobs:
           ./run-version-test.sh
 
       - name:  Run java test (Cohere Transcribe)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           cd ./java-api-examples
@@ -428,6 +473,10 @@ jobs:
             arch: "x64"
             native_lib: win-x64
 
+          - os: windows-11-arm
+            arch: "arm64"
+            native_lib: win-arm64
+
     steps:
       - uses: actions/checkout@v4
 
@@ -542,6 +591,9 @@ jobs:
 
           - os: windows-2022
             arch: "x64"
+
+          - os: windows-11-arm
+            arch: "arm64"
 
     steps:
       - uses: actions/checkout@v4
@@ -690,6 +742,10 @@ jobs:
             arch: "x64"
             native_lib: win-x64
 
+          - os: windows-11-arm
+            arch: "arm64"
+            native_lib: win-arm64
+
     steps:
       - uses: actions/checkout@v4
 
@@ -815,6 +871,9 @@ jobs:
           - os: windows-2022
             arch: "x64"
 
+          - os: windows-11-arm
+            arch: "arm64"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -925,6 +984,9 @@ jobs:
 
           - os: windows-2022
             arch: "x64"
+
+          - os: windows-11-arm
+            arch: "arm64"
 
     steps:
       - uses: actions/checkout@v4

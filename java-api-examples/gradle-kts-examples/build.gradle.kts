@@ -24,10 +24,7 @@ val targetNativeClassifier = when {
         if (osArch == "aarch64" || osArch == "arm64") "linux-aarch64" else "linux-x64"
     }
     osName.contains("win") -> {
-        if (osArch == "aarch64" || osArch == "arm64") {
-            throw GradleException("Windows ARM64 is not supported yet. Please use x64.")
-        }
-        "win-x64"
+        if (osArch == "aarch64" || osArch == "arm64") "win-arm64" else "win-x64"
     }
     else -> throw GradleException("Unsupported OS: $osName, Arch: $osArch")
 }

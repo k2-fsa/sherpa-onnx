@@ -8,6 +8,14 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/windows-arm64.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-cohere-transcribe.sh'
+      # - '.github/scripts/test-offline-diacritization.sh'
+      - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
 
@@ -24,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022]
+        os: [windows-11-arm]
         build_type: [Release, Debug, MinSizeRel, RelWithDebInfo]
         shared_lib: [ON, OFF]
         with_tts: [ON, OFF]
@@ -35,6 +43,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
@@ -43,16 +57,13 @@ jobs:
         run: |
           which dumpbin
 
-      - name: Update version
-        shell: bash
-        run: |
-          ./new-release.sh
-          git diff .
-
       - name: Configure CMake
         shell: bash
         run: |
           mkdir build
+
+          cmake --version
+
           cd build
           cmake \
             -A ARM64 \
@@ -107,6 +118,9 @@ jobs:
         shell: bash
         run: |
           cd build
+
+          cmake --version
+
           cmake --build . --config ${{ matrix.build_type }} -- -m:2
           cmake --build . --config ${{ matrix.build_type }} --target install -- -m:2
 
@@ -262,3 +276,170 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*-win-arm64*.tar.bz2
+
+      - name: Test offline Cohere Transcribe for windows arm64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-cohere-transcribe.sh
+
+      - name: Test offline Moonshine for windows arm64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-moonshine.sh
+
+      - name: Test C++ API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api.exe
+          export CXX_WHISPER_EXE=whisper-cxx-api.exe
+          export CXX_SENSE_VOICE_EXE=sense-voice-cxx-api.exe
+
+          .github/scripts/test-cxx-api.sh
+
+      - name: Test offline speaker diarization
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline-speaker-diarization.exe
+
+          .github/scripts/test-speaker-diarization.sh
+
+      - name: Test online punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-online-punctuation.exe
+
+          .github/scripts/test-online-punctuation.sh
+
+      - name: Test offline punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline-punctuation.exe
+
+          .github/scripts/test-offline-punctuation.sh
+
+      # - name: Test offline diacritization
+      #   if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      #   shell: bash
+      #   run: |
+      #     export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+      #     export EXE=sherpa-onnx-offline-diacritization.exe
+      #
+      #     .github/scripts/test-offline-diacritization.sh
+
+      - name: Test C API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export SLID_EXE=spoken-language-identification-c-api.exe
+          export SID_EXE=speaker-identification-c-api.exe
+          export AT_EXE=audio-tagging-c-api.exe
+          export PUNCT_EXE=add-punctuation-c-api.exe
+
+          .github/scripts/test-c-api.sh
+
+      - name: Test Audio tagging
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline-audio-tagging.exe
+
+          .github/scripts/test-audio-tagging.sh
+
+      - name: Test spoken language identification (C++ API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline-language-identification.exe
+
+          .github/scripts/test-spoken-language-identification.sh
+
+      - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx.exe
+
+          .github/scripts/test-online-ctc.sh
+
+      - name: Test offline TTS
+        if: matrix.with_tts == 'ON' && !startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline-tts.exe
+
+          .github/scripts/test-offline-tts.sh
+
+      - name: Test online paraformer for windows arm64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx.exe
+
+          .github/scripts/test-online-paraformer.sh
+
+      - name: Test offline Whisper for windows arm64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-whisper.sh
+
+      - name: Test offline CTC for windows arm64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-ctc.sh
+
+      - name: Test offline transducer for Windows arm64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-transducer.sh
+
+      - name: Test online transducer for Windows arm64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx.exe
+
+          .github/scripts/test-online-transducer.sh
+
+      - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=decode-file-c-api.exe
+
+          .github/scripts/test-online-transducer.sh

@@ -87,6 +87,15 @@
             <version>refactor-jar-SNAPSHOT</version>
         </dependency>
         -->
+
+        <!-- Windows ARM64 -->
+        <!--
+        <dependency>
+            <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
+            <artifactId>sherpa-onnx-native-lib-win-arm64</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+        -->
     </dependencies>
 
     <build>

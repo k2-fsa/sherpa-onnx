@@ -11,6 +11,6 @@ if [ ! -f ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/tokens.txt ]; the
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   NonStreamingDecodeFileMoonshineV2.java
