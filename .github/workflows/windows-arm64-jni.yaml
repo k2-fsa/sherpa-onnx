@@ -3,7 +3,7 @@ name: windows-arm64-jni
 on:
   push:
     branches:
-      - win-arm64
+      - win-arm64-2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 

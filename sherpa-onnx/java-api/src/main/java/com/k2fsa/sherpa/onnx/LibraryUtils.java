@@ -188,9 +188,13 @@ public class LibraryUtils {
             // 32-bit x86 is not supported by the Java API
             detectedArch = "x86";
         } else if (arch.startsWith("aarch64") || arch.startsWith("arm64")) {
-            detectedArch = "aarch64";
+            if (detectedOS.equals("win")) {
+                detectedArch = "arm64";
+            } else {
+                detectedArch = "aarch64";
+            }
         } else if (arch.startsWith("arm")) {
-            detectedArch = "arm"; //armv8l架构
+            detectedArch = "arm"; //armv8l
         } else {
             throw new IllegalStateException("Unsupported arch:" + arch);
         }
