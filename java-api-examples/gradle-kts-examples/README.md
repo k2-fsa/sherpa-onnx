@@ -22,14 +22,19 @@ val targetNativeClassifier = when {
     osName.contains("linux") -> {
         if (osArch == "aarch64" || osArch == "arm64") "linux-aarch64" else "linux-x64"
     }
-    osName.contains("win") -> "win-x64"
+    osName.contains("win") -> {
+        if (osArch == "aarch64" || osArch == "arm64") {
+            throw GradleException("Windows ARM64 is not supported yet. Please use x64.")
+        }
+        "win-x64"
+    }
     else -> throw GradleException("Unsupported OS: $osName, Arch: $osArch")
 }
 ```
 
 This means:
 - **No manual configuration needed** — just run `./gradlew build`
-- **Works on any platform** — macOS, Linux, Windows (x64 and ARM64)
+- **Works on any platform** — macOS, Linux, Windows x64
 - **No CI scripts to modify** — the build file handles everything
 
 ## Dependencies
@@ -60,7 +65,7 @@ gradle build
 
 The build output will show the auto-detected platform:
 
-```
+```text
 --> Auto-detected platform native lib: osx-aarch64
 ```
 
@@ -76,21 +81,23 @@ gradle run
 
 Expected output:
 
-```
+```text
 sherpa-onnx version: x.y.z
 sherpa-onnx gitSha1: ...
 sherpa-onnx gitDate: ...
 ```
 
-## Available Native Lib Artifacts
+## Supported Platforms
 
-| Platform | Artifact |
-|---|---|
-| macOS ARM64 | `sherpa-onnx-native-lib-osx-aarch64` |
-| macOS x64 | `sherpa-onnx-native-lib-osx-x64` |
-| Linux x64 | `sherpa-onnx-native-lib-linux-x64` |
-| Linux ARM64 | `sherpa-onnx-native-lib-linux-aarch64` |
-| Windows x64 | `sherpa-onnx-native-lib-win-x64` |
+| Platform | Architecture | Artifact |
+|---|---|---|
+| macOS | ARM64 (Apple Silicon) | `sherpa-onnx-native-lib-osx-aarch64` |
+| macOS | x64 (Intel) | `sherpa-onnx-native-lib-osx-x64` |
+| Linux | x64 | `sherpa-onnx-native-lib-linux-x64` |
+| Linux | ARM64 | `sherpa-onnx-native-lib-linux-aarch64` |
+| Windows | x64 | `sherpa-onnx-native-lib-win-x64` |
+
+> **Note:** Windows ARM64 is not currently supported. The build will fail with an error if you try to build on Windows ARM64.
 
 ## Appendix: Groovy vs Kotlin DSL comparison
 

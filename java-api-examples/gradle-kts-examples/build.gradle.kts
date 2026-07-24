@@ -23,11 +23,16 @@ val targetNativeClassifier = when {
     osName.contains("linux") -> {
         if (osArch == "aarch64" || osArch == "arm64") "linux-aarch64" else "linux-x64"
     }
-    osName.contains("win") -> "win-x64"
+    osName.contains("win") -> {
+        if (osArch == "aarch64" || osArch == "arm64") {
+            throw GradleException("Windows ARM64 is not supported yet. Please use x64.")
+        }
+        "win-x64"
+    }
     else -> throw GradleException("Unsupported OS: $osName, Arch: $osArch")
 }
 
-println("--> Auto-detected platform native lib: $targetNativeClassifier")
+logger.lifecycle("--> Auto-detected platform native lib: $targetNativeClassifier")
 
 dependencies {
     // 1. JVM core API
