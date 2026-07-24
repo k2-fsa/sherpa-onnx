@@ -9,6 +9,7 @@ before_install:
   - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-native-lib-osx-aarch64-1.13.4.jar
   - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-native-lib-osx-x64-1.13.4.jar
   - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-native-lib-win-x64-1.13.4.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-native-lib-win-arm64-1.13.4.jar
 
 install:
   - mvn install:install-file -Dfile=sherpa-onnx-1.13.4.aar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx -Dversion=1.13.4 -Dpackaging=aar -DgeneratePom=true
@@ -18,3 +19,4 @@ install:
   - mvn install:install-file -Dfile=sherpa-onnx-native-lib-osx-aarch64-1.13.4.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-osx-aarch64 -Dversion=1.13.4 -Dpackaging=jar -DgeneratePom=true
   - mvn install:install-file -Dfile=sherpa-onnx-native-lib-osx-x64-1.13.4.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-osx-x64 -Dversion=1.13.4 -Dpackaging=jar -DgeneratePom=true
   - mvn install:install-file -Dfile=sherpa-onnx-native-lib-win-x64-1.13.4.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-win-x64 -Dversion=1.13.4 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-win-arm64-1.13.4.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-win-arm64 -Dversion=1.13.4 -Dpackaging=jar -DgeneratePom=true
