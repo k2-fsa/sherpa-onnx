@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">PocketTTS Demo</string>
+    <string name="title_main">PocketTTS Voice Cloning Demo</string>
+    <string name="btn_wav_selected">WAV Selected</string>
+    <string name="btn_pick_wav">Pick Reference WAV</string>
+    <string name="label_text_input">Text to synthesize</string>
+    <string name="label_steps">Steps:</string>
+    <string name="label_temperature">Temperature:</string>
+    <string name="label_speed">Speed:</string>
+    <string name="btn_generate">Generate</string>
+    <string name="btn_generating">Generating...</string>
+    <string name="label_duration">Duration:</string>
+    <string name="btn_play">Play</string>
+    <string name="btn_pause">Pause</string>
+    <string name="btn_resume">Resume</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_save">Save to Device</string>
+    <string name="err_tts_not_init">TTS not initialized</string>
+    <string name="err_pick_wav">Please pick a reference WAV</string>
+    <string name="err_empty_text">Text cannot be empty</string>
+    <string name="err_read_wav">Failed to read WAV</string>
+    <string name="msg_gen_success">Generation successful!</string>
+    <string name="err_save_audio">Failed to save generated audio</string>
+    <string name="err_gen_failed">Generation failed:</string>
+    <string name="msg_audio_saved">Audio saved successfully</string>
+    <string name="err_invalid_wav">This doesn\'t look like a valid WAV file</string>
+    <string name="err_read_file">Failed to read file</string>
+    <string name="err_play_audio">Failed to play audio</string>
+</resources>
