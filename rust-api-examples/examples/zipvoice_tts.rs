@@ -27,6 +27,7 @@ fn main() {
                 lexicon: Some(
                     "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt".into(),
                 ),
+                espeak_voice: Some("en-us".into()),
                 feat_scale: 0.1,
                 t_shift: 0.5,
                 target_rms: 0.1,

@@ -26,6 +26,7 @@ class ZipVoiceTtsDemo
     config.Model.ZipVoice.Vocoder = "./vocos_24khz.onnx";
     config.Model.ZipVoice.DataDir = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data";
     config.Model.ZipVoice.Lexicon = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt";
+    config.Model.ZipVoice.EspeakVoice = "en-us";
 
     config.Model.NumThreads = 2;
     config.Model.Debug = 1;

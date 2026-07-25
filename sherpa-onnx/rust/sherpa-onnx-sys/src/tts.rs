@@ -62,6 +62,7 @@ pub struct OfflineTtsZipvoiceModelConfig {
     pub vocoder: *const c_char,
     pub data_dir: *const c_char,
     pub lexicon: *const c_char,
+    pub espeak_voice: *const c_char,
     pub feat_scale: c_float,
     pub t_shift: c_float,
     pub target_rms: c_float,

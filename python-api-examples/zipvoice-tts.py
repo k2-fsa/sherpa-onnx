@@ -44,6 +44,7 @@ def create_tts():
                 data_dir="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data",
                 lexicon="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt",
                 vocoder="./vocos_24khz.onnx",
+                espeak_voice="en-us",
             ),
             debug=False,
             num_threads=2,

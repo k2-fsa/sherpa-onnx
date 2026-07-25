@@ -61,6 +61,7 @@ void main(List<String> arguments) async {
     vocoder: vocoder,
     dataDir: dataDir,
     lexicon: lexicon,
+    espeakVoice: 'en-us',
   );
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(

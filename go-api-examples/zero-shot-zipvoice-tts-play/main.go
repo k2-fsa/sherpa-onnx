@@ -117,6 +117,7 @@ func main() {
 	config.Model.Zipvoice.Tokens =
 		"./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt"
 	config.Model.Zipvoice.Vocoder = "./vocos_24khz.onnx"
+	config.Model.Zipvoice.EspeakVoice = "en-us"
 
 	config.Model.NumThreads = 2
 	config.Model.Debug = 0

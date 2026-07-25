@@ -10,6 +10,7 @@ function createOfflineTts() {
     lexicon: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt',
     dataDir: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data',
     vocoder: './vocos_24khz.onnx',
+    espeakVoice: 'en-us',
   };
 
   const offlineTtsModelConfig = {

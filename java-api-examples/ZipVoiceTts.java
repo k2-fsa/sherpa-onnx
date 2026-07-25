@@ -25,6 +25,7 @@ public class ZipVoiceTts {
             .setVocoder("./vocos_24khz.onnx")
             .setDataDir(modelDir + "/espeak-ng-data")
             .setLexicon(modelDir + "/lexicon.txt")
+            .setEspeakVoice("en-us")
             .build();
 
     OfflineTtsModelConfig modelConfig =

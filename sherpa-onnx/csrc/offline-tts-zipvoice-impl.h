@@ -285,13 +285,15 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   void InitFrontend(Manager *mgr) {
     frontend_ = std::make_unique<MatchaTtsLexicon>(
         mgr, config_.model.zipvoice.lexicon, config_.model.zipvoice.tokens,
-        config_.model.zipvoice.data_dir, config_.model.debug, true);
+        config_.model.zipvoice.data_dir, config_.model.debug, true,
+        config_.model.zipvoice.espeak_voice);
   }
 
   void InitFrontend() {
     frontend_ = std::make_unique<MatchaTtsLexicon>(
         config_.model.zipvoice.lexicon, config_.model.zipvoice.tokens,
-        config_.model.zipvoice.data_dir, config_.model.debug, true);
+        config_.model.zipvoice.data_dir, config_.model.debug, true,
+        config_.model.zipvoice.espeak_voice);
   }
 
   void ComputeMelSpectrogram(const std::vector<float> &_samples,

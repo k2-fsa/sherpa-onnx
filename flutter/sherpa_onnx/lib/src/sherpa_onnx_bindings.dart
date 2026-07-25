@@ -231,6 +231,7 @@ final class SherpaOnnxOfflineTtsZipVoiceModelConfig extends Struct {
   external Pointer<Utf8> vocoder;
   external Pointer<Utf8> dataDir;
   external Pointer<Utf8> lexicon;
+  external Pointer<Utf8> espeakVoice;
 
   @Float()
   external double featScale;

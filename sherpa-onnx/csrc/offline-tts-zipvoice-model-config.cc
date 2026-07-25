@@ -18,6 +18,8 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
   po->Register("zipvoice-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng.");
   po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt for Chinese");
+  po->Register("zipvoice-espeak-voice", &espeak_voice,
+               "eSpeak voice/language for OOV words (default: en-us)");
   po->Register("zipvoice-encoder", &encoder, "Path to zipvoice text model");
   po->Register("zipvoice-decoder", &decoder,
                "Path to zipvoice flow-matching decoder model");
@@ -130,6 +132,7 @@ std::string OfflineTtsZipvoiceModelConfig::ToString() const {
   os << "vocoder=\"" << vocoder << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
+  os << "espeak_voice=\"" << espeak_voice << "\", ";
   os << "feat_scale=" << feat_scale << ", ";
   os << "t_shift=" << t_shift << ", ";
   os << "target_rms=" << target_rms << ", ";

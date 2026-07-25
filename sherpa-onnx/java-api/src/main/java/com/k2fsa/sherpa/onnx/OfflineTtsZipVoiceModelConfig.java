@@ -9,6 +9,7 @@ public class OfflineTtsZipVoiceModelConfig {
     private final String vocoder;
     private final String dataDir;
     private final String lexicon;
+    private final String espeakVoice;
     private final float featScale;
     private final float tShift;
     private final float targetRms;
@@ -21,6 +22,7 @@ public class OfflineTtsZipVoiceModelConfig {
         this.vocoder = builder.vocoder;
         this.dataDir = builder.dataDir;
         this.lexicon = builder.lexicon;
+        this.espeakVoice = builder.espeakVoice;
         this.featScale = builder.featScale;
         this.tShift = builder.tShift;
         this.targetRms = builder.targetRms;
@@ -55,6 +57,10 @@ public class OfflineTtsZipVoiceModelConfig {
         return lexicon;
     }
 
+    public String getEspeakVoice() {
+        return espeakVoice;
+    }
+
     public float getFeatScale() {
         return featScale;
     }
@@ -78,6 +84,7 @@ public class OfflineTtsZipVoiceModelConfig {
         private String vocoder = "";
         private String dataDir = "";
         private String lexicon = "";
+        private String espeakVoice = "en-us";
         private float featScale = 0.1f;
         private float tShift = 0.5f;
         private float targetRms = 0.1f;
@@ -114,6 +121,11 @@ public class OfflineTtsZipVoiceModelConfig {
 
         public Builder setLexicon(String lexicon) {
             this.lexicon = lexicon;
+            return this;
+        }
+
+        public Builder setEspeakVoice(String espeakVoice) {
+            this.espeakVoice = espeakVoice;
             return this;
         }
 

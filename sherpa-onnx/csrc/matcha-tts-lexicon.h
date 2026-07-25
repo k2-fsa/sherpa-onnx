@@ -21,12 +21,14 @@ class MatchaTtsLexicon : public OfflineTtsFrontend {
 
   MatchaTtsLexicon(const std::string &lexicon, const std::string &tokens,
                    const std::string &data_dir, bool debug,
-                   bool skip_replacement);
+                   bool skip_replacement,
+                   const std::string &espeak_voice = "en-us");
 
   template <typename Manager>
   MatchaTtsLexicon(Manager *mgr, const std::string &lexicon,
                    const std::string &tokens, const std::string &data_dir,
-                   bool debug, bool skip_replacement);
+                   bool debug, bool skip_replacement,
+                   const std::string &espeak_voice = "en-us");
 
   std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text,

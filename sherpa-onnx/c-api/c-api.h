@@ -2331,6 +2331,8 @@ typedef struct SherpaOnnxOfflineTtsZipvoiceModelConfig {
   const char *data_dir;
   /** Path to the lexicon file. */
   const char *lexicon;
+  /** eSpeak voice/language for OOV words (default: "en-us"). */
+  const char *espeak_voice;
   /** Feature scaling factor. */
   float feat_scale;
   /** Time shift parameter. */

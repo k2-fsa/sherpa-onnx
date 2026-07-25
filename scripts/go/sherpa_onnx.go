@@ -1041,6 +1041,8 @@ type OfflineTtsZipvoiceModelConfig struct {
 	Lexicon string // Path to lexicon.txt (needed for zh)
 	Vocoder string // Path to vocoder (e.g. vocos_24khz.onnx)
 
+	EspeakVoice string // eSpeak voice/language for OOV words
+
 	FeatScale     float32 // Feature scale
 	TShift        float32 // t-shift (<1 shifts to smaller t)
 	TargetRms     float32 // Target RMS for speech normalization

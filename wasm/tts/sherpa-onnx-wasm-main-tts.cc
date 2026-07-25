@@ -17,7 +17,7 @@ static_assert(sizeof(SherpaOnnxOfflineTtsVitsModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKittenModelConfig) == 5 * 4, "");
-static_assert(sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) == 10 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) == 11 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsPocketModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsSupertonicModelConfig) == 7 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
@@ -88,6 +88,7 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "vocoder: %s\n", zipvoice->vocoder);
   fprintf(stdout, "data_dir: %s\n", zipvoice->data_dir);
   fprintf(stdout, "lexicon: %s\n", zipvoice->lexicon);
+  fprintf(stdout, "espeak_voice: %s\n", zipvoice->espeak_voice);
   fprintf(stdout, "feat scale: %.3f\n", zipvoice->feat_scale);
   fprintf(stdout, "t_shift: %.3f\n", zipvoice->t_shift);
   fprintf(stdout, "target_rms: %.3f\n", zipvoice->target_rms);

@@ -14,6 +14,7 @@ async function createOfflineTts() {
         dataDir:
             './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data',
         lexicon: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt',
+        espeakVoice: 'en-us',
       },
       debug: false,  // set to true to see verbose logs
       numThreads: 2,

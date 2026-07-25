@@ -335,6 +335,7 @@ class OfflineTtsZipVoiceModelConfig {
     this.vocoder = '',
     this.dataDir = '',
     this.lexicon = '',
+    this.espeakVoice = 'en-us',
     this.featScale = 0.1,
     this.tShift = 0.5,
     this.targetRms = 0.1,
@@ -349,6 +350,7 @@ class OfflineTtsZipVoiceModelConfig {
       vocoder: json['vocoder'] as String? ?? '',
       dataDir: json['dataDir'] as String? ?? '',
       lexicon: json['lexicon'] as String? ?? '',
+      espeakVoice: json['espeakVoice'] as String? ?? 'en-us',
       featScale: (json['featScale'] as num?)?.toDouble() ?? 0.1,
       tShift: (json['tShift'] as num?)?.toDouble() ?? 0.5,
       targetRms: (json['targetRms'] as num?)?.toDouble() ?? 0.1,
@@ -358,7 +360,7 @@ class OfflineTtsZipVoiceModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsZipVoiceModelConfig(tokens: $tokens, encoder: $encoder, decoder: $decoder, vocoder: $vocoder, dataDir: $dataDir, lexicon: $lexicon, featScale: $featScale, tShift: $tShift, targetRms: $targetRms, guidanceScale: $guidanceScale)';
+    return 'OfflineTtsZipVoiceModelConfig(tokens: $tokens, encoder: $encoder, decoder: $decoder, vocoder: $vocoder, dataDir: $dataDir, lexicon: $lexicon, espeakVoice: $espeakVoice, featScale: $featScale, tShift: $tShift, targetRms: $targetRms, guidanceScale: $guidanceScale)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -368,6 +370,7 @@ class OfflineTtsZipVoiceModelConfig {
     'vocoder': vocoder,
     'dataDir': dataDir,
     'lexicon': lexicon,
+    'espeakVoice': espeakVoice,
     'featScale': featScale,
     'tShift': tShift,
     'targetRms': targetRms,
@@ -380,6 +383,7 @@ class OfflineTtsZipVoiceModelConfig {
   final String vocoder;
   final String dataDir;
   final String lexicon;
+  final String espeakVoice;
   final double featScale;
   final double tShift;
   final double targetRms;
@@ -671,6 +675,7 @@ class OfflineTts {
     c.ref.model.zipvoice.vocoder = config.model.zipvoice.vocoder.toNativeUtf8();
     c.ref.model.zipvoice.dataDir = config.model.zipvoice.dataDir.toNativeUtf8();
     c.ref.model.zipvoice.lexicon = config.model.zipvoice.lexicon.toNativeUtf8();
+    c.ref.model.zipvoice.espeakVoice = config.model.zipvoice.espeakVoice.toNativeUtf8();
     c.ref.model.zipvoice.featScale = config.model.zipvoice.featScale;
     c.ref.model.zipvoice.tShift = config.model.zipvoice.tShift;
     c.ref.model.zipvoice.targetRms = config.model.zipvoice.targetRms;
@@ -735,6 +740,7 @@ class OfflineTts {
     calloc.free(c.ref.model.pocket.lmFlow);
 
     calloc.free(c.ref.model.zipvoice.lexicon);
+    calloc.free(c.ref.model.zipvoice.espeakVoice);
     calloc.free(c.ref.model.zipvoice.dataDir);
     calloc.free(c.ref.model.zipvoice.vocoder);
     calloc.free(c.ref.model.zipvoice.decoder);

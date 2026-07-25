@@ -17,11 +17,13 @@ void PybindOfflineTtsZipvoiceModelConfig(py::module *m) {
       .def(py::init<>())
       .def(py::init<const std::string &, const std::string &,
                     const std::string &, const std::string &,
-                    const std::string &, const std::string &, float, float,
+                    const std::string &, const std::string &,
+                    const std::string &, float, float,
                     float, float>(),
            py::arg("tokens"), py::arg("encoder"), py::arg("decoder"),
            py::arg("vocoder"), py::arg("data_dir") = "",
-           py::arg("lexicon") = "", py::arg("feat_scale") = 0.1,
+           py::arg("lexicon") = "", py::arg("espeak_voice") = "en-us",
+           py::arg("feat_scale") = 0.1,
            py::arg("t_shift") = 0.5, py::arg("target_rms") = 0.1,
            py::arg("guidance_scale") = 1.0)
       .def_readwrite("tokens", &PyClass::tokens)
@@ -30,6 +32,7 @@ void PybindOfflineTtsZipvoiceModelConfig(py::module *m) {
       .def_readwrite("vocoder", &PyClass::vocoder)
       .def_readwrite("data_dir", &PyClass::data_dir)
       .def_readwrite("lexicon", &PyClass::lexicon)
+      .def_readwrite("espeak_voice", &PyClass::espeak_voice)
       .def_readwrite("feat_scale", &PyClass::feat_scale)
       .def_readwrite("t_shift", &PyClass::t_shift)
       .def_readwrite("target_rms", &PyClass::target_rms)

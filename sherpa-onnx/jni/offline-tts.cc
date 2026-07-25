@@ -226,6 +226,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.lexicon, lexicon, zipvoice_cls,
                               zipvoice);
 
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.espeak_voice, espeakVoice,
+                              zipvoice_cls, zipvoice);
+
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.feat_scale, featScale,
                              zipvoice_cls, zipvoice);
 

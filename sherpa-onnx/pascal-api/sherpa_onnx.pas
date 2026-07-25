@@ -123,6 +123,7 @@ type
     Vocoder: AnsiString;
     DataDir: AnsiString;
     Lexicon: AnsiString;
+    EspeakVoice: AnsiString;
     FeatScale: Single;
     Tshift: Single;
     TargetRms: Single;

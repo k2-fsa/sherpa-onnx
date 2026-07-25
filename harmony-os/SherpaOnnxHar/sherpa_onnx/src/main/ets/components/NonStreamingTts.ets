@@ -56,6 +56,7 @@ export class OfflineTtsZipvoiceModelConfig {
   public vocoder: string = '';
   public dataDir: string = '';
   public lexicon: string = '';
+  public espeakVoice: string = 'en-us';
   public featScale: number = 0.1;
   public tShift: number = 0.5;
   public targetRms: number = 0.1;

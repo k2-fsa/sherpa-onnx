@@ -225,6 +225,7 @@ GetOfflineTtsZipvoiceModelConfig(Napi::Object obj) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(vocoder, vocoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
   SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(espeak_voice, espeakVoice);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(feat_scale, featScale);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(t_shift, tShift);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(target_rms, targetRms);

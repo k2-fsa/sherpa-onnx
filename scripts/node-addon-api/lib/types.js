@@ -570,6 +570,7 @@
  * @property {string} [vocoder]
  * @property {string} [dataDir]
  * @property {string} [lexicon]
+ * @property {string} [espeakVoice]
  * @property {number} [featScale]
  * @property {number} [tShift]
  * @property {number} [targetRms]

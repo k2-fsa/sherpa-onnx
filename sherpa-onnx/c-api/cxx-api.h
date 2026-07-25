@@ -933,6 +933,8 @@ struct OfflineTtsZipvoiceModelConfig {
   std::string data_dir;
   /** Lexicon file. */
   std::string lexicon;
+  /** eSpeak voice/language for OOV words. */
+  std::string espeak_voice = "en-us";
 
   /** Feature scale. */
   float feat_scale = 0.1;

@@ -13,7 +13,8 @@ func runZipVoiceTtsDemo() {
     decoder: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx",
     vocoder: "./vocos_24khz.onnx",
     dataDir: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data",
-    lexicon: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt"
+    lexicon: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt",
+    espeakVoice: "en-us"
   )
 
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(numThreads: 2, zipvoice: zipvoice)

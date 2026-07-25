@@ -21,6 +21,8 @@ struct OfflineTtsZipvoiceModelConfig {
   std::string data_dir;
   std::string lexicon;
 
+  std::string espeak_voice = "en-us";
+
   float feat_scale = 0.1;
   float t_shift = 0.5;
   float target_rms = 0.1;
@@ -32,6 +34,7 @@ struct OfflineTtsZipvoiceModelConfig {
       const std::string &tokens, const std::string &encoder,
       const std::string &decoder, const std::string &vocoder,
       const std::string &data_dir, const std::string &lexicon,
+      const std::string &espeak_voice = "en-us",
       float feat_scale = 0.1, float t_shift = 0.5, float target_rms = 0.1,
       float guidance_scale = 1.0)
       : tokens(tokens),
@@ -40,6 +43,7 @@ struct OfflineTtsZipvoiceModelConfig {
         vocoder(vocoder),
         data_dir(data_dir),
         lexicon(lexicon),
+        espeak_voice(espeak_voice),
         feat_scale(feat_scale),
         t_shift(t_shift),
         target_rms(target_rms),

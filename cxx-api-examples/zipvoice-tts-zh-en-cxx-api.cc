@@ -49,6 +49,7 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.zipvoice.tokens =
       "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt";
   config.model.zipvoice.vocoder = "./vocos_24khz.onnx";
+  config.model.zipvoice.espeak_voice = "en-us";
 
   config.model.num_threads = 2;
 

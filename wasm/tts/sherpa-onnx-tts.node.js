@@ -287,13 +287,14 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   const vocoderLen = Module.lengthBytesUTF8(config.vocoder || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
+  const espeakVoiceLen = Module.lengthBytesUTF8(config.espeakVoice || '') + 1;
 
   const n = tokensLen + encoderLen + decoderLen + vocoderLen + dataDirLen +
-      lexiconLen;
+      lexiconLen + espeakVoiceLen;
 
   const buffer = Module._malloc(n);
 
-  const len = 10 * 4;
+  const len = 11 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -315,6 +316,9 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
   offset += lexiconLen;
 
+  Module.stringToUTF8(config.espeakVoice || '', buffer + offset, espeakVoiceLen);
+  offset += espeakVoiceLen;
+
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
   offset += tokensLen;
@@ -334,17 +338,20 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   Module.setValue(ptr + 20, buffer + offset, 'i8*');
   offset += lexiconLen;
 
-  Module.setValue(ptr + 24, config.featScale || 0.1, 'float');
-  Module.setValue(ptr + 28, config.tShift || 0.5, 'float');
-  Module.setValue(ptr + 32, config.targetRMS || 0.1, 'float');
-  Module.setValue(ptr + 36, config.guidanceScale || 1.0, 'float');
+  Module.setValue(ptr + 24, buffer + offset, 'i8*');
+  offset += espeakVoiceLen;
+
+  Module.setValue(ptr + 28, config.featScale || 0.1, 'float');
+  Module.setValue(ptr + 32, config.tShift || 0.5, 'float');
+  Module.setValue(ptr + 36, config.targetRMS || 0.1, 'float');
+  Module.setValue(ptr + 40, config.guidanceScale || 1.0, 'float');
 
   return {
     buffer: buffer,
     ptr: ptr,
     len: len,
   };
-}
+}}
 
 function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
   const lmFlowLen = Module.lengthBytesUTF8(config.lmFlow || '') + 1;

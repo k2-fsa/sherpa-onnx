@@ -15,6 +15,7 @@ namespace SherpaOnnx
             Vocoder = "";
             DataDir = "";
             Lexicon = "";
+            EspeakVoice = "en-us";
 
             FeatScale = 0.1F;
             Tshift = 0.5F;
@@ -38,6 +39,9 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Lexicon;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string EspeakVoice;
 
         public float FeatScale;
         public float Tshift;

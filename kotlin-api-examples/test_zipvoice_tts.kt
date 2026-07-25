@@ -18,6 +18,7 @@ fun testZipVoiceTts() {
         vocoder = "./vocos_24khz.onnx",
         dataDir = "$modelDir/espeak-ng-data",
         lexicon = "$modelDir/lexicon.txt",
+        espeakVoice = "en-us",
       ),
       numThreads = 2,
       debug = false,

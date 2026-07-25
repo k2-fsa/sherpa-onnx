@@ -43,6 +43,7 @@ data class OfflineTtsZipVoiceModelConfig(
     var vocoder: String = "",
     var dataDir: String = "",
     var lexicon: String = "",
+    var espeakVoice: String = "en-us",
     var featScale: Float = 0.1f,
     var tShift: Float = 0.5f,
     var targetRms: Float = 0.1f,
