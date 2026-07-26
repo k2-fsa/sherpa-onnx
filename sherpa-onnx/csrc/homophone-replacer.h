@@ -19,7 +19,7 @@ struct HomophoneReplacerConfig {
   // comma separated fst files, e.g. a.fst,b.fst,c.fst
   std::string rule_fsts;
 
-  bool debug;
+  bool debug{false};
 
   HomophoneReplacerConfig() = default;
 
