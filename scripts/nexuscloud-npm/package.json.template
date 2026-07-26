@@ -1,0 +1,38 @@
+{
+  "name": "@nexuscloud/sherpa-onnx",
+  "version": "__NPM_VERSION__",
+  "description": "sherpa-onnx __SHERPA_VERSION__ with ZipVoice espeakVoice config. WASM for Electron/Node + Android jniLibs + Kotlin Tts.kt.",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "sherpa-onnx-*.js",
+    "sherpa-onnx-wasm-nodejs.wasm",
+    "android/**",
+    "scripts/**",
+    "README.md"
+  ],
+  "scripts": {
+    "sync-android": "node scripts/sync-android.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ishankrishan/sherpa-onnx.git"
+  },
+  "keywords": [
+    "sherpa-onnx",
+    "text-to-speech",
+    "zipvoice",
+    "wasm",
+    "android",
+    "offline-tts",
+    "espeak"
+  ],
+  "author": "Nexus Cloud",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

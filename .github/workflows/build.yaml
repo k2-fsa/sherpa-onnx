@@ -1,0 +1,184 @@
+name: Build @nexuscloud/sherpa-onnx
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_npm:
+        description: 'Publish to npm (@nexuscloud scope)'
+        required: false
+        default: false
+        type: boolean
+      npm_version:
+        description: 'npm version (e.g. 1.13.4-espeak-voice.1)'
+        required: false
+        default: '1.13.4-espeak-voice.1'
+        type: string
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/build.yaml'
+      - 'sherpa-onnx/csrc/matcha-tts-lexicon.cc'
+      - 'sherpa-onnx/csrc/offline-tts-zipvoice*'
+      - 'sherpa-onnx/kotlin-api/Tts.kt'
+      - 'wasm/**'
+      - 'scripts/nexuscloud-npm/**'
+
+concurrency:
+  group: nexuscloud-sherpa-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-wasm:
+    name: WASM (Node.js)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential
+
+      - name: Install Emscripten 4.0.23
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.23
+          actions-cache-folder: emsdk-cache
+
+      - run: emcc -v
+
+      - name: Build WASM Node.js package
+        run: |
+          chmod +x build-wasm-simd-nodejs.sh
+          ./build-wasm-simd-nodejs.sh
+          ls -lh build-wasm-simd-nodejs/install/bin/wasm/nodejs/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm-nodejs
+          path: build-wasm-simd-nodejs/install/bin/wasm/nodejs/
+          retention-days: 14
+
+  build-android:
+    name: Android jniLibs
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential wget unzip
+
+      - name: Display NDK
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME=${ANDROID_NDK_LATEST_HOME}"
+          ls -lh "${ANDROID_NDK_LATEST_HOME}"
+
+      - name: Build all Android ABIs
+        env:
+          ANDROID_NDK: ${{ env.ANDROID_NDK_LATEST_HOME }}
+          SHERPA_ONNX_ENABLE_C_API: 'ON'
+        run: |
+          chmod +x build-android-*.sh
+          mkdir -p jniLibs
+
+          build_abi() {
+            local script="$1"
+            local abi="$2"
+            local dir="${script%.sh}"
+            echo "========== $script → $abi =========="
+            ./"$script"
+            mkdir -p "jniLibs/$abi"
+            cp -v "$dir/install/lib/"*.so "jniLibs/$abi/"
+            rm -rf "$dir"
+          }
+
+          build_abi build-android-arm64-v8a.sh arm64-v8a
+          build_abi build-android-armv7-eabi.sh armeabi-v7a
+          build_abi build-android-x86.sh x86
+          build_abi build-android-x86-64.sh x86_64
+
+          find jniLibs -name '*.so' -exec ls -lh {} \;
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-jnilibs
+          path: jniLibs/
+          retention-days: 14
+
+  assemble-npm:
+    name: Assemble npm package
+    needs: [build-wasm, build-android]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: wasm-nodejs
+          path: /tmp/wasm
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-jnilibs
+          path: /tmp/jniLibs
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Assemble @nexuscloud/sherpa-onnx
+        env:
+          NPM_VERSION: ${{ github.event.inputs.npm_version || '1.13.4-espeak-voice.1' }}
+        run: |
+          PKG=scripts/nexuscloud-npm
+          OUT=nexuscloud-sherpa-onnx-package
+
+          rm -rf "$OUT"
+          mkdir -p "$OUT/android/jniLibs" "$OUT/android/kotlin-api" "$OUT/scripts"
+
+          cp -v /tmp/wasm/* "$OUT/"
+          cp -v scripts/nodejs/index.js "$OUT/"
+          cp -v scripts/nexuscloud-npm/scripts/sync-android.mjs "$OUT/scripts/"
+          cp -v sherpa-onnx/kotlin-api/Tts.kt "$OUT/android/kotlin-api/"
+          cp -rv /tmp/jniLibs/* "$OUT/android/jniLibs/"
+
+          SHERPA_VERSION=$(grep 'SHERPA_ONNX_VERSION' CMakeLists.txt | head -1 | cut -d'"' -f2)
+          sed "s/__NPM_VERSION__/${NPM_VERSION}/g; s/__SHERPA_VERSION__/${SHERPA_VERSION}/g" \
+            "$PKG/package.json.template" > "$OUT/package.json"
+
+          cp -v "$PKG/README.md" "$OUT/"
+          ls -lhR "$OUT"
+
+          tar cvjf nexuscloud-sherpa-onnx-${NPM_VERSION}.tar.bz2 "$OUT"
+          ls -lh nexuscloud-sherpa-onnx-*.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nexuscloud-sherpa-onnx-package
+          path: |
+            nexuscloud-sherpa-onnx-package/
+            nexuscloud-sherpa-onnx-*.tar.bz2
+          retention-days: 30
+
+      - name: Publish to npm
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_npm == true
+        working-directory: nexuscloud-sherpa-onnx-package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --access public --provenance
+
+      - name: Create GitHub release asset (manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarball-only
+          path: nexuscloud-sherpa-onnx-*.tar.bz2
