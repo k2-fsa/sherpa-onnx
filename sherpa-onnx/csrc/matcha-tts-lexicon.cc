@@ -118,353 +118,353 @@ void CallPhonemizeEspeak(const std::string &text,
 
 class MatchaTtsLexicon::Impl {
  public:
-  Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &data_dir, bool debug, bool skip_replacement,
-       const std::string &espeak_voice)
-      : debug_(debug),
-        skip_replacement_(skip_replacement),
-        espeak_voice_(espeak_voice) {
-    if (lexicon.empty()) {
-      SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
-      SHERPA_ONNX_EXIT(-1);
-    }
+   Impl(const std::string &lexicon, const std::string &tokens,
+        const std::string &data_dir, bool debug, bool skip_replacement,
+        const std::string &espeak_voice)
+       : debug_(debug),
+         skip_replacement_(skip_replacement),
+         espeak_voice_(espeak_voice) {
+     if (lexicon.empty()) {
+       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
+       SHERPA_ONNX_EXIT(-1);
+     }
 
-    {
-      auto is = OpenInputFile(tokens);
-      InitTokens(is);
-    }
+     {
+       auto is = OpenInputFile(tokens);
+       InitTokens(is);
+     }
 
-    InitLexicon(lexicon);
+     InitLexicon(lexicon);
 
-    if (data_dir.empty()) {
-      SHERPA_ONNX_LOGE("Please provide data dir for this model");
-      SHERPA_ONNX_EXIT(-1);
-    }
+     if (data_dir.empty()) {
+       SHERPA_ONNX_LOGE("Please provide data dir for this model");
+       SHERPA_ONNX_EXIT(-1);
+     }
 
-    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
-  }
+     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
+   }
 
-  template <typename Manager>
-  Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
-       const std::string &data_dir, bool debug, bool skip_replacement,
-       const std::string &espeak_voice)
-      : debug_(debug),
-        skip_replacement_(skip_replacement),
-        espeak_voice_(espeak_voice) {
-    if (lexicon.empty()) {
-      SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
-      SHERPA_ONNX_EXIT(-1);
-    }
+   template <typename Manager>
+   Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
+        const std::string &data_dir, bool debug, bool skip_replacement,
+        const std::string &espeak_voice)
+       : debug_(debug),
+         skip_replacement_(skip_replacement),
+         espeak_voice_(espeak_voice) {
+     if (lexicon.empty()) {
+       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
+       SHERPA_ONNX_EXIT(-1);
+     }
 
-    {
-      auto buf = ReadFile(mgr, tokens);
-      std::istringstream is(std::string(buf.data(), buf.size()));
+     {
+       auto buf = ReadFile(mgr, tokens);
+       std::istringstream is(std::string(buf.data(), buf.size()));
 
-      InitTokens(is);
-    }
+       InitTokens(is);
+     }
 
-    std::vector<std::string> files;
-    SplitStringToVector(lexicon, ",", false, &files);
-    for (const auto &f : files) {
-      auto buf = ReadFile(mgr, f);
+     std::vector<std::string> files;
+     SplitStringToVector(lexicon, ",", false, &files);
+     for (const auto &f : files) {
+       auto buf = ReadFile(mgr, f);
 
-      std::istringstream is(std::string(buf.data(), buf.size()));
-      InitLexicon(is);
-    }
+       std::istringstream is(std::string(buf.data(), buf.size()));
+       InitLexicon(is);
+     }
 
-    if (data_dir.empty()) {
-      SHERPA_ONNX_LOGE("Please provide data dir for this model");
-      SHERPA_ONNX_EXIT(-1);
-    }
+     if (data_dir.empty()) {
+       SHERPA_ONNX_LOGE("Please provide data dir for this model");
+       SHERPA_ONNX_EXIT(-1);
+     }
 
-    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
-  }
+     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
+   }
 
-  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
-    std::string text = _text;
-    std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
-        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},   {":", ","},
-        {"。", "."}, {"？", "?"}, {"！", "!"}, {"\\s+", " "},
-    };
-    for (const auto &p : replace_str_pairs) {
-      std::regex re(p.first);
-      text = std::regex_replace(text, re, p.second);
-    }
+   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
+     std::string text = _text;
+     std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
+         {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},   {":", ","},
+         {"。", "."}, {"？", "?"}, {"！", "!"}, {"\\s+", " "},
+     };
+     for (const auto &p : replace_str_pairs) {
+       std::regex re(p.first);
+       text = std::regex_replace(text, re, p.second);
+     }
 
-    if (debug_) {
-      SHERPA_ONNX_LOGE("After replacing punctuations and merging spaces:\n%s",
-                       text.c_str());
-    }
+     if (debug_) {
+       SHERPA_ONNX_LOGE("After replacing punctuations and merging spaces:\n%s",
+                        text.c_str());
+     }
 
-    std::vector<std::string> words = SplitUtf8(text);
+     std::vector<std::string> words = SplitUtf8(text);
 
-    if (debug_) {
+     if (debug_) {
 #if __OHOS__
-      SHERPA_ONNX_LOGE("input text:\n%{public}s", _text.c_str());
-      SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s",
-                       text.c_str());
+       SHERPA_ONNX_LOGE("input text:\n%{public}s", _text.c_str());
+       SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s",
+                        text.c_str());
 #else
-      SHERPA_ONNX_LOGE("input text:\n%s", _text.c_str());
-      SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", text.c_str());
+       SHERPA_ONNX_LOGE("input text:\n%s", _text.c_str());
+       SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", text.c_str());
 #endif
 
-      std::ostringstream os;
-      std::string sep = "";
-      for (const auto &w : words) {
-        os << sep << w;
-        sep = "_";
-      }
+       std::ostringstream os;
+       std::string sep = "";
+       for (const auto &w : words) {
+         os << sep << w;
+         sep = "_";
+       }
 
 #if __OHOS__
-      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%{public}s",
-                       os.str().c_str());
+       SHERPA_ONNX_LOGE("after splitting into UTF8:\n%{public}s",
+                        os.str().c_str());
 #else
-      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%s", os.str().c_str());
+       SHERPA_ONNX_LOGE("after splitting into UTF8:\n%s", os.str().c_str());
 #endif
-    }
+     }
 
-    // remove spaces after punctuations
-    std::vector<std::string> words2 = std::move(words);
-    words.reserve(words2.size());
+     // remove spaces after punctuations
+     std::vector<std::string> words2 = std::move(words);
+     words.reserve(words2.size());
 
-    for (int32_t i = 0; i < words2.size(); ++i) {
-      if (i == 0) {
-        words.push_back(std::move(words2[i]));
-      } else if (words2[i] == " ") {
-        if (words.back() == " " || IsPunct(words.back())) {
-          continue;
-        } else {
-          words.push_back(std::move(words2[i]));
-        }
-      } else if (IsPunct(words2[i])) {
-        if (words.back() == " " || IsPunct(words.back())) {
-          continue;
-        } else {
-          words.push_back(std::move(words2[i]));
-        }
-      } else {
-        words.push_back(std::move(words2[i]));
-      }
-    }
+     for (int32_t i = 0; i < words2.size(); ++i) {
+       if (i == 0) {
+         words.push_back(std::move(words2[i]));
+       } else if (words2[i] == " ") {
+         if (words.back() == " " || IsPunct(words.back())) {
+           continue;
+         } else {
+           words.push_back(std::move(words2[i]));
+         }
+       } else if (IsPunct(words2[i])) {
+         if (words.back() == " " || IsPunct(words.back())) {
+           continue;
+         } else {
+           words.push_back(std::move(words2[i]));
+         }
+       } else {
+         words.push_back(std::move(words2[i]));
+       }
+     }
 
-    if (debug_) {
-      std::ostringstream os;
-      std::string sep = "";
-      for (const auto &w : words) {
-        os << sep << w;
-        sep = "_";
-      }
+     if (debug_) {
+       std::ostringstream os;
+       std::string sep = "";
+       for (const auto &w : words) {
+         os << sep << w;
+         sep = "_";
+       }
 
 #if __OHOS__
-      SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%{public}s",
-                       os.str().c_str());
+       SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%{public}s",
+                        os.str().c_str());
 #else
-      SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%s",
-                       os.str().c_str());
+       SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%s",
+                        os.str().c_str());
 #endif
-    }
+     }
 
-    std::vector<TokenIDs> ans;
-    std::vector<int64_t> this_sentence;
+     std::vector<TokenIDs> ans;
+     std::vector<int64_t> this_sentence;
 
-    PhraseMatcher matcher(&all_words_, words, debug_);
+     PhraseMatcher matcher(&all_words_, words, debug_);
 
-    int32_t blank = token2id_.at(" ");
+     int32_t blank = token2id_.at(" ");
 
-    std::vector<int32_t> ids;
-    std::string last_word;
-    for (const std::string &w : matcher) {
-      ids = ConvertWordToIds(w);
+     std::vector<int32_t> ids;
+     std::string last_word;
+     for (const std::string &w : matcher) {
+       ids = ConvertWordToIds(w);
 
-      if (ids.empty()) {
+       if (ids.empty()) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
+         SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
 #else
-        SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
+         SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
 #endif
 
-        last_word = w;
-        continue;
-      }
+         last_word = w;
+         continue;
+       }
 
-      if (!last_word.empty() && isalpha(last_word[0])) {
-        this_sentence.push_back(blank);
-      }
+       if (!last_word.empty() && isalpha(last_word[0])) {
+         this_sentence.push_back(blank);
+       }
 
-      this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
+       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
 
-      if (IsPunct(w)) {
-        if (debug_) {
-          std::ostringstream os;
-          std::string sep;
-          os << "new sentence: [";
-          for (auto i : this_sentence) {
-            os << sep << i;
-            sep = ", ";
-          }
-          os << "]";
-          SHERPA_ONNX_LOGE("%s", os.str().c_str());
-        }
+       if (IsPunct(w)) {
+         if (debug_) {
+           std::ostringstream os;
+           std::string sep;
+           os << "new sentence: [";
+           for (auto i : this_sentence) {
+             os << sep << i;
+             sep = ", ";
+           }
+           os << "]";
+           SHERPA_ONNX_LOGE("%s", os.str().c_str());
+         }
 
-        ans.emplace_back(std::move(this_sentence));
-        this_sentence = {};
-      }
+         ans.emplace_back(std::move(this_sentence));
+         this_sentence = {};
+       }
 
-      last_word = w;
-    }  // for (const std::string &w : matcher)
+       last_word = w;
+     }  // for (const std::string &w : matcher)
 
-    if (!this_sentence.empty()) {
-      ans.emplace_back(std::move(this_sentence));
-    }
+     if (!this_sentence.empty()) {
+       ans.emplace_back(std::move(this_sentence));
+     }
 
-    return ans;
-  }
+     return ans;
+   }
 
- private:
-  std::vector<int32_t> ConvertWordToIds(const std::string &w) const {
-    std::vector<int32_t> ans;
-    if (word2ids_.count(w)) {
-      ans = word2ids_.at(w);
-    } else if (token2id_.count(w)) {
-      ans = {token2id_.at(w)};
-    } else {
-      if (ContainsCJK(w)) {
-        std::vector<std::string> words = SplitUtf8(w);
-        for (const auto &word : words) {
-          if (word2ids_.count(word)) {
-            auto ids = ConvertWordToIds(word);
-            ans.insert(ans.end(), ids.begin(), ids.end());
-          }
-        }
-      } else {
-        if (debug_) {
-          SHERPA_ONNX_LOGE("use espeak for %s", w.c_str());
-        }
-        // use espeak
-        piper::eSpeakPhonemeConfig config;
-        config.voice = espeak_voice_.c_str();
-        std::vector<std::vector<piper::Phoneme>> phonemes;
-        CallPhonemizeEspeak(w, config, &phonemes);
+  private:
+   std::vector<int32_t> ConvertWordToIds(const std::string &w) const {
+     std::vector<int32_t> ans;
+     if (word2ids_.count(w)) {
+       ans = word2ids_.at(w);
+     } else if (token2id_.count(w)) {
+       ans = {token2id_.at(w)};
+     } else {
+       if (ContainsCJK(w)) {
+         std::vector<std::string> words = SplitUtf8(w);
+         for (const auto &word : words) {
+           if (word2ids_.count(word)) {
+             auto ids = ConvertWordToIds(word);
+             ans.insert(ans.end(), ids.begin(), ids.end());
+           }
+         }
+       } else {
+         if (debug_) {
+           SHERPA_ONNX_LOGE("use espeak for %s", w.c_str());
+         }
+         // use espeak
+         piper::eSpeakPhonemeConfig config;
+         config.voice = espeak_voice_.c_str();
+         std::vector<std::vector<piper::Phoneme>> phonemes;
+         CallPhonemizeEspeak(w, config, &phonemes);
 
-        auto pp = ProcessPhonemes(phonemes, skip_replacement_);
+         auto pp = ProcessPhonemes(phonemes, skip_replacement_);
 
-        for (const auto &p : pp) {
-          if (token2id_.count(p)) {
-            ans.push_back(token2id_.at(p));
-          } else {
-            SHERPA_ONNX_LOGE("Skip token: %s", p.c_str());
-          }
-        }
-      }
-    }
+         for (const auto &p : pp) {
+           if (token2id_.count(p)) {
+             ans.push_back(token2id_.at(p));
+           } else {
+             SHERPA_ONNX_LOGE("Skip token: %s", p.c_str());
+           }
+         }
+       }
+     }
 
-    if (debug_) {
-      std::ostringstream os;
-      os << w << ": ";
-      for (auto i : ans) {
-        os << "'" << id2token_.at(i) << "'(" << i << ")" << ",";
-      }
+     if (debug_) {
+       std::ostringstream os;
+       os << w << ": ";
+       for (auto i : ans) {
+         os << "'" << id2token_.at(i) << "'(" << i << ")" << ",";
+       }
 #if __OHOS__
-      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+       SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
 #else
-      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+       SHERPA_ONNX_LOGE("%s", os.str().c_str());
 #endif
-    }
+     }
 
-    return ans;
-  }
+     return ans;
+   }
 
-  void InitTokens(std::istream &is) {
-    token2id_ = ReadTokens(is);
+   void InitTokens(std::istream &is) {
+     token2id_ = ReadTokens(is);
 
-    if (debug_) {
-      for (const auto &p : token2id_) {
-        id2token_[p.second] = p.first;
-      }
-    }
-  }
+     if (debug_) {
+       for (const auto &p : token2id_) {
+         id2token_[p.second] = p.first;
+       }
+     }
+   }
 
-  void InitLexicon(const std::string &lexicon) {
-    if (lexicon.empty()) {
-      SHERPA_ONNX_LOGE("Empty lexicon!");
-      return;
-    }
+   void InitLexicon(const std::string &lexicon) {
+     if (lexicon.empty()) {
+       SHERPA_ONNX_LOGE("Empty lexicon!");
+       return;
+     }
 
-    std::vector<std::string> files;
-    SplitStringToVector(lexicon, ",", false, &files);
-    for (const auto &f : files) {
-      auto is = OpenInputFile(f);
-      InitLexicon(is);
-    }
-  }
+     std::vector<std::string> files;
+     SplitStringToVector(lexicon, ",", false, &files);
+     for (const auto &f : files) {
+       auto is = OpenInputFile(f);
+       InitLexicon(is);
+     }
+   }
 
-  void InitLexicon(std::istream &is) {
-    std::string word;
-    std::vector<std::string> token_list;
-    std::string line;
-    std::string phone;
-    int32_t line_num = 0;
+   void InitLexicon(std::istream &is) {
+     std::string word;
+     std::vector<std::string> token_list;
+     std::string line;
+     std::string phone;
+     int32_t line_num = 0;
 
-    while (std::getline(is, line)) {
-      ++line_num;
+     while (std::getline(is, line)) {
+       ++line_num;
 
-      std::istringstream iss(line);
+       std::istringstream iss(line);
 
-      token_list.clear();
+       token_list.clear();
 
-      iss >> word;
-      ToLowerCase(&word);
+       iss >> word;
+       ToLowerCase(&word);
 
-      if (word2ids_.count(word)) {
+       if (word2ids_.count(word)) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE(
-            "Duplicated word: %{public}s at line %{public}d:%{public}s. Ignore "
-            "it.",
-            word.c_str(), line_num, line.c_str());
+         SHERPA_ONNX_LOGE(
+             "Duplicated word: %{public}s at line %{public}d:%{public}s. Ignore "
+             "it.",
+             word.c_str(), line_num, line.c_str());
 #else
-        SHERPA_ONNX_LOGE("Duplicated word: %s at line %d:%s. Ignore it.",
-                         word.c_str(), line_num, line.c_str());
+         SHERPA_ONNX_LOGE("Duplicated word: %s at line %d:%s. Ignore it.",
+                          word.c_str(), line_num, line.c_str());
 #endif
-        continue;
-      }
+         continue;
+       }
 
-      while (iss >> phone) {
-        token_list.push_back(std::move(phone));
-      }
+       while (iss >> phone) {
+         token_list.push_back(std::move(phone));
+       }
 
-      std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
-      if (ids.empty()) {
-        if (debug_) {
+       std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
+       if (ids.empty()) {
+         if (debug_) {
 #if __OHOS__
-          SHERPA_ONNX_LOGE("Empty token ids for '%{public}s'", line.c_str());
+           SHERPA_ONNX_LOGE("Empty token ids for '%{public}s'", line.c_str());
 #else
-          SHERPA_ONNX_LOGE("Empty token ids for '%s'", line.c_str());
+           SHERPA_ONNX_LOGE("Empty token ids for '%s'", line.c_str());
 #endif
-        }
-        continue;
-      }
+         }
+         continue;
+       }
 
-      word2ids_.insert({std::move(word), std::move(ids)});
-    }
+       word2ids_.insert({std::move(word), std::move(ids)});
+     }
 
-    for (const auto &[key, _] : word2ids_) {
-      all_words_.insert(key);
-    }
-  }
+     for (const auto &[key, _] : word2ids_) {
+       all_words_.insert(key);
+     }
+   }
 
- private:
-  // lexicon.txt is saved in word2ids_
-  std::unordered_map<std::string, std::vector<int32_t>> word2ids_;
-  std::unordered_set<std::string> all_words_;
+  private:
+   // lexicon.txt is saved in word2ids_
+   std::unordered_map<std::string, std::vector<int32_t>> word2ids_;
+   std::unordered_set<std::string> all_words_;
 
-  // tokens.txt is saved in token2id_
-  std::unordered_map<std::string, int32_t> token2id_;
+   // tokens.txt is saved in token2id_
+   std::unordered_map<std::string, int32_t> token2id_;
 
-  std::unordered_map<int32_t, std::string> id2token_;
+   std::unordered_map<int32_t, std::string> id2token_;
 
-  bool debug_ = false;
-  bool skip_replacement_ = false;
-  std::string espeak_voice_ = "en-us";
+   bool debug_ = false;
+   bool skip_replacement_ = false;
+   std::string espeak_voice_ = "en-us";
 };  // namespace sherpa_onnx
 
 MatchaTtsLexicon::~MatchaTtsLexicon() = default;
@@ -496,7 +496,8 @@ template MatchaTtsLexicon::MatchaTtsLexicon(AAssetManager *mgr,
                                             const std::string &lexicon,
                                             const std::string &tokens,
                                             const std::string &data_dir,
-                                            bool debug, bool skip_replacement);
+                                            bool debug, bool skip_replacement,
+                                            const std::string &espeak_voice);
 #endif
 
 #if __OHOS__
@@ -504,7 +505,8 @@ template MatchaTtsLexicon::MatchaTtsLexicon(NativeResourceManager *mgr,
                                             const std::string &lexicon,
                                             const std::string &tokens,
                                             const std::string &data_dir,
-                                            bool debug, bool skip_replacement);
+                                            bool debug, bool skip_replacement,
+                                            const std::string &espeak_voice);
 #endif
 
 }  // namespace sherpa_onnx
