@@ -11,7 +11,7 @@ on:
       npm_version:
         description: 'npm version (e.g. 1.13.4-espeak-voice.1)'
         required: false
-        default: '1.13.4-espeak-voice.1'
+        default: '1.13.4-espeak-voice.2'
         type: string
   push:
     branches:
@@ -33,8 +33,40 @@ permissions:
   id-token: write
 
 jobs:
+  # Cheap gate: catch JS syntax errors (e.g. stray '}}' after espeakVoice edits)
+  # before spending ~30m on WASM/Android native builds.
+  check-js-syntax:
+    name: Check JS syntax
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: node --check wasm + nodejs package sources
+        run: |
+          set -euo pipefail
+          # Keep CommonJS binding in sync with browser ESM source
+          python3 wasm/tts/sync-tts-node.py
+          if ! git diff --quiet -- wasm/tts/sherpa-onnx-tts.node.js; then
+            echo "::error::wasm/tts/sherpa-onnx-tts.node.js is out of sync with sherpa-onnx-tts.js"
+            echo "Run: python3 wasm/tts/sync-tts-node.py && commit the result"
+            git diff -- wasm/tts/sherpa-onnx-tts.node.js
+            exit 1
+          fi
+          fail=0
+          while IFS= read -r -d '' f; do
+            echo "node --check $f"
+            if ! node --check "$f"; then
+              echo "::error::Syntax error in $f"
+              fail=1
+            fi
+          done < <(find wasm/tts scripts/nodejs -name '*.js' -print0)
+          exit "$fail"
+
   build-wasm:
     name: WASM (Node.js)
+    needs: [check-js-syntax]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -66,6 +98,7 @@ jobs:
 
   build-android:
     name: Android jniLibs
+    needs: [check-js-syntax]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -138,7 +171,7 @@ jobs:
 
       - name: Assemble @nexuscloud/sherpa-onnx
         env:
-          NPM_VERSION: ${{ github.event.inputs.npm_version || '1.13.4-espeak-voice.1' }}
+          NPM_VERSION: ${{ github.event.inputs.npm_version || '1.13.4-espeak-voice.2' }}
         run: |
           PKG=scripts/nexuscloud-npm
           OUT=nexuscloud-sherpa-onnx-package
@@ -147,6 +180,9 @@ jobs:
           mkdir -p "$OUT/android/jniLibs" "$OUT/android/kotlin-api" "$OUT/scripts"
 
           cp -v /tmp/wasm/* "$OUT/"
+          # Prefer source-controlled Node TTS bindings (espeakVoice) over any
+          # stale copy that may land in the WASM install tree.
+          cp -v wasm/tts/sherpa-onnx-tts.node.js "$OUT/"
           cp -v scripts/nodejs/index.js "$OUT/"
           cp -v scripts/nexuscloud-npm/scripts/sync-android.mjs "$OUT/scripts/"
           cp -v sherpa-onnx/kotlin-api/Tts.kt "$OUT/android/kotlin-api/"
@@ -157,6 +193,25 @@ jobs:
             "$PKG/package.json.template" > "$OUT/package.json"
 
           cp -v "$PKG/README.md" "$OUT/"
+
+          # Fail the package if any shipped JS has a syntax error (e.g. stray '}}').
+          # Without this, npm publish can ship a package that crashes on require().
+          echo "Syntax-checking packaged JS..."
+          fail=0
+          for f in "$OUT"/*.js; do
+            echo "  node --check $f"
+            if ! node --check "$f"; then
+              echo "::error::Syntax error in $f"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+
+          # Smoke-load the package entry (requires wasm sibling files present).
+          node -e "const m=require('./$OUT'); if(typeof m.createOfflineTts!=='function') process.exit(2); console.log('require OK, version=', m.version);"
+
           ls -lhR "$OUT"
 
           tar cvjf nexuscloud-sherpa-onnx-${NPM_VERSION}.tar.bz2 "$OUT"

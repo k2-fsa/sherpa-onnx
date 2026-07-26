@@ -351,7 +351,7 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
     ptr: ptr,
     len: len,
   };
-}}
+}
 
 function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
   const lmFlowLen = Module.lengthBytesUTF8(config.lmFlow || '') + 1;

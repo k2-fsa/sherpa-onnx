@@ -41,6 +41,21 @@ const tts = createOfflineTts({
 });
 ```
 
+## Local validation (before publish)
+
+```bash
+# Keep CommonJS TTS binding in sync with browser source
+python3 wasm/tts/sync-tts-node.py
+
+# Fail on syntax errors (catches stray braces after hand-edits)
+node --check wasm/tts/sherpa-onnx-tts.js
+node --check wasm/tts/sherpa-onnx-tts.node.js
+node --check scripts/nodejs/index.js
+```
+
+CI (`build.yaml`) runs the same checks before WASM/Android builds and again
+on the assembled npm package so a bad JS file cannot be published.
+
 ## License
 
 Apache-2.0 (same as upstream sherpa-onnx)
