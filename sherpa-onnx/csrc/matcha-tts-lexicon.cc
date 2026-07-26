@@ -124,6 +124,13 @@ class MatchaTtsLexicon::Impl {
        : debug_(debug),
          skip_replacement_(skip_replacement),
          espeak_voice_(espeak_voice) {
+     // Always log the eSpeak voice once — critical for non-English ZipVoice
+     // (e.g. Sinhala "si"). If this prints "en-us" while the app passed "si",
+     // the C-API is not copying espeak_voice into the C++ config.
+     SHERPA_ONNX_LOGE("MatchaTtsLexicon espeak_voice=%s skip_replacement=%d",
+                      espeak_voice_.c_str(),
+                      static_cast<int>(skip_replacement_));
+
      if (lexicon.empty()) {
        SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
        SHERPA_ONNX_EXIT(-1);
@@ -151,6 +158,10 @@ class MatchaTtsLexicon::Impl {
        : debug_(debug),
          skip_replacement_(skip_replacement),
          espeak_voice_(espeak_voice) {
+     SHERPA_ONNX_LOGE("MatchaTtsLexicon espeak_voice=%s skip_replacement=%d",
+                      espeak_voice_.c_str(),
+                      static_cast<int>(skip_replacement_));
+
      if (lexicon.empty()) {
        SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
        SHERPA_ONNX_EXIT(-1);

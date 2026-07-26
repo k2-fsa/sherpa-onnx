@@ -337,54 +337,85 @@ static bool IsSpecial(const std::string &w) {
 
 static std::vector<std::string> MergeCharactersIntoWords(
     const std::vector<std::string> &words) {
+  // SplitUtf8 emits one UTF-8 codepoint per entry. We re-merge into words:
+  //   - CJK stays one character per token (Chinese lexicon lookup)
+  //   - ASCII / Latin / Sinhala / Arabic / etc. merge into space-delimited words
+  //     so eSpeak (ZipVoice tokenizer=espeak) sees full words, not codepoints
+  //   - punctuation and spaces break words
+  //
+  // Without non-CJK merging, Sinhala (3-byte codepoints) was phonemized one
+  // letter at a time with the wrong eSpeak voice → Chinese-like garbage.
   std::vector<std::string> ans;
 
   int32_t n = static_cast<int32_t>(words.size());
   int32_t i = 0;
   int32_t prev = -1;
 
+  auto flush_word = [&]() {
+    if (prev == -1) {
+      return;
+    }
+    std::string t;
+    for (int32_t j = prev; j < i; ++j) {
+      t.append(words[j]);
+    }
+    prev = -1;
+    if (!t.empty()) {
+      ans.push_back(std::move(t));
+    }
+  };
+
   while (i < n) {
     const auto &w = words[i];
-    if (w.size() >= 3 || (w.size() == 2 && !IsSpecial(w)) ||
-        (w.size() == 1 &&
-         (IsPunct(w[0]) || std::isspace(static_cast<uint8_t>(w[0]))))) {
-      if (prev != -1) {
-        std::string t;
-        for (; prev < i; ++prev) {
-          t.append(words[prev]);
-        }
-        prev = -1;
-        ans.push_back(std::move(t));
-      }
-
-      if (!std::isspace(static_cast<uint8_t>(w[0]))) {
-        ans.push_back(w);
-      }
+    if (w.empty()) {
       ++i;
       continue;
     }
 
-    // e.g., öffnen
-    if (w.size() == 1 || (w.size() == 2 && IsSpecial(w))) {
-      if (prev == -1) {
-        prev = i;
-      }
+    const bool is_space =
+        w.size() == 1 && std::isspace(static_cast<uint8_t>(w[0]));
+    const bool is_ascii_punct =
+        w.size() == 1 && IsPunct(static_cast<char>(w[0]));
+    // Multi-byte punctuation known to Matcha/ZipVoice frontends, plus
+    // zero-width joiners that should stay inside the surrounding word.
+    const bool is_mb_punct = IsPunct(w);
+    const bool is_zw =
+        w.size() == 3 && static_cast<uint8_t>(w[0]) == 0xe2 &&
+        static_cast<uint8_t>(w[1]) == 0x80 &&
+        (static_cast<uint8_t>(w[2]) == 0x8c ||  // ZWNJ
+         static_cast<uint8_t>(w[2]) == 0x8d);   // ZWJ
+
+    if (is_space) {
+      flush_word();
       ++i;
       continue;
     }
 
-    SHERPA_ONNX_LOGE("Ignore %s", w.c_str());
+    if (is_ascii_punct || is_mb_punct) {
+      flush_word();
+      ans.push_back(w);
+      ++i;
+      continue;
+    }
+
+    // CJK: keep as individual characters for lexicon models (zh ZipVoice).
+    if (ContainsCJK(w)) {
+      flush_word();
+      ans.push_back(w);
+      ++i;
+      continue;
+    }
+
+    // Non-CJK letter-like units (ASCII, diacritics, Sinhala, ZWJ/ZWNJ, ...):
+    // accumulate into a word for eSpeak.
+    (void)is_zw;  // kept with surrounding letters via the accumulate path
+    if (prev == -1) {
+      prev = i;
+    }
     ++i;
   }
 
-  if (prev != -1) {
-    std::string t;
-    for (; prev < i; ++prev) {
-      t.append(words[prev]);
-    }
-    ans.push_back(std::move(t));
-  }
-
+  flush_word();
   return ans;
 }
 

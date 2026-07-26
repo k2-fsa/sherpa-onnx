@@ -18,7 +18,9 @@ on:
       - master
     paths:
       - '.github/workflows/build.yaml'
-      - 'sherpa-onnx/csrc/matcha-tts-lexicon.cc'
+      - 'sherpa-onnx/c-api/**'
+      - 'sherpa-onnx/csrc/matcha-tts-lexicon.*'
+      - 'sherpa-onnx/csrc/text-utils.*'
       - 'sherpa-onnx/csrc/offline-tts-zipvoice*'
       - 'sherpa-onnx/kotlin-api/Tts.kt'
       - 'wasm/**'

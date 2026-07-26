@@ -1528,6 +1528,11 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.zipvoice.data_dir, "");
   tts_config.model.zipvoice.lexicon =
       SHERPA_ONNX_OR(config->model.zipvoice.lexicon, "");
+  // Required for non-English ZipVoice (e.g. Sinhala espeak_voice="si").
+  // Without this copy, C++ keeps the default "en-us" and OOV phonemization
+  // is wrong even when JS/WASM packs espeakVoice correctly.
+  tts_config.model.zipvoice.espeak_voice =
+      SHERPA_ONNX_OR(config->model.zipvoice.espeak_voice, "en-us");
   tts_config.model.zipvoice.feat_scale =
       SHERPA_ONNX_OR(config->model.zipvoice.feat_scale, 0.1f);
   tts_config.model.zipvoice.t_shift =
