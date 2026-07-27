@@ -136,22 +136,33 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 // https://github.com/rhasspy/piper/blob/master/notebooks/piper_inference_(ONNX).ipynb
 static std::vector<int64_t> PiperPhonemesToIdsVits(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<piper::Phoneme> &phonemes) {
+    const std::vector<piper::Phoneme> &phonemes, bool is_inflect) {
   // see
   // https://github.com/rhasspy/piper-phonemize/blob/master/src/phoneme_ids.hpp#L17
   int32_t pad = token2id.at(U'_');
-  int32_t bos = token2id.at(U'^');
-  int32_t eos = token2id.at(U'$');
+
+  int32_t bos = -1;
+  int32_t eos = -1;
+
+  if (!is_inflect) {
+    bos = token2id.at(U'^');
+    eos = token2id.at(U'$');
+  }
 
   std::vector<int64_t> ans;
   // bos + pad after bos + (phoneme + pad) * N + eos
   ans.reserve(phonemes.size() * 2 + 3);
 
-  ans.push_back(bos);
-  // Match piper-phonemize phoneme_ids.cpp and OfflineTtsImpl::AddBlank():
-  // pad must follow bos so every phoneme (including the first) is framed.
-  // See https://github.com/k2-fsa/sherpa-onnx/issues/3721
-  ans.push_back(pad);
+  if (is_inflect) {
+    ans.push_back(pad);
+  } else {
+    ans.push_back(bos);
+    // Match piper-phonemize phoneme_ids.cpp and OfflineTtsImpl::AddBlank():
+    // pad must follow bos so every phoneme (including the first) is framed.
+    // See https://github.com/k2-fsa/sherpa-onnx/issues/3721
+    ans.push_back(pad);
+  }
+
   for (auto p : phonemes) {
     if (token2id.count(p)) {
       ans.push_back(token2id.at(p));
@@ -161,7 +172,10 @@ static std::vector<int64_t> PiperPhonemesToIdsVits(
                        static_cast<uint32_t>(p));
     }
   }
-  ans.push_back(eos);
+
+  if (!is_inflect) {
+    ans.push_back(eos);
+  }
 
   return ans;
 }
@@ -389,8 +403,7 @@ void InitEspeak(const std::string &data_dir) {
 
 std::vector<TokenIDs> ConvertTextToTokenIdsKokoroOrKitten(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    int32_t max_token_len, const std::string &text,
-    const std::string &voice);
+    int32_t max_token_len, const std::string &text, const std::string &voice);
 
 std::vector<TokenIDs> ConvertTextToTokenIdsKitten(
     const std::unordered_map<char32_t, int32_t> &token2id,
@@ -625,9 +638,11 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsVits(
 
   std::vector<int64_t> phoneme_ids;
 
-  if (vits_meta_data_.is_piper || vits_meta_data_.is_icefall) {
+  if (vits_meta_data_.is_piper || vits_meta_data_.is_icefall ||
+      vits_meta_data_.is_inflect) {
     for (const auto &p : phonemes) {
-      phoneme_ids = PiperPhonemesToIdsVits(token2id_, p);
+      phoneme_ids =
+          PiperPhonemesToIdsVits(token2id_, p, vits_meta_data_.is_inflect);
       ans.emplace_back(std::move(phoneme_ids));
     }
   } else if (vits_meta_data_.is_coqui) {

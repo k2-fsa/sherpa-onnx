@@ -22,6 +22,7 @@ struct OfflineTtsVitsModelMetaData {
   bool is_coqui = false;
   bool is_icefall = false;
   bool is_melo_tts = false;
+  bool is_inflect = false;
 
   // for piper zh models using pinyin instead of espeak-ng
   bool use_g2pw = false;
