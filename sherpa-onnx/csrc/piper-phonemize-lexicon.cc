@@ -150,12 +150,17 @@ static std::vector<int64_t> PiperPhonemesToIdsVits(
   }
 
   std::vector<int64_t> ans;
-  ans.reserve(phonemes.size());
+  // bos + pad after bos + (phoneme + pad) * N + eos
+  ans.reserve(phonemes.size() * 2 + 3);
 
   if (is_inflect) {
     ans.push_back(pad);
   } else {
     ans.push_back(bos);
+    // Match piper-phonemize phoneme_ids.cpp and OfflineTtsImpl::AddBlank():
+    // pad must follow bos so every phoneme (including the first) is framed.
+    // See https://github.com/k2-fsa/sherpa-onnx/issues/3721
+    ans.push_back(pad);
   }
 
   for (auto p : phonemes) {
