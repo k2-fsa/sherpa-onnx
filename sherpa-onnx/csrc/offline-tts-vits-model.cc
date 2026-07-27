@@ -3,13 +3,14 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -53,6 +54,8 @@ class OfflineTtsVitsModel::Impl {
   Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
     if (meta_data_.is_piper || meta_data_.is_coqui) {
       return RunVitsPiperOrCoqui(std::move(x), sid, speed);
+    } else if (meta_data_.is_inflect) {
+      return RunVitsInflect(std::move(x), speed);
     }
 
     return RunVits(std::move(x), sid, speed);
@@ -220,6 +223,10 @@ class OfflineTtsVitsModel::Impl {
       // version 0 is the first version
       // version 2: add jieba=1 to the metadata
     }
+
+    if (comment.find("Inflect") != std::string::npos) {
+      meta_data_.is_inflect = true;
+    }
   }
 
   Ort::Value RunVitsPiperOrCoqui(Ort::Value x, int64_t sid, float speed) {
@@ -275,6 +282,51 @@ class OfflineTtsVitsModel::Impl {
     if (input_names_.size() >= 5 && input_names_[4] == "langid") {
       inputs.push_back(std::move(lang_id_tensor));
     }
+
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+
+    return std::move(out[0]);
+  }
+
+  Ort::Value RunVitsInflect(Ort::Value x, float speed) {
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::vector<int64_t> x_shape = x.GetTensorTypeAndShapeInfo().GetShape();
+    if (x_shape[0] != 1) {
+      SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
+                       static_cast<int32_t>(x_shape[0]));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    int64_t len = x_shape[1];
+    int64_t len_shape = 1;
+
+    Ort::Value x_length =
+        Ort::Value::CreateTensor(memory_info, &len, 1, &len_shape, 1);
+
+    int64_t scale_shape = 1;
+    float noise_scale = config_.vits.noise_scale;
+    float length_scale = config_.vits.length_scale;
+
+    if (speed != 1 && speed > 0) {
+      length_scale = 1. / speed;
+    }
+
+    Ort::Value noise_scale_tensor =
+        Ort::Value::CreateTensor(memory_info, &noise_scale, 1, &scale_shape, 1);
+
+    Ort::Value length_scale_tensor = Ort::Value::CreateTensor(
+        memory_info, &length_scale, 1, &scale_shape, 1);
+
+    std::vector<Ort::Value> inputs;
+    inputs.reserve(4);
+    inputs.push_back(std::move(x));
+    inputs.push_back(std::move(x_length));
+    inputs.push_back(std::move(noise_scale_tensor));
+    inputs.push_back(std::move(length_scale_tensor));
 
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),

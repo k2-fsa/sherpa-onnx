@@ -19,14 +19,17 @@ except Exception as ex:
 
 
 def get_token2id():
-    _pad = "_"
-    _punctuation = ';:,.!?¡¿—…"«»“” '
-    _letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-    _letters_ipa = "ɑɐɒæɓʙβɔɕçɗɖðʤəɘɚɛɜɝɞɟʄɡɠɢʛɦɧħɥʜɨɪʝɭɬɫɮʟɱɯɰŋɳɲɴøɵɸθœɶʘɹɺɾɻʀʁɽʂʃʈʧʉʊʋⱱʌɣɤʍχʎʏʑʐʒʔʡʕʢǀǁǂǃˈˌːˑʼʴʰʱʲʷˠˤ˞↓↑→↗↘'̩'ᵻ"
-
-    symbols = [_pad] + list(_punctuation) + list(_letters) + list(_letters_ipa)
-
-    return {sym: idx for idx, sym in enumerate(symbols)}
+    ans = dict()
+    with open("tokens.txt", encoding="utf-8") as f:
+        for line in f:
+            fields = line.strip().split()
+            if len(fields) == 2:
+                token, idx = fields
+                ans[token] = int(idx)
+            else:
+                assert len(fields) == 1, (len(fields), line)
+                ans[" "] = int(fields[0])
+    return ans
 
 
 def show(name, sess):
@@ -43,76 +46,46 @@ def show(name, sess):
 
 
 class OnnxModel:
-    def __init__(self, duration_predictor: str, decoder: str):
+    def __init__(self, model: str):
         session_opts = ort.SessionOptions()
         session_opts.inter_op_num_threads = 1
         session_opts.intra_op_num_threads = 1
 
         self.session_opts = session_opts
-        self.duration_predictor = ort.InferenceSession(
-            duration_predictor,
+        self.model = ort.InferenceSession(
+            model,
             sess_options=self.session_opts,
             providers=["CPUExecutionProvider"],
         )
 
-        self.decoder = ort.InferenceSession(
-            decoder,
-            sess_options=self.session_opts,
-            providers=["CPUExecutionProvider"],
-        )
+        meta = self.model.get_modelmeta().custom_metadata_map
+        print(meta)
 
-        duration_predictor_meta_data = (
-            self.duration_predictor.get_modelmeta().custom_metadata_map
-        )
-        decoder_meta_data = self.decoder.get_modelmeta().custom_metadata_map
-        print("---duration_predictor_meta_data---")
-        print(duration_predictor_meta_data)
-        print("---decoder_meta_data---")
-        print(decoder_meta_data)
+        show("model", self.model)
 
-        show("duration_predictor", self.duration_predictor)
-        show("decoder", self.decoder)
+        self.sample_rate = int(meta["sample_rate"])
 
-        self.sample_rate = int(decoder_meta_data["sample_rate_hz"])
-
-    def run_duration_predictor(self, tokens: List[int], speed=1.0):
-        length_scale = np.array([1 / speed], dtype=np.float32)
-        token_length = np.array([len(tokens)], dtype=np.int64)
-        tokens = np.array(tokens, dtype=np.int64)[None]
-
-        m_p_exp, logs_p_exp, y_mask = self.duration_predictor.run(
-            [
-                self.duration_predictor.get_outputs()[0].name,
-                self.duration_predictor.get_outputs()[1].name,
-                self.duration_predictor.get_outputs()[2].name,
-            ],
-            {
-                self.duration_predictor.get_inputs()[0].name: tokens,
-                self.duration_predictor.get_inputs()[1].name: token_length,
-                self.duration_predictor.get_inputs()[2].name: length_scale,
-            },
-        )
-        return m_p_exp, logs_p_exp, y_mask
-
-    def run_decoder(self, m_p_exp, logs_p_exp, y_mask, noise, noise_scale=0.667):
+    def __call__(self, x: List[int], noise_scale=0.667, speed=1.0):
         noise_scale = np.array([noise_scale], dtype=np.float32)
-        waveform = self.decoder.run(
+        length_scale = np.array([1 / speed], dtype=np.float32)
+        x_length = np.array([len(x)], dtype=np.int64)
+        x = np.array(x, dtype=np.int64)[None]
+
+        y = self.model.run(
             [
-                self.decoder.get_outputs()[0].name,
+                self.model.get_outputs()[0].name,
             ],
             {
-                self.decoder.get_inputs()[0].name: m_p_exp,
-                self.decoder.get_inputs()[1].name: logs_p_exp,
-                self.decoder.get_inputs()[2].name: y_mask,
-                self.decoder.get_inputs()[3].name: noise,
-                self.decoder.get_inputs()[4].name: noise_scale,
+                self.model.get_inputs()[0].name: x,
+                self.model.get_inputs()[1].name: x_length,
+                self.model.get_inputs()[2].name: noise_scale,
+                self.model.get_inputs()[3].name: length_scale,
             },
         )[0]
-        return waveform
+        return y
 
 
 def main():
-
     token2id = get_token2id()
     with open("tokens.txt", "w", encoding="utf-8") as f:
         for s, i in token2id.items():
@@ -125,7 +98,7 @@ def main():
         + "an official, or a scholar."
     )
 
-    model = OnnxModel(duration_predictor="./duration.onnx", decoder="./decode.onnx")
+    model = OnnxModel(model="model.onnx")
     start = time.time()
 
     tokens = phonemize_espeak(text, "en-us")
@@ -140,19 +113,7 @@ def main():
     padded[1::2] = ids
     #  print(padded)
 
-    m_p_exp, logs_p_exp, y_mask = model.run_duration_predictor(padded)
-    #  print(m_p_exp.shape, m_p_exp.dtype)  # (1, 128, 144)
-    #  print(logs_p_exp.shape, logs_p_exp.dtype)  # (1, 128, 144)
-    #  print(y_mask.shape, y_mask.dtype)  # (1, 1, 144)
-
-    noise = np.random.randn(*m_p_exp.shape).astype(np.float32)
-    #  print("noise.shape", noise.shape, noise.dtype)
-    waveform = model.run_decoder(
-        m_p_exp=m_p_exp,
-        logs_p_exp=logs_p_exp,
-        y_mask=y_mask,
-        noise=noise,
-    )
+    waveform = model(padded)
 
     waveform = waveform[0, 0]
     end = time.time()
@@ -167,7 +128,7 @@ def main():
         subtype="PCM_16",
     )
 
-    print(f" Saved to ./generated.wav")
+    print(" Saved to ./generated.wav")
     print(f" Elapsed seconds: {elapsed_seconds:.3f}")
     print(f" Audio duration in seconds: {audio_duration:.3f}")
     print(f" RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
