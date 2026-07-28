@@ -3,14 +3,7 @@ name: export-vits-ljspeech-to-onnx
 on:
   push:
     branches:
-      - master
-    paths:
-      - 'scripts/vits/**'
-      - '.github/workflows/export-vits-ljspeech-to-onnx.yaml'
-  pull_request:
-    paths:
-      - 'scripts/vits/**'
-      - '.github/workflows/export-vits-ljspeech-to-onnx.yaml'
+      - export-vits
 
   workflow_dispatch:
 

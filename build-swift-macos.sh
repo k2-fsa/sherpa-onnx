@@ -44,3 +44,11 @@ xcodebuild -create-xcframework \
   -library install/lib/libsherpa-onnx.a \
   -headers install/include \
   -output sherpa-onnx.xcframework
+
+SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+
+rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip sherpa-onnx.xcframework
+
+echo "Checksum:"
+swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip | tee checksum.txt
