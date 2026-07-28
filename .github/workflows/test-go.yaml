@@ -127,6 +127,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/zero-shot-pocket-tts
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/source-separation
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/supertonic-tts
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/version
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
           else
