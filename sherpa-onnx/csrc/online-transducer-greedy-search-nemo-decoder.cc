@@ -47,7 +47,8 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
   std::vector<Ort::Value> &last_decoder_states = s->GetNeMoDecoderStates();
 
   // decoder_output_pair.second returns the next decoder state
-  std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair;
+  std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair{
+      Ort::Value{nullptr}, std::vector<Ort::Value>{}};
 
   if (!last_decoder_out) {
     decoder_output_pair = model->RunDecoder(std::move(decoder_input),

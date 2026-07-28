@@ -113,28 +113,6 @@ jobs:
           - os: windows-11-arm
             python-version: "3.14"
 
-          # Windows x86
-          - os: windows-2022
-            python-version: "3.8"
-            architecture: x86
-          - os: windows-2022
-            python-version: "3.9"
-            architecture: x86
-          - os: windows-2022
-            python-version: "3.10"
-            architecture: x86
-          - os: windows-2022
-            python-version: "3.11"
-            architecture: x86
-          - os: windows-2022
-            python-version: "3.12"
-            architecture: x86
-          - os: windows-2022
-            python-version: "3.13"
-            architecture: x86
-          - os: windows-2022
-            python-version: "3.14"
-            architecture: x86
 
     steps:
       - uses: actions/checkout@v4
@@ -180,7 +158,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin soundfile 
           python3 -m pip install wheel twine setuptools
 
       - name: Install librosa (Linux/macOS)

@@ -229,7 +229,11 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-reco
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
 
-python3 ./python-api-examples/offline-speaker-diarization.py
+if python3 -c "import librosa" 2>/dev/null; then
+  python3 ./python-api-examples/offline-speaker-diarization.py
+else
+  log "Skipping offline-speaker-diarization.py (librosa not installed)"
+fi
 
 rm -rf *.wav *.onnx ./sherpa-onnx-pyannote-segmentation-3-0
 

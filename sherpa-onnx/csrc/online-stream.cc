@@ -215,7 +215,9 @@ class OnlineStream::Impl {
   // states for nemo transducer models
   std::vector<Ort::Value> nemo_decoder_states_;
 
-  Ort::Value nemo_decoder_out_;  // decoder out for nemo transducer models
+  // decoder out for nemo transducer models
+  Ort::Value nemo_decoder_out_{nullptr};
+
   std::vector<float> paraformer_feat_cache_;
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;

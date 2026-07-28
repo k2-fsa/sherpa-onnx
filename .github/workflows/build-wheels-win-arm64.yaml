@@ -248,7 +248,7 @@ jobs:
           twine upload --skip-existing --verbose /c/tmp/wheels/*.whl
 
   build_wheels_win_arm64:
-    # needs: [core, test]
+    needs: [core, test]
     # if: always()
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
