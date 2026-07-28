@@ -1,0 +1,48 @@
+name: test-spm
+
+on:
+  push:
+    branches:
+      - master
+      - test-spm-2
+  workflow_dispatch:
+
+jobs:
+  test-spm-macos:
+    name: Test SPM (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run (macOS)
+        shell: bash
+        run: |
+          cd spm-examples/macOS
+          rm -rf .build
+          swift package resolve
+          swift package show-dependencies
+          swift build
+          swift run SherpaOnnxExample
+
+  test-spm-ios:
+    name: Test SPM (iOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build for iOS Simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd spm-examples/iOS
+
+          echo "=== Resolving ==="
+          swift package resolve
+
+          echo "=== Building for iOS Simulator ==="
+          xcodebuild -scheme SherpaOnnxExample \
+            -destination "generic/platform=iOS Simulator" \
+            -skipPackagePluginValidation \
+            build 2>&1

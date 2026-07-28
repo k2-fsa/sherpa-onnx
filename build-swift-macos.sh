@@ -25,6 +25,7 @@ cmake \
 make -j4
 make install
 rm -fv ./install/include/cargs.h
+cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
 libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-c-api.a \

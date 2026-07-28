@@ -33,6 +33,11 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ios-tts-${{ matrix.with_tts }}
+
       - name: Build iOS shared
         # if: matrix.with_tts == 'ON'
         if: false
@@ -45,12 +50,16 @@ jobs:
         if: matrix.with_tts == 'ON'
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           ./build-ios.sh
 
       - name: Build iOS (No tts)
         if: matrix.with_tts == 'OFF'
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           ./build-ios-no-tts.sh
 
       - name: Display artifacts
@@ -88,15 +97,15 @@ jobs:
           file: ./build-ios*/*.xcframework.zip
 
       - name: Release xcframework
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: ./build-ios*/*.xcframework.zip
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.4
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.13.4
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -144,9 +153,16 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos
+
       - name: Build macOS
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           ./build-swift-macos.sh
 
       - name: Display artifacts
@@ -169,15 +185,15 @@ jobs:
           file: ./build-swift-macos/*.xcframework.zip
 
       - name: Release xcframework
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: ./build-swift-macos/*.xcframework.zip
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.4
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.13.4
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface

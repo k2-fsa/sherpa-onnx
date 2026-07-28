@@ -123,6 +123,7 @@ cmake \
 cmake --build build/os64 -j 4
 # Generate headers for sherpa-onnx.xcframework
 cmake --build build/os64 --target install
+cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
 echo "Generate xcframework"
 
