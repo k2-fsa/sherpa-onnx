@@ -1,0 +1,16 @@
+name: version
+
+description: >
+  Print sherpa-onnx version info.
+
+version: 1.0.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  sherpa_onnx:
+    path: ../../flutter/sherpa_onnx
+
+dev_dependencies:
+  lints: ^3.0.0

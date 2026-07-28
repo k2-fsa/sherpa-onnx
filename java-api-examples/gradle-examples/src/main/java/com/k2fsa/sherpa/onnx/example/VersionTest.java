@@ -9,5 +9,6 @@ public class VersionTest {
     System.out.printf("sherpa-onnx version: %s\n", VersionInfo.getVersion());
     System.out.printf("sherpa-onnx gitSha1: %s\n", VersionInfo.getGitSha1());
     System.out.printf("sherpa-onnx gitDate: %s\n", VersionInfo.getGitDate());
+    System.out.printf("onnxruntime version: %s\n", VersionInfo.getOnnxruntimeVersion());
   }
 }

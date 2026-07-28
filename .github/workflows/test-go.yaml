@@ -155,6 +155,18 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test version
+        shell: bash
+        run: |
+          cd scripts/go/_internal/version
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+
       - name: Test source separation (Spleeter & UVR)
         shell: bash
         run: |

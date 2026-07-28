@@ -132,6 +132,15 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
+      - name:  Run Pascal version test
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          pushd version
+          ./run.sh
+          popd
+
       - name:  Run Pascal test (Cohere Transcribe)
         shell: bash
         run: |
