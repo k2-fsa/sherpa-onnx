@@ -458,6 +458,26 @@ def get_vits_models() -> List[TtsModel]:
     return all_models
 
 
+def get_inflect_models() -> List[TtsModel]:
+    english_models = [
+        TtsModel(
+            model_dir="vits-inflect-en-nano-v2",
+            model_name="model.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="vits-inflect-en-micro-v2",
+            model_name="model.onnx",
+            lang="en",
+        ),
+    ]
+
+    for m in english_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+
+    return english_models
+
+
 def get_matcha_models() -> List[TtsModel]:
     chinese_models = [
         TtsModel(
@@ -640,6 +660,9 @@ def main():
     all_model_list += get_kokoro_models()
     all_model_list += get_kitten_models()
     all_model_list += get_supertonic3_models()
+    all_model_list += get_inflect_models()
+
+    all_model_list = get_inflect_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)
