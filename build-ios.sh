@@ -170,8 +170,8 @@ libtool -static -o build/os64/libsherpa-onnx.a \
 rm -rf sherpa-onnx.xcframework
 
 xcodebuild -create-xcframework \
-      -library "build/os64/libsherpa-onnx.a" -headers install/include \
-      -library "build/simulator/libsherpa-onnx.a" -headers install/include  \
+      -library "build/os64/libsherpa-onnx.a" -headers install/include/sherpa-onnx/c-api \
+      -library "build/simulator/libsherpa-onnx.a" -headers install/include/sherpa-onnx/c-api \
       -output sherpa-onnx.xcframework
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
