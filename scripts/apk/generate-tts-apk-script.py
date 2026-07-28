@@ -24,6 +24,11 @@ def get_args():
         default=0,
         help="Index of the current runner",
     )
+    parser.add_argument(
+        "--count",
+        action="store_true",
+        help="Print the total number of models and exit",
+    )
     return parser.parse_args()
 
 
@@ -458,6 +463,26 @@ def get_vits_models() -> List[TtsModel]:
     return all_models
 
 
+def get_inflect_models() -> List[TtsModel]:
+    english_models = [
+        TtsModel(
+            model_dir="vits-inflect-en-nano-v2",
+            model_name="model.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="vits-inflect-en-micro-v2",
+            model_name="model.onnx",
+            lang="en",
+        ),
+    ]
+
+    for m in english_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+
+    return english_models
+
+
 def get_matcha_models() -> List[TtsModel]:
     chinese_models = [
         TtsModel(
@@ -627,10 +652,6 @@ def get_supertonic3_models() -> List[TtsModel]:
 
 def main():
     args = get_args()
-    index = args.index
-    total = args.total
-    assert 0 <= index < total, (index, total)
-    d = dict()
 
     all_model_list = get_vits_models()
     all_model_list += get_piper_models()
@@ -640,6 +661,16 @@ def main():
     all_model_list += get_kokoro_models()
     all_model_list += get_kitten_models()
     all_model_list += get_supertonic3_models()
+    all_model_list += get_inflect_models()
+
+    if args.count:
+        print(len(all_model_list))
+        return
+
+    index = args.index
+    total = args.total
+    assert 0 <= index < total, (index, total)
+    d = dict()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)

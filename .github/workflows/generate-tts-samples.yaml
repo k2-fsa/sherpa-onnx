@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - tts-samples-2
+      - inflect-tts-android
 
   workflow_dispatch:
 
@@ -33,7 +34,7 @@ jobs:
           pip install --verbose sherpa_onnx_bin sherpa_onnx_core sherpa_onnx --no-index -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
 
       - name: supertonic
-        if: true
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -148,4 +149,43 @@ jobs:
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
           popd
 
+          rm -rf hf
+
+      - name: Inflect
+        if: true
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          cd scripts/vits/inflect
+          pwd=$PWD
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+          mkdir -p ./hf/inflect/vits-inflect-en-nano-v2/mp3
+          mkdir -p ./hf/inflect/vits-inflect-en-micro-v2/mp3
+
+          for v in nano micro; do
+            pushd ${v}_v2
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-inflect-en-$v-v2.tar.bz2
+            tar xf vits-inflect-en-$v-v2.tar.bz2
+            rm vits-inflect-en-$v-v2.tar.bz2
+
+            ln -s ../hf .
+            python3 ./generate_samples.py
+            rm -rf vits-inflect-en-$v-v2
+            popd
+          done
+
+
+          pushd hf
+          git pull
+          git add .
+          git commit -m 'add inflect tts samples'
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+          popd
           rm -rf hf
