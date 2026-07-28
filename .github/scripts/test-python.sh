@@ -21,7 +21,7 @@ rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
 
 log "test Qwen3 ASR"
 
-wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
 tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
 rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
 
@@ -232,7 +232,11 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-reco
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
 
-python3 ./python-api-examples/offline-speaker-diarization.py
+if python3 -c "import librosa" 2>/dev/null; then
+  python3 ./python-api-examples/offline-speaker-diarization.py
+else
+  log "Skipping offline-speaker-diarization.py (librosa not installed)"
+fi
 
 rm -rf *.wav *.onnx ./sherpa-onnx-pyannote-segmentation-3-0
 
@@ -274,7 +278,7 @@ python3 ./python-api-examples/offline-sense-voice-ctc-decode-files-with-hr.py
 
 rm -rf dict replace.fst test-hr.wav lexicon.txt
 
-if [[ $(uname) == Linux ]]; then
+if command -v ffmpeg &> /dev/null; then
   # It needs ffmpeg
   log  "generate subtitles (Chinese)"
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx

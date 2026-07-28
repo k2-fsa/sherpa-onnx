@@ -30,7 +30,6 @@ for details.
 import time
 from pathlib import Path
 
-import librosa
 import sherpa_onnx
 import soundfile as sf
 
@@ -67,9 +66,9 @@ def main():
 
     tts = create_tts()
 
-    reference_audio, sample_rate = librosa.load(
-        reference_audio_file, sr=tts.sample_rate
-    )
+    reference_audio, sample_rate = sf.read(reference_audio_file, dtype="float32")
+    if reference_audio.ndim > 1:
+        reference_audio = reference_audio[:, 0]  # only use the first channel
 
     text = "I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation."
 

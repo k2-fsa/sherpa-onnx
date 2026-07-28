@@ -56,26 +56,22 @@ def create_recognizer():
 def load_audio(filename):
     audio, sample_rate = sf.read(filename, dtype="float32", always_2d=True)
     audio = audio[:, 0]  # only use the first channel
-    if sample_rate != 16000:
-        import librosa
 
-        audio = librosa.resample(audio, orig_sr=sample_rate, target_sr=16000)
-
-    return np.ascontiguousarray(audio)
+    return np.ascontiguousarray(audio), sample_rate
 
 
 def decode_single_file(recognizer, filename):
-    samples = load_audio(filename)
+    samples, sample_rate = load_audio(filename)
 
     start_time = time.time()
 
     stream = recognizer.create_stream()
-    stream.accept_waveform(sample_rate=16000, waveform=samples)
+    stream.accept_waveform(sample_rate=sample_rate, waveform=samples)
     recognizer.decode_stream(stream)
 
     end_time = time.time()
     elapsed_seconds = end_time - start_time
-    audio_duration = len(samples) / 16000
+    audio_duration = len(samples) / sample_rate
     real_time_factor = elapsed_seconds / audio_duration
 
     print("---")
@@ -95,11 +91,11 @@ def decode_multiple_files(recognizer, filenames):
     audio_duration = 0
 
     for filename in filenames:
-        samples = load_audio(filename)
-        audio_duration += len(samples) / 16000
+        samples, sample_rate = load_audio(filename)
+        audio_duration += len(samples) / sample_rate
 
         stream = recognizer.create_stream()
-        stream.accept_waveform(sample_rate=16000, waveform=samples)
+        stream.accept_waveform(sample_rate=sample_rate, waveform=samples)
         streams.append(stream)
 
     recognizer.decode_streams(streams)

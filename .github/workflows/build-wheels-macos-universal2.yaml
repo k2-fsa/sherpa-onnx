@@ -249,7 +249,7 @@ jobs:
 
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
-          twine upload /tmp/wheels/*.whl
+          twine upload --skip-existing --verbose /tmp/wheels/*.whl
 
   build_wheels_macos_universal2:
     needs: [core, test]
@@ -343,4 +343,4 @@ jobs:
 
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
-          twine upload ./wheelhouse/*.whl
+          twine upload --skip-existing --verbose ./wheelhouse/*.whl

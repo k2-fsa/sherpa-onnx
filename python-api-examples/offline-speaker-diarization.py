@@ -37,9 +37,9 @@ Step 4. Run it
 """
 from pathlib import Path
 
+import librosa
 import sherpa_onnx
 import soundfile as sf
-import librosa
 
 
 def resample_audio(audio, sample_rate, target_sample_rate):
@@ -110,11 +110,11 @@ def main():
     # Since we know there are 4 speakers in the above test wave file, we use
     # num_speakers 4 here
     sd = init_speaker_diarization(num_speakers=4)
-    
+
     # Resample audio to match the expected sample rate
     target_sample_rate = sd.sample_rate
     audio, sample_rate = resample_audio(audio, sample_rate, target_sample_rate)
-    
+
     if sample_rate != sd.sample_rate:
         raise RuntimeError(
             f"Expected samples rate: {sd.sample_rate}, given: {sample_rate}"

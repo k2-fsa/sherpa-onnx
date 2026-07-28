@@ -272,7 +272,7 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload /tmp/wheels/*.whl
+          twine upload --skip-existing --verbose /tmp/wheels/*.whl
 
 
   build_wheels_armv7l:
@@ -457,4 +457,4 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload ./wheelhouse/*.whl
+          twine upload --skip-existing --verbose ./wheelhouse/*.whl

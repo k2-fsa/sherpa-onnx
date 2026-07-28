@@ -150,7 +150,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     s->SetStates(model_->GetEncoderInitStates());
 
     s->SetNeMoDecoderStates(model_->GetDecoderInitStates());
-    s->SetNeMoDecoderOut(nullptr);
+    s->SetNeMoDecoderOut(Ort::Value{nullptr});
 
     // Note: We only update counters. The underlying audio samples
     // are not discarded.

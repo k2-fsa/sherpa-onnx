@@ -1,4 +1,4 @@
-name: build-wheels-win64-cuda
+name: build-wheels-win-x64-cuda
 
 on:
   push:
@@ -10,11 +10,11 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-win64-cuda-${{ github.ref }}
+  group: build-wheels-win-x64-cuda-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build_wheels_win64_cuda:
+  build_wheels_win_x64_cuda:
     name: ${{ matrix.python-version }} ${{ matrix.onnxruntime_version }}
     runs-on: ${{ matrix.os }}
     strategy:

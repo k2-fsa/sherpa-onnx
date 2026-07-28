@@ -9,6 +9,12 @@
 import unittest
 from pathlib import Path
 
+try:
+    import sentencepiece  # noqa: F401
+    has_sentencepiece = True
+except ImportError:
+    has_sentencepiece = False
+
 import sherpa_onnx
 
 d = "/tmp/sherpa-test-data"
@@ -17,6 +23,7 @@ d = "/tmp/sherpa-test-data"
 # to download test data for testing
 
 
+@unittest.skipUnless(has_sentencepiece, "sentencepiece is not installed")
 class TestText2Token(unittest.TestCase):
     def test_bpe(self):
         tokens = f"{d}/text2token/tokens_en.txt"
