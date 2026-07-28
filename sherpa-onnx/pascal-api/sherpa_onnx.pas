@@ -805,6 +805,7 @@ type
   function SherpaOnnxGetVersionStr(): AnsiString;
   function SherpaOnnxGetGitSha1(): AnsiString;
   function SherpaOnnxGetGitDate(): AnsiString;
+  function SherpaOnnxGetOnnxruntimeVersionStr(): AnsiString;
 
 implementation
 
@@ -1362,6 +1363,14 @@ end;
 function SherpaOnnxGetGitDate(): AnsiString;
 begin
   Result := SherpaOnnxGetGitDateWrapper();
+end;
+
+function SherpaOnnxGetOnnxruntimeVersionStrWrapper(): PAnsiChar; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxGetOnnxruntimeVersionStr';
+
+function SherpaOnnxGetOnnxruntimeVersionStr(): AnsiString;
+begin
+  Result := SherpaOnnxGetOnnxruntimeVersionStrWrapper();
 end;
 
 procedure SherpaOnnxDestroyLinearResampler(P: Pointer); cdecl;

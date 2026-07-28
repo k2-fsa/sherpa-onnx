@@ -17,7 +17,13 @@ public class VersionInfo {
         return getGitDate2();
     }
 
+    public static String getOnnxruntimeVersion() {
+        LibraryLoader.maybeLoad();
+        return getOnnxruntimeVersionStr2();
+    }
+
     private static native String getVersionStr2();
     private static native String getGitSha12();
     private static native String getGitDate2();
+    private static native String getOnnxruntimeVersionStr2();
 }

@@ -32,3 +32,14 @@ String getGitDate() {
 
   return gitDate.toDartString();
 }
+
+/// Return the onnxruntime version string used by the native library.
+String getOnnxruntimeVersion() {
+  Pointer<Utf8> version =
+      SherpaOnnxBindings.getOnnxruntimeVersionStr?.call() ?? nullptr;
+  if (version == nullptr) {
+    return '';
+  }
+
+  return version.toDartString();
+}

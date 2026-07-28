@@ -94,6 +94,12 @@ function getGitDate() {
   return wasmModule.UTF8ToString(v);
 }
 
+// Return the onnxruntime version string used by the library.
+function getOnnxruntimeVersion() {
+  const v = wasmModule._SherpaOnnxGetOnnxruntimeVersionStr();
+  return wasmModule.UTF8ToString(v);
+}
+
 // Note: online means streaming and offline means non-streaming here.
 // Both of them don't require internet connection.
 module.exports = {
@@ -114,4 +120,5 @@ module.exports = {
   version: getVersion(),
   gitSha1: getGitSha1(),
   gitDate: getGitDate(),
+  onnxruntimeVersion: getOnnxruntimeVersion(),
 };

@@ -15,8 +15,12 @@ class VersionInfo {
         val gitDate: String
             get() = getGitDate2()
 
+        val onnxruntimeVersion: String
+            get() = getOnnxruntimeVersionStr2()
+
         external fun getVersionStr2(): String
         external fun getGitSha12(): String
         external fun getGitDate2(): String
+        external fun getOnnxruntimeVersionStr2(): String
     }
 }

@@ -8,6 +8,7 @@ extern "C" {
     pub fn SherpaOnnxGetVersionStr() -> *const c_char;
     pub fn SherpaOnnxGetGitSha1() -> *const c_char;
     pub fn SherpaOnnxGetGitDate() -> *const c_char;
+    pub fn SherpaOnnxGetOnnxruntimeVersionStr() -> *const c_char;
     pub fn SherpaOnnxFileExists(filename: *const c_char) -> i32;
 }
 

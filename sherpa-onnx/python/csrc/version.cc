@@ -14,12 +14,15 @@ void PybindVersion(py::module *m) {
   m->attr("version") = std::string(GetVersionStr());
   m->attr("git_sha1") = std::string(GetGitSha1());
   m->attr("git_date") = std::string(GetGitDate());
+  m->attr("onnxruntime_version") = std::string(GetOnnxruntimeVersionStr());
 
   m->attr("__doc_version") = "str: The version of sherpa-onnx.";
   m->attr("__doc_git_sha1") =
       "str: The git commit SHA1 used to build sherpa-onnx.";
   m->attr("__doc_git_date") =
       "str: The git commit date used to build sherpa-onnx.";
+  m->attr("__doc_onnxruntime_version") =
+      "str: The version of onnxruntime used by sherpa-onnx.";
 }
 
 }  // namespace sherpa_onnx

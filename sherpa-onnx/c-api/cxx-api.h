@@ -1492,6 +1492,8 @@ SHERPA_ONNX_API std::string GetVersionStr();
 SHERPA_ONNX_API std::string GetGitSha1();
 /** @brief Return the build Git date as a C++ string. */
 SHERPA_ONNX_API std::string GetGitDate();
+/** @brief Return the onnxruntime version string as a C++ string. */
+SHERPA_ONNX_API std::string GetOnnxruntimeVersionStr();
 /** @brief Return `true` if a file exists. */
 SHERPA_ONNX_API bool FileExists(const std::string &filename);
 

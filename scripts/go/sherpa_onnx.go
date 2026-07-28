@@ -2750,6 +2750,11 @@ func GetGitDate() string {
 	return C.GoString(C.SherpaOnnxGetGitDate())
 }
 
+// GetOnnxruntimeVersion returns the onnxruntime version string used by the library.
+func GetOnnxruntimeVersion() string {
+	return C.GoString(C.SherpaOnnxGetOnnxruntimeVersionStr())
+}
+
 type OfflineSourceSeparationSpleeterModelConfig struct {
 	Vocals        string
 	Accompaniment string

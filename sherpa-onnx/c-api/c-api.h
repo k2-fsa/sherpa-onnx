@@ -151,6 +151,16 @@ SHERPA_ONNX_API const char *SherpaOnnxGetGitSha1();
 SHERPA_ONNX_API const char *SherpaOnnxGetGitDate();
 
 /**
+ * @brief Return the onnxruntime version string used by the library.
+ *
+ * The returned pointer refers to statically allocated memory owned by the
+ * library. Do not free it and do not modify it.
+ *
+ * @return Onnxruntime version string, for example `"1.22.0"`.
+ */
+SHERPA_ONNX_API const char *SherpaOnnxGetOnnxruntimeVersionStr();
+
+/**
  * @brief Check whether a file exists.
  *
  * @param filename File path to test.
