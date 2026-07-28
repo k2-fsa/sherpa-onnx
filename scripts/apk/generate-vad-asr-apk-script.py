@@ -21,6 +21,11 @@ def get_args():
         default=0,
         help="Index of the current runner",
     )
+    parser.add_argument(
+        "--count",
+        action="store_true",
+        help="Print the total number of models and exit",
+    )
     return parser.parse_args()
 
 
@@ -1055,11 +1060,16 @@ def get_models():
 
 def main():
     args = get_args()
+
+    all_model_list = get_models()
+
+    if args.count:
+        print(len(all_model_list))
+        return
+
     index = args.index
     total = args.total
     assert 0 <= index < total, (index, total)
-
-    all_model_list = get_models()
 
     num_models = len(all_model_list)
 

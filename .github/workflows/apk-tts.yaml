@@ -15,16 +15,44 @@ permissions:
   contents: write
 
 jobs:
-  apk_tts:
+  generate_matrix:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2 iso639-lang
+
+      - name: Generating matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          cd scripts/apk
+          COUNT=$(python3 ./generate-tts-apk-script.py --count)
+          echo "Model count: $COUNT"
+
+          MODELS_PER_JOB=5
+          TOTAL=$(( (COUNT + MODELS_PER_JOB - 1) / MODELS_PER_JOB ))
+          echo "Total jobs: $TOTAL"
+
+          MATRIX=$(seq 0 $((TOTAL - 1)) | jq -R . | jq -s --arg t "$TOTAL" '{"include": [{"os":"ubuntu-latest","total":$t,"index":.}]}')
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  apk_tts:
+    needs: [generate_matrix]
     runs-on: ${{ matrix.os }}
     name: apk for tts ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        total: ["40"]
-        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39"]
+        ${{ fromJson(needs.generate_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
