@@ -22,7 +22,7 @@ jobs:
           rm -rf .build
           swift package resolve
           swift package show-dependencies
-          swift build
+          swift build --verbose
           swift run SherpaOnnxExample
 
   test-spm-ios:
@@ -45,4 +45,5 @@ jobs:
           xcodebuild -scheme SherpaOnnxExample \
             -destination "generic/platform=iOS Simulator" \
             -skipPackagePluginValidation \
+            -verbose \
             build 2>&1
