@@ -1,0 +1,158 @@
+name: export-vits-inflect-to-onnx
+
+on:
+  push:
+    branches:
+      - export-inflect
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-vits-inflect-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-vits-inflect-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: Inflect ${{ matrix.model }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        torch: ["2.2.0"]
+        model: ['nano_v2', 'micro_v2']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install -qq torch==${{ matrix.torch }}+cpu -f https://download.pytorch.org/whl/torch numpy
+          python3 -m pip install onnxruntime onnx soundfile
+          python3 -m pip install scipy cython unidecode phonemizer
+
+          pip install piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+
+          # required by phonemizer
+          # See https://bootphon.github.io/phonemizer/install.html
+          # To fix the following error: RuntimeError: espeak not installed on your system
+          #
+          sudo apt-get install festival espeak-ng mbrola
+
+      - name: export ${{ matrix.model }}
+        shell: bash
+        run: |
+          model=${{ matrix.model }}
+          cd scripts/vits/inflect/$model
+          ./run.sh
+
+          ls -lh
+
+      - name: Collect ${{ matrix.model }}
+        shell: bash
+        run: |
+          model=${{ matrix.model }}
+          src=scripts/vits/inflect/$model
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+          tar xf espeak-ng-data.tar.bz2
+          rm espeak-ng-data.tar.bz2
+
+          m="${model//_/-}"
+          dst=vits-inflect-en-$m
+          mkdir -p $dst
+
+          mv -v $src/model.onnx $dst
+          mv -v $src/tokens.txt $dst
+          cp -v $src/../README.md $dst
+          mv espeak-ng-data $dst
+
+          ls -lh $dst
+
+          tar cjfv ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-wav-${{ matrix.model }}
+          path: scripts/vits/inflect/*/generated.wav
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-onnx-${{ matrix.model }}
+          path: scripts/vits/inflect/*/model.onnx
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-tokens-${{ matrix.model }}
+          path: scripts/vits/inflect/*/tokens.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.model }}
+          path: vits-*.tar.bz2
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./vits-*tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./vits-*tar.bz2
+          overwrite: true
+          tag: tts-models
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            dirs=(
+              vits-inflect-en-nano-v2
+              vits-inflect-en-micro-v2
+            )
+            for d in ${dirs[@]}; do
+              src=$d
+              if [ ! -d $src ]; then
+                continue;
+              fi
+
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -a $src/* ./huggingface
+              pushd huggingface
+              git lfs track "*.onnx"
+              git lfs track af_dict
+              git lfs track ar_dict
+              git lfs track cmn_dict
+              git lfs track da_dict en_dict fa_dict hu_dict ia_dict it_dict lb_dict phondata ru_dict ta_dict
+              git lfs track ur_dict yue_dict
+
+              git status
+              git add .
+              git status
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              popd
+            done

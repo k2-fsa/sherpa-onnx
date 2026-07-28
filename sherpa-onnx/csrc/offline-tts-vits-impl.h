@@ -379,7 +379,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
           model_->GetMetaData(), config_.model.debug);
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
-                meta_data.is_icefall) &&
+                meta_data.is_icefall || meta_data.is_inflect) &&
                !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           mgr, config_.model.vits.tokens, config_.model.vits.data_dir,
@@ -417,7 +417,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           config_.model.vits.lexicon, config_.model.vits.tokens,
           config_.model.debug, meta_data.use_g2pw);
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
-                meta_data.is_icefall) &&
+                meta_data.is_icefall || meta_data.is_inflect) &&
                !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           config_.model.vits.tokens, config_.model.vits.data_dir,

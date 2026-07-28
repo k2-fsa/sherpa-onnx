@@ -42,6 +42,9 @@ dependencies {
 
     // Windows x64
     // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-x64:refactor-jar-SNAPSHOT'
+
+    // Windows ARM64
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-arm64:refactor-jar-SNAPSHOT'
 }
 
 java {

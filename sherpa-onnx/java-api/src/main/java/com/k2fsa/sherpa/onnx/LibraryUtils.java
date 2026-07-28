@@ -95,6 +95,20 @@ public class LibraryUtils {
                     System.out.printf("Loading from: %s\n", libInDir.getAbsolutePath());
                 }
 
+                // Load onnxruntime first to avoid picking up a system version
+                if (Objects.equals(detectedOS, "osx")) {
+                    File onnxruntimeFile = new File(nativeDir, "libonnxruntime.1.27.0.dylib");
+                    if (onnxruntimeFile.exists()) {
+                        System.load(onnxruntimeFile.getAbsolutePath());
+                    }
+                } else {
+                    String onnxLibFileName = System.mapLibraryName("onnxruntime");
+                    File onnxruntimeFile = new File(nativeDir, onnxLibFileName);
+                    if (onnxruntimeFile.exists()) {
+                        System.load(onnxruntimeFile.getAbsolutePath());
+                    }
+                }
+
                 System.load(libInDir.getAbsolutePath());
                 return true;
             }
@@ -188,9 +202,13 @@ public class LibraryUtils {
             // 32-bit x86 is not supported by the Java API
             detectedArch = "x86";
         } else if (arch.startsWith("aarch64") || arch.startsWith("arm64")) {
-            detectedArch = "aarch64";
+            if (detectedOS.equals("win")) {
+                detectedArch = "arm64";
+            } else {
+                detectedArch = "aarch64";
+            }
         } else if (arch.startsWith("arm")) {
-            detectedArch = "arm"; //armv8l架构
+            detectedArch = "arm"; //armv8l
         } else {
             throw new IllegalStateException("Unsupported arch:" + arch);
         }

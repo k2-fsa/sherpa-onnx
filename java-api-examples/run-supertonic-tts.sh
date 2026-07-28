@@ -15,6 +15,6 @@ if [ ! -f ./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   SupertonicTts.java

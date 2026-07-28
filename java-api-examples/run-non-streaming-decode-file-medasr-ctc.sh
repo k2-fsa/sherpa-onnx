@@ -12,6 +12,6 @@ fi
 
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   NonStreamingDecodeFileMedAsrCtc.java

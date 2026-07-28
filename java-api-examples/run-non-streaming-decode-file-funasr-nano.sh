@@ -11,6 +11,6 @@ if [ ! -f ./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx ]; then
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   NonStreamingDecodeFileFunAsrNano.java

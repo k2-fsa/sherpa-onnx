@@ -2,6 +2,17 @@
 
 This directory contains examples for the JAVA API of sherpa-onnx.
 
+## Supported platforms
+
+| OS | Architecture | Status |
+|---|---|---|
+| Linux | x64 | ✅ |
+| Linux | ARM64 | ✅ |
+| macOS | x64 (Intel) | ✅ |
+| macOS | ARM64 (Apple Silicon) | ✅ |
+| Windows | x64 | ✅ |
+| Windows | ARM64 | ✅ |
+
 # Usage
 
 ## Non-streaming speech enhancement

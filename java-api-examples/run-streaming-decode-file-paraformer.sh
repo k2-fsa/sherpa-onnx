@@ -11,6 +11,6 @@ if [ ! -f ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt ]; then
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   StreamingDecodeFileParaformer.java

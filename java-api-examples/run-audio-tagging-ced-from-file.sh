@@ -11,6 +11,6 @@ if [ ! -f ./sherpa-onnx-ced-mini-audio-tagging-2024-04-19/model.int8.onnx ]; the
 fi
 
 java \
-  -Djava.library.path=$PWD/../build/lib \
+  -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   ./AudioTaggingCEDFromFile.java

@@ -23,10 +23,7 @@ val targetNativeClassifier = when {
         if (osArch == "aarch64" || osArch == "arm64") "linux-aarch64" else "linux-x64"
     }
     osName.contains("win") -> {
-        if (osArch == "aarch64" || osArch == "arm64") {
-            throw GradleException("Windows ARM64 is not supported yet. Please use x64.")
-        }
-        "win-x64"
+        if (osArch == "aarch64" || osArch == "arm64") "win-arm64" else "win-x64"
     }
     else -> throw GradleException("Unsupported OS: $osName, Arch: $osArch")
 }
@@ -34,7 +31,7 @@ val targetNativeClassifier = when {
 
 This means:
 - **No manual configuration needed** — just run `./gradlew build`
-- **Works on any platform** — macOS, Linux, Windows x64
+- **Works on any platform** — macOS, Linux, Windows x64, Windows ARM64
 - **No CI scripts to modify** — the build file handles everything
 
 ## Dependencies
@@ -96,8 +93,7 @@ sherpa-onnx gitDate: ...
 | Linux | x64 | `sherpa-onnx-native-lib-linux-x64` |
 | Linux | ARM64 | `sherpa-onnx-native-lib-linux-aarch64` |
 | Windows | x64 | `sherpa-onnx-native-lib-win-x64` |
-
-> **Note:** Windows ARM64 is not currently supported. The build will fail with an error if you try to build on Windows ARM64.
+| Windows | ARM64 | `sherpa-onnx-native-lib-win-arm64` |
 
 ## Appendix: Groovy vs Kotlin DSL comparison
 

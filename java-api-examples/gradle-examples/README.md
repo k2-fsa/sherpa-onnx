@@ -56,6 +56,7 @@ Available native lib artifacts for each platform:
 | Linux x64 | `sherpa-onnx-native-lib-linux-x64` |
 | Linux ARM64 | `sherpa-onnx-native-lib-linux-aarch64` |
 | Windows x64 | `sherpa-onnx-native-lib-win-x64` |
+| Windows ARM64 | `sherpa-onnx-native-lib-win-arm64` |
 
 > **Note:** The `build.gradle` in this directory uses Approach 2 by default. Approach 1 is
 > included as a comment for reference.

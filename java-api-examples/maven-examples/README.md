@@ -68,6 +68,7 @@ Available native lib artifacts for each platform:
 | Linux x64 | `sherpa-onnx-native-lib-linux-x64` |
 | Linux ARM64 | `sherpa-onnx-native-lib-linux-aarch64` |
 | Windows x64 | `sherpa-onnx-native-lib-win-x64` |
+| Windows ARM64 | `sherpa-onnx-native-lib-win-arm64` |
 
 > **Note:** The `pom.xml` in this directory uses Approach 2 by default. Approach 1 is
 > included as a comment for reference.
@@ -136,6 +137,8 @@ sherpa-onnx/native/osx-x64/libonnxruntime.1.27.0.dylib      32 MB   (macOS x64)
 sherpa-onnx/native/osx-x64/libsherpa-onnx-jni.dylib         4.4 MB
 sherpa-onnx/native/win-x64/onnxruntime.dll             17 MB   (Windows x64)
 sherpa-onnx/native/win-x64/sherpa-onnx-jni.dll         4.6 MB
+sherpa-onnx/native/win-arm64/onnxruntime.dll           17 MB   (Windows ARM64)
+sherpa-onnx/native/win-arm64/sherpa-onnx-jni.dll       4.6 MB
 ```
 
 **Approach 2** (`sherpa-onnx-jvm` + `sherpa-onnx-native-lib-osx-aarch64`) only includes
