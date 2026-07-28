@@ -24,7 +24,7 @@ export src_dir
 mkdir -p $src_dir
 pushd $src_dir
 
-RIDS=(linux-x64 linux-arm64 android-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64)
+RIDS=(linux-x64 linux-arm64 android-arm64 android-x64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64)
 
 mkdir -p ${RIDS[@]}
 
@@ -34,8 +34,8 @@ linux_x64_wheel=$src_dir/$linux_x64_wheel_filename
 linux_arm64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_aarch64.whl
 linux_arm64_wheel=$src_dir/$linux_arm64_wheel_filename
 
-android_arm64_tarball_filename=sherpa-onnx-v$SHERPA_ONNX_VERSION-android.tar.bz2
-android_arm64_tarball=$src_dir/$android_arm64_tarball_filename
+android_tarball_filename=sherpa-onnx-v$SHERPA_ONNX_VERSION-android.tar.bz2
+android_tarball=$src_dir/$android_tarball_filename
 
 macos_x64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-macosx_10_15_x86_64.whl
 macos_x64_wheel=$src_dir/$macos_x64_wheel_filename
@@ -88,24 +88,32 @@ if [ ! -f $src_dir/linux-arm64/libsherpa-onnx-c-api.so ]; then
   cd ..
 fi
 
-if [ ! -f $src_dir/android-arm64/libsherpa-onnx-c-api.so ]; then
-  echo "---android arm64---"
-  cd android-arm64
+if [ ! -f $src_dir/android-arm64/libsherpa-onnx-c-api.so ] || [ ! -f $src_dir/android-x64/libsherpa-onnx-c-api.so ]; then
+  echo "---android---"
   mkdir -p tarball
   cd tarball
-  if [ -f $android_arm64_tarball  ]; then
-    cp -v $android_arm64_tarball .
+  if [ -f $android_tarball  ]; then
+    cp -v $android_tarball .
   else
-    curl -OL "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/$android_arm64_tarball_filename"
+    curl -OL "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/$android_tarball_filename"
   fi
-  tar xjf $android_arm64_tarball_filename
-  cp -v jniLibs/arm64-v8a/lib{onnxruntime,sherpa-onnx-c-api}.so ../
+  tar xjf $android_tarball_filename
+
+  if [ ! -f $src_dir/android-arm64/libsherpa-onnx-c-api.so ]; then
+    echo "---android arm64---"
+    cp -v jniLibs/arm64-v8a/lib{onnxruntime,sherpa-onnx-c-api}.so ../android-arm64/
+    ls -lh ../android-arm64
+  fi
+
+  if [ ! -f $src_dir/android-x64/libsherpa-onnx-c-api.so ]; then
+    echo "---android x64---"
+    cp -v jniLibs/x86_64/lib{onnxruntime,sherpa-onnx-c-api}.so ../android-x64/
+    ls -lh ../android-x64
+  fi
 
   cd ..
 
   rm -rf tarball
-  ls -lh
-  cd ..
 fi
 
 if [ ! -f $src_dir/macos-x64/libsherpa-onnx-c-api.dylib ]; then

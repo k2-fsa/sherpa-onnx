@@ -121,6 +121,7 @@ def main():
     process_linux(s, "x64")
     process_linux(s, "arm64")
     process_android(s, "arm64")
+    process_android(s, "x64")
     process_windows(s, "x64")
     process_windows(s, "x86")
     process_windows(s, "arm64")
