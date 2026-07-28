@@ -4,6 +4,11 @@ set -ex
 
 cd dart-api-examples
 
+echo '----------Version----------'
+pushd version
+./run.sh
+popd
+
 pushd non-streaming-asr
 
 echo '----------Cohere Transcribe----------'

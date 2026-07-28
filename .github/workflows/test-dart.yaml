@@ -132,6 +132,7 @@ jobs:
           cp scripts/dart/streaming-speech-enhancement-gtcrn-pubspec.yaml dart-api-examples/streaming-speech-enhancement-gtcrn/pubspec.yaml
           cp scripts/dart/streaming-speech-enhancement-dpdfnet-pubspec.yaml dart-api-examples/streaming-speech-enhancement-dpdfnet/pubspec.yaml
           cp scripts/dart/slid-pubspec.yaml dart-api-examples/spoken-language-identification/pubspec.yaml
+          cp scripts/dart/version-pubspec.yaml dart-api-examples/version/pubspec.yaml
 
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 

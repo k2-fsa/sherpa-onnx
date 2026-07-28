@@ -20,7 +20,6 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineDolphinModelConfig,
     OfflineFireRedAsrModelConfig,
     OfflineFunASRNanoModelConfig,
-    OfflineQwen3ASRModelConfig,
     OfflineLMConfig,
     OfflineModelConfig,
     OfflineMoonshineModelConfig,
@@ -29,6 +28,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflinePunctuation,
     OfflinePunctuationConfig,
     OfflinePunctuationModelConfig,
+    OfflineQwen3ASRModelConfig,
     OfflineRecognizerConfig,
     OfflineSenseVoiceModelConfig,
     OfflineSourceSeparation,
@@ -85,6 +85,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     VoiceActivityDetector,
     git_date,
     git_sha1,
+    onnxruntime_version,
     version,
     write_wave,
 )

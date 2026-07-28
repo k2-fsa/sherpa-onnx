@@ -24,6 +24,9 @@ const char *GetGitSha1();
 // The memory pointed by the returned pointer is statically allocated.
 const char *GetGitDate();
 
+// The memory pointed by the returned pointer is statically allocated.
+const char *GetOnnxruntimeVersionStr();
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_VERSION_H_

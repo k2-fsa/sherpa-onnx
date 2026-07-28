@@ -118,6 +118,7 @@ jobs:
             cp -v install/lib/*.dll ../pascal-api-examples/tts
             cp -v install/lib/*.dll ../pascal-api-examples/vad
             cp -v install/lib/*.dll ../pascal-api-examples/vad-with-non-streaming-asr
+            cp -v install/lib/*.dll ../pascal-api-examples/version
 
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/non-streaming-asr
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/read-wav
@@ -130,7 +131,17 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/tts
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/version
           fi
+
+      - name:  Run Pascal version test
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          pushd version
+          ./run.sh
+          popd
 
       - name:  Run Pascal test (Cohere Transcribe)
         shell: bash

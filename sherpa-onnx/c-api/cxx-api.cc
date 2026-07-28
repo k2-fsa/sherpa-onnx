@@ -1052,6 +1052,10 @@ std::string GetGitSha1() { return SherpaOnnxGetGitSha1(); }
 
 std::string GetGitDate() { return SherpaOnnxGetGitDate(); }
 
+std::string GetOnnxruntimeVersionStr() {
+  return SherpaOnnxGetOnnxruntimeVersionStr();
+}
+
 bool FileExists(const std::string &filename) {
   return SherpaOnnxFileExists(filename.c_str());
 }

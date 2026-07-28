@@ -544,6 +544,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-vad
     sherpa-onnx-vad-with-offline-asr
     sherpa-onnx-vad-with-online-asr
+    sherpa-onnx-version
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes
@@ -585,7 +586,6 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   install(
     TARGETS
       ${main_exes}
-      sherpa-onnx-version
     DESTINATION
       bin
   )

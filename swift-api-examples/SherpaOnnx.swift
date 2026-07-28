@@ -2108,6 +2108,11 @@ func getSherpaOnnxGitSha1() -> String {
 func getSherpaOnnxGitDate() -> String {
   return String(cString: SherpaOnnxGetGitDate())
 }
+
+/// Return the onnxruntime version string used by the library.
+func getSherpaOnnxOnnxruntimeVersion() -> String {
+  return String(cString: SherpaOnnxGetOnnxruntimeVersionStr())
+}
 //---------------------------
 // Source separation
 //---------------------------

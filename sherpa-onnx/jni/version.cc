@@ -46,4 +46,18 @@ JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_VersionInfo_getGitDate2(
   return SafeNewStringUTF(env, GetGitDate());
 }
 
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jstring JNICALL
+Java_com_k2fsa_sherpa_onnx_VersionInfo_00024Companion_getOnnxruntimeVersionStr2(
+    JNIEnv *env, jclass /*cls*/) {
+  return SafeNewStringUTF(env, GetOnnxruntimeVersionStr());
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jstring JNICALL
+Java_com_k2fsa_sherpa_onnx_VersionInfo_getOnnxruntimeVersionStr2(
+    JNIEnv *env, jclass /*cls*/) {
+  return SafeNewStringUTF(env, GetOnnxruntimeVersionStr());
+}
+
 }  // namespace sherpa_onnx

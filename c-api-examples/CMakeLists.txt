@@ -1,6 +1,9 @@
 include(cargs)
 
 include_directories(${PROJECT_SOURCE_DIR})
+add_executable(version-c-api version-c-api.c)
+target_link_libraries(version-c-api sherpa-onnx-c-api)
+
 add_executable(decode-file-c-api decode-file-c-api.c)
 target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 

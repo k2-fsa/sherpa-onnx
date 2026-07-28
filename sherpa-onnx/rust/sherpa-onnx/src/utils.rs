@@ -36,6 +36,12 @@ pub fn git_date() -> &'static str {
     c_str_to_static_str(ptr)
 }
 
+/// Return the onnxruntime version string used by the native library.
+pub fn onnxruntime_version() -> &'static str {
+    let ptr = unsafe { sys::SherpaOnnxGetOnnxruntimeVersionStr() };
+    c_str_to_static_str(ptr)
+}
+
 /// Return `true` if `filename` exists according to the native helper.
 pub fn file_exists(filename: &str) -> bool {
     let cstr = match CString::new(filename) {

@@ -45,4 +45,5 @@ module.exports = {
   version : addon.version,
   gitSha1 : addon.gitSha1,
   gitDate : addon.gitDate,
+  onnxruntimeVersion : addon.onnxruntimeVersion,
 }

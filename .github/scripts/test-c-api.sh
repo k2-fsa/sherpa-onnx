@@ -8,6 +8,9 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test version"
+./build/bin/version-c-api
+
 echo "SLID_EXE is $SLID_EXE"
 echo "SID_EXE is $SID_EXE"
 echo "AT_EXE is $AT_EXE"

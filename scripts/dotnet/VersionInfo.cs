@@ -107,6 +107,42 @@ namespace SherpaOnnx
           }
         }
 
+        /// <summary>
+        /// Return the onnxruntime version string used by the library.
+        /// </summary>
+        public static String OnnxruntimeVersion
+        {
+          get
+          {
+            IntPtr p = SherpaOnnxGetOnnxruntimeVersionStr();
+
+            string s = "";
+            int length = 0;
+
+            unsafe
+            {
+                byte* b = (byte*)p;
+                if (b != null)
+                {
+                    while (*b != 0)
+                    {
+                        ++b;
+                        length += 1;
+                    }
+                }
+            }
+
+            if (length > 0)
+            {
+                byte[] stringBuffer = new byte[length];
+                Marshal.Copy(p, stringBuffer, 0, length);
+                s = Encoding.UTF8.GetString(stringBuffer);
+            }
+
+            return s;
+          }
+        }
+
 
         [DllImport(Dll.Filename)]
         private static extern IntPtr SherpaOnnxGetVersionStr();
@@ -116,5 +152,8 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename)]
         private static extern IntPtr SherpaOnnxGetGitDate();
+
+        [DllImport(Dll.Filename)]
+        private static extern IntPtr SherpaOnnxGetOnnxruntimeVersionStr();
     }
 }
