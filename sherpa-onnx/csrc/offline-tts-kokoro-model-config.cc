@@ -60,6 +60,16 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
     return false;
   }
 
+  if (voices.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --kokoro-voices");
+    return false;
+  }
+
+  if (!FileExists(voices)) {
+    SHERPA_ONNX_LOGE("--kokoro-voices: '%s' does not exist", voices.c_str());
+    return false;
+  }
+
   if (!lexicon.empty()) {
     std::vector<std::string> files;
     SplitStringToVector(lexicon, ",", false, &files);
