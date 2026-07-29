@@ -5,6 +5,7 @@
 //  Created by knight on 2024/4/1.
 //
 
+import SherpaOnnx
 import SwiftUI
 
 struct ContentView: View {
