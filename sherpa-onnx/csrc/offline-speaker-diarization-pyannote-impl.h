@@ -564,8 +564,16 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     if (k != cur_row_index) {
-      auto seq = Eigen::seqN(0, cur_row_index);
-      ans = ans(seq, Eigen::placeholders::all);
+      // NOTE: `ans = ans(seq, all)` is an ALIASED assignment and is not safe
+      // here. Assigning an indexed view of `ans` back into `ans` changes its
+      // number of rows, so the assignment resizes `ans` first, and Eigen's
+      // DenseStorage::resize() frees the old buffer and allocates a new one
+      // whenever the total size changes. The right-hand side still refers to
+      // the old, now-freed buffer, so the copy reads freed memory
+      // (heap-use-after-free). Evaluate the selection into a temporary first.
+      Matrix2D valid =
+          ans(Eigen::seqN(0, cur_row_index), Eigen::placeholders::all);
+      ans = std::move(valid);
     }
 
     return ans;
