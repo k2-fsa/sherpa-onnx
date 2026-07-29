@@ -111,6 +111,7 @@ class OfflineSpeechDenoiserModelConfig {
 class OfflineSpeechDenoiserConfig {
   const OfflineSpeechDenoiserConfig({
     this.model = const OfflineSpeechDenoiserModelConfig(),
+    this.dpdfnetAttenuationLimitDb = 0.0,
   });
 
   factory OfflineSpeechDenoiserConfig.fromJson(Map<String, dynamic> json) {
@@ -119,19 +120,24 @@ class OfflineSpeechDenoiserConfig {
           ? OfflineSpeechDenoiserModelConfig.fromJson(
               json['model'] as Map<String, dynamic>)
           : const OfflineSpeechDenoiserModelConfig(),
+      dpdfnetAttenuationLimitDb:
+          (json['dpdfnet_attenuation_limit_db'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
   @override
   String toString() {
-    return 'OfflineSpeechDenoiserConfig(model: $model)';
+    return 'OfflineSpeechDenoiserConfig(model: $model, '
+        'dpdfnetAttenuationLimitDb: $dpdfnetAttenuationLimitDb)';
   }
 
   Map<String, dynamic> toJson() => {
         'model': model.toJson(),
+        'dpdfnet_attenuation_limit_db': dpdfnetAttenuationLimitDb,
       };
 
   final OfflineSpeechDenoiserModelConfig model;
+  final double dpdfnetAttenuationLimitDb;
 }
 
 /// Audio returned by offline or online speech denoisers.
@@ -164,6 +170,7 @@ class OfflineSpeechDenoiser {
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
+    c.ref.dpdfnetAttenuationLimitDb = config.dpdfnetAttenuationLimitDb;
 
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser?.call(c) ??

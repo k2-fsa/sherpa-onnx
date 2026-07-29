@@ -51,6 +51,8 @@ OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(JNIEnv *env,
   jobject model = env->GetObjectField(config, fid);
 
   ans.model = GetOfflineSpeechDenoiserModelConfig(env, model, ok);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.dpdfnet_attenuation_limit_db,
+                            dpdfnetAttenuationLimitDb, cls, config);
   return ans;
 }
 

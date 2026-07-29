@@ -27,6 +27,7 @@ fn main() -> anyhow::Result<()> {
             },
             ..Default::default()
         },
+        dpdfnet_attenuation_limit_db: 12.0,
     };
 
     let denoiser = OfflineSpeechDenoiser::create(&config)

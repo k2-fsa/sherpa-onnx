@@ -26,6 +26,7 @@ void main(List<String> arguments) async {
   final outputWav = res['output-wav'] as String;
 
   final config = sherpa_onnx.OfflineSpeechDenoiserConfig(
+      dpdfnetAttenuationLimitDb: 12.0,
       model: sherpa_onnx.OfflineSpeechDenoiserModelConfig(
     gtcrn: const sherpa_onnx.OfflineSpeechDenoiserGtcrnModelConfig(),
     dpdfnet: sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(model: model),

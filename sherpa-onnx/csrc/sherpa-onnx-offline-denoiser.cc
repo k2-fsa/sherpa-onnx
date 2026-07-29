@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
@@ -38,6 +38,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 
 ./bin/sherpa-onnx-offline-denoiser \
   --speech-denoiser-dpdfnet-model=dpdfnet4.onnx \
+  --speech-denoiser-dpdfnet-attenuation-limit-db=12 \
   --input-wav=input.wav \
   --output-wav=output_16k.wav
 
@@ -73,6 +74,11 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
     SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
   fprintf(stderr, "%s\n", config.ToString().c_str());
+
+  if (!config.Validate()) {
+    fprintf(stderr, "Errors in config!\n");
+    return -1;
+  }
 
   if (input_wave.empty()) {
     fprintf(stderr, "Please provide --input-wav\n");

@@ -2582,7 +2582,8 @@ type OfflineSpeechDenoiserModelConfig struct {
 }
 
 type OfflineSpeechDenoiserConfig struct {
-	Model OfflineSpeechDenoiserModelConfig
+	Model                     OfflineSpeechDenoiserModelConfig
+	DpdfNetAttenuationLimitDb float32
 }
 
 type OfflineSpeechDenoiser struct {
@@ -2656,6 +2657,7 @@ func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeec
 
 	c.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(c.model.provider))
+	c.dpdfnet_attenuation_limit_db = C.float(config.DpdfNetAttenuationLimitDb)
 
 	impl := C.SherpaOnnxCreateOfflineSpeechDenoiser(&c)
 	if impl == nil {

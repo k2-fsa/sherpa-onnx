@@ -33,6 +33,7 @@ begin
   Config.Model.NumThreads:= 1;
   Config.Model.Debug:= True;
   Config.Model.Provider:= 'cpu';
+  Config.DpdfNetAttenuationLimitDb := 12.0;
 
   Sd := TSherpaOnnxOfflineSpeechDenoiser.Create(Config);
 

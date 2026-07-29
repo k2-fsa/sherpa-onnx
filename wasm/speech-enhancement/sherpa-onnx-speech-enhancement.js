@@ -127,18 +127,36 @@ function initSherpaOnnxOfflineSpeechDenoiserConfig(config, Module) {
 
   const modelConfig =
       initSherpaOnnxOfflineSpeechDenoiserModelConfig(config.model, Module);
-  const len = modelConfig.len;
+  const len = modelConfig.len + 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
   Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset);
   offset += modelConfig.len;
 
+  Module.setValue(
+      ptr + offset, config.dpdfnetAttenuationLimitDb || 0, 'float');
+  offset += 4;
+
   return {
     ptr: ptr,
     len: len,
     config: modelConfig,
   };
+}
+
+function initSherpaOnnxOnlineSpeechDenoiserConfig(config, Module) {
+  if (!('model' in config)) {
+    config.model = {
+      gtcrn: {model: ''},
+      dpdfnet: {model: ''},
+      provider: 'cpu',
+      debug: 1,
+      numThreads: 1,
+    };
+  }
+
+  return initSherpaOnnxOfflineSpeechDenoiserModelConfig(config.model, Module);
 }
 
 function copyDenoisedAudio(handle, Module) {
@@ -209,7 +227,7 @@ class OfflineSpeechDenoiser extends SpeechDenoiserBase {
 class OnlineSpeechDenoiser extends SpeechDenoiserBase {
   constructor(configObj, Module) {
     super(Module);
-    const config = initSherpaOnnxOfflineSpeechDenoiserConfig(configObj, Module);
+    const config = initSherpaOnnxOnlineSpeechDenoiserConfig(configObj, Module);
     const handle = Module._SherpaOnnxCreateOnlineSpeechDenoiser(config.ptr);
 
     freeConfig(config, Module);

@@ -20,6 +20,7 @@ data class OfflineSpeechDenoiserModelConfig(
 
 data class OfflineSpeechDenoiserConfig(
     var model: OfflineSpeechDenoiserModelConfig = OfflineSpeechDenoiserModelConfig(),
+    var dpdfnetAttenuationLimitDb: Float = 0.0f,
 )
 
 class OfflineSpeechDenoiser(

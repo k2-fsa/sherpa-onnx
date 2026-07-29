@@ -26,6 +26,9 @@ final class SherpaOnnxOfflineSpeechDenoiserModelConfig extends Struct {
 
 final class SherpaOnnxOfflineSpeechDenoiserConfig extends Struct {
   external SherpaOnnxOfflineSpeechDenoiserModelConfig model;
+
+  @Float()
+  external double dpdfnetAttenuationLimitDb;
 }
 
 final class SherpaOnnxOnlineSpeechDenoiserConfig extends Struct {

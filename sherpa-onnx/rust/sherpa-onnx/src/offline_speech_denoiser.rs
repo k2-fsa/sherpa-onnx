@@ -129,6 +129,8 @@ impl DenoisedAudio {
 /// Top-level configuration for [`OfflineSpeechDenoiser`].
 pub struct OfflineSpeechDenoiserConfig {
     pub model: OfflineSpeechDenoiserModelConfig,
+    /// DPDFNet-only offline attenuation limit in dB. 0 disables it.
+    pub dpdfnet_attenuation_limit_db: f32,
 }
 
 impl OfflineSpeechDenoiserConfig {
@@ -137,6 +139,7 @@ impl OfflineSpeechDenoiserConfig {
             model: self
                 .model
                 .to_sys(cstrings),
+            dpdfnet_attenuation_limit_db: self.dpdfnet_attenuation_limit_db,
         }
     }
 }

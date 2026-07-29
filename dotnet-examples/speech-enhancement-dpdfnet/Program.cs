@@ -33,6 +33,7 @@ class OfflineSpeechEnhancementDemo
     config.Model.Dpdfnet.Model = model;
     config.Model.Debug = 1;
     config.Model.NumThreads = 1;
+    config.DpdfNetAttenuationLimitDb = 12.0f;
     var sd = new OfflineSpeechDenoiser(config);
 
     WaveReader waveReader = new WaveReader("./inp_16k.wav");

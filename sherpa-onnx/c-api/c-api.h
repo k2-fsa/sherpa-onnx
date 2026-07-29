@@ -4123,6 +4123,14 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserModelConfig {
 typedef struct SherpaOnnxOfflineSpeechDenoiserConfig {
   /** Model configuration. */
   SherpaOnnxOfflineSpeechDenoiserModelConfig model;
+  /**
+   * DPDFNet-only offline attenuation limit in dB.
+   *
+   * Values greater than 0 limit suppression by blending aligned noisy spectra
+   * into the enhanced spectra with a noisy-signal weight of
+   * `10^(-limit_db / 20)`. Set to 0 or infinity to disable the limit.
+   */
+  float dpdfnet_attenuation_limit_db;
 } SherpaOnnxOfflineSpeechDenoiserConfig;
 
 /** @brief Opaque offline speech denoiser handle. */

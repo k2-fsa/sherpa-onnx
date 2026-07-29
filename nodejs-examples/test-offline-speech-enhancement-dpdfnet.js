@@ -14,6 +14,7 @@ const sherpa_onnx = require('sherpa-onnx');
 function createOfflineSpeechDenoiser() {
   const model = './dpdfnet2.onnx';
   let config = {
+    dpdfnetAttenuationLimitDb: 12,
     model: {
       dpdfnet: {model},
       debug: 1,

@@ -19,6 +19,7 @@ fun createOfflineSpeechDenoiserDpdfNet(): OfflineSpeechDenoiser {
         provider = "cpu",
         numThreads = 1,
       ),
+      dpdfnetAttenuationLimitDb = 12.0f,
   )
 
   return OfflineSpeechDenoiser(config = config)

@@ -791,6 +791,8 @@ OfflineSpeechDenoiser OfflineSpeechDenoiser::Create(
     const OfflineSpeechDenoiserConfig &config) {
   struct SherpaOnnxOfflineSpeechDenoiserConfig c;
   FillSpeechDenoiserModelConfig(config.model, &c.model);
+  c.dpdfnet_attenuation_limit_db =
+      config.dpdfnet_attenuation_limit_db;
 
   auto p = SherpaOnnxCreateOfflineSpeechDenoiser(&c);
 

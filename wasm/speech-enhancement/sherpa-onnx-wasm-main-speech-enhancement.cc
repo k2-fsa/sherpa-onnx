@@ -24,7 +24,7 @@ static_assert(
             sizeof(SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig) + 3 * 4,
     "");
 static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserConfig) ==
-                  sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig),
+                  sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig) + 4,
               "");
 
 void MyPrint(SherpaOnnxOfflineSpeechDenoiserConfig *config) {
@@ -37,6 +37,8 @@ void MyPrint(SherpaOnnxOfflineSpeechDenoiserConfig *config) {
   fprintf(stdout, "num threads: %d\n", model->num_threads);
   fprintf(stdout, "debug: %d\n", model->debug);
   fprintf(stdout, "provider: %s\n", model->provider);
+  fprintf(stdout, "dpdfnet attenuation limit (dB): %.2f\n",
+          config->dpdfnet_attenuation_limit_db);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {

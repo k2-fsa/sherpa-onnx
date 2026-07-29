@@ -54,7 +54,8 @@ def create_speech_denoiser():
             debug=False,
             num_threads=1,
             provider="cpu",
-        )
+        ),
+        dpdfnet_attenuation_limit_db=12.0,
     )
     if not config.validate():
         print(config)

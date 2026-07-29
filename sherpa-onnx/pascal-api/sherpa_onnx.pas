@@ -747,6 +747,7 @@ type
 
   TSherpaOnnxOfflineSpeechDenoiserConfig = record
     Model: TSherpaOnnxOfflineSpeechDenoiserModelConfig;
+    DpdfNetAttenuationLimitDb: Single;
     function ToString: AnsiString;
   end;
 
@@ -1317,6 +1318,7 @@ type
 
   SherpaOnnxOfflineSpeechDenoiserConfig = record
     Model: SherpaOnnxOfflineSpeechDenoiserModelConfig;
+    DpdfNetAttenuationLimitDb: cfloat;
   end;
 
   PSherpaOnnxOfflineSpeechDenoiserConfig = ^SherpaOnnxOfflineSpeechDenoiserConfig;
@@ -3446,7 +3448,8 @@ end;
 function TSherpaOnnxOfflineSpeechDenoiserConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineSpeechDenoiserConfig(' +
-    'Model := %s)', [Self.Model.ToString]);
+    'Model := %s, DpdfNetAttenuationLimitDb := %f)',
+    [Self.Model.ToString, Self.DpdfNetAttenuationLimitDb]);
 end;
 
 function TSherpaOnnxOnlineSpeechDenoiserConfig.ToString: AnsiString;
@@ -3481,6 +3484,7 @@ begin
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Debug := Ord(Config.Model.Debug);
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
+  C.DpdfNetAttenuationLimitDb := Config.DpdfNetAttenuationLimitDb;
 
   Self.Handle := SherpaOnnxCreateOfflineSpeechDenoiser(@C);
   Self._Config := Config;

@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 
+#include <cmath>
 #include <string>
 
 #if __ANDROID_API__ >= 9
@@ -15,21 +16,48 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser-impl.h"
 
 namespace sherpa_onnx {
 
 void OfflineSpeechDenoiserConfig::Register(ParseOptions *po) {
   model.Register(po);
+  po->Register(
+      "speech-denoiser-dpdfnet-attenuation-limit-db",
+      &dpdfnet_attenuation_limit_db,
+      "Offline-only DPDFNet attenuation limit in dB. Values greater than 0 "
+      "limit suppression by blending aligned noisy spectra into the enhanced "
+      "spectra. 0 or infinity disables the limit.");
 }
 
-bool OfflineSpeechDenoiserConfig::Validate() const { return model.Validate(); }
+bool OfflineSpeechDenoiserConfig::Validate() const {
+  if (std::isnan(dpdfnet_attenuation_limit_db) ||
+      dpdfnet_attenuation_limit_db < 0.0f) {
+    SHERPA_ONNX_LOGE(
+        "dpdfnet_attenuation_limit_db must be non-negative. Given: %f",
+        dpdfnet_attenuation_limit_db);
+    return false;
+  }
+
+  if (dpdfnet_attenuation_limit_db > 0.0f &&
+      !std::isinf(dpdfnet_attenuation_limit_db) &&
+      model.dpdfnet.model.empty()) {
+    SHERPA_ONNX_LOGE(
+        "dpdfnet_attenuation_limit_db is supported only with a DPDFNet model");
+    return false;
+  }
+
+  return model.Validate();
+}
 
 std::string OfflineSpeechDenoiserConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineSpeechDenoiserConfig(";
-  os << "model=" << model.ToString() << ")";
+  os << "model=" << model.ToString() << ", ";
+  os << "dpdfnet_attenuation_limit_db="
+     << dpdfnet_attenuation_limit_db << ")";
   return os.str();
 }
 

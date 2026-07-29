@@ -20,6 +20,14 @@ struct DenoisedAudio {
 
 struct OfflineSpeechDenoiserConfig {
   OfflineSpeechDenoiserModelConfig model;
+  // DPDFNet-only offline attenuation limit in dB. A value of 0 disables it.
+  float dpdfnet_attenuation_limit_db = 0.0f;
+
+  OfflineSpeechDenoiserConfig() = default;
+  OfflineSpeechDenoiserConfig(const OfflineSpeechDenoiserModelConfig &model,
+                              float dpdfnet_attenuation_limit_db = 0.0f)
+      : model(model),
+        dpdfnet_attenuation_limit_db(dpdfnet_attenuation_limit_db) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

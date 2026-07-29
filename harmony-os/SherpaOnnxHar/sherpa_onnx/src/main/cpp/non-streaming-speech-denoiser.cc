@@ -44,6 +44,8 @@ CreateOfflineSpeechDenoiserWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxOfflineSpeechDenoiserConfig c;
   memset(&c, 0, sizeof(c));
   c.model = GetSpeechDenoiserModelConfig(o);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(dpdfnet_attenuation_limit_db,
+                                dpdfnetAttenuationLimitDb);
 
 #if __OHOS__
   std::unique_ptr<NativeResourceManager,
