@@ -82,6 +82,9 @@ rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8
 
 ./run-fire-red-asr-ctc.sh
 
+./run-paraformer.sh
+rm -rf sherpa-onnx-paraformer-zh-small-2024-03-09
+
 ./run-silero-vad-remove-silence.sh
 
 ./run-ten-vad-remove-silence.sh
