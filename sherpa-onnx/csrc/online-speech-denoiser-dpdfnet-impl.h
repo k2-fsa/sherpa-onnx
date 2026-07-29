@@ -67,10 +67,13 @@ class OnlineSpeechDenoiserDpdfNetImpl : public OnlineSpeechDenoiserImpl {
   void Init() {
     const auto &meta = model_.GetMetaData();
     if (meta.profile != "dpdfnet_16khz" &&
-        meta.profile != "dpdfnet2_48khz_hr") {
+        meta.profile != "dpdfnet2_8khz" &&
+        meta.profile != "dpdfnet8_8khz" &&
+        meta.profile != "dpdfnet2_48khz_hr" &&
+        meta.profile != "dpdfnet8_48khz_hr") {
       SHERPA_ONNX_LOGE(
-          "Online speech denoiser currently supports only DPDFNet streaming "
-          "exports. Given profile: %s",
+          "Online speech denoiser supports the official 8, 16, and 48 kHz "
+          "DPDFNet streaming exports. Given profile: %s",
           meta.profile.c_str());
       SHERPA_ONNX_EXIT(-1);
     }

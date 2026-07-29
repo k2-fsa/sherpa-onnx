@@ -34,7 +34,10 @@ Currently this binary supports:
   dpdfnet2.onnx
   dpdfnet4.onnx
   dpdfnet8.onnx
+  dpdfnet2_8khz.onnx
+  dpdfnet8_8khz.onnx
   dpdfnet2_48khz_hr.onnx
+  dpdfnet8_48khz_hr.onnx
 
 Usage:
 
@@ -55,6 +58,9 @@ Usage:
   --chunk-duration-ms=10 \
   --input-wav=input.wav \
   --output-wav=output_48k.wav
+
+# Use dpdfnet2_8khz.onnx or dpdfnet8_8khz.onnx for 8 kHz audio, and
+# dpdfnet8_48khz_hr.onnx for the highest-quality 48 kHz audio.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);

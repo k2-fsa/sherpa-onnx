@@ -15,8 +15,10 @@ namespace sherpa_onnx {
 void OfflineSpeechDenoiserDpdfNetModelConfig::Register(ParseOptions *po) {
   po->Register("speech-denoiser-dpdfnet-model", &model,
                "Path to a DPDFNet ONNX model for speech denoising, e.g. "
-               "baseline/dpdfnet2/dpdfnet4/dpdfnet8 (16 kHz) or "
-               "dpdfnet2_48khz_hr (48 kHz). Download DPDFNet models from the "
+               "baseline/dpdfnet2/dpdfnet4/dpdfnet8 (16 kHz), "
+               "dpdfnet2_8khz/dpdfnet8_8khz (8 kHz), or "
+               "dpdfnet2_48khz_hr/dpdfnet8_48khz_hr (48 kHz). "
+               "Download DPDFNet models from the "
                "sherpa-onnx GitHub release or the official Hugging Face hub: "
                "https://github.com/k2-fsa/sherpa-onnx/releases/tag/"
                "speech-enhancement-models or "
