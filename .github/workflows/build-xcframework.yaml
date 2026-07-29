@@ -97,15 +97,15 @@ jobs:
           file: ./build-ios*/*.xcframework.zip
 
       - name: Release xcframework
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: ./build-ios*/*.xcframework.zip
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.4
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.13.4
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -127,7 +127,7 @@ jobs:
 
             cd huggingface
 
-            cp -v ../*.xcframework.zip ./
+            cp -v ../build-ios*/*.xcframework.zip ./
 
             git status
             git lfs track "*.zip"
@@ -185,15 +185,15 @@ jobs:
           file: ./build-swift-macos/*.xcframework.zip
 
       - name: Release xcframework
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: ./build-swift-macos/*.xcframework.zip
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.4
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.13.4
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface

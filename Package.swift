@@ -10,7 +10,7 @@ let package = Package(
   products: [
     .library(
       name: "sherpa-onnx",
-      targets: ["sherpa-onnx"]
+      targets: ["SherpaOnnx"]
     ),
   ],
   dependencies: [
@@ -18,22 +18,22 @@ let package = Package(
   ],
   targets: [
     .binaryTarget(
-      name: "sherpa-onnx-macos",
+      name: "SherpaOnnxMacOS",
       url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-macos.xcframework.zip",
       checksum: "4325d8aed99b94be58969005b19f9626f3f3afc4ebd42378b0aad2b84e233552"
     ),
     .binaryTarget(
-      name: "sherpa-onnx-ios",
+      name: "SherpaOnnxIOS",
       url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-ios.xcframework.zip",
       checksum: "c5a62904bba73edc4bac89bbf51b4c3db1dd6c1b397a16ee95b2ff94701e9846"
     ),
     .target(
-      name: "sherpa-onnx",
+      name: "SherpaOnnx",
       dependencies: [
         .product(name: "onnxruntime-macos", package: "onnxruntime-libs", condition: .when(platforms: [.macOS])),
         .product(name: "onnxruntime-ios", package: "onnxruntime-libs", condition: .when(platforms: [.iOS])),
-        .target(name: "sherpa-onnx-macos", condition: .when(platforms: [.macOS])),
-        .target(name: "sherpa-onnx-ios", condition: .when(platforms: [.iOS])),
+        .target(name: "SherpaOnnxMacOS", condition: .when(platforms: [.macOS])),
+        .target(name: "SherpaOnnxIOS", condition: .when(platforms: [.iOS])),
       ],
       path: "swift-api-examples",
       exclude: [
