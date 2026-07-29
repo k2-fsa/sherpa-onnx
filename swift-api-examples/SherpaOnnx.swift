@@ -209,7 +209,7 @@ public func sherpaOnnxOnlineRecognizerConfig(
 ///  let result = recognizer.getResult()
 ///  print("text: \(result.text)")
 ///
-public class SherpaOnnxOnlineRecongitionResult {
+public class SherpaOnnxOnlineRecognitionResult {
   /// A pointer to the underlying counterpart in C
   private let result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>
 
@@ -291,11 +291,11 @@ public class SherpaOnnxRecognizer {
   }
 
   /// Get the decoding results so far
-  public func getResult() -> SherpaOnnxOnlineRecongitionResult {
+  public func getResult() -> SherpaOnnxOnlineRecognitionResult {
     guard let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream) else {
       fatalError("SherpaOnnxGetOnlineStreamResult returned nil")
     }
-    return SherpaOnnxOnlineRecongitionResult(result: result)
+    return SherpaOnnxOnlineRecognitionResult(result: result)
   }
 
   /// Reset the recognizer, which clears the neural network model state
@@ -674,7 +674,7 @@ public func sherpaOnnxOfflineRecognizerConfig(
   )
 }
 
-public class SherpaOnnxOfflineRecongitionResult {
+public class SherpaOnnxOfflineRecognitionResult {
   /// A pointer to the underlying counterpart in C
   public let result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>
 
@@ -788,7 +788,7 @@ public class SherpaOnnxOfflineRecognizer {
   ///   - samples: Audio samples normalized to the range [-1, 1]
   ///   - sampleRate: Sample rate of the input audio samples. Must match
   ///                 the one expected by the model.
-  public func decode(samples: [Float], sampleRate: Int = 16_000) -> SherpaOnnxOfflineRecongitionResult {
+  public func decode(samples: [Float], sampleRate: Int = 16_000) -> SherpaOnnxOfflineRecognitionResult {
     let stream = createStream()
     stream.acceptWaveform(samples: samples, sampleRate: sampleRate)
     decode(stream: stream)
@@ -811,12 +811,12 @@ public class SherpaOnnxOfflineRecognizer {
     SherpaOnnxDecodeOfflineStream(recognizer, stream.stream)
   }
 
-  public func getResult(stream: SherpaOnnxOfflineStreamWrapper) -> SherpaOnnxOfflineRecongitionResult {
+  public func getResult(stream: SherpaOnnxOfflineStreamWrapper) -> SherpaOnnxOfflineRecognitionResult {
     guard let resultPtr = SherpaOnnxGetOfflineStreamResult(stream.stream) else {
       fatalError("Failed to get offline recognition result")
     }
 
-    return SherpaOnnxOfflineRecongitionResult(result: resultPtr)
+    return SherpaOnnxOfflineRecognitionResult(result: resultPtr)
   }
 }
 

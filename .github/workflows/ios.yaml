@@ -27,10 +27,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Build SherpaOnnx
         shell: bash
         run: |
+          set -euo pipefail
           cd ios-swiftui/SherpaOnnx
           xcodebuild -project SherpaOnnx.xcodeproj \
             -scheme SherpaOnnx \
@@ -44,10 +46,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Build SherpaOnnx2Pass
         shell: bash
         run: |
+          set -euo pipefail
           cd ios-swiftui/SherpaOnnx2Pass
           xcodebuild -project SherpaOnnx2Pass.xcodeproj \
             -scheme SherpaOnnx2Pass \
@@ -61,10 +65,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Build SherpaOnnxLangID
         shell: bash
         run: |
+          set -euo pipefail
           cd ios-swiftui/SherpaOnnxLangID
           xcodebuild -project SherpaOnnxLangID.xcodeproj \
             -scheme SherpaOnnxLangID \
@@ -78,10 +84,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Build SherpaOnnxSubtitle
         shell: bash
         run: |
+          set -euo pipefail
           cd ios-swiftui/SherpaOnnxSubtitle
           xcodebuild -project SherpaOnnxSubtitle.xcodeproj \
             -scheme SherpaOnnxSubtitle \
@@ -95,10 +103,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Build SherpaOnnxTts
         shell: bash
         run: |
+          set -euo pipefail
           cd ios-swiftui/SherpaOnnxTts
           xcodebuild -project SherpaOnnxTts.xcodeproj \
             -scheme SherpaOnnxTts \

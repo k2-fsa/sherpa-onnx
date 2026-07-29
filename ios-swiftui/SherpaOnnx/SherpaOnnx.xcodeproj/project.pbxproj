@@ -605,6 +605,17 @@
 	};
 	rootObject = C924F32229DDAC0B00A440A5 /* Project object */;
 
+/* Begin XCRemoteSwiftPackageReference section */
+		C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
+			requirement = {
+				kind = branch;
+				branch = master;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		C9SP000000000002 /* sherpa-onnx */ = {
 			isa = XCSwiftPackageProductDependency;
