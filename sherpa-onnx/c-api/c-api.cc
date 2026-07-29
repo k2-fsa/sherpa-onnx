@@ -3260,10 +3260,24 @@ const SherpaOnnxOfflineSpeakerDiarizationResult *
 SherpaOnnxOfflineSpeakerDiarizationProcess(
     const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
     int32_t n) {
-  auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
-  ans->impl = sd->impl->Process(samples, n);
+  if (!sd || !sd->impl) return nullptr;
 
-  return ans;
+  try {
+    auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
+    ans->impl = sd->impl->Process(samples, n);
+
+    return ans;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Speaker diarization failed: %s", e.what());
+    return nullptr;
+  } catch (...) {
+    // fastclustercpp::nan_error and fenv_error are thrown by hclust_fast() and
+    // do not derive from std::exception. Letting any C++ exception escape a
+    // C-linkage entry point is undefined behaviour for non-C++ callers (it
+    // crashes .NET/JVM P/Invoke frames rather than unwinding).
+    SHERPA_ONNX_LOGE("Speaker diarization failed with an unknown exception");
+    return nullptr;
+  }
 }
 
 void SherpaOnnxOfflineSpeakerDiarizationDestroyResult(
@@ -3277,10 +3291,20 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
     const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
     int32_t n, SherpaOnnxOfflineSpeakerDiarizationProgressCallback callback,
     void *arg) {
-  auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
-  ans->impl = sd->impl->Process(samples, n, callback, arg);
+  if (!sd || !sd->impl) return nullptr;
 
-  return ans;
+  try {
+    auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
+    ans->impl = sd->impl->Process(samples, n, callback, arg);
+
+    return ans;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Speaker diarization failed: %s", e.what());
+    return nullptr;
+  } catch (...) {
+    SHERPA_ONNX_LOGE("Speaker diarization failed with an unknown exception");
+    return nullptr;
+  }
 }
 
 const SherpaOnnxOfflineSpeakerDiarizationResult *
@@ -3288,15 +3312,25 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
     const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
     int32_t n,
     SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback) {
+  if (!sd || !sd->impl) return nullptr;
+
   auto wrapper = [callback](int32_t num_processed_chunks,
                             int32_t num_total_chunks, void *) {
     return callback(num_processed_chunks, num_total_chunks);
   };
 
-  auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
-  ans->impl = sd->impl->Process(samples, n, wrapper);
+  try {
+    auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
+    ans->impl = sd->impl->Process(samples, n, wrapper);
 
-  return ans;
+    return ans;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Speaker diarization failed: %s", e.what());
+    return nullptr;
+  } catch (...) {
+    SHERPA_ONNX_LOGE("Speaker diarization failed with an unknown exception");
+    return nullptr;
+  }
 }
 #else
 
