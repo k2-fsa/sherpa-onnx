@@ -490,7 +490,7 @@ def check_args(args):
         raise ValueError(f"Unsupported decoding method {args.decoding_method}")
 
     if args.decoding_method == "modified_beam_search":
-        assert args.num_active_paths > 0, args.num_active_paths
+        assert args.max_active_paths > 0, args.max_active_paths
         assert Path(args.encoder).is_file(), args.encoder
         assert Path(args.decoder).is_file(), args.decoder
         assert Path(args.joiner).is_file(), args.joiner
