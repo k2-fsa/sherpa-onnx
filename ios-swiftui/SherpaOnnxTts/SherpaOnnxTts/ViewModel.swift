@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SherpaOnnx
 
 // used to get the path to espeak-ng-data
 func resourceURL(to path: String) -> String {
@@ -199,7 +200,7 @@ func getTtsFor_kokoro_multi_lang_v1_0() -> SherpaOnnxOfflineTtsWrapper {
     model: model, voices: voices, tokens: tokens, dataDir: dataDir,
     lexicon: lexicon)
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro)
-  var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
+  var config = sherpaOnnxOfflineTtsConfig(model: modelConfig, ruleFsts: ruleFsts)
 
   return SherpaOnnxOfflineTtsWrapper(config: &config)
 }

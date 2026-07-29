@@ -5,6 +5,7 @@
 //  Created by fangjun on 2023/9/11.
 //
 
+import SherpaOnnx
 import SwiftUI
 
 @main

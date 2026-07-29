@@ -8,6 +8,7 @@
 
 import SwiftUI
 import AVFoundation
+import SherpaOnnx
 import UniformTypeIdentifiers
 
 class TtsProgressHandler: ObservableObject {
