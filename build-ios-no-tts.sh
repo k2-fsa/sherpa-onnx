@@ -50,6 +50,7 @@ cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=OFF \
   -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+  -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_ENABLE_TESTS=OFF \
   -DSHERPA_ONNX_ENABLE_CHECK=OFF \
   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
@@ -79,6 +80,7 @@ cmake \
   -DCMAKE_INSTALL_PREFIX=./install \
   -DBUILD_SHARED_LIBS=OFF \
   -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+  -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_ENABLE_TESTS=OFF \
   -DSHERPA_ONNX_ENABLE_CHECK=OFF \
   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
@@ -112,6 +114,7 @@ cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=OFF \
   -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+  -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_ENABLE_TESTS=OFF \
   -DSHERPA_ONNX_ENABLE_CHECK=OFF \
   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
@@ -124,6 +127,7 @@ cmake \
 cmake --build build/os64 -j 4
 # Generate headers for sherpa-onnx.xcframework
 cmake --build build/os64 --target install
+cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
 echo "Generate xcframework"
 
@@ -162,17 +166,14 @@ libtool -static -o build/os64/sherpa-onnx.a \
 rm -rf sherpa-onnx.xcframework
 
 xcodebuild -create-xcframework \
-      -library "build/os64/sherpa-onnx.a" \
-      -library "build/simulator/sherpa-onnx.a" \
+      -library "build/os64/sherpa-onnx.a" -headers install/include/sherpa-onnx/c-api \
+      -library "build/simulator/sherpa-onnx.a" -headers install/include/sherpa-onnx/c-api \
       -output sherpa-onnx.xcframework
 
-# Copy Headers
-mkdir -p sherpa-onnx.xcframework/Headers
-cp -av install/include/* sherpa-onnx.xcframework/Headers
+SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
-pushd sherpa-onnx.xcframework/ios-arm64_x86_64-simulator
-ln -s sherpa-onnx.a libsherpa-onnx.a
-popd
+rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-no-tts.xcframework.zip
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-no-tts.xcframework.zip sherpa-onnx.xcframework
 
-pushd sherpa-onnx.xcframework/ios-arm64
-ln -s sherpa-onnx.a libsherpa-onnx.a
+echo "Checksum:"
+swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-no-tts.xcframework.zip | tee checksum.txt

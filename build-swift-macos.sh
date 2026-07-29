@@ -25,6 +25,7 @@ cmake \
 make -j4
 make install
 rm -fv ./install/include/cargs.h
+cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
 libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-c-api.a \
@@ -42,5 +43,13 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
 
 xcodebuild -create-xcframework \
   -library install/lib/libsherpa-onnx.a \
-  -headers install/include \
+  -headers install/include/sherpa-onnx/c-api \
   -output sherpa-onnx.xcframework
+
+SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+
+rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip sherpa-onnx.xcframework
+
+echo "Checksum:"
+swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip | tee checksum.txt

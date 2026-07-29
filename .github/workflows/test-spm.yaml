@@ -1,0 +1,69 @@
+name: test-spm
+
+on:
+  push:
+    branches:
+      - master
+      - test-spm
+  workflow_dispatch:
+
+jobs:
+  test-spm-macos:
+    name: Test SPM (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run (macOS)
+        shell: bash
+        run: |
+          cd spm-examples/macOS
+          rm -rf .build
+          swift package resolve
+          swift package show-dependencies
+          swift build --verbose
+          swift run SherpaOnnxExample
+
+  test-spm-ios:
+    name: Test SPM (iOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run for iOS Simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd spm-examples/iOS
+
+          echo "=== Resolving ==="
+          swift package resolve
+
+          echo "=== Building for iOS Simulator ==="
+          xcodebuild -scheme SherpaOnnxExample \
+            -destination "generic/platform=iOS Simulator" \
+            -skipPackagePluginValidation \
+            -verbose \
+            build 2>&1
+
+          echo "=== Finding built executable ==="
+          BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
+          echo "Binary: $BINARY"
+
+          echo "=== Booting iOS Simulator ==="
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for key in devices:
+              for d in devices[key]:
+                  if d['isAvailable'] and 'iPhone' in d['name']:
+                      print(d['udid'])
+                      sys.exit(0)
+          ")
+          echo "Device: $DEVICE"
+          xcrun simctl boot "$DEVICE" 2>/dev/null || true
+
+          echo "=== Running on iOS Simulator ==="
+          xcrun simctl spawn "$DEVICE" "$BINARY"
