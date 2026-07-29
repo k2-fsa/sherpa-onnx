@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C98126522BFEEDB7000AD7AA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C98126512BFEEDB7000AD7AA /* Info.plist */; };
 		DEBB2D762BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2D752BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift */; };
 		DEBB2D782BBAAA3500864EF5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2D772BBAAA3500864EF5 /* ContentView.swift */; };
 		DEBB2D7A2BBAAA3600864EF5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DEBB2D792BBAAA3600864EF5 /* Assets.xcassets */; };
@@ -51,8 +50,8 @@
 		DEBB2D8C2BBAAA3600864EF5 /* SherpaOnnxLangIDUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxLangIDUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBB2D902BBAAA3600864EF5 /* SherpaOnnxLangIDUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxLangIDUITests.swift; sourceTree = "<group>"; };
 		DEBB2D922BBAAA3600864EF5 /* SherpaOnnxLangIDUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxLangIDUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		DEBB2DA02BBAAAD800864EF5 /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extension.swift; path = ../../SherpaOnnx/SherpaOnnx/Extension.swift; sourceTree = "<group>"; };
-		DEBB2DA22BBAAAE700864EF5 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Model.swift; path = ../../SherpaOnnx/SherpaOnnx/Model.swift; sourceTree = "<group>"; };
+		DEBB2DA02BBAAAD800864EF5 /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extension.swift; path = ../../SherpaOnnxAsr/SherpaOnnxAsr/Extension.swift; sourceTree = "<group>"; };
+		DEBB2DA22BBAAAE700864EF5 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Model.swift; path = ../../SherpaOnnxAsr/SherpaOnnxAsr/Model.swift; sourceTree = "<group>"; };
 		DEBB2DA42BBAAAFD00864EF5 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -150,6 +149,7 @@
 			buildConfigurationList = DEBB2D962BBAAA3600864EF5 /* Build configuration list for PBXNativeTarget "SherpaOnnxLangID" */;
 			buildPhases = (
 				DEBB2D6E2BBAAA3500864EF5 /* Sources */,
+				DEBB2D6F2BBAAA3500864EF5 /* Frameworks */,
 				DEBB2D702BBAAA3500864EF5 /* Resources */,
 			);
 			buildRules = (
@@ -230,9 +230,9 @@
 				Base,
 			);
 			mainGroup = DEBB2D692BBAAA3500864EF5;
-				packageReferences = (
-					C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
-				);
+			packageReferences = (
+				C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
+			);
 			productRefGroup = DEBB2D732BBAAA3500864EF5 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -251,7 +251,6 @@
 			files = (
 				DEBB2D7D2BBAAA3600864EF5 /* Preview Assets.xcassets in Resources */,
 				DEBB2D7A2BBAAA3600864EF5 /* Assets.xcassets in Resources */,
-				C98126522BFEEDB7000AD7AA /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -618,16 +617,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-	};
-	rootObject = DEBB2D6A2BBAAA3500864EF5 /* Project object */;
-
 /* Begin XCRemoteSwiftPackageReference section */
 		C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
-				kind = branch;
 				branch = master;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -639,4 +635,6 @@
 			productName = "sherpa-onnx";
 		};
 /* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DEBB2D6A2BBAAA3500864EF5 /* Project object */;
 }

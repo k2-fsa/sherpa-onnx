@@ -6,6 +6,7 @@
 //
 
 import SherpaOnnx
+import SherpaOnnxC
 import SwiftUI
 import AVFoundation
 

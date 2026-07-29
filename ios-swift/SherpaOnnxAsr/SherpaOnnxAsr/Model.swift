@@ -1,4 +1,6 @@
 import Foundation
+import SherpaOnnx
+import SherpaOnnxC
 
 func getResource(_ forResource: String, _ ofType: String) -> String {
   let path = Bundle.main.path(forResource: forResource, ofType: ofType)

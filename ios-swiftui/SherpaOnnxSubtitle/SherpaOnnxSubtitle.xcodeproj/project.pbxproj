@@ -119,6 +119,7 @@
 			buildConfigurationList = DEA6571F2ABF19740066A81D /* Build configuration list for PBXNativeTarget "SherpaOnnxSubtitle" */;
 			buildPhases = (
 				DEA6570D2ABF19730066A81D /* Sources */,
+				DEA6570E2ABF19730066A81D /* Frameworks */,
 				DEA6570F2ABF19730066A81D /* Resources */,
 			);
 			buildRules = (
@@ -157,9 +158,9 @@
 				Base,
 			);
 			mainGroup = DEA657082ABF19730066A81D;
-				packageReferences = (
-					C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
-				);
+			packageReferences = (
+				C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
+			);
 			productRefGroup = DEA657122ABF19730066A81D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -405,16 +406,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-	};
-	rootObject = DEA657092ABF19730066A81D /* Project object */;
-
 /* Begin XCRemoteSwiftPackageReference section */
 		C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
-				kind = branch;
 				branch = master;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -426,4 +424,6 @@
 			productName = "sherpa-onnx";
 		};
 /* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DEA657092ABF19730066A81D /* Project object */;
 }

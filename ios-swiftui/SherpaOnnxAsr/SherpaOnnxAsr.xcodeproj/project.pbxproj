@@ -12,8 +12,8 @@
 		C924F33229DDAC0D00A440A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C924F33129DDAC0D00A440A5 /* Assets.xcassets */; };
 		C924F33529DDAC0D00A440A5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C924F33429DDAC0D00A440A5 /* Preview Assets.xcassets */; };
 		C924F33F29DDAC0D00A440A5 /* SherpaOnnxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F33E29DDAC0D00A440A5 /* SherpaOnnxTests.swift */; };
-		C924F34929DDAC0D00A440A5 /* SherpaOnnxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F34829DDAC0D00A440A5 /* SherpaOnnxUITests.swift */; };
-		C924F34B29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F34A29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift */; };
+		C924F34929DDAC0D00A440A5 /* SherpaOnnxAsrUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F34829DDAC0D00A440A5 /* SherpaOnnxAsrUITests.swift */; };
+		C924F34B29DDAC0D00A440A5 /* SherpaOnnxAsrUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F34A29DDAC0D00A440A5 /* SherpaOnnxAsrUITestsLaunchTests.swift */; };
 		C924F35E29DDAE8200A440A5 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F35D29DDAE8200A440A5 /* Model.swift */; };
 		C924F36229DDB15D00A440A5 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F36129DDB15D00A440A5 /* Extension.swift */; };
 		C924F36429DDB1D500A440A5 /* SherpaOnnxViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */; };
@@ -38,16 +38,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C924F32A29DDAC0B00A440A5 /* SherpaOnnx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnx.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C924F32A29DDAC0B00A440A5 /* SherpaOnnxAsr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxAsr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C924F32D29DDAC0B00A440A5 /* SherpaOnnxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxApp.swift; sourceTree = "<group>"; };
 		C924F32F29DDAC0B00A440A5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C924F33129DDAC0D00A440A5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C924F33429DDAC0D00A440A5 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		C924F33A29DDAC0D00A440A5 /* SherpaOnnxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C924F33A29DDAC0D00A440A5 /* SherpaOnnxAsrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxAsrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C924F33E29DDAC0D00A440A5 /* SherpaOnnxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxTests.swift; sourceTree = "<group>"; };
-		C924F34429DDAC0D00A440A5 /* SherpaOnnxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		C924F34829DDAC0D00A440A5 /* SherpaOnnxUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxUITests.swift; sourceTree = "<group>"; };
-		C924F34A29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		C924F34429DDAC0D00A440A5 /* SherpaOnnxAsrUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxAsrUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C924F34829DDAC0D00A440A5 /* SherpaOnnxAsrUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxAsrUITests.swift; sourceTree = "<group>"; };
+		C924F34A29DDAC0D00A440A5 /* SherpaOnnxAsrUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxAsrUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		C924F35D29DDAE8200A440A5 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		C924F36129DDB15D00A440A5 /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
 		C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SherpaOnnxViewModel.swift; sourceTree = "<group>"; };
@@ -84,8 +84,8 @@
 			isa = PBXGroup;
 			children = (
 				C924F32C29DDAC0B00A440A5 /* SherpaOnnx */,
-				C924F33D29DDAC0D00A440A5 /* SherpaOnnxTests */,
-				C924F34729DDAC0D00A440A5 /* SherpaOnnxUITests */,
+				C924F33D29DDAC0D00A440A5 /* SherpaOnnxAsrTests */,
+				C924F34729DDAC0D00A440A5 /* SherpaOnnxAsrUITests */,
 				C924F32B29DDAC0B00A440A5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,9 +93,9 @@
 		C924F32B29DDAC0B00A440A5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C924F32A29DDAC0B00A440A5 /* SherpaOnnx.app */,
-				C924F33A29DDAC0D00A440A5 /* SherpaOnnxTests.xctest */,
-				C924F34429DDAC0D00A440A5 /* SherpaOnnxUITests.xctest */,
+				C924F32A29DDAC0B00A440A5 /* SherpaOnnxAsr.app */,
+				C924F33A29DDAC0D00A440A5 /* SherpaOnnxAsrTests.xctest */,
+				C924F34429DDAC0D00A440A5 /* SherpaOnnxAsrUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -112,7 +112,7 @@
 				C924F33129DDAC0D00A440A5 /* Assets.xcassets */,
 				C924F33329DDAC0D00A440A5 /* Preview Content */,
 			);
-			path = SherpaOnnx;
+			path = SherpaOnnxAsr;
 			sourceTree = "<group>";
 		};
 		C924F33329DDAC0D00A440A5 /* Preview Content */ = {
@@ -123,21 +123,21 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		C924F33D29DDAC0D00A440A5 /* SherpaOnnxTests */ = {
+		C924F33D29DDAC0D00A440A5 /* SherpaOnnxAsrTests */ = {
 			isa = PBXGroup;
 			children = (
 				C924F33E29DDAC0D00A440A5 /* SherpaOnnxTests.swift */,
 			);
-			path = SherpaOnnxTests;
+			path = SherpaOnnxAsrTests;
 			sourceTree = "<group>";
 		};
-		C924F34729DDAC0D00A440A5 /* SherpaOnnxUITests */ = {
+		C924F34729DDAC0D00A440A5 /* SherpaOnnxAsrUITests */ = {
 			isa = PBXGroup;
 			children = (
-				C924F34829DDAC0D00A440A5 /* SherpaOnnxUITests.swift */,
-				C924F34A29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift */,
+				C924F34829DDAC0D00A440A5 /* SherpaOnnxAsrUITests.swift */,
+				C924F34A29DDAC0D00A440A5 /* SherpaOnnxAsrUITestsLaunchTests.swift */,
 			);
-			path = SherpaOnnxUITests;
+			path = SherpaOnnxAsrUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -145,26 +145,27 @@
 /* Begin PBXNativeTarget section */
 		C924F32929DDAC0B00A440A5 /* SherpaOnnx */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C924F34E29DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnx" */;
+			buildConfigurationList = C924F34E29DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxAsr" */;
 			buildPhases = (
 				C924F32629DDAC0B00A440A5 /* Sources */,
+				C924F32729DDAC0B00A440A5 /* Frameworks */,
 				C924F32829DDAC0B00A440A5 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = SherpaOnnx;
+			name = SherpaOnnxAsr;
 			packageProductDependencies = (
 				C9SP000000000002 /* sherpa-onnx */,
 			);
-			productName = SherpaOnnx;
-			productReference = C924F32A29DDAC0B00A440A5 /* SherpaOnnx.app */;
+			productName = SherpaOnnxAsr;
+			productReference = C924F32A29DDAC0B00A440A5 /* SherpaOnnxAsr.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C924F33929DDAC0D00A440A5 /* SherpaOnnxTests */ = {
+		C924F33929DDAC0D00A440A5 /* SherpaOnnxAsrTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C924F35129DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxTests" */;
+			buildConfigurationList = C924F35129DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxAsrTests" */;
 			buildPhases = (
 				C924F33629DDAC0D00A440A5 /* Sources */,
 				C924F33829DDAC0D00A440A5 /* Resources */,
@@ -174,14 +175,14 @@
 			dependencies = (
 				C924F33C29DDAC0D00A440A5 /* PBXTargetDependency */,
 			);
-			name = SherpaOnnxTests;
-			productName = SherpaOnnxTests;
-			productReference = C924F33A29DDAC0D00A440A5 /* SherpaOnnxTests.xctest */;
+			name = SherpaOnnxAsrTests;
+			productName = SherpaOnnxAsrTests;
+			productReference = C924F33A29DDAC0D00A440A5 /* SherpaOnnxAsrTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		C924F34329DDAC0D00A440A5 /* SherpaOnnxUITests */ = {
+		C924F34329DDAC0D00A440A5 /* SherpaOnnxAsrUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C924F35429DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxUITests" */;
+			buildConfigurationList = C924F35429DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxAsrUITests" */;
 			buildPhases = (
 				C924F34029DDAC0D00A440A5 /* Sources */,
 				C924F34229DDAC0D00A440A5 /* Resources */,
@@ -191,9 +192,9 @@
 			dependencies = (
 				C924F34629DDAC0D00A440A5 /* PBXTargetDependency */,
 			);
-			name = SherpaOnnxUITests;
-			productName = SherpaOnnxUITests;
-			productReference = C924F34429DDAC0D00A440A5 /* SherpaOnnxUITests.xctest */;
+			name = SherpaOnnxAsrUITests;
+			productName = SherpaOnnxAsrUITests;
+			productReference = C924F34429DDAC0D00A440A5 /* SherpaOnnxAsrUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -228,16 +229,16 @@
 				Base,
 			);
 			mainGroup = C924F32129DDAC0B00A440A5;
-				packageReferences = (
-					C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
-				);
+			packageReferences = (
+				C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
+			);
 			productRefGroup = C924F32B29DDAC0B00A440A5 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				C924F32929DDAC0B00A440A5 /* SherpaOnnx */,
-				C924F33929DDAC0D00A440A5 /* SherpaOnnxTests */,
-				C924F34329DDAC0D00A440A5 /* SherpaOnnxUITests */,
+				C924F33929DDAC0D00A440A5 /* SherpaOnnxAsrTests */,
+				C924F34329DDAC0D00A440A5 /* SherpaOnnxAsrUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -293,8 +294,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C924F34B29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift in Sources */,
-				C924F34929DDAC0D00A440A5 /* SherpaOnnxUITests.swift in Sources */,
+				C924F34B29DDAC0D00A440A5 /* SherpaOnnxAsrUITestsLaunchTests.swift in Sources */,
+				C924F34929DDAC0D00A440A5 /* SherpaOnnxAsrUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -435,11 +436,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnx/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxAsr/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SherpaOnnx/Info.plist;
+				INFOPLIST_FILE = SherpaOnnxAsr/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use microphone to record voice";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -451,7 +452,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnx";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxAsr";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -466,11 +467,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnx/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxAsr/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SherpaOnnx/Info.plist;
+				INFOPLIST_FILE = SherpaOnnxAsr/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use microphone to record voice";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -482,7 +483,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnx";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxAsr";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -500,12 +501,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxAsrTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SherpaOnnx.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SherpaOnnx";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SherpaOnnxAsr.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SherpaOnnx";
 			};
 			name = Debug;
 		};
@@ -519,12 +520,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxAsrTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SherpaOnnx.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SherpaOnnx";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SherpaOnnxAsr.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SherpaOnnx";
 			};
 			name = Release;
 		};
@@ -536,12 +537,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxAsrUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = SherpaOnnx;
+				TEST_TARGET_NAME = SherpaOnnxAsr;
 			};
 			name = Debug;
 		};
@@ -553,12 +554,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxAsrUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = SherpaOnnx;
+				TEST_TARGET_NAME = SherpaOnnxAsr;
 			};
 			name = Release;
 		};
@@ -574,7 +575,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C924F34E29DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnx" */ = {
+		C924F34E29DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxAsr" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C924F34F29DDAC0D00A440A5 /* Debug */,
@@ -583,7 +584,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C924F35129DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxTests" */ = {
+		C924F35129DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxAsrTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C924F35229DDAC0D00A440A5 /* Debug */,
@@ -592,7 +593,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C924F35429DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxUITests" */ = {
+		C924F35429DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxAsrUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C924F35529DDAC0D00A440A5 /* Debug */,
@@ -602,16 +603,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-	};
-	rootObject = C924F32229DDAC0B00A440A5 /* Project object */;
-
 /* Begin XCRemoteSwiftPackageReference section */
 		C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
-				kind = branch;
 				branch = master;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -623,4 +621,6 @@
 			productName = "sherpa-onnx";
 		};
 /* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = C924F32229DDAC0B00A440A5 /* Project object */;
 }

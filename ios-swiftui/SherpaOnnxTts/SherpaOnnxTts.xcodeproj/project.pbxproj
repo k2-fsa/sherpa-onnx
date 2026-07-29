@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -21,9 +21,6 @@
 		C917B4E62B0EEF3B005245AC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C917B4E82B0EEF3C005245AC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		C9E3B5CE3019B6D50057554A /* espeak-ng-data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "espeak-ng-data"; sourceTree = "<group>"; };
-		C9E3B5CF3019B6D50057554A /* en_US-amy-low.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "en_US-amy-low.onnx"; sourceTree = "<group>"; };
-		C9E3B5D03019B6D50057554A /* tokens.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = tokens.txt; sourceTree = "<group>"; };
 		C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -42,9 +39,6 @@
 		C917B4D82B0EEF3B005245AC = {
 			isa = PBXGroup;
 			children = (
-				C9E3B5CF3019B6D50057554A /* en_US-amy-low.onnx */,
-				C9E3B5CE3019B6D50057554A /* espeak-ng-data */,
-				C9E3B5D03019B6D50057554A /* tokens.txt */,
 				C917B4E32B0EEF3B005245AC /* SherpaOnnxTts */,
 				C917B4E22B0EEF3B005245AC /* Products */,
 			);
@@ -126,7 +120,7 @@
 			);
 			mainGroup = C917B4D82B0EEF3B005245AC;
 			packageReferences = (
-				C9SP000000000003 /* XCLocalSwiftPackageReference "../../" */,
+				C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
 			);
 			productRefGroup = C917B4E22B0EEF3B005245AC /* Products */;
 			projectDirPath = "";
@@ -361,20 +355,11 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
-				kind = branch;
 				branch = master;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		/*
-		C9SP000000000003 XCLocalSwiftPackageReference "../../" = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../;
-		};
-		*/
-/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		C9SP000000000002 /* sherpa-onnx */ = {
