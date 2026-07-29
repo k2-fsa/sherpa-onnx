@@ -81,8 +81,10 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
                                        frame.second.end());
     }
 
-    ApplyAttenuationLimit(stft_result, attenuation_limit_db_,
-                          &enhanced_stft_result);
+    if (!ApplyAttenuationLimit(stft_result, attenuation_limit_db_,
+                               &enhanced_stft_result)) {
+      return {};
+    }
 
     knf::IStft istft(stft_config);
 
@@ -98,11 +100,11 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
   }
 
  private:
-  static void ApplyAttenuationLimit(const knf::StftResult &noisy,
+  static bool ApplyAttenuationLimit(const knf::StftResult &noisy,
                                     float attenuation_limit_db,
                                     knf::StftResult *enhanced) {
     if (attenuation_limit_db <= 0.0f || std::isinf(attenuation_limit_db)) {
-      return;
+      return true;
     }
 
     if (noisy.num_frames != enhanced->num_frames ||
@@ -111,13 +113,13 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
       SHERPA_ONNX_LOGE(
           "Cannot apply the DPDFNet attenuation limit because noisy and "
           "enhanced STFT shapes differ");
-      SHERPA_ONNX_EXIT(-1);
+      return false;
     }
 
     constexpr int32_t kNoisyFrameOffset = 4;
     const int32_t num_frames = noisy.num_frames;
     if (num_frames <= 0) {
-      return;
+      return true;
     }
 
     const int32_t num_bins =
@@ -145,6 +147,8 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
             alpha * noisy_imag + enhanced_scale * enhanced->imag[i];
       }
     }
+
+    return true;
   }
 
   static std::vector<float> ShiftWaveform(std::vector<float> samples,

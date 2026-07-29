@@ -156,7 +156,17 @@ function initSherpaOnnxOnlineSpeechDenoiserConfig(config, Module) {
     };
   }
 
-  return initSherpaOnnxOfflineSpeechDenoiserModelConfig(config.model, Module);
+  const modelConfig =
+      initSherpaOnnxOfflineSpeechDenoiserModelConfig(config.model, Module);
+  const len = modelConfig.len;
+  const ptr = Module._malloc(len);
+  Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr);
+
+  return {
+    ptr: ptr,
+    len: len,
+    config: modelConfig,
+  };
 }
 
 function copyDenoisedAudio(handle, Module) {
