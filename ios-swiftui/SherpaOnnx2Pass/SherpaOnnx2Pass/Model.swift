@@ -1,4 +1,5 @@
 import SherpaOnnx
+import SherpaOnnxC
 import Foundation
 
 func getResource(_ forResource: String, _ ofType: String) -> String {

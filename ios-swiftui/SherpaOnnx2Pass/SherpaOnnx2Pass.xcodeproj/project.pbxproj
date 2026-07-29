@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C98126502BFEED7D000AD7AA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C981264F2BFEED7C000AD7AA /* Info.plist */; };
 		C9A2587D2AAEFFF100E555CA /* SherpaOnnx2PassApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2587C2AAEFFF100E555CA /* SherpaOnnx2PassApp.swift */; };
 		C9A2587F2AAEFFF100E555CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2587E2AAEFFF100E555CA /* ContentView.swift */; };
 		C9A258812AAEFFF200E555CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9A258802AAEFFF200E555CA /* Assets.xcassets */; };
@@ -15,7 +14,7 @@
 		C9A2588E2AAF039D00E555CA /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2588A2AAF039D00E555CA /* Model.swift */; };
 		C9A258902AAF039D00E555CA /* SherpaOnnxViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2588C2AAF039D00E555CA /* SherpaOnnxViewModel.swift */; };
 		C9A258912AAF039D00E555CA /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2588D2AAF039D00E555CA /* Extension.swift */; };
-		C9SP000000000001 /* sherpa-onnx in Frameworks */ = {isa = PBXBuildFile; productRef = C9SP000000000002 /* sherpa-onnx */; };
+		C9DE3D063019F54700131729 /* sherpa-onnx in Frameworks */ = {isa = PBXBuildFile; productRef = C9DE3D053019F54700131729 /* sherpa-onnx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,7 +34,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C9SP000000000001 /* sherpa-onnx in Frameworks */,
+				C9DE3D063019F54700131729 /* sherpa-onnx in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,6 +88,7 @@
 			buildConfigurationList = C9A258872AAEFFF200E555CA /* Build configuration list for PBXNativeTarget "SherpaOnnx2Pass" */;
 			buildPhases = (
 				C9A258752AAEFFF100E555CA /* Sources */,
+				C9A258762AAEFFF100E555CA /* Frameworks */,
 				C9A258772AAEFFF100E555CA /* Resources */,
 			);
 			buildRules = (
@@ -97,7 +97,7 @@
 			);
 			name = SherpaOnnx2Pass;
 			packageProductDependencies = (
-				C9SP000000000002 /* sherpa-onnx */,
+				C9DE3D053019F54700131729 /* sherpa-onnx */,
 			);
 			productName = SherpaOnnx2Pass;
 			productReference = C9A258792AAEFFF100E555CA /* SherpaOnnx2Pass.app */;
@@ -127,9 +127,9 @@
 				Base,
 			);
 			mainGroup = C9A258702AAEFFF100E555CA;
-				packageReferences = (
-					C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
-				);
+			packageReferences = (
+				C9DE3D043019F54700131729 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
+			);
 			productRefGroup = C9A2587A2AAEFFF100E555CA /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -146,7 +146,6 @@
 			files = (
 				C9A258842AAEFFF200E555CA /* Preview Assets.xcassets in Resources */,
 				C9A258812AAEFFF200E555CA /* Assets.xcassets in Resources */,
-				C98126502BFEED7D000AD7AA /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,25 +359,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-	};
-	rootObject = C9A258712AAEFFF100E555CA /* Project object */;
 
 /* Begin XCRemoteSwiftPackageReference section */
-		C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
+		C9DE3D043019F54700131729 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
-				kind = branch;
 				branch = master;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		C9SP000000000002 /* sherpa-onnx */ = {
+		C9DE3D053019F54700131729 /* sherpa-onnx */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */;
+			package = C9DE3D043019F54700131729 /* XCRemoteSwiftPackageReference "sherpa-onnx" */;
 			productName = "sherpa-onnx";
 		};
 /* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = C9A258712AAEFFF100E555CA /* Project object */;
 }

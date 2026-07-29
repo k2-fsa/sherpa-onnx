@@ -7,6 +7,7 @@
 
 import AVFoundation
 import UIKit
+import SherpaOnnx
 
 extension AudioBuffer {
     func array() -> [Float] {

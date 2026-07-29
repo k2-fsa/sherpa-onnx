@@ -6,9 +6,9 @@
 //
 // Text-to-speech with Next-gen Kaldi on iOS without Internet connection
 
+import SherpaOnnx
 import SwiftUI
 import AVFoundation
-import SherpaOnnx
 import UniformTypeIdentifiers
 
 class TtsProgressHandler: ObservableObject {

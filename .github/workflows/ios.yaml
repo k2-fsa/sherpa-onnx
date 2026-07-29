@@ -7,6 +7,7 @@ on:
       - ios-spm
     paths:
       - '.github/workflows/ios.yaml'
+      - 'ios-swift/**'
       - 'ios-swiftui/**'
       - 'swift-api-examples/**'
       - 'Package.swift'
@@ -22,7 +23,11 @@ permissions:
 
 jobs:
   sherpa-onnx:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,15 +38,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd ios-swiftui/SherpaOnnx
-          xcodebuild -project SherpaOnnx.xcodeproj \
-            -scheme SherpaOnnx \
+          cd ios-swiftui/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
-            build | tail -20
+            build
 
   sherpa-onnx-2pass:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,10 +66,14 @@ jobs:
             -scheme SherpaOnnx2Pass \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
-            build | tail -20
+            build
 
   sherpa-onnx-lang-id:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,10 +89,14 @@ jobs:
             -scheme SherpaOnnxLangID \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
-            build | tail -20
+            build
 
   sherpa-onnx-subtitle:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,10 +112,14 @@ jobs:
             -scheme SherpaOnnxSubtitle \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
-            build | tail -20
+            build
 
   sherpa-onnx-tts:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -114,4 +135,27 @@ jobs:
             -scheme SherpaOnnxTts \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
-            build | tail -20
+            build
+
+  sherpa-onnx-asr:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build SherpaOnnxAsr (ios-swift)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swift/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
