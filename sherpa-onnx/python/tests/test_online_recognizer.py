@@ -286,6 +286,44 @@ class TestOnlineRecognizer(unittest.TestCase):
                 print(f"{wave_filename}\n{result}")
                 print("-" * 10)
 
+    def test_streaming_paraformer(self):
+        m = "sherpa-onnx-streaming-paraformer-bilingual-zh-en"
+        encoder = f"{d}/{m}/encoder.int8.onnx"
+        decoder = f"{d}/{m}/decoder.int8.onnx"
+        tokens = f"{d}/{m}/tokens.txt"
+        wave2 = f"{d}/{m}/test_wavs/2.wav"
+
+        if not Path(encoder).is_file():
+            print("skipping test_streaming_paraformer()")
+            return
+
+        recognizer = sherpa_onnx.OnlineRecognizer.from_paraformer(
+            encoder=encoder,
+            decoder=decoder,
+            tokens=tokens,
+            num_threads=1,
+            provider="cpu",
+        )
+
+        s = recognizer.create_stream()
+        samples, sample_rate = read_wave(wave2)
+        s.accept_waveform(sample_rate, samples)
+
+        tail_paddings = np.zeros(int(0.66 * sample_rate), dtype=np.float32)
+        s.accept_waveform(sample_rate, tail_paddings)
+        s.input_finished()
+        while recognizer.is_ready(s):
+            recognizer.decode_stream(s)
+        result = recognizer.get_result(s)
+        print(f"{wave2}\n{result}")
+
+        # The reference transcript is obtained with the feature frontend
+        # the model was trained with (hamming window, snip_edges=True,
+        # high_freq=0, see InitFeatConfig in
+        # sherpa-onnx/csrc/online-recognizer-paraformer-impl.h); with the
+        # default frontend, 频繁 is misrecognized as 平繁/苹繁.
+        self.assertEqual(result, "这个是频繁的啊不认识接下来 frequently 频繁的")
+
     def test_wenet_ctc(self):
         models = [
             "sherpa-onnx-zh-wenet-aishell",
