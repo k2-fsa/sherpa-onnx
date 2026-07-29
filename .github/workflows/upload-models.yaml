@@ -1234,6 +1234,36 @@ jobs:
 
           mv models/* .
 
+      - name: NeMo CTC Persian (shenava)
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+
+          # Source repos on huggingface.co/mah92
+          models=(
+            sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-non-streaming-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-non-streaming-int8-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-streaming-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-streaming-int8-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-non-streaming-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-non-streaming-int8-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-streaming-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-streaming-int8-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-non-streaming-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-non-streaming-int8-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-2026-06-26
+            sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-int8-2026-06-26
+          )
+
+          for d in ${models[@]}; do
+            git clone https://huggingface.co/mah92/$d
+            rm -rf $d/.git
+            rm -rf $d/.gitattributes
+            tar cjfv $d.tar.bz2 $d
+            ls -lh $d.tar.bz2
+          done
+
       - name: Release
         if: true
         uses: svenstaro/upload-release-action@v2
@@ -1276,6 +1306,18 @@ jobs:
               sherpa-onnx-x-asr-zipformer-transducer-zh-en-int8-2026-06-03
               sherpa-onnx-x-asr-zipformer-transducer-zh-en-punct-2026-06-03
               sherpa-onnx-x-asr-zipformer-transducer-zh-en-punct-int8-2026-06-03
+              sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-non-streaming-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-non-streaming-int8-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-streaming-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-koochik-v1.0-streaming-int8-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-non-streaming-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-non-streaming-int8-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-streaming-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-v1.0-streaming-int8-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-non-streaming-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-non-streaming-int8-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-2026-06-26
+              sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-int8-2026-06-26
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
