@@ -22,9 +22,9 @@ func run() {
   // Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
   var config = sherpaOnnxOfflineSpeechDenoiserConfig(
     model: sherpaOnnxOfflineSpeechDenoiserModelConfig(
-      dpdfnet: sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: model)),
-    dpdfnet_attenuation_limit_db: 12.0
+      dpdfnet: sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: model))
   )
+  config.dpdfnet_attenuation_limit_db = 12.0
 
   let sd = SherpaOnnxOfflineSpeechDenoiserWrapper(config: &config)
 

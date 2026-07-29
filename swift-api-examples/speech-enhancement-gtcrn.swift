@@ -19,8 +19,7 @@ func run() {
   // to download files used in this script
   var config = sherpaOnnxOfflineSpeechDenoiserConfig(
     model: sherpaOnnxOfflineSpeechDenoiserModelConfig(
-      gtcrn: sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: model)),
-    dpdfnet_attenuation_limit_db: 0.0
+      gtcrn: sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: model))
   )
 
   let sd = SherpaOnnxOfflineSpeechDenoiserWrapper(config: &config)
