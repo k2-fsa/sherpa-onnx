@@ -26,7 +26,8 @@ offline-tts-c-api
 run-decode-file-c-api.sh
 sherpa-onnx-ffmpeg
 build-ios
-build-swift-macos
+build-macos
+build-macos-shared
 aa.sh
 client-2.sh
 ffmpeg-examples/run-3.sh

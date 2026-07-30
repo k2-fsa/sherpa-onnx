@@ -2,7 +2,7 @@
 
 set -ex
 
-dir=build-swift-macos
+dir=build-macos
 mkdir -p $dir
 cd $dir
 
