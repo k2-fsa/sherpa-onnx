@@ -91,9 +91,13 @@ jobs:
           echo "lib_path: $lib_path"
           echo "header_dir: $header_dir"
 
+          # Create expected include directory structure
+          mkdir -p include/sherpa-onnx/c-api
+          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+
           # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$header_dir" \
+            -I include \
             -L "$(dirname $lib_path)" \
             -l sherpa-onnx-c-api \
             -l onnxruntime \
@@ -214,9 +218,13 @@ jobs:
           echo "lib_path: $lib_path"
           echo "header_dir: $header_dir"
 
+          # Create expected include directory structure
+          mkdir -p include/sherpa-onnx/c-api
+          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+
           # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$header_dir" \
+            -I include \
             -L "$(dirname $lib_path)" \
             -l sherpa-onnx-c-api \
             -l onnxruntime \
@@ -334,9 +342,13 @@ jobs:
           echo "lib_path: $lib_path"
           echo "header_dir: $header_dir"
 
+          # Create expected include directory structure
+          mkdir -p include/sherpa-onnx/c-api
+          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+
           # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$header_dir" \
+            -I include \
             -L "$(dirname $lib_path)" \
             -l sherpa-onnx-c-api \
             -l onnxruntime \
