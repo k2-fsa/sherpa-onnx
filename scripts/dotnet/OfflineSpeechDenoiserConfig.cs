@@ -10,9 +10,7 @@ namespace SherpaOnnx
         public OfflineSpeechDenoiserConfig()
         {
             Model = new OfflineSpeechDenoiserModelConfig();
-            DpdfNetAttenuationLimitDb = 0.0f;
         }
         public OfflineSpeechDenoiserModelConfig Model;
-        public float DpdfNetAttenuationLimitDb;
     }
 }

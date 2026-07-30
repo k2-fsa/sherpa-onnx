@@ -55,11 +55,12 @@ function initSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(config, Module) {
   const modelLen = Module.lengthBytesUTF8(config.model) + 1;
   const n = modelLen;
   const buffer = Module._malloc(n);
-  const len = 1 * 4;
+  const len = 2 * 4;
   const ptr = Module._malloc(len);
 
   Module.stringToUTF8(config.model, buffer, modelLen);
   Module.setValue(ptr, buffer, 'i8*');
+  Module.setValue(ptr + 4, config.attenuationLimitDb || 0, 'float');
 
   return {
     buffer: buffer,
@@ -127,16 +128,12 @@ function initSherpaOnnxOfflineSpeechDenoiserConfig(config, Module) {
 
   const modelConfig =
       initSherpaOnnxOfflineSpeechDenoiserModelConfig(config.model, Module);
-  const len = modelConfig.len + 4;
+  const len = modelConfig.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
   Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset);
   offset += modelConfig.len;
-
-  Module.setValue(
-      ptr + offset, config.dpdfnetAttenuationLimitDb || 0, 'float');
-  offset += 4;
 
   return {
     ptr: ptr,

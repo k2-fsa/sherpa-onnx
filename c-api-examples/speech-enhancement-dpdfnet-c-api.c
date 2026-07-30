@@ -41,7 +41,7 @@ int32_t main() {
 
   memset(&config, 0, sizeof(config));
   config.model.dpdfnet.model = model_filename;
-  config.dpdfnet_attenuation_limit_db = 12.0f;
+  config.model.dpdfnet.attenuation_limit_db = 12.0f;
 
   const SherpaOnnxOfflineSpeechDenoiser *sd =
       SherpaOnnxCreateOfflineSpeechDenoiser(&config);

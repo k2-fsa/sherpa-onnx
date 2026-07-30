@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-speech-denoiser-dpdfnet-model-config.h"
 
+#include <cmath>
 #include <sstream>
 #include <string>
 
@@ -23,6 +24,13 @@ void OfflineSpeechDenoiserDpdfNetModelConfig::Register(ParseOptions *po) {
                "https://github.com/k2-fsa/sherpa-onnx/releases/tag/"
                "speech-enhancement-models or "
                "https://huggingface.co/Ceva-IP/DPDFNet");
+
+  po->Register(
+      "speech-denoiser-dpdfnet-attenuation-limit-db", &attenuation_limit_db,
+      "Offline-only DPDFNet attenuation limit in dB. Values greater than 0 "
+      "limit suppression by blending aligned noisy spectra into the enhanced "
+      "spectra. The maximum finite value is 100. 0 or infinity disables the "
+      "limit.");
 }
 
 bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate() const {
@@ -36,6 +44,14 @@ bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate() const {
     return false;
   }
 
+  if (std::isnan(attenuation_limit_db) || attenuation_limit_db < 0.0f ||
+      (attenuation_limit_db > 100.0f && !std::isinf(attenuation_limit_db))) {
+    SHERPA_ONNX_LOGE(
+        "attenuation_limit_db must be in [0, 100] or infinity. Given: %f",
+        attenuation_limit_db);
+    return false;
+  }
+
   return true;
 }
 
@@ -43,7 +59,8 @@ std::string OfflineSpeechDenoiserDpdfNetModelConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineSpeechDenoiserDpdfNetModelConfig(";
-  os << "model=\"" << model << "\")";
+  os << "model=\"" << model << "\", ";
+  os << "attenuation_limit_db=" << attenuation_limit_db << ")";
   return os.str();
 }
 

@@ -8,6 +8,7 @@ data class OfflineSpeechDenoiserGtcrnModelConfig(
 
 data class OfflineSpeechDenoiserDpdfNetModelConfig(
     var model: String = "",
+    var attenuationLimitDb: Float = 0.0f,
 )
 
 data class OfflineSpeechDenoiserModelConfig(
@@ -20,7 +21,6 @@ data class OfflineSpeechDenoiserModelConfig(
 
 data class OfflineSpeechDenoiserConfig(
     var model: OfflineSpeechDenoiserModelConfig = OfflineSpeechDenoiserModelConfig(),
-    var dpdfnetAttenuationLimitDb: Float = 0.0f,
 )
 
 class OfflineSpeechDenoiser(

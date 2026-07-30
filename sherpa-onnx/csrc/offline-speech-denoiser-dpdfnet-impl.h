@@ -28,13 +28,13 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
   explicit OfflineSpeechDenoiserDpdfNetImpl(
       const OfflineSpeechDenoiserConfig &config)
       : model_(config.model),
-        attenuation_limit_db_(config.dpdfnet_attenuation_limit_db) {}
+        attenuation_limit_db_(config.model.dpdfnet.attenuation_limit_db) {}
 
   template <typename Manager>
   OfflineSpeechDenoiserDpdfNetImpl(Manager *mgr,
                                    const OfflineSpeechDenoiserConfig &config)
       : model_(mgr, config.model),
-        attenuation_limit_db_(config.dpdfnet_attenuation_limit_db) {}
+        attenuation_limit_db_(config.model.dpdfnet.attenuation_limit_db) {}
 
   DenoisedAudio Run(const float *samples, int32_t n,
                     int32_t sample_rate) const override {

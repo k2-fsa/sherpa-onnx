@@ -30,6 +30,8 @@ OfflineSpeechDenoiserModelConfig GetOfflineSpeechDenoiserModelConfig(
   jclass dpdfnet_cls = env->GetObjectClass(dpdfnet);
 
   SHERPA_ONNX_JNI_READ_STRING(ans.dpdfnet.model, model, dpdfnet_cls, dpdfnet);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.dpdfnet.attenuation_limit_db,
+                            attenuationLimitDb, dpdfnet_cls, dpdfnet);
 
   SHERPA_ONNX_JNI_READ_INT(ans.num_threads, numThreads, model_config_cls,
                            model);
@@ -51,8 +53,6 @@ OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(JNIEnv *env,
   jobject model = env->GetObjectField(config, fid);
 
   ans.model = GetOfflineSpeechDenoiserModelConfig(env, model, ok);
-  SHERPA_ONNX_JNI_READ_FLOAT(ans.dpdfnet_attenuation_limit_db,
-                            dpdfnetAttenuationLimitDb, cls, config);
   return ans;
 }
 

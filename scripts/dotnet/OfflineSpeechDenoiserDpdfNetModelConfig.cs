@@ -10,9 +10,11 @@ namespace SherpaOnnx
         public OfflineSpeechDenoiserDpdfNetModelConfig()
         {
             Model = "";
+            AttenuationLimitDb = 0.0f;
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Model;
+        public float AttenuationLimitDb;
     }
 }

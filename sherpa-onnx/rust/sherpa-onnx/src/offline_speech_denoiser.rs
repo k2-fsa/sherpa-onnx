@@ -33,6 +33,8 @@ impl OfflineSpeechDenoiserGtcrnModelConfig {
 /// DPDFNet model path for offline denoising.
 pub struct OfflineSpeechDenoiserDpdfNetModelConfig {
     pub model: Option<String>,
+    /// Offline attenuation limit in dB. 0 disables it.
+    pub attenuation_limit_db: f32,
 }
 
 impl OfflineSpeechDenoiserDpdfNetModelConfig {
@@ -42,6 +44,7 @@ impl OfflineSpeechDenoiserDpdfNetModelConfig {
     ) -> sys::OfflineSpeechDenoiserDpdfNetModelConfig {
         sys::OfflineSpeechDenoiserDpdfNetModelConfig {
             model: to_c_ptr(&self.model, cstrings),
+            attenuation_limit_db: self.attenuation_limit_db,
         }
     }
 }
@@ -129,8 +132,6 @@ impl DenoisedAudio {
 /// Top-level configuration for [`OfflineSpeechDenoiser`].
 pub struct OfflineSpeechDenoiserConfig {
     pub model: OfflineSpeechDenoiserModelConfig,
-    /// DPDFNet-only offline attenuation limit in dB. 0 disables it.
-    pub dpdfnet_attenuation_limit_db: f32,
 }
 
 impl OfflineSpeechDenoiserConfig {
@@ -139,7 +140,6 @@ impl OfflineSpeechDenoiserConfig {
             model: self
                 .model
                 .to_sys(cstrings),
-            dpdfnet_attenuation_limit_db: self.dpdfnet_attenuation_limit_db,
         }
     }
 }

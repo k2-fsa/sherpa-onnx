@@ -2813,8 +2813,8 @@ static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
   c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
-  c.dpdfnet_attenuation_limit_db =
-      config->dpdfnet_attenuation_limit_db;
+  c.model.dpdfnet.attenuation_limit_db =
+      config->model.dpdfnet.attenuation_limit_db;
 
   if (c.model.debug) {
 #if __OHOS__
@@ -3410,10 +3410,6 @@ SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
   }
 
   auto sd_config = GetOfflineSpeechDenoiserConfig(config);
-  if (!sd_config.Validate()) {
-    SHERPA_ONNX_LOGE("Errors in config");
-    return nullptr;
-  }
 
   SherpaOnnxOfflineSpeechDenoiser *sd = new SherpaOnnxOfflineSpeechDenoiser;
 

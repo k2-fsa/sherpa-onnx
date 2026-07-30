@@ -10,9 +10,9 @@ func main() {
 
 	config := sherpa.OfflineSpeechDenoiserConfig{}
 	config.Model.DpdfNet.Model = "./dpdfnet_baseline.onnx"
+	config.Model.DpdfNet.AttenuationLimitDb = 12
 	config.Model.NumThreads = 1
 	config.Model.Debug = 1
-	config.DpdfNetAttenuationLimitDb = 12
 
 	sd := sherpa.NewOfflineSpeechDenoiser(&config)
 	defer sherpa.DeleteOfflineSpeechDenoiser(sd)

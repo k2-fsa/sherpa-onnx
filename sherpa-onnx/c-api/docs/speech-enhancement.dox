@@ -39,7 +39,7 @@ Example source: [speech-enhancement-gtcrn-c-api.c](https://github.com/k2-fsa/she
 SherpaOnnxOfflineSpeechDenoiserConfig config;
 memset(&config, 0, sizeof(config));
 config.model.dpdfnet.model = "./dpdfnet_baseline.onnx";
-config.dpdfnet_attenuation_limit_db = 12.0f;
+config.model.dpdfnet.attenuation_limit_db = 12.0f;
 config.model.num_threads = 1;
 config.model.provider = "cpu";
 

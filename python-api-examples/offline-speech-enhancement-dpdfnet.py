@@ -49,13 +49,13 @@ def create_speech_denoiser():
     config = sherpa_onnx.OfflineSpeechDenoiserConfig(
         model=sherpa_onnx.OfflineSpeechDenoiserModelConfig(
             dpdfnet=sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(
-                model=model_filename
+                model=model_filename,
+                attenuation_limit_db=12.0,
             ),
             debug=False,
             num_threads=1,
             provider="cpu",
         ),
-        dpdfnet_attenuation_limit_db=12.0,
     )
     if not config.validate():
         print(config)

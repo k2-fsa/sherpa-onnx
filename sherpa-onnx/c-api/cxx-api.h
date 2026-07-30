@@ -1219,6 +1219,8 @@ struct OfflineSpeechDenoiserGtcrnModelConfig {
 struct OfflineSpeechDenoiserDpdfNetModelConfig {
   /** Model ONNX file. */
   std::string model;
+  /** Offline attenuation limit in dB. 0 disables it. */
+  float attenuation_limit_db = 0.0f;
 };
 
 /**
@@ -1244,8 +1246,6 @@ struct OfflineSpeechDenoiserModelConfig {
 struct OfflineSpeechDenoiserConfig {
   /** Model configuration. */
   OfflineSpeechDenoiserModelConfig model;
-  /** DPDFNet-only offline attenuation limit in dB. 0 disables it. */
-  float dpdfnet_attenuation_limit_db = 0.0f;
 };
 
 /** @brief Denoised waveform returned by speech enhancement wrappers. */

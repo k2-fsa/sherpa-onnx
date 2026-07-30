@@ -24,10 +24,10 @@ fn main() -> anyhow::Result<()> {
         model: sherpa_onnx::OfflineSpeechDenoiserModelConfig {
             dpdfnet: OfflineSpeechDenoiserDpdfNetModelConfig {
                 model: Some(args.model),
+                attenuation_limit_db: 12.0,
             },
             ..Default::default()
         },
-        dpdfnet_attenuation_limit_db: 12.0,
     };
 
     let denoiser = OfflineSpeechDenoiser::create(&config)

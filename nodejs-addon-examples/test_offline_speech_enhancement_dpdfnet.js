@@ -6,9 +6,11 @@ function createOfflineSpeechDenoiser() {
   // please download models from
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
   const config = {
-    dpdfnetAttenuationLimitDb: 12,
     model: {
-      dpdfnet: {model: './dpdfnet_baseline.onnx'},
+      dpdfnet: {
+        model: './dpdfnet_baseline.onnx',
+        attenuationLimitDb: 12,
+      },
       debug: true,
       numThreads: 1,
     },
