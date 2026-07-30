@@ -14,8 +14,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.1/onnxruntime-osx-universal2-static_lib-1.27.1.zip")
-set(onnxruntime_URL2  "https://hf-mirror.com/csukuangfj2/onnxruntime-libs/resolve/main/1.27.1/onnxruntime-osx-universal2-static_lib-1.27.1.zip")
-set(onnxruntime_HASH "SHA256=cb241768f6f98ff4a7d80376f1674a37c27870118293d3d1bf6d4ef9bca5a5f1")
+set(onnxruntime_HASH "SHA256=f57df541a2e44b59b83dd8523362b11d830573c3a28c62801e7dd2d02232b3ca")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
@@ -32,7 +31,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -40,7 +38,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 
