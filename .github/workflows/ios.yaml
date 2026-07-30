@@ -22,6 +22,41 @@ permissions:
   contents: read
 
 jobs:
+  sherpa-onnx-local:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Patch to local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+          git diff
+          cat ios-swiftui/SherpaOnnxAsr/SherpaOnnxAsr.xcodeproj/project.pbxproj
+
+      - name: Build SherpaOnnx (local)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swiftui/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
   sherpa-onnx:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -41,6 +76,41 @@ jobs:
           cd ios-swiftui/SherpaOnnxAsr
           xcodebuild -project SherpaOnnxAsr.xcodeproj \
             -scheme SherpaOnnxAsr \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+  sherpa-onnx-2pass-local:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Patch to local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+          git diff
+          cat ios-swiftui/SherpaOnnx2Pass/SherpaOnnx2Pass.xcodeproj/project.pbxproj
+
+      - name: Build SherpaOnnx2Pass (local)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swiftui/SherpaOnnx2Pass
+          xcodebuild -project SherpaOnnx2Pass.xcodeproj \
+            -scheme SherpaOnnx2Pass \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             build
@@ -68,6 +138,41 @@ jobs:
             -skipPackagePluginValidation \
             build
 
+  sherpa-onnx-lang-id-local:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Patch to local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+          git diff
+          cat ios-swiftui/SherpaOnnxLangID/SherpaOnnxLangID.xcodeproj/project.pbxproj
+
+      - name: Build SherpaOnnxLangID (local)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swiftui/SherpaOnnxLangID
+          xcodebuild -project SherpaOnnxLangID.xcodeproj \
+            -scheme SherpaOnnxLangID \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
   sherpa-onnx-lang-id:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -87,6 +192,41 @@ jobs:
           cd ios-swiftui/SherpaOnnxLangID
           xcodebuild -project SherpaOnnxLangID.xcodeproj \
             -scheme SherpaOnnxLangID \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+  sherpa-onnx-subtitle-local:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Patch to local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+          git diff
+          cat ios-swiftui/SherpaOnnxSubtitle/SherpaOnnxSubtitle.xcodeproj/project.pbxproj
+
+      - name: Build SherpaOnnxSubtitle (local)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swiftui/SherpaOnnxSubtitle
+          xcodebuild -project SherpaOnnxSubtitle.xcodeproj \
+            -scheme SherpaOnnxSubtitle \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             build
@@ -114,6 +254,41 @@ jobs:
             -skipPackagePluginValidation \
             build
 
+  sherpa-onnx-tts-local:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Patch to local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+          git diff
+          cat ios-swiftui/SherpaOnnxTts/SherpaOnnxTts.xcodeproj/project.pbxproj
+
+      - name: Build SherpaOnnxTts (local)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swiftui/SherpaOnnxTts
+          xcodebuild -project SherpaOnnxTts.xcodeproj \
+            -scheme SherpaOnnxTts \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
   sherpa-onnx-tts:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -133,6 +308,41 @@ jobs:
           cd ios-swiftui/SherpaOnnxTts
           xcodebuild -project SherpaOnnxTts.xcodeproj \
             -scheme SherpaOnnxTts \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+  sherpa-onnx-asr-local:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Patch to local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+          git diff
+          cat ios-swift/SherpaOnnxAsr/SherpaOnnxAsr.xcodeproj/project.pbxproj
+
+      - name: Build SherpaOnnxAsr ios-swift (local)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swift/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             build

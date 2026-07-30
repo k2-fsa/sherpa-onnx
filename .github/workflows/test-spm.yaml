@@ -21,6 +21,7 @@ jobs:
           cd spm-examples/macOS
           # Use local package for CI testing
           sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+          git diff
           cat Package.swift
           rm -rf .build
           swift package resolve
@@ -60,6 +61,7 @@ jobs:
 
           # Use local package for CI testing
           sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+          git diff
           cat Package.swift
 
           echo "=== Resolving ==="

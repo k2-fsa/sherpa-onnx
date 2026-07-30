@@ -14,7 +14,7 @@ let package = Package(
     ),
   ],
   dependencies: [
-    .package(url: "https://github.com/csukuangfj/onnxruntime-libs", branch: "master"),
+    .package(url: "https://github.com/csukuangfj/onnxruntime-libs", exact: "1.27.1"),
   ],
   targets: [
     .binaryTarget(
