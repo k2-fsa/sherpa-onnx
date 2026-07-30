@@ -297,6 +297,9 @@ xcodebuild -create-xcframework \
   -framework ios-arm64_x86_64-simulator/sherpa_onnx.framework \
   -output sherpa_onnx.xcframework
 
+# Remove cxx-api.h from the xcframework - it is not needed for the C API
+find sherpa-onnx.xcframework -name "cxx-api.h" -delete
+
 cd sherpa_onnx.xcframework
 echo "PWD: $PWD"
 ls -lh

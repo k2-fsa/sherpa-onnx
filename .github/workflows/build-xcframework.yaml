@@ -75,6 +75,33 @@ jobs:
         run: |
           ls -lh build-ios-no-tts/*.xcframework.zip
 
+      - name: Test xcframework
+        if: matrix.with_tts == 'ON'
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-ios/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Find the library and headers
+          lib_path=$(find sherpa-onnx.xcframework -name "*.a" | head -1)
+          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+
+          echo "lib_path: $lib_path"
+          echo "header_dir: $header_dir"
+
+          # Compile and run
+          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -I "$header_dir" \
+            -L "$(dirname $lib_path)" \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime \
+            -lc++ \
+            -Wl,-rpath,"$(dirname $lib_path)"
+
+          ./version-c-api
+
       - name: Upload xcframework.zip
         if: matrix.with_tts == 'ON'
         uses: actions/upload-artifact@v4
@@ -172,6 +199,32 @@ jobs:
         run: |
           ls -lh build-macos/*.xcframework.zip
 
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-macos/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Find the library and headers
+          lib_path=$(find sherpa-onnx.xcframework -name "*.a" | head -1)
+          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+
+          echo "lib_path: $lib_path"
+          echo "header_dir: $header_dir"
+
+          # Compile and run
+          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -I "$header_dir" \
+            -L "$(dirname $lib_path)" \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime \
+            -lc++ \
+            -Wl,-rpath,"$(dirname $lib_path)"
+
+          ./version-c-api
+
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4
         with:
@@ -265,6 +318,32 @@ jobs:
         run: |
           ls -lh build-macos-shared/*.xcframework.zip
           unzip -l build-macos-shared/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-macos-shared/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Find the library and headers
+          lib_path=$(find sherpa-onnx.xcframework -name "*.dylib" | head -1)
+          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+
+          echo "lib_path: $lib_path"
+          echo "header_dir: $header_dir"
+
+          # Compile and run
+          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -I "$header_dir" \
+            -L "$(dirname $lib_path)" \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime \
+            -lc++ \
+            -Wl,-rpath,"$(dirname $lib_path)"
+
+          ./version-c-api
 
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4

@@ -35,6 +35,9 @@ xcodebuild -create-xcframework \
   -headers install/include/sherpa-onnx/c-api \
   -output sherpa-onnx.xcframework
 
+# Remove cxx-api.h from the xcframework - it is not needed for the C API
+find sherpa-onnx.xcframework -name "cxx-api.h" -delete
+
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
 rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared.xcframework.zip
