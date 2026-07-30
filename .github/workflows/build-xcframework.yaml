@@ -346,14 +346,20 @@ jobs:
           mkdir -p include/sherpa-onnx/c-api
           cp "$header_dir"/*.h include/sherpa-onnx/c-api/
 
+          # Use onnxruntime from the build directory
+          ort_lib=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/lib
+          ort_header=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/include
+
           # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -I include \
             -L "$(dirname $lib_path)" \
+            -L "$ort_lib" \
             -l sherpa-onnx-c-api \
             -l onnxruntime \
             -lc++ \
-            -Wl,-rpath,"$(dirname $lib_path)"
+            -Wl,-rpath,"$(dirname $lib_path)" \
+            -Wl,-rpath,"$ort_lib"
 
           ./version-c-api
 
