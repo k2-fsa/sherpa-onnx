@@ -25,7 +25,6 @@ cmake \
 make -j4
 make install
 rm -fv ./install/include/cargs.h
-cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
 libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-c-api.a \
@@ -44,13 +43,59 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
 # Rename to match the expected library name for linking with -l sherpa-onnx-c-api
 mv -v install/lib/libsherpa-onnx.a install/lib/libsherpa-onnx-c-api.a
 
-xcodebuild -create-xcframework \
-  -library install/lib/libsherpa-onnx-c-api.a \
-  -headers install/include \
-  -output sherpa-onnx.xcframework
+# Create a framework bundle (like onnxruntime does) so SPM can resolve the module
+FRAMEWORK_DIR=SherpaOnnxC.framework
+rm -rf $FRAMEWORK_DIR
 
-# Remove cxx-api.h from the xcframework - it is not needed for the C API
-find sherpa-onnx.xcframework -name "cxx-api.h" -delete
+mkdir -p $FRAMEWORK_DIR/Versions/A/Headers/sherpa-onnx/c-api
+mkdir -p $FRAMEWORK_DIR/Versions/A/Modules
+mkdir -p $FRAMEWORK_DIR/Versions/A/Resources
+
+# Binary
+cp install/lib/libsherpa-onnx-c-api.a $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
+
+# Headers (preserve nested path for #include "sherpa-onnx/c-api/c-api.h")
+cp install/include/sherpa-onnx/c-api/c-api.h $FRAMEWORK_DIR/Versions/A/Headers/sherpa-onnx/c-api/
+
+# Modulemap
+cat > $FRAMEWORK_DIR/Versions/A/Modules/module.modulemap << 'EOF'
+framework module SherpaOnnxC {
+  header "sherpa-onnx/c-api/c-api.h"
+  export *
+}
+EOF
+
+# Info.plist
+cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>com.k2-fsa.sherpa-onnx</string>
+  <key>CFBundleName</key>
+  <string>SherpaOnnxC</string>
+  <key>CFBundlePackageType</key>
+  <string>FMWK</string>
+</dict>
+</plist>
+EOF
+
+# Versioned symlinks
+pushd $FRAMEWORK_DIR/Versions
+ln -sf A Current
+popd
+
+ln -sf Versions/Current/SherpaOnnxC $FRAMEWORK_DIR/SherpaOnnxC
+ln -sf Versions/Current/Headers $FRAMEWORK_DIR/Headers
+ln -sf Versions/Current/Modules $FRAMEWORK_DIR/Modules
+ln -sf Versions/Current/Resources $FRAMEWORK_DIR/Resources
+
+rm -rf sherpa-onnx.xcframework
+
+xcodebuild -create-xcframework \
+  -framework $FRAMEWORK_DIR \
+  -output sherpa-onnx.xcframework
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 

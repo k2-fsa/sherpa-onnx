@@ -53,15 +53,13 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-ios/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Verify xcframework structure (flat layout)
-          lib_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "*.a" | head -1)
-          header_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "c-api.h" -exec dirname {} \; | head -1)
+          # Verify xcframework structure (framework bundle)
+          fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
 
-          echo "lib_path: $lib_path"
-          echo "header_dir: $header_dir"
-
-          test -f "$lib_path" || { echo "Binary not found"; exit 1; }
-          test -f "$header_dir/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
 
           echo "iOS static xcframework structure verified"
 
@@ -130,18 +128,15 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-ios-shared/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Verify xcframework structure (flat layout)
-          lib_path=$(find sherpa-onnx.xcframework -name "*.dylib" | head -1)
-          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+          # Verify xcframework structure (framework bundle)
+          fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
 
-          echo "lib_path: $lib_path"
-          echo "header_dir: $header_dir"
-
-          test -f "$lib_path" || { echo "Library not found"; exit 1; }
-          test -f "$header_dir/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
 
           echo "iOS shared xcframework structure verified"
-
 
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4
@@ -207,26 +202,23 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-macos/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the library and headers
-          lib_path=$(find sherpa-onnx.xcframework -name "*.a" | head -1)
-          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+          # Find the framework bundle
+          fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
 
-          echo "lib_path: $lib_path"
-          echo "header_dir: $header_dir"
-
-          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
-          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
-          include_dir=$(dirname $(dirname "$header_dir"))
+          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
 
           # Use onnxruntime from the build directory
           ort_lib=$GITHUB_WORKSPACE/build-macos/_deps/onnxruntime-src/lib
 
-          # Compile and run
+          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
+          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$include_dir" \
-            -L "$(dirname $lib_path)" \
+            -I "$fw_path/Headers" \
+            "$fw_path/Versions/A/SherpaOnnxC" \
             -L "$ort_lib" \
-            -l sherpa-onnx-c-api \
             -l onnxruntime \
             -framework CoreFoundation \
             -framework Foundation \
@@ -304,28 +296,26 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-macos-shared/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the library and headers
-          lib_path=$(find sherpa-onnx.xcframework -name "*.dylib" | head -1)
-          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+          # Find the framework bundle
+          fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
 
-          echo "lib_path: $lib_path"
-          echo "header_dir: $header_dir"
-
-          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
-          include_dir=$(dirname $(dirname "$header_dir"))
+          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
 
           # Use onnxruntime from the build directory
           ort_lib=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/lib
 
-          # Compile and run
+          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
+          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$include_dir" \
-            -L "$(dirname $lib_path)" \
+            -I "$fw_path/Headers" \
+            "$fw_path/Versions/A/SherpaOnnxC" \
             -L "$ort_lib" \
-            -l sherpa-onnx-c-api \
             -l onnxruntime \
             -lc++ \
-            -Wl,-rpath,"$(dirname $lib_path)" \
+            -Wl,-rpath,"$fw_path/Versions/A" \
             -Wl,-rpath,"$ort_lib"
 
           ./version-c-api
