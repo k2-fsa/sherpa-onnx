@@ -20,12 +20,12 @@ let package = Package(
     .binaryTarget(
       name: "SherpaOnnxMacOS",
       url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-macos-static.xcframework.zip",
-      checksum: "e4be37e578b7c79d38bf7c1857df988d7d2f9eaf14652eb7212c0fb437628f88"
+      checksum: "ed956eedfeeed8262b069ce7dd01a2b5d89a91ec160e9ce54e4ccc4bada837c8"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOS",
       url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-ios-static.xcframework.zip",
-      checksum: "0cab0c667b031b1511576a4121f1b2b60202187753c5ca955296b6eb10a13e97"
+      checksum: "bf6a5dce72aaa1c4b6a2baa0c31e9a1f64ad72667dd2fd89ecbb5e0c165060b1"
     ),
     .target(
       name: "SherpaOnnx",
