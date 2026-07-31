@@ -179,7 +179,7 @@ for arch in os64 simulator; do
   cp -v install/include/sherpa-onnx/c-api/c-api.h build/$arch/sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
 
   cat > build/$arch/sherpa-onnx.framework/Modules/module.modulemap << 'EOF'
-framework module SherpaOnnxC {
+module SherpaOnnxC {
     header "sherpa-onnx/c-api/c-api.h"
     export *
 }

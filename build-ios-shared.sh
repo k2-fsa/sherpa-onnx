@@ -289,7 +289,7 @@ EOF
 
   # Create module map
   cat > $dst/Modules/module.modulemap << 'EOF'
-framework module SherpaOnnxC {
+module SherpaOnnxC {
     header "sherpa-onnx/c-api/c-api.h"
     export *
 }
