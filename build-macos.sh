@@ -25,6 +25,7 @@ cmake \
 make -j4
 make install
 rm -fv ./install/include/cargs.h
+cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
 libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-c-api.a \
@@ -40,29 +41,20 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libespeak-ng.a \
   ./install/lib/libssentencepiece_core.a
 
-# Create framework directory structure
-rm -rf sherpa-onnx.framework
-mkdir -p sherpa-onnx.framework/Headers/sherpa-onnx/c-api
-mkdir -p sherpa-onnx.framework/Modules
-
-# Copy binary (rename from libsherpa-onnx.a to sherpa-onnx)
-cp -v install/lib/libsherpa-onnx.a sherpa-onnx.framework/sherpa-onnx
-
-# Copy headers into multi-level path
-cp -v install/include/sherpa-onnx/c-api/c-api.h sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
-
-# Copy module map
-cp -v ../sherpa-onnx/c-api/module.modulemap sherpa-onnx.framework/Modules/
-
-rm -rf sherpa-onnx.xcframework
 xcodebuild -create-xcframework \
-  -framework sherpa-onnx.framework \
+  -library install/lib/libsherpa-onnx.a \
+  -headers install/include/sherpa-onnx/c-api \
   -output sherpa-onnx.xcframework
+
+# Remove the module map from the install directory to prevent swiftc from
+# auto-discovering it. The module map is only needed inside the xcframework
+# (used by SPM). For direct swiftc builds, the bridging header is used instead.
+rm -fv ./install/include/sherpa-onnx/c-api/module.modulemap
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
-rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-static.xcframework.zip
-zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-static.xcframework.zip sherpa-onnx.xcframework
+rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip sherpa-onnx.xcframework
 
 echo "Checksum:"
-swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-static.xcframework.zip | tee checksum.txt
+swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip | tee checksum.txt

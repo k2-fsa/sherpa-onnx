@@ -1,7 +1,4 @@
 #!/usr/bin/env  bash
-#
-# Build a shared xcframework for macOS (arm64 + x86_64).
-# This is used by the Flutter macOS plugin.
 
 set -ex
 
@@ -28,36 +25,31 @@ cmake \
 make -j4
 make install
 rm -fv ./install/include/cargs.h
+cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
-# Create framework directory structure
-rm -rf sherpa-onnx.framework
-mkdir -p sherpa-onnx.framework/Headers/sherpa-onnx/c-api
-mkdir -p sherpa-onnx.framework/Modules
+libtool -static -o ./install/lib/libsherpa-onnx.a \
+  ./install/lib/libsherpa-onnx-c-api.a \
+  ./install/lib/libsherpa-onnx-core.a \
+  ./install/lib/libkaldi-native-fbank-core.a \
+  ./install/lib/libkissfft-float.a \
+  ./install/lib/libsherpa-onnx-fstfar.a \
+  ./install/lib/libsherpa-onnx-fst.a \
+  ./install/lib/libsherpa-onnx-kaldifst-core.a \
+  ./install/lib/libkaldi-decoder-core.a \
+  ./install/lib/libucd.a \
+  ./install/lib/libpiper_phonemize.a \
+  ./install/lib/libespeak-ng.a \
+  ./install/lib/libssentencepiece_core.a
 
-# Copy binary (rename from libsherpa-onnx-c-api.dylib to sherpa-onnx)
-cp -v install/lib/libsherpa-onnx-c-api.dylib sherpa-onnx.framework/sherpa-onnx
-
-# Update install name to match framework structure
-cd sherpa-onnx.framework
-install_name_tool \
-  -change @rpath/libsherpa-onnx-c-api.dylib @rpath/sherpa-onnx.framework/sherpa-onnx \
-  sherpa-onnx
-
-install_name_tool \
-  -id "@rpath/sherpa-onnx.framework/sherpa-onnx" \
-  sherpa-onnx
-cd ..
-
-# Copy headers into multi-level path
-cp -v install/include/sherpa-onnx/c-api/c-api.h sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
-
-# Copy module map
-cp -v ../sherpa-onnx/c-api/module.modulemap sherpa-onnx.framework/Modules/
-
-rm -rf sherpa-onnx.xcframework
 xcodebuild -create-xcframework \
-  -framework sherpa-onnx.framework \
+  -library install/lib/libsherpa-onnx.a \
+  -headers install/include/sherpa-onnx/c-api \
   -output sherpa-onnx.xcframework
+
+# Remove the module map from the install directory to prevent swiftc from
+# auto-discovering it. The module map is only needed inside the xcframework
+# (used by SPM). For direct swiftc builds, the bridging header is used instead.
+rm -fv ./install/include/sherpa-onnx/c-api/module.modulemap
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 

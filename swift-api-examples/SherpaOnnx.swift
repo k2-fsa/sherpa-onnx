@@ -2245,7 +2245,7 @@ public class SourceSeparator {
     guard let engine = engine else { return nil }
 
     return buffer.withUnsafeBufferPointer { flatBuf in
-      guard let base = flatBuf.baseAddress else { return nil }
+      guard let base = flatBuf.baseAddress else { return [] }
       var ptrs: [UnsafePointer<Float>?] = (0..<buffer.channelCount).map {
         base + ($0 * buffer.samplesPerChannel)
       }
