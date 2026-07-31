@@ -48,6 +48,11 @@ jobs:
       - name: Test xcframework
         shell: bash
         run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-ios/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
           # Verify xcframework structure (flat layout)
           lib_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "*.a" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "c-api.h" -exec dirname {} \; | head -1)
