@@ -80,6 +80,7 @@ jobs:
             -framework onnxruntime \
             -framework CoreML \
             -framework CoreFoundation \
+            -framework Foundation \
             -lc++ \
             -Wl,-rpath,@executable_path
 
