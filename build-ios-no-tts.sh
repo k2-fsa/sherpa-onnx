@@ -165,15 +165,29 @@ libtool -static -o build/os64/sherpa-onnx.a \
 mv -v build/os64/sherpa-onnx.a build/os64/libsherpa-onnx-c-api.a
 mv -v build/simulator/sherpa-onnx.a build/simulator/libsherpa-onnx-c-api.a
 
+# Create framework structures for each architecture
+for arch in os64 simulator; do
+  rm -rf build/$arch/sherpa-onnx.framework
+  mkdir -p build/$arch/sherpa-onnx.framework/Headers/sherpa-onnx/c-api
+  mkdir -p build/$arch/sherpa-onnx.framework/Modules
+
+  cp -v build/$arch/libsherpa-onnx-c-api.a build/$arch/sherpa-onnx.framework/sherpa-onnx
+  cp -v install/include/sherpa-onnx/c-api/c-api.h build/$arch/sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
+
+  cat > build/$arch/sherpa-onnx.framework/Modules/module.modulemap << 'EOF'
+framework module SherpaOnnxC {
+    header "sherpa-onnx/c-api/c-api.h"
+    export *
+}
+EOF
+done
+
 rm -rf sherpa-onnx.xcframework
 
 xcodebuild -create-xcframework \
-      -library "build/os64/libsherpa-onnx-c-api.a" -headers install/include/sherpa-onnx/c-api \
-      -library "build/simulator/libsherpa-onnx-c-api.a" -headers install/include/sherpa-onnx/c-api \
+      -framework "build/os64/sherpa-onnx.framework" \
+      -framework "build/simulator/sherpa-onnx.framework" \
       -output sherpa-onnx.xcframework
-
-# Remove cxx-api.h from the xcframework - it is not needed for the C API
-find sherpa-onnx.xcframework -name "cxx-api.h" -delete
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 

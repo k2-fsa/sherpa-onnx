@@ -53,27 +53,27 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-ios/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the library and headers
-          lib_path=$(find sherpa-onnx.xcframework -name "*.a" | head -1)
-          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+          # Find the framework directory (use simulator slice for macOS testing)
+          fw_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "sherpa-onnx.framework" | head -1)
+          header_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "c-api.h" -exec dirname {} \; | head -1)
 
-          echo "lib_path: $lib_path"
+          echo "fw_dir: $fw_dir"
           echo "header_dir: $header_dir"
 
-          # Create expected include directory structure
-          mkdir -p include/sherpa-onnx/c-api
-          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+          # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
+          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
+          include_dir="$header_dir/../.."
 
-          # Use onnxruntime from the build directory (iOS uses xcframework)
-          ort_framework=$GITHUB_WORKSPACE/build-ios/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
+          # Use onnxruntime simulator slice from the build directory
+          ort_framework=$GITHUB_WORKSPACE/build-ios/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
 
-          # Compile and run (static lib, no rpath needed)
+          # Compile and run (link against frameworks)
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I include \
-            -L "$(dirname $lib_path)" \
+            -I "$include_dir" \
+            -F "$(dirname $fw_dir)" \
+            -framework sherpa-onnx \
             -F "$ort_framework" \
             -framework onnxruntime \
-            -l sherpa-onnx-c-api \
             -lc++
 
           ./version-c-api
@@ -173,31 +173,30 @@ jobs:
           mkdir -p /tmp/test-xcframework
           cd /tmp/test-xcframework
           unzip -o $GITHUB_WORKSPACE/build-ios-shared/*.xcframework.zip -d .
-          ls -lh sherpa_onnx.xcframework/
+          ls -lh sherpa-onnx.xcframework/
 
-          # Find the library and headers
-          lib_path=$(find sherpa_onnx.xcframework -name "*.dylib" | head -1)
-          header_dir=$(find sherpa_onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+          # Find the framework directory
+          fw_dir=$(find sherpa-onnx.xcframework -name "sherpa-onnx.framework" | head -1)
+          header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
 
-          echo "lib_path: $lib_path"
+          echo "fw_dir: $fw_dir"
           echo "header_dir: $header_dir"
 
-          # Create expected include directory structure
-          mkdir -p include/sherpa-onnx/c-api
-          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+          # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
+          include_dir="$header_dir/../.."
 
           # Use onnxruntime from the build directory (iOS uses xcframework)
           ort_framework=$GITHUB_WORKSPACE/build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
 
-          # Compile and run
+          # Compile and run (link against frameworks)
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I include \
-            -L "$(dirname $lib_path)" \
+            -I "$include_dir" \
+            -F "$(dirname $fw_dir)" \
+            -framework sherpa-onnx \
             -F "$ort_framework" \
             -framework onnxruntime \
-            -l sherpa-onnx-c-api \
             -lc++ \
-            -Wl,-rpath,"$(dirname $lib_path)"
+            -Wl,-rpath,"$(dirname $fw_dir)"
 
           ./version-c-api
 
@@ -298,26 +297,25 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-macos/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the library and headers
-          lib_path=$(find sherpa-onnx.xcframework -name "*.a" | head -1)
+          # Find the framework directory
+          fw_dir=$(find sherpa-onnx.xcframework -name "sherpa-onnx.framework" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
 
-          echo "lib_path: $lib_path"
+          echo "fw_dir: $fw_dir"
           echo "header_dir: $header_dir"
 
-          # Create expected include directory structure
-          mkdir -p include/sherpa-onnx/c-api
-          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+          # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
+          include_dir="$header_dir/../.."
 
           # Use onnxruntime from the build directory
           ort_lib=$GITHUB_WORKSPACE/build-macos/_deps/onnxruntime-src/lib
 
-          # Compile and run (static lib, no rpath needed)
+          # Compile and run (link against framework)
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I include \
-            -L "$(dirname $lib_path)" \
+            -I "$include_dir" \
+            -F "$(dirname $fw_dir)" \
+            -framework sherpa-onnx \
             -L "$ort_lib" \
-            -l sherpa-onnx-c-api \
             -l onnxruntime \
             -framework CoreFoundation \
             -framework Foundation \
@@ -429,28 +427,28 @@ jobs:
           ls -lh sherpa-onnx.xcframework/
 
           # Find the library and headers
-          lib_path=$(find sherpa-onnx.xcframework -name "*.dylib" | head -1)
+          # Find the framework directory
+          fw_dir=$(find sherpa-onnx.xcframework -name "sherpa-onnx.framework" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
 
-          echo "lib_path: $lib_path"
+          echo "fw_dir: $fw_dir"
           echo "header_dir: $header_dir"
 
-          # Create expected include directory structure
-          mkdir -p include/sherpa-onnx/c-api
-          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+          # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
+          include_dir="$header_dir/../.."
 
           # Use onnxruntime from the build directory
           ort_lib=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/lib
 
-          # Compile and run
+          # Compile and run (link against frameworks)
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I include \
-            -L "$(dirname $lib_path)" \
+            -I "$include_dir" \
+            -F "$(dirname $fw_dir)" \
+            -framework sherpa-onnx \
             -L "$ort_lib" \
-            -l sherpa-onnx-c-api \
             -l onnxruntime \
             -lc++ \
-            -Wl,-rpath,"$(dirname $lib_path)" \
+            -Wl,-rpath,"$(dirname $fw_dir)" \
             -Wl,-rpath,"$ort_lib"
 
           ./version-c-api

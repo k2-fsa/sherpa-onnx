@@ -28,15 +28,30 @@ cmake \
 make -j4
 make install
 rm -fv ./install/include/cargs.h
-cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
+# Create framework directory structure
+rm -rf sherpa-onnx.framework
+mkdir -p sherpa-onnx.framework/Headers/sherpa-onnx/c-api
+mkdir -p sherpa-onnx.framework/Modules
+
+# Copy binary (rename from libsherpa-onnx-c-api.dylib to sherpa-onnx)
+cp -v install/lib/libsherpa-onnx-c-api.dylib sherpa-onnx.framework/sherpa-onnx
+
+# Copy headers into multi-level path
+cp -v install/include/sherpa-onnx/c-api/c-api.h sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
+
+# Create module map
+cat > sherpa-onnx.framework/Modules/module.modulemap << 'EOF'
+framework module SherpaOnnxC {
+    header "sherpa-onnx/c-api/c-api.h"
+    export *
+}
+EOF
+
+rm -rf sherpa-onnx.xcframework
 xcodebuild -create-xcframework \
-  -library install/lib/libsherpa-onnx-c-api.dylib \
-  -headers install/include/sherpa-onnx/c-api \
+  -framework sherpa-onnx.framework \
   -output sherpa-onnx.xcframework
-
-# Remove cxx-api.h from the xcframework - it is not needed for the C API
-find sherpa-onnx.xcframework -name "cxx-api.h" -delete
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 

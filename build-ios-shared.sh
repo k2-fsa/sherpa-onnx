@@ -168,56 +168,58 @@ lipo \
     ios-arm64_x86_64-simulator/libsherpa-onnx-c-api.dylib
 
 pushd ios-arm64
-rm -rf sherpa_onnx.framework
-mkdir sherpa_onnx.framework
+rm -rf sherpa-onnx.framework
+mkdir -p sherpa-onnx.framework/Headers/sherpa-onnx/c-api
+mkdir -p sherpa-onnx.framework/Modules
 
 lipo \
   -create \
     libsherpa-onnx-c-api.dylib \
   -output \
-    sherpa_onnx
+    sherpa-onnx
 
-mv sherpa_onnx sherpa_onnx.framework/
-cd sherpa_onnx.framework
-
-install_name_tool \
-  -change @rpath/libsherpa-onnx-c-api.dylib @rpath/sherpa_onnx.framework/sherpa_onnx \
-  sherpa_onnx
+mv sherpa-onnx sherpa-onnx.framework/
+cd sherpa-onnx.framework
 
 install_name_tool \
-  -id "@rpath/sherpa_onnx.framework/sherpa_onnx" \
-  sherpa_onnx
+  -change @rpath/libsherpa-onnx-c-api.dylib @rpath/sherpa-onnx.framework/sherpa-onnx \
+  sherpa-onnx
 
-chmod +x sherpa_onnx
-strip -x sherpa_onnx
+install_name_tool \
+  -id "@rpath/sherpa-onnx.framework/sherpa-onnx" \
+  sherpa-onnx
+
+chmod +x sherpa-onnx
+strip -x sherpa-onnx
 popd
 
 pushd ios-arm64_x86_64-simulator
-rm -rf sherpa_onnx.framework
-mkdir sherpa_onnx.framework
+rm -rf sherpa-onnx.framework
+mkdir -p sherpa-onnx.framework/Headers/sherpa-onnx/c-api
+mkdir -p sherpa-onnx.framework/Modules
 
 lipo \
   -create \
     libsherpa-onnx-c-api.dylib \
   -output \
-    sherpa_onnx
+    sherpa-onnx
 
-mv sherpa_onnx sherpa_onnx.framework/
-cd sherpa_onnx.framework
+mv sherpa-onnx sherpa-onnx.framework/
+cd sherpa-onnx.framework
 install_name_tool \
-  -change @rpath/libsherpa-onnx-c-api.dylib @rpath/sherpa_onnx.framework/sherpa_onnx \
-  sherpa_onnx
+  -change @rpath/libsherpa-onnx-c-api.dylib @rpath/sherpa-onnx.framework/sherpa-onnx \
+  sherpa-onnx
 
 install_name_tool \
-  -id "@rpath/sherpa_onnx.framework/sherpa_onnx" \
-  sherpa_onnx
+  -id "@rpath/sherpa-onnx.framework/sherpa-onnx" \
+  sherpa-onnx
 
-chmod +x sherpa_onnx
-strip -x sherpa_onnx
+chmod +x sherpa-onnx
+strip -x sherpa-onnx
 popd
 
 for d in ios-arm64_x86_64-simulator ios-arm64; do
-  dst=$d/sherpa_onnx.framework
+  dst=$d/sherpa-onnx.framework
 
   # The Info.plist is modified from
   # https://github.com/Spicely/flutter_openim_sdk_ffi/blob/main/ios/openim_sdk_ffi.framework/Info.plist
@@ -227,7 +229,7 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>sherpa_onnx</string>
+	<string>sherpa-onnx</string>
 	<key>DTSDKName</key>
 	<string>iphoneos17.0</string>
 	<key>DTXcode</key>
@@ -253,7 +255,7 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleExecutable</key>
-	<string>sherpa_onnx</string>
+	<string>sherpa-onnx</string>
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -287,18 +289,26 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 </dict>
 </plist>
 EOF
+
+  # Copy headers into multi-level path
+  cp -v ../build/os64/install/include/sherpa-onnx/c-api/c-api.h $dst/Headers/sherpa-onnx/c-api/
+
+  # Create module map
+  cat > $dst/Modules/module.modulemap << 'EOF'
+framework module SherpaOnnxC {
+    header "sherpa-onnx/c-api/c-api.h"
+    export *
+}
+EOF
 done
 
-rm -rf sherpa_onnx.xcframework
+rm -rf sherpa-onnx.xcframework
 xcodebuild -create-xcframework \
-  -framework ios-arm64/sherpa_onnx.framework \
-  -framework ios-arm64_x86_64-simulator/sherpa_onnx.framework \
-  -output sherpa_onnx.xcframework
+  -framework ios-arm64/sherpa-onnx.framework \
+  -framework ios-arm64_x86_64-simulator/sherpa-onnx.framework \
+  -output sherpa-onnx.xcframework
 
-# Remove cxx-api.h from the xcframework - it is not needed for the C API
-find sherpa-onnx.xcframework -name "cxx-api.h" -delete
-
-cd sherpa_onnx.xcframework
+cd sherpa-onnx.xcframework
 echo "PWD: $PWD"
 ls -lh
 echo "---"
@@ -308,7 +318,7 @@ SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " "
 
 cd ..
 rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared.xcframework.zip
-zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared.xcframework.zip sherpa_onnx.xcframework
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared.xcframework.zip sherpa-onnx.xcframework
 
 echo "Checksum:"
 swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared.xcframework.zip | tee checksum.txt
