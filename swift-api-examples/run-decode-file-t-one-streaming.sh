@@ -23,7 +23,7 @@ if [ ! -e ./decode-file-t-one-streaming ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./decode-file-t-one-streaming.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o decode-file-t-one-streaming
 

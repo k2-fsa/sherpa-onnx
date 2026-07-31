@@ -23,7 +23,7 @@ if [ ! -e ./source-separation-uvr ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./source-separation-uvr.swift ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o source-separation-uvr
 

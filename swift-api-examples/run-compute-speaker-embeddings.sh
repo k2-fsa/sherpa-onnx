@@ -38,7 +38,7 @@ if [ ! -e ./compute-speaker-embeddings ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./compute-speaker-embeddings.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o compute-speaker-embeddings
 

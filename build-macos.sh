@@ -41,8 +41,11 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libespeak-ng.a \
   ./install/lib/libssentencepiece_core.a
 
+# Rename to match the shared library naming convention
+mv -v install/lib/libsherpa-onnx.a install/lib/libsherpa-onnx-c-api.a
+
 xcodebuild -create-xcframework \
-  -library install/lib/libsherpa-onnx.a \
+  -library install/lib/libsherpa-onnx-c-api.a \
   -headers install/include/sherpa-onnx/c-api \
   -output sherpa-onnx.xcframework
 

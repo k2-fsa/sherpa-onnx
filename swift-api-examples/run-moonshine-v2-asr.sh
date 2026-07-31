@@ -29,7 +29,7 @@ if [ ! -e ./moonshine-v2-asr ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./moonshine-v2-asr.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o moonshine-v2-asr
 

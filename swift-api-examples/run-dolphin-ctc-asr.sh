@@ -29,7 +29,7 @@ if [ ! -e ./dolphin-ctc-asr ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./dolphin-ctc-asr.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o dolphin-ctc-asr
 

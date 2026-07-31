@@ -22,7 +22,7 @@ if [ ! -e ./add-punctuation-online ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./add-punctuation-online.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o ./add-punctuation-online
 

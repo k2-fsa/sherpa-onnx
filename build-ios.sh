@@ -165,11 +165,15 @@ libtool -static -o build/os64/libsherpa-onnx.a \
   build/os64/lib/libespeak-ng.a \
   build/os64/lib/libssentencepiece_core.a
 
+# Rename to match the shared library naming convention
+mv -v build/os64/libsherpa-onnx.a build/os64/libsherpa-onnx-c-api.a
+mv -v build/simulator/libsherpa-onnx.a build/simulator/libsherpa-onnx-c-api.a
+
 rm -rf sherpa-onnx.xcframework
 
 xcodebuild -create-xcframework \
-      -library "build/os64/libsherpa-onnx.a" -headers install/include/sherpa-onnx/c-api \
-      -library "build/simulator/libsherpa-onnx.a" -headers install/include/sherpa-onnx/c-api \
+      -library "build/os64/libsherpa-onnx-c-api.a" -headers install/include/sherpa-onnx/c-api \
+      -library "build/simulator/libsherpa-onnx-c-api.a" -headers install/include/sherpa-onnx/c-api \
       -output sherpa-onnx.xcframework
 
 # Remove cxx-api.h from the xcframework - it is not needed for the C API

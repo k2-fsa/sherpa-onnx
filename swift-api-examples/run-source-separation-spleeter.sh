@@ -25,7 +25,7 @@ if [ ! -e ./source-separation-spleeter ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./source-separation-spleeter.swift ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o source-separation-spleeter
 

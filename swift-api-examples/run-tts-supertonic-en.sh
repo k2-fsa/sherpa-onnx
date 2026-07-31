@@ -24,7 +24,7 @@ if [ ! -e ./tts-supertonic-en ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./tts-supertonic-en.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o tts-supertonic-en
 

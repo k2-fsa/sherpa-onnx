@@ -29,7 +29,7 @@ if [ ! -e ./fire-red-asr ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./fire-red-asr.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o fire-red-asr
 

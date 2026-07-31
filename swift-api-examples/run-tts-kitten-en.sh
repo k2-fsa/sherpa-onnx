@@ -52,7 +52,7 @@ if [ ! -e ./tts-kitten-en ] || [ ./tts-kitten-en.swift -nt ./tts-kitten-en ] || 
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./tts-kitten-en.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o tts-kitten-en
 

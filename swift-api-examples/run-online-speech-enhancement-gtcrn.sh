@@ -22,7 +22,7 @@ if [ ! -e ./online-speech-enhancement-gtcrn ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./online-speech-enhancement-gtcrn.swift ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o online-speech-enhancement-gtcrn
 

@@ -31,7 +31,7 @@ if [ ! -e ./decode-file-sense-voice-with-hr ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./decode-file-sense-voice-with-hr.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o decode-file-sense-voice-with-hr
 

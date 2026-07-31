@@ -28,7 +28,7 @@ if [ ! -e ./tts-matcha-zh ]; then
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./tts-matcha-zh.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
-    -l sherpa-onnx \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o tts-matcha-zh
 
