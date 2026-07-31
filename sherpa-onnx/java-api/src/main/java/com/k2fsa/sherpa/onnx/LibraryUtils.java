@@ -143,7 +143,7 @@ public class LibraryUtils {
             extractResource(onnxruntimePath, tempFile);
             System.load(tempFile.getAbsolutePath());
 
-            File tempFile = tempDirectory.resolve(libFileName).toFile();
+            tempFile = tempDirectory.resolve(libFileName).toFile();
             extractResource(sherpaOnnxJniPath, tempFile);
             System.load(tempFile.getAbsolutePath());
         } finally {
