@@ -164,8 +164,8 @@ lipo \
 rm -rf sherpa-onnx.xcframework
 
 xcodebuild -create-xcframework \
-  -library ios-arm64/libsherpa-onnx-c-api.dylib -headers install/include \
-  -library ios-arm64_x86_64-simulator/libsherpa-onnx-c-api.dylib -headers install/include \
+  -library ios-arm64/libsherpa-onnx-c-api.dylib -headers build/os64/install/include \
+  -library ios-arm64_x86_64-simulator/libsherpa-onnx-c-api.dylib -headers build/os64/install/include \
   -output sherpa-onnx.xcframework
 
 # Remove cxx-api.h from the xcframework - it is not needed for the C API
