@@ -305,3 +305,12 @@ echo "PWD: $PWD"
 ls -lh
 echo "---"
 ls -lh */*
+
+SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+
+cd ..
+rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared.xcframework.zip
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared.xcframework.zip sherpa_onnx.xcframework
+
+echo "Checksum:"
+swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared.xcframework.zip | tee checksum.txt

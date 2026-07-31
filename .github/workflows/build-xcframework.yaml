@@ -6,7 +6,7 @@ on:
       - master
       - macos-xcframework
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - 'release-v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
@@ -15,15 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_ios_xcframework:
-    if: false
-    name: ios tts-${{ matrix.with_tts }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest]
-        with_tts: [ON, OFF]
+  build_ios_static_xcframework:
+    name: ios-static
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -37,46 +31,21 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ios-tts-${{ matrix.with_tts }}
+          key: ios-static
 
-      - name: Build iOS shared
-        # if: matrix.with_tts == 'ON'
-        if: false
-        shell: bash
-        run: |
-          export CMAKE_VERBOSE_MAKEFILE=ON
-          ./build-ios-shared.sh
-
-      - name: Build iOS
-        if: matrix.with_tts == 'ON'
+      - name: Build iOS static
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           ./build-ios.sh
 
-      - name: Build iOS (No tts)
-        if: matrix.with_tts == 'OFF'
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          ./build-ios-no-tts.sh
-
       - name: Display artifacts
-        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           ls -lh build-ios/*.xcframework.zip
 
-      - name: Display artifacts
-        if: matrix.with_tts == 'OFF'
-        shell: bash
-        run: |
-          ls -lh build-ios-no-tts/*.xcframework.zip
-
       - name: Test xcframework
-        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           mkdir -p /tmp/test-xcframework
@@ -107,18 +76,10 @@ jobs:
           ./version-c-api
 
       - name: Upload xcframework.zip
-        if: matrix.with_tts == 'ON'
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-ios-xcframework
+          name: sherpa-onnx-ios-static-xcframework
           path: ./build-ios/*.xcframework.zip
-
-      - name: Upload xcframework.zip (no tts)
-        if: matrix.with_tts == 'OFF'
-        uses: actions/upload-artifact@v4
-        with:
-          name: sherpa-onnx-ios-no-tts-xcframework
-          path: ./build-ios-no-tts/*.xcframework.zip
 
       - name: Release xcframework
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -126,18 +87,19 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./build-ios*/*.xcframework.zip
+          file: ./build-ios/*.xcframework.zip
+          tag: xcframework
 
       - name: Release xcframework
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: ./build-ios*/*.xcframework.zip
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.13.4
+          file: ./build-ios/*.xcframework.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: xcframework
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -159,7 +121,7 @@ jobs:
 
             cd huggingface
 
-            cp -v ../build-ios*/*.xcframework.zip ./
+            cp -v ../build-ios/*.xcframework.zip ./
 
             git status
             git lfs track "*.zip"
@@ -167,14 +129,13 @@ jobs:
             git add .
 
             SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
-            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION} xcframework"
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION} ios-static xcframework"
 
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
 
-  build_macos_xcframework:
-    if: false
-    name: macos
+  build_ios_shared_xcframework:
+    name: ios-shared
     runs-on: macos-latest
 
     steps:
@@ -189,9 +150,133 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: macos
+          key: ios-shared
 
-      - name: Build macOS
+      - name: Build iOS shared
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-ios-shared.sh
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          ls -lh build-ios-shared/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-ios-shared/*.xcframework.zip -d .
+          ls -lh sherpa_onnx.xcframework/
+
+          # Find the library and headers
+          lib_path=$(find sherpa_onnx.xcframework -name "*.dylib" | head -1)
+          header_dir=$(find sherpa_onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
+
+          echo "lib_path: $lib_path"
+          echo "header_dir: $header_dir"
+
+          # Create expected include directory structure
+          mkdir -p include/sherpa-onnx/c-api
+          cp "$header_dir"/*.h include/sherpa-onnx/c-api/
+
+          # Use onnxruntime from the build directory
+          ort_lib=$GITHUB_WORKSPACE/build-ios-shared/_deps/onnxruntime-src/lib
+
+          # Compile and run
+          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -I include \
+            -L "$(dirname $lib_path)" \
+            -L "$ort_lib" \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime \
+            -lc++ \
+            -Wl,-rpath,"$(dirname $lib_path)" \
+            -Wl,-rpath,"$ort_lib"
+
+          ./version-c-api
+
+      - name: Upload xcframework.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-ios-shared-xcframework
+          path: ./build-ios-shared/*.xcframework.zip
+
+      - name: Release xcframework
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./build-ios-shared/*.xcframework.zip
+          tag: xcframework
+
+      - name: Release xcframework
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./build-ios-shared/*.xcframework.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: xcframework
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
+
+            cd huggingface
+
+            cp -v ../build-ios-shared/*.xcframework.zip ./
+
+            git status
+            git lfs track "*.zip"
+
+            git add .
+
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION} ios-shared xcframework"
+
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
+
+
+  build_macos_static_xcframework:
+    name: macos-static
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-static
+
+      - name: Build macOS static
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -236,7 +321,7 @@ jobs:
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-macos-xcframework
+          name: sherpa-onnx-macos-static-xcframework
           path: ./build-macos/*.xcframework.zip
 
       - name: Release xcframework
@@ -246,17 +331,18 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./build-macos/*.xcframework.zip
+          tag: xcframework
 
       - name: Release xcframework
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: ./build-macos/*.xcframework.zip
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.13.4
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: xcframework
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -286,7 +372,7 @@ jobs:
             git add .
 
             SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
-            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION} macos xcframework"
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION} macos-static xcframework"
 
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
@@ -348,7 +434,6 @@ jobs:
 
           # Use onnxruntime from the build directory
           ort_lib=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/lib
-          ort_header=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/include
 
           # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
@@ -376,6 +461,7 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./build-macos-shared/*.xcframework.zip
+          tag: xcframework
 
       - name: Release xcframework
         # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -386,11 +472,11 @@ jobs:
           file: ./build-macos-shared/*.xcframework.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.4
+          tag: xcframework
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
-        # if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
