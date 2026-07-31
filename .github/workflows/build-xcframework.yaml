@@ -74,6 +74,7 @@ jobs:
             -framework sherpa-onnx \
             -F "$ort_framework" \
             -framework onnxruntime \
+            -framework CoreML \
             -lc++
 
           # Boot simulator and run
@@ -197,8 +198,8 @@ jobs:
           # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
           include_dir="$header_dir/../.."
 
-          # Use onnxruntime from the build directory (iOS uses xcframework)
-          ort_framework=$GITHUB_WORKSPACE/build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
+          # Use onnxruntime simulator slice from the build directory
+          ort_framework=$GITHUB_WORKSPACE/build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
 
           # Compile for iOS simulator
           xcrun -sdk iphonesimulator clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
@@ -208,6 +209,7 @@ jobs:
             -framework sherpa-onnx \
             -F "$ort_framework" \
             -framework onnxruntime \
+            -framework CoreML \
             -lc++ \
             -Wl,-rpath,"$(dirname $fw_dir)"
 
