@@ -121,7 +121,6 @@ cmake \
 cmake --build build/os64 -j 4
 # Generate headers for sherpa-onnx.xcframework
 cmake --build build/os64 --target install
-cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
 echo "Generate xcframework"
 
@@ -177,13 +176,7 @@ for arch in os64 simulator; do
 
   cp -v build/$arch/libsherpa-onnx-c-api.a build/$arch/sherpa-onnx.framework/sherpa-onnx
   cp -v install/include/sherpa-onnx/c-api/c-api.h build/$arch/sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
-
-  cat > build/$arch/sherpa-onnx.framework/Modules/module.modulemap << 'EOF'
-module SherpaOnnxC {
-    header "sherpa-onnx/c-api/c-api.h"
-    export *
-}
-EOF
+  cp -v ../sherpa-onnx/c-api/module.modulemap build/$arch/sherpa-onnx.framework/Modules/
 done
 
 rm -rf sherpa-onnx.xcframework

@@ -51,23 +51,13 @@ cp -v install/lib/libsherpa-onnx.a sherpa-onnx.framework/sherpa-onnx
 # Copy headers into multi-level path
 cp -v install/include/sherpa-onnx/c-api/c-api.h sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
 
-# Create module map
-cat > sherpa-onnx.framework/Modules/module.modulemap << 'EOF'
-module SherpaOnnxC {
-    header "sherpa-onnx/c-api/c-api.h"
-    export *
-}
-EOF
+# Copy module map
+cp -v ../sherpa-onnx/c-api/module.modulemap sherpa-onnx.framework/Modules/
 
 rm -rf sherpa-onnx.xcframework
 xcodebuild -create-xcframework \
   -framework sherpa-onnx.framework \
   -output sherpa-onnx.xcframework
-
-# Remove the module map from the install directory to prevent swiftc from
-# auto-discovering it. The module map is only needed inside the xcframework
-# (used by SPM). For direct swiftc builds, the bridging header is used instead.
-rm -fv ./install/include/sherpa-onnx/c-api/module.modulemap
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 

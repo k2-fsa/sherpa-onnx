@@ -1,4 +1,4 @@
 module SherpaOnnxC {
-  header "c-api.h"
-  export *
+    header "sherpa-onnx/c-api/c-api.h"
+    export *
 }

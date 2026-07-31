@@ -287,13 +287,8 @@ EOF
   # Copy headers into multi-level path
   cp -v build/os64/install/include/sherpa-onnx/c-api/c-api.h $dst/Headers/sherpa-onnx/c-api/
 
-  # Create module map
-  cat > $dst/Modules/module.modulemap << 'EOF'
-module SherpaOnnxC {
-    header "sherpa-onnx/c-api/c-api.h"
-    export *
-}
-EOF
+  # Copy module map
+  cp -v ../sherpa-onnx/c-api/module.modulemap $dst/Modules/
 done
 
 rm -rf sherpa-onnx.xcframework

@@ -51,13 +51,8 @@ cd ..
 # Copy headers into multi-level path
 cp -v install/include/sherpa-onnx/c-api/c-api.h sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
 
-# Create module map
-cat > sherpa-onnx.framework/Modules/module.modulemap << 'EOF'
-module SherpaOnnxC {
-    header "sherpa-onnx/c-api/c-api.h"
-    export *
-}
-EOF
+# Copy module map
+cp -v ../sherpa-onnx/c-api/module.modulemap sherpa-onnx.framework/Modules/
 
 rm -rf sherpa-onnx.xcframework
 xcodebuild -create-xcframework \
