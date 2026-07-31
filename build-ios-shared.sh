@@ -28,11 +28,9 @@ fi
 if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/onnxruntime ]; then
   mkdir -p $onnxruntime_dir
   pushd $onnxruntime_dir
-  wget -c https://${SHERPA_ONNX_GITHUB}/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
-  unzip onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
-  rm onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
-  mv onnxruntime-ios-static-xcframework-${onnxruntime_version}/onnxruntime.xcframework .
-  rmdir onnxruntime-ios-static-xcframework-${onnxruntime_version}
+  wget -c https://${SHERPA_ONNX_GITHUB}/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-ios-shared-xcframework-${onnxruntime_version}.xcframework.zip
+  unzip onnxruntime-ios-shared-xcframework-${onnxruntime_version}.xcframework.zip
+  rm onnxruntime-ios-shared-xcframework-${onnxruntime_version}.xcframework.zip
   cd ..
   ln -sf $onnxruntime_version/onnxruntime.xcframework .
   popd

@@ -5,17 +5,15 @@ set -e
 dir=build-ios-no-tts
 mkdir -p $dir
 cd $dir
-onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.0}
+onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.1}
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
 if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/onnxruntime ]; then
   mkdir -p $onnxruntime_dir
   pushd $onnxruntime_dir
-  wget -c https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
-  unzip onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
-  rm onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
-  mv onnxruntime-ios-static-xcframework-${onnxruntime_version}/onnxruntime.xcframework .
-  rmdir onnxruntime-ios-static-xcframework-${onnxruntime_version}
+  wget -c https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-ios-static-xcframework-${onnxruntime_version}.xcframework.zip
+  unzip onnxruntime-ios-static-xcframework-${onnxruntime_version}.xcframework.zip
+  rm onnxruntime-ios-static-xcframework-${onnxruntime_version}.xcframework.zip
   cd ..
   ln -sf $onnxruntime_version/onnxruntime.xcframework .
   popd
