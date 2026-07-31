@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - macos-xcframework-2
+      - macos-xcframework
     tags:
       - 'release-v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -57,9 +57,10 @@ jobs:
           fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
           echo "fw_path: $fw_path"
 
-          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$fw_path/Info.plist" || { echo "Info.plist not found"; exit 1; }
 
           echo "iOS static xcframework structure verified"
 
@@ -132,9 +133,10 @@ jobs:
           fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
           echo "fw_path: $fw_path"
 
-          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$fw_path/Info.plist" || { echo "Info.plist not found"; exit 1; }
 
           echo "iOS shared xcframework structure verified"
 

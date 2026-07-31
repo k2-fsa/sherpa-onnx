@@ -171,21 +171,20 @@ create_framework() {
   local fw_dir=$output_dir/SherpaOnnxC.framework
   rm -rf $fw_dir
 
-  mkdir -p $fw_dir/Versions/A/Headers/sherpa-onnx/c-api
-  mkdir -p $fw_dir/Versions/A/Modules
-  mkdir -p $fw_dir/Versions/A/Resources
+  mkdir -p $fw_dir/Headers/sherpa-onnx/c-api
+  mkdir -p $fw_dir/Modules
 
-  cp $lib_path $fw_dir/Versions/A/SherpaOnnxC
-  cp build/os64/install/include/sherpa-onnx/c-api/c-api.h $fw_dir/Versions/A/Headers/sherpa-onnx/c-api/
+  cp $lib_path $fw_dir/SherpaOnnxC
+  cp build/os64/install/include/sherpa-onnx/c-api/c-api.h $fw_dir/Headers/sherpa-onnx/c-api/
 
-  cat > $fw_dir/Versions/A/Modules/module.modulemap << 'MEOF'
+  cat > $fw_dir/Modules/module.modulemap << 'MEOF'
 framework module SherpaOnnxC {
   header "sherpa-onnx/c-api/c-api.h"
   export *
 }
 MEOF
 
-  cat > $fw_dir/Versions/A/Resources/Info.plist << 'PEOF'
+  cat > $fw_dir/Info.plist << 'PEOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -200,17 +199,8 @@ MEOF
 </plist>
 PEOF
 
-  pushd $fw_dir/Versions
-  ln -sf A Current
-  popd
-
-  ln -sf Versions/Current/SherpaOnnxC $fw_dir/SherpaOnnxC
-  ln -sf Versions/Current/Headers $fw_dir/Headers
-  ln -sf Versions/Current/Modules $fw_dir/Modules
-  ln -sf Versions/Current/Resources $fw_dir/Resources
-
   # Fix dylib install name
-  install_name_tool -id @rpath/SherpaOnnxC.framework/Versions/A/SherpaOnnxC $fw_dir/Versions/A/SherpaOnnxC
+  install_name_tool -id @rpath/SherpaOnnxC.framework/SherpaOnnxC $fw_dir/SherpaOnnxC
 }
 
 create_framework ios-arm64/libsherpa-onnx-c-api.dylib ios-arm64
