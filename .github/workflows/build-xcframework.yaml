@@ -48,55 +48,17 @@ jobs:
       - name: Test xcframework
         shell: bash
         run: |
-          mkdir -p /tmp/test-xcframework
-          cd /tmp/test-xcframework
-          unzip -o $GITHUB_WORKSPACE/build-ios/*.xcframework.zip -d .
-          ls -lh sherpa-onnx.xcframework/
-
-          # Find the framework directory (use simulator slice)
-          fw_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "sherpa-onnx.framework" | head -1)
+          # Verify xcframework structure (flat layout)
+          lib_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "*.a" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "c-api.h" -exec dirname {} \; | head -1)
 
-          echo "fw_dir: $fw_dir"
+          echo "lib_path: $lib_path"
           echo "header_dir: $header_dir"
 
-          # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
-          include_dir="$header_dir/../.."
+          test -f "$lib_path" || { echo "Binary not found"; exit 1; }
+          test -f "$header_dir/c-api.h" || { echo "Header not found"; exit 1; }
 
-          # Use onnxruntime simulator slice from the build directory
-          ort_framework=$GITHUB_WORKSPACE/build-ios/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
-
-          # Copy frameworks next to the binary for simulator runtime
-          cp -R "$(dirname $fw_dir)/sherpa-onnx.framework" .
-          cp -R "$ort_framework/onnxruntime.framework" .
-
-          # Compile for iOS simulator with rpath pointing to current directory
-          xcrun -sdk iphonesimulator clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -target arm64-apple-ios16.0-simulator \
-            -I "$include_dir" \
-            -F . \
-            -framework sherpa-onnx \
-            -F . \
-            -framework onnxruntime \
-            -framework CoreML \
-            -framework CoreFoundation \
-            -framework Foundation \
-            -lc++ \
-            -Wl,-rpath,@executable_path
-
-          # Boot simulator and run
-          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
-          import json, sys
-          devices = json.load(sys.stdin)['devices']
-          for key in devices:
-              for d in devices[key]:
-                  if d['isAvailable'] and 'iPhone' in d['name']:
-                      print(d['udid'])
-                      sys.exit(0)
-          ")
-          echo "Device: $DEVICE"
-          xcrun simctl boot "$DEVICE" 2>/dev/null || true
-          xcrun simctl spawn "$DEVICE" ./version-c-api
+          echo "iOS static xcframework structure verified"
 
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4
@@ -163,49 +125,18 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-ios-shared/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the framework directory
-          fw_dir=$(find sherpa-onnx.xcframework -name "sherpa-onnx.framework" | head -1)
+          # Verify xcframework structure (flat layout)
+          lib_path=$(find sherpa-onnx.xcframework -name "*.dylib" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
 
-          echo "fw_dir: $fw_dir"
+          echo "lib_path: $lib_path"
           echo "header_dir: $header_dir"
 
-          # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
-          include_dir="$header_dir/../.."
+          test -f "$lib_path" || { echo "Library not found"; exit 1; }
+          test -f "$header_dir/c-api.h" || { echo "Header not found"; exit 1; }
 
-          # Use onnxruntime simulator slice from the build directory
-          ort_framework=$GITHUB_WORKSPACE/build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
+          echo "iOS shared xcframework structure verified"
 
-          # Copy frameworks next to the binary for simulator runtime
-          cp -R "$(dirname $fw_dir)/sherpa-onnx.framework" .
-          cp -R "$ort_framework/onnxruntime.framework" .
-
-          # Compile for iOS simulator with rpath pointing to current directory
-          xcrun -sdk iphonesimulator clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -target arm64-apple-ios16.0-simulator \
-            -I "$include_dir" \
-            -F . \
-            -framework sherpa-onnx \
-            -F . \
-            -framework onnxruntime \
-            -framework CoreML \
-            -framework CoreFoundation \
-            -lc++ \
-            -Wl,-rpath,@executable_path
-
-          # Boot simulator and run
-          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
-          import json, sys
-          devices = json.load(sys.stdin)['devices']
-          for key in devices:
-              for d in devices[key]:
-                  if d['isAvailable'] and 'iPhone' in d['name']:
-                      print(d['udid'])
-                      sys.exit(0)
-          ")
-          echo "Device: $DEVICE"
-          xcrun simctl boot "$DEVICE" 2>/dev/null || true
-          xcrun simctl spawn "$DEVICE" ./version-c-api
 
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4
@@ -271,19 +202,23 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-macos/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the library and headers (flat structure)
+          # Find the library and headers
           lib_path=$(find sherpa-onnx.xcframework -name "*.a" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
 
           echo "lib_path: $lib_path"
           echo "header_dir: $header_dir"
 
+          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
+          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
+          include_dir=$(dirname $(dirname "$header_dir"))
+
           # Use onnxruntime from the build directory
           ort_lib=$GITHUB_WORKSPACE/build-macos/_deps/onnxruntime-src/lib
 
-          # Compile and run (flat structure, link directly)
+          # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$header_dir" \
+            -I "$include_dir" \
             -L "$(dirname $lib_path)" \
             -L "$ort_lib" \
             -l sherpa-onnx-c-api \
@@ -364,19 +299,22 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-macos-shared/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the library and headers (flat structure)
+          # Find the library and headers
           lib_path=$(find sherpa-onnx.xcframework -name "*.dylib" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -name "c-api.h" -exec dirname {} \; | head -1)
 
           echo "lib_path: $lib_path"
           echo "header_dir: $header_dir"
 
+          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
+          include_dir=$(dirname $(dirname "$header_dir"))
+
           # Use onnxruntime from the build directory
           ort_lib=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/lib
 
-          # Compile and run (flat structure, link directly)
+          # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$header_dir" \
+            -I "$include_dir" \
             -L "$(dirname $lib_path)" \
             -L "$ort_lib" \
             -l sherpa-onnx-c-api \

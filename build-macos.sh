@@ -43,13 +43,11 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
 
 xcodebuild -create-xcframework \
   -library install/lib/libsherpa-onnx.a \
-  -headers install/include/sherpa-onnx/c-api \
+  -headers install/include \
   -output sherpa-onnx.xcframework
 
-# Remove the module map from the install directory to prevent swiftc from
-# auto-discovering it. The module map is only needed inside the xcframework
-# (used by SPM). For direct swiftc builds, the bridging header is used instead.
-rm -fv ./install/include/sherpa-onnx/c-api/module.modulemap
+# Remove cxx-api.h from the xcframework - it is not needed for the C API
+find sherpa-onnx.xcframework -name "cxx-api.h" -delete
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 

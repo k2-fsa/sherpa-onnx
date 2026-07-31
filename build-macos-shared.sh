@@ -27,29 +27,13 @@ make install
 rm -fv ./install/include/cargs.h
 cp -v ../sherpa-onnx/c-api/module.modulemap ./install/include/sherpa-onnx/c-api/
 
-libtool -static -o ./install/lib/libsherpa-onnx.a \
-  ./install/lib/libsherpa-onnx-c-api.a \
-  ./install/lib/libsherpa-onnx-core.a \
-  ./install/lib/libkaldi-native-fbank-core.a \
-  ./install/lib/libkissfft-float.a \
-  ./install/lib/libsherpa-onnx-fstfar.a \
-  ./install/lib/libsherpa-onnx-fst.a \
-  ./install/lib/libsherpa-onnx-kaldifst-core.a \
-  ./install/lib/libkaldi-decoder-core.a \
-  ./install/lib/libucd.a \
-  ./install/lib/libpiper_phonemize.a \
-  ./install/lib/libespeak-ng.a \
-  ./install/lib/libssentencepiece_core.a
-
 xcodebuild -create-xcframework \
-  -library install/lib/libsherpa-onnx.a \
-  -headers install/include/sherpa-onnx/c-api \
+  -library install/lib/libsherpa-onnx-c-api.dylib \
+  -headers install/include \
   -output sherpa-onnx.xcframework
 
-# Remove the module map from the install directory to prevent swiftc from
-# auto-discovering it. The module map is only needed inside the xcframework
-# (used by SPM). For direct swiftc builds, the bridging header is used instead.
-rm -fv ./install/include/sherpa-onnx/c-api/module.modulemap
+# Remove cxx-api.h from the xcframework - it is not needed for the C API
+find sherpa-onnx.xcframework -name "cxx-api.h" -delete
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
