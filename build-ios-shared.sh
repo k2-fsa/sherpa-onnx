@@ -285,7 +285,7 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 EOF
 
   # Copy headers into multi-level path
-  cp -v ../build/os64/install/include/sherpa-onnx/c-api/c-api.h $dst/Headers/sherpa-onnx/c-api/
+  cp -v build/os64/install/include/sherpa-onnx/c-api/c-api.h $dst/Headers/sherpa-onnx/c-api/
 
   # Create module map
   cat > $dst/Modules/module.modulemap << 'EOF'
