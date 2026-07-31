@@ -64,16 +64,16 @@ jobs:
           mkdir -p include/sherpa-onnx/c-api
           cp "$header_dir"/*.h include/sherpa-onnx/c-api/
 
-          # Use onnxruntime from the build directory
-          ort_lib=$GITHUB_WORKSPACE/build-ios/_deps/onnxruntime-src/lib
+          # Use onnxruntime from the build directory (iOS uses xcframework)
+          ort_framework=$GITHUB_WORKSPACE/build-ios/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
 
           # Compile and run (static lib, no rpath needed)
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -I include \
             -L "$(dirname $lib_path)" \
-            -L "$ort_lib" \
+            -F "$ort_framework" \
+            -framework onnxruntime \
             -l sherpa-onnx-c-api \
-            -l onnxruntime \
             -lc++
 
           ./version-c-api
@@ -186,19 +186,18 @@ jobs:
           mkdir -p include/sherpa-onnx/c-api
           cp "$header_dir"/*.h include/sherpa-onnx/c-api/
 
-          # Use onnxruntime from the build directory
-          ort_lib=$GITHUB_WORKSPACE/build-ios-shared/_deps/onnxruntime-src/lib
+          # Use onnxruntime from the build directory (iOS uses xcframework)
+          ort_framework=$GITHUB_WORKSPACE/build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
 
           # Compile and run
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -I include \
             -L "$(dirname $lib_path)" \
-            -L "$ort_lib" \
+            -F "$ort_framework" \
+            -framework onnxruntime \
             -l sherpa-onnx-c-api \
-            -l onnxruntime \
             -lc++ \
-            -Wl,-rpath,"$(dirname $lib_path)" \
-            -Wl,-rpath,"$ort_lib"
+            -Wl,-rpath,"$(dirname $lib_path)"
 
           ./version-c-api
 
@@ -320,6 +319,8 @@ jobs:
             -L "$ort_lib" \
             -l sherpa-onnx-c-api \
             -l onnxruntime \
+            -framework CoreFoundation \
+            -framework Foundation \
             -lc++
 
           ./version-c-api
