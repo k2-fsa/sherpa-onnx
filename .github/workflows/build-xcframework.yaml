@@ -309,13 +309,15 @@ jobs:
 
           # Headers are at Headers/sherpa-onnx/c-api/c-api.h
           # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
+          # rpath must point to the directory containing SherpaOnnxC.framework/
+          fw_parent=$(dirname "$fw_path")
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -I "$fw_path/Headers" \
             "$fw_path/Versions/A/SherpaOnnxC" \
             -L "$ort_lib" \
             -l onnxruntime \
             -lc++ \
-            -Wl,-rpath,"$fw_path/Versions/A" \
+            -Wl,-rpath,"$fw_parent" \
             -Wl,-rpath,"$ort_lib"
 
           ./version-c-api
