@@ -64,14 +64,17 @@ jobs:
           mkdir -p include/sherpa-onnx/c-api
           cp "$header_dir"/*.h include/sherpa-onnx/c-api/
 
-          # Compile and run
+          # Use onnxruntime from the build directory
+          ort_lib=$GITHUB_WORKSPACE/build-ios/_deps/onnxruntime-src/lib
+
+          # Compile and run (static lib, no rpath needed)
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -I include \
             -L "$(dirname $lib_path)" \
+            -L "$ort_lib" \
             -l sherpa-onnx-c-api \
             -l onnxruntime \
-            -lc++ \
-            -Wl,-rpath,"$(dirname $lib_path)"
+            -lc++
 
           ./version-c-api
 
@@ -307,14 +310,17 @@ jobs:
           mkdir -p include/sherpa-onnx/c-api
           cp "$header_dir"/*.h include/sherpa-onnx/c-api/
 
-          # Compile and run
+          # Use onnxruntime from the build directory
+          ort_lib=$GITHUB_WORKSPACE/build-macos/_deps/onnxruntime-src/lib
+
+          # Compile and run (static lib, no rpath needed)
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -I include \
             -L "$(dirname $lib_path)" \
+            -L "$ort_lib" \
             -l sherpa-onnx-c-api \
             -l onnxruntime \
-            -lc++ \
-            -Wl,-rpath,"$(dirname $lib_path)"
+            -lc++
 
           ./version-c-api
 
