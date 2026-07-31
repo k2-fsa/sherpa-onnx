@@ -54,8 +54,8 @@ find sherpa-onnx.xcframework -name "cxx-api.h" -delete
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
-rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip
-zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip sherpa-onnx.xcframework
+rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-static.xcframework.zip
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-static.xcframework.zip sherpa-onnx.xcframework
 
 echo "Checksum:"
-swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-macos.xcframework.zip | tee checksum.txt
+swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-static.xcframework.zip | tee checksum.txt
