@@ -37,6 +37,17 @@ mkdir -p sherpa-onnx.framework/Modules
 # Copy binary (rename from libsherpa-onnx-c-api.dylib to sherpa-onnx)
 cp -v install/lib/libsherpa-onnx-c-api.dylib sherpa-onnx.framework/sherpa-onnx
 
+# Update install name to match framework structure
+cd sherpa-onnx.framework
+install_name_tool \
+  -change @rpath/libsherpa-onnx-c-api.dylib @rpath/sherpa-onnx.framework/sherpa-onnx \
+  sherpa-onnx
+
+install_name_tool \
+  -id "@rpath/sherpa-onnx.framework/sherpa-onnx" \
+  sherpa-onnx
+cd ..
+
 # Copy headers into multi-level path
 cp -v install/include/sherpa-onnx/c-api/c-api.h sherpa-onnx.framework/Headers/sherpa-onnx/c-api/
 

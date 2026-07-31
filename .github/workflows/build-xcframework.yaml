@@ -53,7 +53,7 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-ios/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the framework directory (use simulator slice for macOS testing)
+          # Find the framework directory (use simulator slice)
           fw_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "sherpa-onnx.framework" | head -1)
           header_dir=$(find sherpa-onnx.xcframework -path "*simulator*" -name "c-api.h" -exec dirname {} \; | head -1)
 
@@ -61,14 +61,14 @@ jobs:
           echo "header_dir: $header_dir"
 
           # Headers are at Headers/sherpa-onnx/c-api/ inside the framework
-          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
           include_dir="$header_dir/../.."
 
           # Use onnxruntime simulator slice from the build directory
           ort_framework=$GITHUB_WORKSPACE/build-ios/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
 
-          # Compile and run (link against frameworks)
-          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+          # Compile for iOS simulator
+          xcrun -sdk iphonesimulator clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -target arm64-apple-ios16.0-simulator \
             -I "$include_dir" \
             -F "$(dirname $fw_dir)" \
             -framework sherpa-onnx \
@@ -76,7 +76,19 @@ jobs:
             -framework onnxruntime \
             -lc++
 
-          ./version-c-api
+          # Boot simulator and run
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for key in devices:
+              for d in devices[key]:
+                  if d['isAvailable'] and 'iPhone' in d['name']:
+                      print(d['udid'])
+                      sys.exit(0)
+          ")
+          echo "Device: $DEVICE"
+          xcrun simctl boot "$DEVICE" 2>/dev/null || true
+          xcrun simctl spawn "$DEVICE" ./version-c-api
 
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4
@@ -188,8 +200,9 @@ jobs:
           # Use onnxruntime from the build directory (iOS uses xcframework)
           ort_framework=$GITHUB_WORKSPACE/build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
 
-          # Compile and run (link against frameworks)
-          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+          # Compile for iOS simulator
+          xcrun -sdk iphonesimulator clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -target arm64-apple-ios16.0-simulator \
             -I "$include_dir" \
             -F "$(dirname $fw_dir)" \
             -framework sherpa-onnx \
@@ -198,7 +211,19 @@ jobs:
             -lc++ \
             -Wl,-rpath,"$(dirname $fw_dir)"
 
-          ./version-c-api
+          # Boot simulator and run
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for key in devices:
+              for d in devices[key]:
+                  if d['isAvailable'] and 'iPhone' in d['name']:
+                      print(d['udid'])
+                      sys.exit(0)
+          ")
+          echo "Device: $DEVICE"
+          xcrun simctl boot "$DEVICE" 2>/dev/null || true
+          xcrun simctl spawn "$DEVICE" ./version-c-api
 
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4

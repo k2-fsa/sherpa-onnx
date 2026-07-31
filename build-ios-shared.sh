@@ -13,14 +13,8 @@ cd $dir
 onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.1}
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
-SHERPA_ONNX_GITHUB=github.com
-
-if [ "$SHERPA_ONNX_GITHUB_MIRROW" == true ]; then
-    SHERPA_ONNX_GITHUB=hub.nuaa.cf
-fi
-
 if [ ! -z CMAKE_VERBOSE_MAKEFILE ]; then
-  CMAKE_VERBOSE_MAKEFILE=ON
+  CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE
 else
   CMAKE_VERBOSE_MAKEFILE=OFF
 fi
@@ -28,7 +22,7 @@ fi
 if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/onnxruntime ]; then
   mkdir -p $onnxruntime_dir
   pushd $onnxruntime_dir
-  wget -c https://${SHERPA_ONNX_GITHUB}/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-ios-shared-xcframework-${onnxruntime_version}.xcframework.zip
+  wget -c https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-ios-shared-xcframework-${onnxruntime_version}.xcframework.zip
   unzip onnxruntime-ios-shared-xcframework-${onnxruntime_version}.xcframework.zip
   rm onnxruntime-ios-shared-xcframework-${onnxruntime_version}.xcframework.zip
   cd ..
