@@ -148,7 +148,7 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  cp -v libonnxruntime.*.dylib libonnxruntime.dylib
+  # libonnxruntime.dylib is already the correct name (no version suffix)
   popd
 
   cd ..
@@ -166,7 +166,7 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  cp -v libonnxruntime.*.dylib libonnxruntime.dylib
+  # libonnxruntime.dylib is already the correct name (no version suffix)
   popd
 
   cd ..
