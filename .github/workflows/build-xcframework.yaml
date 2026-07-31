@@ -66,16 +66,22 @@ jobs:
           # Use onnxruntime simulator slice from the build directory
           ort_framework=$GITHUB_WORKSPACE/build-ios/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
 
-          # Compile for iOS simulator
+          # Copy frameworks next to the binary for simulator runtime
+          cp -R "$(dirname $fw_dir)/sherpa-onnx.framework" .
+          cp -R "$ort_framework/onnxruntime.framework" .
+
+          # Compile for iOS simulator with rpath pointing to current directory
           xcrun -sdk iphonesimulator clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -target arm64-apple-ios16.0-simulator \
             -I "$include_dir" \
-            -F "$(dirname $fw_dir)" \
+            -F . \
             -framework sherpa-onnx \
-            -F "$ort_framework" \
+            -F . \
             -framework onnxruntime \
             -framework CoreML \
-            -lc++
+            -framework CoreFoundation \
+            -lc++ \
+            -Wl,-rpath,@executable_path
 
           # Boot simulator and run
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "
@@ -201,17 +207,22 @@ jobs:
           # Use onnxruntime simulator slice from the build directory
           ort_framework=$GITHUB_WORKSPACE/build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
 
-          # Compile for iOS simulator
+          # Copy frameworks next to the binary for simulator runtime
+          cp -R "$(dirname $fw_dir)/sherpa-onnx.framework" .
+          cp -R "$ort_framework/onnxruntime.framework" .
+
+          # Compile for iOS simulator with rpath pointing to current directory
           xcrun -sdk iphonesimulator clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -target arm64-apple-ios16.0-simulator \
             -I "$include_dir" \
-            -F "$(dirname $fw_dir)" \
+            -F . \
             -framework sherpa-onnx \
-            -F "$ort_framework" \
+            -F . \
             -framework onnxruntime \
             -framework CoreML \
+            -framework CoreFoundation \
             -lc++ \
-            -Wl,-rpath,"$(dirname $fw_dir)"
+            -Wl,-rpath,@executable_path
 
           # Boot simulator and run
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "
