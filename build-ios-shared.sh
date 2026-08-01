@@ -13,11 +13,7 @@ cd $dir
 onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.1}
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
-if [ ! -z CMAKE_VERBOSE_MAKEFILE ]; then
-  CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE
-else
-  CMAKE_VERBOSE_MAKEFILE=OFF
-fi
+CMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE:-OFF}
 
 if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/onnxruntime ]; then
   mkdir -p $onnxruntime_dir
