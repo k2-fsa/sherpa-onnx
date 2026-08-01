@@ -464,17 +464,32 @@ jobs:
           echo "=== Finding built executable ==="
           BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
           echo "Binary: $BINARY"
+          PRODUCTS_DIR=$(dirname "$BINARY")
 
-          # Copy onnxruntime dylib into Frameworks/ so the loader finds it
-          ort_dylib=$(find ~/Library/Developer/Xcode/DerivedData -path "*OnnxruntimeIOSShared*" -name "onnxruntime" -type f | grep -v Headers | head -1)
-          if [ -n "$ort_dylib" ]; then
-            echo "Found onnxruntime dylib: $ort_dylib"
-            file "$ort_dylib"
-            fw_dir="$(dirname "$BINARY")/Frameworks"
-            mkdir -p "$fw_dir"
-            cp "$ort_dylib" "$fw_dir/libonnxruntime.dylib"
-            install_name_tool -id "@rpath/libonnxruntime.dylib" "$fw_dir/libonnxruntime.dylib"
+          # Ensure dynamic frameworks are accessible next to the binary
+          # simctl spawn uses @executable_path-relative rpaths, so frameworks must be
+          # in PackageFrameworks/ or Frameworks/ relative to the binary
+          echo "=== Checking framework locations ==="
+          find "$PRODUCTS_DIR" -name "*.framework" -type d
+          ls -la "$PRODUCTS_DIR/Frameworks/" 2>/dev/null || true
+          ls -la "$PRODUCTS_DIR/PackageFrameworks/" 2>/dev/null || true
+
+          # Copy SherpaOnnxC.framework to PackageFrameworks/ if not already there
+          pkg_fw_dir="$PRODUCTS_DIR/PackageFrameworks"
+          mkdir -p "$pkg_fw_dir"
+
+          sherpa_fw=$(find "$PRODUCTS_DIR" -path "*/Frameworks/SherpaOnnxC.framework" -type d | head -1)
+          if [ -n "$sherpa_fw" ] && [ ! -d "$pkg_fw_dir/SherpaOnnxC.framework" ]; then
+            cp -a "$sherpa_fw" "$pkg_fw_dir/"
           fi
+
+          ort_fw=$(find "$PRODUCTS_DIR" -path "*/Frameworks/onnxruntime.framework" -type d | head -1)
+          if [ -n "$ort_fw" ] && [ ! -d "$pkg_fw_dir/onnxruntime.framework" ]; then
+            cp -a "$ort_fw" "$pkg_fw_dir/"
+          fi
+
+          echo "=== PackageFrameworks contents ==="
+          ls -la "$pkg_fw_dir/"
 
           echo "=== Booting iOS Simulator ==="
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "
@@ -584,7 +599,7 @@ jobs:
       - build_macos_static_xcframework
       - build_macos_shared_xcframework
       - test_spm
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
