@@ -394,9 +394,28 @@ jobs:
           echo "=== Shared macOS xcframework ==="
           ls -lh build-macos/sherpa-onnx.xcframework/
 
+          # Download shared onnxruntime (sherpa-onnx dylib links against it)
+          ort_version=1.27.1
+          ort_dir=/tmp/onnxruntime-shared-$ort_version
+          if [ ! -f "$ort_dir/lib/libonnxruntime.dylib" ]; then
+            mkdir -p "$ort_dir"
+            cd "$ort_dir"
+            curl -SL -o onnxruntime.zip \
+              https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-macos-shared-xcframework-${ort_version}.xcframework.zip
+            unzip -q onnxruntime.zip
+            ort_fw=$(find onnxruntime.xcframework -name "onnxruntime.framework" -type d | head -1)
+            mkdir -p lib
+            cp "$ort_fw/onnxruntime" lib/libonnxruntime.dylib
+          fi
+
           cd spm-examples/macOS
           rm -rf .build
           swift build --verbose
+
+          # Copy onnxruntime dylib next to the executable so the loader finds it
+          exe_dir=$(dirname "$(find .build -name "SherpaOnnxExample" -type f -perm +111 | head -1)")
+          cp "$ort_dir/lib/libonnxruntime.dylib" "$exe_dir/"
+
           swift run SherpaOnnxExample
 
       - name: Test SPM iOS (shared)
@@ -410,6 +429,17 @@ jobs:
 
           echo "=== Shared iOS xcframework ==="
           ls -lh build-ios/sherpa-onnx.xcframework/
+
+          # Download shared iOS onnxruntime (sherpa-onnx dylib links against it)
+          ort_version=1.27.1
+          ort_ios_dir=/tmp/onnxruntime-ios-shared-$ort_version
+          if [ ! -d "$ort_ios_dir/onnxruntime.xcframework" ]; then
+            mkdir -p "$ort_ios_dir"
+            cd "$ort_ios_dir"
+            curl -SL -o onnxruntime.zip \
+              https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-ios-shared-xcframework-${ort_version}.xcframework.zip
+            unzip -q onnxruntime.zip
+          fi
 
           cd spm-examples/iOS
 
@@ -426,6 +456,12 @@ jobs:
           echo "=== Finding built executable ==="
           BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
           echo "Binary: $BINARY"
+
+          # Copy onnxruntime dylib into the Frameworks directory next to the executable
+          ort_sim_fw=$(find "$ort_ios_dir/onnxruntime.xcframework" -path "*simulator*" -name "onnxruntime.framework" -type d | head -1)
+          app_frameworks_dir="$(dirname "$BINARY")/Frameworks"
+          mkdir -p "$app_frameworks_dir"
+          cp "$ort_sim_fw/onnxruntime" "$app_frameworks_dir/libonnxruntime.dylib"
 
           echo "=== Booting iOS Simulator ==="
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "
