@@ -463,7 +463,7 @@ jobs:
 
           # Copy shared frameworks into PackageFrameworks (xcodebuild doesn't embed SPM binary targets)
           ort_sim_fw=$(find "$ort_ios_dir/onnxruntime.xcframework" -path "*simulator*" -name "onnxruntime.framework" -type d | head -1)
-          sherpa_sim_fw=$(find build-ios/sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          sherpa_sim_fw=$(find "$GITHUB_WORKSPACE/build-ios/sherpa-onnx.xcframework" -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
           # rpath includes PackageFrameworks/ - that's where SPM expects embedded frameworks
           build_products_dir="$(dirname "$BINARY")"
           pkg_fw_dir="$build_products_dir/PackageFrameworks"
