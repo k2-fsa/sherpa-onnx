@@ -394,31 +394,22 @@ jobs:
           echo "=== Shared macOS xcframework ==="
           ls -lh build-macos/sherpa-onnx.xcframework/
 
-          # Download shared onnxruntime (sherpa-onnx dylib links against it)
-          ort_version=1.27.1
-          ort_dir=/tmp/onnxruntime-shared-$ort_version
-          if [ ! -f "$ort_dir/lib/libonnxruntime.dylib" ]; then
-            (
-              mkdir -p "$ort_dir"
-              cd "$ort_dir"
-              curl -SL -o onnxruntime.zip \
-                https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-macos-shared-xcframework-${ort_version}.xcframework.zip
-              unzip -q onnxruntime.zip
-              ort_fw=$(find onnxruntime.xcframework -name "onnxruntime.framework" -type d | head -1)
-              mkdir -p lib
-              cp "$ort_fw/onnxruntime" lib/libonnxruntime.dylib
-            )
-          fi
+          # Patch root Package.swift: use shared onnxruntime + local shared xcframework
+          python3 -c "
+          import re
+          text = open('Package.swift').read()
+          # Switch to shared onnxruntime
+          text = text.replace('\"onnxruntime-macos\"', '\"onnxruntime-macos-shared\"')
+          # Use local shared xcframework paths
+          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-macos-static.xcframework.zip\",', 'path: \"build-macos/sherpa-onnx.xcframework\",', text)
+          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-ios-static.xcframework.zip\",', 'path: \"build-ios/sherpa-onnx.xcframework\",', text)
+          text = re.sub(r'\n\s*checksum: \"[a-f0-9]+\",?\n', '\n', text)
+          open('Package.swift', 'w').write(text)
+          "
 
           cd spm-examples/macOS
           rm -rf .build
           swift build --verbose
-
-          # Copy onnxruntime dylib next to the executable and fix install name
-          exe_dir=$(dirname "$(find .build -name "SherpaOnnxExample" -type f -perm +111 | head -1)")
-          cp "$ort_dir/lib/libonnxruntime.dylib" "$exe_dir/"
-          install_name_tool -id "@rpath/libonnxruntime.dylib" "$exe_dir/libonnxruntime.dylib"
-
           swift run SherpaOnnxExample
 
       - name: Test SPM iOS (shared)
@@ -433,6 +424,19 @@ jobs:
           echo "=== Shared iOS xcframework ==="
           ls -lh build-ios/sherpa-onnx.xcframework/
 
+          # Patch root Package.swift: use shared onnxruntime + local shared xcframework
+          python3 -c "
+          import re
+          text = open('Package.swift').read()
+          # Switch to shared onnxruntime
+          text = text.replace('\"onnxruntime-ios\"', '\"onnxruntime-ios-shared\"')
+          # Use local shared xcframework paths
+          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-macos-static.xcframework.zip\",', 'path: \"build-macos/sherpa-onnx.xcframework\",', text)
+          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-ios-static.xcframework.zip\",', 'path: \"build-ios/sherpa-onnx.xcframework\",', text)
+          text = re.sub(r'\n\s*checksum: \"[a-f0-9]+\",?\n', '\n', text)
+          open('Package.swift', 'w').write(text)
+          "
+
           cd spm-examples/iOS
 
           echo "=== Resolving ==="
@@ -445,7 +449,25 @@ jobs:
             -verbose \
             build 2>&1
 
-          echo "=== iOS shared build succeeded ==="
+          echo "=== Finding built executable ==="
+          BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
+          echo "Binary: $BINARY"
+
+          echo "=== Booting iOS Simulator ==="
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for key in devices:
+              for d in devices[key]:
+                  if d['isAvailable'] and 'iPhone' in d['name']:
+                      print(d['udid'])
+                      sys.exit(0)
+          ")
+          echo "Device: $DEVICE"
+          xcrun simctl boot "$DEVICE" 2>/dev/null || true
+
+          echo "=== Running on iOS Simulator ==="
+          xcrun simctl spawn "$DEVICE" "$BINARY"
 
       - name: Test iOS app (static, local SPM)
         shell: bash
