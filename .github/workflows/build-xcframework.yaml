@@ -410,6 +410,13 @@ jobs:
           cd spm-examples/macOS
           rm -rf .build
           swift build --verbose
+
+          # Copy onnxruntime dylib from SPM artifact cache to build dir
+          ort_dylib=$(find .build/artifacts -name "onnxruntime" -path "*/onnxruntime.framework/*" -type f | head -1)
+          exe_dir=$(dirname "$(find .build -name "SherpaOnnxExample" -type f -perm +111 | head -1)")
+          cp "$ort_dylib" "$exe_dir/libonnxruntime.dylib"
+          install_name_tool -id "@rpath/libonnxruntime.dylib" "$exe_dir/libonnxruntime.dylib"
+
           swift run SherpaOnnxExample
 
       - name: Test SPM iOS (shared)
@@ -452,6 +459,15 @@ jobs:
           echo "=== Finding built executable ==="
           BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
           echo "Binary: $BINARY"
+
+          # Copy onnxruntime dylib into Frameworks/ so the loader finds it
+          ort_dylib=$(find ~/Library/Developer/Xcode/DerivedData -path "*OnnxruntimeIOSShared*" -name "onnxruntime" -type f | head -1)
+          if [ -n "$ort_dylib" ]; then
+            fw_dir="$(dirname "$BINARY")/Frameworks"
+            mkdir -p "$fw_dir"
+            cp "$ort_dylib" "$fw_dir/libonnxruntime.dylib"
+            install_name_tool -id "@rpath/libonnxruntime.dylib" "$fw_dir/libonnxruntime.dylib"
+          fi
 
           echo "=== Booting iOS Simulator ==="
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "
