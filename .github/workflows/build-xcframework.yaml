@@ -326,25 +326,25 @@ jobs:
           text = open('Package.swift').read()
           # Patch static macOS binary target to local path
           text = re.sub(
-              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOS\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOS\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
               '.binaryTarget(name: \"SherpaOnnxMacOS\", path: \"build-macos/sherpa-onnx.xcframework\")',
               text
           )
           # Patch static iOS binary target to local path
           text = re.sub(
-              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOS\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOS\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
               '.binaryTarget(name: \"SherpaOnnxIOS\", path: \"build-ios/sherpa-onnx.xcframework\")',
               text
           )
           # Patch shared macOS binary target to local path
           text = re.sub(
-              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOSShared\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOSShared\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
               '.binaryTarget(name: \"SherpaOnnxMacOSShared\", path: \"build-macos-shared/sherpa-onnx.xcframework\")',
               text
           )
           # Patch shared iOS binary target to local path
           text = re.sub(
-              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOSShared\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOSShared\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
               '.binaryTarget(name: \"SherpaOnnxIOSShared\", path: \"build-ios-shared/sherpa-onnx.xcframework\")',
               text
           )
