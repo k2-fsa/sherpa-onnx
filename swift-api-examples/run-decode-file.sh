@@ -26,7 +26,7 @@ if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13 ]; then
   rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 fi
 
-if [ ! -e ./decode-file ]; then
+if [ ! -e ./decode-file ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./decode-file ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

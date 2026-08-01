@@ -77,6 +77,12 @@ cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
   <string>SherpaOnnxC</string>
   <key>CFBundlePackageType</key>
   <string>FMWK</string>
+  <key>CFBundleExecutable</key>
+  <string>SherpaOnnxC</string>
+  <key>CFBundleVersion</key>
+  <string>20260707</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.13.4</string>
 </dict>
 </plist>
 EOF

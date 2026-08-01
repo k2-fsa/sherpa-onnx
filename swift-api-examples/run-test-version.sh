@@ -7,7 +7,7 @@ if [ ! -d ../build-macos ]; then
   exit 1
 fi
 
-if [ ! -e ./test-version ]; then
+if [ ! -e ./test-version ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./test-version ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

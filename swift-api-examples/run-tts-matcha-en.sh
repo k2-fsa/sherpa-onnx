@@ -21,7 +21,7 @@ if [ ! -f ./vocos-22khz-univ.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
-if [ ! -e ./tts-matcha-en ]; then
+if [ ! -e ./tts-matcha-en ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-matcha-en ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

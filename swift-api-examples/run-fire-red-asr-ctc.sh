@@ -22,7 +22,7 @@ if [ ! -f ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/model.int8.onnx 
   ls -lh sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
 fi
 
-if [ ! -e ./fire-red-asr-ctc ]; then
+if [ ! -e ./fire-red-asr-ctc ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./fire-red-asr-ctc ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

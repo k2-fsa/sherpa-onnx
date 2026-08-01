@@ -44,7 +44,7 @@ if [ ! -d "${model_dir}/espeak-ng-data" ]; then
   mv espeak-ng-data "${model_dir}/"
 fi
 
-if [ ! -e ./tts-kitten-en ] || [ ./tts-kitten-en.swift -nt ./tts-kitten-en ] || [ ./SherpaOnnx.swift -nt ./tts-kitten-en ]; then
+if [ ! -e ./tts-kitten-en ] || [ ./tts-kitten-en.swift -nt ./tts-kitten-en ] || [ ./SherpaOnnx.swift -nt ./tts-kitten-en ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-kitten-en ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

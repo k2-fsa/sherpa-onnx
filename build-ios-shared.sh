@@ -191,6 +191,18 @@ MEOF
   <string>SherpaOnnxC</string>
   <key>CFBundlePackageType</key>
   <string>FMWK</string>
+  <key>CFBundleExecutable</key>
+  <string>SherpaOnnxC</string>
+  <key>CFBundleVersion</key>
+  <string>20260707</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.13.4</string>
+  <key>MinimumOSVersion</key>
+  <string>13.0</string>
+  <key>CFBundleSupportedPlatforms</key>
+  <array>
+    <string>iPhoneOS</string>
+  </array>
 </dict>
 </plist>
 PEOF

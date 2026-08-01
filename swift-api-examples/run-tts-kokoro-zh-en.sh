@@ -16,7 +16,7 @@ if [ ! -f ./kokoro-multi-lang-v1_0/model.onnx ]; then
   rm kokoro-multi-lang-v1_0.tar.bz2
 fi
 
-if [ ! -e ./tts-kokoro-zh-en ]; then
+if [ ! -e ./tts-kokoro-zh-en ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-kokoro-zh-en ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

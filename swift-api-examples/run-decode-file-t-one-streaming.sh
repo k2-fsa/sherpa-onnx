@@ -15,7 +15,7 @@ if [ ! -d ./sherpa-onnx-streaming-t-one-russian-2025-09-08 ]; then
   rm sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
 fi
 
-if [ ! -e ./decode-file-t-one-streaming ]; then
+if [ ! -e ./decode-file-t-one-streaming ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./decode-file-t-one-streaming ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

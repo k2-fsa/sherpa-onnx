@@ -23,7 +23,7 @@ if [ ! -d dict ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
 fi
 
-if [ ! -e ./decode-file-sense-voice-with-hr ]; then
+if [ ! -e ./decode-file-sense-voice-with-hr ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./decode-file-sense-voice-with-hr ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

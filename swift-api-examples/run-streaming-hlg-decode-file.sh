@@ -15,7 +15,7 @@ if [ ! -f ./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst ]; then
   rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 fi
 
-if [ ! -e ./streaming-hlg-decode-file ]; then
+if [ ! -e ./streaming-hlg-decode-file ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./streaming-hlg-decode-file ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

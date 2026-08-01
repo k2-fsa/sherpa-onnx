@@ -21,7 +21,7 @@ if [ ! -f ./sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/model.int8.o
   ls -lh sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 fi
 
-if [ ! -e ./dolphin-ctc-asr ]; then
+if [ ! -e ./dolphin-ctc-asr ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./dolphin-ctc-asr ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
