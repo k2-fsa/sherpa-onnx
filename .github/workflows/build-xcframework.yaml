@@ -318,9 +318,6 @@ jobs:
           # Patch Package.swift to use local package
           sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
 
-          # Fix package identity (directory name is sherpa-onnx-2, not sherpa-onnx)
-          sed -i.bak 's|package: "sherpa-onnx"|package: "sherpa-onnx-2"|' Package.swift
-
           # Patch root Package.swift to use local xcframework paths
           cd ../..
           cp Package.swift Package.swift.bak
@@ -351,9 +348,6 @@ jobs:
 
           # Patch Package.swift to use local package
           sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
-
-          # Fix package identity
-          sed -i.bak 's|package: "sherpa-onnx"|package: "sherpa-onnx-2"|' Package.swift
 
           echo "=== Package.swift ==="
           cat Package.swift
