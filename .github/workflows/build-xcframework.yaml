@@ -324,9 +324,30 @@ jobs:
           python3 -c "
           import re
           text = open('Package.swift').read()
-          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-macos-static.xcframework.zip\",', 'path: \"build-macos/sherpa-onnx.xcframework\",', text)
-          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-ios-static.xcframework.zip\",', 'path: \"build-ios/sherpa-onnx.xcframework\",', text)
-          text = re.sub(r'\n\s*checksum: \"[a-f0-9]+\",?\n', '\n', text)
+          # Patch static macOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOS\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxMacOS\", path: \"build-macos/sherpa-onnx.xcframework\")',
+              text
+          )
+          # Patch static iOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOS\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxIOS\", path: \"build-ios/sherpa-onnx.xcframework\")',
+              text
+          )
+          # Patch shared macOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOSShared\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxMacOSShared\", path: \"build-macos-shared/sherpa-onnx.xcframework\")',
+              text
+          )
+          # Patch shared iOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOSShared\",\s*url: \"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxIOSShared\", path: \"build-ios-shared/sherpa-onnx.xcframework\")',
+              text
+          )
           open('Package.swift', 'w').write(text)
           "
           cd spm-examples/macOS
@@ -387,32 +408,30 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Swap static xcframework with shared
-          rm -rf build-macos/sherpa-onnx.xcframework
-          cp -a build-macos-shared/sherpa-onnx.xcframework build-macos/
-
-          echo "=== Shared macOS xcframework ==="
-          ls -lh build-macos/sherpa-onnx.xcframework/
-
-          # Patch root Package.swift: use shared onnxruntime + local shared xcframework
-          python3 -c "
-          import re
-          text = open('Package.swift').read()
-          # Switch to shared onnxruntime
-          text = text.replace('\"onnxruntime-macos\"', '\"onnxruntime-macos-shared\"')
-          # Use local shared xcframework paths
-          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-macos-static.xcframework.zip\",', 'path: \"build-macos/sherpa-onnx.xcframework\",', text)
-          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-ios-static.xcframework.zip\",', 'path: \"build-ios/sherpa-onnx.xcframework\",', text)
-          text = re.sub(r'\n\s*checksum: \"[a-f0-9]+\",?\n', '\n', text)
-          open('Package.swift', 'w').write(text)
-          "
-
           cd spm-examples/macOS
+
+          # Patch Package.swift to use shared product
+          sed -i.bak2 's|.product(name: "sherpa-onnx", package: "sherpa-onnx")|.product(name: "sherpa-onnx-shared", package: "sherpa-onnx")|' Package.swift
+
+          echo "=== Package.swift (shared) ==="
+          cat Package.swift
+          echo "=== Root Package.swift ==="
+          cat ../../Package.swift
+
           rm -rf .build
           swift build --verbose
 
-          # Copy onnxruntime dylib from SPM artifact cache to build dir
-          ort_dylib=$(find .build/artifacts -name "onnxruntime" -path "*/onnxruntime.framework/*" -type f | head -1)
+          # Find the shared onnxruntime dylib from OnnxruntimeMacOSShared artifact
+          ort_dylib=$(find .build/artifacts -path "*OnnxruntimeMacOSShared*" -name "onnxruntime" -type f | grep -v Headers | head -1)
+          if [ -z "$ort_dylib" ]; then
+            echo "ERROR: shared onnxruntime dylib not found in artifacts"
+            echo "=== Listing all artifacts ==="
+            find .build/artifacts -type f | sort
+            exit 1
+          fi
+          echo "Found onnxruntime dylib: $ort_dylib"
+          file "$ort_dylib"
+
           exe_dir=$(dirname "$(find .build -name "SherpaOnnxExample" -type f -perm +111 | head -1)")
           cp "$ort_dylib" "$exe_dir/libonnxruntime.dylib"
           install_name_tool -id "@rpath/libonnxruntime.dylib" "$exe_dir/libonnxruntime.dylib"
@@ -424,27 +443,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Swap static xcframework with shared
-          rm -rf build-ios/sherpa-onnx.xcframework
-          cp -a build-ios-shared/sherpa-onnx.xcframework build-ios/
-
-          echo "=== Shared iOS xcframework ==="
-          ls -lh build-ios/sherpa-onnx.xcframework/
-
-          # Patch root Package.swift: use shared onnxruntime + local shared xcframework
-          python3 -c "
-          import re
-          text = open('Package.swift').read()
-          # Switch to shared onnxruntime
-          text = text.replace('\"onnxruntime-ios\"', '\"onnxruntime-ios-shared\"')
-          # Use local shared xcframework paths
-          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-macos-static.xcframework.zip\",', 'path: \"build-macos/sherpa-onnx.xcframework\",', text)
-          text = re.sub(r'url: \"https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v[0-9.]+-ios-static.xcframework.zip\",', 'path: \"build-ios/sherpa-onnx.xcframework\",', text)
-          text = re.sub(r'\n\s*checksum: \"[a-f0-9]+\",?\n', '\n', text)
-          open('Package.swift', 'w').write(text)
-          "
-
           cd spm-examples/iOS
+
+          # Patch Package.swift to use shared product
+          sed -i.bak2 's|.product(name: "sherpa-onnx", package: "sherpa-onnx")|.product(name: "sherpa-onnx-shared", package: "sherpa-onnx")|' Package.swift
+
+          echo "=== Package.swift (shared) ==="
+          cat Package.swift
 
           echo "=== Resolving ==="
           swift package resolve
@@ -461,8 +466,10 @@ jobs:
           echo "Binary: $BINARY"
 
           # Copy onnxruntime dylib into Frameworks/ so the loader finds it
-          ort_dylib=$(find ~/Library/Developer/Xcode/DerivedData -path "*OnnxruntimeIOSShared*" -name "onnxruntime" -type f | head -1)
+          ort_dylib=$(find ~/Library/Developer/Xcode/DerivedData -path "*OnnxruntimeIOSShared*" -name "onnxruntime" -type f | grep -v Headers | head -1)
           if [ -n "$ort_dylib" ]; then
+            echo "Found onnxruntime dylib: $ort_dylib"
+            file "$ort_dylib"
             fw_dir="$(dirname "$BINARY")/Frameworks"
             mkdir -p "$fw_dir"
             cp "$ort_dylib" "$fw_dir/libonnxruntime.dylib"
@@ -485,15 +492,12 @@ jobs:
           echo "=== Running on iOS Simulator ==="
           xcrun simctl spawn "$DEVICE" "$BINARY"
 
-      - name: Test iOS app (static, local SPM)
+      - name: Test iOS apps (static, local SPM)
         shell: bash
         run: |
           set -euo pipefail
 
-          # Restore static xcframework (may have been swapped to shared)
-          rm -rf build-ios/sherpa-onnx.xcframework
-          unzip -o artifacts/sherpa-onnx-ios-static-xcframework/*.zip -d build-ios/
-
+          # Restore root Package.swift for static test (already patched with local paths)
           # Patch ios-swiftui/ios-swift xcodeproj files to use local package
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
             -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
@@ -501,25 +505,61 @@ jobs:
             -e '/requirement = {/,/};/d' \
             {} +
 
-          echo "=== Building SherpaOnnxAsr (static, local SPM) ==="
-          cd ios-swiftui/SherpaOnnxAsr
+          # Ensure we're using the static product in spm-examples
+          # (Root Package.swift already has static binary targets patched to local paths)
+
+          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTts; do
+            echo "=== Building ios-swiftui/$app (static, local SPM) ==="
+            cd ios-swiftui/$app
+            xcodebuild -project $app.xcodeproj \
+              -scheme $app \
+              -destination 'generic/platform=iOS Simulator' \
+              -skipPackagePluginValidation \
+              build
+            cd ../..
+          done
+
+          echo "=== Building ios-swift/SherpaOnnxAsr (static, local SPM) ==="
+          cd ios-swift/SherpaOnnxAsr
           xcodebuild -project SherpaOnnxAsr.xcodeproj \
             -scheme SherpaOnnxAsr \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             build
 
-      - name: Test iOS app (shared, local SPM)
+      - name: Test iOS apps (shared, local SPM)
         shell: bash
         run: |
           set -euo pipefail
 
-          # Swap to shared xcframework
+          # Swap static xcframeworks with shared ones in the local paths
+          rm -rf build-macos/sherpa-onnx.xcframework
+          cp -a build-macos-shared/sherpa-onnx.xcframework build-macos/
           rm -rf build-ios/sherpa-onnx.xcframework
           cp -a build-ios-shared/sherpa-onnx.xcframework build-ios/
 
-          echo "=== Building SherpaOnnxAsr (shared, local SPM) ==="
-          cd ios-swiftui/SherpaOnnxAsr
+          # Patch root Package.swift to use shared onnxruntime products
+          python3 -c "
+          text = open('Package.swift').read()
+          # In the static wrapper target, swap to shared onnxruntime products
+          text = text.replace('\"onnxruntime-macos\"', '\"onnxruntime-macos-shared\"')
+          text = text.replace('\"onnxruntime-ios\"', '\"onnxruntime-ios-shared\"')
+          open('Package.swift', 'w').write(text)
+          "
+
+          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTts; do
+            echo "=== Building ios-swiftui/$app (shared, local SPM) ==="
+            cd ios-swiftui/$app
+            xcodebuild -project $app.xcodeproj \
+              -scheme $app \
+              -destination 'generic/platform=iOS Simulator' \
+              -skipPackagePluginValidation \
+              build
+            cd ../..
+          done
+
+          echo "=== Building ios-swift/SherpaOnnxAsr (shared, local SPM) ==="
+          cd ios-swift/SherpaOnnxAsr
           xcodebuild -project SherpaOnnxAsr.xcodeproj \
             -scheme SherpaOnnxAsr \
             -destination 'generic/platform=iOS Simulator' \
@@ -533,7 +573,7 @@ jobs:
           [ -f spm-examples/macOS/Package.swift.bak ] && mv spm-examples/macOS/Package.swift.bak spm-examples/macOS/Package.swift || true
           [ -f Package.swift.bak ] && mv Package.swift.bak Package.swift || true
           [ -f spm-examples/iOS/Package.swift.bak ] && mv spm-examples/iOS/Package.swift.bak spm-examples/iOS/Package.swift || true
-          # Restore xcodeproj files patched by ios.yaml test
+          # Restore xcodeproj files patched for ios app test
           git checkout -- ios-swiftui/ ios-swift/ 2>/dev/null || true
 
   release:
