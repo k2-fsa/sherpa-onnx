@@ -461,11 +461,15 @@ jobs:
           BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
           echo "Binary: $BINARY"
 
-          # Copy onnxruntime dylib into the Frameworks directory next to the executable
+          # Copy shared frameworks into PackageFrameworks (xcodebuild doesn't embed SPM binary targets)
           ort_sim_fw=$(find "$ort_ios_dir/onnxruntime.xcframework" -path "*simulator*" -name "onnxruntime.framework" -type d | head -1)
-          app_frameworks_dir="$(dirname "$BINARY")/Frameworks"
-          mkdir -p "$app_frameworks_dir"
-          cp "$ort_sim_fw/onnxruntime" "$app_frameworks_dir/libonnxruntime.dylib"
+          sherpa_sim_fw=$(find build-ios/sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          # rpath includes PackageFrameworks/ - that's where SPM expects embedded frameworks
+          build_products_dir="$(dirname "$BINARY")"
+          pkg_fw_dir="$build_products_dir/PackageFrameworks"
+          mkdir -p "$pkg_fw_dir"
+          cp -a "$sherpa_sim_fw" "$pkg_fw_dir/"
+          cp "$ort_sim_fw/onnxruntime" "$pkg_fw_dir/libonnxruntime.dylib"
 
           echo "=== Booting iOS Simulator ==="
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "
