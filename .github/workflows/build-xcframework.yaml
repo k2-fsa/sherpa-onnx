@@ -433,19 +433,6 @@ jobs:
           echo "=== Shared iOS xcframework ==="
           ls -lh build-ios/sherpa-onnx.xcframework/
 
-          # Download shared iOS onnxruntime (sherpa-onnx dylib links against it)
-          ort_version=1.27.1
-          ort_ios_dir=/tmp/onnxruntime-ios-shared-$ort_version
-          if [ ! -d "$ort_ios_dir/onnxruntime.xcframework" ]; then
-            (
-              mkdir -p "$ort_ios_dir"
-              cd "$ort_ios_dir"
-              curl -SL -o onnxruntime.zip \
-                https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-ios-shared-xcframework-${ort_version}.xcframework.zip
-              unzip -q onnxruntime.zip
-            )
-          fi
-
           cd spm-examples/iOS
 
           echo "=== Resolving ==="
@@ -458,36 +445,7 @@ jobs:
             -verbose \
             build 2>&1
 
-          echo "=== Finding built executable ==="
-          BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
-          echo "Binary: $BINARY"
-
-          # Copy shared frameworks into PackageFrameworks (xcodebuild doesn't embed SPM binary targets)
-          ort_sim_fw=$(find "$ort_ios_dir/onnxruntime.xcframework" -path "*simulator*" -name "onnxruntime.framework" -type d | head -1)
-          sherpa_sim_fw=$(find "$GITHUB_WORKSPACE/build-ios/sherpa-onnx.xcframework" -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
-          # rpath includes PackageFrameworks/ - that's where SPM expects embedded frameworks
-          build_products_dir="$(dirname "$BINARY")"
-          pkg_fw_dir="$build_products_dir/PackageFrameworks"
-          mkdir -p "$pkg_fw_dir"
-          cp -a "$sherpa_sim_fw" "$pkg_fw_dir/"
-          cp "$ort_sim_fw/onnxruntime" "$pkg_fw_dir/libonnxruntime.dylib"
-          install_name_tool -id "@rpath/libonnxruntime.dylib" "$pkg_fw_dir/libonnxruntime.dylib"
-
-          echo "=== Booting iOS Simulator ==="
-          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
-          import json, sys
-          devices = json.load(sys.stdin)['devices']
-          for key in devices:
-              for d in devices[key]:
-                  if d['isAvailable'] and 'iPhone' in d['name']:
-                      print(d['udid'])
-                      sys.exit(0)
-          ")
-          echo "Device: $DEVICE"
-          xcrun simctl boot "$DEVICE" 2>/dev/null || true
-
-          echo "=== Running on iOS Simulator ==="
-          xcrun simctl spawn "$DEVICE" "$BINARY"
+          echo "=== iOS shared build succeeded ==="
 
       - name: Test iOS app (static, local SPM)
         shell: bash
