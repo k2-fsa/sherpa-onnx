@@ -443,13 +443,35 @@ jobs:
           echo "=== Running on iOS Simulator ==="
           xcrun simctl spawn "$DEVICE" "$BINARY"
 
-      - name: Restore Package.swift files
+      - name: Test iOS app (local SPM)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Patch ios-swiftui/ios-swift xcodeproj files to use local package
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+
+          echo "=== Building SherpaOnnxAsr (local SPM) ==="
+          cd ios-swiftui/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+      - name: Restore modified files
         if: always()
         shell: bash
         run: |
           [ -f spm-examples/macOS/Package.swift.bak ] && mv spm-examples/macOS/Package.swift.bak spm-examples/macOS/Package.swift || true
           [ -f Package.swift.bak ] && mv Package.swift.bak Package.swift || true
           [ -f spm-examples/iOS/Package.swift.bak ] && mv spm-examples/iOS/Package.swift.bak spm-examples/iOS/Package.swift || true
+          # Restore xcodeproj files patched by ios.yaml test
+          git checkout -- ios-swiftui/ ios-swift/ 2>/dev/null || true
 
   release:
     name: release
