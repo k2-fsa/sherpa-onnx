@@ -398,14 +398,16 @@ jobs:
           ort_version=1.27.1
           ort_dir=/tmp/onnxruntime-shared-$ort_version
           if [ ! -f "$ort_dir/lib/libonnxruntime.dylib" ]; then
-            mkdir -p "$ort_dir"
-            cd "$ort_dir"
-            curl -SL -o onnxruntime.zip \
-              https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-macos-shared-xcframework-${ort_version}.xcframework.zip
-            unzip -q onnxruntime.zip
-            ort_fw=$(find onnxruntime.xcframework -name "onnxruntime.framework" -type d | head -1)
-            mkdir -p lib
-            cp "$ort_fw/onnxruntime" lib/libonnxruntime.dylib
+            (
+              mkdir -p "$ort_dir"
+              cd "$ort_dir"
+              curl -SL -o onnxruntime.zip \
+                https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-macos-shared-xcframework-${ort_version}.xcframework.zip
+              unzip -q onnxruntime.zip
+              ort_fw=$(find onnxruntime.xcframework -name "onnxruntime.framework" -type d | head -1)
+              mkdir -p lib
+              cp "$ort_fw/onnxruntime" lib/libonnxruntime.dylib
+            )
           fi
 
           cd spm-examples/macOS
@@ -434,11 +436,13 @@ jobs:
           ort_version=1.27.1
           ort_ios_dir=/tmp/onnxruntime-ios-shared-$ort_version
           if [ ! -d "$ort_ios_dir/onnxruntime.xcframework" ]; then
-            mkdir -p "$ort_ios_dir"
-            cd "$ort_ios_dir"
-            curl -SL -o onnxruntime.zip \
-              https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-ios-shared-xcframework-${ort_version}.xcframework.zip
-            unzip -q onnxruntime.zip
+            (
+              mkdir -p "$ort_ios_dir"
+              cd "$ort_ios_dir"
+              curl -SL -o onnxruntime.zip \
+                https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-ios-shared-xcframework-${ort_version}.xcframework.zip
+              unzip -q onnxruntime.zip
+            )
           fi
 
           cd spm-examples/iOS
@@ -479,10 +483,14 @@ jobs:
           echo "=== Running on iOS Simulator ==="
           xcrun simctl spawn "$DEVICE" "$BINARY"
 
-      - name: Test iOS app (local SPM)
+      - name: Test iOS app (static, local SPM)
         shell: bash
         run: |
           set -euo pipefail
+
+          # Restore static xcframework (may have been swapped to shared)
+          rm -rf build-ios/sherpa-onnx.xcframework
+          unzip -o artifacts/sherpa-onnx-ios-static-xcframework/*.zip -d build-ios/
 
           # Patch ios-swiftui/ios-swift xcodeproj files to use local package
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
@@ -491,7 +499,24 @@ jobs:
             -e '/requirement = {/,/};/d' \
             {} +
 
-          echo "=== Building SherpaOnnxAsr (local SPM) ==="
+          echo "=== Building SherpaOnnxAsr (static, local SPM) ==="
+          cd ios-swiftui/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+      - name: Test iOS app (shared, local SPM)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Swap to shared xcframework
+          rm -rf build-ios/sherpa-onnx.xcframework
+          cp -a build-ios-shared/sherpa-onnx.xcframework build-ios/
+
+          echo "=== Building SherpaOnnxAsr (shared, local SPM) ==="
           cd ios-swiftui/SherpaOnnxAsr
           xcodebuild -project SherpaOnnxAsr.xcodeproj \
             -scheme SherpaOnnxAsr \
