@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - macos-xcframework-2
     tags:
       - 'release-v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -599,7 +598,7 @@ jobs:
       - build_macos_static_xcframework
       - build_macos_shared_xcframework
       - test_spm
-    # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
@@ -622,7 +621,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          overwrite: true
+          overwrite: false
           file: artifacts/**/*.xcframework.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
