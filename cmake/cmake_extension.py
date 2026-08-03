@@ -364,6 +364,3 @@ class BuildExtension(build_ext):
             shutil.rmtree(f"{install_dir}/share")
         if Path(f"{install_dir}/lib/pkgconfig").is_dir():
             shutil.rmtree(f"{install_dir}/lib/pkgconfig")
-
-        if is_macos():
-            os.remove(f"{install_dir}/lib/libonnxruntime.dylib")
