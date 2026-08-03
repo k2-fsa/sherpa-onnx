@@ -113,3 +113,48 @@ flutter build linux
 # Windows
 flutter build windows
 ```
+
+## Running on iOS simulator
+
+### Step 1: List available simulators
+
+```bash
+xcrun simctl list devices
+```
+
+Look for a booted simulator, e.g.:
+
+```
+iPhone 16 Plus (UUID) (Booted)
+```
+
+### Step 2: Run on the simulator
+
+```bash
+flutter run -d <UUID>
+```
+
+For example:
+
+```bash
+flutter run -d 34FB0674-4ABA-4870-ABF2-D0D6E110A7C2
+```
+
+### Troubleshooting
+
+If you see `ld: framework 'sherpa_onnx' not found`, it means the Xcode
+project has stale Swift Package Manager (SPM) references. Remove them:
+
+```bash
+cd ios
+# Remove SPM references from the Xcode project
+# (edit Runner.xcodeproj/project.pbxproj to remove FlutterGeneratedPluginSwiftPackage entries)
+```
+
+Or regenerate the iOS project:
+
+```bash
+flutter clean
+flutter pub get
+flutter run -d <UUID>
+```
