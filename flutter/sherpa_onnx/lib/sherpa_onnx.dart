@@ -61,15 +61,15 @@ final DynamicLibrary _dylib = () {
       return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
     } else {
       // for Dart CLI without flutter
-      // CI places sherpa_onnx.xcframework inside ../../../flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos
+      // CI places SherpaOnnxC.xcframework inside ../../../flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos
       return DynamicLibrary.open(
-        '$_path/sherpa_onnx_macos/sherpa_onnx.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework/SherpaOnnxC',
+        '$_path/sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework/SherpaOnnxC',
       );
     }
   }
 
   if (Platform.isIOS) {
-    // CI places sherpa_onnx.xcframework inside ../../../flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios
+    // CI places SherpaOnnxC.xcframework inside ../../../flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios
     return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
   }
 
