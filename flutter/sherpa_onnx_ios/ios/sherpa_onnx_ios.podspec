@@ -23,6 +23,9 @@ A new Flutter FFI plugin project.
   s.source           = { :path => '.' }
   s.dependency 'Flutter'
   s.platform = :ios, '13.0'
+  # The xcframework must be named SherpaOnnxC.xcframework (matching the framework
+  # inside it) because CocoaPods derives the linker flag -framework <name> from
+  # the xcframework filename.
   s.vendored_frameworks = 'sherpa_onnx_ios/SherpaOnnxC.xcframework'
 
   # Flutter.framework does not contain a i386 slice.
