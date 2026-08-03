@@ -1,35 +1,33 @@
-// Module-type worker. The wasm glue is built with -sEXPORT_ES6=1 so its
-// pthread runtime can spawn its own worker pool from inside this worker
-// (classic-worker importScripts() of the same glue hangs during nested
-// pthread bootstrap).
-import createModule from "./sherpa-onnx-wasm-main-tts.js";
-import {
-  createOfflineTts,
-  getDefaultOfflineTtsModelType,
-} from "./sherpa-onnx-tts.js";
-
 let tts = null;
-
-const Module = await createModule({
-  locateFile: (path, scriptDirectory = "") => scriptDirectory + path,
-  setStatus: (status) => {
+self.Module = {
+  // https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+  locateFile: function (path, scriptDirectory = "") {
+    return scriptDirectory + path;
+  },
+  // https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+  setStatus: function (status) {
     self.postMessage({ type: "sherpa-onnx-tts-progress", status });
   },
-});
-
-try {
-  tts = createOfflineTts(Module);
-  self.postMessage({
-    type: "sherpa-onnx-tts-ready",
-    modelType: getDefaultOfflineTtsModelType(),
-    numSpeakers: tts.numSpeakers,
-  });
-} catch (e) {
-  self.postMessage({
-    type: "error",
-    message: "TTS Initialization failed: " + e.message,
-  });
-}
+  onRuntimeInitialized: function () {
+    console.log("Model files downloaded!");
+    console.log("Initializing tts ......");
+    try {
+      tts = createOfflineTts(self.Module);
+      self.postMessage({
+        type: "sherpa-onnx-tts-ready",
+        modelType: getDefaultOfflineTtsModelType(),
+        numSpeakers: tts.numSpeakers,
+      });
+    } catch (e) {
+      self.postMessage({
+        type: "error",
+        message: "TTS Initialization failed: " + e.message,
+      });
+    }
+  },
+};
+importScripts("sherpa-onnx-wasm-main-tts.js");
+importScripts("sherpa-onnx-tts.js");
 
 function getErrorMessage(err) {
   if (err instanceof Error) {
@@ -44,7 +42,7 @@ function getErrorMessage(err) {
 
 self.onmessage = async (e) => {
   const { type, text, sid, speed, genConfig } = e.data;
-  if (type === "generate") {
+  if (type == "generate") {
     if (!tts) {
       return;
     }
@@ -70,7 +68,7 @@ self.onmessage = async (e) => {
         message: "Generation failed: " + getErrorMessage(err),
       });
     }
-  } else if (type === "generateWithConfig") {
+  } else if (type == "generateWithConfig") {
     if (!tts) {
       return;
     }

@@ -3,7 +3,6 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-zipformer-transducer-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cassert>
@@ -36,7 +35,7 @@ namespace sherpa_onnx {
 
 OnlineZipformerTransducerModel::OnlineZipformerTransducerModel(
     const OnlineModelConfig &config)
-    : env_(CreateOrtEnv()),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
@@ -56,7 +55,7 @@ OnlineZipformerTransducerModel::OnlineZipformerTransducerModel(
 template <typename Manager>
 OnlineZipformerTransducerModel::OnlineZipformerTransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(CreateOrtEnv()),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {

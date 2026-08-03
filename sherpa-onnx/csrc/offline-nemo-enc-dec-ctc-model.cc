@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -33,7 +32,7 @@ class OfflineNemoEncDecCtcModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -44,7 +43,7 @@ class OfflineNemoEncDecCtcModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config_.nemo_ctc.model);

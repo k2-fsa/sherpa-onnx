@@ -3,7 +3,6 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cstring>
@@ -36,7 +35,7 @@ class OfflineTtsZipvoiceModel::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     encoder_sess_ = std::make_unique<Ort::Session>(
@@ -51,7 +50,7 @@ class OfflineTtsZipvoiceModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config.zipvoice.encoder);

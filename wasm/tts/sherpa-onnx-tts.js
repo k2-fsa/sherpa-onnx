@@ -1095,7 +1095,10 @@ function createOfflineTts(Module, myConfig) {
   return new OfflineTts(offlineTtsConfig, Module);
 }
 
-export {
-  createOfflineTts,
-  getDefaultOfflineTtsModelType,
-};
+if (typeof process == 'object' && typeof process.versions == 'object' &&
+    typeof process.versions.node == 'string') {
+  module.exports = {
+    createOfflineTts,
+    getDefaultOfflineTtsModelType,
+  };
+}
