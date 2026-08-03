@@ -1,0 +1,213 @@
+name: build-xcframework-shared-sherpa-with-static-onnxruntime
+
+on:
+  push:
+    branches:
+      - master
+      - xcframework-2
+    tags:
+      - 'release-v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: build-xcframework-shared-sherpa-with-static-onnxruntime-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_macos_shared_onnxruntime_static:
+    name: macos-shared-onnxruntime-static
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tree
+        shell: bash
+        run: |
+          brew install tree
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-shared-onnxruntime-static
+
+      - name: Build macOS shared (onnxruntime static)
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Display build directory
+        shell: bash
+        run: |
+          ls -lh build-macos-shared-sherpa-with-static-onnxruntime
+          cd build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          du -h -d1 .
+          tree .
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          ls -lh build-macos-shared-sherpa-with-static-onnxruntime/*.xcframework.zip
+          unzip -l build-macos-shared-sherpa-with-static-onnxruntime/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-macos-shared-sherpa-with-static-onnxruntime/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Find the framework bundle
+          fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
+
+          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+
+          # Verify onnxruntime is NOT a dynamic dependency
+          echo "Checking dynamic dependencies:"
+          otool -L "$fw_path/Versions/A/SherpaOnnxC"
+          if otool -L "$fw_path/Versions/A/SherpaOnnxC" | grep -q libonnxruntime; then
+            echo "ERROR: libonnxruntime is still a dynamic dependency!"
+            exit 1
+          fi
+          echo "OK: onnxruntime is statically linked"
+
+          # Test compilation
+          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -I "$fw_path/Headers" \
+            "$fw_path/Versions/A/SherpaOnnxC" \
+            -framework CoreFoundation \
+            -framework Foundation \
+            -lc++ \
+            -Wl,-rpath,"$(dirname $fw_path)"
+
+          ./version-c-api
+
+      - name: Upload xcframework.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-macos-shared-onnxruntime-static-xcframework
+          path: ./build-macos-shared-sherpa-with-static-onnxruntime/*.xcframework.zip
+
+  build_ios_shared_onnxruntime_static:
+    name: ios-shared-onnxruntime-static
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tree
+        shell: bash
+        run: |
+          brew install tree
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ios-shared-onnxruntime-static
+
+      - name: Build iOS shared (onnxruntime static)
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Display build directory
+        shell: bash
+        run: |
+          ls -lh build-ios-shared-sherpa-with-static-onnxruntime/
+          cd build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          du -h -d1 .
+          tree .
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          ls -lh build-ios-shared-sherpa-with-static-onnxruntime/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-ios-shared-sherpa-with-static-onnxruntime/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Verify xcframework structure (framework bundle)
+          fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
+
+          test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$fw_path/Info.plist" || { echo "Info.plist not found"; exit 1; }
+
+          # Verify onnxruntime is NOT a dynamic dependency
+          echo "Checking dynamic dependencies:"
+          otool -L "$fw_path/SherpaOnnxC"
+          if otool -L "$fw_path/SherpaOnnxC" | grep -q onnxruntime; then
+            echo "ERROR: onnxruntime is still a dynamic dependency!"
+            exit 1
+          fi
+          echo "OK: onnxruntime is statically linked"
+
+          echo "iOS shared (onnxruntime static) xcframework structure verified"
+
+      - name: Upload xcframework.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-ios-shared-onnxruntime-static-xcframework
+          path: ./build-ios-shared-sherpa-with-static-onnxruntime/*.xcframework.zip
+
+  release:
+    name: release
+    needs:
+      - build_macos_shared_onnxruntime_static
+      - build_ios_shared_onnxruntime_static
+    # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all xcframework artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Release xcframework (k2-fsa)
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: false
+          file: artifacts/**/*.xcframework.zip
+          tag: xcframework
+
+      - name: Release xcframework (csukuangfj)
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: artifacts/**/*.xcframework.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: xcframework
