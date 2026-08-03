@@ -36,6 +36,8 @@ sed -i.bak "$replace_str" ./build-ios-shared.sh
 sed -i.bak "$replace_str" ./build-ios-no-tts.sh
 sed -i.bak "$replace_str" ./build-macos.sh
 sed -i.bak "$replace_str" ./build-macos-shared.sh
+sed -i.bak "$replace_str" ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+sed -i.bak "$replace_str" ./build-ios-shared-sherpa-with-static-onnxruntime.sh
 
 for f in ./build-ios.sh ./build-ios-shared.sh ./build-ios-no-tts.sh ./build-macos.sh ./build-macos-shared.sh; do
   sed -i.bak "s/$old_version_code/$new_version_code/g" "$f"
