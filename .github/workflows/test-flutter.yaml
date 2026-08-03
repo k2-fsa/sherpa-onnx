@@ -80,8 +80,8 @@ jobs:
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
-          flutter config --no-enable-swift-package-manager
           flutter pub get
+          flutter config --no-enable-swift-package-manager
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -244,8 +244,8 @@ jobs:
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
-          flutter config --no-enable-swift-package-manager
           flutter pub get
+          flutter config --no-enable-swift-package-manager
           flutter build ios --no-codesign
 
           ls -lh build/ios/iphoneos/
