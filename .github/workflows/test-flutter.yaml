@@ -61,8 +61,16 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx.xcframework
-          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx.xcframework/
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa_onnx.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa_onnx.xcframework/
+
+      - name: Use local sherpa_onnx_macos
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_macos: ^1.13.4|  # sherpa_onnx_macos: ^1.13.4\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
 
       - name: Build Flutter app (CocoaPods)
         shell: bash
@@ -78,11 +86,18 @@ jobs:
 
           ls -lh build/macos/Build/Products/Release/
 
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/macos/Build/Products/Release/
+          zip -r hello-world-macos-cocoapods.zip hello_world.app
+          ls -lh hello-world-macos-cocoapods.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hello-world-macos-cocoapods
-          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-macos-cocoapods.zip
 
   macos_spm:
     name: macOS (SPM)
@@ -128,8 +143,16 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx.xcframework
-          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx.xcframework/
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa_onnx.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa_onnx.xcframework/
+
+      - name: Use local sherpa_onnx_macos
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_macos: ^1.13.4|  # sherpa_onnx_macos: ^1.13.4\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
 
       - name: Build Flutter app (SPM)
         shell: bash
@@ -145,11 +168,18 @@ jobs:
 
           ls -lh build/macos/Build/Products/Release/
 
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/macos/Build/Products/Release/
+          zip -r hello-world-macos-spm.zip hello_world.app
+          ls -lh hello-world-macos-spm.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hello-world-macos-spm
-          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-macos-spm.zip
 
   ios_cocoapods:
     name: iOS (CocoaPods)
@@ -195,8 +225,16 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx.xcframework
-          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx.xcframework/
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa_onnx.xcframework
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa_onnx.xcframework/
+
+      - name: Use local sherpa_onnx_ios
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_ios: ^1.13.4|  # sherpa_onnx_ios: ^1.13.4\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
 
       - name: Build Flutter app (CocoaPods)
         shell: bash
@@ -262,8 +300,16 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx.xcframework
-          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx.xcframework/
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa_onnx.xcframework
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa_onnx.xcframework/
+
+      - name: Use local sherpa_onnx_ios
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_ios: ^1.13.4|  # sherpa_onnx_ios: ^1.13.4\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
 
       - name: Build Flutter app (SPM)
         shell: bash
@@ -357,6 +403,14 @@ jobs:
           cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/$arch
           ls -lh ./flutter/sherpa_onnx_linux/linux/$arch
 
+      - name: Use local sherpa_onnx_linux
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_linux: ^1.13.4|  # sherpa_onnx_linux: ^1.13.4\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
       - name: Build Flutter app
         shell: bash
         run: |
@@ -425,6 +479,14 @@ jobs:
         run: |
           cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/
           ls -lh ./flutter/sherpa_onnx_windows/windows/
+
+      - name: Use local sherpa_onnx_windows
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_windows: ^1.13.4|  # sherpa_onnx_windows: ^1.13.4\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
 
       - name: Build Flutter app
         shell: bash
@@ -500,6 +562,14 @@ jobs:
         run: |
           cp -fv build-android-arm64-v8a/install/lib/lib*.so flutter/sherpa_onnx_android_arm64/android/src/main/jniLibs/arm64-v8a/
           ls -lh flutter/sherpa_onnx_android_arm64/android/src/main/jniLibs/arm64-v8a/
+
+      - name: Use local sherpa_onnx_android_arm64
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_android_arm64: ^1.13.4|  # sherpa_onnx_android_arm64: ^1.13.4\n  sherpa_onnx_android_arm64:\n    path: ../sherpa_onnx_android_arm64|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
 
       - name: Build Flutter APK
         shell: bash
