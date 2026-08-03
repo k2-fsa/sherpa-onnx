@@ -7,7 +7,13 @@
 
 import AVFoundation
 import UIKit
+#if canImport(SherpaOnnx)
 import SherpaOnnx
+#elseif canImport(SherpaOnnxShared)
+import SherpaOnnxShared
+#else
+#error("SherpaOnnx module not found. Please check your SPM dependency configuration.")
+#endif
 
 extension AudioBuffer {
     func array() -> [Float] {

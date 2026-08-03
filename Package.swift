@@ -22,13 +22,13 @@ let package = Package(
       name: "SherpaOnnxMacOS",
       url:
         "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-macos-static.xcframework.zip",
-      checksum: "61cdc1e44f0d7dca34e234047ef5b95face46e174c940164edf1108232eac4e1"
+      checksum: "16690967d863fc8b981ebe77c7764ce5ca3805638489496b87281a866bd8bf3c"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOS",
       url:
         "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-ios-static.xcframework.zip",
-      checksum: "68cce762de53c45f79db49e66300fd1280875abacd05999e86356ea2d0119a14"
+      checksum: "b48ec217952a5b82242ce7d8323fcbc8de54ff900a72df1f0b20bfcf7b08881d"
     ),
 
     // --- Shared binary targets ---
@@ -36,13 +36,13 @@ let package = Package(
       name: "SherpaOnnxMacOSShared",
       url:
         "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-macos-shared.xcframework.zip",
-      checksum: "7eb98cc527f1ed43723ae8a1b5c26ac43d24e186c240ec49936bb292584d04ee"
+      checksum: "f821a02c2c8371a143922f29ee971de5ff5946a03037f0b4d6f62eab3204b0c2"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOSShared",
       url:
         "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-ios-shared.xcframework.zip",
-      checksum: "8f20230285b8e2b09bd3a620a6d5487dd7e69eedd2b5045e9f49b6f46f70dca7"
+      checksum: "b02da91832d281e9b785e6c4040c38f47fbdd076c78dabc7a42d0178afa86ae8"
     ),
 
     // --- Static wrapper target (default) ---

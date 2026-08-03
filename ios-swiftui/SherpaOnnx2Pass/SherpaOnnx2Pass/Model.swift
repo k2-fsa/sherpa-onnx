@@ -1,4 +1,10 @@
+#if canImport(SherpaOnnx)
 import SherpaOnnx
+#elseif canImport(SherpaOnnxShared)
+import SherpaOnnxShared
+#else
+#error("SherpaOnnx module not found. Please check your SPM dependency configuration.")
+#endif
 import SherpaOnnxC
 import Foundation
 

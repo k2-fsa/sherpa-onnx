@@ -6,7 +6,13 @@
 //
 
 import XCTest
+#if canImport(SherpaOnnx)
 @testable import SherpaOnnx
+#elseif canImport(SherpaOnnxShared)
+@testable import SherpaOnnxShared
+#else
+#error("SherpaOnnx module not found. Please check your SPM dependency configuration.")
+#endif
 
 final class SherpaOnnxTests: XCTestCase {
 
