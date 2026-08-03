@@ -3,7 +3,7 @@ name: test-flutter-package
 on:
   push:
     branches:
-      - dart-xcframework
+      - dart-xcframework-2
 
   schedule:
     # nightly build at 16:50 UTC time every day

@@ -3,7 +3,7 @@ name: test-dart-package
 on:
   push:
     branches:
-      - dart-xcframework
+      - dart-xcframework-2
 
   schedule:
     # minute (0-59)
