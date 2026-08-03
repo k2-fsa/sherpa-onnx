@@ -55,17 +55,25 @@ String? _path;
 final DynamicLibrary _dylib = () {
   if (Platform.isMacOS) {
     if (_path == null) {
-      return DynamicLibrary.open('libsherpa-onnx-c-api.dylib');
+      return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
     } else {
+      try {
+        return DynamicLibrary.open(
+            '$_path/sherpa_onnx.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework/SherpaOnnxC');
+      } catch (_) {}
+      try {
+        return DynamicLibrary.open(
+            '$_path/sherpa-onnx.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework/SherpaOnnxC');
+      } catch (_) {}
       return DynamicLibrary.open('$_path/libsherpa-onnx-c-api.dylib');
     }
   }
 
   if (Platform.isIOS) {
     if (_path == null) {
-      return DynamicLibrary.open('sherpa_onnx.framework/sherpa_onnx');
+      return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
     } else {
-      return DynamicLibrary.open('$_path/sherpa_onnx.framework/sherpa_onnx');
+      return DynamicLibrary.open('$_path/SherpaOnnxC.framework/SherpaOnnxC');
     }
   }
 

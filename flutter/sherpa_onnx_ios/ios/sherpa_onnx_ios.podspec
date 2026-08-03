@@ -23,7 +23,6 @@ A new Flutter FFI plugin project.
   s.source           = { :path => '.' }
   s.dependency 'Flutter'
   s.platform = :ios, '13.0'
-  s.preserve_paths = 'sherpa_onnx.xcframework/**/*'
   s.vendored_frameworks = 'sherpa_onnx.xcframework'
 
   # Flutter.framework does not contain a i386 slice.
