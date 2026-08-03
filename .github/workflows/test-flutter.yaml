@@ -40,7 +40,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: latest
 
       - name: Display flutter info
         shell: bash
@@ -107,7 +107,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: latest
 
       - name: Display flutter info
         shell: bash
@@ -174,7 +174,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: latest
 
       - name: Display flutter info
         shell: bash
@@ -241,7 +241,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: latest
 
       - name: Display flutter info
         shell: bash
@@ -318,7 +318,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: latest
 
       - name: Display flutter info
         shell: bash
@@ -394,7 +394,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: latest
 
       - name: Display flutter info
         shell: bash
@@ -468,7 +468,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: latest
 
       - name: Setup Java
         uses: actions/setup-java@v4
