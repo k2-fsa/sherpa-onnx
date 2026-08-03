@@ -2,8 +2,8 @@
 
 set -ex
 
-if [ ! -d ../build-swift-macos ]; then
-  echo "Please run ../build-swift-macos.sh first!"
+if [ ! -d ../build-macos ]; then
+  echo "Please run ../build-macos.sh first!"
   exit 1
 fi
 
@@ -21,15 +21,15 @@ if [ ! -f ./sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/model.int8.o
   ls -lh sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 fi
 
-if [ ! -e ./dolphin-ctc-asr ]; then
+if [ ! -e ./dolphin-ctc-asr ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./dolphin-ctc-asr ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
-    -I ../build-swift-macos/install/include \
+    -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./dolphin-ctc-asr.swift  ./SherpaOnnx.swift \
-    -L ../build-swift-macos/install/lib/ \
-    -l sherpa-onnx \
+    -L ../build-macos/install/lib/ \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o dolphin-ctc-asr
 
@@ -38,5 +38,5 @@ else
   echo "./dolphin-ctc-asr exists - skip building"
 fi
 
-export DYLD_LIBRARY_PATH=$PWD/../build-swift-macos/install/lib:$DYLD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
 ./dolphin-ctc-asr

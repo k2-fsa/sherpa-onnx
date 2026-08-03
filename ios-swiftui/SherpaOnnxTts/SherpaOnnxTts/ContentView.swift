@@ -6,7 +6,13 @@
 //
 // Text-to-speech with Next-gen Kaldi on iOS without Internet connection
 
+#if canImport(SherpaOnnx)
 import SherpaOnnx
+#elseif canImport(SherpaOnnxShared)
+import SherpaOnnxShared
+#else
+#error("SherpaOnnx module not found. Please check your SPM dependency configuration.")
+#endif
 import SwiftUI
 import AVFoundation
 import UniformTypeIdentifiers

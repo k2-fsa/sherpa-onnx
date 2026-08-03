@@ -8,30 +8,52 @@ let package = Package(
     .macOS(.v10_15),
   ],
   products: [
-    .library(
-      name: "sherpa-onnx",
-      targets: ["SherpaOnnx"]
-    ),
+    // Static xcframework (default)
+    .library(name: "sherpa-onnx", targets: ["SherpaOnnx"]),
+    // Shared/dynamic xcframework
+    .library(name: "sherpa-onnx-shared", targets: ["SherpaOnnxShared"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/csukuangfj/onnxruntime-libs", exact: "1.27.1"),
+    .package(url: "https://github.com/csukuangfj/onnxruntime-libs", exact: "1.27.1")
   ],
   targets: [
+    // --- Static binary targets ---
     .binaryTarget(
       name: "SherpaOnnxMacOS",
-      url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-macos.xcframework.zip",
-      checksum: "4325d8aed99b94be58969005b19f9626f3f3afc4ebd42378b0aad2b84e233552"
+      url:
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-macos-static.xcframework.zip",
+      checksum: "16690967d863fc8b981ebe77c7764ce5ca3805638489496b87281a866bd8bf3c"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOS",
-      url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-ios.xcframework.zip",
-      checksum: "c5a62904bba73edc4bac89bbf51b4c3db1dd6c1b397a16ee95b2ff94701e9846"
+      url:
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-ios-static.xcframework.zip",
+      checksum: "b48ec217952a5b82242ce7d8323fcbc8de54ff900a72df1f0b20bfcf7b08881d"
     ),
+
+    // --- Shared binary targets ---
+    .binaryTarget(
+      name: "SherpaOnnxMacOSShared",
+      url:
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-macos-shared.xcframework.zip",
+      checksum: "f821a02c2c8371a143922f29ee971de5ff5946a03037f0b4d6f62eab3204b0c2"
+    ),
+    .binaryTarget(
+      name: "SherpaOnnxIOSShared",
+      url:
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-ios-shared.xcframework.zip",
+      checksum: "b02da91832d281e9b785e6c4040c38f47fbdd076c78dabc7a42d0178afa86ae8"
+    ),
+
+    // --- Static wrapper target (default) ---
     .target(
       name: "SherpaOnnx",
       dependencies: [
-        .product(name: "onnxruntime-macos", package: "onnxruntime-libs", condition: .when(platforms: [.macOS])),
-        .product(name: "onnxruntime-ios", package: "onnxruntime-libs", condition: .when(platforms: [.iOS])),
+        .product(
+          name: "onnxruntime-macos", package: "onnxruntime-libs",
+          condition: .when(platforms: [.macOS])),
+        .product(
+          name: "onnxruntime-ios", package: "onnxruntime-libs", condition: .when(platforms: [.iOS])),
         .target(name: "SherpaOnnxMacOS", condition: .when(platforms: [.macOS])),
         .target(name: "SherpaOnnxIOS", condition: .when(platforms: [.iOS])),
       ],
@@ -120,7 +142,27 @@ let package = Package(
       ],
       sources: ["SherpaOnnx.swift"],
       linkerSettings: [
-        .linkedLibrary("c++"),
+        .linkedLibrary("c++")
+      ]
+    ),
+
+    // --- Shared wrapper target ---
+    .target(
+      name: "SherpaOnnxShared",
+      dependencies: [
+        .product(
+          name: "onnxruntime-macos-shared", package: "onnxruntime-libs",
+          condition: .when(platforms: [.macOS])),
+        .product(
+          name: "onnxruntime-ios-shared", package: "onnxruntime-libs",
+          condition: .when(platforms: [.iOS])),
+        .target(name: "SherpaOnnxMacOSShared", condition: .when(platforms: [.macOS])),
+        .target(name: "SherpaOnnxIOSShared", condition: .when(platforms: [.iOS])),
+      ],
+      path: "Sources/SherpaOnnxShared",
+      sources: ["SherpaOnnx.swift"],
+      linkerSettings: [
+        .linkedLibrary("c++")
       ]
     ),
   ]

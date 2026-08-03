@@ -131,15 +131,11 @@ jobs:
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
           else
-            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib $upload_dir/
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime.dylib $upload_dir/
             cp -v lib/*.dylib $upload_dir
 
-            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime.dylib ./lib/
             rm ./lib/*.a
-            rm ./lib/libonnxruntime.dylib
-            cd lib
-            ln -s libonnxruntime.1.27.0.dylib libonnxruntime.dylib
-            cd ..
           fi
 
           cd ../scripts/go/_internal/

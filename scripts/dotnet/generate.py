@@ -52,6 +52,7 @@ def process_android(s, rid):
     with open(f"./android-{rid}/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
+
 def process_linux(s, rid):
     libs = [
         "libonnxruntime.so",
@@ -74,9 +75,9 @@ def process_linux(s, rid):
 
 def process_macos(s, rid):
     lib_dir = os.path.join(src_dir, f"macos-{rid}")
-    onnx_libs = glob.glob(os.path.join(lib_dir, "libonnxruntime*.dylib"))
+    onnx_libs = glob.glob(os.path.join(lib_dir, "libonnxruntime.dylib"))
     if not onnx_libs:
-        raise FileNotFoundError(f"No libonnxruntime*.dylib found in {lib_dir}")
+        raise FileNotFoundError(f"No libonnxruntime.dylib found in {lib_dir}")
 
     other_libs = [os.path.join(lib_dir, "libsherpa-onnx-c-api.dylib")]
     libs = onnx_libs + other_libs

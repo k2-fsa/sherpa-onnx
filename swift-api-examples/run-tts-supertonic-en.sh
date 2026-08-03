@@ -2,8 +2,8 @@
 
 set -ex
 
-if [ ! -d ../build-swift-macos ]; then
-  echo "Please run ../build-swift-macos.sh first!"
+if [ ! -d ../build-macos ]; then
+  echo "Please run ../build-macos.sh first!"
   exit 1
 fi
 
@@ -20,11 +20,11 @@ if [ ! -e ./tts-supertonic-en ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
-    -I ../build-swift-macos/install/include \
+    -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./tts-supertonic-en.swift  ./SherpaOnnx.swift \
-    -L ../build-swift-macos/install/lib/ \
-    -l sherpa-onnx \
+    -L ../build-macos/install/lib/ \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o tts-supertonic-en
 
@@ -33,5 +33,5 @@ else
   echo "./tts-supertonic-en exists - skip building"
 fi
 
-export DYLD_LIBRARY_PATH=$PWD/../build-swift-macos/install/lib:$DYLD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
 ./tts-supertonic-en
