@@ -1,0 +1,352 @@
+name: test-flutter-package
+
+on:
+  push:
+    branches:
+      - dart-xcframework-2
+
+  schedule:
+    # nightly build at 16:50 UTC time every day
+    - cron: "50 16 * * *"
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-flutter-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos_cocoapods:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: macOS (CocoaPods)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build Flutter app (CocoaPods)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+          flutter pub get
+          flutter config --no-enable-swift-package-manager
+          flutter build macos
+
+          ls -lh build/macos/Build/Products/Release/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-macos-cocoapods
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+
+  macos_spm:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: macOS (SPM)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build Flutter app (SPM)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+          flutter pub get
+          flutter config --enable-swift-package-manager
+          flutter build macos
+
+          ls -lh build/macos/Build/Products/Release/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-macos-spm
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+
+  ios_cocoapods:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: iOS (CocoaPods)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build Flutter app (CocoaPods)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+          flutter pub get
+          flutter config --no-enable-swift-package-manager
+          flutter build ios --no-codesign
+
+          ls -lh build/ios/iphoneos/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-ios-cocoapods
+          path: flutter-examples/hello_world/build/ios/iphoneos/Runner.app
+
+  ios_spm:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: iOS (SPM)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build Flutter app (SPM)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+          flutter pub get
+          flutter config --enable-swift-package-manager
+          flutter build ios --no-codesign
+
+          ls -lh build/ios/iphoneos/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-ios-spm
+          path: flutter-examples/hello_world/build/ios/iphoneos/Runner.app
+
+  linux:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: Linux ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+          flutter pub get
+          flutter build linux
+
+          ls -lh build/linux/*/release/bundle/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-linux-${{ matrix.os }}
+          path: flutter-examples/hello_world/build/linux/*/release/bundle/
+
+  windows:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+          flutter pub get
+          flutter build windows
+
+          ls -lh build/windows/x64/runner/Release/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-windows
+          path: flutter-examples/hello_world/build/windows/x64/runner/Release/
+
+  android:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build Flutter APK
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+          flutter pub get
+          flutter build apk
+
+          ls -lh build/app/outputs/flutter-apk/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-android
+          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/app-release.apk

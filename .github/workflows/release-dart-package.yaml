@@ -258,11 +258,6 @@ jobs:
           ./new-release.sh
           git diff .
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-flutter-release-package
-
       - name: Fix version
         shell: bash
         run: |
@@ -290,44 +285,25 @@ jobs:
 
           git status
 
-      - name: Configure CMake
+      - name: Download pre-built xcframework
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd flutter/sherpa_onnx_macos/macos
 
-          mkdir build
-          cd build
-          cmake \
-            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-            -D SHERPA_ONNX_ENABLE_TTS=ON \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_INSTALL_PREFIX=./install \
-            -D SHERPA_ONNX_ENABLE_JNI=OFF \
-            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            -D CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-            ..
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
+          unzip sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
+          rm sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
 
-      - name: Build sherpa-onnx
+          mv sherpa-onnx.xcframework sherpa_onnx_macos/SherpaOnnxC.xcframework
+
+          ls -lh sherpa_onnx_macos/SherpaOnnxC.xcframework/
+
+      - name: Prepare for publish
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
-
-          cd build
-          make -j2 install
-
-          ls -lh install/lib/libsherpa-onnx-c-api.dylib
-          file install/lib/libsherpa-onnx-c-api.dylib
-          rm -v install/lib/libonnxruntime.dylib
-
-      - name: Copy pre-built libs
-        shell: bash
-        run: |
-          cp -v build/install/lib/lib*.dylib* flutter/sherpa_onnx_macos/macos/
+          rm -f flutter/sherpa_onnx_macos/macos/libsherpa-onnx-c-api.dylib
+          rm -f flutter/sherpa_onnx_macos/macos/libonnxruntime.dylib
 
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
@@ -848,11 +824,6 @@ jobs:
           ./new-release.sh
           git diff .
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-flutter-release-package-ios
-
       - name: Fix version
         shell: bash
         run: |
@@ -880,23 +851,26 @@ jobs:
 
           git status
 
-      - name: Build ios
+      - name: Download pre-built xcframework
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
-          ./build-ios-shared.sh
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd flutter/sherpa_onnx_ios/ios
 
-      - name: Copy pre-built libs
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
+          unzip sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
+          rm sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
+
+          mv sherpa-onnx.xcframework sherpa_onnx_ios/SherpaOnnxC.xcframework
+
+          ls -lh sherpa_onnx_ios/SherpaOnnxC.xcframework/
+
+      - name: Prepare for publish
         shell: bash
         run: |
-          echo "----ios arm64 and arm64_x64_simulator----"
-          cp -av build-ios-shared/sherpa_onnx.xcframework flutter/sherpa_onnx_ios/ios/
-
           mv -v flutter/sherpa_onnx_ios /tmp/to_be_published
 
-          ls -lh /tmp/to_be_published
+          ls -lh /tmp/to_be_published/ios
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -911,7 +885,6 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
-
           flutter pub get
           flutter pub publish --dry-run
           flutter pub publish --force

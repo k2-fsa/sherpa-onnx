@@ -1,6 +1,10 @@
 name: test-dart-package
 
 on:
+  push:
+    branches:
+      - dart-xcframework-2
+
   schedule:
     # minute (0-59)
     # hour (0-23)
@@ -17,9 +21,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Test using the published package from pub.dev (original podspec approach)
   test_dart_package:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
-    name: ${{ matrix.os }}
+    name: pub.dev ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -60,49 +65,90 @@ jobs:
           cd dart-api-examples/vad
           flutter pub get
 
-          if false; then
+      - name: Run tests
+        shell: bash
+        run: |
+          .github/scripts/test-dart.sh
 
-          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-24.04-arm ]]; then
-            echo "-----"
-            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev
+  # Test using xcframework built from source (SPM approach)
+  test_dart_package_xcframework:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: xcframework ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
 
-            echo "-----"
-            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            echo "-----"
-            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*/*
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
-            echo "-----"
-            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-dart-xcframework
 
-            # sudo mkdir /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib
-            # sudo touch /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib/.gitkeep
+      # see https://github.com/subosito/flutter-action/issues/345
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: master
+          flutter-version: 3.24.0
 
-            echo "-----"
-            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*/linux/*
-          elif [[ ${{ matrix.os }} == macos-latest ]]; then
-            echo "-----"
-            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
 
-            echo "-----"
-            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*
+          flutter --version
+          dart --version
+          flutter doctor
 
-            echo "-----"
-            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*/*
+      - name: Build xcframework from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
 
-            echo "-----"
-            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-*/
+          ./build-macos-shared-sherpa-with-static-onnxruntime.sh
 
-            echo "-----"
-            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-*/macos
+      - name: Copy xcframework
+        shell: bash
+        run: |
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework
 
-            # sudo mkdir /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib
-            # sudo touch /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib/.gitkeep
-          fi
-          fi
-
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework/
 
       - name: Run tests
         shell: bash
         run: |
+          cp scripts/dart/vad-pubspec.yaml dart-api-examples/vad/pubspec.yaml
+          cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
+          cp scripts/dart/streaming-asr-pubspec.yaml dart-api-examples/streaming-asr/pubspec.yaml
+          cp scripts/dart/tts-pubspec.yaml dart-api-examples/tts/pubspec.yaml
+          cp scripts/dart/kws-pubspec.yaml dart-api-examples/keyword-spotter/pubspec.yaml
+          cp scripts/dart/vad-non-streaming-asr-pubspec.yaml dart-api-examples/vad-with-non-streaming-asr/pubspec.yaml
+          cp scripts/dart/audio-tagging-pubspec.yaml dart-api-examples/audio-tagging/pubspec.yaml
+          cp scripts/dart/add-punctuations-pubspec.yaml dart-api-examples/add-punctuations/pubspec.yaml
+          cp scripts/dart/speaker-id-pubspec.yaml dart-api-examples/speaker-identification/pubspec.yaml
+          cp scripts/dart/speaker-diarization-pubspec.yaml dart-api-examples/speaker-diarization/pubspec.yaml
+          cp scripts/dart/speech-enhancement-gtcrn-pubspec.yaml dart-api-examples/speech-enhancement-gtcrn/pubspec.yaml
+          cp scripts/dart/speech-enhancement-dpdfnet-pubspec.yaml dart-api-examples/speech-enhancement-dpdfnet/pubspec.yaml
+          cp scripts/dart/streaming-speech-enhancement-gtcrn-pubspec.yaml dart-api-examples/streaming-speech-enhancement-gtcrn/pubspec.yaml
+          cp scripts/dart/streaming-speech-enhancement-dpdfnet-pubspec.yaml dart-api-examples/streaming-speech-enhancement-dpdfnet/pubspec.yaml
+          cp scripts/dart/slid-pubspec.yaml dart-api-examples/spoken-language-identification/pubspec.yaml
+          cp scripts/dart/version-pubspec.yaml dart-api-examples/version/pubspec.yaml
+
+          cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
+
           .github/scripts/test-dart.sh

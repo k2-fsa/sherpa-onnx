@@ -47,6 +47,8 @@ export 'src/wave_writer.dart';
 
 import 'src/sherpa_onnx_bindings.dart';
 
+// it is not-empty for Dart CLI
+// See ../../../dart-api-examples/vad/bin/init.dart
 String? _path;
 
 // see also
@@ -55,18 +57,20 @@ String? _path;
 final DynamicLibrary _dylib = () {
   if (Platform.isMacOS) {
     if (_path == null) {
-      return DynamicLibrary.open('libsherpa-onnx-c-api.dylib');
+      // for Flutter
+      return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
     } else {
-      return DynamicLibrary.open('$_path/libsherpa-onnx-c-api.dylib');
+      // for Dart CLI without flutter
+      // CI places SherpaOnnxC.xcframework inside ../../../flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos
+      return DynamicLibrary.open(
+        '$_path/sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework/SherpaOnnxC',
+      );
     }
   }
 
   if (Platform.isIOS) {
-    if (_path == null) {
-      return DynamicLibrary.open('sherpa_onnx.framework/sherpa_onnx');
-    } else {
-      return DynamicLibrary.open('$_path/sherpa_onnx.framework/sherpa_onnx');
-    }
+    // CI places SherpaOnnxC.xcframework inside ../../../flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios
+    return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
   }
 
   if (Platform.isAndroid || Platform.isLinux) {

@@ -1,0 +1,592 @@
+name: test-flutter
+
+on:
+  push:
+    branches:
+      - master
+      - dart-xcframework
+    paths:
+      - '.github/workflows/test-flutter.yaml'
+      - 'flutter-examples/hello_world/**'
+      - 'flutter/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-flutter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos_cocoapods:
+    name: macOS (CocoaPods)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-flutter-cocoapods
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: 3.44.8
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build xcframework from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework
+        shell: bash
+        run: |
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework/
+
+      - name: Use local sherpa_onnx_macos
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_macos: ^1.13.4|  # sherpa_onnx_macos: ^1.13.4\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter app (CocoaPods)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter config --no-enable-swift-package-manager
+          flutter build macos
+
+          ls -lh build/macos/Build/Products/Release/
+
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/macos/Build/Products/Release/
+          zip -r hello-world-macos-cocoapods.zip hello_world.app
+          ls -lh hello-world-macos-cocoapods.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-macos-cocoapods
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-macos-cocoapods.zip
+
+  macos_spm:
+    name: macOS (SPM)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-flutter-spm
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build xcframework from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework
+        shell: bash
+        run: |
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework/
+
+      - name: Use local sherpa_onnx_macos
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_macos: ^1.13.4|  # sherpa_onnx_macos: ^1.13.4\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter app (SPM)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter config --enable-swift-package-manager
+          flutter build macos
+
+          ls -lh build/macos/Build/Products/Release/
+
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/macos/Build/Products/Release/
+          zip -r hello-world-macos-spm.zip hello_world.app
+          ls -lh hello-world-macos-spm.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-macos-spm
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-macos-spm.zip
+
+  ios_cocoapods:
+    name: iOS (CocoaPods)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ios-flutter-cocoapods
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: 3.44.8
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build iOS xcframework from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework
+        shell: bash
+        run: |
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework/
+
+      - name: Use local sherpa_onnx_ios
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_ios: ^1.13.4|  # sherpa_onnx_ios: ^1.13.4\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter app (CocoaPods)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter config --no-enable-swift-package-manager
+          flutter build ios --no-codesign
+
+          ls -lh build/ios/iphoneos/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-ios-cocoapods
+          path: flutter-examples/hello_world/build/ios/iphoneos/Runner.app
+
+  ios_spm:
+    name: iOS (SPM)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ios-flutter-spm
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build iOS xcframework from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework
+        shell: bash
+        run: |
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework/
+
+      - name: Use local sherpa_onnx_ios
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_ios: ^1.13.4|  # sherpa_onnx_ios: ^1.13.4\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter app (SPM)
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter config --enable-swift-package-manager
+          flutter build ios --no-codesign
+
+          ls -lh build/ios/iphoneos/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-ios-spm
+          path: flutter-examples/hello_world/build/ios/iphoneos/Runner.app
+
+  linux:
+    name: Linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # os: [ubuntu-latest, ubuntu-24.04-arm]
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-flutter
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          mkdir build
+          cd build
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          if [[ $(uname -m) == "aarch64" ]]; then
+            arch=aarch64
+          else
+            arch=x64
+          fi
+          cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/$arch
+          ls -lh ./flutter/sherpa_onnx_linux/linux/$arch
+
+      - name: Use local sherpa_onnx_linux
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_linux: ^1.13.4|  # sherpa_onnx_linux: ^1.13.4\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build linux
+
+          ls -lh build/linux/*/release/bundle/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-linux-${{ matrix.os }}
+          path: flutter-examples/hello_world/build/linux/*/release/bundle/
+
+  windows:
+    name: Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/
+          ls -lh ./flutter/sherpa_onnx_windows/windows/
+
+      - name: Use local sherpa_onnx_windows
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_windows: ^1.13.4|  # sherpa_onnx_windows: ^1.13.4\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build windows
+
+          ls -lh build/windows/x64/runner/Release/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-windows
+          path: flutter-examples/hello_world/build/windows/x64/runner/Release/
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-flutter
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build android-arm64-v8a from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export SHERPA_ONNX_ENABLE_C_API=ON
+          export SHERPA_ONNX_ENABLE_JNI=OFF
+          export SHERPA_ONNX_ENABLE_BINARY=OFF
+          ./build-android-arm64-v8a.sh
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -fv build-android-arm64-v8a/install/lib/lib*.so flutter/sherpa_onnx_android_arm64/android/src/main/jniLibs/arm64-v8a/
+          ls -lh flutter/sherpa_onnx_android_arm64/android/src/main/jniLibs/arm64-v8a/
+
+      - name: Use local sherpa_onnx_android_arm64
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_android_arm64: ^1.13.4|  # sherpa_onnx_android_arm64: ^1.13.4\n  sherpa_onnx_android_arm64:\n    path: ../sherpa_onnx_android_arm64|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter APK
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build apk
+
+          ls -lh build/app/outputs/flutter-apk/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-android
+          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/app-release.apk

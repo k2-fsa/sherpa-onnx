@@ -1,0 +1,1 @@
+../../vad/bin/init.dart

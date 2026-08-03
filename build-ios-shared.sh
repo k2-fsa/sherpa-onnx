@@ -3,8 +3,6 @@
 # Note: This script is to build sherpa-onnx for flutter/dart, which requires
 # us to use shared libraries for sherpa-onnx.
 #
-# Note: We still use static libraries for onnxruntime.
-
 set -e
 
 dir=build-ios-shared
