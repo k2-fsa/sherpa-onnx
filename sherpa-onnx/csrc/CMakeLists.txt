@@ -24,6 +24,7 @@ set(sources
   hypothesis.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc
+  lfr.cc
   lodr-fst.cc
   math.cc
   normal-data-generator.cc
@@ -827,6 +828,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     cat-test.cc
     circular-buffer-test.cc
     context-graph-test.cc
+    lfr-test.cc
     math-test.cc
     offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
