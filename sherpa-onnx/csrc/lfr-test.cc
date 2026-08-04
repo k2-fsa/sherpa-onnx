@@ -66,4 +66,23 @@ TEST(Lfr, EmptyInput) {
                   .empty());
 }
 
+TEST(Lfr, RejectsInvalidArgumentsAtRuntime) {
+  EXPECT_DEATH_IF_SUPPORTED(
+      ApplyLfr({1.0f}, /*input_dim=*/0, /*window_size=*/7,
+               /*window_shift=*/6),
+      "ApplyLfr: input_dim must be positive");
+  EXPECT_DEATH_IF_SUPPORTED(
+      ApplyLfr({1.0f}, /*input_dim=*/1, /*window_size=*/0,
+               /*window_shift=*/6),
+      "ApplyLfr: window_size must be positive");
+  EXPECT_DEATH_IF_SUPPORTED(
+      ApplyLfr({1.0f}, /*input_dim=*/1, /*window_size=*/7,
+               /*window_shift=*/0),
+      "ApplyLfr: window_shift must be positive");
+  EXPECT_DEATH_IF_SUPPORTED(
+      ApplyLfr({1.0f, 2.0f, 3.0f}, /*input_dim=*/2, /*window_size=*/7,
+               /*window_shift=*/6),
+      "ApplyLfr: input size .* is not divisible by input_dim 2");
+}
+
 }  // namespace sherpa_onnx

@@ -5,18 +5,39 @@
 #include "sherpa-onnx/csrc/lfr.h"
 
 #include <algorithm>
-#include <cassert>
 #include <vector>
+
+#include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
 std::vector<float> ApplyLfr(const std::vector<float> &input,
                             int32_t input_dim, int32_t window_size,
                             int32_t window_shift) {
-  assert(input_dim > 0);
-  assert(window_size > 0);
-  assert(window_shift > 0);
-  assert(input.size() % input_dim == 0);
+  if (input_dim <= 0) {
+    SHERPA_ONNX_LOGE("ApplyLfr: input_dim must be positive. Given: %d",
+                     input_dim);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  if (window_size <= 0) {
+    SHERPA_ONNX_LOGE("ApplyLfr: window_size must be positive. Given: %d",
+                     window_size);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  if (window_shift <= 0) {
+    SHERPA_ONNX_LOGE("ApplyLfr: window_shift must be positive. Given: %d",
+                     window_shift);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  if (input.size() % static_cast<size_t>(input_dim) != 0) {
+    SHERPA_ONNX_LOGE(
+        "ApplyLfr: input size %zu is not divisible by input_dim %d",
+        input.size(), input_dim);
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   if (input.empty()) {
     return {};
