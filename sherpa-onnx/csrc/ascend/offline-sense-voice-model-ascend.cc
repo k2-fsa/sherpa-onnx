@@ -66,7 +66,7 @@ class OfflineSenseVoiceModelAscend::Impl {
       return {};
     }
 
-    int32_t num_frames = features.size() / 560;
+    int32_t num_frames = features.size() / kLfrOutputDim;
 
     aclError ret =
         aclrtMemcpy(*x_ptr_, features.size() * sizeof(float), features.data(),
@@ -88,7 +88,7 @@ class OfflineSenseVoiceModelAscend::Impl {
     // dynamic shape input
     // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/appdevg/acldevg/aclcppdevg_000044.html
 
-    std::array<int64_t, 3> x_shape = {1, num_frames, 560};
+    std::array<int64_t, 3> x_shape = {1, num_frames, kLfrOutputDim};
     AclTensorDesc x_desc(ACL_FLOAT, x_shape.size(), x_shape.data(),
                          ACL_FORMAT_ND);
     input_dataset.SetTensorDesc(x_desc, 0);
@@ -153,9 +153,8 @@ class OfflineSenseVoiceModelAscend::Impl {
 
   void Preallocate() {
     // max 30 seconds
-    max_num_frames_ =
-        (30 * 100 + meta_data_.window_shift - 1) / meta_data_.window_shift;
-    x_ptr_ = std::make_unique<AclDevicePtr>(max_num_frames_ * feat_dim_ *
+    max_num_frames_ = (30 * 100 + kLfrWindowShift - 1) / kLfrWindowShift;
+    x_ptr_ = std::make_unique<AclDevicePtr>(max_num_frames_ * kLfrOutputDim *
                                             sizeof(float));
 
     prompt_ptr_ = std::make_unique<AclDevicePtr>(4 * sizeof(int32_t));
@@ -165,12 +164,9 @@ class OfflineSenseVoiceModelAscend::Impl {
   }
 
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {
-    constexpr int32_t kInputDim = 80;
-    const int32_t output_dim = kInputDim * meta_data_.window_size;
-    std::vector<float> out = ApplyLfr(in, kInputDim, meta_data_.window_size,
-                                      meta_data_.window_shift);
-    int32_t out_num_frames =
-        static_cast<int32_t>(out.size() / output_dim);
+    std::vector<float> out =
+        ApplyLfr(in, kLfrInputDim, kLfrWindowSize, kLfrWindowShift);
+    int32_t out_num_frames = static_cast<int32_t>(out.size() / kLfrOutputDim);
 
     if (out_num_frames > max_num_frames_) {
       SHERPA_ONNX_LOGE(
@@ -182,13 +178,18 @@ class OfflineSenseVoiceModelAscend::Impl {
           "model accepting longer audios.");
 
       out_num_frames = max_num_frames_;
-      out.resize(static_cast<size_t>(out_num_frames) * output_dim);
+      out.resize(static_cast<size_t>(out_num_frames) * kLfrOutputDim);
     }
 
     return out;
   }
 
  private:
+  static constexpr int32_t kLfrInputDim = 80;
+  static constexpr int32_t kLfrWindowSize = 7;
+  static constexpr int32_t kLfrWindowShift = 6;
+  static constexpr int32_t kLfrOutputDim = kLfrInputDim * kLfrWindowSize;
+
   std::mutex mutex_;
   Acl acl_;
 
@@ -200,7 +201,6 @@ class OfflineSenseVoiceModelAscend::Impl {
   std::unique_ptr<AclModel> model_;
   int32_t vocab_size_ = 0;
   int32_t max_num_frames_ = 0;
-  int32_t feat_dim_ = 560;
 
   std::unique_ptr<AclDevicePtr> x_ptr_;
   std::unique_ptr<AclDevicePtr> prompt_ptr_;

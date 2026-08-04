@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/lfr.h
 //
-// Copyright (c)  2026  Xiaomi Corporation
+// Copyright (c)  2026  zhifu gao
 
 #ifndef SHERPA_ONNX_CSRC_LFR_H_
 #define SHERPA_ONNX_CSRC_LFR_H_
