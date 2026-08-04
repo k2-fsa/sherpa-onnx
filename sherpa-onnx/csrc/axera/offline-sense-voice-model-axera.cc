@@ -25,6 +25,7 @@
 #include "sherpa-onnx/csrc/axera/ax-engine-guard.h"
 #include "sherpa-onnx/csrc/axera/utils.h"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/lfr.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -59,6 +60,9 @@ class OfflineSenseVoiceModelAxera::Impl {
     std::lock_guard<std::mutex> lock(mutex_);
 
     features = ApplyLFR(std::move(features));
+    if (features.empty()) {
+      return {};
+    }
 
     std::array<int32_t, 4> prompt{language, 1, 2, text_norm};
 
@@ -133,36 +137,10 @@ class OfflineSenseVoiceModelAxera::Impl {
     }
   }
 
-  std::vector<float> ApplyLFR(std::vector<float> in) const {
-    int32_t lfr_window_size = meta_data_.window_size;
-    int32_t lfr_window_shift = meta_data_.window_shift;
-    int32_t in_feat_dim = 80;
-    int32_t in_num_frames = in.size() / in_feat_dim;
-    int32_t out_num_frames =
-        (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
-
-    if (out_num_frames > num_input_frames_) {
-      SHERPA_ONNX_LOGE(
-          "Number of input frames %d is too large. Truncate it to %d frames.",
-          out_num_frames, num_input_frames_);
-      SHERPA_ONNX_LOGE(
-          "Recognition result may be truncated/incomplete. Please select a "
-          "model accepting longer audios.");
-      out_num_frames = num_input_frames_;
-    }
-
-    int32_t out_feat_dim = in_feat_dim * lfr_window_size;
-    std::vector<float> out(num_input_frames_ * out_feat_dim);
-    const float *p_in = in.data();
-    float *p_out = out.data();
-
-    for (int32_t i = 0; i != out_num_frames; ++i) {
-      std::copy(p_in, p_in + out_feat_dim, p_out);
-      p_out += out_feat_dim;
-      p_in += lfr_window_shift * in_feat_dim;
-    }
-
-    return out;
+  std::vector<float> ApplyLFR(const std::vector<float> &in) const {
+    return ApplyLfrForFixedShape(
+        in, /*input_dim=*/80, meta_data_.window_size, meta_data_.window_shift,
+        num_input_frames_);
   }
 
  private:

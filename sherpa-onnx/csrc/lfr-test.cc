@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/lfr.h"
 
+#include <limits>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -60,6 +61,39 @@ TEST(Lfr, PreservesFeatureDimensions) {
             expected);
 }
 
+TEST(Lfr, PadsFixedShapeWithZeros) {
+  std::vector<float> input(13);
+  std::iota(input.begin(), input.end(), 0.0f);
+  auto expected = ApplyLfr(input, /*input_dim=*/1, /*window_size=*/7,
+                           /*window_shift=*/6);
+  expected.resize(5 * 7, 0.0f);
+
+  EXPECT_EQ(ApplyLfrForFixedShape(input, /*input_dim=*/1,
+                                  /*window_size=*/7, /*window_shift=*/6,
+                                  /*output_frames=*/5),
+            expected);
+}
+
+TEST(Lfr, TruncatesFixedShape) {
+  std::vector<float> input(13);
+  std::iota(input.begin(), input.end(), 0.0f);
+  auto expected = ApplyLfr(input, /*input_dim=*/1, /*window_size=*/7,
+                           /*window_shift=*/6);
+  expected.resize(2 * 7);
+
+  EXPECT_EQ(ApplyLfrForFixedShape(input, /*input_dim=*/1,
+                                  /*window_size=*/7, /*window_shift=*/6,
+                                  /*output_frames=*/2),
+            expected);
+}
+
+TEST(Lfr, KeepsEmptyFixedShapeInputEmpty) {
+  EXPECT_TRUE(ApplyLfrForFixedShape({}, /*input_dim=*/80,
+                                    /*window_size=*/7, /*window_shift=*/6,
+                                    /*output_frames=*/500)
+                  .empty());
+}
+
 TEST(Lfr, EmptyInput) {
   EXPECT_TRUE(ApplyLfr({}, /*input_dim=*/80, /*window_size=*/7,
                        /*window_shift=*/6)
@@ -83,6 +117,15 @@ TEST(Lfr, RejectsInvalidArgumentsAtRuntime) {
       ApplyLfr({1.0f, 2.0f, 3.0f}, /*input_dim=*/2, /*window_size=*/7,
                /*window_shift=*/6),
       "ApplyLfr: input size .* is not divisible by input_dim 2");
+  EXPECT_DEATH_IF_SUPPORTED(
+      ApplyLfrForFixedShape({1.0f}, /*input_dim=*/1, /*window_size=*/7,
+                            /*window_shift=*/6, /*output_frames=*/0),
+      "ApplyLfrForFixedShape: output_frames must be positive");
+  EXPECT_DEATH_IF_SUPPORTED(
+      ApplyLfr({1.0f, 2.0f}, /*input_dim=*/2,
+               /*window_size=*/std::numeric_limits<int32_t>::max(),
+               /*window_shift=*/1),
+      "ApplyLfr: output dimension .* exceeds int32 capacity");
 }
 
 }  // namespace sherpa_onnx

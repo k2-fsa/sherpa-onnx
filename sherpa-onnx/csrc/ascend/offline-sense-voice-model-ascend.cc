@@ -26,6 +26,7 @@
 #include "sherpa-onnx/csrc/ascend/macros.h"
 #include "sherpa-onnx/csrc/ascend/utils.h"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/lfr.h"
 
 namespace sherpa_onnx {
 
@@ -57,7 +58,8 @@ class OfflineSenseVoiceModelAscend::Impl {
     std::lock_guard<std::mutex> lock(mutex_);
 
     aclError ret_set_ctx = aclrtSetCurrentContext(*context_);
-    SHERPA_ONNX_ASCEND_CHECK(ret_set_ctx, "Failed to call aclrtSetCurrentContext");
+    SHERPA_ONNX_ASCEND_CHECK(ret_set_ctx,
+                            "Failed to call aclrtSetCurrentContext");
 
     features = ApplyLFR(std::move(features));
     if (features.empty()) {
@@ -151,7 +153,8 @@ class OfflineSenseVoiceModelAscend::Impl {
 
   void Preallocate() {
     // max 30 seconds
-    max_num_frames_ = (30 * 100 - 7) / 6 + 1;
+    max_num_frames_ =
+        (30 * 100 + meta_data_.window_shift - 1) / meta_data_.window_shift;
     x_ptr_ = std::make_unique<AclDevicePtr>(max_num_frames_ * feat_dim_ *
                                             sizeof(float));
 
@@ -161,18 +164,13 @@ class OfflineSenseVoiceModelAscend::Impl {
                                                  vocab_size_ * sizeof(float));
   }
 
-  std::vector<float> ApplyLFR(std::vector<float> in) const {
-    int32_t lfr_window_size = meta_data_.window_size;
-    int32_t lfr_window_shift = meta_data_.window_shift;
-    int32_t in_feat_dim = 80;
-
-    int32_t in_num_frames = in.size() / in_feat_dim;
-    if (in_num_frames < lfr_window_size) {
-      return {};
-    }
-
+  std::vector<float> ApplyLFR(const std::vector<float> &in) const {
+    constexpr int32_t kInputDim = 80;
+    const int32_t output_dim = kInputDim * meta_data_.window_size;
+    std::vector<float> out = ApplyLfr(in, kInputDim, meta_data_.window_size,
+                                      meta_data_.window_shift);
     int32_t out_num_frames =
-        (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
+        static_cast<int32_t>(out.size() / output_dim);
 
     if (out_num_frames > max_num_frames_) {
       SHERPA_ONNX_LOGE(
@@ -184,20 +182,7 @@ class OfflineSenseVoiceModelAscend::Impl {
           "model accepting longer audios.");
 
       out_num_frames = max_num_frames_;
-    }
-
-    int32_t out_feat_dim = in_feat_dim * lfr_window_size;
-
-    std::vector<float> out(out_num_frames * out_feat_dim);
-
-    const float *p_in = in.data();
-    float *p_out = out.data();
-
-    for (int32_t i = 0; i != out_num_frames; ++i) {
-      std::copy(p_in, p_in + out_feat_dim, p_out);
-
-      p_out += out_feat_dim;
-      p_in += lfr_window_shift * in_feat_dim;
+      out.resize(static_cast<size_t>(out_num_frames) * output_dim);
     }
 
     return out;
