@@ -3,7 +3,6 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-rnn-lm.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 #include <string>
@@ -32,7 +31,7 @@ class OfflineRnnLM::Impl {
  public:
   explicit Impl(const OfflineLMConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_{GetSessionOptions(config)},
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -43,7 +42,7 @@ class OfflineRnnLM::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineLMConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_{GetSessionOptions(config)},
         allocator_{} {
     auto buf = ReadFile(mgr, config_.model);

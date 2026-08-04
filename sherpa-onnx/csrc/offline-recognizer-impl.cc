@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #if __ANDROID_API__ >= 9
 
@@ -318,7 +317,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     }
   }
 
-  Ort::Env env = CreateOrtEnv();
+  Ort::Env env = ORT_LOGGING_LEVEL_ERROR;
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
@@ -686,7 +685,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     }
   }
 
-  Ort::Env env = CreateOrtEnv();
+  Ort::Env env = ORT_LOGGING_LEVEL_ERROR;
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);

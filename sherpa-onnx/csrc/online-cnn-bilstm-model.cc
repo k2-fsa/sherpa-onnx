@@ -3,7 +3,6 @@
 // Copyright (c) 2024 Jian You (jianyou@cisco.com, Cisco Systems)
 
 #include "sherpa-onnx/csrc/online-cnn-bilstm-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 #include <memory>
@@ -31,7 +30,7 @@ class OnlineCNNBiLSTMModel::Impl {
  public:
   explicit Impl(const OnlinePunctuationModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -42,7 +41,7 @@ class OnlineCNNBiLSTMModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OnlinePunctuationModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config_.cnn_bilstm);

@@ -3,7 +3,6 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-zipformer-audio-tagging-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 #include <memory>
@@ -22,7 +21,7 @@ class OfflineZipformerAudioTaggingModel::Impl {
  public:
   explicit Impl(const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -33,7 +32,7 @@ class OfflineZipformerAudioTaggingModel::Impl {
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config_.zipformer.model);
