@@ -268,20 +268,24 @@ class OfflineSpeakerDiarization {
 
     final n = samples.length;
     final Pointer<Float> p = calloc<Float>(n);
+    try {
+      final pList = p.asTypedList(n);
+      pList.setAll(0, samples);
 
-    final pList = p.asTypedList(n);
-    pList.setAll(0, samples);
-
-    final r = SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationProcess
-            ?.call(ptr, p, n) ??
-        nullptr;
-
-    final ans = _processImpl(r);
-
-    SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
-        ?.call(r);
-
-    return ans;
+      final r = SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationProcess
+              ?.call(ptr, p, n) ??
+          nullptr;
+      try {
+        return _processImpl(r);
+      } finally {
+        if (r != nullptr) {
+          SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
+              ?.call(r);
+        }
+      }
+    } finally {
+      calloc.free(p);
+    }
   }
 
   List<OfflineSpeakerDiarizationSegment> processWithCallback({
@@ -300,29 +304,34 @@ class OfflineSpeakerDiarization {
 
     final n = samples.length;
     final Pointer<Float> p = calloc<Float>(n);
+    try {
+      final pList = p.asTypedList(n);
+      pList.setAll(0, samples);
 
-    final pList = p.asTypedList(n);
-    pList.setAll(0, samples);
-
-    final wrapper = NativeCallable<
-            SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>.isolateLocal(
-        (int numProcessedChunks, int numTotalChunks) {
-      return callback(numProcessedChunks, numTotalChunks);
-    }, exceptionalReturn: 0);
-
-    final r = SherpaOnnxBindings
-            .sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg
-            ?.call(ptr, p, n, wrapper.nativeFunction) ??
-        nullptr;
-
-    wrapper.close();
-
-    final ans = _processImpl(r);
-
-    SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
-        ?.call(r);
-
-    return ans;
+      final wrapper = NativeCallable<
+              SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>.isolateLocal(
+          (int numProcessedChunks, int numTotalChunks) {
+        return callback(numProcessedChunks, numTotalChunks);
+      }, exceptionalReturn: 0);
+      try {
+        final r = SherpaOnnxBindings
+                .sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg
+                ?.call(ptr, p, n, wrapper.nativeFunction) ??
+            nullptr;
+        try {
+          return _processImpl(r);
+        } finally {
+          if (r != nullptr) {
+            SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
+                ?.call(r);
+          }
+        }
+      } finally {
+        wrapper.close();
+      }
+    } finally {
+      calloc.free(p);
+    }
   }
 
   List<OfflineSpeakerDiarizationSegment> _processImpl(
