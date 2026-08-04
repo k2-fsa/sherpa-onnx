@@ -16,16 +16,18 @@ namespace {
 
 size_t GetOutputDim(int32_t input_dim, int32_t window_size,
                     const char *caller) {
-  size_t output_dim =
-      static_cast<size_t>(input_dim) * static_cast<size_t>(window_size);
-  if (output_dim >
-      static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
-    SHERPA_ONNX_LOGE("%s: output dimension %zu exceeds int32 capacity",
-                     caller, output_dim);
+  const size_t input_dim_size = static_cast<size_t>(input_dim);
+  const size_t window_size_size = static_cast<size_t>(window_size);
+  const size_t max_output_dim =
+      static_cast<size_t>(std::numeric_limits<int32_t>::max());
+  if (window_size_size > max_output_dim / input_dim_size) {
+    SHERPA_ONNX_LOGE(
+        "%s: output dimension %d * %d exceeds int32 capacity", caller,
+        input_dim, window_size);
     SHERPA_ONNX_EXIT(-1);
   }
 
-  return output_dim;
+  return input_dim_size * window_size_size;
 }
 
 size_t GetOutputSize(size_t output_frames, size_t output_dim,
