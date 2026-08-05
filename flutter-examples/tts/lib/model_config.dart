@@ -2,9 +2,9 @@
 // Shared model selection — edit this file to change the TTS model.
 // Both native (model.dart) and web (model_web.dart) use this.
 //
-// Change the index below to select a different model.
 import 'package:sherpa_onnx/sherpa_onnx.dart';
 
+// Change the index below to select a different model.
 /// Select which TTS model to use (0-8).
 const int selectedModelIndex = 2;
 
