@@ -526,6 +526,15 @@ detection, streaming and offline speech recognition, and text-to-speech.
 Speech engines and models are selected through per-companion configuration,
 making it easy to match supported sherpa-onnx models to different hardware.
 
+### [qwen-audio-agent](https://github.com/QwenAudio/qwen-audio-agent)
+
+> A realtime full-duplex voice runtime for AI coding agents
+> (Claude Code, Codex, OpenCode, and other ACP agents).
+> It uses sherpa-onnx keyword spotting with the 3M-parameter
+> zh-en transducer model to implement a local voice wake word:
+> the app sleeps on idle but keeps the microphone open,
+> and the wake phrase brings the session back with no cloud calls.
+
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
