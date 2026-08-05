@@ -38,8 +38,17 @@ class TtsWorker {
     final modelFiles = await m.loadModelFileBytes();
     final config = await m.prepareModelConfig();
 
+    print('[worker_web] init()');
+    print('[worker_web]   modelFiles: ${modelFiles.length} files');
+    print('[worker_web]   config.modelPath: ${config.modelPath}');
+    print('[worker_web]   config.tokensPath: ${config.tokensPath}');
+    print('[worker_web]   config.dataDir: ${config.dataDir}');
+    print('[worker_web]   config.lexicon: ${config.lexicon}');
+    print('[worker_web]   config.numThreads: ${config.numThreads}');
+
     // Create Web Worker.
     _worker = web.Worker('tts-worker.js'.toJS);
+    print('[worker_web] Worker created');
 
     // Listen for messages from the worker.
     _worker!.onmessage = (web.MessageEvent event) {
@@ -58,22 +67,35 @@ class TtsWorker {
       jsModelFiles[entry.key] = entry.value.buffer.toJS;
     }
 
-    // Build config.
+    // Build config matching the worker's expected format.
     final jsConfig = JSObject();
+
+    // VITS config.
     final vits = JSObject();
     vits['model'] = config.modelPath.toJS;
     vits['tokens'] = config.tokensPath.toJS;
-    vits['dataDir'] = config.dataDir.toJS;
+    if (config.dataDir.isNotEmpty) vits['dataDir'] = config.dataDir.toJS;
+    if (config.lexicon.isNotEmpty) vits['lexicon'] = config.lexicon.toJS;
+    vits['noiseScale'] = config.noiseScale.toJS;
+    vits['noiseScaleW'] = config.noiseScaleW.toJS;
+    vits['lengthScale'] = config.lengthScale.toJS;
+
+    // Model config.
     final model = JSObject();
     model['vits'] = vits;
     model['numThreads'] = config.numThreads.toJS;
     model['debug'] = config.debug.toJS;
     model['provider'] = config.provider.toJS;
+
+    // Top-level config.
     jsConfig['model'] = model;
+    if (config.ruleFsts.isNotEmpty) jsConfig['ruleFsts'] = config.ruleFsts.toJS;
+    if (config.ruleFars.isNotEmpty) jsConfig['ruleFars'] = config.ruleFars.toJS;
     jsConfig['maxNumSentences'] = 1.toJS;
     jsConfig['silenceScale'] = 0.2.toJS;
 
     // Send init message with JS glue source, WASM binary, and model files.
+    print('[worker_web] Sending init message to worker...');
     final initMsg = JSObject();
     initMsg['type'] = 'init'.toJS;
     initMsg['jsGlueSource'] = jsGlueSource.toJS;

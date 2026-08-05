@@ -6,9 +6,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+import './model_config.dart';
 
-/// Configuration for creating a TTS instance (web version).
-/// On web, paths are relative to the WASM virtual filesystem.
+/// Flat config for the worker (matches the worker's expected format).
 class TtsModelConfig {
   final String modelPath;
   final String tokensPath;
@@ -21,6 +21,9 @@ class TtsModelConfig {
   final int numThreads;
   final bool debug;
   final String provider;
+  final double noiseScale;
+  final double noiseScaleW;
+  final double lengthScale;
 
   const TtsModelConfig({
     required this.modelPath,
@@ -31,30 +34,107 @@ class TtsModelConfig {
     this.ruleFars = '',
     this.voices = '',
     this.isKitten = false,
-    this.numThreads = 1,
+    this.numThreads = 2,
     this.debug = true,
     this.provider = 'cpu',
+    this.noiseScale = 0.667,
+    this.noiseScaleW = 0.8,
+    this.lengthScale = 1.0,
   });
 }
 
-/// Prepare model config: load model assets from Flutter bundle.
+/// Prepare model config from shared model selection.
 Future<TtsModelConfig> prepareModelConfig() async {
-  final modelDir = 'vits-piper-en_US-amy-low';
+  final cfg = selectedTtsConfig;
+  final m = cfg.model;
+
+  // Debug logging.
+  print('[model_web] prepareModelConfig()');
+  print('[model_web]   selectedModelIndex: $selectedModelIndex');
+  print('[model_web]   vits.model: ${m.vits.model}');
+  print('[model_web]   vits.tokens: ${m.vits.tokens}');
+  print('[model_web]   vits.dataDir: ${m.vits.dataDir}');
+  print('[model_web]   vits.lexicon: ${m.vits.lexicon}');
+  print('[model_web]   numThreads: ${m.numThreads}');
+  print('[model_web]   debug: ${m.debug}');
+  print('[model_web]   provider: ${m.provider}');
+  print('[model_web]   ruleFsts: ${cfg.ruleFsts}');
+  print('[model_web]   ruleFars: ${cfg.ruleFars}');
+
+  // Determine which model type is active and extract paths.
+  if (m.vits.model.isNotEmpty) {
+    return TtsModelConfig(
+      modelPath: m.vits.model,
+      tokensPath: m.vits.tokens,
+      dataDir: m.vits.dataDir,
+      lexicon: m.vits.lexicon,
+      numThreads: m.numThreads,
+      debug: m.debug,
+      provider: m.provider,
+      noiseScale: m.vits.noiseScale,
+      noiseScaleW: m.vits.noiseScaleW,
+      lengthScale: m.vits.lengthScale,
+    );
+  }
+  if (m.kokoro.model.isNotEmpty) {
+    return TtsModelConfig(
+      modelPath: m.kokoro.model,
+      tokensPath: m.kokoro.tokens,
+      dataDir: m.kokoro.dataDir,
+      lexicon: m.kokoro.lexicon,
+      voices: m.kokoro.voices,
+      numThreads: m.numThreads,
+      debug: m.debug,
+      provider: m.provider,
+    );
+  }
+  if (m.kitten.model.isNotEmpty) {
+    return TtsModelConfig(
+      modelPath: m.kitten.model,
+      tokensPath: m.kitten.tokens,
+      dataDir: m.kitten.dataDir,
+      voices: m.kitten.voices,
+      isKitten: true,
+      numThreads: m.numThreads,
+      debug: m.debug,
+      provider: m.provider,
+    );
+  }
+
+  // Default fallback.
   return TtsModelConfig(
-    modelPath: '$modelDir/en_US-amy-low.onnx',
-    tokensPath: '$modelDir/tokens.txt',
-    dataDir: '$modelDir/espeak-ng-data',
+    modelPath: m.vits.model,
+    tokensPath: m.vits.tokens,
+    numThreads: m.numThreads,
+    debug: m.debug,
+    provider: m.provider,
   );
 }
 
 /// Load model file bytes from Flutter assets.
-/// Returns a map of {relativePath: bytes} for sending to a Web Worker.
 Future<Map<String, Uint8List>> loadModelFileBytes() async {
   final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
   final allAssets = assetManifest.listAssets();
+  final cfg = selectedTtsConfig;
 
-  final modelAssets =
-      allAssets.where((a) => a.contains('vits-piper-en_US-amy-low')).toList();
+  // Collect all model directory names from the config.
+  final modelDirs = <String>{};
+  for (final path in [
+    cfg.model.vits.model, cfg.model.vits.tokens, cfg.model.vits.dataDir,
+    cfg.model.kokoro.model, cfg.model.kokoro.voices, cfg.model.kokoro.tokens,
+    cfg.model.kitten.model, cfg.model.kitten.voices, cfg.model.kitten.tokens,
+  ]) {
+    if (path.isNotEmpty) {
+      modelDirs.add(path.split('/').first);
+    }
+  }
+
+  final modelAssets = allAssets.where((a) {
+    for (final dir in modelDirs) {
+      if (a.contains(dir)) return true;
+    }
+    return false;
+  }).toList();
 
   final result = <String, Uint8List>{};
   for (final asset in modelAssets) {
@@ -65,60 +145,10 @@ Future<Map<String, Uint8List>> loadModelFileBytes() async {
   return result;
 }
 
-/// Create a TTS instance from config (web version).
+/// Create a TTS instance from config (web — not used directly).
+/// On web, the worker creates the TTS instance.
 sherpa_onnx.OfflineTts createTtsFromConfig(TtsModelConfig cfg) {
-  final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
-    model: cfg.modelPath,
-    tokens: cfg.tokensPath,
-    dataDir: cfg.dataDir,
-  );
-
-  final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
-    vits: vits,
-    numThreads: cfg.numThreads,
-    debug: cfg.debug,
-    provider: cfg.provider,
-  );
-
-  final config = sherpa_onnx.OfflineTtsConfig(
-    model: modelConfig,
-    maxNumSenetences: 1,
-  );
-
-  return sherpa_onnx.OfflineTts(config);
-}
-
-// ── WASM FS helpers ──────────────────────────────────────────────────────
-
-JSObject _getFS() {
-  final module = globalContext.getProperty('Module'.toJS) as JSObject?;
-  if (module != null) {
-    final fs = module.getProperty('FS'.toJS) as JSObject?;
-    if (fs != null) return fs;
-  }
-  final globalFs = globalContext.getProperty('FS'.toJS) as JSObject?;
-  if (globalFs != null) return globalFs;
-  throw StateError('FS not found on Module.');
-}
-
-void _writeToWasmFS(String path, Uint8List data) {
-  final fs = _getFS();
-  final fn = fs.getProperty('writeFile'.toJS) as JSFunction;
-  fn.callAsFunction(fs, path.toJS, data.toJS);
-}
-
-void _mkdirWasmFS(String path) {
-  final fs = _getFS();
-  final parts = path.split('/');
-  String current = '';
-  for (final part in parts) {
-    if (part.isEmpty) continue;
-    current = '$current/$part';
-    try {
-      final fn = fs.getProperty('mkdir'.toJS) as JSFunction;
-      fn.callAsFunction(fs, current.toJS);
-    } catch (_) {}
-  }
+  throw UnsupportedError('createTtsFromConfig is not available on web');
 }
 
 Future<Uint8List> _loadAsset(String assetPath) async {

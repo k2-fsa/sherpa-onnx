@@ -9,6 +9,7 @@ It works on the following platforms:
   - Linux
   - macOS (both arm64 and x86_64 are supported)
   - Windows
+  - Web
 
 Pre-built APPs for this folder can be found at <https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#text-to-speech-tts-speech-synthesis>
 
@@ -43,9 +44,9 @@ Then please do the following:
 
 ```bash
 cd flutter-examples/tts/assets
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2
-tar xf vits-piper-en_US-libritts_r-medium.tar.bz2
-rm vits-piper-en_US-libritts_r-medium.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+tar xf vits-piper-en_US-amy-low.tar.bz2
+rm vits-piper-en_US-amy-low.tar.bz2
 cd ..
 
 ./generate-asset-list.py
@@ -56,16 +57,11 @@ cd ..
 
   - 2. Change the code to use the downloaded model.
 
-    We have given several examples for different models in [./lib/model.dart](./lib/model.dart).
-    For our selected model, we need to change [./lib/model.dart](./lib/model.dart) so that it looks like below:
+    We have given several examples for different models in [./lib/model_config.dart](./lib/model_config.dart).
+    For our selected model, we need to change [./lib/model_config.dart](./lib/model_config.dart) so that it looks like below:
 
 ```
-// Example 6
-// https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-// https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2
-modelDir = 'vits-piper-en_US-libritts_r-medium';
-modelName = 'en_US-libritts_r-medium.onnx';
-dataDir = 'vits-piper-en_US-libritts_r-medium/espeak-ng-data';
+const int selectedModelIndex = 0;
 ```
 
   - 3. That's it.
@@ -114,7 +110,23 @@ flutter build windows
 flutter build apk --split-per-abi
 ```
 
-  - 5. For iOS
+  - 5. For web
+
+```
+flutter run -d chrome
+```
+
+Also, you can use
+
+```
+flutter build web
+cd build/web
+python3 -m http.server 6006
+```
+and then start your browser and access <http://localhost:6006>
+or you can serve it with any http server.
+
+  - 6. For iOS
 
 First, connect your iPhone to your computer and use `flutter devices` to show
 available devices. You will see something like below:

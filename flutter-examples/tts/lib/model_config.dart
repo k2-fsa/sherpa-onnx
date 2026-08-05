@@ -1,0 +1,139 @@
+// Copyright (c)  2026  Xiaomi Corporation
+// Shared model selection — edit this file to change the TTS model.
+// Both native (model.dart) and web (model_web.dart) use this.
+//
+// Change the index below to select a different model.
+import 'package:sherpa_onnx/sherpa_onnx.dart';
+
+/// Select which TTS model to use (0-6).
+const int selectedModelIndex = 1;
+
+/// Available TTS models.
+final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
+  // ── VITS Piper (English) ──────────────────────────────────────────────
+  0 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      vits: OfflineTtsVitsModelConfig(
+        model: 'vits-piper-en_US-amy-low/en_US-amy-low.onnx',
+        tokens: 'vits-piper-en_US-amy-low/tokens.txt',
+        dataDir: 'vits-piper-en_US-amy-low/espeak-ng-data',
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+    maxNumSenetences: 1,
+  ),
+
+  // ── VITS Piper (Chinese) ─────────────────────────────────────────────
+  1 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      vits: OfflineTtsVitsModelConfig(
+        model: 'vits-piper-zh_CN-xiao_ya-medium/zh_CN-xiao_ya-medium.onnx',
+        tokens: 'vits-piper-zh_CN-xiao_ya-medium/tokens.txt',
+        lexicon: 'vits-piper-zh_CN-xiao_ya-medium/lexicon.txt',
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+    ruleFsts: 'vits-piper-zh_CN-xiao_ya-medium/phone.fst,vits-piper-zh_CN-xiao_ya-medium/date.fst,vits-piper-zh_CN-xiao_ya-medium/number.fst',
+    maxNumSenetences: 1,
+  ),
+
+  // ── Kokoro (English) ──────────────────────────────────────────────────
+  2 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      kokoro: OfflineTtsKokoroModelConfig(
+        model: 'kokoro-en-v0_19/model.onnx',
+        voices: 'kokoro-en-v0_19/voices.bin',
+        tokens: 'kokoro-en-v0_19/tokens.txt',
+        dataDir: 'kokoro-en-v0_19/espeak-ng-data',
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+    maxNumSenetences: 1,
+  ),
+
+  // ── Kokoro (Chinese + English) ────────────────────────────────────────
+  3 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      kokoro: OfflineTtsKokoroModelConfig(
+        model: 'kokoro-multi-lang-v1_0/model.onnx',
+        voices: 'kokoro-multi-lang-v1_0/voices.bin',
+        tokens: 'kokoro-multi-lang-v1_0/tokens.txt',
+        dataDir: 'kokoro-multi-lang-v1_0/espeak-ng-data',
+        lexicon: 'kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt',
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+    maxNumSenetences: 1,
+  ),
+
+  // ── MatchaTTS (English) ───────────────────────────────────────────────
+  4 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      matcha: OfflineTtsMatchaModelConfig(
+        acousticModel: 'matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
+        vocoder: 'vocos-22khz-univ.onnx',
+        tokens: 'matcha-icefall-en_US-ljspeech/tokens.txt',
+        dataDir: 'matcha-icefall-en_US-ljspeech/espeak-ng-data',
+      ),
+      numThreads: 1,
+      debug: true,
+    ),
+    maxNumSenetences: 1,
+  ),
+
+  // ── KittenTTS (English) ───────────────────────────────────────────────
+  5 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      kitten: OfflineTtsKittenModelConfig(
+        model: 'kitten-nano-en-v0_1-fp16/model.fp16.onnx',
+        voices: 'kitten-nano-en-v0_1-fp16/voices.bin',
+        tokens: 'kitten-nano-en-v0_1-fp16/tokens.txt',
+        dataDir: 'kitten-nano-en-v0_1-fp16/espeak-ng-data',
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+    maxNumSenetences: 1,
+  ),
+
+  // ── Pocket TTS (English) ──────────────────────────────────────────────
+  6 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      pocket: OfflineTtsPocketModelConfig(
+        lmFlow: 'sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx',
+        lmMain: 'sherpa-onnx-pocket-tts-int8-2026-01-26/lm_main.int8.onnx',
+        encoder: 'sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx',
+        decoder: 'sherpa-onnx-pocket-tts-int8-2026-01-26/decoder.int8.onnx',
+        textConditioner: 'sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx',
+        vocabJson: 'sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json',
+        tokenScoresJson: 'sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json',
+        voiceEmbeddingCacheCapacity: 50,
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+  ),
+
+  // ── Supertonic TTS (English) ──────────────────────────────────────────
+  7 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      supertonic: OfflineTtsSupertonicModelConfig(
+        durationPredictor: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx',
+        textEncoder: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx',
+        vectorEstimator: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx',
+        vocoder: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx',
+        ttsJson: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json',
+        unicodeIndexer: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin',
+        voiceStyle: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin',
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+  ),
+
+  _ => throw ArgumentError('Invalid selectedModelIndex: $selectedModelIndex. Must be 0-7.'),
+};

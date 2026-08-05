@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+import './model_config.dart';
 
 /// Configuration for creating a TTS instance.
 /// All paths are resolved to absolute paths on disk.
@@ -20,6 +21,9 @@ class TtsModelConfig {
   final int numThreads;
   final bool debug;
   final String provider;
+  final double noiseScale;
+  final double noiseScaleW;
+  final double lengthScale;
 
   const TtsModelConfig({
     required this.modelPath,
@@ -33,35 +37,77 @@ class TtsModelConfig {
     this.numThreads = 2,
     this.debug = true,
     this.provider = 'cpu',
+    this.noiseScale = 0.667,
+    this.noiseScaleW = 0.8,
+    this.lengthScale = 1.0,
   });
 }
 
+/// Resolve a relative path to absolute.
+String _abs(String base, String relative) =>
+    relative.isEmpty ? '' : p.join(base, relative);
+
 /// Prepare model config: copy assets to disk and resolve all paths.
-/// This must be called on the main thread (uses platform channels).
 Future<TtsModelConfig> prepareModelConfig() async {
-  // Copy all asset files to the app support directory.
   await _copyAllAssetFiles();
 
-  // Select your model here:
-  final modelDir = 'vits-piper-en_US-amy-low';
-  final modelName = 'en_US-amy-low.onnx';
-  final dataDir = 'vits-piper-en_US-amy-low/espeak-ng-data';
+  final cfg = selectedTtsConfig;
+  final m = cfg.model;
+  final d = (await getApplicationSupportDirectory()).path;
 
-  final Directory directory = await getApplicationSupportDirectory();
+  // Determine active model type and resolve paths.
+  if (m.vits.model.isNotEmpty) {
+    return TtsModelConfig(
+      modelPath: _abs(d, m.vits.model),
+      tokensPath: _abs(d, m.vits.tokens),
+      dataDir: _abs(d, m.vits.dataDir),
+      lexicon: m.vits.lexicon,
+      ruleFsts: cfg.ruleFsts,
+      ruleFars: cfg.ruleFars,
+      numThreads: m.numThreads,
+      debug: m.debug,
+      provider: m.provider,
+      noiseScale: m.vits.noiseScale,
+      noiseScaleW: m.vits.noiseScaleW,
+      lengthScale: m.vits.lengthScale,
+    );
+  }
+  if (m.kokoro.model.isNotEmpty) {
+    return TtsModelConfig(
+      modelPath: _abs(d, m.kokoro.model),
+      tokensPath: _abs(d, m.kokoro.tokens),
+      dataDir: _abs(d, m.kokoro.dataDir),
+      lexicon: m.kokoro.lexicon,
+      voices: m.kokoro.voices,
+      ruleFsts: cfg.ruleFsts,
+      ruleFars: cfg.ruleFars,
+      numThreads: m.numThreads,
+      debug: m.debug,
+      provider: m.provider,
+    );
+  }
+  if (m.kitten.model.isNotEmpty) {
+    return TtsModelConfig(
+      modelPath: _abs(d, m.kitten.model),
+      tokensPath: _abs(d, m.kitten.tokens),
+      dataDir: _abs(d, m.kitten.dataDir),
+      voices: m.kitten.voices,
+      isKitten: true,
+      ruleFsts: cfg.ruleFsts,
+      ruleFars: cfg.ruleFars,
+      numThreads: m.numThreads,
+      debug: m.debug,
+      provider: m.provider,
+    );
+  }
 
-  final absModel = p.join(directory.path, modelDir, modelName);
-  final absTokens = p.join(directory.path, modelDir, 'tokens.txt');
-  final absDataDir = dataDir.isNotEmpty
-      ? p.join(directory.path, dataDir)
-      : '';
-
+  // Default.
   return TtsModelConfig(
-    modelPath: absModel,
-    tokensPath: absTokens,
-    dataDir: absDataDir,
-    numThreads: 2,
-    debug: true,
-    provider: 'cpu',
+    modelPath: _abs(d, m.vits.model),
+    tokensPath: _abs(d, m.vits.tokens),
+    numThreads: m.numThreads,
+    debug: m.debug,
+    provider: m.provider,
   );
 }
 
