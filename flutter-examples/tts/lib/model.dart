@@ -1,5 +1,4 @@
 // Copyright (c)  2024  Xiaomi Corporation
-
 import "dart:io";
 
 import 'package:flutter/services.dart';
@@ -7,208 +6,145 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
-import './utils.dart';
+/// Configuration for creating a TTS instance.
+/// All paths are resolved to absolute paths on disk.
+class TtsModelConfig {
+  final String modelPath;
+  final String tokensPath;
+  final String dataDir;
+  final String lexicon;
+  final String ruleFsts;
+  final String ruleFars;
+  final String voices;
+  final bool isKitten;
+  final int numThreads;
+  final bool debug;
+  final String provider;
 
-Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
-  // sherpa_onnx requires that model files are in the local disk, so we
-  // need to copy all asset files to disk.
-  await copyAllAssetFiles();
+  const TtsModelConfig({
+    required this.modelPath,
+    required this.tokensPath,
+    this.dataDir = '',
+    this.lexicon = '',
+    this.ruleFsts = '',
+    this.ruleFars = '',
+    this.voices = '',
+    this.isKitten = false,
+    this.numThreads = 2,
+    this.debug = true,
+    this.provider = 'cpu',
+  });
+}
 
-  sherpa_onnx.initBindings();
+/// Prepare model config: copy assets to disk and resolve all paths.
+/// This must be called on the main thread (uses platform channels).
+Future<TtsModelConfig> prepareModelConfig() async {
+  // Copy all asset files to the app support directory.
+  await _copyAllAssetFiles();
 
-  // Such a design is to make it easier to build flutter APPs with
-  // github actions for a variety of tts models
-  //
-  // See https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/flutter/generate-tts.py
-  // for details
-
-  String modelDir = '';
-  String modelName = '';
-  String voices = ''; // for Kokoro or Kitten
-  bool isKitten = false;
-  String ruleFsts = '';
-  String ruleFars = '';
-  String lexicon = '';
-  String dataDir = '';
-
-  // You can select an example below and change it accordingly to match your
-  // selected tts model
-
-  // ============================================================
-  // Your change starts here
-  // ============================================================
-
-  // Example 1:
-  // modelDir = 'vits-vctk';
-  // modelName = 'vits-vctk.onnx';
-  // lexicon = 'lexicon.txt';
-
-  // Example 2:
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-  // modelDir = 'vits-piper-en_US-amy-low';
-  // modelName = 'en_US-amy-low.onnx';
-  // dataDir = 'vits-piper-en_US-amy-low/espeak-ng-data';
-
-  // Example 3:
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
-  // modelDir = 'vits-icefall-zh-aishell3';
-  // modelName = 'model.onnx';
-  // ruleFsts = 'vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,vits-icefall-zh-aishell3/new_heteronym.fst';
-  // ruleFars = 'vits-icefall-zh-aishell3/rule.far';
-  // lexicon = 'lexicon.txt';
-
-  // Example 4:
-  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#csukuangfj-vits-zh-hf-fanchen-c-chinese-187-speakers
-  // modelDir = 'vits-zh-hf-fanchen-C';
-  // modelName = 'vits-zh-hf-fanchen-C.onnx';
-  // lexicon = 'lexicon.txt';
-
-  // Example 5:
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
-  // modelDir = 'vits-coqui-de-css10';
-  // modelName = 'model.onnx';
-
-  // Example 6
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2
-  // modelDir = 'vits-piper-en_US-libritts_r-medium';
-  // modelName = 'en_US-libritts_r-medium.onnx';
-  // dataDir = 'vits-piper-en_US-libritts_r-medium/espeak-ng-data';
-
-  // Example 7
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
-  // modelDir = 'vits-melo-tts-zh_en';
-  // modelName = 'model.onnx';
-  // lexicon = 'lexicon.txt';
-
-  // Example 8
-  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html#kokoro-en-v0-19-english-11-speakers
-  // modelDir = 'kokoro-en-v0_19';
-  // modelName = 'model.onnx';
-  // voices = 'voices.bin';
-  // dataDir = 'kokoro-en-v0_19/espeak-ng-data';
-
-  // Example 9
-  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
-  // modelDir = 'kokoro-multi-lang-v1_0';
-  // modelName = 'model.onnx';
-  // voices = 'voices.bin';
-  // dataDir = 'kokoro-multi-lang-v1_0/espeak-ng-data';
-  // lexicon = 'kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt';
-
-  // Example 10
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // modelDir = 'kitten-nano-en-v0_8-fp32';
-  // modelName = 'model.fp32.onnx';
-  // voices = 'voices.bin';
-  // dataDir = 'kitten-nano-en-v0_8-fp32/espeak-ng-data';
-  // isKitten = true;
-
-  // ============================================================
-  // Please don't change the remaining part of this function
-  // ============================================================
-  if (modelName == '') {
-    throw Exception(
-        'You are supposed to select a model by changing the code before you run the app');
-  }
+  // Select your model here:
+  final modelDir = 'vits-piper-en_US-amy-low';
+  final modelName = 'en_US-amy-low.onnx';
+  final dataDir = 'vits-piper-en_US-amy-low/espeak-ng-data';
 
   final Directory directory = await getApplicationSupportDirectory();
-  modelName = p.join(directory.path, modelDir, modelName);
 
-  if (ruleFsts != '') {
-    final all = ruleFsts.split(',');
-    var tmp = <String>[];
-    for (final f in all) {
-      tmp.add(p.join(directory.path, f));
-    }
-    ruleFsts = tmp.join(',');
-  }
+  final absModel = p.join(directory.path, modelDir, modelName);
+  final absTokens = p.join(directory.path, modelDir, 'tokens.txt');
+  final absDataDir = dataDir.isNotEmpty
+      ? p.join(directory.path, dataDir)
+      : '';
 
-  if (ruleFars != '') {
-    final all = ruleFars.split(',');
-    var tmp = <String>[];
-    for (final f in all) {
-      tmp.add(p.join(directory.path, f));
-    }
-    ruleFars = tmp.join(',');
-  }
+  return TtsModelConfig(
+    modelPath: absModel,
+    tokensPath: absTokens,
+    dataDir: absDataDir,
+    numThreads: 2,
+    debug: true,
+    provider: 'cpu',
+  );
+}
 
-  if (lexicon.contains(',')) {
-    final all = lexicon.split(',');
-    var tmp = <String>[];
-    for (final f in all) {
-      tmp.add(p.join(directory.path, f));
-    }
-    lexicon = tmp.join(',');
-  } else if (lexicon != '') {
-    lexicon = p.join(directory.path, modelDir, lexicon);
-  }
+/// Create an OfflineTts from a resolved config.
+/// Can be called from any thread (no platform channels).
+sherpa_onnx.OfflineTts createTtsFromConfig(TtsModelConfig cfg) {
+  final vits = cfg.isKitten || cfg.voices.isNotEmpty
+      ? sherpa_onnx.OfflineTtsVitsModelConfig()
+      : sherpa_onnx.OfflineTtsVitsModelConfig(
+          model: cfg.modelPath,
+          lexicon: cfg.lexicon,
+          tokens: cfg.tokensPath,
+          dataDir: cfg.dataDir,
+        );
 
-  if (dataDir != '') {
-    dataDir = p.join(directory.path, dataDir);
-  }
+  final kokoro = cfg.voices.isNotEmpty && !cfg.isKitten
+      ? sherpa_onnx.OfflineTtsKokoroModelConfig(
+          model: cfg.modelPath,
+          voices: cfg.voices,
+          tokens: cfg.tokensPath,
+          dataDir: cfg.dataDir,
+          lexicon: cfg.lexicon,
+        )
+      : sherpa_onnx.OfflineTtsKokoroModelConfig();
 
-  final tokens = p.join(directory.path, modelDir, 'tokens.txt');
-  if (voices != '') {
-    voices = p.join(directory.path, modelDir, voices);
-  }
-
-  late final sherpa_onnx.OfflineTtsVitsModelConfig vits;
-  late final sherpa_onnx.OfflineTtsKokoroModelConfig kokoro;
-  late final sherpa_onnx.OfflineTtsKittenModelConfig kitten;
-
-  if (isKitten) {
-    vits = sherpa_onnx.OfflineTtsVitsModelConfig();
-    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
-    kitten = sherpa_onnx.OfflineTtsKittenModelConfig(
-      model: modelName,
-      voices: voices,
-      tokens: tokens,
-      dataDir: dataDir,
-    );
-  } else if (voices != '') {
-    vits = sherpa_onnx.OfflineTtsVitsModelConfig();
-    kitten = sherpa_onnx.OfflineTtsKittenModelConfig();
-    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig(
-      model: modelName,
-      voices: voices,
-      tokens: tokens,
-      dataDir: dataDir,
-      lexicon: lexicon,
-    );
-  } else {
-    vits = sherpa_onnx.OfflineTtsVitsModelConfig(
-      model: modelName,
-      lexicon: lexicon,
-      tokens: tokens,
-      dataDir: dataDir,
-    );
-
-    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
-    kitten = sherpa_onnx.OfflineTtsKittenModelConfig();
-  }
+  final kitten = cfg.isKitten
+      ? sherpa_onnx.OfflineTtsKittenModelConfig(
+          model: cfg.modelPath,
+          voices: cfg.voices,
+          tokens: cfg.tokensPath,
+          dataDir: cfg.dataDir,
+        )
+      : sherpa_onnx.OfflineTtsKittenModelConfig();
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
     vits: vits,
     kokoro: kokoro,
     kitten: kitten,
-    numThreads: 2,
-    debug: true,
-    provider: 'cpu',
+    numThreads: cfg.numThreads,
+    debug: cfg.debug,
+    provider: cfg.provider,
   );
 
   final config = sherpa_onnx.OfflineTtsConfig(
     model: modelConfig,
-    ruleFsts: ruleFsts,
-    ruleFars: ruleFars,
+    ruleFsts: cfg.ruleFsts,
+    ruleFars: cfg.ruleFars,
     maxNumSenetences: 1,
   );
-  // print(config);
 
-  final tts = sherpa_onnx.OfflineTts(config);
-  print('tts created successfully');
+  return sherpa_onnx.OfflineTts(config);
+}
 
-  return tts;
+/// Copy all Flutter assets to the app support directory.
+/// Skips files that already exist with the correct size.
+Future<void> _copyAllAssetFiles() async {
+  final AssetManifest assetManifest =
+      await AssetManifest.loadFromAssetBundle(rootBundle);
+  final List<String> assets = assetManifest.listAssets();
+  for (final src in assets) {
+    final dst = _stripLeadingDirectory(src);
+    await _copyAssetFile(src, dst);
+  }
+}
+
+String _stripLeadingDirectory(String src, {int n = 1}) {
+  return p.joinAll(p.split(src).sublist(n));
+}
+
+Future<String> _copyAssetFile(String src, [String? dst]) async {
+  final Directory directory = await getApplicationSupportDirectory();
+  if (dst == null) {
+    dst = p.basename(src);
+  }
+  final target = p.join(directory.path, dst);
+  bool exists = await File(target).exists();
+
+  final data = await rootBundle.load(src);
+  if (!exists || File(target).lengthSync() != data.lengthInBytes) {
+    final List<int> bytes =
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    await (await File(target).create(recursive: true)).writeAsBytes(bytes);
+  }
+
+  return target;
 }

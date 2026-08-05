@@ -1,9 +1,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import './info.dart';
-import './tts.dart';
-import 'isolate_tts.dart';
+import './tts_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,60 +14,79 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Next-gen Kaldi flutter demo',
+      title: 'sherpa-onnx TTS Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Next-gen Kaldi with Flutter'),
+      home: const HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
-  final List<Widget> _tabs = [
-    TtsScreen(),
-    InfoScreen(),
-    IsolateTtsView(),
-  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: const [
+          TtsScreen(),
+          InfoScreen(),
+        ],
       ),
-      body: _tabs[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.info),
-            label: 'Info',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.multiline_chart),
-            label: 'isolate',
-          ),
+        onTap: (i) => setState(() => _currentIndex = i),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'TTS'),
+          BottomNavigationBarItem(icon: Icon(Icons.info), label: 'Info'),
         ],
+      ),
+    );
+  }
+}
+
+class InfoScreen extends StatelessWidget {
+  const InfoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Info')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('sherpa-onnx TTS Demo'),
+            const SizedBox(height: 12),
+            InkWell(
+              child: const Text(
+                'https://github.com/k2-fsa/sherpa-onnx',
+                style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+              ),
+              onTap: () => launchUrl(Uri.parse('https://github.com/k2-fsa/sherpa-onnx')),
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              child: const Text(
+                'Doc: https://k2-fsa.github.io/sherpa/onnx/',
+                style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+              ),
+              onTap: () => launchUrl(Uri.parse('https://k2-fsa.github.io/sherpa/onnx/')),
+            ),
+          ],
+        ),
       ),
     );
   }

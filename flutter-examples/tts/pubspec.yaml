@@ -8,7 +8,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.13.4
 
 environment:
-  sdk: ">=2.17.0 <4.0.0"
+  sdk: ">=3.1.0 <4.0.0"
   flutter: ">=2.8.1"
 
 dependencies:
@@ -16,20 +16,57 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.6
+  file_picker: ^8.0.0
   path_provider: ^2.1.3
   path: ^1.9.0
-  sherpa_onnx: ^1.13.4
-  # sherpa_onnx:
-  #   path: ../../flutter/sherpa_onnx
+  # sherpa_onnx: ^1.13.4
+  sherpa_onnx:
+    path: ../../flutter/sherpa_onnx
+  sherpa_onnx_web:
+    path: ../../flutter/sherpa_onnx_web
   url_launcher: 6.2.6
   url_launcher_linux: 3.1.0
   audioplayers: ^5.0.0
-  media_kit: 
-  media_kit_libs_video: 
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/vits-melo-tts-zh_en/
-    - assets/vits-melo-tts-zh_en/dict/
+    - assets/vits-piper-en_US-amy-low/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/aav/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/art/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/azc/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/bat/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/bnt/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/ccs/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/cel/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/cus/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/dra/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/esx/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/gmq/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/gmw/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/grk/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/inc/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/ine/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/ira/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/iro/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/itc/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/jpx/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/map/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/miz/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/myn/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/poz/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/roa/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/sai/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/sem/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/sit/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/tai/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/trk/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/urj/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/zle/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/zls/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/lang/zlw/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/voices/
+    - assets/vits-piper-en_US-amy-low/espeak-ng-data/voices/!v/

@@ -43,7 +43,7 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
-  const dictDir = ''
+  const dictDir = '';
   const dictDirLen = Module.lengthBytesUTF8(dictDir) + 1;
 
   const n = modelLen + lexiconLen + tokensLen + dataDirLen + dictDirLen;
@@ -281,6 +281,11 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
+  // Support Dart camelCase: targetRms -> targetRMS
+  if ('targetRms' in config && !('targetRMS' in config)) {
+    config.targetRMS = config.targetRms;
+  }
+
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
@@ -502,6 +507,22 @@ function initSherpaOnnxOfflineTtsSupertonicModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
+  // Support short aliases (used by Dart web implementation).
+  const aliasMap = {
+    vits: 'offlineTtsVitsModelConfig',
+    matcha: 'offlineTtsMatchaModelConfig',
+    kokoro: 'offlineTtsKokoroModelConfig',
+    kitten: 'offlineTtsKittenModelConfig',
+    zipvoice: 'offlineTtsZipVoiceModelConfig',
+    pocket: 'offlineTtsPocketModelConfig',
+    supertonic: 'offlineTtsSupertonicModelConfig',
+  };
+  for (const [short, full] of Object.entries(aliasMap)) {
+    if (short in config && !(full in config)) {
+      config[full] = config[short];
+    }
+  }
+
   if (!('offlineTtsVitsModelConfig' in config)) {
     config.offlineTtsVitsModelConfig = {
       model: '',
@@ -665,6 +686,15 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineTtsConfig(config, Module) {
+  // Support short alias for model config (used by Dart web implementation).
+  if ('model' in config && !('offlineTtsModelConfig' in config)) {
+    config.offlineTtsModelConfig = config.model;
+  }
+  // Support typo in Dart config class.
+  if ('maxNumSenetences' in config && !('maxNumSentences' in config)) {
+    config.maxNumSentences = config.maxNumSenetences;
+  }
+
   const modelConfig =
       initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig, Module);
   const len = modelConfig.len + 4 * 4;
