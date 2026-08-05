@@ -297,7 +297,8 @@ class _TtsScreenState extends State<TtsScreen> {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
-            TtsControls(
+            Expanded(
+              child: TtsControls(
               maxSpeakerID: _maxSpeakerID,
               speed: _speed,
               onSpeedChanged: (v) => setState(() => _speed = v),
@@ -330,6 +331,7 @@ class _TtsScreenState extends State<TtsScreen> {
               isGenerating: _isGenerating ||
                   _manager.state == TtsState.initializing,
             ),
+            ),
             const SizedBox(height: 4),
             TextField(
               decoration: const InputDecoration(
@@ -339,7 +341,7 @@ class _TtsScreenState extends State<TtsScreen> {
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              maxLines: 2,
+              maxLines: 5,
               controller: _logController,
               readOnly: true,
             ),

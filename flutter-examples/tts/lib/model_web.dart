@@ -8,107 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import './model_config.dart';
 
-/// Flat config for the worker (matches the worker's expected format).
-class TtsModelConfig {
-  final String modelPath;
-  final String tokensPath;
-  final String dataDir;
-  final String lexicon;
-  final String ruleFsts;
-  final String ruleFars;
-  final String voices;
-  final bool isKitten;
-  final int numThreads;
-  final bool debug;
-  final String provider;
-  final double noiseScale;
-  final double noiseScaleW;
-  final double lengthScale;
-
-  const TtsModelConfig({
-    required this.modelPath,
-    required this.tokensPath,
-    this.dataDir = '',
-    this.lexicon = '',
-    this.ruleFsts = '',
-    this.ruleFars = '',
-    this.voices = '',
-    this.isKitten = false,
-    this.numThreads = 2,
-    this.debug = true,
-    this.provider = 'cpu',
-    this.noiseScale = 0.667,
-    this.noiseScaleW = 0.8,
-    this.lengthScale = 1.0,
-  });
-}
-
-/// Prepare model config from shared model selection.
-Future<TtsModelConfig> prepareModelConfig() async {
-  final cfg = selectedTtsConfig;
-  final m = cfg.model;
-
-  // Debug logging.
-  print('[model_web] prepareModelConfig()');
-  print('[model_web]   selectedModelIndex: $selectedModelIndex');
-  print('[model_web]   vits.model: ${m.vits.model}');
-  print('[model_web]   vits.tokens: ${m.vits.tokens}');
-  print('[model_web]   vits.dataDir: ${m.vits.dataDir}');
-  print('[model_web]   vits.lexicon: ${m.vits.lexicon}');
-  print('[model_web]   numThreads: ${m.numThreads}');
-  print('[model_web]   debug: ${m.debug}');
-  print('[model_web]   provider: ${m.provider}');
-  print('[model_web]   ruleFsts: ${cfg.ruleFsts}');
-  print('[model_web]   ruleFars: ${cfg.ruleFars}');
-
-  // Determine which model type is active and extract paths.
-  if (m.vits.model.isNotEmpty) {
-    return TtsModelConfig(
-      modelPath: m.vits.model,
-      tokensPath: m.vits.tokens,
-      dataDir: m.vits.dataDir,
-      lexicon: m.vits.lexicon,
-      numThreads: m.numThreads,
-      debug: m.debug,
-      provider: m.provider,
-      noiseScale: m.vits.noiseScale,
-      noiseScaleW: m.vits.noiseScaleW,
-      lengthScale: m.vits.lengthScale,
-    );
-  }
-  if (m.kokoro.model.isNotEmpty) {
-    return TtsModelConfig(
-      modelPath: m.kokoro.model,
-      tokensPath: m.kokoro.tokens,
-      dataDir: m.kokoro.dataDir,
-      lexicon: m.kokoro.lexicon,
-      voices: m.kokoro.voices,
-      numThreads: m.numThreads,
-      debug: m.debug,
-      provider: m.provider,
-    );
-  }
-  if (m.kitten.model.isNotEmpty) {
-    return TtsModelConfig(
-      modelPath: m.kitten.model,
-      tokensPath: m.kitten.tokens,
-      dataDir: m.kitten.dataDir,
-      voices: m.kitten.voices,
-      isKitten: true,
-      numThreads: m.numThreads,
-      debug: m.debug,
-      provider: m.provider,
-    );
-  }
-
-  // Default fallback.
-  return TtsModelConfig(
-    modelPath: m.vits.model,
-    tokensPath: m.vits.tokens,
-    numThreads: m.numThreads,
-    debug: m.debug,
-    provider: m.provider,
-  );
+/// Prepare model config for web (paths relative to WASM FS).
+Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
+  return selectedTtsConfig;
 }
 
 /// Load model file bytes from Flutter assets.
@@ -123,6 +25,10 @@ Future<Map<String, Uint8List>> loadModelFileBytes() async {
     cfg.model.vits.model, cfg.model.vits.tokens, cfg.model.vits.dataDir,
     cfg.model.kokoro.model, cfg.model.kokoro.voices, cfg.model.kokoro.tokens,
     cfg.model.kitten.model, cfg.model.kitten.voices, cfg.model.kitten.tokens,
+    cfg.model.matcha.acousticModel, cfg.model.matcha.vocoder,
+    cfg.model.pocket.lmFlow, cfg.model.pocket.lmMain,
+    cfg.model.supertonic.durationPredictor,
+    cfg.model.zipvoice.encoder, cfg.model.zipvoice.tokens,
   ]) {
     if (path.isNotEmpty) {
       modelDirs.add(path.split('/').first);
@@ -145,10 +51,99 @@ Future<Map<String, Uint8List>> loadModelFileBytes() async {
   return result;
 }
 
-/// Create a TTS instance from config (web — not used directly).
-/// On web, the worker creates the TTS instance.
-sherpa_onnx.OfflineTts createTtsFromConfig(TtsModelConfig cfg) {
-  throw UnsupportedError('createTtsFromConfig is not available on web');
+/// Convert OfflineTtsConfig to JS config for the worker.
+JSObject configToJs(sherpa_onnx.OfflineTtsConfig cfg) {
+  final jsConfig = JSObject();
+  final model = JSObject();
+  final m = cfg.model;
+
+  // Only include model types that are actually configured.
+  if (m.vits.model.isNotEmpty) {
+    final vits = JSObject();
+    vits['model'] = m.vits.model.toJS;
+    vits['tokens'] = m.vits.tokens.toJS;
+    if (m.vits.dataDir.isNotEmpty) vits['dataDir'] = m.vits.dataDir.toJS;
+    if (m.vits.lexicon.isNotEmpty) vits['lexicon'] = m.vits.lexicon.toJS;
+    vits['noiseScale'] = m.vits.noiseScale.toJS;
+    vits['noiseScaleW'] = m.vits.noiseScaleW.toJS;
+    vits['lengthScale'] = m.vits.lengthScale.toJS;
+    model['vits'] = vits;
+  }
+
+  if (m.kokoro.model.isNotEmpty) {
+    final kokoro = JSObject();
+    kokoro['model'] = m.kokoro.model.toJS;
+    kokoro['tokens'] = m.kokoro.tokens.toJS;
+    if (m.kokoro.dataDir.isNotEmpty) kokoro['dataDir'] = m.kokoro.dataDir.toJS;
+    if (m.kokoro.lexicon.isNotEmpty) kokoro['lexicon'] = m.kokoro.lexicon.toJS;
+    if (m.kokoro.voices.isNotEmpty) kokoro['voices'] = m.kokoro.voices.toJS;
+    model['kokoro'] = kokoro;
+  }
+
+  if (m.kitten.model.isNotEmpty) {
+    final kitten = JSObject();
+    kitten['model'] = m.kitten.model.toJS;
+    kitten['tokens'] = m.kitten.tokens.toJS;
+    if (m.kitten.dataDir.isNotEmpty) kitten['dataDir'] = m.kitten.dataDir.toJS;
+    if (m.kitten.voices.isNotEmpty) kitten['voices'] = m.kitten.voices.toJS;
+    model['kitten'] = kitten;
+  }
+
+  if (m.matcha.acousticModel.isNotEmpty) {
+    final matcha = JSObject();
+    matcha['acousticModel'] = m.matcha.acousticModel.toJS;
+    matcha['vocoder'] = m.matcha.vocoder.toJS;
+    matcha['tokens'] = m.matcha.tokens.toJS;
+    if (m.matcha.dataDir.isNotEmpty) matcha['dataDir'] = m.matcha.dataDir.toJS;
+    model['matcha'] = matcha;
+  }
+
+  if (m.pocket.lmFlow.isNotEmpty) {
+    final pocket = JSObject();
+    pocket['lmFlow'] = m.pocket.lmFlow.toJS;
+    pocket['lmMain'] = m.pocket.lmMain.toJS;
+    pocket['encoder'] = m.pocket.encoder.toJS;
+    pocket['decoder'] = m.pocket.decoder.toJS;
+    pocket['textConditioner'] = m.pocket.textConditioner.toJS;
+    pocket['vocabJson'] = m.pocket.vocabJson.toJS;
+    pocket['tokenScoresJson'] = m.pocket.tokenScoresJson.toJS;
+    model['pocket'] = pocket;
+  }
+
+  if (m.supertonic.durationPredictor.isNotEmpty) {
+    final supertonic = JSObject();
+    supertonic['durationPredictor'] = m.supertonic.durationPredictor.toJS;
+    supertonic['textEncoder'] = m.supertonic.textEncoder.toJS;
+    supertonic['vectorEstimator'] = m.supertonic.vectorEstimator.toJS;
+    supertonic['vocoder'] = m.supertonic.vocoder.toJS;
+    supertonic['ttsJson'] = m.supertonic.ttsJson.toJS;
+    supertonic['unicodeIndexer'] = m.supertonic.unicodeIndexer.toJS;
+    supertonic['voiceStyle'] = m.supertonic.voiceStyle.toJS;
+    model['supertonic'] = supertonic;
+  }
+
+  if (m.zipvoice.encoder.isNotEmpty) {
+    final zipvoice = JSObject();
+    zipvoice['tokens'] = m.zipvoice.tokens.toJS;
+    zipvoice['encoder'] = m.zipvoice.encoder.toJS;
+    zipvoice['decoder'] = m.zipvoice.decoder.toJS;
+    zipvoice['vocoder'] = m.zipvoice.vocoder.toJS;
+    if (m.zipvoice.dataDir.isNotEmpty) zipvoice['dataDir'] = m.zipvoice.dataDir.toJS;
+    if (m.zipvoice.lexicon.isNotEmpty) zipvoice['lexicon'] = m.zipvoice.lexicon.toJS;
+    model['zipvoice'] = zipvoice;
+  }
+
+  model['numThreads'] = m.numThreads.toJS;
+  model['debug'] = m.debug.toJS;
+  model['provider'] = m.provider.toJS;
+
+  jsConfig['model'] = model;
+  if (cfg.ruleFsts.isNotEmpty) jsConfig['ruleFsts'] = cfg.ruleFsts.toJS;
+  if (cfg.ruleFars.isNotEmpty) jsConfig['ruleFars'] = cfg.ruleFars.toJS;
+  jsConfig['maxNumSentences'] = cfg.maxNumSenetences.toJS;
+  jsConfig['silenceScale'] = cfg.silenceScale.toJS;
+
+  return jsConfig;
 }
 
 Future<Uint8List> _loadAsset(String assetPath) async {

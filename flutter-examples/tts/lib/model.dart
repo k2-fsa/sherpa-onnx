@@ -7,162 +7,106 @@ import 'package:path/path.dart' as p;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import './model_config.dart';
 
-/// Configuration for creating a TTS instance.
-/// All paths are resolved to absolute paths on disk.
-class TtsModelConfig {
-  final String modelPath;
-  final String tokensPath;
-  final String dataDir;
-  final String lexicon;
-  final String ruleFsts;
-  final String ruleFars;
-  final String voices;
-  final bool isKitten;
-  final int numThreads;
-  final bool debug;
-  final String provider;
-  final double noiseScale;
-  final double noiseScaleW;
-  final double lengthScale;
-
-  const TtsModelConfig({
-    required this.modelPath,
-    required this.tokensPath,
-    this.dataDir = '',
-    this.lexicon = '',
-    this.ruleFsts = '',
-    this.ruleFars = '',
-    this.voices = '',
-    this.isKitten = false,
-    this.numThreads = 2,
-    this.debug = true,
-    this.provider = 'cpu',
-    this.noiseScale = 0.667,
-    this.noiseScaleW = 0.8,
-    this.lengthScale = 1.0,
-  });
-}
-
 /// Resolve a relative path to absolute.
 String _abs(String base, String relative) =>
     relative.isEmpty ? '' : p.join(base, relative);
 
+/// Resolve comma-separated relative paths to absolute.
+String _absMulti(String base, String csv) =>
+    csv.isEmpty ? '' : csv.split(',').map((f) => _abs(base, f.trim())).join(',');
+
 /// Prepare model config: copy assets to disk and resolve all paths.
-Future<TtsModelConfig> prepareModelConfig() async {
+Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
   await _copyAllAssetFiles();
 
   final cfg = selectedTtsConfig;
-  final m = cfg.model;
   final d = (await getApplicationSupportDirectory()).path;
+  final m = cfg.model;
 
-  // Determine active model type and resolve paths.
-  if (m.vits.model.isNotEmpty) {
-    return TtsModelConfig(
-      modelPath: _abs(d, m.vits.model),
-      tokensPath: _abs(d, m.vits.tokens),
-      dataDir: _abs(d, m.vits.dataDir),
-      lexicon: m.vits.lexicon,
-      ruleFsts: cfg.ruleFsts,
-      ruleFars: cfg.ruleFars,
+  return sherpa_onnx.OfflineTtsConfig(
+    model: sherpa_onnx.OfflineTtsModelConfig(
+      vits: sherpa_onnx.OfflineTtsVitsModelConfig(
+        model: _abs(d, m.vits.model),
+        lexicon: _abs(d, m.vits.lexicon),
+        tokens: _abs(d, m.vits.tokens),
+        dataDir: _abs(d, m.vits.dataDir),
+        noiseScale: m.vits.noiseScale,
+        noiseScaleW: m.vits.noiseScaleW,
+        lengthScale: m.vits.lengthScale,
+      ),
+      kokoro: sherpa_onnx.OfflineTtsKokoroModelConfig(
+        model: _abs(d, m.kokoro.model),
+        voices: _abs(d, m.kokoro.voices),
+        tokens: _abs(d, m.kokoro.tokens),
+        dataDir: _abs(d, m.kokoro.dataDir),
+        lexicon: _absMulti(d, m.kokoro.lexicon),
+        lang: m.kokoro.lang,
+        lengthScale: m.kokoro.lengthScale,
+      ),
+      kitten: sherpa_onnx.OfflineTtsKittenModelConfig(
+        model: _abs(d, m.kitten.model),
+        voices: _abs(d, m.kitten.voices),
+        tokens: _abs(d, m.kitten.tokens),
+        dataDir: _abs(d, m.kitten.dataDir),
+        lengthScale: m.kitten.lengthScale,
+      ),
+      matcha: sherpa_onnx.OfflineTtsMatchaModelConfig(
+        acousticModel: _abs(d, m.matcha.acousticModel),
+        vocoder: _abs(d, m.matcha.vocoder),
+        tokens: _abs(d, m.matcha.tokens),
+        dataDir: _abs(d, m.matcha.dataDir),
+        lexicon: _abs(d, m.matcha.lexicon),
+        noiseScale: m.matcha.noiseScale,
+        lengthScale: m.matcha.lengthScale,
+      ),
+      pocket: sherpa_onnx.OfflineTtsPocketModelConfig(
+        lmFlow: _abs(d, m.pocket.lmFlow),
+        lmMain: _abs(d, m.pocket.lmMain),
+        encoder: _abs(d, m.pocket.encoder),
+        decoder: _abs(d, m.pocket.decoder),
+        textConditioner: _abs(d, m.pocket.textConditioner),
+        vocabJson: _abs(d, m.pocket.vocabJson),
+        tokenScoresJson: _abs(d, m.pocket.tokenScoresJson),
+        voiceEmbeddingCacheCapacity: m.pocket.voiceEmbeddingCacheCapacity,
+      ),
+      supertonic: sherpa_onnx.OfflineTtsSupertonicModelConfig(
+        durationPredictor: _abs(d, m.supertonic.durationPredictor),
+        textEncoder: _abs(d, m.supertonic.textEncoder),
+        vectorEstimator: _abs(d, m.supertonic.vectorEstimator),
+        vocoder: _abs(d, m.supertonic.vocoder),
+        ttsJson: _abs(d, m.supertonic.ttsJson),
+        unicodeIndexer: _abs(d, m.supertonic.unicodeIndexer),
+        voiceStyle: _abs(d, m.supertonic.voiceStyle),
+      ),
+      zipvoice: sherpa_onnx.OfflineTtsZipVoiceModelConfig(
+        tokens: _abs(d, m.zipvoice.tokens),
+        encoder: _abs(d, m.zipvoice.encoder),
+        decoder: _abs(d, m.zipvoice.decoder),
+        vocoder: _abs(d, m.zipvoice.vocoder),
+        dataDir: _abs(d, m.zipvoice.dataDir),
+        lexicon: _abs(d, m.zipvoice.lexicon),
+        featScale: m.zipvoice.featScale,
+        tShift: m.zipvoice.tShift,
+        targetRms: m.zipvoice.targetRms,
+        guidanceScale: m.zipvoice.guidanceScale,
+      ),
       numThreads: m.numThreads,
       debug: m.debug,
       provider: m.provider,
-      noiseScale: m.vits.noiseScale,
-      noiseScaleW: m.vits.noiseScaleW,
-      lengthScale: m.vits.lengthScale,
-    );
-  }
-  if (m.kokoro.model.isNotEmpty) {
-    return TtsModelConfig(
-      modelPath: _abs(d, m.kokoro.model),
-      tokensPath: _abs(d, m.kokoro.tokens),
-      dataDir: _abs(d, m.kokoro.dataDir),
-      lexicon: m.kokoro.lexicon,
-      voices: m.kokoro.voices,
-      ruleFsts: cfg.ruleFsts,
-      ruleFars: cfg.ruleFars,
-      numThreads: m.numThreads,
-      debug: m.debug,
-      provider: m.provider,
-    );
-  }
-  if (m.kitten.model.isNotEmpty) {
-    return TtsModelConfig(
-      modelPath: _abs(d, m.kitten.model),
-      tokensPath: _abs(d, m.kitten.tokens),
-      dataDir: _abs(d, m.kitten.dataDir),
-      voices: m.kitten.voices,
-      isKitten: true,
-      ruleFsts: cfg.ruleFsts,
-      ruleFars: cfg.ruleFars,
-      numThreads: m.numThreads,
-      debug: m.debug,
-      provider: m.provider,
-    );
-  }
-
-  // Default.
-  return TtsModelConfig(
-    modelPath: _abs(d, m.vits.model),
-    tokensPath: _abs(d, m.vits.tokens),
-    numThreads: m.numThreads,
-    debug: m.debug,
-    provider: m.provider,
+    ),
+    ruleFsts: _absMulti(d, cfg.ruleFsts),
+    ruleFars: _absMulti(d, cfg.ruleFars),
+    maxNumSenetences: cfg.maxNumSenetences,
   );
 }
 
 /// Create an OfflineTts from a resolved config.
-/// Can be called from any thread (no platform channels).
-sherpa_onnx.OfflineTts createTtsFromConfig(TtsModelConfig cfg) {
-  final vits = cfg.isKitten || cfg.voices.isNotEmpty
-      ? sherpa_onnx.OfflineTtsVitsModelConfig()
-      : sherpa_onnx.OfflineTtsVitsModelConfig(
-          model: cfg.modelPath,
-          lexicon: cfg.lexicon,
-          tokens: cfg.tokensPath,
-          dataDir: cfg.dataDir,
-        );
-
-  final kokoro = cfg.voices.isNotEmpty && !cfg.isKitten
-      ? sherpa_onnx.OfflineTtsKokoroModelConfig(
-          model: cfg.modelPath,
-          voices: cfg.voices,
-          tokens: cfg.tokensPath,
-          dataDir: cfg.dataDir,
-          lexicon: cfg.lexicon,
-        )
-      : sherpa_onnx.OfflineTtsKokoroModelConfig();
-
-  final kitten = cfg.isKitten
-      ? sherpa_onnx.OfflineTtsKittenModelConfig(
-          model: cfg.modelPath,
-          voices: cfg.voices,
-          tokens: cfg.tokensPath,
-          dataDir: cfg.dataDir,
-        )
-      : sherpa_onnx.OfflineTtsKittenModelConfig();
-
-  final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
-    vits: vits,
-    kokoro: kokoro,
-    kitten: kitten,
-    numThreads: cfg.numThreads,
-    debug: cfg.debug,
-    provider: cfg.provider,
-  );
-
-  final config = sherpa_onnx.OfflineTtsConfig(
-    model: modelConfig,
-    ruleFsts: cfg.ruleFsts,
-    ruleFars: cfg.ruleFars,
-    maxNumSenetences: 1,
-  );
-
-  return sherpa_onnx.OfflineTts(config);
+sherpa_onnx.OfflineTts createTtsFromConfig(sherpa_onnx.OfflineTtsConfig cfg) {
+  return sherpa_onnx.OfflineTts(cfg);
 }
 
-/// Copy all Flutter assets to the app support directory.
-/// Skips files that already exist with the correct size.
+// ── Asset copy helpers ───────────────────────────────────────────────────
+
 Future<void> _copyAllAssetFiles() async {
   final AssetManifest assetManifest =
       await AssetManifest.loadFromAssetBundle(rootBundle);
@@ -179,18 +123,14 @@ String _stripLeadingDirectory(String src, {int n = 1}) {
 
 Future<String> _copyAssetFile(String src, [String? dst]) async {
   final Directory directory = await getApplicationSupportDirectory();
-  if (dst == null) {
-    dst = p.basename(src);
-  }
+  if (dst == null) dst = p.basename(src);
   final target = p.join(directory.path, dst);
   bool exists = await File(target).exists();
-
   final data = await rootBundle.load(src);
   if (!exists || File(target).lengthSync() != data.lengthInBytes) {
     final List<int> bytes =
         data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     await (await File(target).create(recursive: true)).writeAsBytes(bytes);
   }
-
   return target;
 }

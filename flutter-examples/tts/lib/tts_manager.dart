@@ -270,11 +270,11 @@ class TtsManager {
     sherpa_onnx.OfflineTts? tts;
 
     receivePort.listen((message) {
-      if (message is m.TtsModelConfig) {
+      if (message is sherpa_onnx.OfflineTtsConfig) {
         try {
           // IMPORTANT: sherpa-onnx must be initialized in every isolate.
           sherpa_onnx.initBindings();
-          tts = m.createTtsFromConfig(message);
+          tts = sherpa_onnx.OfflineTts(message);
           mainSendPort.send(_Ready(tts!.numSpeakers));
         } catch (e) {
           mainSendPort.send(_WorkerError('$e'));
