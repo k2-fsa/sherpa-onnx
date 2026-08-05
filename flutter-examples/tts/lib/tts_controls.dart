@@ -54,21 +54,17 @@ class TtsControls extends StatelessWidget {
           value: speed,
           onChanged: onSpeedChanged,
         ),
-        Expanded(
-          child: TextField(
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Enter text to synthesize',
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            expands: true,
-            maxLines: null,
-            minLines: null,
-            textAlignVertical: TextAlignVertical.top,
-            controller: textController,
-            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+        TextField(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Enter text to synthesize',
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
+          maxLines: 8,
+          minLines: 4,
+          controller: textController,
+          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
         ),
         const SizedBox(height: 4),
         Row(

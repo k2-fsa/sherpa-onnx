@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart';
 import 'package:web/web.dart' as web;
 
@@ -38,13 +39,13 @@ class TtsWorker {
     final modelFiles = await m.loadModelFileBytes();
     final config = await m.prepareModelConfig();
 
-    print('[worker_web] init()');
-    print('[worker_web]   modelFiles: ${modelFiles.length} files');
-    print('[worker_web]   config: ${config.toString()}');
+    if (kDebugMode) {
+      print('[worker_web] config: ${config.toString()}');
+      print('[worker_web] modelFiles: ${modelFiles.length} files');
+    }
 
     // Create Web Worker.
     _worker = web.Worker('tts-worker.js'.toJS);
-    print('[worker_web] Worker created');
 
     // Listen for messages from the worker.
     _worker!.onmessage = (web.MessageEvent event) {
@@ -67,7 +68,6 @@ class TtsWorker {
     final jsConfig = m.configToJs(config);
 
     // Send init message with JS glue source, WASM binary, and model files.
-    print('[worker_web] Sending init message to worker...');
     final initMsg = JSObject();
     initMsg['type'] = 'init'.toJS;
     initMsg['jsGlueSource'] = jsGlueSource.toJS;
@@ -78,13 +78,14 @@ class TtsWorker {
   }
 
   /// Start audio generation.
-  void generate({required String text, int sid = 0, double speed = 1.0}) {
+  void generate({required String text, int sid = 0, double speed = 1.0, int generationId = 0}) {
     _pendingLabel = GeneratedAudioItem.makeLabel(text);
     final msg = JSObject();
     msg['type'] = 'generate'.toJS;
     msg['text'] = text.toJS;
     msg['sid'] = sid.toJS;
     msg['speed'] = speed.toJS;
+    msg['generationId'] = generationId.toJS;
     _worker?.postMessage(msg);
   }
 
@@ -137,10 +138,13 @@ class TtsWorker {
           (data.getProperty('progress'.toJS)! as JSNumber).toDartDouble;
       final sampleRate =
           (data.getProperty('sampleRate'.toJS)! as JSNumber).toDartInt;
+      final genId =
+          (data.getProperty('generationId'.toJS) as JSNumber?)?.toDartInt ?? 0;
       onChunk(AudioChunk(
         samples: Float32List.fromList(samples),
         progress: progress,
         sampleRate: sampleRate,
+        generationId: genId,
       ));
     } else if (type == 'done') {
       final samplesBuffer = _toByteBuffer(data.getProperty('samples'.toJS)!);
@@ -151,11 +155,14 @@ class TtsWorker {
           (data.getProperty('duration'.toJS)! as JSNumber).toDartDouble;
       final elapsed =
           (data.getProperty('elapsed'.toJS)! as JSNumber).toDartDouble;
+      final genId =
+          (data.getProperty('generationId'.toJS) as JSNumber?)?.toDartInt ?? 0;
 
       final wavBytes =
           web_audio.encodeWav(Float32List.fromList(samples), sampleRate);
       onDone(GeneratedAudioItem(
         label: _pendingLabel,
+        generationId: genId,
         wavBytes: wavBytes,
         duration: duration,
         elapsed: elapsed,

@@ -21,6 +21,9 @@ class GeneratedAudioItem {
   /// Sample rate of the audio.
   final int sampleRate;
 
+  /// Generation ID to distinguish from previous generations.
+  final int generationId;
+
   GeneratedAudioItem({
     required this.label,
     this.wavBytes,
@@ -28,6 +31,7 @@ class GeneratedAudioItem {
     required this.duration,
     required this.elapsed,
     required this.sampleRate,
+    this.generationId = 0,
   });
 
   /// Create a label from input text (first 30 characters).
@@ -49,9 +53,13 @@ class AudioChunk {
   /// Sample rate of the audio.
   final int sampleRate;
 
+  /// Generation ID to distinguish from previous generations.
+  final int generationId;
+
   AudioChunk({
     required this.samples,
     required this.progress,
     required this.sampleRate,
+    this.generationId = 0,
   });
 }

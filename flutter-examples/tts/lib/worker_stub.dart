@@ -15,7 +15,7 @@ class TtsWorker {
   });
 
   Future<void> init() async {}
-  void generate({required String text, int sid = 0, double speed = 1.0}) {}
+  void generate({required String text, int sid = 0, double speed = 1.0, int generationId = 0}) {}
   void cancel() {}
   void dispose() {}
 }

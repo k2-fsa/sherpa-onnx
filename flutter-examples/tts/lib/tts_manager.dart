@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import './generated_audio.dart';
@@ -25,7 +25,8 @@ class _GenerateRequest extends _ToWorker {
   final String text;
   final int sid;
   final double speed;
-  _GenerateRequest(this.text, this.sid, this.speed);
+  final int generationId;
+  _GenerateRequest(this.text, this.sid, this.speed, this.generationId);
 }
 
 class _DisposeRequest extends _ToWorker {}
@@ -44,14 +45,17 @@ class _GenerateDone extends _FromWorker {
   final int sampleRate;
   final double duration;
   final double elapsed;
-  _GenerateDone(this.samples, this.sampleRate, this.duration, this.elapsed);
+  final int generationId;
+  _GenerateDone(this.samples, this.sampleRate, this.duration, this.elapsed,
+      this.generationId);
 }
 
 class _AudioChunk extends _FromWorker {
   final Float32List samples;
   final double progress;
   final int sampleRate;
-  _AudioChunk(this.samples, this.progress, this.sampleRate);
+  final int generationId;
+  _AudioChunk(this.samples, this.progress, this.sampleRate, this.generationId);
 }
 
 class _WorkerError extends _FromWorker {
@@ -70,7 +74,13 @@ class _PendingGenerate {
   final String text;
   final int sid;
   final double speed;
-  _PendingGenerate({required this.text, required this.sid, required this.speed});
+  final int generationId;
+  _PendingGenerate({
+    required this.text,
+    required this.sid,
+    required this.speed,
+    this.generationId = 0,
+  });
 }
 
 // ── TtsManager ───────────────────────────────────────────────────────────
@@ -117,29 +127,45 @@ class TtsManager {
   }
 
   /// Generate audio from text.
-  int generate({required String text, int sid = 0, double speed = 1.0}) {
+  int generate({
+    required String text,
+    int sid = 0,
+    double speed = 1.0,
+    int generationId = 0,
+  }) {
     if (_state != TtsState.initialized) {
       _logController.add('Error: TTS not initialized');
       return -1;
     }
 
+    if (kDebugMode) {
+      print('[tts_manager] generate: text="$text", sid=$sid, speed=$speed');
+    }
+
     final id = _nextId++;
 
     if (kIsWeb) {
-      _worker?.generate(text: text, sid: sid, speed: speed);
+      _worker?.generate(text: text, sid: sid, speed: speed, generationId: generationId);
     } else {
-      _pending[id] = _PendingGenerate(text: text, sid: sid, speed: speed);
-      _sendPort!.send(_GenerateRequest(text, sid, speed));
+      _pending[id] = _PendingGenerate(
+        text: text, sid: sid, speed: speed, generationId: generationId,
+      );
+      _sendPort!.send(_GenerateRequest(text, sid, speed, generationId));
     }
 
     return id;
   }
 
   /// Cancel the current generation.
-  /// The TTS object stays alive for reuse.
+  /// On web: terminates the worker (TTS is recreated on next Generate).
+  /// On native: sends cancel signal to the isolate (TTS stays alive).
   void cancel() {
     if (kIsWeb) {
-      _worker?.cancel();
+      // The WASM call blocks the worker, so cancel messages are queued
+      // and never processed. Terminate the worker instead.
+      _worker?.dispose();
+      _worker = null;
+      _state = TtsState.uninitialized;
     } else {
       // Send cancel signal to the isolate.
       // The callback checks this and returns 0 to stop generation.
@@ -210,6 +236,10 @@ class TtsManager {
       _logController.add('Preparing model...');
       final config = await m.prepareModelConfig();
 
+      if (kDebugMode) {
+        print('[tts_manager] config: $config');
+      }
+
       // IMPORTANT: sherpa-onnx must be initialized in every isolate that calls
       // its Dart API. The main isolate needs initBindings() for writeWave(),
       // AudioPlayer, and other operations that happen after generation.
@@ -242,6 +272,7 @@ class TtsManager {
             samples: Float32List.fromList(message.samples),
             progress: message.progress,
             sampleRate: message.sampleRate,
+            generationId: message.generationId,
           ));
         } else if (message is _GenerateDone) {
           _handleGenerateDone(message);
@@ -310,6 +341,7 @@ class TtsManager {
       );
 
       final sampleRate = tts.sampleRate;
+      final genId = req.generationId;
       final audio = tts.generateWithConfig(
         text: req.text,
         config: genConfig,
@@ -319,6 +351,7 @@ class TtsManager {
             Float32List.fromList(samples),
             progress,
             sampleRate,
+            genId,
           ));
           return 1; // continue generation
         },
@@ -333,6 +366,7 @@ class TtsManager {
         audio.sampleRate,
         duration,
         elapsed,
+        genId,
       ));
     } catch (e) {
       mainSendPort.send(_WorkerError('$e'));
@@ -364,6 +398,7 @@ class TtsManager {
         duration: msg.duration,
         elapsed: msg.elapsed,
         sampleRate: msg.sampleRate,
+        generationId: msg.generationId,
       ));
     }
   }

@@ -39,7 +39,9 @@ class _TtsScreenState extends State<TtsScreen> {
   int _maxSpeakerID = 0;
   double _speed = 1.0;
   bool _isGenerating = false;
-  bool _isCancelled = false;
+  // On native: incremented on each Generate/Stop to ignore stale chunks.
+  // On web: unused (worker is terminated on Stop, no stale chunks).
+  int _generationId = 0;
 
   double _generationProgress = 0.0;
 
@@ -83,44 +85,55 @@ class _TtsScreenState extends State<TtsScreen> {
 
     // Stream audio chunks for real-time playback.
     _manager.chunkStream.listen((chunk) {
-      if (mounted && !_isCancelled) {
-        setState(() {
-          _generationProgress = chunk.progress;
-          _logController.text =
-              'Generating... ${(chunk.progress * 100).toStringAsFixed(0)}%';
-        });
+      if (!mounted) return;
+      // On native: ignore chunks from a previous generation.
+      if (!kIsWeb && chunk.generationId != _generationId) return;
 
-        if (kIsWeb) {
-          web_audio.playAudioChunk(chunk.samples, chunk.sampleRate);
-        } else {
-          _chunkBuffer.add(chunk.samples);
-          _chunkSampleRate = chunk.sampleRate;
+      setState(() {
+        _generationProgress = chunk.progress;
+        _logController.text =
+            'Generating... ${(chunk.progress * 100).toStringAsFixed(0)}%';
+      });
 
-          int totalSamples = 0;
-          for (final c in _chunkBuffer) {
-            totalSamples += c.length;
-          }
+      if (kIsWeb) {
+        web_audio.playAudioChunk(chunk.samples, chunk.sampleRate);
+      } else {
+        _chunkBuffer.add(chunk.samples);
+        _chunkSampleRate = chunk.sampleRate;
 
-          if (totalSamples >= _chunkThresholdSamples) {
-            _flushChunkBuffer();
-          }
+        int totalSamples = 0;
+        for (final c in _chunkBuffer) {
+          totalSamples += c.length;
+        }
+
+        if (totalSamples >= _chunkThresholdSamples) {
+          _flushChunkBuffer();
         }
       }
     });
 
     // When generation completes, flush remaining and add to list.
     _manager.audioStream.listen((item) {
-      if (mounted && !_isCancelled) {
-        _generationProgress = 0.0;
-        if (!kIsWeb && _chunkBuffer.isNotEmpty) {
-          _flushChunkBuffer();
-        }
-        _chunkBuffer.clear();
-        setState(() {
-          _isGenerating = false;
-          _audioItems.insert(0, item);
-        });
+      if (!mounted) return;
+      // On native: ignore results from a previous generation.
+      if (!kIsWeb && item.generationId != _generationId) return;
+
+      _generationProgress = 0.0;
+      if (!kIsWeb && _chunkBuffer.isNotEmpty) {
+        _flushChunkBuffer();
       }
+      _chunkBuffer.clear();
+
+      final rtf = item.elapsed / item.duration;
+      final status = 'Duration: ${item.duration.toStringAsFixed(2)}s\n'
+          'Elapsed: ${item.elapsed.toStringAsFixed(2)}s\n'
+          'RTF: ${item.elapsed.toStringAsFixed(2)} / ${item.duration.toStringAsFixed(2)} = ${rtf.toStringAsFixed(3)}';
+
+      setState(() {
+        _isGenerating = false;
+        _audioItems.insert(0, item);
+        _logController.text = status;
+      });
     });
   }
 
@@ -227,11 +240,13 @@ class _TtsScreenState extends State<TtsScreen> {
 
     final sid = int.tryParse(_sidController.text.trim()) ?? 0;
 
-    _isCancelled = false;
+    if (!kIsWeb) _generationId++;
     if (kIsWeb) {
       web_audio.resetChunkPlayback();
     }
-    final id = _manager.generate(text: text, sid: sid, speed: _speed);
+    final id = _manager.generate(
+      text: text, sid: sid, speed: _speed, generationId: _generationId,
+    );
     if (id < 0) {
       // Generate failed (not initialized).
       return;
@@ -297,8 +312,7 @@ class _TtsScreenState extends State<TtsScreen> {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
-            Expanded(
-              child: TtsControls(
+            TtsControls(
               maxSpeakerID: _maxSpeakerID,
               speed: _speed,
               onSpeedChanged: (v) => setState(() => _speed = v),
@@ -311,8 +325,10 @@ class _TtsScreenState extends State<TtsScreen> {
               },
               onStop: () {
                 // Stop generation.
+                // On native: increment generationId to invalidate stale chunks.
+                // On web: worker is terminated, no stale chunks possible.
                 _manager.cancel();
-                _isCancelled = true;
+                if (!kIsWeb) _generationId++;
                 // Stop playback and clear queues.
                 if (kIsWeb) {
                   web_audio.stopPlayback();
@@ -331,7 +347,6 @@ class _TtsScreenState extends State<TtsScreen> {
               isGenerating: _isGenerating ||
                   _manager.state == TtsState.initializing,
             ),
-            ),
             const SizedBox(height: 4),
             TextField(
               decoration: const InputDecoration(
@@ -341,7 +356,7 @@ class _TtsScreenState extends State<TtsScreen> {
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              maxLines: 5,
+              maxLines: 3,
               controller: _logController,
               readOnly: true,
             ),

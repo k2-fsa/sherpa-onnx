@@ -231,6 +231,7 @@ self.onmessage = async function(e) {
 
       // Set up callback for streaming chunks.
       _cancelled = false;
+      const genId = msg.generationId || 0;
       const callbackPtr = Module.addFunction((samplesPtr, n, progress, arg) => {
         if (_cancelled) return 0; // cancel generation
         const samples = new Float32Array(Module.HEAPF32.buffer, samplesPtr, n).slice();
@@ -239,6 +240,7 @@ self.onmessage = async function(e) {
           samples: samples.buffer,
           progress: progress,
           sampleRate: tts.sampleRate,
+          generationId: genId,
         }, [samples.buffer]);
         return 1; // continue
       }, 'iiifi');
@@ -280,6 +282,7 @@ self.onmessage = async function(e) {
         sampleRate: sampleRateOut,
         duration: duration,
         elapsed: elapsed,
+        generationId: genId,
       }, [samples.buffer]);
     } catch (e) {
       self.postMessage({ type: 'error', message: e.message || String(e) });
