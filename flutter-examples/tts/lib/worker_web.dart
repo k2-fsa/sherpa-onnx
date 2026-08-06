@@ -67,7 +67,7 @@ class TtsWorker {
     // Convert OfflineTtsConfig to JS format for the worker.
     final jsConfig = m.configToJs(config);
 
-    // Send init message with JS glue source, WASM binary, and model files.
+    // Send init message with JS glue, WASM binary, model files, and config.
     final initMsg = JSObject();
     initMsg['type'] = 'init'.toJS;
     initMsg['jsGlueSource'] = jsGlueSource.toJS;
