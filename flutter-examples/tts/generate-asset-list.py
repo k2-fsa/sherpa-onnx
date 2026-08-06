@@ -16,14 +16,13 @@ def main():
     space = "    "
     entries = []
     patterns_to_skip = ["1.5x", "2.x", "3.x", "4.x"]
+    has_root_files = False
     for root, dirs, files in os.walk(target):
-        # Add individual files in the assets/ root directory.
+        # If there are files directly in assets/, add the directory itself.
         if root == target:
-            for f in sorted(files):
-                if f.startswith('.'):
-                    continue
-                path = (root + f).lstrip('./')
-                entries.append("{space}- {path}".format(space=space, path=path))
+            has_root_files = any(not f.startswith('.') for f in files)
+            if has_root_files:
+                entries.append("{space}- assets/".format(space=space))
         for d in dirs:
             path = os.path.join(root, d).replace("\\", "/")
             if os.listdir(path):
@@ -32,8 +31,9 @@ def main():
                     continue
                 entries.append("{space}- {path}/".format(space=space, path=path))
 
-    assert entries, "The entries list is empty."
-
+    if not entries:
+        print("Warning: no assets found in ./assets/. "
+              "Add model files and run this script again.")
     entries = sorted(entries)
 
     loc_of_flutter = -1

@@ -5,8 +5,33 @@
 import 'package:sherpa_onnx/sherpa_onnx.dart';
 
 // Change the index below to select a different model.
-/// Select which TTS model to use (0-8).
-const int selectedModelIndex = 8;
+/// Select which TTS model to use (0-10).
+const int selectedModelIndex = 0;
+
+/// Model directory name, extracted from the first non-empty model path.
+final String selectedModelDir = () {
+  final m = selectedTtsConfig.model;
+  final path = m.vits.model.isNotEmpty
+      ? m.vits.model
+      : m.matcha.acousticModel.isNotEmpty
+          ? m.matcha.acousticModel
+          : m.kokoro.model.isNotEmpty
+              ? m.kokoro.model
+              : m.kitten.model.isNotEmpty
+                  ? m.kitten.model
+                  : m.pocket.lmFlow.isNotEmpty
+                      ? m.pocket.lmFlow
+                      : m.supertonic.durationPredictor.isNotEmpty
+                          ? m.supertonic.durationPredictor
+                          : m.zipvoice.encoder.isNotEmpty
+                              ? m.zipvoice.encoder
+                              : '';
+  return path.contains('/') ? path.split('/').first : path;
+}();
+
+/// Download URL for the selected model.
+final String selectedModelUrl =
+    'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$selectedModelDir.tar.bz2';
 
 /// Available TTS models.
 final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
@@ -53,9 +78,24 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
     maxNumSenetences: 1,
   ),
 
+  // ── VITS (English, inflect-nano-v2) ──────────────────────────────────
+  // https://k2-fsa.github.io/sherpa/onnx/tts/all/English/vits-inflect-en-nano-v2.html
+  3 => OfflineTtsConfig(
+    model: OfflineTtsModelConfig(
+      vits: OfflineTtsVitsModelConfig(
+        model: 'vits-inflect-en-nano-v2/model.onnx',
+        tokens: 'vits-inflect-en-nano-v2/tokens.txt',
+        dataDir: 'vits-inflect-en-nano-v2/espeak-ng-data',
+      ),
+      numThreads: 2,
+      debug: true,
+    ),
+    maxNumSenetences: 1,
+  ),
+
   // ── Kokoro (English) ──────────────────────────────────────────────────
   // warning: It is super slow with single threaded wasm
-  3 => OfflineTtsConfig(
+  4 => OfflineTtsConfig(
     model: OfflineTtsModelConfig(
       kokoro: OfflineTtsKokoroModelConfig(
         model: 'kokoro-int8-en-v0_19/model.int8.onnx',
@@ -71,7 +111,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
 
   // ── Kokoro (Chinese + English) ────────────────────────────────────────
   // warning: It is super slow with single threaded wasm
-  4 => OfflineTtsConfig(
+  5 => OfflineTtsConfig(
     model: OfflineTtsModelConfig(
       kokoro: OfflineTtsKokoroModelConfig(
         model: 'kokoro-multi-lang-v1_0/model.onnx',
@@ -87,7 +127,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
   ),
 
   // ── MatchaTTS (English) ───────────────────────────────────────────────
-  5 => OfflineTtsConfig(
+  6 => OfflineTtsConfig(
     model: OfflineTtsModelConfig(
       matcha: OfflineTtsMatchaModelConfig(
         acousticModel: 'matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
@@ -95,7 +135,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
         tokens: 'matcha-icefall-en_US-ljspeech/tokens.txt',
         dataDir: 'matcha-icefall-en_US-ljspeech/espeak-ng-data',
       ),
-      numThreads: 1,
+      numThreads: 2,
       debug: true,
     ),
     maxNumSenetences: 1,
@@ -103,7 +143,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
 
   // ── MatchaTTS (Chinese + English) ────────────────────────────────────
   // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/matcha-icefall-zh-en.html
-  6 => OfflineTtsConfig(
+  7 => OfflineTtsConfig(
     model: OfflineTtsModelConfig(
       matcha: OfflineTtsMatchaModelConfig(
         acousticModel: 'matcha-icefall-zh-en/model-steps-3.onnx',
@@ -112,7 +152,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
         tokens: 'matcha-icefall-zh-en/tokens.txt',
         dataDir: 'matcha-icefall-zh-en/espeak-ng-data',
       ),
-      numThreads: 1,
+      numThreads: 2,
       debug: true,
     ),
     ruleFsts: 'matcha-icefall-zh-en/phone-zh.fst,matcha-icefall-zh-en/date-zh.fst,matcha-icefall-zh-en/number-zh.fst',
@@ -120,7 +160,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
   ),
 
   // ── KittenTTS (English) ───────────────────────────────────────────────
-  7 => OfflineTtsConfig(
+  8 => OfflineTtsConfig(
     model: OfflineTtsModelConfig(
       kitten: OfflineTtsKittenModelConfig(
         model: 'kitten-nano-en-v0_1-fp16/model.fp16.onnx',
@@ -135,7 +175,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
   ),
 
   // ── Pocket TTS (English) ──────────────────────────────────────────────
-  8 => OfflineTtsConfig(
+  9 => OfflineTtsConfig(
     model: OfflineTtsModelConfig(
       pocket: OfflineTtsPocketModelConfig(
         lmFlow: 'sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx',
@@ -153,7 +193,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
   ),
 
   // ── Supertonic TTS (English) ──────────────────────────────────────────
-  9 => OfflineTtsConfig(
+  10 => OfflineTtsConfig(
     model: OfflineTtsModelConfig(
       supertonic: OfflineTtsSupertonicModelConfig(
         durationPredictor: 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx',
@@ -169,5 +209,5 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
     ),
   ),
 
-  _ => throw ArgumentError('Invalid selectedModelIndex: $selectedModelIndex. Must be 0-9.'),
+  _ => throw ArgumentError('Invalid selectedModelIndex: $selectedModelIndex. Must be 0-10.'),
 };

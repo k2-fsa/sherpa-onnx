@@ -1,4 +1,67 @@
 // Copyright (c)  2026  Xiaomi Corporation
+//
+// TTS manager — handles TTS lifecycle for both native and web.
+//
+// On native: communicates with a background isolate via SendPort/ReceivePort.
+// On web: delegates to TtsWorker which communicates with a Web Worker.
+//
+// See worker_web.dart and tts-worker.js for the web message protocol.
+//
+// ── Native Isolate Message Protocol ────────────────────────────────────────
+//
+// The main isolate and background isolate communicate over a pair of
+// SendPort/ReceivePort. The very first message from the background isolate
+// is its SendPort (bidirectional setup). After that, messages flow as typed
+// Dart objects.
+//
+// Main → Background:
+//
+//   OfflineTtsConfig   — initial config; triggers TTS creation.
+//                        The background isolate calls sherpa_onnx.OfflineTts(config)
+//                        and replies with _Ready or _WorkerError.
+//
+//   _GenerateRequest   — synthesize speech.
+//     .text              String       — text to synthesize
+//     .sid               int          — speaker ID
+//     .speed             double       — speech rate
+//     .generationId      int          — id for matching chunks/result
+//     .referenceAudio    Float32List? — optional PCM samples for voice cloning
+//     .referenceSampleRate int        — sample rate of reference audio
+//     .numSteps          int          — diffusion steps (Pocket TTS)
+//
+//   _DisposeRequest    — free the OfflineTts and close the isolate.
+//
+// Background → Main:
+//
+//   SendPort         — first message; the main isolate uses this to send back.
+//   SendPort         — second+ messages; per-generation cancel port.
+//                      Sent each time _handleGenerate starts.
+//                      Main isolate sends `true` on this port to cancel.
+//
+//   _Ready           — TTS created successfully.
+//     .numSpeakers      int
+//
+//   _AudioChunk      — streaming audio chunk (sent during generation).
+//     .samples          Float32List  — PCM samples
+//     .progress         double       — 0.0–1.0
+//     .sampleRate       int
+//     .generationId     int
+//
+//   _GenerateDone    — generation complete.
+//     .samples          Float32List  — full PCM audio
+//     .sampleRate       int
+//     .duration         double       — audio length in seconds
+//     .elapsed          double       — wall-clock time in seconds
+//     .generationId     int
+//
+//   _WorkerLog       — debug/info message.
+//     .message          String
+//
+//   _WorkerError     — error message.
+//     .message          String
+//
+// ───────────────────────────────────────────────────────────────────────────
+
 import 'dart:async';
 import 'dart:isolate';
 import 'dart:typed_data';

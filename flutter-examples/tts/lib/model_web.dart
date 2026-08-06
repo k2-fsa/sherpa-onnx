@@ -1,5 +1,42 @@
 // Copyright (c)  2026  Xiaomi Corporation
 // Web-specific TTS model loading.
+//
+// This file provides three utilities for the Flutter web TTS demo:
+//
+// 1. [prepareModelConfig] — returns the selected OfflineTtsConfig (paths are
+//    relative to the WASM virtual filesystem, not absolute).
+//
+// 2. [loadModelFileBytes] — loads all model-related files from Flutter assets
+//    and returns a map of { relativePath: bytes } to be written into the WASM FS.
+//
+// 3. [configToJs] — converts an OfflineTtsConfig to a JSObject (via JSON
+//    round-trip) for passing to the Web Worker.
+//
+// Message flow (Dart → Worker):
+//
+//   worker_web.dart sends an 'init' message with:
+//     {
+//       type: 'init',
+//       jsGlueSource:  String,    // sherpa-onnx-wasm-web.js source
+//       ttsJsSource:   String,    // sherpa-onnx-tts.js source
+//       wasmBinary:    ArrayBuffer, // compiled WASM module
+//       modelFiles:    Object,    // { "path/in/fs": ArrayBuffer, ... }
+//       config:        Object,    // OfflineTtsConfig as JSON (via configToJs)
+//     }
+//
+//   The config JSON uses the keys from OfflineTtsConfig.toJson():
+//     {
+//       "model": {
+//         "vits": { "model": "...", "lexicon": "...", ... },
+//         "matcha": { ... }, "kokoro": { ... }, ...
+//         "numThreads": 2, "debug": true, "provider": "cpu"
+//       },
+//       "ruleFsts": "...", "ruleFars": "...",
+//       "maxNumSentences": 1, "silenceScale": 0.2
+//     }
+//
+// See tts-worker.js for the Worker → Dart message formats.
+
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';

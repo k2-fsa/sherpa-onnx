@@ -47,7 +47,7 @@ class _TtsScreenState extends State<TtsScreen> {
   bool _isGenerating = false;
 
   // Reference audio for Pocket TTS voice cloning.
-  static const bool _isPocketTts = selectedModelIndex == 8;
+  static const bool _isPocketTts = selectedModelIndex == 9;
   Float32List? _referenceAudio;
   int _referenceSampleRate = 0;
   String? _referenceAudioName;
