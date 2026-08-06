@@ -635,6 +635,14 @@ jobs:
         run: |
           ./build-flutter-web-wasm.sh
 
+      - name: Use local sherpa_onnx_web
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
       - name: Build Flutter web app
         shell: bash
         run: |
