@@ -12,7 +12,7 @@ documentation: https://k2-fsa.github.io/sherpa/onnx/
 homepage: https://github.com/k2-fsa/sherpa-onnx
 
 environment:
-  sdk: ">=3.1.0 <4.0.0"
+  sdk: ">=3.4.0 <4.0.0"
   flutter: ">=2.8.1"
 
 dependencies:

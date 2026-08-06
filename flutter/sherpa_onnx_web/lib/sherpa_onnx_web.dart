@@ -94,7 +94,7 @@ class SherpaOnnxWeb {
     }
 
     // 8. Set Module as global so dart:js_interop code can access it.
-    globalContext['Module'] = result!;
+    globalContext['Module'] = result;
     _log('WASM module initialized');
 
     _initialized = true;
