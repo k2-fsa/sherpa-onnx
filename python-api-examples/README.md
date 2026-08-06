@@ -21,9 +21,10 @@
 
 - [online-speech-enhancement-dpdfnet.py](./online-speech-enhancement-dpdfnet.py)
   It shows how to use the online speech denoiser API with DPDFNet.
-  models. Use 16 kHz DPDFNet models such as `dpdfnet_baseline.onnx`,
+  Use 16 kHz DPDFNet models such as `dpdfnet_baseline.onnx`,
   `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR and
-  `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
+  `dpdfnet2_8khz.onnx` or `dpdfnet8_8khz.onnx` for 8 kHz enhancement.
+  Use `dpdfnet2_48khz_hr.onnx` or `dpdfnet8_48khz_hr.onnx` for 48 kHz output.
 
 - [pocket-tts.py](./pocket-tts.py) It shows how to use PocketTTS with the
   `GenerationConfig` API.

@@ -24,6 +24,7 @@ func run() {
     model: sherpaOnnxOfflineSpeechDenoiserModelConfig(
       dpdfnet: sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: model))
   )
+  config.model.dpdfnet.attenuation_limit_db = 12.0
 
   let sd = SherpaOnnxOfflineSpeechDenoiserWrapper(config: &config)
 

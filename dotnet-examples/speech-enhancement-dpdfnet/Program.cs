@@ -31,6 +31,7 @@ class OfflineSpeechEnhancementDemo
     var model = "./dpdfnet_baseline.onnx";
     var config = new OfflineSpeechDenoiserConfig();
     config.Model.Dpdfnet.Model = model;
+    config.Model.Dpdfnet.AttenuationLimitDb = 12.0f;
     config.Model.Debug = 1;
     config.Model.NumThreads = 1;
     var sd = new OfflineSpeechDenoiser(config);

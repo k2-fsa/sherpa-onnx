@@ -4098,6 +4098,15 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig {
 typedef struct SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig {
   /** Model filename. */
   const char *model;
+  /**
+   * Offline attenuation limit in dB.
+   *
+   * Values greater than 0 limit suppression by blending aligned noisy spectra
+   * into the enhanced spectra with a noisy-signal weight of
+   * `10^(-limit_db / 20)`. The maximum finite value is 100. Set to 0 or
+   * infinity to disable the limit.
+   */
+  float attenuation_limit_db;
 } SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
 
 /**

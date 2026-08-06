@@ -30,6 +30,7 @@ begin
 
   Initialize(Config);
   Config.Model.DpdfNet.Model := './dpdfnet_baseline.onnx';
+  Config.Model.DpdfNet.AttenuationLimitDb := 12.0;
   Config.Model.NumThreads:= 1;
   Config.Model.Debug:= True;
   Config.Model.Provider:= 'cpu';

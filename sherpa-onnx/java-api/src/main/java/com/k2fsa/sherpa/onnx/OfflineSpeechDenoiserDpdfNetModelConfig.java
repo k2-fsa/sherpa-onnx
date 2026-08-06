@@ -3,9 +3,11 @@ package com.k2fsa.sherpa.onnx;
 
 public class OfflineSpeechDenoiserDpdfNetModelConfig {
     private final String model;
+    private final float attenuationLimitDb;
 
     private OfflineSpeechDenoiserDpdfNetModelConfig(Builder builder) {
         this.model = builder.model;
+        this.attenuationLimitDb = builder.attenuationLimitDb;
     }
 
     public static Builder builder() {
@@ -16,8 +18,13 @@ public class OfflineSpeechDenoiserDpdfNetModelConfig {
         return model;
     }
 
+    public float getAttenuationLimitDb() {
+        return attenuationLimitDb;
+    }
+
     public static class Builder {
         private String model = "";
+        private float attenuationLimitDb = 0.0f;
 
         public OfflineSpeechDenoiserDpdfNetModelConfig build() {
             return new OfflineSpeechDenoiserDpdfNetModelConfig(this);
@@ -25,6 +32,11 @@ public class OfflineSpeechDenoiserDpdfNetModelConfig {
 
         public Builder setModel(String model) {
             this.model = model;
+            return this;
+        }
+
+        public Builder setAttenuationLimitDb(float value) {
+            this.attenuationLimitDb = value;
             return this;
         }
     }

@@ -8,6 +8,9 @@ final class SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig extends Struct {
 
 final class SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig extends Struct {
   external Pointer<Utf8> model;
+
+  @Float()
+  external double attenuationLimitDb;
 }
 
 final class SherpaOnnxOfflineSpeechDenoiserModelConfig extends Struct {

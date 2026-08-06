@@ -12,6 +12,9 @@ namespace sherpa_onnx {
 
 struct OfflineSpeechDenoiserDpdfNetModelConfig {
   std::string model;
+  // Offline attenuation limit in dB. A value of 0 disables it.
+  float attenuation_limit_db = 0.0f;
+
   OfflineSpeechDenoiserDpdfNetModelConfig() = default;
 
   void Register(ParseOptions *po);

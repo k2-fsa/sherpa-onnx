@@ -14,7 +14,8 @@ fun createOfflineSpeechDenoiserDpdfNet(): OfflineSpeechDenoiser {
   val config = OfflineSpeechDenoiserConfig(
       model = OfflineSpeechDenoiserModelConfig(
         dpdfnet = OfflineSpeechDenoiserDpdfNetModelConfig(
-          model = "./dpdfnet_baseline.onnx"
+          model = "./dpdfnet_baseline.onnx",
+          attenuationLimitDb = 12.0f,
         ),
         provider = "cpu",
         numThreads = 1,

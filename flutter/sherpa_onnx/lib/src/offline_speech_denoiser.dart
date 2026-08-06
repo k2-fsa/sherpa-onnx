@@ -38,25 +38,31 @@ class OfflineSpeechDenoiserGtcrnModelConfig {
 class OfflineSpeechDenoiserDpdfNetModelConfig {
   const OfflineSpeechDenoiserDpdfNetModelConfig({
     this.model = '',
+    this.attenuationLimitDb = 0.0,
   });
 
   factory OfflineSpeechDenoiserDpdfNetModelConfig.fromJson(
       Map<String, dynamic> json) {
     return OfflineSpeechDenoiserDpdfNetModelConfig(
       model: json['model'] as String? ?? '',
+      attenuationLimitDb:
+          (json['attenuation_limit_db'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
   @override
   String toString() {
-    return 'OfflineSpeechDenoiserDpdfNetModelConfig(model: $model)';
+    return 'OfflineSpeechDenoiserDpdfNetModelConfig(model: $model, '
+        'attenuationLimitDb: $attenuationLimitDb)';
   }
 
   Map<String, dynamic> toJson() => {
         'model': model,
+        'attenuation_limit_db': attenuationLimitDb,
       };
 
   final String model;
+  final double attenuationLimitDb;
 }
 
 /// Aggregate model configuration for [OfflineSpeechDenoiser].
@@ -160,6 +166,8 @@ class OfflineSpeechDenoiser {
     final c = calloc<SherpaOnnxOfflineSpeechDenoiserConfig>();
     c.ref.model.gtcrn.model = config.model.gtcrn.model.toNativeUtf8();
     c.ref.model.dpdfnet.model = config.model.dpdfnet.model.toNativeUtf8();
+    c.ref.model.dpdfnet.attenuationLimitDb =
+        config.model.dpdfnet.attenuationLimitDb;
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;

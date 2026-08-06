@@ -14,6 +14,7 @@
 
 #include "kaldi-native-fbank/csrc/istft.h"
 #include "kaldi-native-fbank/csrc/stft.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser-dpdfnet-model.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser-impl.h"
@@ -26,12 +27,14 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
  public:
   explicit OfflineSpeechDenoiserDpdfNetImpl(
       const OfflineSpeechDenoiserConfig &config)
-      : model_(config.model) {}
+      : model_(config.model),
+        attenuation_limit_db_(config.model.dpdfnet.attenuation_limit_db) {}
 
   template <typename Manager>
   OfflineSpeechDenoiserDpdfNetImpl(Manager *mgr,
                                    const OfflineSpeechDenoiserConfig &config)
-      : model_(mgr, config.model) {}
+      : model_(mgr, config.model),
+        attenuation_limit_db_(config.model.dpdfnet.attenuation_limit_db) {}
 
   DenoisedAudio Run(const float *samples, int32_t n,
                     int32_t sample_rate) const override {
@@ -78,6 +81,11 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
                                        frame.second.end());
     }
 
+    if (!ApplyAttenuationLimit(stft_result, attenuation_limit_db_,
+                               &enhanced_stft_result)) {
+      return {};
+    }
+
     knf::IStft istft(stft_config);
 
     DenoisedAudio denoised_audio;
@@ -92,6 +100,57 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
   }
 
  private:
+  static bool ApplyAttenuationLimit(const knf::StftResult &noisy,
+                                    float attenuation_limit_db,
+                                    knf::StftResult *enhanced) {
+    if (attenuation_limit_db <= 0.0f || std::isinf(attenuation_limit_db)) {
+      return true;
+    }
+
+    if (noisy.num_frames != enhanced->num_frames ||
+        noisy.real.size() != enhanced->real.size() ||
+        noisy.imag.size() != enhanced->imag.size()) {
+      SHERPA_ONNX_LOGE(
+          "Cannot apply the DPDFNet attenuation limit because noisy and "
+          "enhanced STFT shapes differ");
+      return false;
+    }
+
+    constexpr int32_t kNoisyFrameOffset = 4;
+    const int32_t num_frames = noisy.num_frames;
+    if (num_frames <= 0) {
+      return true;
+    }
+
+    const int32_t num_bins =
+        static_cast<int32_t>(noisy.real.size()) / num_frames;
+    const float alpha = std::pow(10.0f, -attenuation_limit_db / 20.0f);
+    const float enhanced_scale = 1.0f - alpha;
+
+    for (int32_t frame = 0; frame < num_frames; ++frame) {
+      const int32_t enhanced_offset = frame * num_bins;
+      const int32_t noisy_frame = frame - kNoisyFrameOffset;
+
+      for (int32_t bin = 0; bin < num_bins; ++bin) {
+        float noisy_real = 0.0f;
+        float noisy_imag = 0.0f;
+        if (noisy_frame >= 0) {
+          const int32_t noisy_offset = noisy_frame * num_bins + bin;
+          noisy_real = noisy.real[noisy_offset];
+          noisy_imag = noisy.imag[noisy_offset];
+        }
+
+        const int32_t i = enhanced_offset + bin;
+        enhanced->real[i] =
+            alpha * noisy_real + enhanced_scale * enhanced->real[i];
+        enhanced->imag[i] =
+            alpha * noisy_imag + enhanced_scale * enhanced->imag[i];
+      }
+    }
+
+    return true;
+  }
+
   static std::vector<float> ShiftWaveform(std::vector<float> samples,
                                           int32_t shift) {
     if (samples.size() > static_cast<size_t>(shift)) {
@@ -163,6 +222,7 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
 
  private:
   OfflineSpeechDenoiserDpdfNetModel model_;
+  float attenuation_limit_db_ = 0.0f;
 };
 
 }  // namespace sherpa_onnx
