@@ -256,6 +256,7 @@ class TtsManager {
 
   /// Dispose the TTS engine and release resources.
   void dispose() {
+    _state = TtsState.uninitialized;
     if (kIsWeb) {
       _worker?.dispose();
       _worker = null;
@@ -356,6 +357,7 @@ class TtsManager {
         } else if (message is _WorkerLog) {
           _logController.add(message.message);
         } else if (message is _WorkerError) {
+          _state = TtsState.uninitialized;
           _logController.add('Error: ${message.message}');
           if (!readyCompleter.isCompleted) {
             readyCompleter.completeError(message.message);

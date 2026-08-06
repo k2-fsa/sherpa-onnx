@@ -216,8 +216,8 @@ class OfflineFunAsrNanoModelConfig {
       llm: json['llm'] as String? ?? '',
       embedding: json['embedding'] as String? ?? '',
       tokenizer: json['tokenizer'] as String? ?? '',
-      systemPrompt: json['systemPrompt'] as String? ?? '',
-      userPrompt: json['userPrompt'] as String? ?? '',
+      systemPrompt: json['systemPrompt'] as String? ?? 'You are a helpful assistant.',
+      userPrompt: json['userPrompt'] as String? ?? '语音转写：',
       maxNewTokens: json['maxNewTokens'] as int? ?? 512,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 1e-6,
       topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
@@ -836,7 +836,9 @@ class OfflineRecognizerConfig {
       ruleFsts: json['ruleFsts'] as String? ?? '',
       ruleFars: json['ruleFars'] as String? ?? '',
       blankPenalty: (json['blankPenalty'] as num?)?.toDouble() ?? 0.0,
-      hr: HomophoneReplacerConfig.fromJson(json['hr'] as Map<String, dynamic>),
+      hr: json['hr'] != null
+          ? HomophoneReplacerConfig.fromJson(json['hr'] as Map<String, dynamic>)
+          : const HomophoneReplacerConfig(),
     );
   }
 

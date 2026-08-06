@@ -60,7 +60,7 @@ class AudioList extends StatelessWidget {
                       ),
                       Text(
                         '${item.duration.toStringAsPrecision(3)}s | '
-                        'RTF ${(item.elapsed / item.duration).toStringAsPrecision(3)}',
+                        'RTF ${item.duration > 0 ? (item.elapsed / item.duration).toStringAsPrecision(3) : '-'}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

@@ -23,11 +23,12 @@ void _evalJs(String source) {
 /// Load a JS asset and return its source code.
 Future<String> _loadAsset(String assetPath) async {
   final data = await rootBundle.load(assetPath);
-  return utf8.decode(data.buffer.asUint8List());
+  return utf8.decode(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
 }
 
 class SherpaOnnxWeb {
   static bool _initialized = false;
+  static Completer<void>? _loadingCompleter;
 
   static void registerWith(Registrar registrar) {}
 
@@ -35,8 +36,18 @@ class SherpaOnnxWeb {
   ///
   /// This must be called once before using any sherpa-onnx API on web.
   /// Typically called via `initBindingsAsync()` from the sherpa_onnx package.
+  /// Safe to call concurrently — only the first call performs initialization.
   static Future<void> loadWasm() async {
     if (_initialized) return;
+
+    // If another call is already in progress, wait for it.
+    if (_loadingCompleter != null) {
+      return _loadingCompleter!.future;
+    }
+
+    _loadingCompleter = Completer<void>();
+
+    try {
 
     const prefix = 'packages/sherpa_onnx_web/assets';
 
@@ -57,7 +68,7 @@ class SherpaOnnxWeb {
     _log('Loading WASM binary...');
     final wasmData =
         await rootBundle.load('$prefix/sherpa-onnx-wasm-web.wasm');
-    final wasmBytes = wasmData.buffer.asUint8List();
+    final wasmBytes = wasmData.buffer.asUint8List(wasmData.offsetInBytes, wasmData.lengthInBytes);
 
     // 3. Evaluate JS glue code (defines SherpaOnnx factory).
     _log('Evaluating JS...');
@@ -98,5 +109,11 @@ class SherpaOnnxWeb {
     _log('WASM module initialized');
 
     _initialized = true;
+    _loadingCompleter!.complete();
+    } catch (e) {
+      _loadingCompleter!.completeError(e);
+      _loadingCompleter = null;
+      rethrow;
+    }
   }
 }

@@ -401,16 +401,21 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          rm -f pubspec.yaml.bak
-
           flutter pub get
           flutter build web
 
           ls -lh build/web/
 
+      - name: Zip web app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/
+          mv web hello-world-pkg-web
+          zip -r hello-world-pkg-web.zip hello-world-pkg-web/
+          ls -lh hello-world-pkg-web.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hello-world-pkg-web
-          path: flutter-examples/hello_world/build/web/
+          path: flutter-examples/hello_world/build/hello-world-pkg-web.zip

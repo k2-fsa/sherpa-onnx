@@ -100,5 +100,5 @@ JSObject configToJs(sherpa_onnx.OfflineTtsConfig cfg) {
 
 Future<Uint8List> _loadAsset(String assetPath) async {
   final data = await rootBundle.load(assetPath);
-  return data.buffer.asUint8List();
+  return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
 }

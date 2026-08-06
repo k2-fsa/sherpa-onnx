@@ -78,6 +78,26 @@ class OfflineTts {
     genConfig['sid'] = config.sid.toJS;
     genConfig['numSteps'] = config.numSteps.toJS;
 
+    // Reference audio for voice cloning (e.g. Pocket TTS).
+    if (config.referenceAudio != null && config.referenceAudio!.isNotEmpty) {
+      genConfig['referenceAudio'] = config.referenceAudio;
+      genConfig['referenceSampleRate'] = config.referenceSampleRate.toJS;
+      genConfig['referenceText'] = config.referenceText.toJS;
+    }
+
+    // Extra model-specific attributes.
+    if (config.extra.isNotEmpty) {
+      final extraObj = JSObject();
+      for (final entry in config.extra.entries) {
+        extraObj[entry.key] = (entry.value is String
+            ? (entry.value as String).toJS
+            : entry.value is int
+                ? (entry.value as int).toJS
+                : (entry.value as double).toJS) as JSAny;
+      }
+      genConfig['extra'] = extraObj;
+    }
+
     if (onProgress != null) {
       // Create a JS callback that calls the Dart callback.
       genConfig['callback'] = (JSAny samplesPtr, JSAny n, JSAny progress, JSAny arg) {

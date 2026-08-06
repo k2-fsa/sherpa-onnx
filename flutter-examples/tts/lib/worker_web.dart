@@ -52,6 +52,11 @@ class TtsWorker {
       _handleMessage(event);
     }.toJS;
 
+    // Handle worker startup failures (e.g. failed to load tts-worker.js).
+    _worker!.onerror = (web.ErrorEvent event) {
+      onError('Worker error: ${event.message}');
+    }.toJS;
+
     // Load JS glue source, TTS helpers, and WASM binary from Flutter assets.
     final jsGlueSource = await _loadAssetAsString(
         'packages/sherpa_onnx_web/assets/sherpa-onnx-wasm-web.js');
@@ -97,11 +102,11 @@ class TtsWorker {
     msg['sid'] = sid.toJS;
     msg['speed'] = speed.toJS;
     msg['generationId'] = generationId.toJS;
+    msg['numSteps'] = numSteps.toJS;
 
     if (referenceAudio != null && referenceAudio.isNotEmpty) {
       msg['referenceAudio'] = referenceAudio.buffer.toJS;
       msg['referenceSampleRate'] = referenceSampleRate.toJS;
-      msg['numSteps'] = numSteps.toJS;
     }
     _worker?.postMessage(msg);
   }

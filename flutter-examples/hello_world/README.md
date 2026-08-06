@@ -135,7 +135,7 @@ cd build/web
 python3 -m http.server 8080
 ```
 
-Then open http://localhost:8080 in a browser.
+Then start your browser and visit <http://localhost:8080> .
 
 ### Notes
 
