@@ -297,6 +297,11 @@ jobs:
 
           git status
 
+      - name: Remove .gitignore so xcframework files are included in package
+        shell: bash
+        run: |
+          rm -fv flutter/sherpa_onnx_macos/macos/.gitignore
+
       - name: Download pre-built xcframework
         shell: bash
         run: |
@@ -934,6 +939,11 @@ jobs:
           cp -v CHANGELOG.md $dst/
 
           git status
+
+      - name: Remove .gitignore so xcframework files are included in package
+        shell: bash
+        run: |
+          rm -fv flutter/sherpa_onnx_ios/ios/.gitignore
 
       - name: Download pre-built xcframework
         shell: bash
