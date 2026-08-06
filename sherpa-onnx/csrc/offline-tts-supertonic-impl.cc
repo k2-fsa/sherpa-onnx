@@ -47,10 +47,15 @@ constexpr float kMinDuration = 0.1f;
 // Maximum latent length to prevent excessive memory allocation and OOM.
 constexpr int32_t kMaxLatentLen = 10000;
 
-constexpr std::array<std::string_view, 31> kSupertonicAvailableLangs = {
+// "na" (language-agnostic — the model infers the language itself from the
+// text) is a real 32nd tag the upstream Supertonic checkpoint understands
+// (see supertone-inc/supertonic's own Rust preprocessing example); this
+// list was ported from upstream's language enumeration but dropped that
+// entry, hard-blocking a mode the model itself supports.
+constexpr std::array<std::string_view, 32> kSupertonicAvailableLangs = {
     "en", "ko", "ja", "ar", "bg", "cs", "da", "de", "el", "es", "et",
     "fi", "fr", "hi", "hr", "hu", "id", "it", "lt", "lv", "nl", "pl",
-    "pt", "ro", "ru", "sk", "sl", "sv", "tr", "uk", "vi",
+    "pt", "ro", "ru", "sk", "sl", "sv", "tr", "uk", "vi", "na",
 };
 
 void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths,
