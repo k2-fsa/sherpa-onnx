@@ -656,8 +656,16 @@ jobs:
 
           ls -lh build/web/
 
+      - name: Zip web app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/
+          mv web hello-world-web
+          zip -r hello-world-web.zip hello-world-web/
+          ls -lh hello-world-web.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hello-world-web
-          path: flutter-examples/hello_world/build/web/
+          path: flutter-examples/hello_world/build/web/hello-world-web.zip
