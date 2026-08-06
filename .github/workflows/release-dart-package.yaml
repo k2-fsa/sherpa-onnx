@@ -1037,18 +1037,16 @@ jobs:
           cp build-wasm-simd-web/install/bin/wasm/web/sherpa-onnx-wasm-web.wasm \
              flutter/sherpa_onnx_web/assets/
 
-      - name: Replace symlinks with real files
-        shell: bash
-        run: |
-          cd flutter/sherpa_onnx_web/assets
-          for f in *.js; do
-            if [ -L "$f" ]; then
-              target=$(readlink "$f")
-              rm "$f"
-              cp "$target" "$f"
-            fi
-          done
-          ls -lh
+          # Copy JS wrappers from their source directories (not symlinks).
+          cp wasm/tts/sherpa-onnx-tts.js flutter/sherpa_onnx_web/assets/
+          cp wasm/asr/sherpa-onnx-asr.js flutter/sherpa_onnx_web/assets/
+          cp wasm/vad/sherpa-onnx-vad.js flutter/sherpa_onnx_web/assets/
+          cp wasm/kws/sherpa-onnx-kws.js flutter/sherpa_onnx_web/assets/
+          cp wasm/nodejs/sherpa-onnx-punctuation.js flutter/sherpa_onnx_web/assets/
+          cp wasm/speaker-diarization/sherpa-onnx-speaker-diarization.js flutter/sherpa_onnx_web/assets/
+          cp wasm/speech-enhancement/sherpa-onnx-speech-enhancement.js flutter/sherpa_onnx_web/assets/
+
+          ls -lh flutter/sherpa_onnx_web/assets/
 
       - name: Remove .gitignore so WASM files are included in package
         shell: bash
