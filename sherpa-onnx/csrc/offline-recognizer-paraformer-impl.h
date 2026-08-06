@@ -12,8 +12,9 @@
 #include <vector>
 
 #include "Eigen/Dense"
-#include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/lfr.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-model.h"
@@ -217,28 +218,8 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
   }
 
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {
-    int32_t lfr_window_size = model_->LfrWindowSize();
-    int32_t lfr_window_shift = model_->LfrWindowShift();
-    int32_t in_feat_dim = config_.feat_config.feature_dim;
-
-    int32_t in_num_frames = in.size() / in_feat_dim;
-    int32_t out_num_frames =
-        (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
-    int32_t out_feat_dim = in_feat_dim * lfr_window_size;
-
-    std::vector<float> out(out_num_frames * out_feat_dim);
-
-    const float *p_in = in.data();
-    float *p_out = out.data();
-
-    for (int32_t i = 0; i != out_num_frames; ++i) {
-      std::copy(p_in, p_in + out_feat_dim, p_out);
-
-      p_out += out_feat_dim;
-      p_in += lfr_window_shift * in_feat_dim;
-    }
-
-    return out;
+    return ApplyLfr(in, config_.feat_config.feature_dim,
+                    model_->LfrWindowSize(), model_->LfrWindowShift());
   }
 
   void ApplyCMVN(std::vector<float> *v) const {
