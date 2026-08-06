@@ -2,9 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  initBindings();
+
+  // Works on all platforms: loads native lib on desktop/mobile, WASM on web.
+  // IMPORTANT: You must call initBindingsAsync() in every isolate that uses
+  // sherpa-onnx APIs — including the main isolate and any worker isolates.
+  await initBindingsAsync();
+
   runApp(const MyApp());
 }
 

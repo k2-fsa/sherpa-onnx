@@ -1,214 +1,136 @@
 // Copyright (c)  2024  Xiaomi Corporation
-
 import "dart:io";
 
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+import './model_config.dart';
 
-import './utils.dart';
+/// Resolve a relative path to absolute.
+String _abs(String base, String relative) =>
+    relative.isEmpty ? '' : p.join(base, relative);
 
-Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
-  // sherpa_onnx requires that model files are in the local disk, so we
-  // need to copy all asset files to disk.
-  await copyAllAssetFiles();
+/// Resolve comma-separated relative paths to absolute.
+String _absMulti(String base, String csv) =>
+    csv.isEmpty ? '' : csv.split(',').map((f) => _abs(base, f.trim())).join(',');
 
-  sherpa_onnx.initBindings();
+/// Prepare model config: copy assets to disk and resolve all paths.
+Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
+  await _copyAllAssetFiles();
 
-  // Such a design is to make it easier to build flutter APPs with
-  // github actions for a variety of tts models
-  //
-  // See https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/flutter/generate-tts.py
-  // for details
+  final cfg = selectedTtsConfig;
+  final d = (await getApplicationSupportDirectory()).path;
+  final m = cfg.model;
 
-  String modelDir = '';
-  String modelName = '';
-  String voices = ''; // for Kokoro or Kitten
-  bool isKitten = false;
-  String ruleFsts = '';
-  String ruleFars = '';
-  String lexicon = '';
-  String dataDir = '';
+  return sherpa_onnx.OfflineTtsConfig(
+    model: sherpa_onnx.OfflineTtsModelConfig(
+      vits: sherpa_onnx.OfflineTtsVitsModelConfig(
+        model: _abs(d, m.vits.model),
+        lexicon: _abs(d, m.vits.lexicon),
+        tokens: _abs(d, m.vits.tokens),
+        dataDir: _abs(d, m.vits.dataDir),
+        noiseScale: m.vits.noiseScale,
+        noiseScaleW: m.vits.noiseScaleW,
+        lengthScale: m.vits.lengthScale,
+      ),
+      kokoro: sherpa_onnx.OfflineTtsKokoroModelConfig(
+        model: _abs(d, m.kokoro.model),
+        voices: _abs(d, m.kokoro.voices),
+        tokens: _abs(d, m.kokoro.tokens),
+        dataDir: _abs(d, m.kokoro.dataDir),
+        lexicon: _absMulti(d, m.kokoro.lexicon),
+        lang: m.kokoro.lang,
+        lengthScale: m.kokoro.lengthScale,
+      ),
+      kitten: sherpa_onnx.OfflineTtsKittenModelConfig(
+        model: _abs(d, m.kitten.model),
+        voices: _abs(d, m.kitten.voices),
+        tokens: _abs(d, m.kitten.tokens),
+        dataDir: _abs(d, m.kitten.dataDir),
+        lengthScale: m.kitten.lengthScale,
+      ),
+      matcha: sherpa_onnx.OfflineTtsMatchaModelConfig(
+        acousticModel: _abs(d, m.matcha.acousticModel),
+        vocoder: _abs(d, m.matcha.vocoder),
+        tokens: _abs(d, m.matcha.tokens),
+        dataDir: _abs(d, m.matcha.dataDir),
+        lexicon: _abs(d, m.matcha.lexicon),
+        noiseScale: m.matcha.noiseScale,
+        lengthScale: m.matcha.lengthScale,
+      ),
+      pocket: sherpa_onnx.OfflineTtsPocketModelConfig(
+        lmFlow: _abs(d, m.pocket.lmFlow),
+        lmMain: _abs(d, m.pocket.lmMain),
+        encoder: _abs(d, m.pocket.encoder),
+        decoder: _abs(d, m.pocket.decoder),
+        textConditioner: _abs(d, m.pocket.textConditioner),
+        vocabJson: _abs(d, m.pocket.vocabJson),
+        tokenScoresJson: _abs(d, m.pocket.tokenScoresJson),
+        voiceEmbeddingCacheCapacity: m.pocket.voiceEmbeddingCacheCapacity,
+      ),
+      supertonic: sherpa_onnx.OfflineTtsSupertonicModelConfig(
+        durationPredictor: _abs(d, m.supertonic.durationPredictor),
+        textEncoder: _abs(d, m.supertonic.textEncoder),
+        vectorEstimator: _abs(d, m.supertonic.vectorEstimator),
+        vocoder: _abs(d, m.supertonic.vocoder),
+        ttsJson: _abs(d, m.supertonic.ttsJson),
+        unicodeIndexer: _abs(d, m.supertonic.unicodeIndexer),
+        voiceStyle: _abs(d, m.supertonic.voiceStyle),
+      ),
+      zipvoice: sherpa_onnx.OfflineTtsZipVoiceModelConfig(
+        tokens: _abs(d, m.zipvoice.tokens),
+        encoder: _abs(d, m.zipvoice.encoder),
+        decoder: _abs(d, m.zipvoice.decoder),
+        vocoder: _abs(d, m.zipvoice.vocoder),
+        dataDir: _abs(d, m.zipvoice.dataDir),
+        lexicon: _abs(d, m.zipvoice.lexicon),
+        featScale: m.zipvoice.featScale,
+        tShift: m.zipvoice.tShift,
+        targetRms: m.zipvoice.targetRms,
+        guidanceScale: m.zipvoice.guidanceScale,
+      ),
+      numThreads: m.numThreads,
+      debug: m.debug,
+      provider: m.provider,
+    ),
+    ruleFsts: _absMulti(d, cfg.ruleFsts),
+    ruleFars: _absMulti(d, cfg.ruleFars),
+    maxNumSenetences: cfg.maxNumSenetences,
+  );
+}
 
-  // You can select an example below and change it accordingly to match your
-  // selected tts model
+/// Create an OfflineTts from a resolved config.
+sherpa_onnx.OfflineTts createTtsFromConfig(sherpa_onnx.OfflineTtsConfig cfg) {
+  return sherpa_onnx.OfflineTts(cfg);
+}
 
-  // ============================================================
-  // Your change starts here
-  // ============================================================
+// ── Asset copy helpers ───────────────────────────────────────────────────
 
-  // Example 1:
-  // modelDir = 'vits-vctk';
-  // modelName = 'vits-vctk.onnx';
-  // lexicon = 'lexicon.txt';
-
-  // Example 2:
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-  // modelDir = 'vits-piper-en_US-amy-low';
-  // modelName = 'en_US-amy-low.onnx';
-  // dataDir = 'vits-piper-en_US-amy-low/espeak-ng-data';
-
-  // Example 3:
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
-  // modelDir = 'vits-icefall-zh-aishell3';
-  // modelName = 'model.onnx';
-  // ruleFsts = 'vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,vits-icefall-zh-aishell3/new_heteronym.fst';
-  // ruleFars = 'vits-icefall-zh-aishell3/rule.far';
-  // lexicon = 'lexicon.txt';
-
-  // Example 4:
-  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#csukuangfj-vits-zh-hf-fanchen-c-chinese-187-speakers
-  // modelDir = 'vits-zh-hf-fanchen-C';
-  // modelName = 'vits-zh-hf-fanchen-C.onnx';
-  // lexicon = 'lexicon.txt';
-
-  // Example 5:
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
-  // modelDir = 'vits-coqui-de-css10';
-  // modelName = 'model.onnx';
-
-  // Example 6
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2
-  // modelDir = 'vits-piper-en_US-libritts_r-medium';
-  // modelName = 'en_US-libritts_r-medium.onnx';
-  // dataDir = 'vits-piper-en_US-libritts_r-medium/espeak-ng-data';
-
-  // Example 7
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
-  // modelDir = 'vits-melo-tts-zh_en';
-  // modelName = 'model.onnx';
-  // lexicon = 'lexicon.txt';
-
-  // Example 8
-  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html#kokoro-en-v0-19-english-11-speakers
-  // modelDir = 'kokoro-en-v0_19';
-  // modelName = 'model.onnx';
-  // voices = 'voices.bin';
-  // dataDir = 'kokoro-en-v0_19/espeak-ng-data';
-
-  // Example 9
-  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
-  // modelDir = 'kokoro-multi-lang-v1_0';
-  // modelName = 'model.onnx';
-  // voices = 'voices.bin';
-  // dataDir = 'kokoro-multi-lang-v1_0/espeak-ng-data';
-  // lexicon = 'kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt';
-
-  // Example 10
-  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  // modelDir = 'kitten-nano-en-v0_8-fp32';
-  // modelName = 'model.fp32.onnx';
-  // voices = 'voices.bin';
-  // dataDir = 'kitten-nano-en-v0_8-fp32/espeak-ng-data';
-  // isKitten = true;
-
-  // ============================================================
-  // Please don't change the remaining part of this function
-  // ============================================================
-  if (modelName == '') {
-    throw Exception(
-        'You are supposed to select a model by changing the code before you run the app');
+Future<void> _copyAllAssetFiles() async {
+  final AssetManifest assetManifest =
+      await AssetManifest.loadFromAssetBundle(rootBundle);
+  final List<String> assets = assetManifest.listAssets();
+  for (final src in assets) {
+    final dst = _stripLeadingDirectory(src);
+    await _copyAssetFile(src, dst);
   }
+}
 
+String _stripLeadingDirectory(String src, {int n = 1}) {
+  return p.joinAll(p.split(src).sublist(n));
+}
+
+Future<String> _copyAssetFile(String src, [String? dst]) async {
   final Directory directory = await getApplicationSupportDirectory();
-  modelName = p.join(directory.path, modelDir, modelName);
-
-  if (ruleFsts != '') {
-    final all = ruleFsts.split(',');
-    var tmp = <String>[];
-    for (final f in all) {
-      tmp.add(p.join(directory.path, f));
-    }
-    ruleFsts = tmp.join(',');
+  if (dst == null) dst = p.basename(src);
+  final target = p.join(directory.path, dst);
+  bool exists = await File(target).exists();
+  final data = await rootBundle.load(src);
+  if (!exists || File(target).lengthSync() != data.lengthInBytes) {
+    final List<int> bytes =
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    await (await File(target).create(recursive: true)).writeAsBytes(bytes);
   }
-
-  if (ruleFars != '') {
-    final all = ruleFars.split(',');
-    var tmp = <String>[];
-    for (final f in all) {
-      tmp.add(p.join(directory.path, f));
-    }
-    ruleFars = tmp.join(',');
-  }
-
-  if (lexicon.contains(',')) {
-    final all = lexicon.split(',');
-    var tmp = <String>[];
-    for (final f in all) {
-      tmp.add(p.join(directory.path, f));
-    }
-    lexicon = tmp.join(',');
-  } else if (lexicon != '') {
-    lexicon = p.join(directory.path, modelDir, lexicon);
-  }
-
-  if (dataDir != '') {
-    dataDir = p.join(directory.path, dataDir);
-  }
-
-  final tokens = p.join(directory.path, modelDir, 'tokens.txt');
-  if (voices != '') {
-    voices = p.join(directory.path, modelDir, voices);
-  }
-
-  late final sherpa_onnx.OfflineTtsVitsModelConfig vits;
-  late final sherpa_onnx.OfflineTtsKokoroModelConfig kokoro;
-  late final sherpa_onnx.OfflineTtsKittenModelConfig kitten;
-
-  if (isKitten) {
-    vits = sherpa_onnx.OfflineTtsVitsModelConfig();
-    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
-    kitten = sherpa_onnx.OfflineTtsKittenModelConfig(
-      model: modelName,
-      voices: voices,
-      tokens: tokens,
-      dataDir: dataDir,
-    );
-  } else if (voices != '') {
-    vits = sherpa_onnx.OfflineTtsVitsModelConfig();
-    kitten = sherpa_onnx.OfflineTtsKittenModelConfig();
-    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig(
-      model: modelName,
-      voices: voices,
-      tokens: tokens,
-      dataDir: dataDir,
-      lexicon: lexicon,
-    );
-  } else {
-    vits = sherpa_onnx.OfflineTtsVitsModelConfig(
-      model: modelName,
-      lexicon: lexicon,
-      tokens: tokens,
-      dataDir: dataDir,
-    );
-
-    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
-    kitten = sherpa_onnx.OfflineTtsKittenModelConfig();
-  }
-
-  final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
-    vits: vits,
-    kokoro: kokoro,
-    kitten: kitten,
-    numThreads: 2,
-    debug: true,
-    provider: 'cpu',
-  );
-
-  final config = sherpa_onnx.OfflineTtsConfig(
-    model: modelConfig,
-    ruleFsts: ruleFsts,
-    ruleFars: ruleFars,
-    maxNumSenetences: 1,
-  );
-  // print(config);
-
-  final tts = sherpa_onnx.OfflineTts(config);
-  print('tts created successfully');
-
-  return tts;
+  return target;
 }

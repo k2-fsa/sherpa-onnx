@@ -14,20 +14,27 @@ import os
 def main():
     target = "./assets/"
     space = "    "
-    subfolders = []
+    entries = []
     patterns_to_skip = ["1.5x", "2.x", "3.x", "4.x"]
+    has_root_files = False
     for root, dirs, files in os.walk(target):
+        # If there are files directly in assets/, add the directory itself.
+        if root == target:
+            has_root_files = any(not f.startswith('.') for f in files)
+            if has_root_files:
+                entries.append("{space}- assets/".format(space=space))
         for d in dirs:
             path = os.path.join(root, d).replace("\\", "/")
             if os.listdir(path):
                 path = path.lstrip('./')
                 if any(path.endswith(pattern) for pattern in patterns_to_skip):
                     continue
-                subfolders.append("{space}- {path}/".format(space=space, path=path))
+                entries.append("{space}- {path}/".format(space=space, path=path))
 
-    assert subfolders, "The subfolders list is empty."
-
-    subfolders = sorted(subfolders)
+    if not entries:
+        print("Warning: no assets found in ./assets/. "
+              "Add model files and run this script again.")
+    entries = sorted(entries)
 
     loc_of_flutter = -1
     loc_of_flutter_asset = -1
@@ -75,24 +82,24 @@ def main():
                     f.write(line)
                 if index + 1 == loc_of_flutter_asset:
                     f.write("  assets:\n")
-                    for folder in subfolders:
-                        f.write("{folder}\n".format(folder=folder))
+                    for entry in entries:
+                        f.write("{entry}\n".format(entry=entry))
             else:
                 if index + 1 < loc_of_end_flutter or index + 1 > loc_of_end_flutter:
                     f.write(line)
                 if index + 1 == loc_of_end_flutter:
                     f.write("  assets:\n")
-                    for indexOfFolder, folder in enumerate(subfolders):
-                        f.write("{folder}\n".format(folder=folder))
-                        if indexOfFolder == len(subfolders) - 1:
+                    for indexOfEntry, entry in enumerate(entries):
+                        f.write("{entry}\n".format(entry=entry))
+                        if indexOfEntry == len(entries) - 1:
                             f.write("\n")
                             break
 
         if loc_of_end_flutter == len(lines) + 1:
             f.write("\n")
             f.write("  assets:\n")
-            for folder in subfolders:
-                f.write("{folder}\n".format(folder=folder))
+            for entry in entries:
+                f.write("{entry}\n".format(entry=entry))
 
 if __name__ == "__main__":
     main()

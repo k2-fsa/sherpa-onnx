@@ -1,0 +1,12 @@
+# Built by build-wasm-simd-web.sh
+assets/sherpa-onnx-wasm-web.js
+assets/sherpa-onnx-wasm-web.wasm
+
+# Symlinks created by build-flutter-web-wasm.sh
+assets/sherpa-onnx-asr.js
+assets/sherpa-onnx-kws.js
+assets/sherpa-onnx-punctuation.js
+assets/sherpa-onnx-speaker-diarization.js
+assets/sherpa-onnx-speech-enhancement.js
+assets/sherpa-onnx-tts.js
+assets/sherpa-onnx-vad.js

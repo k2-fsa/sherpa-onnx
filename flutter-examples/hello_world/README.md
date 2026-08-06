@@ -114,6 +114,37 @@ flutter build linux
 flutter build windows
 ```
 
+## Running on Web (Chrome)
+
+```bash
+cd flutter-examples/hello_world
+flutter pub get
+flutter run -d chrome
+```
+
+### Build for deployment
+
+```bash
+flutter build web
+```
+
+The output is in `build/web/`. Serve it with any HTTP server:
+
+```bash
+cd build/web
+python3 -m http.server 8080
+```
+
+Then start your browser and visit <http://localhost:8080> .
+
+### Notes
+
+- The web build uses WebAssembly (via Emscripten) to run the sherpa-onnx C API
+  in the browser. No server-side processing is needed.
+- The WASM binary is ~15-20MB as it includes all features (ASR, TTS, VAD, etc.)
+- First load may take a few seconds while the WASM module is downloaded and
+  compiled
+
 ## Running on iOS simulator
 
 ### Step 1: List available simulators

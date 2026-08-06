@@ -350,3 +350,72 @@ jobs:
         with:
           name: hello-world-pkg-android
           path: flutter-examples/hello_world/build/app/outputs/flutter-apk/app-release.apk
+
+  web:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.23
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build WASM module
+        shell: bash
+        run: |
+          ./build-wasm-simd-web.sh
+
+      - name: Copy WASM assets to web plugin
+        shell: bash
+        run: |
+          ./build-flutter-web-wasm.sh
+
+      - name: Build Flutter web app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world
+
+          flutter pub get
+          flutter build web
+
+          ls -lh build/web/
+
+      - name: Zip web app
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/
+          mv web hello-world-pkg-web
+          zip -r hello-world-pkg-web.zip hello-world-pkg-web/
+          ls -lh hello-world-pkg-web.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-pkg-web
+          path: flutter-examples/hello_world/build/hello-world-pkg-web.zip
