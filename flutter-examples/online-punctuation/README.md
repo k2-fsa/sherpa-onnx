@@ -23,6 +23,8 @@ cd flutter-examples/online-punctuation/assets
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+# We use model.int8.onnx, so delete the larger model.onnx to save space.
+rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
 cd ..
 
 ./generate-asset-list.py
