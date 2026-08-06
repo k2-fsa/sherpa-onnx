@@ -50,6 +50,8 @@
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 #endif
 
+#define SHERPA_ONNX_OR(x, y) (x ? x : y)
+
 const char *SherpaOnnxGetVersionStr() { return sherpa_onnx::GetVersionStr(); }
 const char *SherpaOnnxGetGitSha1() { return sherpa_onnx::GetGitSha1(); }
 const char *SherpaOnnxGetGitDate() { return sherpa_onnx::GetGitDate(); }
@@ -85,8 +87,6 @@ struct SherpaOnnxOnlineStream {
 struct SherpaOnnxDisplay {
   std::unique_ptr<sherpa_onnx::Display> impl;
 };
-
-#define SHERPA_ONNX_OR(x, y) (x ? x : y)
 
 static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
     const SherpaOnnxOnlineRecognizerConfig *config) {

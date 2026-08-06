@@ -52,9 +52,11 @@ class TtsWorker {
       _handleMessage(event);
     }.toJS;
 
-    // Load JS glue source and WASM binary from Flutter assets.
+    // Load JS glue source, TTS helpers, and WASM binary from Flutter assets.
     final jsGlueSource = await _loadAssetAsString(
         'packages/sherpa_onnx_web/assets/sherpa-onnx-wasm-web.js');
+    final ttsJsSource = await _loadAssetAsString(
+        'packages/sherpa_onnx_web/assets/sherpa-onnx-tts.js');
     final wasmData = await _loadAssetBytes(
         'packages/sherpa_onnx_web/assets/sherpa-onnx-wasm-web.wasm');
 
@@ -67,10 +69,11 @@ class TtsWorker {
     // Convert OfflineTtsConfig to JS format for the worker.
     final jsConfig = m.configToJs(config);
 
-    // Send init message with JS glue, WASM binary, model files, and config.
+    // Send init message with JS glue, TTS helpers, WASM binary, model files, and config.
     final initMsg = JSObject();
     initMsg['type'] = 'init'.toJS;
     initMsg['jsGlueSource'] = jsGlueSource.toJS;
+    initMsg['ttsJsSource'] = ttsJsSource.toJS;
     initMsg['wasmBinary'] = wasmData.buffer.toJS;
     initMsg['modelFiles'] = jsModelFiles;
     initMsg['config'] = jsConfig;
