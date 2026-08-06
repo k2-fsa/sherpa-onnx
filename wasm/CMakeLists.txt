@@ -29,3 +29,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_WASM_NODEJS)
   add_subdirectory(nodejs)
 endif()
+
+if(SHERPA_ONNX_ENABLE_WASM_COMBINED)
+  add_subdirectory(combined)
+endif()
