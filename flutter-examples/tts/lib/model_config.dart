@@ -6,7 +6,7 @@ import 'package:sherpa_onnx/sherpa_onnx.dart';
 
 // Change the index below to select a different model.
 /// Select which TTS model to use (0-8).
-const int selectedModelIndex = 6;
+const int selectedModelIndex = 8;
 
 /// Available TTS models.
 final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {

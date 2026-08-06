@@ -26,7 +26,11 @@ class _GenerateRequest extends _ToWorker {
   final int sid;
   final double speed;
   final int generationId;
-  _GenerateRequest(this.text, this.sid, this.speed, this.generationId);
+  final Float32List? referenceAudio;
+  final int referenceSampleRate;
+  final int numSteps;
+  _GenerateRequest(this.text, this.sid, this.speed, this.generationId,
+      {this.referenceAudio, this.referenceSampleRate = 0, this.numSteps = 5});
 }
 
 class _DisposeRequest extends _ToWorker {}
@@ -132,6 +136,9 @@ class TtsManager {
     int sid = 0,
     double speed = 1.0,
     int generationId = 0,
+    Float32List? referenceAudio,
+    int referenceSampleRate = 0,
+    int numSteps = 5,
   }) {
     if (_state != TtsState.initialized) {
       _logController.add('Error: TTS not initialized');
@@ -145,12 +152,19 @@ class TtsManager {
     final id = _nextId++;
 
     if (kIsWeb) {
-      _worker?.generate(text: text, sid: sid, speed: speed, generationId: generationId);
+      _worker?.generate(
+        text: text, sid: sid, speed: speed, generationId: generationId,
+        referenceAudio: referenceAudio, referenceSampleRate: referenceSampleRate,
+        numSteps: numSteps,
+      );
     } else {
       _pending[id] = _PendingGenerate(
         text: text, sid: sid, speed: speed, generationId: generationId,
       );
-      _sendPort!.send(_GenerateRequest(text, sid, speed, generationId));
+      _sendPort!.send(_GenerateRequest(text, sid, speed, generationId,
+        referenceAudio: referenceAudio, referenceSampleRate: referenceSampleRate,
+        numSteps: numSteps,
+      ));
     }
 
     return id;
@@ -338,6 +352,9 @@ class TtsManager {
         sid: req.sid,
         speed: req.speed,
         silenceScale: 0.2,
+        referenceAudio: req.referenceAudio,
+        referenceSampleRate: req.referenceSampleRate,
+        numSteps: req.numSteps,
       );
 
       final sampleRate = tts.sampleRate;

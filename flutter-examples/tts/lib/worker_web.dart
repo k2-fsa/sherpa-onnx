@@ -81,7 +81,15 @@ class TtsWorker {
   }
 
   /// Start audio generation.
-  void generate({required String text, int sid = 0, double speed = 1.0, int generationId = 0}) {
+  void generate({
+    required String text,
+    int sid = 0,
+    double speed = 1.0,
+    int generationId = 0,
+    Float32List? referenceAudio,
+    int referenceSampleRate = 0,
+    int numSteps = 5,
+  }) {
     _pendingLabel = GeneratedAudioItem.makeLabel(text);
     final msg = JSObject();
     msg['type'] = 'generate'.toJS;
@@ -89,6 +97,12 @@ class TtsWorker {
     msg['sid'] = sid.toJS;
     msg['speed'] = speed.toJS;
     msg['generationId'] = generationId.toJS;
+
+    if (referenceAudio != null && referenceAudio.isNotEmpty) {
+      msg['referenceAudio'] = referenceAudio.buffer.toJS;
+      msg['referenceSampleRate'] = referenceSampleRate.toJS;
+      msg['numSteps'] = numSteps.toJS;
+    }
     _worker?.postMessage(msg);
   }
 

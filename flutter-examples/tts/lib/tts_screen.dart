@@ -19,7 +19,11 @@ import './save_file.dart' if (dart.library.js_interop) './save_file_stub.dart'
     as save_file;
 import './play_bytes.dart' if (dart.library.js_interop) './play_bytes_stub.dart'
     as play_bytes;
+import './play_ref.dart' if (dart.library.js_interop) './play_ref_stub.dart'
+    as play_ref;
 import './wav_encoder.dart';
+import './model_config.dart' show selectedModelIndex;
+import 'package:file_picker/file_picker.dart';
 
 class TtsScreen extends StatefulWidget {
   const TtsScreen({super.key});
@@ -32,6 +36,7 @@ class _TtsScreenState extends State<TtsScreen> {
   final _textController = TextEditingController();
   final _sidController = TextEditingController(text: '0');
   final _logController = TextEditingController();
+  final _numStepsController = TextEditingController(text: '5');
 
   late final TtsManager _manager;
   AudioPlayer? _player;
@@ -40,6 +45,13 @@ class _TtsScreenState extends State<TtsScreen> {
   int _maxSpeakerID = 0;
   double _speed = 1.0;
   bool _isGenerating = false;
+
+  // Reference audio for Pocket TTS voice cloning.
+  static const bool _isPocketTts = selectedModelIndex == 8;
+  Float32List? _referenceAudio;
+  int _referenceSampleRate = 0;
+  String? _referenceAudioName;
+  bool _isRefPlaying = false;
   // On native: incremented on each Generate/Stop to ignore stale chunks.
   // On web: unused (worker is terminated on Stop, no stale chunks).
   int _generationId = 0;
@@ -66,6 +78,9 @@ class _TtsScreenState extends State<TtsScreen> {
       _player!.onPlayerComplete.listen((_) {
         _isPlayingSegment = false;
         _playNextSegment();
+        if (mounted && _isRefPlaying) {
+          setState(() => _isRefPlaying = false);
+        }
       });
     }
 
@@ -178,6 +193,62 @@ class _TtsScreenState extends State<TtsScreen> {
     } catch (_) {}
   }
 
+  Future<void> _onPickReferenceAudio() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['wav'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.first;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      setState(() => _logController.text = 'Error: Could not read file');
+      return;
+    }
+
+    final wav = decodeWav(bytes);
+    if (wav == null) {
+      setState(() => _logController.text =
+          'Error: Unsupported WAV format (need 16-bit PCM or 32-bit float)');
+      return;
+    }
+    setState(() {
+      _referenceAudio = wav.samples;
+      _referenceSampleRate = wav.sampleRate;
+      _referenceAudioName = file.name;
+    });
+  }
+
+  Future<void> _playReferenceAudio() async {
+    if (_referenceAudio == null || _referenceAudio!.isEmpty) return;
+    final wavBytes = encodeWav(_referenceAudio!, _referenceSampleRate);
+    setState(() => _isRefPlaying = true);
+    if (kIsWeb) {
+      web_audio.playWavBytes(wavBytes);
+      // Web Audio API doesn't have a completion callback easily;
+      // reset after a rough duration estimate.
+      final duration = _referenceAudio!.length / _referenceSampleRate;
+      Future.delayed(Duration(milliseconds: (duration * 1000).ceil() + 200), () {
+        if (mounted) setState(() => _isRefPlaying = false);
+      });
+    } else {
+      if (_player != null) {
+        await play_ref.playRefWavBytes(_player!, wavBytes);
+      }
+    }
+  }
+
+  Future<void> _stopReferenceAudio() async {
+    if (kIsWeb) {
+      web_audio.stopPlayback();
+    } else {
+      await _player?.stop();
+    }
+    setState(() => _isRefPlaying = false);
+  }
+
   Future<void> _playAudio(GeneratedAudioItem item) async {
     if (kIsWeb) {
       web_audio.playWavBytes(item.wavBytes!);
@@ -196,10 +267,18 @@ class _TtsScreenState extends State<TtsScreen> {
       _chunkBuffer.clear();
       _playQueue.clear();
     }
+    if (_isRefPlaying) {
+      setState(() => _isRefPlaying = false);
+    }
 
     final text = _textController.text.trim();
     if (text.isEmpty) {
       setState(() => _logController.text = 'Please enter text to synthesize');
+      return;
+    }
+
+    if (_isPocketTts && _referenceAudio == null) {
+      setState(() => _logController.text = 'Please pick a reference WAV file first');
       return;
     }
 
@@ -209,8 +288,12 @@ class _TtsScreenState extends State<TtsScreen> {
     if (kIsWeb) {
       web_audio.resetChunkPlayback();
     }
+    final numSteps = int.tryParse(_numStepsController.text.trim()) ?? 5;
     final id = _manager.generate(
       text: text, sid: sid, speed: _speed, generationId: _generationId,
+      referenceAudio: _isPocketTts ? _referenceAudio : null,
+      referenceSampleRate: _isPocketTts ? _referenceSampleRate : 0,
+      numSteps: _isPocketTts ? numSteps : 5,
     );
     if (id < 0) {
       // Generate failed (not initialized).
@@ -288,6 +371,13 @@ class _TtsScreenState extends State<TtsScreen> {
                 _textController.clear();
                 _logController.clear();
               },
+              showReferenceAudio: _isPocketTts,
+              referenceAudioLabel: _referenceAudioName,
+              onPickReferenceAudio: _onPickReferenceAudio,
+              onPlayReferenceAudio: _playReferenceAudio,
+              onStopReferenceAudio: _stopReferenceAudio,
+              isRefPlaying: _isRefPlaying,
+              numStepsController: _numStepsController,
               onStop: () {
                 // Stop generation.
                 // On native: increment generationId to invalidate stale chunks.
@@ -348,6 +438,7 @@ class _TtsScreenState extends State<TtsScreen> {
     _textController.dispose();
     _sidController.dispose();
     _logController.dispose();
+    _numStepsController.dispose();
     super.dispose();
   }
 }

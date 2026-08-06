@@ -1,4 +1,5 @@
 // Native stub for TtsWorker (not used on native).
+import 'dart:typed_data';
 import './generated_audio.dart';
 
 typedef OnChunkCallback = void Function(AudioChunk chunk);
@@ -15,7 +16,15 @@ class TtsWorker {
   });
 
   Future<void> init() async {}
-  void generate({required String text, int sid = 0, double speed = 1.0, int generationId = 0}) {}
+  void generate({
+    required String text,
+    int sid = 0,
+    double speed = 1.0,
+    int generationId = 0,
+    Float32List? referenceAudio,
+    int referenceSampleRate = 0,
+    int numSteps = 5,
+  }) {}
   void cancel() {}
   void dispose() {}
 }

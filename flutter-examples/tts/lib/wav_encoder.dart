@@ -1,6 +1,99 @@
 // Copyright (c)  2026  Xiaomi Corporation
-// Shared WAV encoding utility — works on all platforms.
+// Shared WAV encoding/decoding utility — works on all platforms (including web).
 import 'dart:typed_data';
+
+/// Result of decoding a WAV file.
+class WavData {
+  final Float32List samples;
+  final int sampleRate;
+  const WavData({required this.samples, required this.sampleRate});
+}
+
+/// Decode WAV bytes to mono float samples + sample rate.
+/// Supports 16-bit PCM and 32-bit float PCM.
+/// Returns null if the format is unsupported or the file is invalid.
+WavData? decodeWav(Uint8List bytes) {
+  if (bytes.length < 44) return null;
+  final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+
+  // Check RIFF/WAVE header.
+  if (bytes[0] != 0x52 || bytes[1] != 0x49 || bytes[2] != 0x46 || bytes[3] != 0x46) {
+    return null; // Not RIFF
+  }
+  if (bytes[8] != 0x57 || bytes[9] != 0x41 || bytes[10] != 0x56 || bytes[11] != 0x45) {
+    return null; // Not WAVE
+  }
+
+  // Find "fmt " chunk.
+  int offset = 12;
+  int audioFormat = 0;
+  int numChannels = 0;
+  int sampleRate = 0;
+  int bitsPerSample = 0;
+  bool foundFmt = false;
+
+  while (offset + 8 <= bytes.length) {
+    final chunkId = String.fromCharCodes(bytes.sublist(offset, offset + 4));
+    final chunkSize = bd.getUint32(offset + 4, Endian.little);
+    if (chunkId == 'fmt ') {
+      audioFormat = bd.getUint16(offset + 8, Endian.little);
+      numChannels = bd.getUint16(offset + 10, Endian.little);
+      sampleRate = bd.getUint32(offset + 12, Endian.little);
+      bitsPerSample = bd.getUint16(offset + 22, Endian.little);
+      foundFmt = true;
+      offset += 8 + chunkSize;
+      break;
+    }
+    offset += 8 + chunkSize;
+  }
+  if (!foundFmt) return null;
+
+  // Find "data" chunk.
+  offset = 12;
+  Uint8List? dataBytes;
+  while (offset + 8 <= bytes.length) {
+    final chunkId = String.fromCharCodes(bytes.sublist(offset, offset + 4));
+    final chunkSize = bd.getUint32(offset + 4, Endian.little);
+    if (chunkId == 'data') {
+      dataBytes = Uint8List.view(bytes.buffer, bytes.offsetInBytes + offset + 8, chunkSize);
+      break;
+    }
+    offset += 8 + chunkSize;
+  }
+  if (dataBytes == null) return null;
+
+  // Decode to mono float samples.
+  if (audioFormat == 1 && bitsPerSample == 16) {
+    // 16-bit PCM
+    final numSamples = dataBytes.length ~/ (2 * numChannels);
+    final samples = Float32List(numSamples);
+    final dbd = dataBytes.buffer.asByteData(dataBytes.offsetInBytes, dataBytes.lengthInBytes);
+    for (int i = 0; i < numSamples; i++) {
+      // Mix to mono if stereo: average channels.
+      double sum = 0;
+      for (int ch = 0; ch < numChannels; ch++) {
+        sum += dbd.getInt16((i * numChannels + ch) * 2, Endian.little) / 32768.0;
+      }
+      samples[i] = sum / numChannels;
+    }
+    return WavData(samples: samples, sampleRate: sampleRate);
+  } else if (audioFormat == 3 && bitsPerSample == 32) {
+    // 32-bit float PCM
+    final numSamples = dataBytes.length ~/ (4 * numChannels);
+    final samples = Float32List(numSamples);
+    final dbd = dataBytes.buffer.asByteData(dataBytes.offsetInBytes, dataBytes.lengthInBytes);
+    for (int i = 0; i < numSamples; i++) {
+      double sum = 0;
+      for (int ch = 0; ch < numChannels; ch++) {
+        sum += dbd.getFloat32((i * numChannels + ch) * 4, Endian.little);
+      }
+      samples[i] = sum / numChannels;
+    }
+    return WavData(samples: samples, sampleRate: sampleRate);
+  }
+
+  return null; // Unsupported format
+}
 
 /// Encode Float32List PCM samples to WAV bytes (16-bit mono).
 Uint8List encodeWav(Float32List samples, int sampleRate) {

@@ -93,6 +93,14 @@ self.onmessage = async function(e) {
         speed: msg.speed || 1.0,
         sid: msg.sid || 0,
       };
+
+      // Reference audio for voice cloning (e.g. Pocket TTS).
+      if (msg.referenceAudio) {
+        genCfg.referenceAudio = new Float32Array(msg.referenceAudio);
+        genCfg.referenceSampleRate = msg.referenceSampleRate || 0;
+        genCfg.numSteps = msg.numSteps || 5;
+      }
+
       const cfgWasm = initSherpaOnnxGenerationConfig(genCfg, Module);
 
       // Set up callback for streaming chunks.
