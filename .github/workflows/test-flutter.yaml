@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - dart-xcframework
+      - flutter-ci
     paths:
       - '.github/workflows/test-flutter.yaml'
       - 'flutter-examples/hello_world/**'
@@ -509,8 +509,32 @@ jobs:
           path: flutter-examples/hello_world/build/windows/x64/runner/Release/
 
   android:
-    name: Android
+    name: Android (${{ matrix.abi }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            build_script: build-android-arm64-v8a.sh
+            build_dir: build-android-arm64-v8a
+            plugin: sherpa_onnx_android_arm64
+            plugin_key: sherpa_onnx_android_arm64
+          - abi: armeabi-v7a
+            build_script: build-android-armv7-eabi.sh
+            build_dir: build-android-armv7-eabi
+            plugin: sherpa_onnx_android_armeabi
+            plugin_key: sherpa_onnx_android_armeabi
+          - abi: x86_64
+            build_script: build-android-x86-64.sh
+            build_dir: build-android-x86-64
+            plugin: sherpa_onnx_android_x86_64
+            plugin_key: sherpa_onnx_android_x86_64
+          - abi: x86
+            build_script: build-android-x86.sh
+            build_dir: build-android-x86
+            plugin: sherpa_onnx_android_x86
+            plugin_key: sherpa_onnx_android_x86
     steps:
       - uses: actions/checkout@v4
         with:
@@ -525,7 +549,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: android-flutter
+          key: android-flutter-${{ matrix.abi }}
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
@@ -548,7 +572,7 @@ jobs:
           dart --version
           flutter doctor
 
-      - name: Build android-arm64-v8a from source
+      - name: Build ${{ matrix.abi }} from source
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -556,19 +580,19 @@ jobs:
           export SHERPA_ONNX_ENABLE_C_API=ON
           export SHERPA_ONNX_ENABLE_JNI=OFF
           export SHERPA_ONNX_ENABLE_BINARY=OFF
-          ./build-android-arm64-v8a.sh
+          ./${{ matrix.build_script }}
 
       - name: Copy libs
         shell: bash
         run: |
-          cp -fv build-android-arm64-v8a/install/lib/lib*.so flutter/sherpa_onnx_android_arm64/android/src/main/jniLibs/arm64-v8a/
-          ls -lh flutter/sherpa_onnx_android_arm64/android/src/main/jniLibs/arm64-v8a/
+          cp -fv ${{ matrix.build_dir }}/install/lib/lib*.so flutter/${{ matrix.plugin }}/android/src/main/jniLibs/${{ matrix.abi }}/
+          ls -lh flutter/${{ matrix.plugin }}/android/src/main/jniLibs/${{ matrix.abi }}/
 
-      - name: Use local sherpa_onnx_android_arm64
+      - name: Use local ${{ matrix.plugin }}
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_android_arm64: ^1.13.4|  # sherpa_onnx_android_arm64: ^1.13.4\n  sherpa_onnx_android_arm64:\n    path: ../sherpa_onnx_android_arm64|' pubspec.yaml
+          sed -i.bak 's|  ${{ matrix.plugin_key }}: ^1.13.4|  # ${{ matrix.plugin_key }}: ^1.13.4\n  ${{ matrix.plugin_key }}:\n    path: ../${{ matrix.plugin }}|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -581,15 +605,15 @@ jobs:
           rm -f pubspec.yaml.bak
 
           flutter pub get
-          flutter build apk
+          flutter build apk --split-per-abi --target-platform android-${{ matrix.abi }}
 
           ls -lh build/app/outputs/flutter-apk/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-android
-          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/app-release.apk
+          name: hello-world-android-${{ matrix.abi }}
+          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/
 
   web:
     name: Web

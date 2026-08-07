@@ -3,11 +3,7 @@ name: test-flutter-package
 on:
   push:
     branches:
-      - dart-xcframework-2
-
-  schedule:
-    # nightly build at 16:50 UTC time every day
-    - cron: "50 16 * * *"
+      - flutter-ci
 
   workflow_dispatch:
 
@@ -302,8 +298,12 @@ jobs:
 
   android:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
-    name: Android
+    name: Android (${{ matrix.abi }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a, x86_64, x86]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -341,15 +341,15 @@ jobs:
         run: |
           cd flutter-examples/hello_world
           flutter pub get
-          flutter build apk
+          flutter build apk --split-per-abi --target-platform android-${{ matrix.abi }}
 
           ls -lh build/app/outputs/flutter-apk/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-pkg-android
-          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/app-release.apk
+          name: hello-world-pkg-android-${{ matrix.abi }}
+          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/
 
   web:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
