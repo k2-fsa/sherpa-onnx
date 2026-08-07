@@ -103,6 +103,7 @@ or details.
   sherpa_onnx::ParseOptions po(kUsageMessage);
   std::string output_filename = "./generated.wav";
   int32_t sid = 0;
+  int32_t emotion_id = -1;
 
   std::string reference_audio;
   po.Register(
@@ -135,6 +136,10 @@ or details.
               "Speaker ID. Used only for multi-speaker models, e.g., models "
               "trained using the VCTK dataset. Not used for single-speaker "
               "models, e.g., models trained using the LJSpeech dataset");
+
+  po.Register("emotion-id", &emotion_id,
+              "Emotion ID. Used only for models that support emotion "
+              "selection. Ignored otherwise.");
 
   po.Register("speed", &gen_config.speed,
               "Speech speed. Larger=faster. Used by Supertonic, VITS, etc. "
@@ -179,6 +184,10 @@ or details.
                          !config.model.zipvoice.decoder.empty();
 
   gen_config.sid = sid;
+
+  if (emotion_id >= 0) {
+    gen_config.extra["emotion_id"] = std::to_string(emotion_id);
+  }
 
   if (is_supertonic_tts && !lang.empty()) {
     gen_config.extra["lang"] = lang;

@@ -17,6 +17,7 @@ struct OfflineTtsVitsModelMetaData {
   int32_t sample_rate = 0;
   int32_t add_blank = 0;
   int32_t num_speakers = 0;
+  int32_t num_emotions = 0;
 
   bool is_piper = false;
   bool is_coqui = false;
