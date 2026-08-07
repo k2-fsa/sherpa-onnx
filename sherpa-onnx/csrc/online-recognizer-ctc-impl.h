@@ -7,8 +7,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <fstream>
 #include <ios>
 #include <memory>
+#include <regex>  // NOLINT
 #include <sstream>
 #include <string>
 #include <utility>
@@ -21,8 +23,11 @@
 #include "sherpa-onnx/csrc/online-ctc-fst-decoder.h"
 #include "sherpa-onnx/csrc/online-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-ctc-model.h"
+#include "sherpa-onnx/csrc/online-ctc-prefix-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/utils.h"
+#include "ssentencepiece/csrc/ssentencepiece.h"
 
 namespace sherpa_onnx {
 
@@ -104,7 +109,50 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
   }
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
-    auto stream = std::make_unique<OnlineStream>(config_.feat_config);
+    auto stream =
+        std::make_unique<OnlineStream>(config_.feat_config, hotwords_graph_);
+    stream->SetStates(model_->GetInitStates());
+    stream->SetFasterDecoder(decoder_->CreateFasterDecoder());
+
+    return stream;
+  }
+
+  std::unique_ptr<OnlineStream> CreateStream(
+      const std::string &hotwords) const override {
+    auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
+    std::istringstream is(hws);
+    std::vector<std::vector<int32_t>> current;
+    std::vector<float> current_scores;
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
+                        bpe_encoder_.get(), &current, &current_scores)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
+                       hotwords.c_str());
+    }
+
+    int32_t num_default_hws = hotwords_.size();
+    int32_t num_hws = current.size();
+
+    current.insert(current.end(), hotwords_.begin(), hotwords_.end());
+
+    if (!current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else if (!current_scores.empty() && boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_default_hws,
+                            config_.hotwords_score);
+    } else if (current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_hws,
+                            config_.hotwords_score);
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else {
+      // Do nothing.
+    }
+
+    auto context_graph = std::make_shared<ContextGraph>(
+        current, config_.hotwords_score, current_scores);
+    auto stream =
+        std::make_unique<OnlineStream>(config_.feat_config, context_graph);
     stream->SetStates(model_->GetInitStates());
     stream->SetFasterDecoder(decoder_->CreateFasterDecoder());
 
@@ -298,6 +346,18 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
           config_.ctc_fst_decoder_config, blank_id);
     } else if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineCtcGreedySearchDecoder>(blank_id);
+    } else if (config_.decoding_method == "prefix_beam_search") {
+      if (!config_.model_config.bpe_vocab.empty()) {
+        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
+            config_.model_config.bpe_vocab);
+      }
+
+      if (!config_.hotwords_file.empty()) {
+        InitHotwords();
+      }
+
+      decoder_ = std::make_unique<OnlineCtcPrefixBeamSearchDecoder>(
+          config_.max_active_paths, blank_id);
     } else {
       SHERPA_ONNX_LOGE(
           "Unsupported decoding method: %s for streaming CTC models",
@@ -352,11 +412,35 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
   }
 
  private:
+  void InitHotwords() {
+    std::ifstream is(config_.hotwords_file);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+                       config_.hotwords_file.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
+    }
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
+  }
+
   OnlineRecognizerConfig config_;
   std::unique_ptr<OnlineCtcModel> model_;
   std::unique_ptr<OnlineCtcDecoder> decoder_;
   SymbolTable sym_;
   Endpoint endpoint_;
+
+  // for prefix beam search with hotwords
+  std::unique_ptr<ssentencepiece::Ssentencepiece> bpe_encoder_;
+  std::vector<std::vector<int32_t>> hotwords_;
+  std::vector<float> boost_scores_;
+  ContextGraphPtr hotwords_graph_;
 };
 
 }  // namespace sherpa_onnx
