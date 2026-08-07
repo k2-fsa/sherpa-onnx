@@ -77,13 +77,6 @@ jobs:
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
-      - name: Use local sherpa_onnx_web
-        shell: bash
-        run: |
-          cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
-          rm -f pubspec.yaml.bak
-          cat pubspec.yaml
 
       - name: Download model
         shell: bash
@@ -110,8 +103,9 @@ jobs:
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
-          flutter pub get
           flutter config --no-enable-swift-package-manager
+          flutter pub get
+          cd macos && pod install && cd ..
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -211,13 +205,6 @@ jobs:
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
-      - name: Use local sherpa_onnx_web
-        shell: bash
-        run: |
-          cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
-          rm -f pubspec.yaml.bak
-          cat pubspec.yaml
 
       - name: Download model
         shell: bash
@@ -343,13 +330,6 @@ jobs:
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
-      - name: Use local sherpa_onnx_web
-        shell: bash
-        run: |
-          cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
-          rm -f pubspec.yaml.bak
-          cat pubspec.yaml
 
       - name: Download model
         shell: bash
@@ -455,13 +435,6 @@ jobs:
           cd ..
           ./generate-asset-list.py
 
-      - name: Use local sherpa_onnx_web
-        shell: bash
-        run: |
-          cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
-          rm -f pubspec.yaml.bak
-          cat pubspec.yaml
 
       - name: Build Flutter web app
         shell: bash

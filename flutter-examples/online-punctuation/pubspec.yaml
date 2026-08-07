@@ -19,8 +19,6 @@ dependencies:
   path: ^1.9.0
   sherpa_onnx:
     path: ../../flutter/sherpa_onnx
-  sherpa_onnx_web:
-    path: ../../flutter/sherpa_onnx_web
   url_launcher: 6.2.6
   url_launcher_linux: 3.1.0
 
