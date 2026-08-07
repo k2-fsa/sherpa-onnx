@@ -24,6 +24,10 @@
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
+#if SHERPA_ONNX_ENABLE_AXERA
+#include "sherpa-onnx/csrc/axera/offline-tts-supertonic-impl-axera.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
@@ -54,6 +58,11 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
   } else if (!config.model.pocket.lm_flow.empty()) {
     return std::make_unique<OfflineTtsPocketImpl>(config);
   } else if (!config.model.supertonic.tts_json.empty()) {
+#if SHERPA_ONNX_ENABLE_AXERA
+    if (config.model.provider == "axera") {
+      return std::make_unique<OfflineTtsSupertonicImplAxera>(config);
+    }
+#endif
     return std::make_unique<OfflineTtsSupertonicImpl>(config);
   }
 
@@ -79,6 +88,11 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
   } else if (!config.model.pocket.lm_flow.empty()) {
     return std::make_unique<OfflineTtsPocketImpl>(mgr, config);
   } else if (!config.model.supertonic.tts_json.empty()) {
+#if SHERPA_ONNX_ENABLE_AXERA
+    if (config.model.provider == "axera") {
+      return std::make_unique<OfflineTtsSupertonicImplAxera>(mgr, config);
+    }
+#endif
     return std::make_unique<OfflineTtsSupertonicImpl>(mgr, config);
   }
 
