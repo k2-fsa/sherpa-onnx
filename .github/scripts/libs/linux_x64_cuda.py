@@ -25,7 +25,7 @@ class OnnxruntimeConfig:
 
     @property
     def dst_suffix(self) -> str:
-        return f"cuda-{self.cuda_version}.x-cudnn-9.x-linux-x64-gpu"
+        return f"cuda-{self.cuda_version}.x-cudnn-9.x-onnxruntime{self.onnxruntime_version}-linux-x64-gpu"
 
 
 # To add a new onnxruntime version, just add entries here.
