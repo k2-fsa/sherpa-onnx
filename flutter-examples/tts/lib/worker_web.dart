@@ -68,7 +68,8 @@ class TtsWorker {
     // Build model files map.
     final jsModelFiles = JSObject();
     for (final entry in modelFiles.entries) {
-      jsModelFiles[entry.key] = entry.value.buffer.toJS;
+      final bytes = Uint8List.fromList(entry.value);
+      jsModelFiles[entry.key] = bytes.buffer.toJS;
     }
 
     // Convert OfflineTtsConfig to JS format for the worker.
@@ -127,13 +128,13 @@ class TtsWorker {
   /// Load a Flutter asset as a UTF-8 string.
   static Future<String> _loadAssetAsString(String assetPath) async {
     final data = await rootBundle.load(assetPath);
-    return utf8.decode(data.buffer.asUint8List());
+    return utf8.decode(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
   }
 
   /// Load a Flutter asset as bytes.
   static Future<Uint8List> _loadAssetBytes(String assetPath) async {
     final data = await rootBundle.load(assetPath);
-    return data.buffer.asUint8List();
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
   /// Convert a JS ArrayBuffer to a Dart ByteBuffer.

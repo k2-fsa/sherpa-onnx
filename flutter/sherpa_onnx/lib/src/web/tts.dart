@@ -80,7 +80,12 @@ class OfflineTts {
 
     // Reference audio for voice cloning (e.g. Pocket TTS).
     if (config.referenceAudio != null && config.referenceAudio!.isNotEmpty) {
-      genConfig['referenceAudio'] = config.referenceAudio;
+      // Convert Float32List to a JS Float32Array via the ArrayBuffer constructor.
+      final arrayBuffer = config.referenceAudio!.buffer.toJS;
+      final float32ArrayCtor =
+          globalContext.getProperty('Float32Array'.toJS) as JSFunction;
+      genConfig['referenceAudio'] =
+          float32ArrayCtor.callAsConstructor(arrayBuffer);
       genConfig['referenceSampleRate'] = config.referenceSampleRate.toJS;
       genConfig['referenceText'] = config.referenceText.toJS;
     }

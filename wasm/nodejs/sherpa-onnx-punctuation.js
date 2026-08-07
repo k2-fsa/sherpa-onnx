@@ -64,7 +64,7 @@ function initSherpaOnnxOfflinePunctuationConfig(config, Module) {
 }
 
 function initSherpaOnnxOnlinePunctuationModelConfig(config, Module) {
-  const model = config.cnnBilstm || '';
+  const model = config.cnnBiLstm || config.cnnBilstm || '';
   const modelLen = Module.lengthBytesUTF8(model) + 1;
   const bpeVocab = config.bpeVocab || '';
   const bpeVocabLen = Module.lengthBytesUTF8(bpeVocab) + 1;
