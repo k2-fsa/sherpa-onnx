@@ -55,18 +55,16 @@ function(download_simple_sentencepiece)
 #include <functional>
 #include <future>
 #include <memory>
-#include <type_traits>
-#include <utility>
-#include <vector>
 
 class ThreadPool {
  public:
   ThreadPool(size_t) {}
+  // C++14 compatible: use auto return type with decltype.
   template<class F, class... Args>
-  std::future<std::invoke_result_t<F, Args...>>
-  enqueue(F&& f, Args&&... args) {
+  auto enqueue(F&& f, Args&&... args)
+      -> std::future<decltype(f(args...))> {
     // Run synchronously — no threading in WASM.
-    using return_type = std::invoke_result_t<F, Args...>;
+    using return_type = decltype(f(args...));
     auto task = std::make_shared<std::packaged_task<return_type()>>(
         std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     std::future<return_type> res = task->get_future();
@@ -83,6 +81,12 @@ class ThreadPool {
   if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
+  endif()
+
+  # Skip the C++14 compiler check for WASM (Emscripten supports it but the
+  # CMake test may fail depending on flags).
+  if(SHERPA_ONNX_ENABLE_WASM)
+    set(SBPE_COMPILER_SUPPORTS_CXX14 ON CACHE BOOL "" FORCE)
   endif()
 
   add_subdirectory(${simple-sentencepiece_SOURCE_DIR} ${simple-sentencepiece_BINARY_DIR} EXCLUDE_FROM_ALL)
