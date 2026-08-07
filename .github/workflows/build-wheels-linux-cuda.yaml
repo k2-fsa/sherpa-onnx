@@ -14,15 +14,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          MATRIX=$(python3 .github/scripts/wheels/linux_x64_cuda.py)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
   build_wheels_linux_cuda:
-    name: ${{ matrix.manylinux }} ${{ matrix.python-version }} ${{ matrix.onnxruntime_version }}
+    needs: [generate_matrix]
+    name: ${{ matrix.python-version }} ${{ matrix.onnxruntime_version }} cuda${{ matrix.cuda_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
-        onnxruntime_version: ["1.17.1", "1.24.4"]
+        ${{ fromJson(needs.generate_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -73,16 +84,13 @@ jobs:
           export SHERPA_ONNX_ENABLE_ALSA=1
           export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON"
 
-          onnxruntime_version=${{ matrix.onnxruntime_version }}
-          curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v$onnxruntime_version/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
-          unzip  onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
+          curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${{ matrix.onnxruntime_version }}/onnxruntime-linux-x64-${{ matrix.onnxruntime_url_suffix }}.zip
+          unzip onnxruntime-linux-x64-${{ matrix.onnxruntime_url_suffix }}.zip
 
-          export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/lib
-          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/include
+          export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/${{ matrix.onnxruntime_dir_name }}/lib
+          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/${{ matrix.onnxruntime_dir_name }}/include
 
-          if [[ $onnxruntime_version == "1.24.4" ]]; then
-            export SHERPA_ONNX_CUDA_VERSION="12.cudnn9"
-          fi
+          export SHERPA_ONNX_CUDA_VERSION="${{ matrix.cuda_version_tag }}"
 
           python3 setup.py bdist_wheel
 
@@ -117,7 +125,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-cuda-${{ matrix.python-version }}-${{ matrix.onnxruntime_version }}
+          name: wheel-cuda-${{ matrix.python-version }}-${{ matrix.onnxruntime_version }}-cuda${{ matrix.cuda_version }}
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
