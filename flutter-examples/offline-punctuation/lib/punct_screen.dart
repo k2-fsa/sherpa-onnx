@@ -1,5 +1,4 @@
 // Copyright (c)  2026  Xiaomi Corporation
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import './punct_manager.dart';

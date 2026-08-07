@@ -55,16 +55,18 @@ function(download_simple_sentencepiece)
 #include <functional>
 #include <future>
 #include <memory>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 class ThreadPool {
  public:
   ThreadPool(size_t) {}
   template<class F, class... Args>
-  std::future<typename std::result_of<F(Args...)>::type>
+  std::future<std::invoke_result_t<F, Args...>>
   enqueue(F&& f, Args&&... args) {
     // Run synchronously — no threading in WASM.
-    using return_type = typename std::result_of<F(Args...)>::type;
+    using return_type = std::invoke_result_t<F, Args...>;
     auto task = std::make_shared<std::packaged_task<return_type()>>(
         std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     std::future<return_type> res = task->get_future();
