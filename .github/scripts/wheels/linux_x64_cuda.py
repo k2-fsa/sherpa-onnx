@@ -37,6 +37,7 @@ def main():
     entries = []
     for py, cfg in itertools.product(python_versions, onnxruntime_configs):
         d = asdict(cfg)
+        d["os"] = "ubuntu-22.04"
         d["python-version"] = py
         d["onnxruntime_url_suffix"] = cfg.onnxruntime_url_suffix
         d["onnxruntime_dir_name"] = cfg.onnxruntime_dir_name
