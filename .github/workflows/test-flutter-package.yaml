@@ -3,7 +3,7 @@ name: test-flutter-package
 on:
   push:
     branches:
-      - flutter-ci
+      - flutter-ci-2
 
   workflow_dispatch:
 
@@ -410,12 +410,12 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world/build/
-          mv web hello-world-pkg-web
-          zip -r hello-world-pkg-web.zip hello-world-pkg-web/
-          ls -lh hello-world-pkg-web.zip
+          mv web flutter-hello-world-pkg-web
+          zip -r flutter-hello-world-pkg-web.zip flutter-hello-world-pkg-web/
+          ls -lh flutter-hello-world-pkg-web.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-pkg-web
-          path: flutter-examples/hello_world/build/hello-world-pkg-web.zip
+          name: flutter-hello-world-pkg-web
+          path: flutter-examples/hello_world/build/flutter-hello-world-pkg-web.zip

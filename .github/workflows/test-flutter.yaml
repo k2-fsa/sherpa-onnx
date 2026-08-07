@@ -90,14 +90,16 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world/build/macos/Build/Products/Release/
-          zip -r hello-world-macos-cocoapods.zip hello_world.app
-          ls -lh hello-world-macos-cocoapods.zip
+          mkdir -p flutter-hello-world-macos-cocoapods
+          mv hello_world.app flutter-hello-world-macos-cocoapods/
+          zip -r flutter-hello-world-macos-cocoapods.zip flutter-hello-world-macos-cocoapods/
+          ls -lh flutter-hello-world-macos-cocoapods.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-macos-cocoapods
-          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-macos-cocoapods.zip
+          name: flutter-hello-world-macos-cocoapods
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/flutter-hello-world-macos-cocoapods.zip
 
   macos_spm:
     name: macOS (SPM)
@@ -172,14 +174,16 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world/build/macos/Build/Products/Release/
-          zip -r hello-world-macos-spm.zip hello_world.app
-          ls -lh hello-world-macos-spm.zip
+          mkdir -p flutter-hello-world-macos-spm
+          mv hello_world.app flutter-hello-world-macos-spm/
+          zip -r flutter-hello-world-macos-spm.zip flutter-hello-world-macos-spm/
+          ls -lh flutter-hello-world-macos-spm.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-macos-spm
-          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-macos-spm.zip
+          name: flutter-hello-world-macos-spm
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/flutter-hello-world-macos-spm.zip
 
   ios_cocoapods:
     name: iOS (CocoaPods)
@@ -516,25 +520,23 @@ jobs:
       matrix:
         include:
           - abi: arm64-v8a
+            target_platform: android-arm64
             build_script: build-android-arm64-v8a.sh
             build_dir: build-android-arm64-v8a
             plugin: sherpa_onnx_android_arm64
             plugin_key: sherpa_onnx_android_arm64
           - abi: armeabi-v7a
+            target_platform: android-arm
             build_script: build-android-armv7-eabi.sh
             build_dir: build-android-armv7-eabi
             plugin: sherpa_onnx_android_armeabi
             plugin_key: sherpa_onnx_android_armeabi
           - abi: x86_64
+            target_platform: android-x64
             build_script: build-android-x86-64.sh
             build_dir: build-android-x86-64
             plugin: sherpa_onnx_android_x86_64
             plugin_key: sherpa_onnx_android_x86_64
-          - abi: x86
-            build_script: build-android-x86.sh
-            build_dir: build-android-x86
-            plugin: sherpa_onnx_android_x86
-            plugin_key: sherpa_onnx_android_x86
     steps:
       - uses: actions/checkout@v4
         with:
@@ -605,7 +607,7 @@ jobs:
           rm -f pubspec.yaml.bak
 
           flutter pub get
-          flutter build apk --split-per-abi --target-platform android-${{ matrix.abi }}
+          flutter build apk --split-per-abi --target-platform ${{ matrix.target_platform }}
 
           ls -lh build/app/outputs/flutter-apk/
 
@@ -684,12 +686,12 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world/build/
-          mv web hello-world-web
-          zip -r hello-world-web.zip hello-world-web/
-          ls -lh hello-world-web.zip
+          mv web flutter-hello-world-web
+          zip -r flutter-hello-world-web.zip flutter-hello-world-web/
+          ls -lh flutter-hello-world-web.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-web
-          path: flutter-examples/hello_world/build/hello-world-web.zip
+          name: flutter-hello-world-web
+          path: flutter-examples/hello_world/build/flutter-hello-world-web.zip

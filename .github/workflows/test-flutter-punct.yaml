@@ -1,0 +1,491 @@
+name: test-flutter-punct
+
+on:
+  push:
+    branches:
+      - master
+      - flutter-ci
+    paths:
+      - '.github/workflows/test-flutter-punct.yaml'
+      - 'flutter-examples/online-punctuation/**'
+      - 'flutter-examples/offline-punctuation/**'
+      - 'flutter/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-flutter-punct-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: macOS (${{ matrix.demo }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [online-punctuation, offline-punctuation]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-flutter-punct-${{ matrix.demo }}
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: 3.44.8
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build xcframework from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework
+        shell: bash
+        run: |
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework/
+
+      - name: Use local sherpa_onnx_macos
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_macos: ^1.13.4|  # sherpa_onnx_macos: ^1.13.4\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Use local sherpa_onnx_web
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
+          else
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+          fi
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter config --no-enable-swift-package-manager
+          flutter build macos
+
+          ls -lh build/macos/Build/Products/Release/
+
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
+          mkdir -p ${{ matrix.demo }}
+          mv ${{ matrix.demo }}.app ${{ matrix.demo }}/
+          zip -r ${{ matrix.demo }}-macos.zip ${{ matrix.demo }}/
+          ls -lh ${{ matrix.demo }}-macos.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.demo }}-macos
+          path: flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${{ matrix.demo }}-macos.zip
+
+  linux:
+    name: Linux (${{ matrix.demo }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [online-punctuation, offline-punctuation]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: linux-flutter-punct-${{ matrix.demo }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          mkdir build
+          cd build
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          if [[ $(uname -m) == "aarch64" ]]; then
+            arch=aarch64
+          else
+            arch=x64
+          fi
+          cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/$arch
+          ls -lh ./flutter/sherpa_onnx_linux/linux/$arch
+
+      - name: Use local sherpa_onnx_linux
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_linux: ^1.13.4|  # sherpa_onnx_linux: ^1.13.4\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Use local sherpa_onnx_web
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
+          else
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+          fi
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build linux
+
+          ls -lh build/linux/*/release/bundle/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.demo }}-linux
+          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/bundle/
+
+  android:
+    name: Android (${{ matrix.demo }}, ${{ matrix.abi }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [online-punctuation, offline-punctuation]
+        abi: [arm64-v8a, armeabi-v7a, x86_64]
+        include:
+          - abi: arm64-v8a
+            target_platform: android-arm64
+            build_script: build-android-arm64-v8a.sh
+            build_dir: build-android-arm64-v8a
+            plugin: sherpa_onnx_android_arm64
+            plugin_key: sherpa_onnx_android_arm64
+          - abi: armeabi-v7a
+            target_platform: android-arm
+            build_script: build-android-armv7-eabi.sh
+            build_dir: build-android-armv7-eabi
+            plugin: sherpa_onnx_android_armeabi
+            plugin_key: sherpa_onnx_android_armeabi
+          - abi: x86_64
+            target_platform: android-x64
+            build_script: build-android-x86-64.sh
+            build_dir: build-android-x86-64
+            plugin: sherpa_onnx_android_x86_64
+            plugin_key: sherpa_onnx_android_x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-flutter-punct-${{ matrix.demo }}-${{ matrix.abi }}
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build ${{ matrix.abi }} from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export SHERPA_ONNX_ENABLE_C_API=ON
+          export SHERPA_ONNX_ENABLE_JNI=OFF
+          export SHERPA_ONNX_ENABLE_BINARY=OFF
+          ./${{ matrix.build_script }}
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -fv ${{ matrix.build_dir }}/install/lib/lib*.so flutter/${{ matrix.plugin }}/android/src/main/jniLibs/${{ matrix.abi }}/
+          ls -lh flutter/${{ matrix.plugin }}/android/src/main/jniLibs/${{ matrix.abi }}/
+
+      - name: Use local ${{ matrix.plugin }}
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  ${{ matrix.plugin_key }}: ^1.13.4|  # ${{ matrix.plugin_key }}: ^1.13.4\n  ${{ matrix.plugin_key }}:\n    path: ../${{ matrix.plugin }}|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Use local sherpa_onnx_web
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
+          else
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+          fi
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Build Flutter APK
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build apk --split-per-abi --target-platform ${{ matrix.target_platform }}
+
+          ls -lh build/app/outputs/flutter-apk/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.demo }}-android-${{ matrix.abi }}
+          path: flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/
+
+  web:
+    name: Web (${{ matrix.demo }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [online-punctuation, offline-punctuation]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.23
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build WASM module
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export CMAKE_C_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-wasm-simd-web.sh
+
+      - name: Copy WASM assets to web plugin
+        shell: bash
+        run: |
+          ./build-flutter-web-wasm.sh
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
+          else
+            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+          fi
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Use local sherpa_onnx_web
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_web: ^1.13.4|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Build Flutter web app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build web
+
+          ls -lh build/web/
+
+      - name: Zip web app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/
+          mv web ${{ matrix.demo }}
+          zip -r ${{ matrix.demo }}.zip ${{ matrix.demo }}/
+          ls -lh ${{ matrix.demo }}.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.demo }}-web
+          path: flutter-examples/${{ matrix.demo }}/build/${{ matrix.demo }}.zip

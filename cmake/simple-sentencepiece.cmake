@@ -55,18 +55,16 @@ function(download_simple_sentencepiece)
 #include <functional>
 #include <future>
 #include <memory>
-#include <type_traits>
-#include <utility>
-#include <vector>
 
 class ThreadPool {
  public:
   ThreadPool(size_t) {}
+  // C++14 compatible: use auto return type with decltype.
   template<class F, class... Args>
-  std::future<std::invoke_result_t<F, Args...>>
-  enqueue(F&& f, Args&&... args) {
+  auto enqueue(F&& f, Args&&... args)
+      -> std::future<decltype(f(args...))> {
     // Run synchronously — no threading in WASM.
-    using return_type = std::invoke_result_t<F, Args...>;
+    using return_type = decltype(f(args...));
     auto task = std::make_shared<std::packaged_task<return_type()>>(
         std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     std::future<return_type> res = task->get_future();
