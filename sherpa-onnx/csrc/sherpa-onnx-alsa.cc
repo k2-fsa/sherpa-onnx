@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <algorithm>
-#include <cctype>  // std::tolower
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -134,10 +132,9 @@ as the device_name.
 
     if (!text.empty() && last_text != text) {
       last_text = text;
-
-      std::transform(text.begin(), text.end(), text.begin(),
-                     [](auto c) { return std::tolower(c); });
-
+      // Print raw model text (same as sherpa-onnx file decode). Do not force
+      // lowercase here; tokens.txt case must stay consistent across sources.
+      // See https://github.com/k2-fsa/sherpa-onnx/issues/3621
       display.Print(segment_index, text);
       fflush(stderr);
     }
