@@ -12,6 +12,19 @@ class PunctScreen extends StatefulWidget {
   State<PunctScreen> createState() => _PunctScreenState();
 }
 
+const _exampleText =
+    'last week my friends and i decided to take a spontaneous road trip down '
+    'the coast we packed our bags early on saturday morning and hit the highway '
+    'before the sun was even up the weather was absolutely perfect with clear '
+    'blue skies and a gentle breeze blowing through the open windows as we '
+    'drove we played our favorite playlist and sang along at the top of our '
+    'lungs around noon we stopped at a small coastal town to grab some lunch '
+    'we found a cozy little diner right by the pier where we ordered fresh '
+    'fish and chips and homemade lemonade after eating we walked along the '
+    'beach collected a few unique seashells and took tons of pictures to '
+    'capture the memory it was honestly one of the best weekends ive had in a '
+    'long time and i cannot wait until our next adventure';
+
 class _PunctScreenState extends State<PunctScreen> {
   final _inputController = TextEditingController();
   final _resultController = TextEditingController();
@@ -33,11 +46,12 @@ class _PunctScreenState extends State<PunctScreen> {
 
     _manager.resultStream.listen((result) {
       if (!mounted) return;
+      final wordCount = _inputController.text.trim().split(RegExp(r'\s+')).length;
       setState(() {
         _isProcessing = false;
         _resultController.text = result.result;
         _logController.text =
-            'Elapsed: ${result.elapsed.toStringAsFixed(3)}s';
+            'Words: $wordCount | Elapsed: ${result.elapsed.toStringAsFixed(3)}s';
       });
     });
   }
@@ -79,6 +93,11 @@ class _PunctScreenState extends State<PunctScreen> {
               onPunctuate: _onPunctuate,
               onClear: () {
                 _inputController.clear();
+                _resultController.clear();
+                _logController.clear();
+              },
+              onExample: () {
+                _inputController.text = _exampleText;
                 _resultController.clear();
                 _logController.clear();
               },

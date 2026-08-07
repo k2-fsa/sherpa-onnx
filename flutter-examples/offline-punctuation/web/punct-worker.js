@@ -66,7 +66,10 @@ self.onmessage = async function(e) {
         self.eval(msg.jsGlueSource);
       }
 
-      // 2. Load punctuation JS helpers.
+      // 2. Define module stub (Node.js pattern used by JS wrappers).
+      self.eval('if (typeof module === "undefined") { var module = {}; }');
+
+      // 3. Load punctuation JS helpers.
       if (msg.punctJsSource) {
         self.eval(msg.punctJsSource);
       }

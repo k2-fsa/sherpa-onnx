@@ -66,7 +66,10 @@ self.onmessage = async function(e) {
         self.eval(msg.jsGlueSource);
       }
 
-      // 2. Load punctuation JS helpers.
+      // 2. Define module stub (Node.js pattern used by JS wrappers).
+      self.eval('if (typeof module === "undefined") { var module = {}; }');
+
+      // 3. Load punctuation JS helpers.
       if (msg.punctJsSource) {
         self.eval(msg.punctJsSource);
       }
@@ -84,7 +87,9 @@ self.onmessage = async function(e) {
       for (const [path, bytes] of Object.entries(modelFiles)) {
         const dir = path.substring(0, path.lastIndexOf('/'));
         if (dir) mkdirTree(dir);
-        writeFile(path, new Uint8Array(bytes));
+        const arr = new Uint8Array(bytes);
+        writeFile(path, arr);
+        self.postMessage({ type: 'log', message: 'Wrote ' + path + ' (' + arr.length + ' bytes)' });
       }
 
       // 5. Create punctuation instance (online).

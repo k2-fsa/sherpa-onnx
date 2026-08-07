@@ -12,6 +12,14 @@ class PunctScreen extends StatefulWidget {
   State<PunctScreen> createState() => _PunctScreenState();
 }
 
+const _exampleText =
+    'yesterday afternoon 我去了一家 near my apartment 的 coffee shop '
+    '想要 enjoy a cup of hot latte 并 check 一些 important work emails '
+    '顺便在我的 laptop 上写一点 code 因为那里的 atmosphere 总是非常 '
+    'quiet and comfortable 可以让我更加 focus on coding 和 writing documents '
+    '而且没有任何 distractions 所以 if you also like this kind of relaxing '
+    'weekend vibe 我们 definitely 应该 plan 一个 time 一起 hang out.';
+
 class _PunctScreenState extends State<PunctScreen> {
   final _inputController = TextEditingController();
   final _resultController = TextEditingController();
@@ -33,11 +41,12 @@ class _PunctScreenState extends State<PunctScreen> {
 
     _manager.resultStream.listen((result) {
       if (!mounted) return;
+      final wordCount = _inputController.text.trim().split(RegExp(r'\s+')).length;
       setState(() {
         _isProcessing = false;
         _resultController.text = result.result;
         _logController.text =
-            'Elapsed: ${result.elapsed.toStringAsFixed(3)}s';
+            'Words: $wordCount | Elapsed: ${result.elapsed.toStringAsFixed(3)}s';
       });
     });
   }
@@ -79,6 +88,11 @@ class _PunctScreenState extends State<PunctScreen> {
               onPunctuate: _onPunctuate,
               onClear: () {
                 _inputController.clear();
+                _resultController.clear();
+                _logController.clear();
+              },
+              onExample: () {
+                _inputController.text = _exampleText;
                 _resultController.clear();
                 _logController.clear();
               },

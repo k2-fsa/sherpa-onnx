@@ -43,6 +43,41 @@ function(download_simple_sentencepiece)
   endif()
   message(STATUS "simple-sentencepiece is downloaded to ${simple-sentencepiece_SOURCE_DIR}")
 
+  # Patch ssentencepiece to disable threading on WASM (std::thread not available).
+  if(SHERPA_ONNX_ENABLE_WASM)
+    # Replace threadpool.h with a WASM-safe stub that provides a no-op ThreadPool.
+    set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
+    file(WRITE "${_tp_header}" [=[
+// WASM-safe ThreadPool stub (std::thread not available).
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
+
+#include <functional>
+#include <future>
+#include <memory>
+#include <vector>
+
+class ThreadPool {
+ public:
+  ThreadPool(size_t) {}
+  template<class F, class... Args>
+  std::future<typename std::result_of<F(Args...)>::type>
+  enqueue(F&& f, Args&&... args) {
+    // Run synchronously — no threading in WASM.
+    using return_type = typename std::result_of<F(Args...)>::type;
+    auto task = std::make_shared<std::packaged_task<return_type()>>(
+        std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    std::future<return_type> res = task->get_future();
+    (*task)();
+    return res;
+  }
+};
+
+#endif  // THREAD_POOL_H
+]=])
+    message(STATUS "Patched ssentencepiece for WASM (ThreadPool stub installed)")
+  endif()
+
   if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)

@@ -14,6 +14,44 @@ It works on the following platforms:
   - Windows
   - Web
 
+## Example
+
+Input text (145 words):
+
+```
+last week my friends and i decided to take a spontaneous road trip
+down the coast we packed our bags early on saturday morning and hit
+the highway before the sun was even up the weather was absolutely
+perfect with clear blue skies and a gentle breeze blowing through
+the open windows as we drove we played our favorite playlist and
+sang along at the top of our lungs around noon we stopped at a
+small coastal town to grab some lunch we found a cozy little diner
+right by the pier where we ordered fresh fish and chips and homemade
+lemonade after eating we walked along the beach collected a few
+unique seashells and took tons of pictures to capture the memory it
+was honestly one of the best weekends ive had in a long time and i
+cannot wait until our next adventure
+```
+
+Output text:
+
+```
+Last week, my friends and I decided to take a spontaneous road trip
+down the coast. We packed our bags early on Saturday morning and hit
+the highway before the sun was even up. The weather was absolutely
+perfect with clear blue skies and a gentle breeze blowing through
+the open windows. As we drove, we played our favorite playlist and
+sang along at the top of our lungs. Around noon, we stopped at a
+small coastal town to grab some lunch. We found a cozy little diner,
+right by the pier, where we ordered fresh fish and chips and homemade
+lemonade. After eating, we walked along the beach, collected a few
+unique seashells and took tons of pictures to capture the memory. It
+was honestly one of the best weekends Ive had in a long time. and I
+cannot wait until our next adventure.
+```
+
+Performance (web demo, 1 thread): `Words: 145 | Elapsed: 0.085s`
+
 ## How to build
 
 ### 1. Download the model
@@ -88,7 +126,7 @@ cd build/web
 python3 -m http.server 6006
 ```
 
-Then open <http://localhost:6006> in your browser.
+Then visit <http://localhost:6006> in your browser.
 
   - For iOS
 
@@ -100,13 +138,3 @@ flutter run -d <device-id> --release
 ```
 
 If you get signing errors, open `ios/Runner.xcworkspace` in Xcode, configure your signing team, then retry.
-
-## Fix for Linux
-
-If you get gstreamer errors:
-
-```bash
-sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
-```
-
-See also <https://github.com/bluefireteam/audioplayers/tree/main/packages/audioplayers_linux#setup-for-linux>.

@@ -61,7 +61,8 @@ class PunctWorker {
     // Build model files map.
     final jsModelFiles = JSObject();
     for (final entry in modelFiles.entries) {
-      jsModelFiles[entry.key] = entry.value.buffer.toJS;
+      final bytes = Uint8List.fromList(entry.value);
+      jsModelFiles[entry.key] = bytes.buffer.toJS;
     }
 
     // Convert config to JS format.
@@ -94,7 +95,7 @@ class PunctWorker {
 
   static Future<String> _loadAssetAsString(String assetPath) async {
     final data = await rootBundle.load(assetPath);
-    return utf8.decode(data.buffer.asUint8List());
+    return utf8.decode(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
   }
 
   static Future<Uint8List> _loadAssetBytes(String assetPath) async {

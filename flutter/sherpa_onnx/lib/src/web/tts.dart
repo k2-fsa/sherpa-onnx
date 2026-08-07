@@ -80,7 +80,7 @@ class OfflineTts {
 
     // Reference audio for voice cloning (e.g. Pocket TTS).
     if (config.referenceAudio != null && config.referenceAudio!.isNotEmpty) {
-      genConfig['referenceAudio'] = config.referenceAudio;
+      genConfig['referenceAudio'] = config.referenceAudio as JSAny;
       genConfig['referenceSampleRate'] = config.referenceSampleRate.toJS;
       genConfig['referenceText'] = config.referenceText.toJS;
     }
