@@ -4,12 +4,7 @@ on:
   push:
     branches:
       - master
-      - flutter-ci
-    paths:
-      - '.github/workflows/test-flutter-punct.yaml'
-      - 'flutter-examples/online-punctuation/**'
-      - 'flutter-examples/offline-punctuation/**'
-      - 'flutter/**'
+      - flutter-ci-2
 
   workflow_dispatch:
 
@@ -77,18 +72,25 @@ jobs:
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
+      - name: Remove sherpa_onnx_web dependency
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
 
       - name: Download model
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
           else
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            curl -sSL -o sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
           fi
@@ -114,16 +116,18 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
-          mkdir -p ${{ matrix.demo }}
-          mv ${{ matrix.demo }}.app ${{ matrix.demo }}/
-          zip -r ${{ matrix.demo }}-macos.zip ${{ matrix.demo }}/
-          ls -lh ${{ matrix.demo }}-macos.zip
+          # Flutter converts hyphens to underscores in the app name.
+          app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
+          mkdir -p flutter-${{ matrix.demo }}
+          mv ${app_name}.app flutter-${{ matrix.demo }}/
+          zip -r flutter-${{ matrix.demo }}-macos.zip flutter-${{ matrix.demo }}/
+          ls -lh flutter-${{ matrix.demo }}-macos.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.demo }}-macos
-          path: flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${{ matrix.demo }}-macos.zip
+          name: flutter-${{ matrix.demo }}-macos
+          path: flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-macos.zip
 
   linux:
     name: Linux (${{ matrix.demo }})
@@ -205,18 +209,25 @@ jobs:
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
+      - name: Remove sherpa_onnx_web dependency
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
 
       - name: Download model
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
           else
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            curl -sSL -o sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
           fi
@@ -239,8 +250,113 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.demo }}-linux
+          name: flutter-${{ matrix.demo }}-linux-x64
           path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/bundle/
+
+  windows:
+    name: Windows (${{ matrix.demo }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [online-punctuation, offline-punctuation]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/
+          ls -lh ./flutter/sherpa_onnx_windows/windows/
+
+      - name: Use local sherpa_onnx_windows
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_windows: ^1.13.4|  # sherpa_onnx_windows: ^1.13.4\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Remove sherpa_onnx_web dependency
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
+            curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
+          else
+            curl -sSL -o sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+          fi
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build windows
+
+          ls -lh build/windows/x64/runner/Release/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-${{ matrix.demo }}-win-x64
+          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/Release/
 
   android:
     name: Android (${{ matrix.demo }}, ${{ matrix.abi }})
@@ -336,12 +452,12 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
           else
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            curl -sSL -o sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
           fi
@@ -361,11 +477,18 @@ jobs:
 
           ls -lh build/app/outputs/flutter-apk/
 
+      - name: Rename APK
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/
+          mv app-*-release.apk flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
+          ls -lh *.apk
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.demo }}-android-${{ matrix.abi }}
-          path: flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/
+          name: flutter-${{ matrix.demo }}-android-${{ matrix.abi }}
+          path: flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
 
   web:
     name: Web (${{ matrix.demo }})
@@ -408,9 +531,6 @@ jobs:
       - name: Build WASM module
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export CMAKE_C_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           ./build-wasm-simd-web.sh
 
       - name: Copy WASM assets to web plugin
@@ -423,12 +543,12 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+            curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             rm sherpa-onnx-online-punct-en-2024-08-06/model.onnx
           else
-            wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
+            curl -sSL -o sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
             rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2
           fi
@@ -453,12 +573,12 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/
-          mv web ${{ matrix.demo }}
-          zip -r ${{ matrix.demo }}.zip ${{ matrix.demo }}/
-          ls -lh ${{ matrix.demo }}.zip
+          mv web flutter-${{ matrix.demo }}
+          zip -r flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
+          ls -lh flutter-${{ matrix.demo }}.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.demo }}-web
-          path: flutter-examples/${{ matrix.demo }}/build/${{ matrix.demo }}.zip
+          name: flutter-${{ matrix.demo }}-web
+          path: flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip

@@ -83,6 +83,12 @@ class ThreadPool {
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
+  # Skip the C++14 compiler check for WASM (Emscripten supports it but the
+  # CMake test may fail depending on flags).
+  if(SHERPA_ONNX_ENABLE_WASM)
+    set(SBPE_COMPILER_SUPPORTS_CXX14 ON CACHE BOOL "" FORCE)
+  endif()
+
   add_subdirectory(${simple-sentencepiece_SOURCE_DIR} ${simple-sentencepiece_BINARY_DIR} EXCLUDE_FROM_ALL)
 
   if(TARGET ssentencepiece_core AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))

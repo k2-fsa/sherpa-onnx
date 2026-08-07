@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - master
-      - flutter-ci
-    paths:
-      - '.github/workflows/test-flutter.yaml'
-      - 'flutter-examples/hello_world/**'
-      - 'flutter/**'
 
   workflow_dispatch:
 
@@ -434,7 +429,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-linux-${{ matrix.os }}
+          name: flutter-hello-world-linux-x64
           path: flutter-examples/hello_world/build/linux/*/release/bundle/
 
   windows:
@@ -511,7 +506,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-windows
+          name: flutter-hello-world-win-x64
           path: flutter-examples/hello_world/build/windows/x64/runner/Release/
 
   android:
@@ -613,11 +608,18 @@ jobs:
 
           ls -lh build/app/outputs/flutter-apk/
 
+      - name: Rename APK
+        shell: bash
+        run: |
+          cd flutter-examples/hello_world/build/app/outputs/flutter-apk/
+          mv app-*-release.apk flutter-hello-world-${{ matrix.abi }}.apk
+          ls -lh *.apk
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-world-android-${{ matrix.abi }}
-          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/
+          name: flutter-hello-world-android-${{ matrix.abi }}
+          path: flutter-examples/hello_world/build/app/outputs/flutter-apk/flutter-hello-world-${{ matrix.abi }}.apk
 
   web:
     name: Web
