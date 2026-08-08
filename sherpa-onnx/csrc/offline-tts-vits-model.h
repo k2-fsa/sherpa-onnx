@@ -26,14 +26,18 @@ class OfflineTtsVitsModel {
   /** Run the model.
    *
    * @param x A int64 tensor of shape (1, num_tokens)
-  // @param sid Speaker ID. Used only for multi-speaker models, e.g., models
-  //            trained using the VCTK dataset. It is not used for
-  //            single-speaker models, e.g., models trained using the ljspeech
-  //            dataset.
+   * @param sid Speaker ID. Used only for multi-speaker models, e.g., models
+   *            trained using the VCTK dataset. It is not used for
+   *            single-speaker models, e.g., models trained using the ljspeech
+   *            dataset.
+   * @param emotion_id Emotion ID. Used only for multi-emotion VITS models
+   *            whose ONNX file exposes an extra emotion_id input tensor
+   *            (num_emotions > 0 in the model metadata).
    * @return Return a float32 tensor containing audio samples. You can flatten
    *         it to a 1-D tensor.
    */
-  Ort::Value Run(Ort::Value x, int64_t sid = 0, float speed = 1.0);
+  Ort::Value Run(Ort::Value x, int64_t sid = 0, float speed = 1.0,
+                 int64_t emotion_id = 0);
 
   // This is for MeloTTS
   Ort::Value Run(Ort::Value x, Ort::Value tones, int64_t sid = 0,
