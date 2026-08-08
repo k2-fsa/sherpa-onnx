@@ -184,6 +184,14 @@ class OfflineSpeakerDiarizationPyannoteImpl
       chunk_speaker_samples_list_pair.second = std::move(sample_indexes);
     }
 
+    if (embeddings.rows() == 0) {
+      // Every embedding was rejected as non-finite. Taking &embeddings(0, 0)
+      // would index an empty matrix.
+      SHERPA_ONNX_LOGE(
+          "All speaker embeddings were non-finite; cannot cluster this audio");
+      return {};
+    }
+
     Timer clustering_timer(config_.segmentation.debug);
     std::vector<int32_t> cluster_labels = clustering_->Cluster(
         &embeddings(0, 0), embeddings.rows(), embeddings.cols());
@@ -524,7 +532,13 @@ class OfflineSpeakerDiarizationPyannoteImpl
     int32_t sample_rate = meta_data.sample_rate;
     Matrix2D ans(sample_indexes.size(), embedding_extractor_.Dim());
 
-    auto IsNaNWrapper = [](float f) -> bool { return std::isnan(f); };
+    // The embedding model may output NaN, and it may also output +/-Inf. Both
+    // have to be rejected here. An Inf passes an isnan() test but is still
+    // fatal downstream: FastClustering normalizes every row, which turns
+    // inf/inf into NaN, the NaN spreads through the cosine distance matrix,
+    // and hclust_fast() then throws fastclustercpp::nan_error out through the
+    // C API.
+    auto IsNonFinite = [](float f) -> bool { return !std::isfinite(f); };
 
     int32_t k = 0;
     int32_t cur_row_index = 0;
@@ -549,7 +563,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
       std::vector<float> embedding = embedding_extractor_.Compute(stream.get());
 
-      if (std::none_of(embedding.begin(), embedding.end(), IsNaNWrapper)) {
+      if (std::none_of(embedding.begin(), embedding.end(), IsNonFinite)) {
         // a valid embedding
         std::copy(embedding.begin(), embedding.end(), &ans(cur_row_index, 0));
         cur_row_index += 1;
@@ -564,8 +578,16 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     if (k != cur_row_index) {
-      auto seq = Eigen::seqN(0, cur_row_index);
-      ans = ans(seq, Eigen::placeholders::all);
+      // NOTE: `ans = ans(seq, all)` is an ALIASED assignment and is not safe
+      // here. Assigning an indexed view of `ans` back into `ans` changes its
+      // number of rows, so the assignment resizes `ans` first, and Eigen's
+      // DenseStorage::resize() frees the old buffer and allocates a new one
+      // whenever the total size changes. The right-hand side still refers to
+      // the old, now-freed buffer, so the copy reads freed memory
+      // (heap-use-after-free). Evaluate the selection into a temporary first.
+      Matrix2D valid =
+          ans(Eigen::seqN(0, cur_row_index), Eigen::placeholders::all);
+      ans = std::move(valid);
     }
 
     return ans;
