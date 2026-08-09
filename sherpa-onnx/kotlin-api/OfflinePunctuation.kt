@@ -26,7 +26,9 @@ class OfflinePunctuation(
         } else {
             newFromFile(config)
         }
-    }
+        require(ptr != 0L) {
+            "Invalid OfflinePunctuationConfig: failed to create native OfflinePunctuation"
+        }
 
     protected fun finalize() {
         if (ptr != 0L) {

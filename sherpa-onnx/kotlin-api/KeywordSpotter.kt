@@ -38,7 +38,9 @@ class KeywordSpotter(
         } else {
             newFromFile(config)
         }
-    }
+        require(ptr != 0L) {
+            "Invalid KeywordSpotterConfig: failed to create native KeywordSpotter"
+        }
 
     protected fun finalize() {
         if (ptr != 0L) {

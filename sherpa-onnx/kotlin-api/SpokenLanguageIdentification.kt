@@ -27,7 +27,9 @@ class SpokenLanguageIdentification(
         } else {
             newFromFile(config)
         }
-    }
+        require(ptr != 0L) {
+            "Invalid SpokenLanguageIdentificationConfig: failed to create native SpokenLanguageIdentification"
+        }
 
     protected fun finalize() {
         if (ptr != 0L) {

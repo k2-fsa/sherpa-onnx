@@ -34,7 +34,9 @@ class OfflineSpeechDenoiser(
         } else {
             newFromFile(config)
         }
-    }
+        require(ptr != 0L) {
+            "Invalid OfflineSpeechDenoiserConfig: failed to create native OfflineSpeechDenoiser"
+        }
 
     protected fun finalize() {
         if (ptr != 0L) {

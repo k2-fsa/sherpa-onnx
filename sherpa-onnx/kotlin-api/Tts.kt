@@ -150,7 +150,9 @@ class OfflineTts(
         } else {
             newFromFile(config)
         }
-    }
+        require(ptr != 0L) {
+            "Invalid OfflineTtsConfig: failed to create native OfflineTts"
+        }
 
     fun sampleRate() = getSampleRate(ptr)
 
@@ -201,8 +203,10 @@ class OfflineTts(
             } else {
                 newFromFile(config)
             }
+            require(ptr != 0L) {
+                "Invalid OfflineTtsConfig: failed to create native OfflineTts"
+            }
         }
-    }
 
     fun free() {
         if (ptr != 0L) {
