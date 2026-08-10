@@ -119,6 +119,13 @@ jobs:
 
           ls -lh build/macos/Build/Products/Release/
 
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
+          codesign --force --deep -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          xattr -cr flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+
       - name: Zip app
         shell: bash
         run: |
@@ -128,7 +135,7 @@ jobs:
           ls -lh flutter-${{ matrix.demo }}-macos.zip
 
       - name: Release
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -271,7 +278,7 @@ jobs:
           ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
 
       - name: Release
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -395,7 +402,7 @@ jobs:
           ls -lh flutter-${{ matrix.demo }}-win-x64.zip
 
       - name: Release
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -539,7 +546,7 @@ jobs:
           ls -lh *.apk
 
       - name: Release
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -644,7 +651,7 @@ jobs:
           ls -lh flutter-${{ matrix.demo }}.zip
 
       - name: Release
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
