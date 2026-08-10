@@ -2828,6 +2828,8 @@ static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
   c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
+  c.model.dpdfnet.attenuation_limit_db =
+      config->model.dpdfnet.attenuation_limit_db;
 
   if (c.model.debug) {
 #if __OHOS__

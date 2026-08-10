@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
@@ -30,7 +30,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
   --input-wav=input.wav \
   --output-wav=output_16k.wav
 
-(2) Use DPDFNet models at 16 kHz or 48 kHz
+(2) Use DPDFNet models at 8, 16, or 48 kHz
 
 # Download DPDFNet models from either:
 #   https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
@@ -38,6 +38,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 
 ./bin/sherpa-onnx-offline-denoiser \
   --speech-denoiser-dpdfnet-model=dpdfnet4.onnx \
+  --speech-denoiser-dpdfnet-attenuation-limit-db=12 \
   --input-wav=input.wav \
   --output-wav=output_16k.wav
 
@@ -45,11 +46,16 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 #   dpdfnet_baseline.onnx
 #   dpdfnet2.onnx
 #   dpdfnet8.onnx
+# Or the 8 kHz DPDFNet models:
+#   dpdfnet2_8khz.onnx
+#   dpdfnet8_8khz.onnx
 
 ./bin/sherpa-onnx-offline-denoiser \
   --speech-denoiser-dpdfnet-model=dpdfnet2_48khz_hr.onnx \
   --input-wav=input.wav \
   --output-wav=output_48k.wav
+
+# For the highest-quality 48 kHz model, use dpdfnet8_48khz_hr.onnx.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
@@ -68,6 +74,11 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
     SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
   fprintf(stderr, "%s\n", config.ToString().c_str());
+
+  if (!config.Validate()) {
+    fprintf(stderr, "Errors in config!\n");
+    return -1;
+  }
 
   if (input_wave.empty()) {
     fprintf(stderr, "Please provide --input-wav\n");

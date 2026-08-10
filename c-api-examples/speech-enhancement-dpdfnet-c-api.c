@@ -17,13 +17,17 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet4.onnx
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet8.onnx
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2_48khz_hr.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2_8khz.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8_8khz.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8_48khz_hr.onnx
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 */
 // clang-format on
 //
 // Use dpdfnet_baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
 // for 16 kHz downstream ASR or speech recognition.
-// Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
+// Use dpdfnet2_8khz.onnx or dpdfnet8_8khz.onnx for 8 kHz enhancement, and
+// dpdfnet2_48khz_hr.onnx or dpdfnet8_48khz_hr.onnx for 48 kHz enhancement.
 #include <stdio.h>
 #include <string.h>
 
@@ -37,6 +41,7 @@ int32_t main() {
 
   memset(&config, 0, sizeof(config));
   config.model.dpdfnet.model = model_filename;
+  config.model.dpdfnet.attenuation_limit_db = 12.0f;
 
   const SherpaOnnxOfflineSpeechDenoiser *sd =
       SherpaOnnxCreateOfflineSpeechDenoiser(&config);

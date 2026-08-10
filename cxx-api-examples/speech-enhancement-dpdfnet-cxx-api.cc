@@ -34,6 +34,7 @@ int32_t main() {
   std::string wav_filename = "./inp_16k.wav";
   std::string out_wave_filename = "./enhanced-dpdfnet.wav";
   config.model.dpdfnet.model = model_filename;
+  config.model.dpdfnet.attenuation_limit_db = 12.0f;
 
   auto sd = OfflineSpeechDenoiser::Create(config);
   if (!sd.Get()) {

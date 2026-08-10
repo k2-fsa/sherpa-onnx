@@ -15,11 +15,15 @@ Example:
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet4.onnx
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet8.onnx
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2_48khz_hr.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2_8khz.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8_8khz.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8_48khz_hr.onnx
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/speech_with_noise.wav
 
 Use 16 kHz DPDFNet models such as `dpdfnet_baseline.onnx`, `dpdfnet2.onnx`,
 `dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR or speech recognition.
-Use `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
+Use `dpdfnet2_8khz.onnx` or `dpdfnet8_8khz.onnx` for 8 kHz enhancement, and
+`dpdfnet2_48khz_hr.onnx` or `dpdfnet8_48khz_hr.onnx` for 48 kHz output.
 """
 
 import time
@@ -45,12 +49,13 @@ def create_speech_denoiser():
     config = sherpa_onnx.OfflineSpeechDenoiserConfig(
         model=sherpa_onnx.OfflineSpeechDenoiserModelConfig(
             dpdfnet=sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(
-                model=model_filename
+                model=model_filename,
+                attenuation_limit_db=12.0,
             ),
             debug=False,
             num_threads=1,
             provider="cpu",
-        )
+        ),
     )
     if not config.validate():
         print(config)

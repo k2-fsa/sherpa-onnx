@@ -36,6 +36,7 @@ GetSpeechDenoiserDpdfNetModelConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("dpdfnet").As<Napi::Object>();
   SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(attenuation_limit_db, attenuationLimitDb);
   return c;
 }
 

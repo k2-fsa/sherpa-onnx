@@ -23,6 +23,8 @@ class OfflineSpeechDenoiser {
     final c = calloc<SherpaOnnxOfflineSpeechDenoiserConfig>();
     c.ref.model.gtcrn.model = config.model.gtcrn.model.toNativeUtf8();
     c.ref.model.dpdfnet.model = config.model.dpdfnet.model.toNativeUtf8();
+    c.ref.model.dpdfnet.attenuationLimitDb =
+        config.model.dpdfnet.attenuationLimitDb;
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;

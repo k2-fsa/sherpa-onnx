@@ -21,11 +21,16 @@ public class NonStreamingSpeechEnhancementDpdfNet {
             .setDebug(true)
             .setProvider("cpu")
             .setDpdfnet(
-                OfflineSpeechDenoiserDpdfNetModelConfig.builder().setModel(model).build());
+                OfflineSpeechDenoiserDpdfNetModelConfig.builder()
+                    .setModel(model)
+                    .setAttenuationLimitDb(12.0f)
+                    .build());
 
     OfflineSpeechDenoiserModelConfig modelConfig = builder.build();
     OfflineSpeechDenoiserConfig config =
-        OfflineSpeechDenoiserConfig.builder().setModel(modelConfig).build();
+        OfflineSpeechDenoiserConfig.builder()
+            .setModel(modelConfig)
+            .build();
 
     OfflineSpeechDenoiser speech_denoiser = new OfflineSpeechDenoiser(config);
 

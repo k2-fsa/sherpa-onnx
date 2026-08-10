@@ -39,6 +39,7 @@ Example source: [speech-enhancement-gtcrn-c-api.c](https://github.com/k2-fsa/she
 SherpaOnnxOfflineSpeechDenoiserConfig config;
 memset(&config, 0, sizeof(config));
 config.model.dpdfnet.model = "./dpdfnet_baseline.onnx";
+config.model.dpdfnet.attenuation_limit_db = 12.0f;
 config.model.num_threads = 1;
 config.model.provider = "cpu";
 
@@ -49,7 +50,8 @@ SherpaOnnxDestroyOfflineSpeechDenoiser(sd);
 @endcode
 
 Model file: `dpdfnet_baseline.onnx` (also: `dpdfnet2.onnx`, `dpdfnet4.onnx`,
-`dpdfnet8.onnx` for 16 kHz; `dpdfnet2_48khz_hr.onnx` for 48 kHz)
+`dpdfnet8.onnx` for 16 kHz; `dpdfnet2_8khz.onnx`, `dpdfnet8_8khz.onnx` for
+8 kHz; and `dpdfnet2_48khz_hr.onnx`, `dpdfnet8_48khz_hr.onnx` for 48 kHz)
 
 Example source: [speech-enhancement-dpdfnet-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/speech-enhancement-dpdfnet-c-api.c)
 
@@ -92,7 +94,9 @@ const SherpaOnnxOnlineSpeechDenoiser *sd =
 SherpaOnnxDestroyOnlineSpeechDenoiser(sd);
 @endcode
 
-Model file: `dpdfnet_baseline.onnx`
+Model files: `dpdfnet_baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`,
+`dpdfnet8.onnx` for 16 kHz; `dpdfnet2_8khz.onnx`, `dpdfnet8_8khz.onnx` for
+8 kHz; and `dpdfnet2_48khz_hr.onnx`, `dpdfnet8_48khz_hr.onnx` for 48 kHz.
 
 Example source: [online-speech-enhancement-dpdfnet-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/online-speech-enhancement-dpdfnet-c-api.c)
 */

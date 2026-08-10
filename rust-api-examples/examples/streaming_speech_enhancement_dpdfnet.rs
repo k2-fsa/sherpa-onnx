@@ -1,7 +1,7 @@
 use clap::Parser;
 use sherpa_onnx::{
-    write, OfflineSpeechDenoiserDpdfNetModelConfig, OnlineSpeechDenoiser, OnlineSpeechDenoiserConfig,
-    Wave,
+    write, OfflineSpeechDenoiserDpdfNetModelConfig, OnlineSpeechDenoiser,
+    OnlineSpeechDenoiserConfig, Wave,
 };
 
 #[derive(Parser, Debug)]
@@ -24,6 +24,7 @@ fn main() -> anyhow::Result<()> {
         model: sherpa_onnx::OfflineSpeechDenoiserModelConfig {
             dpdfnet: OfflineSpeechDenoiserDpdfNetModelConfig {
                 model: Some(args.model),
+                ..Default::default()
             },
             ..Default::default()
         },

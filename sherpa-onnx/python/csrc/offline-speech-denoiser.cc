@@ -49,7 +49,11 @@ void PybindOfflineSpeechDenoiserConfig(py::module *m) {
 
   py::class_<PyClass>(*m, "OfflineSpeechDenoiserConfig")
       .def(py::init<>())
-      .def(py::init<const OfflineSpeechDenoiserModelConfig &>(),
+      .def(py::init([](const OfflineSpeechDenoiserModelConfig &model) {
+             PyClass ans;
+             ans.model = model;
+             return ans;
+           }),
            py::arg("model") = OfflineSpeechDenoiserModelConfig{})
       .def_readwrite("model", &PyClass::model)
       .def("validate", &PyClass::Validate)

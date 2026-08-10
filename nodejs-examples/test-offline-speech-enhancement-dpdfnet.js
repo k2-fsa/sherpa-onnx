@@ -15,7 +15,7 @@ function createOfflineSpeechDenoiser() {
   const model = './dpdfnet2.onnx';
   let config = {
     model: {
-      dpdfnet: {model},
+      dpdfnet: {model, attenuationLimitDb: 12},
       debug: 1,
     },
   };

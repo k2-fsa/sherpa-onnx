@@ -619,6 +619,7 @@
  * Offline Speech Denoiser model config
  * @typedef {Object} OfflineSpeechDenoiserDpdfNetModelConfig
  * @property {string} [model]
+ * @property {number} [attenuationLimitDb] Offline attenuation limit in dB.
  */
 
 /**
