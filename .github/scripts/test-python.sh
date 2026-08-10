@@ -8,19 +8,6 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
-run_with_windows_arm_segfault_retry() {
-  local status=0
-  "$@" || status=$?
-
-  if [[ ${OS:-} == "windows-11-arm" && $status -eq 139 ]]; then
-    log "Command exited with SIGSEGV on Windows ARM; retrying once: $*"
-    "$@"
-    return
-  fi
-
-  return "$status"
-}
-
 log "test version"
 python3 ./python-api-examples/version-test.py
 
@@ -128,8 +115,7 @@ ls -lh sherpa-onnx-medasr-ctc-en-int8-2025-12-25
 
 ls -lh sherpa-onnx-medasr-ctc-en-int8-2025-12-25/test_wavs
 
-run_with_windows_arm_segfault_retry \
-  python3 ./python-api-examples/offline-medasr-ctc-decode-files.py
+python3 ./python-api-examples/offline-medasr-ctc-decode-files.py
 rm -rf sherpa-onnx-medasr-ctc-en-int8-2025-12-25
 
 log "test omnilingual ASR"
