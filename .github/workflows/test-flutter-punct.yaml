@@ -115,6 +115,7 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
+          export CODE_SIGNING_ALLOWED=NO
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -395,10 +396,10 @@ jobs:
           ls -lh build/windows/x64/runner/Release/
 
       - name: Zip app
-        shell: powershell
+        shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip
+          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip"
           ls -lh flutter-${{ matrix.demo }}-win-x64.zip
 
       - name: Release
@@ -643,6 +644,7 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
