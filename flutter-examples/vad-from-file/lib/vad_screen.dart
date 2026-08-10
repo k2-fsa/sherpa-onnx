@@ -96,7 +96,7 @@ class _VadScreenState extends State<VadScreen> {
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
-      withData: true, // Need bytes on web since path is not available.
+      withData: true,
     );
     if (result == null || result.files.isEmpty) return;
 
