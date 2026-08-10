@@ -130,6 +130,7 @@ class OfflineRecognizer(object):
         hr_lexicon: str = "",
         lodr_fst: str = "",
         lodr_scale: float = 0.0,
+        num_return_paths: int = 1,
     ):
         """
         Please refer to
@@ -166,6 +167,10 @@ class OfflineRecognizer(object):
           max_active_paths:
             Maximum number of active paths to keep. Used only when
             decoding_method is modified_beam_search.
+          num_return_paths:
+            Number of final hypotheses to return. Used only when
+            decoding_method is modified_beam_search. It must not exceed
+            max_active_paths.
           hotwords_file:
             The file containing hotwords, one words/phrases per line, and for each
             phrase the bpe/cjkchar are separated by a space.
@@ -233,6 +238,21 @@ class OfflineRecognizer(object):
                 f"--lm. Currently given: {decoding_method}"
             )
 
+        if decoding_method == "modified_beam_search" and (
+            num_return_paths < 1 or num_return_paths > max_active_paths
+        ):
+            raise ValueError(
+                "num_return_paths must be in the range "
+                f"[1, max_active_paths]. Given: {num_return_paths}. "
+                f"max_active_paths: {max_active_paths}"
+            )
+
+        if num_return_paths != 1 and decoding_method != "modified_beam_search":
+            raise ValueError(
+                "Please use --decoding-method=modified_beam_search when "
+                f"num_return_paths is not 1. Currently given: {decoding_method}"
+            )
+
         lm_config = OfflineLMConfig(
             model=lm,
             scale=lm_scale,
@@ -248,6 +268,7 @@ class OfflineRecognizer(object):
             lm_config=lm_config,
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
+            num_return_paths=num_return_paths,
             hotwords_file=hotwords_file,
             hotwords_score=hotwords_score,
             blank_penalty=blank_penalty,

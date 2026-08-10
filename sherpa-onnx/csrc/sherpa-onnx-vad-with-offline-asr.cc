@@ -249,6 +249,8 @@ for a list of pre-trained models to download.
   fprintf(stderr, "decoding method: %s\n", asr_config.decoding_method.c_str());
   if (asr_config.decoding_method == "modified_beam_search") {
     fprintf(stderr, "max active paths: %d\n", asr_config.max_active_paths);
+    fprintf(stderr, "num return paths: %d\n",
+            asr_config.num_return_paths);
   }
 
   float duration = samples.size() / 16000.;

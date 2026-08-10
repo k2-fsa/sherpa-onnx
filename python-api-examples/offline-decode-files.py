@@ -44,6 +44,8 @@ file(s) with a non-streaming model.
       --joiner=/path/to/joiner.onnx \
       --num-threads=2 \
       --decoding-method=modified_beam_search \
+      --max-active-paths=8 \
+      --num-return-paths=3 \
       --debug=false \
       --sample-rate=16000 \
       --feature-dim=80 \
@@ -290,6 +292,20 @@ def get_args():
     )
 
     parser.add_argument(
+        "--max-active-paths",
+        type=int,
+        default=4,
+        help="Number of active paths kept by modified beam search",
+    )
+
+    parser.add_argument(
+        "--num-return-paths",
+        type=int,
+        default=1,
+        help="Number of final modified beam search hypotheses to return",
+    )
+
+    parser.add_argument(
         "--lm",
         metavar="file",
         type=str,
@@ -421,6 +437,8 @@ def main():
             lodr_fst=args.lodr_fst,
             lodr_scale=args.lodr_scale,
             decoding_method=args.decoding_method,
+            max_active_paths=args.max_active_paths,
+            num_return_paths=args.num_return_paths,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
             modeling_unit=args.modeling_unit,
@@ -527,18 +545,23 @@ def main():
         streams.append(s)
 
     recognizer.decode_streams(streams)
-    results = [s.result.text for s in streams]
     end_time = time.time()
     print("Done!")
 
-    for wave_filename, result in zip(args.sound_files, results):
-        print(f"{wave_filename}\n{result}")
+    for wave_filename, stream in zip(args.sound_files, streams):
+        print(f"{wave_filename}\n{stream.result.text}")
+        if len(stream.result.hypotheses) > 1:
+            for i, hypothesis in enumerate(stream.result.hypotheses, start=1):
+                print(f"  {i}: score={hypothesis.score:.6f} {hypothesis.text}")
         print("-" * 10)
 
     elapsed_seconds = end_time - start_time
     rtf = elapsed_seconds / total_duration
     print(f"num_threads: {args.num_threads}")
     print(f"decoding_method: {args.decoding_method}")
+    if args.decoding_method == "modified_beam_search":
+        print(f"max_active_paths: {args.max_active_paths}")
+        print(f"num_return_paths: {args.num_return_paths}")
     print(f"Wave duration: {total_duration:.3f} s")
     print(f"Elapsed time: {elapsed_seconds:.3f} s")
     print(

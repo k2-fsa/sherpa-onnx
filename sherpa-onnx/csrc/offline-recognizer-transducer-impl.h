@@ -31,13 +31,13 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult Convert(
-    const OfflineTransducerDecoderResult &src, const SymbolTable &sym_table,
-    int32_t frame_shift_ms, int32_t subsampling_factor) {
-  OfflineRecognitionResult r;
-  r.tokens.reserve(src.tokens.size());
-  r.timestamps.reserve(src.timestamps.size());
-  r.durations.reserve(src.durations.size());
+template <typename Source, typename Destination>
+static void ConvertTransducerHypothesis(
+    const Source &src, const SymbolTable &sym_table, int32_t frame_shift_ms,
+    int32_t subsampling_factor, Destination *dest) {
+  dest->tokens.reserve(src.tokens.size());
+  dest->timestamps.reserve(src.timestamps.size());
+  dest->durations.reserve(src.durations.size());
 
   std::string text;
   for (auto i : src.tokens) {
@@ -54,29 +54,41 @@ static OfflineRecognitionResult Convert(
       sym = os.str();
     }
 
-    r.tokens.push_back(std::move(sym));
+    dest->tokens.push_back(std::move(sym));
   }
   if (sym_table.IsByteBpe()) {
     text = sym_table.DecodeByteBpe(text);
   }
 
-  text = RemoveSpaceBetweenCjk(text);
-
-  r.text = std::move(text);
+  dest->text = RemoveSpaceBetweenCjk(text);
 
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
   for (auto t : src.timestamps) {
-    float time = frame_shift_s * t;
-    r.timestamps.push_back(time);
+    dest->timestamps.push_back(frame_shift_s * t);
   }
 
-  // Copy durations (if present)
   for (auto d : src.durations) {
-    r.durations.push_back(d * frame_shift_s);
+    dest->durations.push_back(d * frame_shift_s);
   }
 
-  // Copy token log probabilities (confidence scores)
-  r.ys_log_probs = src.ys_log_probs;
+  dest->ys_log_probs = src.ys_log_probs;
+}
+
+static OfflineRecognitionResult Convert(
+    const OfflineTransducerDecoderResult &src, const SymbolTable &sym_table,
+    int32_t frame_shift_ms, int32_t subsampling_factor) {
+  OfflineRecognitionResult r;
+  ConvertTransducerHypothesis(src, sym_table, frame_shift_ms,
+                              subsampling_factor, &r);
+
+  r.hypotheses.reserve(src.hypotheses.size());
+  for (const auto &src_hyp : src.hypotheses) {
+    OfflineRecognitionHypothesis hyp;
+    ConvertTransducerHypothesis(src_hyp, sym_table, frame_shift_ms,
+                                subsampling_factor, &hyp);
+    hyp.score = src_hyp.score;
+    r.hypotheses.push_back(std::move(hyp));
+  }
 
   return r;
 }
@@ -112,7 +124,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
           model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, unk_id_, config_.blank_penalty);
+          config_.lm_config.scale, unk_id_, config_.blank_penalty,
+          config_.num_return_paths);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -152,7 +165,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
           model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, unk_id_, config_.blank_penalty);
+          config_.lm_config.scale, unk_id_, config_.blank_penalty,
+          config_.num_return_paths);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -252,6 +266,10 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
                        model_->SubsamplingFactor());
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       r.text = ApplyHomophoneReplacer(std::move(r.text));
+      for (auto &hyp : r.hypotheses) {
+        hyp.text = ApplyInverseTextNormalization(std::move(hyp.text));
+        hyp.text = ApplyHomophoneReplacer(std::move(hyp.text));
+      }
 
       ss[i]->SetResult(r);
     }

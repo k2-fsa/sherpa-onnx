@@ -48,6 +48,86 @@ def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
 
 
 class TestOfflineRecognizer(unittest.TestCase):
+    def test_from_transducer_positional_hotwords_compatibility(self):
+        with self.assertRaisesRegex(ValueError, "hotwords-file"):
+            sherpa_onnx.OfflineRecognizer.from_transducer(
+                "encoder.onnx",
+                "decoder.onnx",
+                "joiner.onnx",
+                "tokens.txt",
+                1,
+                16000,
+                80,
+                0.0,
+                "greedy_search",
+                4,
+                "hotwords.txt",
+            )
+
+    def test_num_return_paths_validation(self):
+        kwargs = {
+            "encoder": "encoder.onnx",
+            "decoder": "decoder.onnx",
+            "joiner": "joiner.onnx",
+            "tokens": "tokens.txt",
+        }
+
+        with self.assertRaisesRegex(ValueError, "range"):
+            sherpa_onnx.OfflineRecognizer.from_transducer(
+                **kwargs,
+                decoding_method="modified_beam_search",
+                max_active_paths=4,
+                num_return_paths=5,
+            )
+
+        with self.assertRaisesRegex(ValueError, "modified_beam_search"):
+            sherpa_onnx.OfflineRecognizer.from_transducer(
+                **kwargs,
+                decoding_method="greedy_search",
+                num_return_paths=2,
+            )
+
+    def test_transducer_modified_beam_search_nbest(self):
+        model_dir = Path(d) / "sherpa-onnx-zipformer-en-2023-04-01"
+        encoder = model_dir / "encoder-epoch-99-avg-1.int8.onnx"
+        decoder = model_dir / "decoder-epoch-99-avg-1.onnx"
+        joiner = model_dir / "joiner-epoch-99-avg-1.int8.onnx"
+        tokens = model_dir / "tokens.txt"
+        wave0 = model_dir / "test_wavs" / "0.wav"
+
+        if not encoder.is_file():
+            print("skipping test_transducer_modified_beam_search_nbest()")
+            return
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_transducer(
+            encoder=str(encoder),
+            decoder=str(decoder),
+            joiner=str(joiner),
+            tokens=str(tokens),
+            num_threads=1,
+            decoding_method="modified_beam_search",
+            max_active_paths=8,
+            num_return_paths=3,
+            provider="cpu",
+        )
+
+        stream = recognizer.create_stream()
+        samples, sample_rate = read_wave(str(wave0))
+        stream.accept_waveform(sample_rate, samples)
+        recognizer.decode_stream(stream)
+
+        hypotheses = stream.result.hypotheses
+        self.assertGreaterEqual(len(hypotheses), 1)
+        self.assertLessEqual(len(hypotheses), 3)
+        self.assertEqual(stream.result.text, hypotheses[0].text)
+        self.assertEqual(stream.result.tokens, hypotheses[0].tokens)
+        self.assertTrue(
+            all(
+                left.score >= right.score
+                for left, right in zip(hypotheses, hypotheses[1:])
+            )
+        )
+
     def test_transducer_single_file(self):
         for use_int8 in [True, False]:
             if use_int8:

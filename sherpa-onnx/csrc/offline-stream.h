@@ -16,6 +16,23 @@
 
 namespace sherpa_onnx {
 
+struct OfflineRecognitionHypothesis {
+  std::string text;
+
+  std::vector<std::string> tokens;
+
+  std::vector<float> timestamps;
+
+  std::vector<float> durations;
+
+  std::vector<float> ys_log_probs;
+
+  /// The decoder score used to rank this hypothesis. It is the
+  /// length-normalized total log probability for the regular transducer
+  /// decoder and the accumulated log probability for the NeMo decoder.
+  double score = 0;
+};
+
 struct OfflineRecognitionResult {
   // Recognition results.
   // For English, it consists of space separated words.
@@ -54,6 +71,10 @@ struct OfflineRecognitionResult {
   std::vector<float> segment_timestamps;   // start time of each segment
   std::vector<float> segment_durations;    // duration of each segment
   std::vector<std::string> segment_texts;  // text of each segment
+
+  /// N-best hypotheses in descending score order. It is populated only by
+  /// modified beam search and includes the 1-best hypothesis as the first item.
+  std::vector<OfflineRecognitionHypothesis> hypotheses;
 
   std::string AsJsonString() const;
 };

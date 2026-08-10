@@ -474,6 +474,59 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "]";
 
+  os << ", \"hypotheses\": [";
+  std::string hyp_sep;
+  for (const auto &hyp : hypotheses) {
+    os << hyp_sep << "{";
+    os << "\"text\": " << std::quoted(hyp.text) << ", ";
+
+    os << "\"timestamps\": [";
+    sep = "";
+    for (auto t : hyp.timestamps) {
+      os << sep << std::fixed << std::setprecision(2) << t;
+      sep = ", ";
+    }
+    os << "], ";
+
+    os << "\"durations\": [";
+    sep = "";
+    for (auto d : hyp.durations) {
+      os << sep << std::fixed << std::setprecision(2) << d;
+      sep = ", ";
+    }
+    os << "], ";
+
+    os << "\"tokens\": [";
+    sep = "";
+    for (const auto &token : hyp.tokens) {
+      if (token.size() == 1 && static_cast<uint8_t>(token[0]) > 0x7f) {
+        const uint8_t *p =
+            reinterpret_cast<const uint8_t *>(token.c_str());
+        os << sep << "\""
+           << "<0x" << std::hex << std::uppercase
+           << static_cast<uint32_t>(p[0]) << ">"
+           << "\"";
+        os.flags(oldFlags);
+      } else {
+        os << sep << std::quoted(token);
+      }
+      sep = ", ";
+    }
+    os << "], ";
+
+    os << "\"ys_log_probs\": [";
+    sep = "";
+    for (auto p : hyp.ys_log_probs) {
+      os << sep << std::fixed << std::setprecision(6) << p;
+      sep = ", ";
+    }
+    os << "], ";
+    os << "\"score\": " << std::fixed << std::setprecision(6) << hyp.score;
+    os << "}";
+    hyp_sep = ", ";
+  }
+  os << "]";
+
   // Add segment-level data if present (from Whisper timestamp token mode)
   if (!segment_timestamps.empty()) {
     os << ", ";
