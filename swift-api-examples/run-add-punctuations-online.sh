@@ -2,8 +2,8 @@
 
 set -ex
 
-if [ ! -d ../build-swift-macos ]; then
-  echo "Please run ../build-swift-macos.sh first!"
+if [ ! -d ../build-macos ]; then
+  echo "Please run ../build-macos.sh first!"
   exit 1
 fi
 
@@ -18,11 +18,11 @@ if [ ! -e ./add-punctuation-online ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
-    -I ../build-swift-macos/install/include \
+    -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./add-punctuation-online.swift  ./SherpaOnnx.swift \
-    -L ../build-swift-macos/install/lib/ \
-    -l sherpa-onnx \
+    -L ../build-macos/install/lib/ \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o ./add-punctuation-online
 
@@ -32,5 +32,5 @@ else
 fi
 
 # Set library path and run the executable
-export DYLD_LIBRARY_PATH=$PWD/../build-swift-macos/install/lib:$DYLD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
 ./add-punctuation-online 

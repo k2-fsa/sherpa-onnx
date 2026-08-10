@@ -31,7 +31,18 @@ sed -i.bak "s/  static const char \*date.*/  static const char \*date = \"$date\
 find scripts/wheel -name "setup.py" -type f -exec sed -i.bak "$replace_str" {} \;
 sed -i.bak "$replace_str" ./setup.py
 
+sed -i.bak "$replace_str" ./build-ios.sh
 sed -i.bak "$replace_str" ./build-ios-shared.sh
+sed -i.bak "$replace_str" ./build-ios-no-tts.sh
+sed -i.bak "$replace_str" ./build-macos.sh
+sed -i.bak "$replace_str" ./build-macos-shared.sh
+sed -i.bak "$replace_str" ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+sed -i.bak "$replace_str" ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+sed -i.bak "$replace_str" ./.github/workflows/test-flutter-package.yaml
+
+for f in ./build-ios.sh ./build-ios-shared.sh ./build-ios-no-tts.sh ./build-macos.sh ./build-macos-shared.sh; do
+  sed -i.bak "s/$old_version_code/$new_version_code/g" "$f"
+done
 sed -i.bak "$replace_str" ./pom.xml
 sed -i.bak "$replace_str" ./sherpa-onnx/java-api/pom.xml
 sed -i.bak "$replace_str" ./sherpa-onnx/java-api/README.md

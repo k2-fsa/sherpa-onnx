@@ -8,9 +8,6 @@
 #include <stdlib.h>
 
 #include <utility>
-#if SHERPA_ONNX_ENABLE_WASM
-#include <emscripten.h>
-#endif
 #if __OHOS__
 #include "hilog/log.h"
 
@@ -37,14 +34,12 @@
 #elif defined(__OHOS__)
 #define SHERPA_ONNX_LOGE(...) OH_LOG_INFO(LOG_APP, ##__VA_ARGS__)
 #elif SHERPA_ONNX_ENABLE_WASM
-#define SHERPA_ONNX_LOGE(...)                                          \
-  do {                                                                 \
-    char _buf[4096];                                                   \
-    snprintf(_buf, sizeof(_buf), ##__VA_ARGS__);                       \
-    emscripten_log(EM_LOG_CONSOLE | EM_LOG_NO_PATHS | EM_LOG_ERROR,   \
-                   "%s:%s:%d %s",                                      \
-                   __FILE__, __func__, static_cast<int>(__LINE__),     \
-                   _buf);                                              \
+#define SHERPA_ONNX_LOGE(...)                        \
+  do {                                               \
+    fprintf(stdout, "%s:%s:%d ", __FILE__, __func__, \
+            static_cast<int>(__LINE__));             \
+    fprintf(stdout, ##__VA_ARGS__);                  \
+    fprintf(stdout, "\n");                           \
   } while (0)
 #else
 #define SHERPA_ONNX_LOGE(...)                        \

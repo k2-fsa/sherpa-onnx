@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   asr:
+    if: false
     name: asr ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -272,6 +273,7 @@ jobs:
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-flutter main
 
   tts:
+    if: false
     name: tts ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:

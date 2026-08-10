@@ -234,6 +234,18 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
 
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_linux.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_linux.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_linux
+          path: /tmp/sherpa_onnx_linux.zip
+
       - name: Release
         shell: bash
         run: |
@@ -257,11 +269,6 @@ jobs:
         run: |
           ./new-release.sh
           git diff .
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-flutter-release-package
 
       - name: Fix version
         shell: bash
@@ -290,44 +297,30 @@ jobs:
 
           git status
 
-      - name: Configure CMake
+      - name: Remove .gitignore so xcframework files are included in package
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
+          rm -fv flutter/sherpa_onnx_macos/macos/.gitignore
 
-          mkdir build
-          cd build
-          cmake \
-            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-            -D SHERPA_ONNX_ENABLE_TTS=ON \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_INSTALL_PREFIX=./install \
-            -D SHERPA_ONNX_ENABLE_JNI=OFF \
-            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            -D CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-            ..
-
-      - name: Build sherpa-onnx
+      - name: Download pre-built xcframework
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd flutter/sherpa_onnx_macos/macos
 
-          cd build
-          make -j2 install
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
+          unzip sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
+          rm sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
 
-          ls -lh install/lib/libsherpa-onnx-c-api.dylib
-          file install/lib/libsherpa-onnx-c-api.dylib
-          rm -v install/lib/libonnxruntime.dylib
+          mv sherpa-onnx.xcframework sherpa_onnx_macos/SherpaOnnxC.xcframework
 
-      - name: Copy pre-built libs
+          ls -lh sherpa_onnx_macos/SherpaOnnxC.xcframework/
+
+      - name: Prepare for publish
         shell: bash
         run: |
-          cp -v build/install/lib/lib*.dylib* flutter/sherpa_onnx_macos/macos/
+          rm -f flutter/sherpa_onnx_macos/macos/libsherpa-onnx-c-api.dylib
+          rm -f flutter/sherpa_onnx_macos/macos/libonnxruntime.dylib
 
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
@@ -340,6 +333,18 @@ jobs:
           version: latest
 
       - uses: dart-lang/setup-dart@v1
+
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_macos.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_macos.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_macos
+          path: /tmp/sherpa_onnx_macos.zip
 
       - name: Release
         shell: bash
@@ -431,6 +436,18 @@ jobs:
           version: latest
 
       - uses: dart-lang/setup-dart@v1
+
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_windows.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_windows
+          path: /tmp/sherpa_onnx_windows.zip
 
       - name: Release
         shell: bash
@@ -527,6 +544,18 @@ jobs:
           version: latest
 
       - uses: dart-lang/setup-dart@v1
+
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_android_arm64.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_android_arm64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_android_arm64
+          path: /tmp/sherpa_onnx_android_arm64.zip
 
       - name: Release
         shell: bash
@@ -626,6 +655,18 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
 
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_android_armeabi.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_android_armeabi.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_android_armeabi
+          path: /tmp/sherpa_onnx_android_armeabi.zip
+
       - name: Release
         shell: bash
         run: |
@@ -723,6 +764,18 @@ jobs:
           version: latest
 
       - uses: dart-lang/setup-dart@v1
+
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_android_x86.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_android_x86.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_android_x86
+          path: /tmp/sherpa_onnx_android_x86.zip
 
       - name: Release
         shell: bash
@@ -822,6 +875,18 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
 
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_android_x86_64.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_android_x86_64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_android_x86_64
+          path: /tmp/sherpa_onnx_android_x86_64.zip
+
       - name: Release
         shell: bash
         run: |
@@ -847,11 +912,6 @@ jobs:
         run: |
           ./new-release.sh
           git diff .
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-flutter-release-package-ios
 
       - name: Fix version
         shell: bash
@@ -880,21 +940,144 @@ jobs:
 
           git status
 
-      - name: Build ios
+      - name: Remove .gitignore so xcframework files are included in package
+        shell: bash
+        run: |
+          rm -fv flutter/sherpa_onnx_ios/ios/.gitignore
+
+      - name: Download pre-built xcframework
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd flutter/sherpa_onnx_ios/ios
+
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
+          unzip sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
+          rm sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
+
+          mv sherpa-onnx.xcframework sherpa_onnx_ios/SherpaOnnxC.xcframework
+
+          ls -lh sherpa_onnx_ios/SherpaOnnxC.xcframework/
+
+      - name: Prepare for publish
+        shell: bash
+        run: |
+          mv -v flutter/sherpa_onnx_ios /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published/ios
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_ios.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_ios.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_ios
+          path: /tmp/sherpa_onnx_ios.zip
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to_be_published
+          du -h -d1 .
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+
+  sherpa_onnx_web:
+    # if: false
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx_web
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: release-wasm-web
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.23
+
+      - name: Build WASM module
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export CMAKE_C_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
-          ./build-ios-shared.sh
+          ./build-wasm-simd-web.sh
 
-      - name: Copy pre-built libs
+      - name: Copy WASM assets
         shell: bash
         run: |
-          echo "----ios arm64 and arm64_x64_simulator----"
-          cp -av build-ios-shared/sherpa_onnx.xcframework flutter/sherpa_onnx_ios/ios/
+          cp build-wasm-simd-web/install/bin/wasm/web/sherpa-onnx-wasm-web.js \
+             flutter/sherpa_onnx_web/assets/
+          cp build-wasm-simd-web/install/bin/wasm/web/sherpa-onnx-wasm-web.wasm \
+             flutter/sherpa_onnx_web/assets/
 
-          mv -v flutter/sherpa_onnx_ios /tmp/to_be_published
+          # Copy JS wrappers from their source directories (not symlinks).
+          cp wasm/tts/sherpa-onnx-tts.js flutter/sherpa_onnx_web/assets/
+          cp wasm/asr/sherpa-onnx-asr.js flutter/sherpa_onnx_web/assets/
+          cp wasm/vad/sherpa-onnx-vad.js flutter/sherpa_onnx_web/assets/
+          cp wasm/kws/sherpa-onnx-kws.js flutter/sherpa_onnx_web/assets/
+          cp wasm/nodejs/sherpa-onnx-punctuation.js flutter/sherpa_onnx_web/assets/
+          cp wasm/speaker-diarization/sherpa-onnx-speaker-diarization.js flutter/sherpa_onnx_web/assets/
+          cp wasm/speech-enhancement/sherpa-onnx-speech-enhancement.js flutter/sherpa_onnx_web/assets/
+
+          ls -lh flutter/sherpa_onnx_web/assets/
+
+      - name: Remove .gitignore so WASM files are included in package
+        shell: bash
+        run: |
+          rm -f flutter/sherpa_onnx_web/.gitignore
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx_web
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_web
+
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+
+          git status
+
+          mv -v flutter/sherpa_onnx_web /tmp/to_be_published
 
           ls -lh /tmp/to_be_published
 
@@ -906,18 +1089,29 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
 
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx_web.zip to_be_published
+          ls -lh /tmp/sherpa_onnx_web.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx_web
+          path: /tmp/sherpa_onnx_web.zip
+
       - name: Release
         shell: bash
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
-
           flutter pub get
           flutter pub publish --dry-run
           flutter pub publish --force
 
   sherpa_onnx:
-    needs: [sherpa_onnx_linux, sherpa_onnx_macos, sherpa_onnx_windows, sherpa_onnx_android_arm64, sherpa_onnx_android_armeabi, sherpa_onnx_android_x86, sherpa_onnx_android_x86_64, sherpa_onnx_ios]
+    needs: [sherpa_onnx_linux, sherpa_onnx_macos, sherpa_onnx_windows, sherpa_onnx_android_arm64, sherpa_onnx_android_armeabi, sherpa_onnx_android_x86, sherpa_onnx_android_x86_64, sherpa_onnx_ios, sherpa_onnx_web]
     # if: false
     permissions:
       id-token: write # Required for authentication using OIDC
@@ -970,6 +1164,18 @@ jobs:
           mv -v flutter/sherpa_onnx /tmp/to_be_published
 
           ls -lh /tmp/to_be_published
+
+      - name: Zip package for inspection
+        shell: bash
+        run: |
+          cd /tmp
+          zip -r /tmp/sherpa_onnx.zip to_be_published
+          ls -lh /tmp/sherpa_onnx.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-sherpa_onnx
+          path: /tmp/sherpa_onnx.zip
 
       - name: Release
         shell: bash

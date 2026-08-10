@@ -3,7 +3,6 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/vocos-vocoder.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 #include <string>
@@ -42,7 +41,7 @@ class VocosVocoder::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config.num_threads, config.provider)),
         allocator_{} {
     if (!config.matcha.vocoder.empty()) {
@@ -61,7 +60,7 @@ class VocosVocoder::Impl {
   template <typename Manager>
   explicit Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config.num_threads, config.provider)),
         allocator_{} {
     std::vector<char> buffer;

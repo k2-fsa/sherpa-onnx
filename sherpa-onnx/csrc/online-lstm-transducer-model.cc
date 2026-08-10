@@ -2,7 +2,6 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cassert>
@@ -35,7 +34,7 @@ namespace sherpa_onnx {
 
 OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     const OnlineModelConfig &config)
-    : env_(CreateOrtEnv()),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
@@ -55,7 +54,7 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
 template <typename Manager>
 OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(CreateOrtEnv()),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {

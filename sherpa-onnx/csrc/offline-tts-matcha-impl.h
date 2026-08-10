@@ -44,7 +44,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       }
 
       if (!FileExists(config.model.matcha.vocoder)) {
-        SHERPA_ONNX_LOGE("Please vocoder '%s' does not exist",
+        SHERPA_ONNX_LOGE("The vocoder '%s' does not exist",
                          config.model.matcha.vocoder.c_str());
         SHERPA_ONNX_EXIT(-1);
       }

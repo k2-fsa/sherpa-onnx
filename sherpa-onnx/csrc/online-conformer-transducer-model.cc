@@ -3,7 +3,6 @@
 // Copyright (c)  2023 Jingzhao Ou (jingzhao.ou@gmail.com)
 
 #include "sherpa-onnx/csrc/online-conformer-transducer-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cassert>
@@ -36,7 +35,7 @@ namespace sherpa_onnx {
 
 OnlineConformerTransducerModel::OnlineConformerTransducerModel(
     const OnlineModelConfig &config)
-    : env_(CreateOrtEnv()),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
@@ -56,7 +55,7 @@ OnlineConformerTransducerModel::OnlineConformerTransducerModel(
 template <typename Manager>
 OnlineConformerTransducerModel::OnlineConformerTransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(CreateOrtEnv()),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {

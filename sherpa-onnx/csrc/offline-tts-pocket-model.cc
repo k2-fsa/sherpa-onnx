@@ -3,7 +3,6 @@
 // Copyright (c)  2026  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-tts-pocket-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 #include <string>
@@ -70,7 +69,7 @@ class OfflineTtsPocketModel::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)) {
     lm_flow_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(config.pocket.lm_flow), sess_opts_);
@@ -97,7 +96,7 @@ class OfflineTtsPocketModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)) {
     {
       auto buf = ReadFile(mgr, config.pocket.lm_flow);

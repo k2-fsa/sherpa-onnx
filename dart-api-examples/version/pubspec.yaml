@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   sherpa_onnx: ^1.13.4
+  path: ^1.9.0
 
 dev_dependencies:
   lints: ^3.0.0

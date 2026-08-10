@@ -3,7 +3,6 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-source-separation-uvr-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 #include <memory>
@@ -31,7 +30,7 @@ class OfflineSourceSeparationUvrModel::Impl {
  public:
   explicit Impl(const OfflineSourceSeparationModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -42,7 +41,7 @@ class OfflineSourceSeparationUvrModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineSourceSeparationModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config.uvr.model);

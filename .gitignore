@@ -26,7 +26,8 @@ offline-tts-c-api
 run-decode-file-c-api.sh
 sherpa-onnx-ffmpeg
 build-ios
-build-swift-macos
+build-macos
+build-macos-shared
 aa.sh
 client-2.sh
 ffmpeg-examples/run-3.sh
@@ -192,3 +193,6 @@ sherpa-onnx-spleeter-2stems-fp16
 sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
 espeak-ng-data
 sherpa-onnx-nemo*
+kokoro-int8-en-v0_19
+vits-inflect-*-v2
+assets-2

@@ -3,7 +3,6 @@
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-ctc-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <memory>
@@ -52,7 +51,7 @@ enum class ModelType : std::uint8_t {
 namespace sherpa_onnx {
 
 static ModelType GetModelType(const std::string &model_path, bool debug) {
-  Ort::Env env = CreateOrtEnv();
+  Ort::Env env = ORT_LOGGING_LEVEL_ERROR;
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);
@@ -116,7 +115,7 @@ static ModelType GetModelType(const std::string &model_path, bool debug) {
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env env = CreateOrtEnv();
+  Ort::Env env = ORT_LOGGING_LEVEL_ERROR;
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);

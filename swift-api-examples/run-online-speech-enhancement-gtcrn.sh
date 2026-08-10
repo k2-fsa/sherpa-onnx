@@ -2,8 +2,8 @@
 
 set -ex
 
-if [ ! -d ../build-swift-macos ]; then
-  echo "Please run ../build-swift-macos.sh first!"
+if [ ! -d ../build-macos ]; then
+  echo "Please run ../build-macos.sh first!"
   exit 1
 fi
 
@@ -18,11 +18,11 @@ fi
 if [ ! -e ./online-speech-enhancement-gtcrn ]; then
   swiftc \
     -lc++ \
-    -I ../build-swift-macos/install/include \
+    -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
     ./online-speech-enhancement-gtcrn.swift ./SherpaOnnx.swift \
-    -L ../build-swift-macos/install/lib/ \
-    -l sherpa-onnx \
+    -L ../build-macos/install/lib/ \
+    -l sherpa-onnx-c-api \
     -l onnxruntime \
     -o online-speech-enhancement-gtcrn
 
@@ -31,5 +31,5 @@ else
   echo "./online-speech-enhancement-gtcrn exists - skip building"
 fi
 
-export DYLD_LIBRARY_PATH=$PWD/../build-swift-macos/install/lib:$DYLD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
 ./online-speech-enhancement-gtcrn

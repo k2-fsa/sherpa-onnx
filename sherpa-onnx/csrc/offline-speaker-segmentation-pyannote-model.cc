@@ -3,7 +3,6 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 #include <cmath>
@@ -32,7 +31,7 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
  public:
   explicit Impl(const OfflineSpeakerSegmentationModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -43,7 +42,7 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config_.pyannote.model);

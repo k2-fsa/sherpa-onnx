@@ -3,7 +3,6 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/hifigan-vocoder.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 #include <string>
@@ -31,7 +30,7 @@ class HifiganVocoder::Impl {
  public:
   explicit Impl(int32_t num_threads, const std::string &provider,
                 const std::string &model)
-      : env_(CreateOrtEnv()),
+      : env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(num_threads, provider)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -42,7 +41,7 @@ class HifiganVocoder::Impl {
   template <typename Manager>
   explicit Impl(Manager *mgr, int32_t num_threads, const std::string &provider,
                 const std::string &model)
-      : env_(CreateOrtEnv()),
+      : env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(num_threads, provider)),
         allocator_{} {
     auto buf = ReadFile(mgr, model);

@@ -9,6 +9,9 @@ git status
 ls -lh
 ls -lh node_modules
 
+echo "---test version---"
+node ./test-version.js
+
 if false; then
   # disable it for now since it fails, possible due to not using a recent version of onnxruntime
   echo "---test Qwen3 ASR---"

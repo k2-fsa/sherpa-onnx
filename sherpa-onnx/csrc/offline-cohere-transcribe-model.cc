@@ -3,7 +3,6 @@
 // Copyright (c)  2026  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cmath>
@@ -44,7 +43,7 @@ class OfflineCohereTranscribeModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         cpu_mem_info_(
@@ -68,7 +67,7 @@ class OfflineCohereTranscribeModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         cpu_mem_info_(

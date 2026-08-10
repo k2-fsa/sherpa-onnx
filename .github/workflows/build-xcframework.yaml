@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - master
-      - test-spm-2
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - 'release-v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
@@ -15,133 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_ios_xcframework:
-    name: ios tts-${{ matrix.with_tts }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest]
-        with_tts: [ON, OFF]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Update version
-        shell: bash
-        run: |
-          ./new-release.sh
-          git diff .
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ios-tts-${{ matrix.with_tts }}
-
-      - name: Build iOS shared
-        # if: matrix.with_tts == 'ON'
-        if: false
-        shell: bash
-        run: |
-          export CMAKE_VERBOSE_MAKEFILE=ON
-          ./build-ios-shared.sh
-
-      - name: Build iOS
-        if: matrix.with_tts == 'ON'
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          ./build-ios.sh
-
-      - name: Build iOS (No tts)
-        if: matrix.with_tts == 'OFF'
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          ./build-ios-no-tts.sh
-
-      - name: Display artifacts
-        if: matrix.with_tts == 'ON'
-        shell: bash
-        run: |
-          ls -lh build-ios/*.xcframework.zip
-
-      - name: Display artifacts
-        if: matrix.with_tts == 'OFF'
-        shell: bash
-        run: |
-          ls -lh build-ios-no-tts/*.xcframework.zip
-
-      - name: Upload xcframework.zip
-        if: matrix.with_tts == 'ON'
-        uses: actions/upload-artifact@v4
-        with:
-          name: sherpa-onnx-ios-xcframework
-          path: ./build-ios/*.xcframework.zip
-
-      - name: Upload xcframework.zip (no tts)
-        if: matrix.with_tts == 'OFF'
-        uses: actions/upload-artifact@v4
-        with:
-          name: sherpa-onnx-ios-no-tts-xcframework
-          path: ./build-ios-no-tts/*.xcframework.zip
-
-      - name: Release xcframework
-        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: ./build-ios*/*.xcframework.zip
-
-      - name: Release xcframework
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: ./build-ios*/*.xcframework.zip
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.13.4
-
-      # https://huggingface.co/docs/hub/spaces-github-actions
-      - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 20
-          timeout_seconds: 200
-          shell: bash
-          command: |
-            git config --global user.email "csukuangfj@gmail.com"
-            git config --global user.name "Fangjun Kuang"
-
-            rm -rf huggingface
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
-
-            cd huggingface
-
-            cp -v ../build-ios*/*.xcframework.zip ./
-
-            git status
-            git lfs track "*.zip"
-
-            git add .
-
-            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
-            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION} xcframework"
-
-            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
-
-
-  build_macos_xcframework:
-    name: macos
+  build_ios_static_xcframework:
+    name: ios-static
     runs-on: macos-latest
 
     steps:
@@ -156,73 +30,599 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: macos
+          key: ios-static
 
-      - name: Build macOS
+      - name: Build iOS static
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          ./build-swift-macos.sh
+          ./build-ios.sh
 
       - name: Display artifacts
         shell: bash
         run: |
-          ls -lh build-swift-macos/*.xcframework.zip
+          ls -lh build-ios/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-ios/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Verify xcframework structure (framework bundle)
+          fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
+
+          test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$fw_path/Info.plist" || { echo "Info.plist not found"; exit 1; }
+
+          echo "iOS static xcframework structure verified"
 
       - name: Upload xcframework.zip
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-macos-xcframework
-          path: ./build-swift-macos/*.xcframework.zip
+          name: sherpa-onnx-ios-static-xcframework
+          path: ./build-ios/*.xcframework.zip
 
-      - name: Release xcframework
-        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+  build_ios_shared_xcframework:
+    name: ios-shared
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ios-shared
+
+      - name: Build iOS shared
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-ios-shared.sh
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          ls -lh build-ios-shared/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-ios-shared/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Verify xcframework structure (framework bundle)
+          fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
+
+          test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$fw_path/Info.plist" || { echo "Info.plist not found"; exit 1; }
+
+          echo "iOS shared xcframework structure verified"
+
+      - name: Upload xcframework.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-ios-shared-xcframework
+          path: ./build-ios-shared/*.xcframework.zip
+
+  build_macos_static_xcframework:
+    name: macos-static
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-static
+
+      - name: Build macOS static
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-macos.sh
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          ls -lh build-macos/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-macos/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Find the framework bundle
+          fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
+
+          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+
+          # Use onnxruntime from the build directory
+          ort_lib=$GITHUB_WORKSPACE/build-macos/_deps/onnxruntime-src/lib
+
+          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
+          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
+          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -I "$fw_path/Headers" \
+            "$fw_path/Versions/A/SherpaOnnxC" \
+            -L "$ort_lib" \
+            -l onnxruntime \
+            -framework CoreFoundation \
+            -framework Foundation \
+            -lc++
+
+          ./version-c-api
+
+      - name: Upload xcframework.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-macos-static-xcframework
+          path: ./build-macos/*.xcframework.zip
+
+  build_macos_shared_xcframework:
+    name: macos-shared
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-shared
+
+      - name: Build macOS shared
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-macos-shared.sh
+
+      - name: Display build directory
+        shell: bash
+        run: |
+          ls -lh build-macos-shared
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          ls -lh build-macos-shared/*.xcframework.zip
+          unzip -l build-macos-shared/*.xcframework.zip
+
+      - name: Test xcframework
+        shell: bash
+        run: |
+          mkdir -p /tmp/test-xcframework
+          cd /tmp/test-xcframework
+          unzip -o $GITHUB_WORKSPACE/build-macos-shared/*.xcframework.zip -d .
+          ls -lh sherpa-onnx.xcframework/
+
+          # Find the framework bundle
+          fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
+          echo "fw_path: $fw_path"
+
+          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+
+          # Use onnxruntime from the build directory
+          ort_lib=$GITHUB_WORKSPACE/build-macos-shared/_deps/onnxruntime-src/lib
+
+          # Headers are at Headers/sherpa-onnx/c-api/c-api.h
+          # Include path should be Headers/ so #include "sherpa-onnx/c-api/c-api.h" works
+          # rpath must point to the directory containing SherpaOnnxC.framework/
+          fw_parent=$(dirname "$fw_path")
+          clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
+            -I "$fw_path/Headers" \
+            "$fw_path/Versions/A/SherpaOnnxC" \
+            -L "$ort_lib" \
+            -l onnxruntime \
+            -lc++ \
+            -Wl,-rpath,"$fw_parent" \
+            -Wl,-rpath,"$ort_lib"
+
+          ./version-c-api
+
+      - name: Upload xcframework.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-macos-shared-xcframework
+          path: ./build-macos-shared/*.xcframework.zip
+
+  test_spm:
+    name: test-spm
+    needs:
+      - build_ios_static_xcframework
+      - build_ios_shared_xcframework
+      - build_macos_static_xcframework
+      - build_macos_shared_xcframework
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download xcframework artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Prepare local xcframeworks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build-macos build-ios build-macos-shared build-ios-shared
+
+          # Extract static xcframeworks
+          unzip -o artifacts/sherpa-onnx-macos-static-xcframework/*.zip -d build-macos/
+          unzip -o artifacts/sherpa-onnx-ios-static-xcframework/*.zip -d build-ios/
+
+          # Extract shared xcframeworks
+          unzip -o artifacts/sherpa-onnx-macos-shared-xcframework/*.zip -d build-macos-shared/
+          unzip -o artifacts/sherpa-onnx-ios-shared-xcframework/*.zip -d build-ios-shared/
+
+          echo "=== macOS static xcframework ==="
+          ls -lh build-macos/sherpa-onnx.xcframework/
+          echo "=== iOS static xcframework ==="
+          ls -lh build-ios/sherpa-onnx.xcframework/
+          echo "=== macOS shared xcframework ==="
+          ls -lh build-macos-shared/sherpa-onnx.xcframework/
+          echo "=== iOS shared xcframework ==="
+          ls -lh build-ios-shared/sherpa-onnx.xcframework/
+
+      - name: Test SPM macOS (static)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd spm-examples/macOS
+
+          # Patch Package.swift to use local package
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+
+          # Patch root Package.swift to use local xcframework paths
+          cd ../..
+          cp Package.swift Package.swift.bak
+          python3 -c "
+          import re
+          text = open('Package.swift').read()
+          # Patch static macOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOS\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxMacOS\", path: \"build-macos/sherpa-onnx.xcframework\")',
+              text
+          )
+          # Patch static iOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOS\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxIOS\", path: \"build-ios/sherpa-onnx.xcframework\")',
+              text
+          )
+          # Patch shared macOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxMacOSShared\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxMacOSShared\", path: \"build-macos-shared/sherpa-onnx.xcframework\")',
+              text
+          )
+          # Patch shared iOS binary target to local path
+          text = re.sub(
+              r'\.binaryTarget\(\s*name: \"SherpaOnnxIOSShared\",\s*url:\s*\"[^\"]+\",\s*checksum: \"[a-f0-9]+\"\s*\)',
+              '.binaryTarget(name: \"SherpaOnnxIOSShared\", path: \"build-ios-shared/sherpa-onnx.xcframework\")',
+              text
+          )
+          open('Package.swift', 'w').write(text)
+          "
+          cd spm-examples/macOS
+
+          echo "=== Package.swift ==="
+          cat Package.swift
+          echo "=== Root Package.swift ==="
+          cat ../../Package.swift
+
+          rm -rf .build
+          swift build --verbose
+          swift run SherpaOnnxExample
+
+      - name: Test SPM iOS (static)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd spm-examples/iOS
+
+          # Patch Package.swift to use local package
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+
+          echo "=== Package.swift ==="
+          cat Package.swift
+
+          echo "=== Resolving ==="
+          swift package resolve
+
+          echo "=== Building for iOS Simulator ==="
+          xcodebuild -scheme SherpaOnnxExample \
+            -destination "generic/platform=iOS Simulator" \
+            -skipPackagePluginValidation \
+            -verbose \
+            build 2>&1
+
+          echo "=== Finding built executable ==="
+          BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
+          echo "Binary: $BINARY"
+
+          echo "=== Booting iOS Simulator ==="
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for key in devices:
+              for d in devices[key]:
+                  if d['isAvailable'] and 'iPhone' in d['name']:
+                      print(d['udid'])
+                      sys.exit(0)
+          ")
+          echo "Device: $DEVICE"
+          xcrun simctl boot "$DEVICE" 2>/dev/null || true
+
+          echo "=== Running on iOS Simulator ==="
+          xcrun simctl spawn "$DEVICE" "$BINARY"
+
+      - name: Test SPM macOS (shared)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd spm-examples/macOS
+
+          # Patch Package.swift to use shared product
+          sed -i.bak2 's|.product(name: "sherpa-onnx", package: "sherpa-onnx")|.product(name: "sherpa-onnx-shared", package: "sherpa-onnx")|' Package.swift
+
+          echo "=== Package.swift (shared) ==="
+          cat Package.swift
+          echo "=== Root Package.swift ==="
+          cat ../../Package.swift
+
+          rm -rf .build
+          swift build --verbose
+
+          # Find the shared onnxruntime dylib from OnnxruntimeMacOSShared artifact
+          ort_dylib=$(find .build/artifacts -path "*OnnxruntimeMacOSShared*" -name "onnxruntime" -type f | grep -v Headers | head -1)
+          if [ -z "$ort_dylib" ]; then
+            echo "ERROR: shared onnxruntime dylib not found in artifacts"
+            echo "=== Listing all artifacts ==="
+            find .build/artifacts -type f | sort
+            exit 1
+          fi
+          echo "Found onnxruntime dylib: $ort_dylib"
+          file "$ort_dylib"
+
+          exe_dir=$(dirname "$(find .build -name "SherpaOnnxExample" -type f -perm +111 | head -1)")
+          cp "$ort_dylib" "$exe_dir/libonnxruntime.dylib"
+          install_name_tool -id "@rpath/libonnxruntime.dylib" "$exe_dir/libonnxruntime.dylib"
+
+          swift run SherpaOnnxExample
+
+      - name: Test SPM iOS (shared)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd spm-examples/iOS
+
+          # Patch Package.swift to use shared product
+          sed -i.bak2 's|.product(name: "sherpa-onnx", package: "sherpa-onnx")|.product(name: "sherpa-onnx-shared", package: "sherpa-onnx")|' Package.swift
+
+          echo "=== Package.swift (shared) ==="
+          cat Package.swift
+
+          echo "=== Resolving ==="
+          swift package resolve
+
+          echo "=== Building for iOS Simulator ==="
+          xcodebuild -scheme SherpaOnnxExample \
+            -destination "generic/platform=iOS Simulator" \
+            -skipPackagePluginValidation \
+            -verbose \
+            build 2>&1
+
+          echo "=== Finding built executable ==="
+          BINARY=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/*-iphonesimulator/SherpaOnnxExample" -type f | head -1)
+          echo "Binary: $BINARY"
+          PRODUCTS_DIR=$(dirname "$BINARY")
+
+          # Ensure dynamic frameworks are accessible next to the binary
+          # simctl spawn uses @executable_path-relative rpaths, so frameworks must be
+          # in PackageFrameworks/ or Frameworks/ relative to the binary
+          echo "=== Checking framework locations ==="
+          find "$PRODUCTS_DIR" -name "*.framework" -type d
+          ls -la "$PRODUCTS_DIR/Frameworks/" 2>/dev/null || true
+          ls -la "$PRODUCTS_DIR/PackageFrameworks/" 2>/dev/null || true
+
+          # Copy SherpaOnnxC.framework to PackageFrameworks/ if not already there
+          pkg_fw_dir="$PRODUCTS_DIR/PackageFrameworks"
+          mkdir -p "$pkg_fw_dir"
+
+          sherpa_fw=$(find "$PRODUCTS_DIR" -path "*/Frameworks/SherpaOnnxC.framework" -type d | head -1)
+          if [ -n "$sherpa_fw" ] && [ ! -d "$pkg_fw_dir/SherpaOnnxC.framework" ]; then
+            cp -a "$sherpa_fw" "$pkg_fw_dir/"
+          fi
+
+          ort_fw=$(find "$PRODUCTS_DIR" -path "*/Frameworks/onnxruntime.framework" -type d | head -1)
+          if [ -n "$ort_fw" ] && [ ! -d "$pkg_fw_dir/onnxruntime.framework" ]; then
+            cp -a "$ort_fw" "$pkg_fw_dir/"
+          fi
+
+          echo "=== PackageFrameworks contents ==="
+          ls -la "$pkg_fw_dir/"
+
+          echo "=== Booting iOS Simulator ==="
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for key in devices:
+              for d in devices[key]:
+                  if d['isAvailable'] and 'iPhone' in d['name']:
+                      print(d['udid'])
+                      sys.exit(0)
+          ")
+          echo "Device: $DEVICE"
+          xcrun simctl boot "$DEVICE" 2>/dev/null || true
+
+          echo "=== Running on iOS Simulator ==="
+          xcrun simctl spawn "$DEVICE" "$BINARY"
+
+      - name: Test iOS apps (static, local SPM)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Restore root Package.swift for static test (already patched with local paths)
+          # Patch ios-swiftui/ios-swift xcodeproj files to use local package
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
+            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
+            -e '/requirement = {/,/};/d' \
+            {} +
+
+          # Ensure we're using the static product in spm-examples
+          # (Root Package.swift already has static binary targets patched to local paths)
+
+          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTts; do
+            echo "=== Building ios-swiftui/$app (static, local SPM) ==="
+            cd ios-swiftui/$app
+            xcodebuild -project $app.xcodeproj \
+              -scheme $app \
+              -destination 'generic/platform=iOS Simulator' \
+              -skipPackagePluginValidation \
+              build
+            cd ../..
+          done
+
+          echo "=== Building ios-swift/SherpaOnnxAsr (static, local SPM) ==="
+          cd ios-swift/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+      - name: Test iOS apps (shared, local SPM)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Swap static xcframeworks with shared ones in the local paths
+          rm -rf build-macos/sherpa-onnx.xcframework
+          cp -a build-macos-shared/sherpa-onnx.xcframework build-macos/
+          rm -rf build-ios/sherpa-onnx.xcframework
+          cp -a build-ios-shared/sherpa-onnx.xcframework build-ios/
+
+          # Patch root Package.swift to use shared onnxruntime products
+          python3 -c "
+          text = open('Package.swift').read()
+          # In the static wrapper target, swap to shared onnxruntime products
+          text = text.replace('\"onnxruntime-macos\"', '\"onnxruntime-macos-shared\"')
+          text = text.replace('\"onnxruntime-ios\"', '\"onnxruntime-ios-shared\"')
+          open('Package.swift', 'w').write(text)
+          "
+
+          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTts; do
+            echo "=== Building ios-swiftui/$app (shared, local SPM) ==="
+            cd ios-swiftui/$app
+            xcodebuild -project $app.xcodeproj \
+              -scheme $app \
+              -destination 'generic/platform=iOS Simulator' \
+              -skipPackagePluginValidation \
+              build
+            cd ../..
+          done
+
+          echo "=== Building ios-swift/SherpaOnnxAsr (shared, local SPM) ==="
+          cd ios-swift/SherpaOnnxAsr
+          xcodebuild -project SherpaOnnxAsr.xcodeproj \
+            -scheme SherpaOnnxAsr \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+      - name: Restore modified files
+        if: always()
+        shell: bash
+        run: |
+          [ -f spm-examples/macOS/Package.swift.bak ] && mv spm-examples/macOS/Package.swift.bak spm-examples/macOS/Package.swift || true
+          [ -f Package.swift.bak ] && mv Package.swift.bak Package.swift || true
+          [ -f spm-examples/iOS/Package.swift.bak ] && mv spm-examples/iOS/Package.swift.bak spm-examples/iOS/Package.swift || true
+          # Restore xcodeproj files patched for ios app test
+          git checkout -- ios-swiftui/ ios-swift/ 2>/dev/null || true
+
+  release:
+    name: release
+    needs:
+      - build_ios_static_xcframework
+      - build_ios_shared_xcframework
+      - build_macos_static_xcframework
+      - build_macos_shared_xcframework
+      - test_spm
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all xcframework artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Release xcframework (k2-fsa)
+        if: github.repository_owner == 'k2-fsa'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          overwrite: true
-          file: ./build-swift-macos/*.xcframework.zip
+          overwrite: false
+          file: artifacts/**/*.xcframework.zip
+          tag: xcframework
 
-      - name: Release xcframework
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      - name: Release xcframework (csukuangfj)
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          overwrite: true
-          file: ./build-swift-macos/*.xcframework.zip
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.13.4
-
-      # https://huggingface.co/docs/hub/spaces-github-actions
-      - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 20
-          timeout_seconds: 200
-          shell: bash
-          command: |
-            git config --global user.email "csukuangfj@gmail.com"
-            git config --global user.name "Fangjun Kuang"
-
-            rm -rf huggingface
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
-
-            cd huggingface
-
-            cp -v ../build-swift-macos/*.xcframework.zip ./
-
-            git status
-            git lfs track "*.zip"
-
-            git add .
-
-            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
-            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION} macos xcframework"
-
-            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
+          overwrite: false
+          file: artifacts/**/*.xcframework.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: xcframework

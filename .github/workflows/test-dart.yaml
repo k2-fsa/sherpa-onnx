@@ -6,11 +6,6 @@ on:
       - master
       - dart-api
       - dart
-    paths:
-      - '.github/workflows/test-dart.yaml'
-      - '.github/scripts/test-dart.sh'
-      - 'dart-api-examples/**'
-      - 'flutter/**'
 
   workflow_dispatch:
 
@@ -66,20 +61,24 @@ jobs:
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
-          mkdir build
 
-          cd build
+          if [[ ${{ matrix.os }} == macos-latest ]]; then
+            ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+          else
+            mkdir build
+            cd build
 
-          cmake \
-            -DBUILD_SHARED_LIBS=ON \
-            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-            -DBUILD_ESPEAK_NG_EXE=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-            -DCMAKE_INSTALL_PREFIX=./install \
-            ..
+            cmake \
+              -DBUILD_SHARED_LIBS=ON \
+              -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+              -DBUILD_ESPEAK_NG_EXE=OFF \
+              -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+              -DCMAKE_INSTALL_PREFIX=./install \
+              ..
 
-          cmake --build . --target install --config Release
+            cmake --build . --target install --config Release
+          fi
 
       - name: Copy libs
         shell: bash
@@ -96,20 +95,22 @@ jobs:
 
           echo "os: $os"
 
-          if [[ $os == windows ]]; then
+          if [[ $os == macos ]]; then
+            cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework
+          elif [[ $os == windows ]]; then
             cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_$os/$os
           elif [[ $os == linux-x64 ]]; then
             cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/x64
           elif [[ $os == linux-aarch64 ]]; then
             cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/aarch64
-          else
-            cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
           fi
 
           echo "--------------------"
 
           if [[ $os == linux-x64 || $os == linux-aarch64 ]]; then
             ls -lh ./flutter/sherpa_onnx_linux/linux/*
+          elif [[ $os == macos ]]; then
+            ls -lh ./flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework/
           else
             ls -lh ./flutter/sherpa_onnx_$os/$os
           fi

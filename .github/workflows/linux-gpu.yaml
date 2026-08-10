@@ -27,16 +27,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          MATRIX=$(python3 .github/scripts/libs/linux_x64_cuda.py)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
   linux_gpu:
+    needs: [generate_matrix]
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.build_type }} ${{ matrix.onnxruntime_version }}
+    name: ${{ matrix.build_type }} ${{ matrix.onnxruntime_version }} cuda${{ matrix.cuda_version }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        # build_type: [Release, Debug]
-        build_type: [Release]
-        onnxruntime_version: ["1.17.1", "1.24.4"]
+        ${{ fromJson(needs.generate_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -65,14 +75,13 @@ jobs:
 
               cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
-              onnxruntime_version=${{ matrix.onnxruntime_version }}
-              curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v$onnxruntime_version/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
-              unzip  onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
+              curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${{ matrix.onnxruntime_version }}/onnxruntime-linux-x64-${{ matrix.onnxruntime_url_suffix }}.zip
+              unzip onnxruntime-linux-x64-${{ matrix.onnxruntime_url_suffix }}.zip
 
-              export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/lib
-              export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/include
+              export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/${{ matrix.onnxruntime_dir_name }}/lib
+              export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/${{ matrix.onnxruntime_dir_name }}/include
 
-              ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/lib/libonnxruntime.so
+              ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/${{ matrix.onnxruntime_dir_name }}/lib/libonnxruntime.so
 
               git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
               pushd alsa-lib
@@ -140,12 +149,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-gpu
-
-          onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.24.4" ]]; then
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-linux-x64-gpu
-          fi
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-${{ matrix.dst_suffix }}
 
           mkdir $dst
 
@@ -164,9 +168,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*gpu.tar.bz2
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.13
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.13.4
 
       - name: Release pre-compiled binaries and libs for linux x64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

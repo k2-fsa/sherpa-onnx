@@ -43,9 +43,50 @@ function(download_simple_sentencepiece)
   endif()
   message(STATUS "simple-sentencepiece is downloaded to ${simple-sentencepiece_SOURCE_DIR}")
 
+  # Patch ssentencepiece to disable threading on WASM (std::thread not available).
+  if(SHERPA_ONNX_ENABLE_WASM)
+    # Replace threadpool.h with a WASM-safe stub that provides a no-op ThreadPool.
+    set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
+    file(WRITE "${_tp_header}" [=[
+// WASM-safe ThreadPool stub (std::thread not available).
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
+
+#include <functional>
+#include <future>
+#include <memory>
+
+class ThreadPool {
+ public:
+  ThreadPool(size_t) {}
+  // C++14 compatible: use auto return type with decltype.
+  template<class F, class... Args>
+  auto enqueue(F&& f, Args&&... args)
+      -> std::future<decltype(f(args...))> {
+    // Run synchronously — no threading in WASM.
+    using return_type = decltype(f(args...));
+    auto task = std::make_shared<std::packaged_task<return_type()>>(
+        std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    std::future<return_type> res = task->get_future();
+    (*task)();
+    return res;
+  }
+};
+
+#endif  // THREAD_POOL_H
+]=])
+    message(STATUS "Patched ssentencepiece for WASM (ThreadPool stub installed)")
+  endif()
+
   if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
+  endif()
+
+  # Skip the C++14 compiler check for WASM (Emscripten supports it but the
+  # CMake test may fail depending on flags).
+  if(SHERPA_ONNX_ENABLE_WASM)
+    set(SBPE_COMPILER_SUPPORTS_CXX14 ON CACHE BOOL "" FORCE)
   endif()
 
   add_subdirectory(${simple-sentencepiece_SOURCE_DIR} ${simple-sentencepiece_BINARY_DIR} EXCLUDE_FROM_ALL)

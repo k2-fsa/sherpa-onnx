@@ -3,7 +3,6 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-nemo-ctc-model.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cmath>
@@ -36,7 +35,7 @@ class OnlineNeMoCtcModel::Impl {
  public:
   explicit Impl(const OnlineModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -47,7 +46,7 @@ class OnlineNeMoCtcModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OnlineModelConfig &config)
       : config_(config),
-        env_(CreateOrtEnv()),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {
