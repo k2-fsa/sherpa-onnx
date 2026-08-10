@@ -196,3 +196,4 @@ sherpa-onnx-nemo*
 kokoro-int8-en-v0_19
 vits-inflect-*-v2
 assets-2
+swiftpm

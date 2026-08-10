@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - flutter-ci-2
+      - vad-flutter
 
   workflow_dispatch:
 
@@ -84,6 +85,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -97,6 +99,11 @@ jobs:
           cd ..
           ./generate-asset-list.py
 
+      - name: Copy LICENSE for sherpa_onnx_macos podspec
+        shell: bash
+        run: |
+          cp LICENSE flutter/sherpa_onnx_macos/LICENSE
+
       - name: Build Flutter app
         shell: bash
         run: |
@@ -108,20 +115,36 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
+          export CODE_SIGNING_ALLOWED=NO
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
+
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
+          codesign --force --deep -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          xattr -cr flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
 
       - name: Zip app
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
-          # Flutter converts hyphens to underscores in the app name.
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          mkdir -p flutter-${{ matrix.demo }}
-          mv ${app_name}.app flutter-${{ matrix.demo }}/
-          zip -r flutter-${{ matrix.demo }}-macos.zip flutter-${{ matrix.demo }}/
+          zip -r flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
           ls -lh flutter-${{ matrix.demo }}-macos.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-macos.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -221,6 +244,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -247,11 +271,29 @@ jobs:
 
           ls -lh build/linux/*/release/bundle/
 
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
+          zip -r flutter-${{ matrix.demo }}-linux-x64.zip bundle/
+          ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-linux-x64.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: flutter-${{ matrix.demo }}-linux-x64
-          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/bundle/
+          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-linux-x64.zip
 
   windows:
     name: Windows (${{ matrix.demo }})
@@ -326,6 +368,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -352,11 +395,29 @@ jobs:
 
           ls -lh build/windows/x64/runner/Release/
 
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
+          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip"
+          ls -lh flutter-${{ matrix.demo }}-win-x64.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-win-x64.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: flutter-${{ matrix.demo }}-win-x64
-          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/Release/
+          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-win-x64.zip
 
   android:
     name: Android (${{ matrix.demo }}, ${{ matrix.abi }})
@@ -451,6 +512,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -483,6 +545,17 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/
           mv app-*-release.apk flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
           ls -lh *.apk
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -542,6 +615,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -556,12 +630,21 @@ jobs:
           ./generate-asset-list.py
 
 
+      - name: Use local sherpa_onnx_web
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx_web: 1.13.4$|sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
       - name: Build Flutter web app
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -576,6 +659,17 @@ jobs:
           mv web flutter-${{ matrix.demo }}
           zip -r flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
           ls -lh flutter-${{ matrix.demo }}.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

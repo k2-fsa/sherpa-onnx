@@ -82,6 +82,12 @@ jobs:
 
           ls -lh build/macos/Build/Products/Release/
 
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          codesign --force --deep -s - flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+          xattr -cr flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+
       - name: Zip app
         shell: bash
         run: |
@@ -165,6 +171,12 @@ jobs:
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
+
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          codesign --force --deep -s - flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+          xattr -cr flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
 
       - name: Zip app
         shell: bash
