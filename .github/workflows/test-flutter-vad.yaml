@@ -83,7 +83,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
-          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/vad-models/silero_vad.onnx
+          rm -fv .gitkeep
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh
           cd ..
           ./generate-asset-list.py
 
@@ -93,6 +95,7 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter config --no-enable-swift-package-manager
@@ -107,9 +110,7 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          mkdir -p flutter-${{ matrix.demo }}
-          mv ${app_name}.app flutter-${{ matrix.demo }}/
-          zip -r flutter-${{ matrix.demo }}-macos.zip flutter-${{ matrix.demo }}/
+          zip -r flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
           ls -lh flutter-${{ matrix.demo }}-macos.zip
 
       - name: Upload artifact
@@ -145,7 +146,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libasound2-dev
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
@@ -209,7 +210,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
-          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/vad-models/silero_vad.onnx
+          rm -fv .gitkeep
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh
           cd ..
           ./generate-asset-list.py
 
@@ -219,6 +222,7 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -305,7 +309,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
-          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/vad-models/silero_vad.onnx
+          rm -fv .gitkeep
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh
           cd ..
           ./generate-asset-list.py
 
@@ -315,6 +321,7 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -420,7 +427,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
-          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/vad-models/silero_vad.onnx
+          rm -fv .gitkeep
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh
           cd ..
           ./generate-asset-list.py
 
@@ -430,6 +439,7 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -502,7 +512,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
-          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/vad-models/silero_vad.onnx
+          rm -fv .gitkeep
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh
           cd ..
           ./generate-asset-list.py
 
@@ -512,6 +524,7 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get

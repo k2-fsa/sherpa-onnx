@@ -10,13 +10,13 @@ const List<Map<String, String>> modelInfo = [
   {
     'name': 'Silero VAD v4',
     'file': 'silero_vad.onnx',
-    'url': 'https://github.com/k2-fsa/sherpa-onnx/releases/download/vad-models/silero_vad.onnx',
+    'url': 'https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx',
     'doc': 'https://k2-fsa.github.io/sherpa/onnx/vad/silero-vad.html',
   },
   {
     'name': 'Ten VAD',
     'file': 'ten-vad.onnx',
-    'url': 'https://github.com/k2-fsa/sherpa-onnx/releases/download/vad-models/ten-vad.onnx',
+    'url': 'https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx',
     'doc': 'https://k2-fsa.github.io/sherpa/onnx/vad/ten-vad.html',
   },
 ];

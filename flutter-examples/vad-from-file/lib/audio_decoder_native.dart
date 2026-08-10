@@ -1,11 +1,10 @@
 // Copyright (c)  2026  Xiaomi Corporation
-// Native audio decoder using FFmpeg.
+// Native audio decoder — uses sherpa_onnx readWave for WAV files.
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 /// Result of decoding an audio file.
 class DecodedAudio {
@@ -19,76 +18,48 @@ class DecodedAudio {
   });
 }
 
-/// Decode audio bytes to 16kHz mono Float32 PCM samples using FFmpeg.
+/// Decode audio bytes to Float32 PCM samples.
+/// On native, supports WAV files via sherpa_onnx readWave.
 /// Returns null if decoding fails.
 Future<DecodedAudio?> decodeAudioBytes(Uint8List bytes) async {
   try {
+    sherpa_onnx.initBindings();
+
     final tempDir = await getTemporaryDirectory();
-    await Directory(tempDir.path).create(recursive: true);
-    final inputPath = '${tempDir.path}/input_${DateTime.now().microsecondsSinceEpoch}';
-    await File(inputPath).writeAsBytes(bytes);
-    final result = await _decodePath(inputPath);
-    try { await File(inputPath).delete(); } catch (_) {}
-    return result;
+    await tempDir.create(recursive: true);
+    final inputPath = '${tempDir.path}/vad_input_${DateTime.now().microsecondsSinceEpoch}.wav';
+    final file = File(inputPath);
+    await file.writeAsBytes(bytes);
+
+    final waveData = sherpa_onnx.readWave(inputPath);
+    try { await file.delete(); } catch (_) {}
+
+    if (waveData.samples.isEmpty) return null;
+
+    return DecodedAudio(
+      samples: waveData.samples,
+      sampleRate: waveData.sampleRate,
+      duration: waveData.samples.length / waveData.sampleRate,
+    );
   } catch (e) {
     print('Audio decode error: $e');
     return null;
   }
 }
 
-/// Decode an audio file to 16kHz mono Float32 PCM samples using FFmpeg.
+/// Decode an audio file to Float32 PCM samples.
 /// Returns null if decoding fails.
 Future<DecodedAudio?> decodeAudioFile(String filePath) async {
-  return _decodePath(filePath);
-}
-
-Future<DecodedAudio?> _decodePath(String filePath) async {
   try {
-    final tempDir = await getTemporaryDirectory();
-    // Ensure the temp directory exists.
-    await Directory(tempDir.path).create(recursive: true);
-    final outputPath =
-        '${tempDir.path}/decoded_${DateTime.now().microsecondsSinceEpoch}.raw';
+    sherpa_onnx.initBindings();
 
-    // Use FFmpeg to convert any audio/video to 16kHz mono Float32 PCM.
-    final command =
-        '-i "$filePath" -ar 16000 -ac 1 -f f32le -acodec pcm_f32le -y "$outputPath"';
-
-    final session = await FFmpegKit.execute(command);
-    final returnCode = await session.getReturnCode();
-
-    if (!ReturnCode.isSuccess(returnCode)) {
-      final logs = await session.getOutput();
-      print('FFmpeg error: $logs');
-      return null;
-    }
-
-    // Read the raw PCM file.
-    final file = File(outputPath);
-    if (!await file.exists()) {
-      print('FFmpeg output file not found: $outputPath');
-      return null;
-    }
-
-    final bytes = await file.readAsBytes();
-    await file.delete();
-
-    if (bytes.length < 4) return null;
-
-    // Convert bytes to Float32List.
-    final numSamples = bytes.length ~/ 4;
-    final samples = Float32List(numSamples);
-    final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    for (int i = 0; i < numSamples; i++) {
-      samples[i] = bd.getFloat32(i * 4, Endian.little);
-    }
-
-    final duration = numSamples / 16000.0;
+    final waveData = sherpa_onnx.readWave(filePath);
+    if (waveData.samples.isEmpty) return null;
 
     return DecodedAudio(
-      samples: samples,
-      sampleRate: 16000,
-      duration: duration,
+      samples: waveData.samples,
+      sampleRate: waveData.sampleRate,
+      duration: waveData.samples.length / waveData.sampleRate,
     );
   } catch (e) {
     print('Audio decode error: $e');

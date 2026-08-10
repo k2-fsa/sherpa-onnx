@@ -84,6 +84,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -221,6 +222,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -326,6 +328,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -451,6 +454,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -542,6 +546,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
           if [ "${{ matrix.demo }}" = "online-punctuation" ]; then
             curl -sSL -o sherpa-onnx-online-punct-en-2024-08-06.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
             tar xf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
