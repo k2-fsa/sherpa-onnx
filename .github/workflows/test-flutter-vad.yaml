@@ -79,6 +79,11 @@ jobs:
           sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
+      - name: Copy LICENSE for sherpa_onnx_macos podspec
+        shell: bash
+        run: |
+          cp LICENSE flutter/sherpa_onnx_macos/LICENSE
+
       - name: Download model
         shell: bash
         run: |
@@ -101,7 +106,7 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-          flutter build macos --no-codesign
+          flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
 
@@ -112,6 +117,17 @@ jobs:
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
           zip -r flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
           ls -lh flutter-${{ matrix.demo }}-macos.zip
+
+      - name: Release 
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-macos.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -146,7 +162,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libasound2-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libasound2-dev libjson-glib-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
@@ -230,11 +246,29 @@ jobs:
 
           ls -lh build/linux/*/release/bundle/
 
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
+          zip -r flutter-${{ matrix.demo }}-linux-x64.zip bundle/
+          ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
+
+      - name: Release
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-linux-x64.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: flutter-${{ matrix.demo }}-linux-x64
-          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/bundle/
+          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-linux-x64.zip
 
   windows:
     name: Windows (${{ matrix.demo }})
@@ -329,11 +363,29 @@ jobs:
 
           ls -lh build/windows/x64/runner/Release/
 
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
+          zip -r flutter-${{ matrix.demo }}-win-x64.zip Release/
+          ls -lh flutter-${{ matrix.demo }}-win-x64.zip
+
+      - name: Release
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-win-x64.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: flutter-${{ matrix.demo }}-win-x64
-          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/Release/
+          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-win-x64.zip
 
   android:
     name: Android (${{ matrix.demo }}, ${{ matrix.abi }})
@@ -454,6 +506,17 @@ jobs:
           mv app-*-release.apk flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
           ls -lh *.apk
 
+      - name: Release
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -539,6 +602,17 @@ jobs:
           mv web flutter-${{ matrix.demo }}
           zip -r flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
           ls -lh flutter-${{ matrix.demo }}.zip
+
+      - name: Release
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

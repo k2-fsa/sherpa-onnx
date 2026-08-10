@@ -112,11 +112,14 @@ class _VadScreenState extends State<VadScreen> {
       if (kIsWeb) {
         // On web, use bytes to create a blob URL.
         final bytes = file.bytes;
-        if (bytes == null) {
-          setState(() => _logController.text = 'Error: Could not read file bytes');
+        if (bytes == null || bytes.isEmpty) {
+          setState(() => _logController.text =
+              'Error: Could not read file bytes. Try a smaller file or different browser.');
           return;
         }
         final url = createBlobUrl(bytes);
+        setState(() => _logController.text =
+            'Loaded: ${file.name} (${(bytes.length / 1024 / 1024).toStringAsFixed(1)} MB)');
         controller = VideoPlayerController.networkUrl(Uri.parse(url));
       } else {
         // On native, use the file path.
