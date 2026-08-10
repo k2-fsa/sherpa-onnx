@@ -1,6 +1,10 @@
 package com.k2fsa.sherpa.onnx
 
 class OnlineStream(var ptr: Long = 0) {
+    init {
+        require(ptr != 0L) { "Failed to create native OnlineStream" }
+    }
+
     fun acceptWaveform(samples: FloatArray, sampleRate: Int) =
         acceptWaveform(ptr, samples, sampleRate)
 

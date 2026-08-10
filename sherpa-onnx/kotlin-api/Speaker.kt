@@ -15,7 +15,9 @@ class SpeakerEmbeddingExtractor(
         } else {
             newFromFile(config)
         }
-    }
+        require(ptr != 0L) {
+            "Invalid SpeakerEmbeddingExtractorConfig: failed to create native SpeakerEmbeddingExtractor"
+        }
 
     protected fun finalize() {
         if (ptr != 0L) {
@@ -66,6 +68,7 @@ class SpeakerEmbeddingManager(val dim: Int) {
 
     init {
         ptr = create(dim)
+        require(ptr != 0L) { "Failed to create native SpeakerEmbeddingManager" }
     }
 
     protected fun finalize() {

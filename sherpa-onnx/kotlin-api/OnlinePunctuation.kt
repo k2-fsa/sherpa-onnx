@@ -27,7 +27,9 @@ class OnlinePunctuation(
         } else {
             newFromFile(config)
         }
-    }
+        require(ptr != 0L) {
+            "Invalid OnlinePunctuationConfig: failed to create native OnlinePunctuation"
+        }
 
     protected fun finalize() {
         if (ptr != 0L) {
