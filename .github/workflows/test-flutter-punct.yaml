@@ -99,6 +99,11 @@ jobs:
           cd ..
           ./generate-asset-list.py
 
+      - name: Copy LICENSE for sherpa_onnx_macos podspec
+        shell: bash
+        run: |
+          cp LICENSE flutter/sherpa_onnx_macos/LICENSE
+
       - name: Build Flutter app
         shell: bash
         run: |
@@ -110,7 +115,7 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-          flutter build macos --no-codesign
+          flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
 
@@ -383,10 +388,10 @@ jobs:
           ls -lh build/windows/x64/runner/Release/
 
       - name: Zip app
-        shell: bash
+        shell: powershell
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          zip -r flutter-${{ matrix.demo }}-win-x64.zip Release/
+          Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip
           ls -lh flutter-${{ matrix.demo }}-win-x64.zip
 
       - name: Release

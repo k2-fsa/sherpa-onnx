@@ -106,9 +106,27 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
+
+      - name: Disable code signing
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/macos
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development"/CODE_SIGN_IDENTITY = "-"/g' Runner.xcodeproj/project.pbxproj || true
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' Runner.xcodeproj/project.pbxproj || true
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
+
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
+          codesign --force --deep -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
 
       - name: Zip app
         shell: bash
@@ -364,10 +382,10 @@ jobs:
           ls -lh build/windows/x64/runner/Release/
 
       - name: Zip app
-        shell: bash
+        shell: powershell
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          zip -r flutter-${{ matrix.demo }}-win-x64.zip Release/
+          Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip
           ls -lh flutter-${{ matrix.demo }}-win-x64.zip
 
       - name: Release
