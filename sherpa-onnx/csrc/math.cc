@@ -137,8 +137,12 @@ void NemoNormalizePerFeature(float *p, int32_t num_frames,
   Eigen::Map<RowMajorMat> x(p, num_frames, feature_dim);
 
   Eigen::RowVectorXf mean = x.colwise().mean();
+
+  // E[x^2] - E[x]^2 cancels catastrophically in float32 when a feature
+  // stays near a constant value, yielding var == 0 and huge normalized
+  // outliers, so compute the variance from centered values instead.
   Eigen::RowVectorXf var =
-      (x.array().square().colwise().mean() - mean.array().square()).max(0.0f);
+      (x.rowwise() - mean).array().square().colwise().mean();
 
   Eigen::RowVectorXf inv_std = (var.array().sqrt() + 1e-5f).inverse();
 
