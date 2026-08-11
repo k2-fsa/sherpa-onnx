@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace "com.k2fsa.sherpa.onnx"
     compileSdk 34
 
     defaultConfig {
@@ -22,8 +23,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
@@ -34,5 +35,5 @@ dependencies {
     implementation 'pub.devrel:easypermissions:3.0.0'
     implementation 'androidx.core:core-ktx:1.7.0'
     // implementation files('/Users/fangjun/open-source/sherpa-onnx/android/SherpaOnnxAar/sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar')
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx:1.13.5'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx:v1.13.5'
 }
