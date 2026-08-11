@@ -150,6 +150,7 @@ jobs:
           export SID_EXE=speaker-identification-c-api
           export AT_EXE=audio-tagging-c-api
           export PUNCT_EXE=add-punctuation-c-api
+          export VERSION_EXE=version-c-api
 
           .github/scripts/test-c-api.sh
 
