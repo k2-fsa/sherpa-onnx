@@ -15,7 +15,6 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.1/onnxruntime-linux-aarch64-glibc2_17-Release-1.27.1.zip")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj2/onnxruntime-libs/resolve/main/1.27.1/onnxruntime-linux-aarch64-glibc2_17-Release-1.27.1.zip")
 set(onnxruntime_HASH "SHA256=7c0dc460a78745792ee3c339f2369549a1396d60e79cef0b6616e3948205bda6")
 
 # If you don't have access to the Internet,
@@ -34,7 +33,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -42,7 +40,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 
