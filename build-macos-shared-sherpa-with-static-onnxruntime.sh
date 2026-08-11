@@ -114,7 +114,7 @@ cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
   <key>CFBundleVersion</key>
   <string>20260707</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.13.4</string>
+  <string>1.13.5</string>
 </dict>
 </plist>
 EOF

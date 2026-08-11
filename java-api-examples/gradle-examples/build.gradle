@@ -16,7 +16,7 @@ dependencies {
     // ============================================================
     // Approach 1: Simple — one dependency pulls in everything.
     // ============================================================
-    // implementation 'com.github.k2-fsa:sherpa-onnx:refactor-jar-SNAPSHOT'
+    // implementation 'com.github.k2-fsa:sherpa-onnx:1.13.5'
 
     // ============================================================
     // Approach 2 (recommended): Multi-module — split JVM API and
@@ -24,27 +24,27 @@ dependencies {
     // ============================================================
 
     // 1. JVM core API Jar
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:refactor-jar-SNAPSHOT'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:1.13.5'
 
     // 2. Platform native lib — uncomment ONE for your target platform
 
     // macOS ARM64 (Apple Silicon)
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:refactor-jar-SNAPSHOT'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:1.13.5'
 
     // macOS x64 (Intel)
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-x64:refactor-jar-SNAPSHOT'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-x64:1.13.5'
 
     // Linux x64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-x64:refactor-jar-SNAPSHOT'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-x64:1.13.5'
 
     // Linux ARM64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-aarch64:refactor-jar-SNAPSHOT'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-aarch64:1.13.5'
 
     // Windows x64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-x64:refactor-jar-SNAPSHOT'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-x64:1.13.5'
 
     // Windows ARM64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-arm64:refactor-jar-SNAPSHOT'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-arm64:1.13.5'
 }
 
 java {

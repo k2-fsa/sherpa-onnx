@@ -2,7 +2,7 @@ name: sherpa_onnx_web
 description: >
   Web platform support for sherpa_onnx using WebAssembly.
 
-version: 1.13.4
+version: 1.13.5
 
 repository: https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter
 
