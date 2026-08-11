@@ -1,5 +1,9 @@
 ## 1.13.5
 
+* Update onnxruntime to v1.27.1 (#3861)
+* Fix float32 catastrophic cancellation in variance computation (#3862)
+* Fix float32 catastrophic cancellation in NemoNormalizePerFeature (#3857)
+* Fix Kotlin syntax errors (#3860)
 * Add Flutter/Dart Web support via WebAssembly (#3842)
 * Support swift package manager (SPM) for Flutter on macOS and iOS (#3835, #3816, #3822, #3823, #3828, #3830, #3831, #3833)
 * Add Flutter examples for VAD (#3856)

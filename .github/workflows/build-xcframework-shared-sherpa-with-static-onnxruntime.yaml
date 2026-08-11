@@ -3,8 +3,6 @@ name: build-xcframework-shared-sherpa-with-static-onnxruntime
 on:
   push:
     branches:
-      - master
-    tags:
       - 'release-v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
@@ -182,7 +180,6 @@ jobs:
     needs:
       - build_macos_shared_onnxruntime_static
       - build_ios_shared_onnxruntime_static
-    # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
@@ -205,7 +202,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          overwrite: true
+          overwrite: false
           file: artifacts/**/*.xcframework.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
