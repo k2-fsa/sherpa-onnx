@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/circular-buffer.h"
 
+#include <limits>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -145,6 +146,46 @@ TEST(CircularBuffer, PushAndPop) {
   EXPECT_EQ(c.size(), 2);
   EXPECT_EQ(c[0], 3000);
   EXPECT_EQ(c[1], 4000);
+}
+
+TEST(CircularBuffer, ResizeWrappedData) {
+  CircularBuffer buffer(4);
+  std::vector<float> a = {0, 1, 2};
+  buffer.Push(a.data(), a.size());
+  buffer.Pop(2);
+
+  a = {3, 4, 5};
+  buffer.Push(a.data(), a.size());
+
+  a = {6, 7};
+  buffer.Push(a.data(), a.size());
+
+  std::vector<float> expected = {2, 3, 4, 5, 6, 7};
+  auto actual = buffer.Get(buffer.Head(), buffer.Size());
+  EXPECT_EQ(actual, expected);
+}
+
+TEST(CircularBuffer, LogicalIndexWrap) {
+  CircularBuffer buffer(4);
+  buffer.head_index_ =
+      static_cast<uint32_t>(std::numeric_limits<int32_t>::max()) - 2;
+
+  std::vector<float> a = {0, 1, 2, 3};
+  buffer.Push(a.data(), a.size());
+
+  EXPECT_EQ(buffer.Head(), std::numeric_limits<int32_t>::max() - 2);
+  EXPECT_EQ(buffer.Tail(), 1);
+  EXPECT_EQ(buffer.Get(buffer.Head(), buffer.Size()), a);
+
+  buffer.Pop(3);
+  EXPECT_EQ(buffer.Head(), 0);
+  EXPECT_EQ(buffer.Tail(), 1);
+  EXPECT_EQ(buffer.Get(0, 1), std::vector<float>({3}));
+
+  a = {4, 5, 6};
+  buffer.Push(a.data(), a.size());
+  EXPECT_EQ(buffer.Get(buffer.Head(), buffer.Size()),
+            std::vector<float>({3, 4, 5, 6}));
 }
 
 }  // namespace sherpa_onnx
