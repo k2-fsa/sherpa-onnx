@@ -437,16 +437,10 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
 
-      - name: Zip package for inspection
-        shell: pwsh
-        run: |
-          Compress-Archive -Path /tmp/to_be_published -DestinationPath /tmp/sherpa_onnx_windows.zip
-          ls -lh /tmp/sherpa_onnx_windows.zip
-
       - uses: actions/upload-artifact@v4
         with:
           name: package-sherpa_onnx_windows
-          path: /tmp/sherpa_onnx_windows.zip
+          path: /tmp/to_be_published
 
       - name: Release
         shell: bash
