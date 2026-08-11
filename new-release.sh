@@ -24,11 +24,10 @@ find android -name "build.gradle.kts" -type f -exec sed -i.bak "s/versionName = 
 find android -name "build.gradle" -type f -exec sed -i.bak "s/versionCode $old_version_code/versionCode $new_version_code/g" {} \;
 find android -name "build.gradle.kts" -type f -exec sed -i.bak "s/versionCode = $old_version_code/versionCode = $new_version_code/g" {} \;
 
-find . -name "./build*.sh" -type f -exec sed -i.bak "s/versionCode = $old_version_code/versionCode = $new_version_code/g" {} \;
+find . -name "build*.sh" -type f -exec sed -i.bak "s/$old_version_code/$new_version_code/g" {} \;
 
 sed -i.bak "s/  static const char \*sha1.*/  static const char \*sha1 = \"$sha1\";/g" ./sherpa-onnx/csrc/version.cc
 sed -i.bak "s/  static const char \*date.*/  static const char \*date = \"$date\";/g" ./sherpa-onnx/csrc/version.cc
-
 
 find scripts/wheel -name "setup.py" -type f -exec sed -i.bak "$replace_str" {} \;
 sed -i.bak "$replace_str" ./setup.py
@@ -41,9 +40,10 @@ sed -i.bak "$replace_str" ./build-macos-shared.sh
 sed -i.bak "$replace_str" ./build-macos-shared-sherpa-with-static-onnxruntime.sh
 sed -i.bak "$replace_str" ./build-ios-shared-sherpa-with-static-onnxruntime.sh
 
-for f in ./build-ios.sh ./build-ios-shared.sh ./build-ios-no-tts.sh ./build-macos.sh ./build-macos-shared.sh; do
+for f in ./build*.sh; do
   sed -i.bak "s/$old_version_code/$new_version_code/g" "$f"
 done
+
 sed -i.bak "$replace_str" ./pom.xml
 sed -i.bak "$replace_str" ./sherpa-onnx/java-api/pom.xml
 sed -i.bak "$replace_str" ./sherpa-onnx/java-api/README.md
