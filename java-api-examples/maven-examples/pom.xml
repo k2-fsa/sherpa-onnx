@@ -27,7 +27,7 @@
         <dependency>
             <groupId>com.github.k2-fsa</groupId>
             <artifactId>sherpa-onnx</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
         -->
 
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
             <artifactId>sherpa-onnx-jvm</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
 
         <!-- 2. Platform native lib — uncomment ONE for your target platform -->
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
             <artifactId>sherpa-onnx-native-lib-osx-aarch64</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
 
         <!-- macOS x64 (Intel) -->
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
             <artifactId>sherpa-onnx-native-lib-osx-x64</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
         -->
 
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
             <artifactId>sherpa-onnx-native-lib-linux-x64</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
         -->
 
@@ -75,7 +75,7 @@
         <dependency>
             <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
             <artifactId>sherpa-onnx-native-lib-linux-aarch64</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
         -->
 
@@ -84,7 +84,7 @@
         <dependency>
             <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
             <artifactId>sherpa-onnx-native-lib-win-x64</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
         -->
 
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
             <artifactId>sherpa-onnx-native-lib-win-arm64</artifactId>
-            <version>1.13.5</version>
+            <version>v1.13.5</version>
         </dependency>
         -->
     </dependencies>
