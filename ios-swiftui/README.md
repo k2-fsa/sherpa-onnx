@@ -28,7 +28,7 @@ There are two ways to add sherpa-onnx to your Xcode project:
    ```
 4. Choose your version rule:
    - **Up to Next Major**: e.g. `1.13.0 ..< 2.0.0`
-   - **Exact**: e.g. `1.13.4`
+   - **Exact**: e.g. `1.13.5`
    - **Branch**: e.g. `master`
 5. Click **Add Package**
 6. Select the product you want (`sherpa-onnx` or `sherpa-onnx-shared`) and click **Add Package**
