@@ -2,8 +2,6 @@
 // Web stub for WAV reading -- not yet implemented.
 // TODO: implement using dart:js_interop and the corresponding JS wrapper.
 
-import 'dart:typed_data';
-
 import '../wave_reader_config.dart';
 
 export '../wave_reader_config.dart';

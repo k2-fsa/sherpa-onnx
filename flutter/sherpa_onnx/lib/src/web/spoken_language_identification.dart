@@ -11,7 +11,6 @@ export '../spoken_language_identification_config.dart';
 class SpokenLanguageIdentification {
   SpokenLanguageIdentification.fromPtr(
       {required this.ptr, required this.config});
-  SpokenLanguageIdentification._({required this.ptr, required this.config});
 
   factory SpokenLanguageIdentification(
       SpokenLanguageIdentificationConfig config) {

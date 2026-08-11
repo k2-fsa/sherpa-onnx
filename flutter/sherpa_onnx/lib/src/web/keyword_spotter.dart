@@ -10,7 +10,6 @@ export '../keyword_spotter_config.dart';
 /// Streaming keyword spotter.
 class KeywordSpotter {
   KeywordSpotter.fromPtr({required this.ptr, required this.config});
-  KeywordSpotter._({required this.ptr, required this.config});
 
   factory KeywordSpotter(KeywordSpotterConfig config) {
     throw UnsupportedError('KeywordSpotter is not yet supported on web');

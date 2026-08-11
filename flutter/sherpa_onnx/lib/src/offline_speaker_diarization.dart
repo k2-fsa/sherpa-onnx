@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
-import './speaker_identification.dart';
 import './offline_speaker_diarization_config.dart';
 
 export './offline_speaker_diarization_config.dart';
