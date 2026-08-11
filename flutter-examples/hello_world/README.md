@@ -19,7 +19,8 @@ Edit `pubspec.yaml`, replace the `dependencies:` section with:
 dependencies:
   flutter:
     sdk: flutter
-  sherpa_onnx: ^1.13.4
+  sherpa_onnx: ^1.13.5
+  sherpa_onnx_web: ^1.13.5 # Required only when building for web.
 ```
 
 Then run:

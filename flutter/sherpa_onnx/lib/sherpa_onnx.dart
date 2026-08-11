@@ -1,13 +1,10 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart' show MethodChannel, MissingPluginException;
 
 // Conditional import: native uses dart:io/dart:ffi, web uses dart:js_interop.
 import 'src/init_native.dart'
     if (dart.library.js_interop) 'src/web/init.dart' as init;
-
-// Conditional import for web WASM loader.
-import 'package:sherpa_onnx_web/sherpa_onnx_web.dart'
-    if (dart.library.io) 'src/init_stub.dart' as web;
 
 /// Dart bindings for the public sherpa-onnx inference APIs.
 ///
@@ -85,6 +82,8 @@ export 'src/wave_reader.dart'
 export 'src/wave_writer.dart'
     if (dart.library.js_interop) 'src/web/wave_writer.dart';
 
+const _webChannel = MethodChannel('sherpa_onnx_web');
+
 String? _path;
 
 /// Initialize the native sherpa-onnx bindings.
@@ -110,7 +109,8 @@ void initBindings([String? p]) {
 
 /// Initialize the sherpa-onnx bindings (works on all platforms including web).
 ///
-/// On web, this loads the WASM module and JS wrappers automatically.
+/// On web, this loads the WASM module and JS wrappers from the
+/// `sherpa_onnx_web` package, which must be a direct dependency of the app.
 /// On native platforms, this behaves the same as [initBindings].
 ///
 /// **Important:** If you use Dart isolates, call `initBindings()` or
@@ -119,7 +119,15 @@ void initBindings([String? p]) {
 Future<void> initBindingsAsync([String? p]) async {
   _path ??= p;
   if (kIsWeb) {
-    await web.SherpaOnnxWeb.loadWasm();
+    try {
+      await _webChannel.invokeMethod<void>('loadWasm');
+    } on MissingPluginException {
+      throw StateError(
+        'sherpa_onnx_web is required to use sherpa_onnx on web. '
+        'Add `sherpa_onnx_web` to your pubspec.yaml, then run '
+        '`flutter pub get`.',
+      );
+    }
     return;
   }
   init.initNativeBindings(_path);

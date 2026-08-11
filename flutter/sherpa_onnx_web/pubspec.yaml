@@ -25,6 +25,7 @@ dependencies:
 
 flutter:
   plugin:
+    implements: sherpa_onnx
     platforms:
       web:
         pluginClass: SherpaOnnxWeb

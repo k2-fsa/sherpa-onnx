@@ -30,7 +30,23 @@ class SherpaOnnxWeb {
   static bool _initialized = false;
   static Completer<void>? _loadingCompleter;
 
-  static void registerWith(Registrar registrar) {}
+  static void registerWith(Registrar registrar) {
+    final channel = MethodChannel(
+      'sherpa_onnx_web',
+      const StandardMethodCodec(),
+      registrar,
+    );
+    channel.setMethodCallHandler((call) async {
+      if (call.method == 'loadWasm') {
+        await loadWasm();
+        return;
+      }
+      throw MissingPluginException(
+        'No implementation found for method ${call.method} on channel '
+        '${channel.name}',
+      );
+    });
+  }
 
   /// Load the sherpa-onnx WASM module and JS wrappers.
   ///

@@ -62,10 +62,6 @@ dependencies:
   # sherpa_onnx_ios:
   #   path: ../sherpa_onnx_ios
 
-  sherpa_onnx_web: ^1.13.5
-  # sherpa_onnx_web:
-  #   path: ../sherpa_onnx_web
-
 dev_dependencies:
   flutter_lints: ^3.0.0
 
@@ -86,6 +82,3 @@ flutter:
 
       windows:
         default_package: sherpa_onnx_windows
-
-      web:
-        default_package: sherpa_onnx_web
