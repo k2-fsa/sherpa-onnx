@@ -40,9 +40,6 @@ sed -i.bak "$replace_str" ./build-macos.sh
 sed -i.bak "$replace_str" ./build-macos-shared.sh
 sed -i.bak "$replace_str" ./build-macos-shared-sherpa-with-static-onnxruntime.sh
 sed -i.bak "$replace_str" ./build-ios-shared-sherpa-with-static-onnxruntime.sh
-sed -i.bak "$replace_str" ./.github/workflows/test-flutter-package.yaml
-sed -i.bak "$replace_str" ./.github/workflows/test-flutter-punct.yaml
-sed -i.bak "$replace_str" ./.github/workflows/test-flutter-vad.yaml
 
 for f in ./build-ios.sh ./build-ios-shared.sh ./build-ios-no-tts.sh ./build-macos.sh ./build-macos-shared.sh; do
   sed -i.bak "s/$old_version_code/$new_version_code/g" "$f"
@@ -57,7 +54,6 @@ find java-api-examples -name "README.md" -type f -exec sed -i.bak "$replace_str"
 find java-api-examples -name "build.gradle" -type f -exec sed -i.bak "$replace_str" {} \;
 find java-api-examples -name "build.gradle.kts" -type f -exec sed -i.bak "$replace_str" {} \;
 find java-api-examples -name "pom.xml" -type f -exec sed -i.bak "$replace_str" {} \;
-sed -i.bak "$replace_str" ./.github/workflows/run-java-test.yaml
 
 sed -i.bak "$replace_str" ./rust-api-examples/Cargo.toml
 sed -i.bak "$replace_str" ./rust-api-examples/for-advanced-users.md
@@ -91,4 +87,7 @@ find harmony-os -name BuildProfile.ets -type f -exec sed -i.bak "$replace_str" {
 
 find mfc-examples -name "README.md" -type f -exec sed -i.bak "$replace_str" {} \;
 
+find .github/workflows -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
+
 find . -name "*.bak" -exec rm {} \;
+

@@ -3,7 +3,8 @@ name: build-xcframework
 on:
   push:
     branches:
-      - 'release-v[0-9]+.[0-9]+.[0-9]+*'-2
+      # - 'release-v[0-9]+.[0-9]+.[0-9]+*'
+      - xcframework
 
   workflow_dispatch:
 
@@ -313,7 +314,7 @@ jobs:
           cd spm-examples/macOS
 
           # Patch Package.swift to use local package
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "v1.13.5")|.package(path: "../../")|' Package.swift
 
           # Patch root Package.swift to use local xcframework paths
           cd ../..
@@ -365,7 +366,7 @@ jobs:
           cd spm-examples/iOS
 
           # Patch Package.swift to use local package
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "v1.13.5")|.package(path: "../../")|' Package.swift
 
           echo "=== Package.swift ==="
           cat Package.swift
