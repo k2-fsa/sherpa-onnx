@@ -1757,10 +1757,13 @@ public class SherpaOnnxOnlinePunctuationWrapper {
   }
 }
 
-public func sherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(model: String)
-  -> SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig
-{
-  return SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(model: toCPointer(model))
+public func sherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
+  model: String,
+  windowShiftRatio: Float = 0.1
+) -> SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig {
+  return SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
+    model: toCPointer(model),
+    window_shift_ratio: windowShiftRatio)
 }
 
 public func sherpaOnnxOfflineSpeakerSegmentationModelConfig(

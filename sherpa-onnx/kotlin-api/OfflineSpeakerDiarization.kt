@@ -4,6 +4,7 @@ import android.content.res.AssetManager
 
 data class OfflineSpeakerSegmentationPyannoteModelConfig(
     var model: String = "",
+    var windowShiftRatio: Float = 0.1f,
 )
 
 data class OfflineSpeakerSegmentationModelConfig(

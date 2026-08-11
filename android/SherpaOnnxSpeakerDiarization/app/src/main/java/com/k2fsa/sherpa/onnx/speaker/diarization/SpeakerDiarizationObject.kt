@@ -48,7 +48,8 @@ object SpeakerDiarizationObject {
             val config = OfflineSpeakerDiarizationConfig(
                 segmentation = OfflineSpeakerSegmentationModelConfig(
                     pyannote = OfflineSpeakerSegmentationPyannoteModelConfig(
-                        segmentationModel
+                        model = segmentationModel,
+                        windowShiftRatio = 0.1f,
                     ),
                     debug = true,
                 ),

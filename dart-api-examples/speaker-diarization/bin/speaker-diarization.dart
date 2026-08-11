@@ -46,7 +46,7 @@ void main(List<String> arguments) async {
 
   final segmentationConfig = sherpa_onnx.OfflineSpeakerSegmentationModelConfig(
     pyannote: sherpa_onnx.OfflineSpeakerSegmentationPyannoteModelConfig(
-        model: segmentationModel),
+        model: segmentationModel, windowShiftRatio: 0.1),
   );
 
   final embeddingConfig =

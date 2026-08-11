@@ -43,25 +43,31 @@ class OfflineSpeakerDiarizationSegment {
 class OfflineSpeakerSegmentationPyannoteModelConfig {
   const OfflineSpeakerSegmentationPyannoteModelConfig({
     this.model = '',
+    this.windowShiftRatio = 0.1,
   });
 
   factory OfflineSpeakerSegmentationPyannoteModelConfig.fromJson(
       Map<String, dynamic> json) {
     return OfflineSpeakerSegmentationPyannoteModelConfig(
       model: json['model'] as String? ?? '',
+      windowShiftRatio:
+          (json['windowShiftRatio'] as num?)?.toDouble() ?? 0.1,
     );
   }
 
   @override
   String toString() {
-    return 'OfflineSpeakerSegmentationPyannoteModelConfig(model: $model)';
+    return 'OfflineSpeakerSegmentationPyannoteModelConfig(model: $model, '
+        'windowShiftRatio: $windowShiftRatio)';
   }
 
   Map<String, dynamic> toJson() => {
         'model': model,
+        'windowShiftRatio': windowShiftRatio,
       };
 
   final String model;
+  final double windowShiftRatio;
 }
 
 /// Segmentation model configuration for speaker diarization.

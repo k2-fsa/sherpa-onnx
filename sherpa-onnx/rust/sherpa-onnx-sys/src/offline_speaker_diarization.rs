@@ -8,6 +8,7 @@ use std::os::raw::{c_char, c_float};
 #[derive(Debug, Copy, Clone)]
 pub struct OfflineSpeakerSegmentationPyannoteModelConfig {
     pub model: *const c_char,
+    pub window_shift_ratio: c_float,
 }
 
 #[repr(C)]

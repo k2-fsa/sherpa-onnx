@@ -23,6 +23,7 @@ GetOfflineSpeakerSegmentationPyannoteModelConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("pyannote").As<Napi::Object>();
   SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(window_shift_ratio, windowShiftRatio);
 
   return c;
 }

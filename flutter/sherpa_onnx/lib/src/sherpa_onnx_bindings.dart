@@ -71,6 +71,9 @@ final class SherpaOnnxOfflineSpeakerDiarizationSegment extends Struct {
 final class SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig
     extends Struct {
   external Pointer<Utf8> model;
+
+  @Float()
+  external double windowShiftRatio;
 }
 
 final class SherpaOnnxOfflineSpeakerSegmentationModelConfig extends Struct {

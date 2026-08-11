@@ -29,7 +29,7 @@ function initSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
   const n = modelLen;
   const buffer = Module._malloc(n);
 
-  const len = 1 * 4;
+  const len = 2 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -38,6 +38,10 @@ function initSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
 
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, config.windowShiftRatio ?? 0, 'float');
 
   return {
     buffer: buffer,
@@ -50,6 +54,7 @@ function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
   if (!('pyannote' in config)) {
     config.pyannote = {
       model: '',
+      windowShiftRatio: 0.1,
     };
   }
 
@@ -138,7 +143,7 @@ function initSherpaOnnxFastClusteringConfig(config, Module) {
 function initSherpaOnnxOfflineSpeakerDiarizationConfig(config, Module) {
   if (!('segmentation' in config)) {
     config.segmentation = {
-      pyannote: {model: ''},
+      pyannote: {model: '', windowShiftRatio: 0.1},
       numThreads: 1,
       debug: 0,
       provider: 'cpu',
@@ -277,7 +282,7 @@ class OfflineSpeakerDiarization {
 function createOfflineSpeakerDiarization(Module, myConfig) {
   let config = {
     segmentation: {
-      pyannote: {model: './segmentation.onnx'},
+      pyannote: {model: './segmentation.onnx', windowShiftRatio: 0.1},
       debug: 1,
     },
     embedding: {

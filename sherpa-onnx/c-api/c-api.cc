@@ -3149,6 +3149,10 @@ GetOfflineSpeakerDiarizationConfig(
 
   sd_config.segmentation.pyannote.model =
       SHERPA_ONNX_OR(config->segmentation.pyannote.model, "");
+  sd_config.segmentation.pyannote.window_shift_ratio =
+      config->segmentation.pyannote.window_shift_ratio <= 0
+          ? 0.1f
+          : config->segmentation.pyannote.window_shift_ratio;
   sd_config.segmentation.num_threads =
       GetNumThreads(config->segmentation.num_threads);
   sd_config.segmentation.debug = config->segmentation.debug;

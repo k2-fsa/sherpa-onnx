@@ -648,6 +648,7 @@
  * Offline speaker segmentation (pyannote) model config
  * @typedef {Object} OfflineSpeakerSegmentationPyannoteModelConfig
  * @property {string} [model]
+ * @property {number} [windowShiftRatio=0.1]
  */
 
 /**
