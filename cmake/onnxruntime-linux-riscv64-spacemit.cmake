@@ -34,7 +34,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -42,7 +41,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 

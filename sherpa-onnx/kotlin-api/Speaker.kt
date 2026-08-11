@@ -18,6 +18,7 @@ class SpeakerEmbeddingExtractor(
         require(ptr != 0L) {
             "Invalid SpeakerEmbeddingExtractorConfig: failed to create native SpeakerEmbeddingExtractor"
         }
+    }
 
     protected fun finalize() {
         if (ptr != 0L) {

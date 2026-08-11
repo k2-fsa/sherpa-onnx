@@ -47,6 +47,7 @@ class Vad(
         require(ptr != 0L) {
             "Invalid VadConfig: failed to create native Vad"
         }
+    }
 
     protected fun finalize() {
         if (ptr != 0L) {

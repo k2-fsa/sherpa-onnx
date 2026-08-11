@@ -131,9 +131,9 @@ sherpa-onnx/native/linux-aarch64/libonnxruntime.so       34 MB   (Linux ARM64)
 sherpa-onnx/native/linux-aarch64/libsherpa-onnx-jni.so   4.7 MB
 sherpa-onnx/native/linux-x64/libonnxruntime.so           26 MB   (Linux x64)
 sherpa-onnx/native/linux-x64/libsherpa-onnx-jni.so       5.1 MB
-sherpa-onnx/native/osx-aarch64/libonnxruntime.1.27.0.dylib  28 MB   (macOS ARM64)
+sherpa-onnx/native/osx-aarch64/libonnxruntime.dylib  28 MB   (macOS ARM64)
 sherpa-onnx/native/osx-aarch64/libsherpa-onnx-jni.dylib     4.2 MB
-sherpa-onnx/native/osx-x64/libonnxruntime.1.27.0.dylib      32 MB   (macOS x64)
+sherpa-onnx/native/osx-x64/libonnxruntime.dylib      32 MB   (macOS x64)
 sherpa-onnx/native/osx-x64/libsherpa-onnx-jni.dylib         4.4 MB
 sherpa-onnx/native/win-x64/onnxruntime.dll             17 MB   (Windows x64)
 sherpa-onnx/native/win-x64/sherpa-onnx-jni.dll         4.6 MB
@@ -145,7 +145,7 @@ sherpa-onnx/native/win-arm64/sherpa-onnx-jni.dll       4.6 MB
 the macOS ARM64 native libs:
 
 ```
-sherpa-onnx/native/osx-aarch64/libonnxruntime.1.27.0.dylib  28 MB   (macOS ARM64)
+sherpa-onnx/native/osx-aarch64/libonnxruntime.dylib  28 MB   (macOS ARM64)
 sherpa-onnx/native/osx-aarch64/libsherpa-onnx-jni.dylib     4.2 MB
 ```
 
