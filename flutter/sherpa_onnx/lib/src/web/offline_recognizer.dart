@@ -14,7 +14,6 @@ export '../offline_recognizer_config.dart';
 /// hypothesis with [getResult].
 class OfflineRecognizer {
   OfflineRecognizer.fromPtr({required this.ptr, required this.config});
-  OfflineRecognizer._({required this.ptr, required this.config});
 
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
     throw UnsupportedError('OfflineRecognizer is not yet supported on web');

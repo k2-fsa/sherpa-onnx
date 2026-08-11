@@ -68,7 +68,6 @@ class OfflineTts {
     required OfflineTtsGenerationConfig config,
     int Function(Float32List samples, double progress)? onProgress,
   }) {
-    final m = getModule();
     final handle = ptr as JSObject;
 
     // Build the genConfig JS object.
@@ -94,11 +93,11 @@ class OfflineTts {
     if (config.extra.isNotEmpty) {
       final extraObj = JSObject();
       for (final entry in config.extra.entries) {
-        extraObj[entry.key] = (entry.value is String
+        extraObj[entry.key] = entry.value is String
             ? (entry.value as String).toJS
             : entry.value is int
                 ? (entry.value as int).toJS
-                : (entry.value as double).toJS) as JSAny;
+                : (entry.value as double).toJS;
       }
       genConfig['extra'] = extraObj;
     }

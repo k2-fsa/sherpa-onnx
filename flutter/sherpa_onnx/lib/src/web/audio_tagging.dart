@@ -10,7 +10,6 @@ export '../audio_tagging_config.dart';
 /// Offline audio tagger.
 class AudioTagging {
   AudioTagging.fromPtr({required this.ptr, required this.config});
-  AudioTagging._({required this.ptr, required this.config});
 
   factory AudioTagging({required AudioTaggingConfig config}) {
     throw UnsupportedError('AudioTagging is not yet supported on web');
