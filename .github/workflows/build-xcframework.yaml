@@ -3,9 +3,8 @@ name: build-xcframework
 on:
   push:
     branches:
-      - master
-    tags:
-      - 'release-v[0-9]+.[0-9]+.[0-9]+*'
+      # - 'release-v[0-9]+.[0-9]+.[0-9]+*'
+      - xcframework
 
   workflow_dispatch:
 
@@ -315,7 +314,7 @@ jobs:
           cd spm-examples/macOS
 
           # Patch Package.swift to use local package
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "v1.13.5")|.package(path: "../../")|' Package.swift
 
           # Patch root Package.swift to use local xcframework paths
           cd ../..
@@ -367,7 +366,7 @@ jobs:
           cd spm-examples/iOS
 
           # Patch Package.swift to use local package
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", branch: "master")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "v1.13.5")|.package(path: "../../")|' Package.swift
 
           echo "=== Package.swift ==="
           cat Package.swift
@@ -598,7 +597,7 @@ jobs:
       - build_macos_static_xcframework
       - build_macos_shared_xcframework
       - test_spm
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:

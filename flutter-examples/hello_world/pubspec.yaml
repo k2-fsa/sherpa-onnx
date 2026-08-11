@@ -4,7 +4,7 @@ description: >
 
 publish_to: 'none'
 
-version: 1.13.4
+version: 1.13.5
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -13,7 +13,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sherpa_onnx: ^1.13.4
+  sherpa_onnx: ^1.13.5
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
 

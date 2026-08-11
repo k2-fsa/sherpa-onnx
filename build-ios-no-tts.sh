@@ -201,9 +201,9 @@ MEOF
   <key>CFBundleExecutable</key>
   <string>SherpaOnnxC</string>
   <key>CFBundleVersion</key>
-  <string>20260707</string>
+  <string>20260810</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.13.4</string>
+  <string>1.13.5</string>
   <key>MinimumOSVersion</key>
   <string>13.0</string>
   <key>CFBundleSupportedPlatforms</key>
