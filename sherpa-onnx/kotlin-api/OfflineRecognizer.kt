@@ -192,6 +192,7 @@ class OfflineRecognizer(
         require(ptr != 0L) {
             "Invalid OfflineRecognizerConfig: failed to create native OfflineRecognizer"
         }
+    }
 
     protected fun finalize() {
         if (ptr != 0L) {
