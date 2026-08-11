@@ -11,8 +11,8 @@
 		C917B4E72B0EEF3B005245AC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917B4E62B0EEF3B005245AC /* ContentView.swift */; };
 		C917B4E92B0EEF3C005245AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4E82B0EEF3C005245AC /* Assets.xcassets */; };
 		C917B4EC2B0EEF3C005245AC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */; };
+		C9A4C699302B3BD60004DECB /* sherpa-onnx in Frameworks */ = {isa = PBXBuildFile; productRef = C9A4C698302B3BD60004DECB /* sherpa-onnx */; };
 		C9FE9FE52B0F33CD009F1003 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */; };
-		C9SP000000000001 /* sherpa-onnx in Frameworks */ = {isa = PBXBuildFile; productRef = C9SP000000000002 /* sherpa-onnx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,7 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C9SP000000000001 /* sherpa-onnx in Frameworks */,
+				C9A4C699302B3BD60004DECB /* sherpa-onnx in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,7 +89,7 @@
 			);
 			name = SherpaOnnxTts;
 			packageProductDependencies = (
-				C9SP000000000002 /* sherpa-onnx */,
+				C9A4C698302B3BD60004DECB /* sherpa-onnx */,
 			);
 			productName = SherpaOnnxTts;
 			productReference = C917B4E12B0EEF3B005245AC /* SherpaOnnxTts.app */;
@@ -120,7 +120,7 @@
 			);
 			mainGroup = C917B4D82B0EEF3B005245AC;
 			packageReferences = (
-				C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
+				C9A4C697302B3BD60004DECB /* XCRemoteSwiftPackageReference "sherpa-onnx" */,
 			);
 			productRefGroup = C917B4E22B0EEF3B005245AC /* Products */;
 			projectDirPath = "";
@@ -351,20 +351,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
+		C9A4C697302B3BD60004DECB /* XCRemoteSwiftPackageReference "sherpa-onnx" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
 				kind = exactVersion;
-				version = v1.13.5;
+				version = 1.13.5;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		C9SP000000000002 /* sherpa-onnx */ = {
+		C9A4C698302B3BD60004DECB /* sherpa-onnx */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C9SP000000000003 /* XCRemoteSwiftPackageReference "sherpa-onnx" */;
+			package = C9A4C697302B3BD60004DECB /* XCRemoteSwiftPackageReference "sherpa-onnx" */;
 			productName = "sherpa-onnx";
 		};
 /* End XCSwiftPackageProductDependency section */
