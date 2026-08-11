@@ -21,28 +21,28 @@ let package = Package(
     .binaryTarget(
       name: "SherpaOnnxMacOS",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-macos-static.xcframework.zip",
-      checksum: "16690967d863fc8b981ebe77c7764ce5ca3805638489496b87281a866bd8bf3c"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.5-macos-static.xcframework.zip",
+      checksum: "56bbe822793786e88ff9f459986a78b58a8253d85510054c1591bd2d1bd4bdf4"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOS",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-ios-static.xcframework.zip",
-      checksum: "b48ec217952a5b82242ce7d8323fcbc8de54ff900a72df1f0b20bfcf7b08881d"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.5-ios-static.xcframework.zip",
+      checksum: "79214d00e275c864f0c4f7f9d1c252f8b621b185ceb54c13a43906da6f913080"
     ),
 
     // --- Shared binary targets ---
     .binaryTarget(
       name: "SherpaOnnxMacOSShared",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-macos-shared.xcframework.zip",
-      checksum: "f821a02c2c8371a143922f29ee971de5ff5946a03037f0b4d6f62eab3204b0c2"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.5-macos-shared.xcframework.zip",
+      checksum: "517b17eedb4356ee2940781201259a3a0d5a638e9817ebb62cdc4e231608dd2c"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOSShared",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.4-ios-shared.xcframework.zip",
-      checksum: "b02da91832d281e9b785e6c4040c38f47fbdd076c78dabc7a42d0178afa86ae8"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.5-ios-shared.xcframework.zip",
+      checksum: "d6feb76810875adf4fe0d5f075aa92bd621af57f3a99813770a2c4c9de2a4c87"
     ),
 
     // --- Static wrapper target (default) ---
