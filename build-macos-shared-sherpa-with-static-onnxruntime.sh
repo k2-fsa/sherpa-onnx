@@ -70,6 +70,14 @@ install_name_tool -id @rpath/libsherpa-onnx-c-api.dylib ./install/lib/libsherpa-
 # Ad-hoc sign the dylib
 codesign --force --sign - ./install/lib/libsherpa-onnx-c-api.dylib
 
+# Create modulemap for SPM
+cat > ./install/include/module.modulemap << 'EOF'
+module SherpaOnnxC {
+  header "sherpa-onnx/c-api/c-api.h"
+  export *
+}
+EOF
+
 xcodebuild -create-xcframework \
   -library ./install/lib/libsherpa-onnx-c-api.dylib \
   -headers ./install/include \
