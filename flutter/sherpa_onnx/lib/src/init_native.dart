@@ -10,13 +10,13 @@ DynamicLibrary loadDylib(String? path) {
       return DynamicLibrary.process();
     } else {
       return DynamicLibrary.open(
-        '$path/sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/libsherpa-onnx-c-api.dylib',
+        '$path/sherpa_onnx_macos/sherpa-onnx.xcframework/macos-arm64_x86_64/libsherpa-onnx-c-api.dylib',
       );
     }
   }
 
   if (Platform.isIOS) {
-    return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
+    return DynamicLibrary.process();
   }
 
   if (Platform.isAndroid || Platform.isLinux) {

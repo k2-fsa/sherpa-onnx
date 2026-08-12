@@ -21,7 +21,7 @@ sherpa-onnx Flutter FFI plugin project.
   s.dependency 'FlutterMacOS'
   # The dylib lives inside the xcframework (single copy, no duplication).
   # CocoaPods embeds it; SPM resolves it from the same xcframework.
-  s.vendored_libraries = 'sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/libsherpa-onnx-c-api.dylib'
+  s.vendored_libraries = 'sherpa_onnx_macos/sherpa-onnx.xcframework/macos-arm64_x86_64/libsherpa-onnx-c-api.dylib'
 
   s.platform = :osx, '10.15'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
