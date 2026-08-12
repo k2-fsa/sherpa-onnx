@@ -132,7 +132,7 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          zip -r flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
+          zip -r -y flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
           ls -lh flutter-${{ matrix.demo }}-macos.zip
 
       - name: Release
@@ -275,7 +275,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
-          zip -r flutter-${{ matrix.demo }}-linux-x64.zip bundle/
+          zip -r -y flutter-${{ matrix.demo }}-linux-x64.zip bundle/
           ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
 
       - name: Release
@@ -657,7 +657,7 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/
           mv web flutter-${{ matrix.demo }}
-          zip -r flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
+          zip -r -y flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
           ls -lh flutter-${{ matrix.demo }}.zip
 
       - name: Release

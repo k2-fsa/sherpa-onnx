@@ -94,7 +94,7 @@ jobs:
           cd flutter-examples/hello_world/build/macos/Build/Products/Release/
           mkdir -p flutter-hello-world-macos-cocoapods
           mv hello_world.app flutter-hello-world-macos-cocoapods/
-          zip -r flutter-hello-world-macos-cocoapods.zip flutter-hello-world-macos-cocoapods/
+          zip -r -y flutter-hello-world-macos-cocoapods.zip flutter-hello-world-macos-cocoapods/
           ls -lh flutter-hello-world-macos-cocoapods.zip
 
       - name: Upload artifact
@@ -184,7 +184,7 @@ jobs:
           cd flutter-examples/hello_world/build/macos/Build/Products/Release/
           mkdir -p flutter-hello-world-macos-spm
           mv hello_world.app flutter-hello-world-macos-spm/
-          zip -r flutter-hello-world-macos-spm.zip flutter-hello-world-macos-spm/
+          zip -r -y flutter-hello-world-macos-spm.zip flutter-hello-world-macos-spm/
           ls -lh flutter-hello-world-macos-spm.zip
 
       - name: Upload artifact
@@ -703,7 +703,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world/build/
           mv web flutter-hello-world-web
-          zip -r flutter-hello-world-web.zip flutter-hello-world-web/
+          zip -r -y flutter-hello-world-web.zip flutter-hello-world-web/
           ls -lh flutter-hello-world-web.zip
 
       - name: Upload artifact

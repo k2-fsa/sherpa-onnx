@@ -411,7 +411,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world/build/
           mv web flutter-hello-world-pkg-web
-          zip -r flutter-hello-world-pkg-web.zip flutter-hello-world-pkg-web/
+          zip -r -y flutter-hello-world-pkg-web.zip flutter-hello-world-pkg-web/
           ls -lh flutter-hello-world-pkg-web.zip
 
       - name: Upload artifact

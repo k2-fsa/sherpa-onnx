@@ -238,7 +238,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_linux.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_linux.zip to_be_published
           ls -lh /tmp/sherpa_onnx_linux.zip
 
       - uses: actions/upload-artifact@v4
@@ -314,7 +314,17 @@ jobs:
 
           mv sherpa-onnx.xcframework sherpa_onnx_macos/SherpaOnnxC.xcframework
 
-          ls -lh sherpa_onnx_macos/SherpaOnnxC.xcframework/
+          # Verify framework symlinks are preserved after unzip + mv
+          fw_path=sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework
+          test -L "$fw_path/Versions/Current" || { echo "ERROR: Versions/Current is not a symlink"; exit 1; }
+          test -L "$fw_path/SherpaOnnxC" || { echo "ERROR: SherpaOnnxC is not a symlink"; exit 1; }
+          test -L "$fw_path/Headers" || { echo "ERROR: Headers is not a symlink"; exit 1; }
+          test -L "$fw_path/Modules" || { echo "ERROR: Modules is not a symlink"; exit 1; }
+          test -L "$fw_path/Resources" || { echo "ERROR: Resources is not a symlink"; exit 1; }
+          echo "OK: framework symlinks are correct"
+
+          ls -la "$fw_path"
+          ls -la "$fw_path/Versions/"
 
       - name: Prepare for publish
         shell: bash
@@ -338,7 +348,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_macos.zip to_be_published
+          zip -r -y -y /tmp/sherpa_onnx_macos.zip to_be_published
           ls -lh /tmp/sherpa_onnx_macos.zip
 
       - uses: actions/upload-artifact@v4
@@ -542,7 +552,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_arm64.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_arm64.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_arm64.zip
 
       - uses: actions/upload-artifact@v4
@@ -652,7 +662,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_armeabi.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_armeabi.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_armeabi.zip
 
       - uses: actions/upload-artifact@v4
@@ -762,7 +772,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_x86.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_x86.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_x86.zip
 
       - uses: actions/upload-artifact@v4
@@ -872,7 +882,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_x86_64.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_x86_64.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_x86_64.zip
 
       - uses: actions/upload-artifact@v4
@@ -971,7 +981,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_ios.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_ios.zip to_be_published
           ls -lh /tmp/sherpa_onnx_ios.zip
 
       - uses: actions/upload-artifact@v4
@@ -1086,7 +1096,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_web.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_web.zip to_be_published
           ls -lh /tmp/sherpa_onnx_web.zip
 
       - uses: actions/upload-artifact@v4
@@ -1162,7 +1172,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx.zip to_be_published
           ls -lh /tmp/sherpa_onnx.zip
 
       - uses: actions/upload-artifact@v4
