@@ -92,8 +92,8 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world
-          flutter pub get
           flutter config --enable-swift-package-manager
+          flutter pub get
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -184,8 +184,8 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world
-          flutter pub get
           flutter config --enable-swift-package-manager
+          flutter pub get
           flutter build ios --no-codesign
 
           ls -lh build/ios/iphoneos/
