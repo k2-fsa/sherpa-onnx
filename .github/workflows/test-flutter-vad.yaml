@@ -630,9 +630,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/
-          mv web flutter-${{ matrix.demo }}
-          zip -r -y flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
-          ls -lh flutter-${{ matrix.demo }}.zip
+          mv web flutter-${{ matrix.demo }}-web
+          zip -r -y flutter-${{ matrix.demo }}-web.zip flutter-${{ matrix.demo }}-web/
+          ls -lh flutter-${{ matrix.demo }}-web.zip
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -640,7 +640,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip
+          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-web.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter
