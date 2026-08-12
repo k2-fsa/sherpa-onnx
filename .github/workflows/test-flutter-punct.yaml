@@ -125,7 +125,6 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-          export CODE_SIGNING_ALLOWED=NO
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
