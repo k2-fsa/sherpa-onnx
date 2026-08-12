@@ -60,6 +60,17 @@ struct OfflineRecognitionResult {
 
 struct WhisperTag {
   int32_t dim = 80;
+
+  // When true, place each analysis window so that its midpoint is at
+  // i * frame_shift, matching the centered STFT that OpenAI Whisper's
+  // feature extractor uses (torch.stft with center=True). The kaldi-style
+  // placement used otherwise centers frame i at
+  // i * frame_shift + frame_shift / 2, i.e. every frame is half a
+  // frame-shift (5 ms) late relative to the convention the models were
+  // trained on. Models that are robust to the 5 ms offset (e.g. Whisper
+  // itself) keep the historical behavior; Qwen3-ASR is sensitive to it
+  // (see k2-fsa/sherpa-onnx#3535), so its recognizer opts in.
+  bool align_to_stft_center = false;
 };
 
 struct CEDTag {};
