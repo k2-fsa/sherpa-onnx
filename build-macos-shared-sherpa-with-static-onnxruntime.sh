@@ -3,20 +3,6 @@
 # This script builds a shared xcframework for macOS with onnxruntime
 # statically linked in. The resulting libsherpa-onnx-c-api.dylib is
 # self-contained and does NOT require a separate libonnxruntime.dylib.
-#
-# Differences from build-macos-shared.sh:
-#   - build-macos-shared.sh produces a shared libsherpa-onnx-c-api.dylib that
-#     DEPENDS on a separate libonnxruntime.dylib (downloaded via cmake at build time).
-#     Users must ship both dylibs together.
-#   - This script downloads the STATIC onnxruntime library (libonnxruntime.a) and
-#     links it into libsherpa-onnx-c-api.dylib. The output is a single self-contained
-#     dylib with no external onnxruntime dependency.
-#
-# When to use which:
-#   - build-macos-shared.sh: when you want a smaller sherpa-onnx dylib and are OK
-#     shipping onnxruntime separately (e.g., SPM with separate onnxruntime xcframework).
-#   - This script: when you want a single dylib with everything included (e.g., for
-#     Flutter pub.dev where fewer files and smaller total size matters).
 
 set -ex
 
@@ -76,16 +62,12 @@ fi
 echo "OK: onnxruntime is statically linked"
 
 # Create xcframework with bare library (like merman).
-# macOS does not use shallow bundles, so we cannot use a flat framework
-# structure. Instead, use a bare library without a framework wrapper.
-# This avoids the "expected Versions/Current/Resources/Info.plist" error.
-
 rm -rf sherpa-onnx.xcframework
 
 # Fix dylib install name
 install_name_tool -id @rpath/libsherpa-onnx-c-api.dylib ./install/lib/libsherpa-onnx-c-api.dylib
 
-# Ad-hoc sign the dylib so Xcode can embed and re-sign it
+# Ad-hoc sign the dylib
 codesign --force --sign - ./install/lib/libsherpa-onnx-c-api.dylib
 
 xcodebuild -create-xcframework \

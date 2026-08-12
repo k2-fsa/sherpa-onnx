@@ -319,9 +319,6 @@ jobs:
       - name: Prepare for publish
         shell: bash
         run: |
-          rm -f flutter/sherpa_onnx_macos/macos/libsherpa-onnx-c-api.dylib
-          rm -f flutter/sherpa_onnx_macos/macos/libonnxruntime.dylib
-
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
           ls -lh /tmp/to_be_published/macos
