@@ -51,7 +51,17 @@ jobs:
           dart --version
           flutter doctor
 
+      - name: Cache xcframework
+        id: cache-xcframework
+        uses: actions/cache@v4
+        with:
+          path: build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          key: macos-xcframework-${{ hashFiles('build-macos-shared-sherpa-with-static-onnxruntime.sh', 'CMakeLists.txt') }}
+          restore-keys: |
+            macos-xcframework-
+
       - name: Build xcframework from source
+        if: steps.cache-xcframework.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
