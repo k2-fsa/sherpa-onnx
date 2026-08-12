@@ -75,30 +75,30 @@ if otool -L ./install/lib/libsherpa-onnx-c-api.dylib | grep -q libonnxruntime; t
 fi
 echo "OK: onnxruntime is statically linked"
 
-# Create a framework bundle (like onnxruntime does) so SPM can resolve the module
+# Create a framework bundle so SPM can resolve the module.
+# Use a flat structure (like iOS) instead of Versions/A/ with symlinks,
+# because dart pub publish does not preserve symlinks.
 FRAMEWORK_DIR=SherpaOnnxC.framework
 rm -rf $FRAMEWORK_DIR
 
-mkdir -p $FRAMEWORK_DIR/Versions/A/Headers/sherpa-onnx/c-api
-mkdir -p $FRAMEWORK_DIR/Versions/A/Modules
-mkdir -p $FRAMEWORK_DIR/Versions/A/Resources
+mkdir -p $FRAMEWORK_DIR/Headers/sherpa-onnx/c-api
+mkdir -p $FRAMEWORK_DIR/Modules
 
 # Binary
-cp install/lib/libsherpa-onnx-c-api.dylib $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
+cp install/lib/libsherpa-onnx-c-api.dylib $FRAMEWORK_DIR/SherpaOnnxC
 
 # Headers (preserve nested path for #include "sherpa-onnx/c-api/c-api.h")
-cp install/include/sherpa-onnx/c-api/c-api.h $FRAMEWORK_DIR/Versions/A/Headers/sherpa-onnx/c-api/
+cp install/include/sherpa-onnx/c-api/c-api.h $FRAMEWORK_DIR/Headers/sherpa-onnx/c-api/
 
 # Modulemap
-cat > $FRAMEWORK_DIR/Versions/A/Modules/module.modulemap << 'EOF'
+cat > $FRAMEWORK_DIR/Modules/module.modulemap << 'EOF'
 framework module SherpaOnnxC {
   header "sherpa-onnx/c-api/c-api.h"
   export *
 }
 EOF
 
-# Info.plist
-cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
+cat > $FRAMEWORK_DIR/Info.plist << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -119,21 +119,11 @@ cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
 </plist>
 EOF
 
-# Versioned symlinks
-pushd $FRAMEWORK_DIR/Versions
-ln -sf A Current
-popd
-
-ln -sf Versions/Current/SherpaOnnxC $FRAMEWORK_DIR/SherpaOnnxC
-ln -sf Versions/Current/Headers $FRAMEWORK_DIR/Headers
-ln -sf Versions/Current/Modules $FRAMEWORK_DIR/Modules
-ln -sf Versions/Current/Resources $FRAMEWORK_DIR/Resources
-
 # Fix dylib install name to use framework-relative path
-install_name_tool -id @rpath/SherpaOnnxC.framework/Versions/A/SherpaOnnxC $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
+install_name_tool -id @rpath/SherpaOnnxC.framework/SherpaOnnxC $FRAMEWORK_DIR/SherpaOnnxC
 
 # Ad-hoc sign the framework binary so Xcode can embed and re-sign it
-codesign --force --sign - $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
+codesign --force --sign - $FRAMEWORK_DIR/SherpaOnnxC
 
 rm -rf sherpa-onnx.xcframework
 

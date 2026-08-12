@@ -69,23 +69,15 @@ jobs:
           fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
           echo "fw_path: $fw_path"
 
-          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
-
-          # Verify framework symlinks are correct
-          echo "Checking framework symlinks:"
-          test -L "$fw_path/Versions/Current" || { echo "ERROR: Versions/Current is not a symlink"; exit 1; }
-          test -L "$fw_path/SherpaOnnxC" || { echo "ERROR: SherpaOnnxC is not a symlink"; exit 1; }
-          test -L "$fw_path/Headers" || { echo "ERROR: Headers is not a symlink"; exit 1; }
-          test -L "$fw_path/Modules" || { echo "ERROR: Modules is not a symlink"; exit 1; }
-          test -L "$fw_path/Resources" || { echo "ERROR: Resources is not a symlink"; exit 1; }
-          echo "OK: framework symlinks are correct"
+          # Verify flat framework structure (no Versions/A/ symlinks)
+          test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
+          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$fw_path/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
 
           # Verify onnxruntime is NOT a dynamic dependency
           echo "Checking dynamic dependencies:"
-          otool -L "$fw_path/Versions/A/SherpaOnnxC"
-          if otool -L "$fw_path/Versions/A/SherpaOnnxC" | grep -q libonnxruntime; then
+          otool -L "$fw_path/SherpaOnnxC"
+          if otool -L "$fw_path/SherpaOnnxC" | grep -q libonnxruntime; then
             echo "ERROR: libonnxruntime is still a dynamic dependency!"
             exit 1
           fi
@@ -94,7 +86,7 @@ jobs:
           # Test compilation
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
             -I "$fw_path/Headers" \
-            "$fw_path/Versions/A/SherpaOnnxC" \
+            "$fw_path/SherpaOnnxC" \
             -framework CoreFoundation \
             -framework Foundation \
             -lc++ \

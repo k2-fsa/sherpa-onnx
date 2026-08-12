@@ -314,17 +314,14 @@ jobs:
 
           mv sherpa-onnx.xcframework sherpa_onnx_macos/SherpaOnnxC.xcframework
 
-          # Verify framework symlinks are preserved after unzip + mv
+          # Verify flat framework structure
           fw_path=sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework
-          test -L "$fw_path/Versions/Current" || { echo "ERROR: Versions/Current is not a symlink"; exit 1; }
-          test -L "$fw_path/SherpaOnnxC" || { echo "ERROR: SherpaOnnxC is not a symlink"; exit 1; }
-          test -L "$fw_path/Headers" || { echo "ERROR: Headers is not a symlink"; exit 1; }
-          test -L "$fw_path/Modules" || { echo "ERROR: Modules is not a symlink"; exit 1; }
-          test -L "$fw_path/Resources" || { echo "ERROR: Resources is not a symlink"; exit 1; }
-          echo "OK: framework symlinks are correct"
+          test -f "$fw_path/SherpaOnnxC" || { echo "ERROR: Binary not found"; exit 1; }
+          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "ERROR: Header not found"; exit 1; }
+          test -f "$fw_path/Modules/module.modulemap" || { echo "ERROR: Modulemap not found"; exit 1; }
+          echo "OK: framework structure is correct"
 
           ls -la "$fw_path"
-          ls -la "$fw_path/Versions/"
 
       - name: Prepare for publish
         shell: bash
