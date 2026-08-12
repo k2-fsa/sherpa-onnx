@@ -122,7 +122,9 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}
           export CODE_SIGNING_ALLOWED=NO
-          flutter build macos
+          export CODE_SIGNING_REQUIRED=NO
+          export CODE_SIGN_IDENTITY="-"
+          flutter build macos --no-codesign
 
           ls -lh build/macos/Build/Products/Release/
 
