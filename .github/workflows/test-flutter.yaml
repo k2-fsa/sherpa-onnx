@@ -188,7 +188,9 @@ jobs:
 
           flutter config --enable-swift-package-manager
           flutter pub get
-          cd macos && pod install && cd ..
+          # Remove CocoaPods build phases from Xcode project
+          cd macos && pod deintegrate && cd ..
+          rm -f macos/Podfile macos/Podfile.lock
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -355,7 +357,9 @@ jobs:
 
           flutter config --enable-swift-package-manager
           flutter pub get
-          cd ios && pod install && cd ..
+          # Remove CocoaPods build phases from Xcode project
+          cd ios && pod deintegrate && cd ..
+          rm -f ios/Podfile ios/Podfile.lock
           flutter build ios --no-codesign
 
           ls -lh build/ios/iphoneos/
