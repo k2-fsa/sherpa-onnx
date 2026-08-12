@@ -166,6 +166,9 @@ jobs:
           sed -i.bak 's|sherpa_onnx: ^1.13.5|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
+          # Remove CocoaPods files so Xcode doesn't try to validate Podfile.lock
+          rm -rf macos/Podfile macos/Podfile.lock macos/Pods
+
           flutter config --enable-swift-package-manager
           flutter pub get
           flutter build macos
@@ -331,6 +334,9 @@ jobs:
 
           sed -i.bak 's|sherpa_onnx: ^1.13.5|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
+
+          # Remove CocoaPods files so Xcode doesn't try to validate Podfile.lock
+          rm -rf ios/Podfile ios/Podfile.lock ios/Pods
 
           flutter config --enable-swift-package-manager
           flutter pub get

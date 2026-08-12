@@ -92,6 +92,8 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world
+          # Remove CocoaPods files so Xcode doesn't try to validate Podfile.lock
+          rm -rf macos/Podfile macos/Podfile.lock macos/Pods
           flutter config --enable-swift-package-manager
           flutter pub get
           flutter build macos
@@ -184,6 +186,8 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world
+          # Remove CocoaPods files so Xcode doesn't try to validate Podfile.lock
+          rm -rf ios/Podfile ios/Podfile.lock ios/Pods
           flutter config --enable-swift-package-manager
           flutter pub get
           flutter build ios --no-codesign
