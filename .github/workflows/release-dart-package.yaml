@@ -314,14 +314,7 @@ jobs:
 
           mv sherpa-onnx.xcframework sherpa_onnx_macos/SherpaOnnxC.xcframework
 
-          # Verify flat framework structure
-          fw_path=sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework
-          test -f "$fw_path/SherpaOnnxC" || { echo "ERROR: Binary not found"; exit 1; }
-          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "ERROR: Header not found"; exit 1; }
-          test -f "$fw_path/Modules/module.modulemap" || { echo "ERROR: Modulemap not found"; exit 1; }
-          echo "OK: framework structure is correct"
-
-          ls -la "$fw_path"
+          ls -lh sherpa_onnx_macos/SherpaOnnxC.xcframework/
 
       - name: Prepare for publish
         shell: bash

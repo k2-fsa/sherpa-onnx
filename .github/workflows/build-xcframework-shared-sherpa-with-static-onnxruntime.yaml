@@ -65,19 +65,18 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-macos-shared-sherpa-with-static-onnxruntime/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the framework bundle
-          fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
-          echo "fw_path: $fw_path"
+          # Find the xcframework architecture directory
+          arch_dir=$(find sherpa-onnx.xcframework -path "*macos*" -type d -not -name "*.xcframework" | head -1)
+          echo "arch_dir: $arch_dir"
 
-          # Verify flat framework structure (no Versions/A/ symlinks)
-          test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
-          test -f "$fw_path/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
-          test -f "$fw_path/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$arch_dir/libsherpa-onnx-c-api.dylib" || { echo "Binary not found"; exit 1; }
+          test -f "$arch_dir/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$arch_dir/Headers/module.modulemap" || { echo "Modulemap not found"; exit 1; }
 
           # Verify onnxruntime is NOT a dynamic dependency
           echo "Checking dynamic dependencies:"
-          otool -L "$fw_path/SherpaOnnxC"
-          if otool -L "$fw_path/SherpaOnnxC" | grep -q libonnxruntime; then
+          otool -L "$arch_dir/libsherpa-onnx-c-api.dylib"
+          if otool -L "$arch_dir/libsherpa-onnx-c-api.dylib" | grep -q libonnxruntime; then
             echo "ERROR: libonnxruntime is still a dynamic dependency!"
             exit 1
           fi
@@ -85,12 +84,12 @@ jobs:
 
           # Test compilation
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$fw_path/Headers" \
-            "$fw_path/SherpaOnnxC" \
+            -I "$arch_dir/Headers" \
+            "$arch_dir/libsherpa-onnx-c-api.dylib" \
             -framework CoreFoundation \
             -framework Foundation \
             -lc++ \
-            -Wl,-rpath,"$(dirname $fw_path)"
+            -Wl,-rpath,"$arch_dir"
 
           ./version-c-api
 

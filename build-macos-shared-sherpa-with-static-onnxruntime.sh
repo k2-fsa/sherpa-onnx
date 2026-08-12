@@ -75,60 +75,22 @@ if otool -L ./install/lib/libsherpa-onnx-c-api.dylib | grep -q libonnxruntime; t
 fi
 echo "OK: onnxruntime is statically linked"
 
-# Create a framework bundle so SPM can resolve the module.
-# Use a flat structure (like iOS) instead of Versions/A/ with symlinks,
-# because dart pub publish does not preserve symlinks.
-FRAMEWORK_DIR=SherpaOnnxC.framework
-rm -rf $FRAMEWORK_DIR
-
-mkdir -p $FRAMEWORK_DIR/Headers/sherpa-onnx/c-api
-mkdir -p $FRAMEWORK_DIR/Modules
-
-# Binary
-cp install/lib/libsherpa-onnx-c-api.dylib $FRAMEWORK_DIR/SherpaOnnxC
-
-# Headers (preserve nested path for #include "sherpa-onnx/c-api/c-api.h")
-cp install/include/sherpa-onnx/c-api/c-api.h $FRAMEWORK_DIR/Headers/sherpa-onnx/c-api/
-
-# Modulemap
-cat > $FRAMEWORK_DIR/Modules/module.modulemap << 'EOF'
-framework module SherpaOnnxC {
-  header "sherpa-onnx/c-api/c-api.h"
-  export *
-}
-EOF
-
-cat > $FRAMEWORK_DIR/Info.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleIdentifier</key>
-  <string>com.k2-fsa.sherpa-onnx</string>
-  <key>CFBundleName</key>
-  <string>SherpaOnnxC</string>
-  <key>CFBundlePackageType</key>
-  <string>FMWK</string>
-  <key>CFBundleExecutable</key>
-  <string>SherpaOnnxC</string>
-  <key>CFBundleVersion</key>
-  <string>20260810</string>
-  <key>CFBundleShortVersionString</key>
-  <string>1.13.5</string>
-</dict>
-</plist>
-EOF
-
-# Fix dylib install name to use framework-relative path
-install_name_tool -id @rpath/SherpaOnnxC.framework/SherpaOnnxC $FRAMEWORK_DIR/SherpaOnnxC
-
-# Ad-hoc sign the framework binary so Xcode can embed and re-sign it
-codesign --force --sign - $FRAMEWORK_DIR/SherpaOnnxC
+# Create xcframework with bare library (like merman).
+# macOS does not use shallow bundles, so we cannot use a flat framework
+# structure. Instead, use a bare library without a framework wrapper.
+# This avoids the "expected Versions/Current/Resources/Info.plist" error.
 
 rm -rf sherpa-onnx.xcframework
 
+# Fix dylib install name
+install_name_tool -id @rpath/libsherpa-onnx-c-api.dylib ./install/lib/libsherpa-onnx-c-api.dylib
+
+# Ad-hoc sign the dylib so Xcode can embed and re-sign it
+codesign --force --sign - ./install/lib/libsherpa-onnx-c-api.dylib
+
 xcodebuild -create-xcframework \
-  -framework $FRAMEWORK_DIR \
+  -library ./install/lib/libsherpa-onnx-c-api.dylib \
+  -headers ./install/include \
   -output sherpa-onnx.xcframework
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)

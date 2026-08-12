@@ -7,10 +7,10 @@ import 'sherpa_onnx_bindings.dart';
 DynamicLibrary loadDylib(String? path) {
   if (Platform.isMacOS) {
     if (path == null) {
-      return DynamicLibrary.open('SherpaOnnxC.framework/SherpaOnnxC');
+      return DynamicLibrary.open('libsherpa-onnx-c-api.dylib');
     } else {
       return DynamicLibrary.open(
-        '$path/sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/SherpaOnnxC.framework/SherpaOnnxC',
+        '$path/sherpa_onnx_macos/SherpaOnnxC.xcframework/macos-arm64_x86_64/libsherpa-onnx-c-api.dylib',
       );
     }
   }
