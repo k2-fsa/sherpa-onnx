@@ -339,8 +339,10 @@ bool IsDegenerateRepetition(const std::vector<int64_t> &ids) {
   return true;
 }
 
-// Removes the degenerate tail from ids: every trailing token drawn from the
-// token set of the final kQwen3LoopWindow entries. What remains is the text
+// Removes the degenerate tail from ids: trailing tokens drawn from the token
+// set of the final kQwen3LoopWindow entries, scanning no further back than
+// that window so text decoded before the collapse is never removed even when
+// it ends with a token the loop happens to reuse. What remains is the text
 // decoded before the loop started (possibly nothing).
 void TrimDegenerateTail(std::vector<int64_t> *ids) {
   std::array<int64_t, kQwen3LoopMaxDistinct> distinct{};
@@ -358,8 +360,9 @@ void TrimDegenerateTail(std::vector<int64_t> *ids) {
     }
   }
 
+  const size_t window_start = ids->size() - kQwen3LoopWindow;
   size_t keep = ids->size();
-  while (keep > 0) {
+  while (keep > window_start) {
     bool in_loop_set = false;
     for (int32_t k = 0; k != num_distinct; ++k) {
       if (distinct[k] == (*ids)[keep - 1]) {
