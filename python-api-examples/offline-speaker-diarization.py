@@ -73,7 +73,7 @@ def init_speaker_diarization(num_speakers: int = -1, cluster_threshold: float = 
     config = sherpa_onnx.OfflineSpeakerDiarizationConfig(
         segmentation=sherpa_onnx.OfflineSpeakerSegmentationModelConfig(
             pyannote=sherpa_onnx.OfflineSpeakerSegmentationPyannoteModelConfig(
-                model=segmentation_model
+                model=segmentation_model, window_shift_ratio=0.1
             ),
         ),
         embedding=sherpa_onnx.SpeakerEmbeddingExtractorConfig(

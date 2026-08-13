@@ -2080,7 +2080,8 @@ func ReadWave(filename string) *Wave {
 // For offline speaker diarization
 // ============================================================
 type OfflineSpeakerSegmentationPyannoteModelConfig struct {
-	Model string
+	Model            string
+	WindowShiftRatio float32
 }
 
 type OfflineSpeakerSegmentationModelConfig struct {
@@ -2116,6 +2117,7 @@ func NewOfflineSpeakerDiarization(config *OfflineSpeakerDiarizationConfig) *Offl
 	c := C.struct_SherpaOnnxOfflineSpeakerDiarizationConfig{}
 	c.segmentation.pyannote.model = C.CString(config.Segmentation.Pyannote.Model)
 	defer C.free(unsafe.Pointer(c.segmentation.pyannote.model))
+	c.segmentation.pyannote.window_shift_ratio = C.float(config.Segmentation.Pyannote.WindowShiftRatio)
 
 	c.segmentation.num_threads = C.int(config.Segmentation.NumThreads)
 

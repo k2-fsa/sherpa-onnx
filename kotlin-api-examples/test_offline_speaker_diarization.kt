@@ -15,7 +15,10 @@ fun callback(numProcessedChunks: Int, numTotalChunks: Int, arg: Long): Int {
 fun testOfflineSpeakerDiarization() {
   var config = OfflineSpeakerDiarizationConfig(
     segmentation=OfflineSpeakerSegmentationModelConfig(
-      pyannote=OfflineSpeakerSegmentationPyannoteModelConfig("./sherpa-onnx-pyannote-segmentation-3-0/model.onnx"),
+      pyannote=OfflineSpeakerSegmentationPyannoteModelConfig(
+        model="./sherpa-onnx-pyannote-segmentation-3-0/model.onnx",
+        windowShiftRatio=0.1f,
+      ),
     ),
     embedding=SpeakerEmbeddingExtractorConfig(
       model="./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx",

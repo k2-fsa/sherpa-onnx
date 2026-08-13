@@ -33,6 +33,9 @@ static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
 
   SHERPA_ONNX_JNI_READ_STRING(ans.segmentation.pyannote.model, model,
                               pyannote_config_cls, pyannote_config);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.segmentation.pyannote.window_shift_ratio,
+                             windowShiftRatio, pyannote_config_cls,
+                             pyannote_config);
 
   SHERPA_ONNX_JNI_READ_INT(ans.segmentation.num_threads, numThreads,
                            segmentation_config_cls, segmentation_config);

@@ -8,10 +8,21 @@ use sherpa_onnx_sys as sys;
 use std::ffi::CString;
 use std::slice;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 /// Pyannote segmentation model path.
 pub struct OfflineSpeakerSegmentationPyannoteModelConfig {
     pub model: Option<String>,
+    /// Sliding-window shift as a fraction of the model window size.
+    pub window_shift_ratio: f32,
+}
+
+impl Default for OfflineSpeakerSegmentationPyannoteModelConfig {
+    fn default() -> Self {
+        Self {
+            model: None,
+            window_shift_ratio: 0.1,
+        }
+    }
 }
 
 impl OfflineSpeakerSegmentationPyannoteModelConfig {
@@ -21,6 +32,7 @@ impl OfflineSpeakerSegmentationPyannoteModelConfig {
     ) -> sys::OfflineSpeakerSegmentationPyannoteModelConfig {
         sys::OfflineSpeakerSegmentationPyannoteModelConfig {
             model: to_c_ptr(&self.model, cstrings),
+            window_shift_ratio: self.window_shift_ratio,
         }
     }
 }

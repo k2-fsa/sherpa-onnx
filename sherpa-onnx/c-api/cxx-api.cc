@@ -1464,6 +1464,8 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
   memset(&c, 0, sizeof(c));
   c.segmentation.pyannote.model =
       config.segmentation.pyannote.model.c_str();
+  c.segmentation.pyannote.window_shift_ratio =
+      config.segmentation.pyannote.window_shift_ratio;
   c.segmentation.num_threads = config.segmentation.num_threads;
   c.segmentation.debug = config.segmentation.debug;
   c.segmentation.provider = config.segmentation.provider.c_str();

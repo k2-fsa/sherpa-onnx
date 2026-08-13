@@ -73,6 +73,8 @@ int main() {
   memset(&config, 0, sizeof(config));
 
   config.segmentation.pyannote.model = segmentation_model;
+  // A value of 0 also uses the default of 0.1.
+  config.segmentation.pyannote.window_shift_ratio = 0.1f;
   config.embedding.model = embedding_extractor_model;
 
   // the test wave ./0-four-speakers-zh.wav has 4 speakers, so

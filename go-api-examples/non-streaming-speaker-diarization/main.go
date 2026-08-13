@@ -38,6 +38,7 @@ func initSpeakerDiarization() *sherpa.OfflineSpeakerDiarization {
 	config := sherpa.OfflineSpeakerDiarizationConfig{}
 
 	config.Segmentation.Pyannote.Model = "./sherpa-onnx-pyannote-segmentation-3-0/model.onnx"
+	config.Segmentation.Pyannote.WindowShiftRatio = 0.1
 	config.Embedding.Model = "./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx"
 
 	// The test wave file contains 4 speakers, so we use 4 here

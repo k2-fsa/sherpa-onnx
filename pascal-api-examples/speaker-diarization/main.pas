@@ -62,6 +62,7 @@ begin
   Wave := SherpaOnnxReadWave('./0-four-speakers-zh.wav');
 
   Config.Segmentation.Pyannote.Model := './sherpa-onnx-pyannote-segmentation-3-0/model.onnx';
+  Config.Segmentation.Pyannote.WindowShiftRatio := 0.1;
   Config.Embedding.Model := './3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx';
 
   {

@@ -39,7 +39,10 @@ public class OfflineSpeakerDiarizationDemo {
     WaveReader reader = new WaveReader(waveFilename);
 
     OfflineSpeakerSegmentationPyannoteModelConfig pyannote =
-        OfflineSpeakerSegmentationPyannoteModelConfig.builder().setModel(segmentationModel).build();
+        OfflineSpeakerSegmentationPyannoteModelConfig.builder()
+            .setModel(segmentationModel)
+            .setWindowShiftRatio(0.1f)
+            .build();
 
     OfflineSpeakerSegmentationModelConfig segmentation =
         OfflineSpeakerSegmentationModelConfig.builder()

@@ -14,7 +14,7 @@
 extern "C" {
 
 static_assert(sizeof(SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig) ==
-                  1 * 4,
+                  2 * 4,
               "");
 
 static_assert(
@@ -39,6 +39,8 @@ void MyPrint(const SherpaOnnxOfflineSpeakerDiarizationConfig *sd_config) {
 
   fprintf(stdout, "----------segmentation config----------\n");
   fprintf(stdout, "pyannote model: %s\n", segmentation.pyannote.model);
+  fprintf(stdout, "pyannote window shift ratio: %.3f\n",
+          segmentation.pyannote.window_shift_ratio);
   fprintf(stdout, "num threads: %d\n", segmentation.num_threads);
   fprintf(stdout, "debug: %d\n", segmentation.debug);
   fprintf(stdout, "provider: %s\n", segmentation.provider);

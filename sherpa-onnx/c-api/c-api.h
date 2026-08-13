@@ -3836,6 +3836,13 @@ SHERPA_ONNX_API int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
 typedef struct SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig {
   /** Segmentation model filename. */
   const char *model;
+  /**
+   * Sliding-window shift as a fraction of the model window size.
+   *
+   * Must be in (0, 1]. Set to 0 (or a negative value) to use the default of
+   * 0.1.
+   */
+  float window_shift_ratio;
 } SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig;
 
 /**

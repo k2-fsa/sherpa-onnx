@@ -657,6 +657,7 @@ type
 
   TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig = record
     Model: AnsiString;
+    WindowShiftRatio: Single;
     function ToString: AnsiString;
   end;
 
@@ -1261,6 +1262,7 @@ type
 
   SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig = record
     Model: PAnsiChar;
+    WindowShiftRatio: cfloat;
   end;
 
   SherpaOnnxOfflineSpeakerSegmentationModelConfig = record
@@ -3227,7 +3229,8 @@ end;
 function TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(' +
-    'Model := %s)',[Self.Model]);
+    'Model := %s, WindowShiftRatio := %f)',
+    [Self.Model, Self.WindowShiftRatio]);
 end;
 
 function TSherpaOnnxOfflineSpeakerSegmentationModelConfig.ToString: AnsiString;
@@ -3243,6 +3246,7 @@ end;
 
 class operator TSherpaOnnxOfflineSpeakerSegmentationModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeakerSegmentationModelConfig);
 begin
+  Dest.Pyannote.WindowShiftRatio := 0.1;
   Dest.NumThreads := 1;
   Dest.Debug := False;
   Dest.Provider := 'cpu';
@@ -3311,6 +3315,8 @@ var
 begin
   C := Default(SherpaOnnxOfflineSpeakerDiarizationConfig);
   C.Segmentation.Pyannote.Model := PAnsiChar(Config.Segmentation.Pyannote.Model);
+  C.Segmentation.Pyannote.WindowShiftRatio :=
+    Config.Segmentation.Pyannote.WindowShiftRatio;
   C.Segmentation.NumThreads := Config.Segmentation.NumThreads;
   C.Segmentation.Debug := Ord(Config.Segmentation.Debug);
   C.Segmentation.Provider := PAnsiChar(Config.Segmentation.Provider);

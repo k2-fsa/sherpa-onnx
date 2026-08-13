@@ -1912,6 +1912,8 @@ class SHERPA_ONNX_API SpeakerEmbeddingManager
 struct OfflineSpeakerSegmentationPyannoteModelConfig {
   /** Segmentation model filename. */
   std::string model;
+  /** Sliding-window shift as a fraction of the model window size. */
+  float window_shift_ratio = 0.1f;
 };
 
 /** @brief Segmentation model configuration for offline speaker diarization. */
