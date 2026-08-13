@@ -27,6 +27,46 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clean stale onnxruntime (Windows)
+        if: matrix.os == 'windows-2022'
+        shell: bash
+        run: |
+          echo "Searching for stale onnxruntime.dll..."
+          # Search only common locations (full C: drive scan is too slow)
+          search_dirs=(
+            "/c/Windows/System32"
+            "/c/Program Files"
+            "/c/Program Files (x86)"
+            "/c/Users"
+            "/c/hostedtoolcache"
+          )
+          found=""
+          for dir in "${search_dirs[@]}"; do
+            if [ -d "$dir" ]; then
+              matches=$(find "$dir" -name "onnxruntime.dll" -type f 2>/dev/null || true)
+              if [ -n "$matches" ]; then
+                found="$found$matches"$'\n'
+              fi
+            fi
+          done
+          # Also check PATH directories
+          echo "$PATH" | tr ':' '\n' | while read dir; do
+            if [ -f "$dir/onnxruntime.dll" ]; then
+              found="$found$dir/onnxruntime.dll"$'\n'
+            fi
+          done
+          if [ -n "$found" ]; then
+            echo "Found onnxruntime.dll at:"
+            echo "$found"
+            echo "$found" | while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              echo "Deleting: $f"
+              rm -f "$f" || true
+            done
+          else
+            echo "No stale onnxruntime.dll found"
+          fi
+
       - name: Update version
         shell: bash
         run: |
