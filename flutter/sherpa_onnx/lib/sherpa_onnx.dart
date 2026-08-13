@@ -122,19 +122,21 @@ String? _resolvePlatform() {
 
 String? _resolvePath(String platform, Uri uri) {
   final filePath = uri.toFilePath();
-  final libDir = filePath.substring(0, filePath.lastIndexOf('/'));
-  final parentDir =
-      libDir.endsWith('/lib') ? libDir.substring(0, libDir.length - 4) : libDir;
+  final sep = Platform.pathSeparator;
+  final libDir = filePath.substring(0, filePath.lastIndexOf(sep));
+  final parentDir = libDir.endsWith('${sep}lib')
+      ? libDir.substring(0, libDir.length - 4)
+      : libDir;
 
   if (Platform.isLinux) {
     final arch = Platform.version.contains('arm64') ||
             Platform.version.contains('aarch64')
         ? 'aarch64'
         : 'x64';
-    return '$parentDir/$platform/$arch';
+    return '$parentDir${sep}$platform$sep$arch';
   }
 
-  return '$parentDir/$platform';
+  return '$parentDir$sep$platform';
 }
 
 /// Resolve the path to the sherpa-onnx native library (async).

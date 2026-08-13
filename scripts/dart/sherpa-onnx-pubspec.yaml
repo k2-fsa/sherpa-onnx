@@ -26,8 +26,6 @@ environment:
 
 dependencies:
   ffi: ^2.1.0
-  flutter:
-    sdk: flutter
 
   sherpa_onnx_android_arm64:
     path: ../sherpa_onnx_android_arm64
