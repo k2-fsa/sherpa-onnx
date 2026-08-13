@@ -1,8 +1,8 @@
 name: sherpa_onnx
 
 description: >
-  Speech recognition, speech synthesis, speaker diarization, and speaker recognition
-  using next-gen Kaldi with onnxruntime without Internet connection.
+  Speech recognition, speech synthesis, and speaker recognition using next-gen Kaldi
+  with onnxruntime without Internet connection.
 
 repository: https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter
 
@@ -12,7 +12,7 @@ documentation: https://k2-fsa.github.io/sherpa/onnx/
 topics:
   - speech-recognition
   - speech-synthesis
-  - speaker-diarization
+  - speaker-identification
   - audio-tagging
   - voice-activity-detection
 
@@ -22,14 +22,10 @@ version: 1.13.5
 homepage: https://github.com/k2-fsa/sherpa-onnx
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
-  flutter: ">=2.8.1"
+  sdk: ">=3.2.0 <4.0.0"
 
 dependencies:
   ffi: ^2.1.0
-  flutter:
-    sdk: flutter
-
   sherpa_onnx_android_arm64: ^1.13.5
   # sherpa_onnx_android_arm64:
   #   path: ../sherpa_onnx_android_arm64
@@ -46,46 +42,38 @@ dependencies:
   # sherpa_onnx_android_x86_64:
   #   path: ../sherpa_onnx_android_x86_64
 
-  sherpa_onnx_macos: ^1.13.5
-  # sherpa_onnx_macos:
-  #   path: ../sherpa_onnx_macos
+  sherpa_onnx_ios: ^1.13.5
+  # sherpa_onnx_ios:
+  #   path: ../sherpa_onnx_ios
 
   sherpa_onnx_linux: ^1.13.5
   # sherpa_onnx_linux:
   #   path: ../sherpa_onnx_linux
 
-  sherpa_onnx_windows: ^1.13.5
-  # sherpa_onnx_windows:
-  #   path: ../sherpa_onnx_windows
-
-  sherpa_onnx_ios: ^1.13.5
-  # sherpa_onnx_ios:
-  #   path: ../sherpa_onnx_ios
+  sherpa_onnx_macos: ^1.13.5
+  # sherpa_onnx_macos:
+  #   path: ../sherpa_onnx_macos
 
   sherpa_onnx_web: ^1.13.5
   # sherpa_onnx_web:
   #   path: ../sherpa_onnx_web
 
-dev_dependencies:
-  flutter_lints: ^3.0.0
+  sherpa_onnx_windows: ^1.13.5
+  # sherpa_onnx_windows:
+  #   path: ../sherpa_onnx_windows
 
 flutter:
   plugin:
     platforms:
       android:
         default_package: sherpa_onnx_android_arm64
-
       ios:
         default_package: sherpa_onnx_ios
-
-      macos:
-        default_package: sherpa_onnx_macos
-
       linux:
         default_package: sherpa_onnx_linux
-
-      windows:
-        default_package: sherpa_onnx_windows
-
+      macos:
+        default_package: sherpa_onnx_macos
       web:
         default_package: sherpa_onnx_web
+      windows:
+        default_package: sherpa_onnx_windows

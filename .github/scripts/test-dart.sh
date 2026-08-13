@@ -11,16 +11,24 @@ popd
 
 pushd non-streaming-asr
 
+echo '----------Moonshine v2----------'
+./run-moonshine-v2.sh
+rm -rf sherpa-onnx-*
+
+echo '----------Wenet CTC----------'
+./run-wenet-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------Zipformer CTC----------'
+./run-zipformer-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------Cohere Transcribe----------'
 ./run-cohere-transcribe.sh
 rm -rf sherpa-onnx-*
 
 echo '----------Qwen3 ASR----------'
 ./run-qwen3-asr.sh
-rm -rf sherpa-onnx-*
-
-echo '----------Moonshine v2----------'
-./run-moonshine-v2.sh
 rm -rf sherpa-onnx-*
 
 echo '----------FireRedASR CTC----------'
@@ -37,14 +45,6 @@ rm -rf sherpa-onnx-*
 
 echo '----------Omnilingual ASR CTC----------'
 ./run-omnilingual-asr-ctc.sh
-rm -rf sherpa-onnx-*
-
-echo '----------Wenet CTC----------'
-./run-wenet-ctc.sh
-rm -rf sherpa-onnx-*
-
-echo '----------Zipformer CTC----------'
-./run-zipformer-ctc.sh
 rm -rf sherpa-onnx-*
 
 echo '----------SenseVoice----------'

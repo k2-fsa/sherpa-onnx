@@ -1,7 +1,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
+import 'dart:isolate' show Isolate;
 
-// Conditional import: native uses dart:io/dart:ffi, web uses dart:js_interop.
+// Conditional import: native uses dart:ffi, web uses dart:js_interop.
 import 'src/init_native.dart'
     if (dart.library.js_interop) 'src/web/init.dart' as init;
 
@@ -16,21 +17,42 @@ import 'package:sherpa_onnx_web/sherpa_onnx_web.dart'
 /// audio tagging, spoken language identification, speech denoising, and WAV
 /// I/O helpers from a single entry point.
 ///
-/// Before creating any runtime object, call [initBindings] (native) or
-/// [initBindingsAsync] (all platforms including web) once so the package can
-/// load the underlying native `sherpa-onnx-c-api` library for the current
-/// platform.
+/// ## Initialization
+///
+/// Before creating any runtime object, call [initBindings] (sync, native only)
+/// or [initBindingsAsync] (async, all platforms including web) once to load
+/// the underlying native `sherpa-onnx-c-api` library. No path argument is
+/// needed — the library auto-resolves the native library location for both
+/// Flutter apps and pure Dart CLI programs.
+///
+/// ```dart
+/// import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+///
+/// // Sync (Flutter and Dart CLI, not web):
+/// sherpa_onnx.initBindings();
+///
+/// // Async (Flutter, Dart CLI, and web):
+/// await sherpa_onnx.initBindingsAsync();
+/// ```
+///
+/// ## Isolates
+///
+/// Each isolate has its own FFI binding state. You **must** call
+/// [initBindings] or [initBindingsAsync] in every isolate that uses
+/// sherpa-onnx APIs. Calling it in one isolate does NOT make sherpa-onnx
+/// available in other isolates.
+///
+/// ## Examples
 ///
 /// For concrete end-to-end usage, see `dart-api-examples/` in the repository,
 /// especially:
 ///
-/// - `non-streaming-asr/bin/sense-voice.dart`
-/// - `non-streaming-asr/bin/whisper.dart`
-/// - `non-streaming-asr/bin/nemo-transducer.dart`
-/// - `streaming-asr/bin/zipformer-transducer.dart`
-/// - `tts/bin/pocket-en.dart`
-/// - `vad/bin/vad.dart`
-/// - `speaker-diarization/`
+/// - `version/` — version info with sync, async, and isolate examples
+/// - `vad/` — voice activity detection
+/// - `non-streaming-asr/` — offline speech recognition
+/// - `streaming-asr/` — streaming speech recognition
+/// - `tts/` — text-to-speech
+/// - `speaker-diarization/` — speaker diarization
 
 export 'src/audio_tagging_config.dart';
 export 'src/audio_tagging.dart'
@@ -87,38 +109,129 @@ export 'src/wave_writer.dart'
 
 String? _path;
 
-/// Initialize the native sherpa-onnx bindings.
+// On native platforms (dart:io available), this is always false.
+// On web (dart:js_interop available), the web init.dart is loaded instead.
+const bool _kIsWeb = bool.fromEnvironment('dart.library.io') == false;
+
+String? _resolvePlatform() {
+  if (Platform.isMacOS) return 'macos';
+  if (Platform.isLinux) return 'linux';
+  if (Platform.isWindows) return 'windows';
+  return null;
+}
+
+String? _resolvePath(String platform, Uri uri) {
+  final filePath = uri.toFilePath();
+  final sep = Platform.pathSeparator;
+  final libDir = filePath.substring(0, filePath.lastIndexOf(sep));
+  final parentDir = libDir.endsWith('${sep}lib')
+      ? libDir.substring(0, libDir.length - 4)
+      : libDir;
+
+  if (Platform.isLinux) {
+    final arch = Platform.version.contains('arm64') ||
+            Platform.version.contains('aarch64')
+        ? 'aarch64'
+        : 'x64';
+    return '$parentDir${sep}$platform$sep$arch';
+  }
+
+  return '$parentDir$sep$platform';
+}
+
+/// Resolve the path to the sherpa-onnx native library (async).
 ///
-/// **Important:** This must be called in every isolate that uses sherpa-onnx.
-/// Each isolate has its own FFI binding state, so calling `initBindings()` in
-/// one isolate does NOT make sherpa-onnx available in other isolates. If you
-/// use Dart isolates for background work (e.g., TTS generation, model loading),
-/// call `initBindings()` in each isolate before calling any sherpa-onnx API.
+/// Uses [Isolate.resolvePackageUri] to locate the platform-specific
+/// sherpa_onnx package directory (e.g., `sherpa_onnx_macos`).
 ///
-/// On web, use [initBindingsAsync] instead. This method throws
-/// [UnsupportedError] on web.
+/// Throws [UnsupportedError] on unsupported platforms and [StateError] if
+/// the platform package cannot be found. Not supported in Flutter — use
+/// [initBindings] or [initBindingsAsync] instead (they handle this
+/// automatically).
+Future<String> resolveSherpaOnnxPath() async {
+  final platform = _resolvePlatform();
+  if (platform == null) {
+    throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
+  }
+
+  final uri = await Isolate.resolvePackageUri(
+      Uri.parse('package:sherpa_onnx_$platform/any_path_is_ok_here.dart'));
+
+  if (uri == null) {
+    throw StateError(
+      'Could not resolve package:sherpa_onnx_$platform. '
+      'Make sure sherpa_onnx_$platform is a dependency.',
+    );
+  }
+
+  return _resolvePath(platform, uri)!;
+}
+
+/// Resolve the path to the sherpa-onnx native library (sync).
+///
+/// Uses [Isolate.resolvePackageUriSync] to locate the platform-specific
+/// sherpa_onnx package directory. Returns `null` if not supported (e.g.,
+/// Flutter) or if the package cannot be found.
+String? resolveSherpaOnnxPathSync() {
+  try {
+    final platform = _resolvePlatform();
+    if (platform == null) return null;
+
+    final uri = Isolate.resolvePackageUriSync(
+        Uri.parse('package:sherpa_onnx_$platform/any_path_is_ok_here.dart'));
+
+    if (uri == null) return null;
+    return _resolvePath(platform, uri);
+  } catch (_) {
+    // Not supported in Flutter.
+    return null;
+  }
+}
+
+/// Initialize the native sherpa-onnx bindings synchronously.
+///
+/// Works on Flutter and Dart CLI without a path argument — the native
+/// library location is auto-resolved. On Flutter, uses
+/// `DynamicLibrary.process()`; on Dart CLI, locates the library in the
+/// pub cache via [resolveSherpaOnnxPathSync].
+///
+/// Does **not** support web — use [initBindingsAsync] instead.
+///
+/// **Isolates:** Each isolate has its own FFI binding state. You must call
+/// [initBindings] or [initBindingsAsync] in every isolate that uses
+/// sherpa-onnx APIs.
 void initBindings([String? p]) {
-  if (kIsWeb) {
+  if (_kIsWeb) {
     throw UnsupportedError(
       'initBindings() is not supported on web. '
       'Use initBindingsAsync() instead.',
     );
   }
+  p ??= resolveSherpaOnnxPathSync();
   _path ??= p;
   init.initNativeBindings(_path);
 }
 
-/// Initialize the sherpa-onnx bindings (works on all platforms including web).
+/// Initialize the sherpa-onnx bindings asynchronously.
 ///
-/// On web, this loads the WASM module and JS wrappers automatically.
-/// On native platforms, this behaves the same as [initBindings].
+/// Works on all platforms including web. On native platforms, the native
+/// library path is auto-resolved (no argument needed). On web, loads the
+/// WASM module from bundled assets.
 ///
-/// **Important:** If you use Dart isolates, call `initBindings()` or
-/// `initBindingsAsync()` in each isolate that calls sherpa-onnx APIs.
-/// See [initBindings] for details.
+/// **Isolates:** Each isolate has its own FFI binding state. You must call
+/// [initBindings] or [initBindingsAsync] in every isolate that uses
+/// sherpa-onnx APIs.
 Future<void> initBindingsAsync([String? p]) async {
+  if (p == null && !_kIsWeb) {
+    try {
+      p = await resolveSherpaOnnxPath();
+    } catch (_) {
+      // Isolate.resolvePackageUri is not supported in Flutter.
+      // Fall back to DynamicLibrary.process() via initNativeBindings(null).
+    }
+  }
   _path ??= p;
-  if (kIsWeb) {
+  if (_kIsWeb) {
     await web.SherpaOnnxWeb.loadWasm();
     return;
   }
