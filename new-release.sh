@@ -76,6 +76,7 @@ find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$ol
 
 find flutter -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
 find dart-api-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
+find dart-api-examples -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
 find flutter-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
 find flutter -name "*.podspec" -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-addon-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
