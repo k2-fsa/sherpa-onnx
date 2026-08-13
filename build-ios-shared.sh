@@ -207,6 +207,9 @@ PEOF
 
   # Fix dylib install name
   install_name_tool -id @rpath/SherpaOnnxC.framework/SherpaOnnxC $fw_dir/SherpaOnnxC
+
+  # Ad-hoc sign the framework binary so Xcode can embed and re-sign it
+  codesign --force --sign - $fw_dir/SherpaOnnxC
 }
 
 create_framework ios-arm64/libsherpa-onnx-c-api.dylib ios-arm64

@@ -51,7 +51,17 @@ jobs:
           dart --version
           flutter doctor
 
+      - name: Cache xcframework
+        id: cache-xcframework
+        uses: actions/cache@v4
+        with:
+          path: build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          key: macos-xcframework-${{ hashFiles('build-macos-shared-sherpa-with-static-onnxruntime.sh', 'CMakeLists.txt') }}
+          restore-keys: |
+            macos-xcframework-
+
       - name: Build xcframework from source
+        if: steps.cache-xcframework.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -61,8 +71,8 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework
-          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework/
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa-onnx.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa-onnx.xcframework/
 
       - name: Use local sherpa_onnx_macos
         shell: bash
@@ -106,12 +116,14 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-
-      - name: Build Flutter app
-        shell: bash
-        run: |
-          cd flutter-examples/${{ matrix.demo }}
-          export CODE_SIGNING_ALLOWED=NO
+          # Debug: find where ffmpeg frameworks are
+          echo "=== Searching for ffmpeg frameworks ==="
+          find . -name "libswresample*" -type d 2>/dev/null || true
+          find . -name "libswresample*" -type f 2>/dev/null || true
+          find "$PUB_CACHE" -name "libswresample*" 2>/dev/null | head -10 || true
+          find macos/Pods -name "libswresample*" 2>/dev/null | head -10 || true
+          ls -la macos/Pods/ffmpeg_kit_flutter_new/ 2>/dev/null || true
+          echo "=== End search ==="
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -128,7 +140,7 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          zip -r flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
+          zip -r -y flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
           ls -lh flutter-${{ matrix.demo }}-macos.zip
 
       - name: Release 
@@ -263,7 +275,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
-          zip -r flutter-${{ matrix.demo }}-linux-x64.zip bundle/
+          zip -r -y flutter-${{ matrix.demo }}-linux-x64.zip bundle/
           ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
 
       - name: Release
@@ -620,9 +632,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/
-          mv web flutter-${{ matrix.demo }}
-          zip -r flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
-          ls -lh flutter-${{ matrix.demo }}.zip
+          mv web flutter-${{ matrix.demo }}-web
+          zip -r -y flutter-${{ matrix.demo }}-web.zip flutter-${{ matrix.demo }}-web/
+          ls -lh flutter-${{ matrix.demo }}-web.zip
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -630,7 +642,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip
+          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-web.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter

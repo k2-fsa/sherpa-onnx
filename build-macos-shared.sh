@@ -83,6 +83,9 @@ ln -sf Versions/Current/Resources $FRAMEWORK_DIR/Resources
 # Fix dylib install name to use framework-relative path
 install_name_tool -id @rpath/SherpaOnnxC.framework/Versions/A/SherpaOnnxC $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
 
+# Ad-hoc sign the framework binary so Xcode can embed and re-sign it
+codesign --force --sign - $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
+
 rm -rf sherpa-onnx.xcframework
 
 xcodebuild -create-xcframework \

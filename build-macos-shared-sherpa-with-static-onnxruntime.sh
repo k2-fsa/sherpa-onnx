@@ -3,20 +3,6 @@
 # This script builds a shared xcframework for macOS with onnxruntime
 # statically linked in. The resulting libsherpa-onnx-c-api.dylib is
 # self-contained and does NOT require a separate libonnxruntime.dylib.
-#
-# Differences from build-macos-shared.sh:
-#   - build-macos-shared.sh produces a shared libsherpa-onnx-c-api.dylib that
-#     DEPENDS on a separate libonnxruntime.dylib (downloaded via cmake at build time).
-#     Users must ship both dylibs together.
-#   - This script downloads the STATIC onnxruntime library (libonnxruntime.a) and
-#     links it into libsherpa-onnx-c-api.dylib. The output is a single self-contained
-#     dylib with no external onnxruntime dependency.
-#
-# When to use which:
-#   - build-macos-shared.sh: when you want a smaller sherpa-onnx dylib and are OK
-#     shipping onnxruntime separately (e.g., SPM with separate onnxruntime xcframework).
-#   - This script: when you want a single dylib with everything included (e.g., for
-#     Flutter pub.dev where fewer files and smaller total size matters).
 
 set -ex
 
@@ -75,67 +61,26 @@ if otool -L ./install/lib/libsherpa-onnx-c-api.dylib | grep -q libonnxruntime; t
 fi
 echo "OK: onnxruntime is statically linked"
 
-# Create a framework bundle (like onnxruntime does) so SPM can resolve the module
-FRAMEWORK_DIR=SherpaOnnxC.framework
-rm -rf $FRAMEWORK_DIR
+# Create xcframework with bare library (like merman).
+rm -rf sherpa-onnx.xcframework
 
-mkdir -p $FRAMEWORK_DIR/Versions/A/Headers/sherpa-onnx/c-api
-mkdir -p $FRAMEWORK_DIR/Versions/A/Modules
-mkdir -p $FRAMEWORK_DIR/Versions/A/Resources
+# Fix dylib install name
+install_name_tool -id @rpath/libsherpa-onnx-c-api.dylib ./install/lib/libsherpa-onnx-c-api.dylib
 
-# Binary
-cp install/lib/libsherpa-onnx-c-api.dylib $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
+# Ad-hoc sign the dylib
+codesign --force --sign - ./install/lib/libsherpa-onnx-c-api.dylib
 
-# Headers (preserve nested path for #include "sherpa-onnx/c-api/c-api.h")
-cp install/include/sherpa-onnx/c-api/c-api.h $FRAMEWORK_DIR/Versions/A/Headers/sherpa-onnx/c-api/
-
-# Modulemap
-cat > $FRAMEWORK_DIR/Versions/A/Modules/module.modulemap << 'EOF'
-framework module SherpaOnnxC {
+# Create modulemap for SPM
+cat > ./install/include/module.modulemap << 'EOF'
+module SherpaOnnxC {
   header "sherpa-onnx/c-api/c-api.h"
   export *
 }
 EOF
 
-# Info.plist
-cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleIdentifier</key>
-  <string>com.k2-fsa.sherpa-onnx</string>
-  <key>CFBundleName</key>
-  <string>SherpaOnnxC</string>
-  <key>CFBundlePackageType</key>
-  <string>FMWK</string>
-  <key>CFBundleExecutable</key>
-  <string>SherpaOnnxC</string>
-  <key>CFBundleVersion</key>
-  <string>20260810</string>
-  <key>CFBundleShortVersionString</key>
-  <string>1.13.5</string>
-</dict>
-</plist>
-EOF
-
-# Versioned symlinks
-pushd $FRAMEWORK_DIR/Versions
-ln -sf A Current
-popd
-
-ln -sf Versions/Current/SherpaOnnxC $FRAMEWORK_DIR/SherpaOnnxC
-ln -sf Versions/Current/Headers $FRAMEWORK_DIR/Headers
-ln -sf Versions/Current/Modules $FRAMEWORK_DIR/Modules
-ln -sf Versions/Current/Resources $FRAMEWORK_DIR/Resources
-
-# Fix dylib install name to use framework-relative path
-install_name_tool -id @rpath/SherpaOnnxC.framework/Versions/A/SherpaOnnxC $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
-
-rm -rf sherpa-onnx.xcframework
-
 xcodebuild -create-xcframework \
-  -framework $FRAMEWORK_DIR \
+  -library ./install/lib/libsherpa-onnx-c-api.dylib \
+  -headers ./install/include \
   -output sherpa-onnx.xcframework
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)

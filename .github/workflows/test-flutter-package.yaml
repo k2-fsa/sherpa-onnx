@@ -92,8 +92,11 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world
-          flutter pub get
           flutter config --enable-swift-package-manager
+          flutter pub get
+          # Remove CocoaPods build phases from Xcode project
+          cd macos && pod deintegrate && cd ..
+          rm -f macos/Podfile macos/Podfile.lock
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -184,8 +187,11 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/hello_world
-          flutter pub get
           flutter config --enable-swift-package-manager
+          flutter pub get
+          # Remove CocoaPods build phases from Xcode project
+          cd ios && pod deintegrate && cd ..
+          rm -f ios/Podfile ios/Podfile.lock
           flutter build ios --no-codesign
 
           ls -lh build/ios/iphoneos/
@@ -411,7 +417,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world/build/
           mv web flutter-hello-world-pkg-web
-          zip -r flutter-hello-world-pkg-web.zip flutter-hello-world-pkg-web/
+          zip -r -y flutter-hello-world-pkg-web.zip flutter-hello-world-pkg-web/
           ls -lh flutter-hello-world-pkg-web.zip
 
       - name: Upload artifact
