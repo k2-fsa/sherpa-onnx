@@ -134,18 +134,3 @@ When you call `initBindings()` or `initBindingsAsync()`:
 
 Both functions accept an optional path argument to override the auto-detected
 native library location. In most cases you don't need to pass a path.
-
-## Troubleshooting
-
-**"Failed to lookup symbol"** — The native library was not loaded. Make sure
-you called `initBindings()` or `initBindingsAsync()` before using any
-sherpa-onnx API.
-
-**"Unsupported operation: Isolate.resolvePackageUriSync"** — You're running
-in Flutter and calling `resolveSherpaOnnxPathSync()` directly. Use
-`initBindings()` or `initBindingsAsync()` instead — they handle this
-automatically.
-
-**"dart:ui is not available"** — You're importing the Flutter version of
-sherpa_onnx in a pure Dart CLI project. Make sure your `pubspec.yaml`
-depends on `sherpa_onnx` (not `sherpa_onnx` with a Flutter SDK constraint).
