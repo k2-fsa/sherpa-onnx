@@ -27,11 +27,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Find stale onnxruntime (Windows)
+      - name: Clean stale onnxruntime (Windows)
         if: matrix.os == 'windows-2022'
         shell: bash
         run: |
-          echo "Listing all onnxruntime.dll on the system..."
+          echo "Searching for stale onnxruntime.dll..."
           search_dirs=(
             "/c/Windows/System32"
             "/c/Program Files"
@@ -39,11 +39,22 @@ jobs:
             "/c/Users"
             "/c/hostedtoolcache"
           )
+          count=0
           for dir in "${search_dirs[@]}"; do
             if [ -d "$dir" ]; then
-              find "$dir" -name "onnxruntime.dll" -type f 2>/dev/null || true
+              while IFS= read -r f; do
+                [ -z "$f" ] && continue
+                echo "Deleting: $f"
+                rm -f "$f" || true
+                count=$((count + 1))
+              done < <(find "$dir" -name "onnxruntime.dll" -type f 2>/dev/null || true)
             fi
           done
+          if [ "$count" -eq 0 ]; then
+            echo "No stale onnxruntime.dll found"
+          else
+            echo "Deleted $count onnxruntime.dll file(s)"
+          fi
 
       - name: Update version
         shell: bash
@@ -52,6 +63,7 @@ jobs:
           git diff .
 
       - name: ccache
+        if: matrix.os != 'windows-2022'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-dart
@@ -146,6 +158,8 @@ jobs:
           if [[ "${{ matrix.os }}" == "windows-2022" ]]; then
             export PATH="$PWD/flutter/sherpa_onnx_windows/windows:$PATH"
             echo "PATH includes: $PWD/flutter/sherpa_onnx_windows/windows"
+            echo "Checking DLLs in flutter/sherpa_onnx_windows/windows/:"
+            ls -lh flutter/sherpa_onnx_windows/windows/
           fi
 
           cp scripts/dart/vad-pubspec.yaml dart-api-examples/vad/pubspec.yaml
