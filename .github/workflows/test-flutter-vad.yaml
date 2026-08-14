@@ -130,11 +130,19 @@ jobs:
         run: |
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
           app_path=flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
-          # Sign embedded frameworks individually (--deep fails on ffmpeg's structure)
-          find "$app_path/Contents/Frameworks" -name "*.framework" -type d \
-            -exec codesign --force --sign - {} \; 2>/dev/null || true
-          codesign --force -s - "$app_path"
-          xattr -cr "$app_path"
+          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
+            # vad-from-file: ffmpeg frameworks have non-standard structure,
+            # codesign fails on them. Just clear quarantine so macOS allows it.
+            xattr -cr "$app_path"
+          else
+            codesign --force --deep -s - "$app_path"
+            xattr -cr "$app_path"
+          fi
+
+      - name: Setup tmate session
+        # if: true
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
 
       - name: Zip app
         shell: bash
