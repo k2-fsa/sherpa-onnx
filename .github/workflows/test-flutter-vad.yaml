@@ -116,9 +116,7 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-          # Sign ffmpeg frameworks so Xcode's CodeSign step passes
-          find "$PUB_CACHE" -path "*ffmpeg_kit*macos/Frameworks*" -name "*.framework" -type d \
-            -exec codesign --force --sign - {} \; 2>/dev/null || true
+          export CODE_SIGNING_ALLOWED=NO
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
