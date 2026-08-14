@@ -130,12 +130,10 @@ jobs:
         run: |
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
           app_path=flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
-          # Sign ffmpeg frameworks individually (--deep fails on their structure)
-          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
-            find "$app_path/Contents/Frameworks" -name "*.framework" -type d \
-              -exec codesign --force --sign - {} \; 2>/dev/null || true
-          fi
-          codesign --force --deep -s - "$app_path"
+          # Sign embedded frameworks individually (--deep fails on ffmpeg's structure)
+          find "$app_path/Contents/Frameworks" -name "*.framework" -type d \
+            -exec codesign --force --sign - {} \; 2>/dev/null || true
+          codesign --force -s - "$app_path"
           xattr -cr "$app_path"
 
       - name: Zip app
