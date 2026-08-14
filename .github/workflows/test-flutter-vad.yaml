@@ -116,20 +116,21 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-          # Disable code signing in Xcode project (CI has no dev certificate)
-          sed -i.bak '/CODE_SIGN_IDENTITY = "-";/a\
-          CODE_SIGNING_ALLOWED = NO;
-          ' macos/Runner.xcodeproj/project.pbxproj
-          rm -f macos/Runner.xcodeproj/project.pbxproj.bak
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
+
+          # Sign ffmpeg frameworks in build output so ad-hoc signing passes
+          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
+            find build/macos -name "*.framework" -type d \
+              -exec codesign --force --sign - {} \; 2>/dev/null || true
+          fi
 
       - name: Ad-hoc sign the app
         shell: bash
         run: |
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          codesign --force -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          codesign --force --deep -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
           xattr -cr flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
 
       - name: Zip app
