@@ -116,7 +116,11 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-          export CODE_SIGNING_ALLOWED=NO
+          # Disable code signing in Xcode project (CI has no dev certificate)
+          sed -i.bak '/CODE_SIGN_IDENTITY = "-";/a\
+          CODE_SIGNING_ALLOWED = NO;
+          ' macos/Runner.xcodeproj/project.pbxproj
+          rm -f macos/Runner.xcodeproj/project.pbxproj.bak
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
