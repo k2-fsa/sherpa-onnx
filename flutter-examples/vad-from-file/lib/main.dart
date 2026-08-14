@@ -1,11 +1,13 @@
 // Copyright (c)  2026  Xiaomi Corporation
 import 'package:flutter/material.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import './vad_screen.dart';
 import './model_config.dart' show modelFile, modelUrl, modelDocUrl;
 
 void main() {
+  MediaKit.ensureInitialized();
   runApp(const MyApp());
 }
 

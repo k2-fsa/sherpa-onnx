@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:media_kit/media_kit.dart';
 
 import './audio_decoder_native.dart'
     if (dart.library.js_interop) './audio_decoder_web.dart';
@@ -35,7 +35,7 @@ class _VadScreenState extends State<VadScreen> {
   final _maxSpeechController = TextEditingController(text: '12.0');
 
   late final VadManager _manager;
-  VideoPlayerController? _playerController;
+  Player? _player;
 
   List<VadSegment> _segments = [];
   bool _isProcessing = false;
@@ -103,12 +103,10 @@ class _VadScreenState extends State<VadScreen> {
     final file = result.files.first;
 
     // Dispose previous player.
-    await _playerController?.dispose();
-    _playerController = null;
+    await _player?.dispose();
+    _player = null;
 
-    // Create a new video player for the selected file.
     try {
-      VideoPlayerController controller;
       if (kIsWeb) {
         // On web, use bytes to create a blob URL.
         final bytes = file.bytes;
@@ -120,7 +118,8 @@ class _VadScreenState extends State<VadScreen> {
         final url = createBlobUrl(bytes);
         setState(() => _logController.text =
             'Loaded: ${file.name} (${(bytes.length / 1024 / 1024).toStringAsFixed(1)} MB)');
-        controller = VideoPlayerController.networkUrl(Uri.parse(url));
+        _player = Player();
+        await _player!.open(Media(url), play: false);
       } else {
         // On native, use the file path.
         final path = file.path;
@@ -128,28 +127,31 @@ class _VadScreenState extends State<VadScreen> {
           setState(() => _logController.text = 'Error: Could not get file path');
           return;
         }
-        controller = VideoPlayerController.networkUrl(Uri.file(path));
+        _player = Player();
+        await _player!.open(Media(path), play: false);
       }
-      await controller.initialize();
 
-      controller.addListener(() {
+      _player!.stream.position.listen((pos) {
         if (!mounted) return;
-        setState(() {
-          _currentPosition = controller.value.position;
-          _totalDuration = controller.value.duration;
-          _isPlaying = controller.value.isPlaying;
-        });
+        setState(() => _currentPosition = pos);
+      });
+      _player!.stream.duration.listen((dur) {
+        if (!mounted) return;
+        setState(() => _totalDuration = dur);
+      });
+      _player!.stream.playing.listen((playing) {
+        if (!mounted) return;
+        setState(() => _isPlaying = playing);
       });
 
       setState(() {
-        _playerController = controller;
         _fileName = file.name;
         _fileBytes = file.bytes;
         _segments = [];
         _elapsed = 0.0;
         _audioDuration = 0.0;
         _currentPosition = Duration.zero;
-        _totalDuration = controller.value.duration;
+        _totalDuration = _player!.state.duration;
         _logController.text = 'Loaded: ${file.name}';
       });
     } catch (e) {
@@ -158,12 +160,8 @@ class _VadScreenState extends State<VadScreen> {
   }
 
   void _togglePlayback() {
-    if (_playerController == null) return;
-    if (_playerController!.value.isPlaying) {
-      _playerController!.pause();
-    } else {
-      _playerController!.play();
-    }
+    if (_player == null) return;
+    _player!.playOrPause();
   }
 
   void _cancelVad() {
@@ -176,7 +174,7 @@ class _VadScreenState extends State<VadScreen> {
   }
 
   void _seekTo(Duration position) {
-    _playerController?.seekTo(position);
+    _player?.seek(position);
   }
 
   String _formatDuration(Duration d) {
@@ -269,8 +267,8 @@ class _VadScreenState extends State<VadScreen> {
   bool _hasSegmentListener = false;
 
   void _onPlayerPositionUpdate() {
-    if (_playerController == null) return;
-    final pos = _playerController!.value.position.inMilliseconds;
+    if (_player == null) return;
+    final pos = _player!.state.position.inMilliseconds;
 
     // Check if current segment ended.
     if (_segmentEndMs > 0 && pos >= _segmentEndMs) {
@@ -279,7 +277,7 @@ class _VadScreenState extends State<VadScreen> {
         _playSegment(_playingIndex + 1);
       } else {
         // Stop playback.
-        _playerController!.pause();
+        _player!.pause();
         _segmentEndMs = 0;
         if (mounted) setState(() => _playingIndex = -1);
       }
@@ -291,7 +289,7 @@ class _VadScreenState extends State<VadScreen> {
 
     // If the same segment is already playing, stop it.
     if (_playingIndex == index) {
-      _playerController?.pause();
+      _player?.pause();
       _segmentEndMs = 0;
       setState(() => _playingIndex = -1);
       return;
@@ -305,14 +303,14 @@ class _VadScreenState extends State<VadScreen> {
 
     // Add listener once to check segment end.
     if (!_hasSegmentListener) {
-      _playerController?.addListener(_onPlayerPositionUpdate);
+      _player!.stream.position.listen((_) => _onPlayerPositionUpdate());
       _hasSegmentListener = true;
     }
     _segmentEndMs = endMs;
 
     // Seek to segment start and play.
-    await _playerController?.seekTo(Duration(milliseconds: startMs));
-    _playerController?.play();
+    await _player?.seek(Duration(milliseconds: startMs));
+    _player?.play();
   }
 
   Future<void> _saveSegment(int index) async {
@@ -374,7 +372,7 @@ class _VadScreenState extends State<VadScreen> {
   }
 
   void _clearAll() {
-    _playerController?.pause();
+    _player?.pause();
 
     // Clean up cached WAV files from temp directory.
     cleanupTempChunkFiles();
@@ -422,7 +420,7 @@ class _VadScreenState extends State<VadScreen> {
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton(
-                  onPressed: _playerController == null ? null : _togglePlayback,
+                  onPressed: _player == null ? null : _togglePlayback,
                   child: Text(_isPlaying ? 'Pause' : 'Play'),
                 ),
                 const SizedBox(width: 8),
@@ -449,7 +447,7 @@ class _VadScreenState extends State<VadScreen> {
               ),
             const SizedBox(height: 8),
             // Playback slider with position.
-            if (_playerController != null && _totalDuration.inSeconds > 0)
+            if (_player != null && _totalDuration.inSeconds > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Row(
@@ -635,7 +633,7 @@ class _VadScreenState extends State<VadScreen> {
   @override
   void dispose() {
     _manager.dispose();
-    _playerController?.dispose();
+    _player?.dispose();
     _logController.dispose();
     _thresholdController.dispose();
     _minSilenceController.dispose();
