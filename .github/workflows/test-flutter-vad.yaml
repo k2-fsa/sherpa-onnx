@@ -116,15 +116,14 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
+          # Sign ffmpeg frameworks before build so Xcode's CodeSign passes
+          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
+            find "$PUB_CACHE" -path "*ffmpeg_kit*" -name "*.framework" -type d \
+              -exec codesign --force --sign - {} \; 2>/dev/null || true
+          fi
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
-
-          # Sign ffmpeg frameworks in build output so ad-hoc signing passes
-          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
-            find build/macos -name "*.framework" -type d \
-              -exec codesign --force --sign - {} \; 2>/dev/null || true
-          fi
 
       - name: Ad-hoc sign the app
         shell: bash
