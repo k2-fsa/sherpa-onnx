@@ -129,7 +129,7 @@ jobs:
         shell: bash
         run: |
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          codesign --force --deep -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          codesign --force -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
           xattr -cr flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
 
       - name: Zip app
