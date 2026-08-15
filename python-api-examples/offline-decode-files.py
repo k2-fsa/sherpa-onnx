@@ -548,7 +548,8 @@ def main():
     end_time = time.time()
     print("Done!")
 
-    for wave_filename, stream in zip(args.sound_files, streams):
+    for stream_index, wave_filename in enumerate(args.sound_files):
+        stream = streams[stream_index]
         print(f"{wave_filename}\n{stream.result.text}")
         if len(stream.result.hypotheses) > 1:
             for i, hypothesis in enumerate(stream.result.hypotheses, start=1):

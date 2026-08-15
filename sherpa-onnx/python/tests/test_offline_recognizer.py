@@ -123,8 +123,8 @@ class TestOfflineRecognizer(unittest.TestCase):
         self.assertEqual(stream.result.tokens, hypotheses[0].tokens)
         self.assertTrue(
             all(
-                left.score >= right.score
-                for left, right in zip(hypotheses, hypotheses[1:])
+                hypotheses[i - 1].score >= hypotheses[i].score
+                for i in range(1, len(hypotheses))
             )
         )
 
