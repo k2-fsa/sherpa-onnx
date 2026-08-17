@@ -163,6 +163,8 @@ jobs:
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
           app_path=flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
           if [ "${{ matrix.demo }}" = "vad-non-streaming-asr-from-file" ]; then
+            # vad-non-streaming-asr-from-file: ffmpeg frameworks have non-standard structure,
+            # codesign fails on them. Just clear quarantine so macOS allows it.
             xattr -cr "$app_path"
           else
             codesign --force --deep -s - "$app_path"
