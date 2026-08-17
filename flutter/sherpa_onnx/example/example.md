@@ -72,6 +72,8 @@ Try the following demos directly in your browser:
 |Non-streaming VAD + speech recognition| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/non_streaming_vad_asr)| Android, iOS, Linux, macOS, Windows|
 |Text to speech| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/tts)| Android, iOS, Linux, macOS, Windows, **Web**|
 |VAD from file| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/vad-from-file)| Android, iOS, Linux, macOS, Windows, **Web**|
+|VAD + ASR from file| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/vad-non-streaming-asr-from-file)| Android, iOS, Linux, macOS, Windows, **Web**|
+|VAD + ASR from microphone| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/vad-non-streaming-asr-from-microphone)| Android, iOS, Linux, macOS, Windows, **Web**|
 |VAD from microphone| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/vad-from-microphone)| Android, iOS, Linux, macOS, Windows, **Web**|
 |Offline punctuation restoration| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/offline-punctuation)| Android, iOS, Linux, macOS, Windows, **Web**|
 |Online punctuation restoration| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/online-punctuation)| Android, iOS, Linux, macOS, Windows, **Web**|
