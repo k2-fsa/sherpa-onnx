@@ -47,11 +47,31 @@ class _VadAsrScreenState extends State<VadAsrScreen> {
   final List<double> _sampleBuffer = [];
   int _windowSize = 512;
 
+  // Microphone selection.
+  List<InputDevice> _devices = [];
+  InputDevice? _selectedDevice;
+
   @override
   void initState() {
     super.initState();
     _recorder = AudioRecorder();
     _player = AudioPlayer();
+    _loadDevices();
+  }
+
+  Future<void> _loadDevices() async {
+    try {
+      await _recorder!.hasPermission();
+      final devices = await _recorder!.listInputDevices();
+      setState(() {
+        _devices = devices;
+        if (devices.isNotEmpty && _selectedDevice == null) {
+          _selectedDevice = devices.first;
+        }
+      });
+    } catch (e) {
+      setState(() => _logController.text = 'Error listing devices: $e');
+    }
   }
 
   Future<bool> _initManager({
@@ -163,6 +183,7 @@ class _VadAsrScreenState extends State<VadAsrScreen> {
       encoder: encoder,
       sampleRate: 16000,
       numChannels: 1,
+      device: _selectedDevice,
     );
 
     try {
@@ -299,6 +320,50 @@ class _VadAsrScreenState extends State<VadAsrScreen> {
             _buildParamControls(),
             const SizedBox(height: 8),
             _buildActionButtons(),
+            const SizedBox(height: 8),
+            // Microphone settings.
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Microphone Settings',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Text('Device: '),
+                        Expanded(
+                          child: DropdownButton<InputDevice>(
+                            isExpanded: true,
+                            value: _selectedDevice,
+                            items: _devices.map((d) {
+                              return DropdownMenuItem(
+                                value: d,
+                                child: Text(d.label,
+                                    overflow: TextOverflow.ellipsis),
+                              );
+                            }).toList(),
+                            onChanged: _isListening
+                                ? null
+                                : (v) => setState(() => _selectedDevice = v),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh, size: 18),
+                          tooltip: 'Refresh devices',
+                          onPressed: _isListening ? null : _loadDevices,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Recording: 16kHz mono (required by VAD)',
+                        style: TextStyle(fontSize: 13, color: Colors.grey)),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 8),
             if (_isSpeaking)
               const Padding(
