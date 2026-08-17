@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.vad_from_file"
+    namespace = "com.example.vad_non_streaming_asr_from_file"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.vad_from_file"
+        applicationId = "com.example.vad_non_streaming_asr_from_file"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -5,7 +5,7 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = vad_from_microphone
+PRODUCT_NAME = vad_non_streaming_asr_from_microphone
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.example.vadFromMicrophone

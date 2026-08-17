@@ -1,6 +1,6 @@
 {
-    "name": "vad_from_microphone",
-    "short_name": "vad_from_microphone",
+    "name": "vad_non_streaming_asr_from_microphone",
+    "short_name": "vad_non_streaming_asr_from_microphone",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

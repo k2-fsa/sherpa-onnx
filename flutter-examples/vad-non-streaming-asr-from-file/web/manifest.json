@@ -1,6 +1,6 @@
 {
-    "name": "vad_from_file",
-    "short_name": "vad_from_file",
+    "name": "vad_non_streaming_asr_from_file",
+    "short_name": "vad_non_streaming_asr_from_file",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

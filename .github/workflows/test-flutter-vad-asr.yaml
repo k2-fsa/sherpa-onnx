@@ -125,6 +125,10 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
+          # Remove unnecessary files to reduce app size.
+          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
+          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+
           ls -lh
           cd ..
           ./generate-asset-list.py
@@ -172,7 +176,8 @@ jobs:
           fi
 
       - name: Setup tmate session
-        if: failure()
+        # if: failure()
+        if: false
         uses: mxschmitt/action-tmate@v3
 
       - name: Zip app
@@ -300,6 +305,10 @@ jobs:
           curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${{ matrix.asr_tarball }}
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
+
+          # Remove unnecessary files to reduce app size.
+          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
+          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
 
           ls -lh
           cd ..
@@ -440,6 +449,10 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
+          # Remove unnecessary files to reduce app size.
+          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
+          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+
           ls -lh
           cd ..
           ./generate-asset-list.py
@@ -572,6 +585,10 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
+          # Remove unnecessary files to reduce app size.
+          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
+          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+
           ls -lh
           cd ..
           ./generate-asset-list.py
@@ -683,6 +700,10 @@ jobs:
           curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${{ matrix.asr_tarball }}
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
+
+          # Remove unnecessary files to reduce app size.
+          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
+          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
 
           ls -lh
           cd ..

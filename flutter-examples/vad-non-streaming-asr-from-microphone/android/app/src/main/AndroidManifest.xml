@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
-        android:label="vad_from_microphone"
+        android:label="vad_non_streaming_asr_from_microphone"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

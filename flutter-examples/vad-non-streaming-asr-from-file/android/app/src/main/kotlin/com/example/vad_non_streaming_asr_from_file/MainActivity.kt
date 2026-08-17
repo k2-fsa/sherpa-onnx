@@ -1,4 +1,4 @@
-package com.example.vad_from_microphone
+package com.example.vad_non_streaming_asr_from_file
 
 import io.flutter.embedding.android.FlutterActivity
 

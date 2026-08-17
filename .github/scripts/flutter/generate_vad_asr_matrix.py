@@ -15,14 +15,14 @@ DEMOS = [
 # Language suffix added to name when < 6 chars.
 ASR_MODELS = [
     (0, "zipformer-ctc-zh", "sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2"),
-    #  (1, "sense-voice", "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2"),
-    #  (2, "whisper-tiny-en", "sherpa-onnx-whisper-tiny.en.tar.bz2"),
-    #  (3, "nemo-parakeet-v2-en", "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2"),
-    #  (4, "nemo-parakeet-v3-eu", "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2"),
-    #  (5, "moonshine-en", "sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2"),
-    #  (6, "qwen3-asr-multi", "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2"),
-    #  (7, "funasr-nano", "sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2"),
-    #  (8, "firered-ctc-zh-en", "sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2"),
+    (1, "sense-voice", "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2"),
+    (2, "whisper-tiny-en", "sherpa-onnx-whisper-tiny.en.tar.bz2"),
+    (3, "nemo-parakeet-v2-en", "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2"),
+    (4, "nemo-parakeet-v3-eu", "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2"),
+    (5, "moonshine-en", "sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2"),
+    (6, "qwen3-asr-multi", "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2"),
+    (7, "funasr-nano", "sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2"),
+    (8, "firered-ctc-zh-en", "sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2"),
 ]
 
 # Android ABI configurations.
