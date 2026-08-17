@@ -6,11 +6,6 @@
 
 import json
 
-DEMOS = [
-    "vad-non-streaming-asr-from-file",
-    "vad-non-streaming-asr-from-microphone",
-]
-
 # (model_index, name, tarball filename)
 # Language suffix added to name when < 6 chars.
 ASR_MODELS = [
@@ -25,7 +20,11 @@ ASR_MODELS = [
     (8, "firered-ctc-zh-en", "sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2"),
 ]
 
-# Android ABI configurations.
+DEMOS = [
+    "vad-non-streaming-asr-from-file",
+    "vad-non-streaming-asr-from-microphone",
+]
+
 ANDROID_ABIS = [
     {
         "abi": "arm64-v8a",
@@ -64,13 +63,11 @@ def make_entry(demo, idx, name, tarball):
 
 
 def main():
-    # Desktop/web matrix: demo × ASR model
     desktop_entries = []
     for demo in DEMOS:
         for idx, name, tarball in ASR_MODELS:
             desktop_entries.append(make_entry(demo, idx, name, tarball))
 
-    # Android matrix: demo × ASR model × ABI
     android_entries = []
     for demo in DEMOS:
         for idx, name, tarball in ASR_MODELS:

@@ -3,8 +3,7 @@ name: test-flutter-vad-asr
 on:
   push:
     branches:
-      - master
-      - fix-dart
+      - fix-dart-2
 
   workflow_dispatch:
 
