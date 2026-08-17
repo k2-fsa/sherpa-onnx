@@ -1,15 +1,13 @@
 // Copyright (c)  2026  Xiaomi Corporation
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import 'package:url_launcher/url_launcher.dart';
 
-import './vad_screen.dart';
-import './model_config.dart' show modelFile, modelUrl, modelDocUrl;
+import './model_config.dart' as cfg;
+import './vad_asr_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
   await sherpa_onnx.initBindingsAsync();
   runApp(const MyApp());
 }
@@ -20,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'sherpa-onnx VAD from File',
+      title: 'sherpa-onnx VAD + ASR from Microphone',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -46,7 +44,7 @@ class _HomePageState extends State<HomePage> {
       body: IndexedStack(
         index: _currentIndex,
         children: const [
-          VadScreen(),
+          VadAsrScreen(),
           InfoScreen(),
         ],
       ),
@@ -54,7 +52,7 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.audio_file), label: 'VAD'),
+          BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'VAD+ASR'),
           BottomNavigationBarItem(icon: Icon(Icons.info), label: 'Info'),
         ],
       ),
@@ -77,12 +75,14 @@ class InfoScreen extends StatelessWidget {
     final gitSha1 = sherpa_onnx.getGitSha1();
     final gitDate = sherpa_onnx.getGitDate();
     final onnxruntimeVersion = sherpa_onnx.getOnnxruntimeVersion();
+    final asrModel = cfg.selectedAsrModel;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Info')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Version card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -108,7 +108,10 @@ class InfoScreen extends StatelessWidget {
               ),
             ),
           ),
+
           const SizedBox(height: 12),
+
+          // VAD Model card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -117,35 +120,79 @@ class InfoScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.audio_file, color: theme.colorScheme.primary),
+                      Icon(Icons.hearing, color: theme.colorScheme.primary),
                       const SizedBox(width: 8),
-                      Text('Current Model',
+                      Text('VAD Model',
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const Divider(),
-                  Text(modelFile,
+                  Text('Silero VAD',
                       style: theme.textTheme.bodyLarge
                           ?.copyWith(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   _LinkRow(
                     icon: Icons.download,
                     label: 'Download',
-                    url: modelUrl,
+                    url: cfg.vadModelUrl,
                     style: linkStyle,
                   ),
                   _LinkRow(
                     icon: Icons.menu_book,
                     label: 'Documentation',
-                    url: modelDocUrl,
+                    url: 'https://k2-fsa.github.io/sherpa/onnx/vad/silero-vad.html',
                     style: linkStyle,
                   ),
                 ],
               ),
             ),
           ),
+
           const SizedBox(height: 12),
+
+          // ASR Model card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.record_voice_over,
+                          color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('ASR Model',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Divider(),
+                  Text(asrModel.name,
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  _LinkRow(
+                    icon: Icons.download,
+                    label: 'Download',
+                    url: asrModel.modelUrl,
+                    style: linkStyle,
+                  ),
+                  _LinkRow(
+                    icon: Icons.menu_book,
+                    label: 'Documentation',
+                    url: asrModel.docUrl,
+                    style: linkStyle,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Resources card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -184,7 +231,10 @@ class InfoScreen extends StatelessWidget {
               ),
             ),
           ),
+
           const SizedBox(height: 12),
+
+          // Community card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -212,7 +262,9 @@ class InfoScreen extends StatelessWidget {
               ),
             ),
           ),
+
           const SizedBox(height: 16),
+
           Center(
             child: GestureDetector(
               onTap: () =>
