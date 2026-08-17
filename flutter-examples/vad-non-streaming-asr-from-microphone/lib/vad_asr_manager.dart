@@ -1,25 +1,23 @@
 // Copyright (c)  2026  Xiaomi Corporation
 //
-// VAD + Non-streaming ASR manager for microphone input with 3 isolates:
-//   1. UI isolate (this class) — manages streams for the UI
-//   2. VAD isolate — runs VoiceActivityDetector
-//   3. ASR isolate — runs OfflineRecognizer
+// VAD + Non-streaming ASR manager for microphone input.
+// Two background isolates:
+//   1. VAD isolate — runs VoiceActivityDetector
+//   2. ASR isolate — runs OfflineRecognizer
 //
-// VAD detects speech segments and sends them to ASR for transcription.
-// ASR results flow back to the UI isolate.
+// ## Message flow
 //
-// ## Message protocol between isolates
+// ### Init
+//   UI spawns ASR isolate → ASR sends its SendPort
+//   UI spawns VAD isolate (with ASR SendPort) → VAD sends its SendPort
 //
-// ### Init phase
-//   UI spawns ASR isolate → ASR sends its SendPort to `_asrReceivePort`
-//   UI spawns VAD isolate → VAD sends its SendPort to `_vadReceivePort`
-//   UI waits on both ports to confirm both isolates are ready.
-//
-// ### Run phase (microphone)
+// ### Run (real-time microphone)
 //   UI → VAD:  _AudioChunk (samples)
 //   VAD → UI:  _SpeechState (isSpeech)
-//   VAD → ASR: _AsrSegmentRequest (samples, sampleRate, start, end)
-//   ASR → UI:  _SegmentFound (start, end, samples, text)
+//   VAD → UI:  _SegmentDetected (index, start, end, samples) — shown as "Decoding..."
+//   VAD → ASR: _AsrSegmentRequest (index, samples, sampleRate, start, end)
+//   ASR → UI:  _SegmentFound (index, start, end, samples, text, elapsedSeconds)
+//              → emits TextUpdate to update segment text + RTF
 import 'dart:async';
 import 'dart:isolate';
 import 'dart:typed_data';

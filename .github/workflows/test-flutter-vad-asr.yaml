@@ -1,0 +1,742 @@
+name: test-flutter-vad-asr
+
+on:
+  push:
+    branches:
+      - master
+      - fix-dart
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-flutter-vad-asr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      desktop: ${{ steps.set-matrix.outputs.desktop }}
+      android: ${{ steps.set-matrix.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generating build matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          JSON=$(python3 .github/scripts/flutter/generate_vad_asr_matrix.py)
+          DESKTOP=$(echo "$JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d['desktop']))")
+          ANDROID=$(echo "$JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d['android']))")
+          echo "desktop=$DESKTOP" >> $GITHUB_OUTPUT
+          echo "android=$ANDROID" >> $GITHUB_OUTPUT
+
+  macos:
+    name: macOS ${{ matrix.demo }} ${{ matrix.asr_model_name }}
+    needs: [generate_matrix]
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-flutter-vad-${{ matrix.demo }}-${{ matrix.asr_model_name }}
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: 3.44.8
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Cache xcframework
+        id: cache-xcframework
+        uses: actions/cache@v4
+        with:
+          path: build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          key: macos-xcframework-${{ hashFiles('build-macos-shared-sherpa-with-static-onnxruntime.sh', 'CMakeLists.txt') }}
+          restore-keys: |
+            macos-xcframework-
+
+      - name: Build xcframework from source
+        if: steps.cache-xcframework.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-macos-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework
+        shell: bash
+        run: |
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa-onnx.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa-onnx.xcframework/
+
+      - name: Use local sherpa_onnx_macos
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_macos: ^1.13.5|  # sherpa_onnx_macos: ^1.13.5\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Remove sherpa_onnx_web dependency
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.5|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+      - name: Copy LICENSE for sherpa_onnx_macos podspec
+        shell: bash
+        run: |
+          cp LICENSE flutter/sherpa_onnx_macos/LICENSE
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
+
+          # VAD model
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+          # ASR model
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${{ matrix.asr_tarball }}
+          tar xjf ${{ matrix.asr_tarball }}
+          rm ${{ matrix.asr_tarball }}
+
+          ls -lh
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.asr_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.5|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.5$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter config --no-enable-swift-package-manager
+          flutter pub get
+          cd macos && pod install && cd ..
+          if [ "${{ matrix.demo }}" = "vad-non-streaming-asr-from-file" ]; then
+            sed -i.bak 's/CODE_SIGN_IDENTITY = "-";/CODE_SIGN_IDENTITY = "-";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;/' macos/Runner.xcodeproj/project.pbxproj
+            rm -f macos/Runner.xcodeproj/project.pbxproj.bak
+          fi
+          flutter build macos
+
+          ls -lh build/macos/Build/Products/Release/
+
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
+          app_path=flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          if [ "${{ matrix.demo }}" = "vad-non-streaming-asr-from-file" ]; then
+            xattr -cr "$app_path"
+          else
+            codesign --force --deep -s - "$app_path"
+            xattr -cr "$app_path"
+          fi
+
+      - name: Setup tmate session
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
+          app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos.zip ${app_name}.app/
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos
+          path: flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos.zip
+
+  linux:
+    name: Linux ${{ matrix.demo }} ${{ matrix.asr_model_name }}
+    needs: [generate_matrix]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: linux-flutter-vad-${{ matrix.demo }}-${{ matrix.asr_model_name }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libasound2-dev libjson-glib-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          mkdir build
+          cd build
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          if [[ $(uname -m) == "aarch64" ]]; then
+            arch=aarch64
+          else
+            arch=x64
+          fi
+          cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/$arch
+          ls -lh ./flutter/sherpa_onnx_linux/linux/$arch
+
+      - name: Use local sherpa_onnx_linux
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_linux: ^1.13.5|  # sherpa_onnx_linux: ^1.13.5\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Remove sherpa_onnx_web dependency
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.5|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
+
+          # VAD model
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+          # ASR model
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${{ matrix.asr_tarball }}
+          tar xjf ${{ matrix.asr_tarball }}
+          rm ${{ matrix.asr_tarball }}
+
+          ls -lh
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.asr_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
+
+      - name: Install libmpv (Linux)
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmpv-dev
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.5|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.5$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build linux
+
+          ls -lh build/linux/*/release/bundle/
+
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64.zip bundle/
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64
+          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64.zip
+
+  windows:
+    name: Windows ${{ matrix.demo }} ${{ matrix.asr_model_name }}
+    needs: [generate_matrix]
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/
+          ls -lh ./flutter/sherpa_onnx_windows/windows/
+
+      - name: Use local sherpa_onnx_windows
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  sherpa_onnx_windows: ^1.13.5|  # sherpa_onnx_windows: ^1.13.5\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Remove sherpa_onnx_web dependency
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.5|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
+
+          # VAD model
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+          # ASR model
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${{ matrix.asr_tarball }}
+          tar xjf ${{ matrix.asr_tarball }}
+          rm ${{ matrix.asr_tarball }}
+
+          ls -lh
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.asr_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
+
+      - name: Build Flutter app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.5|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.5$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build windows
+
+          ls -lh build/windows/x64/runner/Release/
+
+      - name: Zip app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
+          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64.zip"
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64
+          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64.zip
+
+  android:
+    name: Android ${{ matrix.demo }} ${{ matrix.asr_model_name }} ${{ matrix.abi }}
+    needs: [generate_matrix]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.android) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-flutter-vad-${{ matrix.demo }}-${{ matrix.asr_model_name }}-${{ matrix.abi }}
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build ${{ matrix.abi }} from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export SHERPA_ONNX_ENABLE_C_API=ON
+          export SHERPA_ONNX_ENABLE_JNI=OFF
+          export SHERPA_ONNX_ENABLE_BINARY=OFF
+          ./${{ matrix.build_script }}
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -fv ${{ matrix.build_dir }}/install/lib/lib*.so flutter/${{ matrix.plugin }}/android/src/main/jniLibs/${{ matrix.abi }}/
+          ls -lh flutter/${{ matrix.plugin }}/android/src/main/jniLibs/${{ matrix.abi }}/
+
+      - name: Use local ${{ matrix.plugin }}
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|  ${{ matrix.plugin_key }}: ^1.13.5|  # ${{ matrix.plugin_key }}: ^1.13.5\n  ${{ matrix.plugin_key }}:\n    path: ../${{ matrix.plugin }}|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+          cat pubspec.yaml
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
+
+          # VAD model
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+          # ASR model
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${{ matrix.asr_tarball }}
+          tar xjf ${{ matrix.asr_tarball }}
+          rm ${{ matrix.asr_tarball }}
+
+          ls -lh
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.asr_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
+
+      - name: Build Flutter APK
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.5|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.5$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build apk --split-per-abi --target-platform ${{ matrix.target_platform }}
+
+          ls -lh build/app/outputs/flutter-apk/
+
+      - name: Rename APK
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/
+          mv app-*-release.apk flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-${{ matrix.abi }}.apk
+          ls -lh *.apk
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-${{ matrix.abi }}.apk
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-android-${{ matrix.abi }}
+          path: flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-${{ matrix.abi }}.apk
+
+  web:
+    name: Web ${{ matrix.demo }} ${{ matrix.asr_model_name }}
+    needs: [generate_matrix]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.23
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build WASM module
+        shell: bash
+        run: |
+          ./build-wasm-simd-web.sh
+
+      - name: Copy WASM assets to web plugin
+        shell: bash
+        run: |
+          ./build-flutter-web-wasm.sh
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/assets
+          rm -fv .gitkeep
+
+          # VAD model
+          curl -sSL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+          # ASR model
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${{ matrix.asr_tarball }}
+          tar xjf ${{ matrix.asr_tarball }}
+          rm ${{ matrix.asr_tarball }}
+
+          ls -lh
+          cd ..
+          ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.asr_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
+
+      - name: Use local sherpa_onnx_web
+        shell: bash
+        run: |
+          cd flutter/sherpa_onnx
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.5\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx_web: 1.13.5$|sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+      - name: Build Flutter web app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+
+          sed -i.bak 's|sherpa_onnx: ^1.13.5|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 1.13.5$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+          flutter pub get
+          flutter build web
+
+          ls -lh build/web/
+
+      - name: Zip web app
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}/build/
+          mv web flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-web
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-web.zip flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-web/
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-web.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-web.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: flutter
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-web
+          path: flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-web.zip
