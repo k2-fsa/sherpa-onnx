@@ -1,3 +1,12 @@
+## 1.13.6
+
+* Add VAD+ASR Flutter examples with 9 ASR models (#3877)
+* Expose the pyannote window shift ratio in the C API and language bindings (#3870)
+* Unify sherpa-onnx init API for Flutter and Dart CLI (#3875)
+* Fix releasing dart packages (#3874)
+* Fix using SPM in iOS examples (#3867)
+* Fix building android and java examples (#3866)
+
 ## 1.13.5
 
 * Update onnxruntime to v1.27.1 (#3861)

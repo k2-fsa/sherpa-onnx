@@ -12,7 +12,7 @@ JSObject getModule() {
 
   // Try to get the global Module set by sherpa_onnx_web.
   final module = globalContext.getProperty('Module'.toJS);
-  if (module != null && module.isA<JSObject>()) {
+  if (module != null) {
     _module = module as JSObject;
     return _module!;
   }
