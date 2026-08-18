@@ -19,6 +19,8 @@ This directory contains Flutter examples for [sherpa-onnx](https://pub.dev/packa
 | [tts](./tts) | Text to speech |
 | [vad-from-file](./vad-from-file) | Voice activity detection from an audio file |
 | [vad-from-microphone](./vad-from-microphone) | Voice activity detection from microphone |
+| [vad-non-streaming-asr-from-file](./vad-non-streaming-asr-from-file) | VAD + non-streaming ASR from an audio file |
+| [vad-non-streaming-asr-from-microphone](./vad-non-streaming-asr-from-microphone) | VAD + non-streaming ASR from microphone |
 | [offline-punctuation](./offline-punctuation) | Offline punctuation restoration |
 | [online-punctuation](./online-punctuation) | Online punctuation restoration |
 

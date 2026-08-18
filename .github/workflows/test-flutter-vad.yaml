@@ -116,14 +116,11 @@ jobs:
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-          # Debug: find where ffmpeg frameworks are
-          echo "=== Searching for ffmpeg frameworks ==="
-          find . -name "libswresample*" -type d 2>/dev/null || true
-          find . -name "libswresample*" -type f 2>/dev/null || true
-          find "$PUB_CACHE" -name "libswresample*" 2>/dev/null | head -10 || true
-          find macos/Pods -name "libswresample*" 2>/dev/null | head -10 || true
-          ls -la macos/Pods/ffmpeg_kit_flutter_new/ 2>/dev/null || true
-          echo "=== End search ==="
+          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
+            # Disable code signing for vad-from-file (CI has no dev certificate, ffmpeg frameworks are unsigned)
+            sed -i.bak 's/CODE_SIGN_IDENTITY = "-";/CODE_SIGN_IDENTITY = "-";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;/' macos/Runner.xcodeproj/project.pbxproj
+            rm -f macos/Runner.xcodeproj/project.pbxproj.bak
+          fi
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -132,8 +129,20 @@ jobs:
         shell: bash
         run: |
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          codesign --force --deep -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
-          xattr -cr flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          app_path=flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
+            # vad-from-file: ffmpeg frameworks have non-standard structure,
+            # codesign fails on them. Just clear quarantine so macOS allows it.
+            xattr -cr "$app_path"
+          else
+            codesign --force --deep -s - "$app_path"
+            xattr -cr "$app_path"
+          fi
+
+      - name: Setup tmate session
+        # if: true
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
 
       - name: Zip app
         shell: bash
@@ -256,6 +265,12 @@ jobs:
           ls -lh
           cd ..
           ./generate-asset-list.py
+
+      - name: Install libmpv (Linux)
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmpv-dev
 
       - name: Build Flutter app
         shell: bash

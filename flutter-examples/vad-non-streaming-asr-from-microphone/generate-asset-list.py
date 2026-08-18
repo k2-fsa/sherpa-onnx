@@ -1,0 +1,1 @@
+../tts/generate-asset-list.py
