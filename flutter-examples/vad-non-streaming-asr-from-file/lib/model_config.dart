@@ -74,12 +74,12 @@ const List<AsrModelInfo> asrModels = [
   AsrModelInfo(
     name: 'SenseVoice',
     modelUrl:
-        'https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2',
+        'https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2',
     docUrl:
         'https://k2-fsa.github.io/sherpa/onnx/sense-voice/',
     assetFiles: [
-      'sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx',
-      'sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt',
+      'sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx',
+      'sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt',
     ],
   ),
   // 2: Whisper tiny.en (English)

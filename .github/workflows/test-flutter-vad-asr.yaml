@@ -124,9 +124,11 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
-          # Remove unnecessary files to reduce app size.
-          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
-          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+          # Remove files the app does not need.
+          model_dir=$(basename ${{ matrix.asr_tarball }} .tar.bz2)
+          pushd $model_dir
+          ${{ matrix.asr_cleanup_cmd }}
+          popd
 
           ls -lh
           cd ..
@@ -305,9 +307,11 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
-          # Remove unnecessary files to reduce app size.
-          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
-          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+          # Remove files the app does not need.
+          model_dir=$(basename ${{ matrix.asr_tarball }} .tar.bz2)
+          pushd $model_dir
+          ${{ matrix.asr_cleanup_cmd }}
+          popd
 
           ls -lh
           cd ..
@@ -448,9 +452,11 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
-          # Remove unnecessary files to reduce app size.
-          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
-          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+          # Remove files the app does not need.
+          model_dir=$(basename ${{ matrix.asr_tarball }} .tar.bz2)
+          pushd $model_dir
+          ${{ matrix.asr_cleanup_cmd }}
+          popd
 
           ls -lh
           cd ..
@@ -584,9 +590,11 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
-          # Remove unnecessary files to reduce app size.
-          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
-          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+          # Remove files the app does not need.
+          model_dir=$(basename ${{ matrix.asr_tarball }} .tar.bz2)
+          pushd $model_dir
+          ${{ matrix.asr_cleanup_cmd }}
+          popd
 
           ls -lh
           cd ..
@@ -700,9 +708,11 @@ jobs:
           tar xjf ${{ matrix.asr_tarball }}
           rm ${{ matrix.asr_tarball }}
 
-          # Remove unnecessary files to reduce app size.
-          find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf "$1/test_wavs"' _ {} \;
-          find . -mindepth 2 -maxdepth 2 -type f \( -name '*.md' -o -name '*.txt' ! -name 'tokens.txt' \) -delete 2>/dev/null || true
+          # Remove files the app does not need.
+          model_dir=$(basename ${{ matrix.asr_tarball }} .tar.bz2)
+          pushd $model_dir
+          ${{ matrix.asr_cleanup_cmd }}
+          popd
 
           ls -lh
           cd ..
