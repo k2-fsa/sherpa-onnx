@@ -623,7 +623,7 @@
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
 				kind = exactVersion;
-				version = 1.13.5;
+				version = 1.13.6;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

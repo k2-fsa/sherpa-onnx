@@ -16,7 +16,7 @@ dependencies {
     // ============================================================
     // Approach 1: Simple — one dependency pulls in everything.
     // ============================================================
-    // implementation 'com.github.k2-fsa:sherpa-onnx:v1.13.5'
+    // implementation 'com.github.k2-fsa:sherpa-onnx:v1.13.6'
 
     // ============================================================
     // Approach 2 (recommended): Multi-module — split JVM API and
@@ -24,27 +24,27 @@ dependencies {
     // ============================================================
 
     // 1. JVM core API Jar
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v1.13.5'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v1.13.6'
 
     // 2. Platform native lib — uncomment ONE for your target platform
 
     // macOS ARM64 (Apple Silicon)
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:v1.13.5'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:v1.13.6'
 
     // macOS x64 (Intel)
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-x64:v1.13.5'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-x64:v1.13.6'
 
     // Linux x64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-x64:v1.13.5'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-x64:v1.13.6'
 
     // Linux ARM64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-aarch64:v1.13.5'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-linux-aarch64:v1.13.6'
 
     // Windows x64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-x64:v1.13.5'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-x64:v1.13.6'
 
     // Windows ARM64
-    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-arm64:v1.13.5'
+    // implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-win-arm64:v1.13.6'
 }
 
 java {

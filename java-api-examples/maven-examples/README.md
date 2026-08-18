@@ -27,7 +27,7 @@ This is the easiest way — one dependency pulls in everything:
 <dependency>
     <groupId>com.github.k2-fsa</groupId>
     <artifactId>sherpa-onnx</artifactId>
-    <version>1.13.5</version>
+    <version>1.13.6</version>
 </dependency>
 ```
 
@@ -48,14 +48,14 @@ so you only ship the platform you need, keeping the final jar lightweight:
 <dependency>
     <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
     <artifactId>sherpa-onnx-jvm</artifactId>
-    <version>1.13.5</version>
+    <version>1.13.6</version>
 </dependency>
 
 <!-- 2. Platform native lib — pick ONE for your target platform -->
 <dependency>
     <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
     <artifactId>sherpa-onnx-native-lib-osx-aarch64</artifactId>
-    <version>1.13.5</version>
+    <version>1.13.6</version>
 </dependency>
 ```
 
@@ -83,7 +83,7 @@ mvn package -q
 ## Run
 
 ```bash
-java -jar target/sherpa-onnx-maven-example-1.13.5.jar
+java -jar target/sherpa-onnx-maven-example-1.13.6.jar
 ```
 
 Expected output:
@@ -163,8 +163,8 @@ your target platform. This matters for:
 ```bash
 # Build and check the jar
 mvn package -q
-ls -lh target/sherpa-onnx-maven-example-1.13.5.jar
+ls -lh target/sherpa-onnx-maven-example-1.13.6.jar
 
 # List native libs in the jar
-unzip -l target/sherpa-onnx-maven-example-1.13.5.jar | grep -E "\.so$|\.dylib$|\.dll$"
+unzip -l target/sherpa-onnx-maven-example-1.13.6.jar | grep -E "\.so$|\.dylib$|\.dll$"
 ```

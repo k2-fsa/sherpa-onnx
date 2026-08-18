@@ -9,17 +9,17 @@
 namespace sherpa_onnx {
 
 const char *GetGitDate() {
-  static const char *date = "Mon Aug 10 21:00:44 2026";
+  static const char *date = "Tue Aug 18 11:46:23 2026";
   return date;
 }
 
 const char *GetGitSha1() {
-  static const char *sha1 = "17ab05b7";
+  static const char *sha1 = "db6866c7";
   return sha1;
 }
 
 const char *GetVersionStr() {
-  static const char *version = "1.13.5";
+  static const char *version = "1.13.6";
   return version;
 }
 

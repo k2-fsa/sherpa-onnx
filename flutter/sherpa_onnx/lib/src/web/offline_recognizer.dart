@@ -284,21 +284,23 @@ JSObject _buildModelConfig(OfflineModelConfig model) {
 }
 
 List<String> _jsArrayToStringList(JSAny? value) {
-  if (value == null || !value.isA<JSArray>()) return [];
+  if (value == null) return [];
   final arr = value as JSArray;
+  final length = arr.getProperty('length'.toJS)!.dartify()! as int;
   final list = <String>[];
-  for (int i = 0; i < arr.length; i++) {
-    list.add((arr[i] as JSString).toDart);
+  for (int i = 0; i < length; i++) {
+    list.add((arr.getProperty(i.toJS) as JSString).toDart);
   }
   return list;
 }
 
 List<double> _jsArrayToDoubleList(JSAny? value) {
-  if (value == null || !value.isA<JSArray>()) return [];
+  if (value == null) return [];
   final arr = value as JSArray;
+  final length = arr.getProperty('length'.toJS)!.dartify()! as int;
   final list = <double>[];
-  for (int i = 0; i < arr.length; i++) {
-    list.add((arr[i] as JSNumber).toDartDouble);
+  for (int i = 0; i < length; i++) {
+    list.add((arr.getProperty(i.toJS) as JSNumber).toDartDouble);
   }
   return list;
 }

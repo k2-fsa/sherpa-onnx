@@ -4,11 +4,11 @@ set -ex
 
 cd "$(dirname "$0")"
 
-old_version_code=20260707
-new_version_code=20260810
+old_version_code=20260810
+new_version_code=20260818
 
-old_version="1\.13\.4"
-new_version="1\.13\.5"
+old_version="1\.13\.5"
+new_version="1\.13\.6"
 
 replace_str="s/$old_version/$new_version/g"
 
@@ -31,6 +31,11 @@ sed -i.bak "s/  static const char \*date.*/  static const char \*date = \"$date\
 
 find scripts/wheel -name "setup.py" -type f -exec sed -i.bak "$replace_str" {} \;
 sed -i.bak "$replace_str" ./setup.py
+
+find ./ios-swift -name "project.pbxproj" -type f -exec sed -i.bak "$replace_str" {} \;
+find ./ios-swiftui -name "project.pbxproj" -type f -exec sed -i.bak "$replace_str" {} \;
+find ./ios-swiftui -name "README.md" -type f -exec sed -i.bak "$replace_str" {} \;
+find ./spm-examples -name "Package.swift" -type f -exec sed -i.bak "$replace_str" {} \;
 
 sed -i.bak "$replace_str" ./build-ios.sh
 sed -i.bak "$replace_str" ./build-ios-shared.sh
