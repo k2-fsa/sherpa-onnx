@@ -54,6 +54,13 @@ using Int32RowVector = Eigen::Matrix<int32_t, 1, Eigen::Dynamic>;
 
 using Int32Pair = std::pair<int32_t, int32_t>;
 
+// One sample interval holding that embedding's silhouette coefficient.
+struct SilhouetteInterval {
+  int32_t start_sample;
+  int32_t end_sample;
+  float silhouette;
+};
+
 class OfflineSpeakerDiarizationPyannoteImpl
     : public OfflineSpeakerDiarizationImpl {
  public:
@@ -185,8 +192,10 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     Timer clustering_timer(config_.segmentation.debug);
+    std::vector<float> silhouettes;
     std::vector<int32_t> cluster_labels = clustering_->Cluster(
-        &embeddings(0, 0), embeddings.rows(), embeddings.cols());
+        &embeddings(0, 0), embeddings.rows(), embeddings.cols(),
+        config_.clustering.compute_confidence ? &silhouettes : nullptr);
     clustering_timer.Log("OfflineSpeakerDiarization: clustering");
 
     if (cluster_labels.empty()) {
@@ -211,7 +220,17 @@ class OfflineSpeakerDiarizationPyannoteImpl
     Matrix2DInt32 final_labels =
         FinalizeLabels(speaker_count, speakers_per_frame);
 
-    auto result = ComputeResult(final_labels);
+    // For each cluster, we keep the list of sample intervals with their
+    // embedding's silhouette value. When we assign the segments, we calculate
+    // the mean of the intervals's silhouettes that overlap the segment.
+    std::unordered_map<int32_t, std::vector<SilhouetteInterval>>
+        cluster_intervals;
+    if (!silhouettes.empty() && silhouettes.size() == cluster_labels.size()) {
+      cluster_intervals = BuildClusterIntervals(
+          chunk_speaker_samples_list_pair.second, cluster_labels, silhouettes);
+    }
+
+    auto result = ComputeResult(final_labels, cluster_intervals);
 
     if (config_.segmentation.debug) {
       LogTotal(static_cast<float>(total_timer.Elapsed()), n);
@@ -702,7 +721,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
   }
 
   OfflineSpeakerDiarizationResult ComputeResult(
-      const Matrix2DInt32 &final_labels) const {
+      const Matrix2DInt32 &final_labels,
+      const std::unordered_map<int32_t, std::vector<SilhouetteInterval>>
+          &cluster_intervals = {}) const {
     Matrix2DInt32 final_labels_t = final_labels.transpose();
     int32_t num_speakers = final_labels_t.rows();
     int32_t num_frames = final_labels_t.cols();
@@ -756,14 +777,66 @@ class OfflineSpeakerDiarizationPyannoteImpl
       // merge segments if the gap between them is less than min_duration_off
       MergeSegments(&this_speaker);
 
-      for (const auto &seg : this_speaker) {
+      // Add the per-segment confidence (if it was at all computed).
+      auto cluster_it = cluster_intervals.find(speaker_index);
+      bool has_intervals = cluster_it != cluster_intervals.end();
+
+      for (auto &seg : this_speaker) {
         if (seg.Duration() > config_.min_duration_on) {
+          if (has_intervals) {
+            seg.SetConfidence(ComputeSegmentConfidence(cluster_it->second, seg,
+                                                       sample_rate));
+          }
           ans.Add(seg);
         }
       }
     }  // for (int32_t speaker_index = 0; speaker_index != num_speakers;
 
     return ans;
+  }
+
+  // Expand each embedding's (chunk, speaker) pairs into its sample
+  // interval ranges with their respectives silhouette values.
+  static std::unordered_map<int32_t, std::vector<SilhouetteInterval>>
+  BuildClusterIntervals(
+      const std::vector<std::vector<Int32Pair>> &sample_indexes,
+      const std::vector<int32_t> &cluster_labels,
+      const std::vector<float> &silhouettes) {
+    std::unordered_map<int32_t, std::vector<SilhouetteInterval>> flattened;
+    for (size_t i = 0; i < cluster_labels.size(); ++i) {
+      int32_t cluster = cluster_labels[i];
+      float silhouette = silhouettes[i];
+      auto &bucket = flattened[cluster];
+      for (const auto &interval : sample_indexes[i]) {
+        bucket.push_back({interval.first, interval.second, silhouette});
+      }
+    }
+    return flattened;
+  }
+
+  // Returns the mean silhouette of every embedding-interval (in this segment's
+  // cluster) whose sample range overlaps the segment. Returns -2 (outside the
+  // valid [-1, 1] range) as the unavailable sentinel when no interval
+  // overlaps.
+  static float ComputeSegmentConfidence(
+      const std::vector<SilhouetteInterval> &cluster_bucket,
+      const OfflineSpeakerDiarizationSegment &segment, int32_t sample_rate) {
+    int32_t seg_start = static_cast<int32_t>(segment.Start() * sample_rate);
+    int32_t seg_end = static_cast<int32_t>(segment.End() * sample_rate);
+
+    double sum = 0.0;
+    int32_t count = 0;
+    for (const auto &interval : cluster_bucket) {
+      if (interval.end_sample > seg_start && interval.start_sample < seg_end) {
+        sum += interval.silhouette;
+        count += 1;
+      }
+    }
+
+    if (count == 0) {
+      return kUnavailableConfidence;
+    }
+    return static_cast<float>(sum / count);
   }
 
   OfflineSpeakerDiarizationResult HandleOneChunkSpecialCase(

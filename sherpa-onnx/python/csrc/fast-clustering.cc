@@ -33,10 +33,11 @@ Returns:
 static void PybindFastClusteringConfig(py::module *m) {
   using PyClass = FastClusteringConfig;
   py::class_<PyClass>(*m, "FastClusteringConfig")
-      .def(py::init<int32_t, float>(), py::arg("num_clusters") = -1,
-           py::arg("threshold") = 0.5)
+      .def(py::init<int32_t, float, bool>(), py::arg("num_clusters") = -1,
+           py::arg("threshold") = 0.5, py::arg("compute_confidence") = false)
       .def_readwrite("num_clusters", &PyClass::num_clusters)
       .def_readwrite("threshold", &PyClass::threshold)
+      .def_readwrite("compute_confidence", &PyClass::compute_confidence)
       .def("__str__", &PyClass::ToString)
       .def("validate", &PyClass::Validate);
 }

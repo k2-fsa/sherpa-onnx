@@ -1475,6 +1475,7 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
   c.embedding.provider = config.embedding.provider.c_str();
   c.clustering.num_clusters = config.clustering.num_clusters;
   c.clustering.threshold = config.clustering.threshold;
+  c.clustering.compute_confidence = config.clustering.compute_confidence ? 1 : 0;
   c.min_duration_on = config.min_duration_on;
   c.min_duration_off = config.min_duration_off;
 
@@ -1503,27 +1504,38 @@ void OfflineSpeakerDiarization::SetConfig(
   memset(&c, 0, sizeof(c));
   c.clustering.num_clusters = config.clustering.num_clusters;
   c.clustering.threshold = config.clustering.threshold;
+  c.clustering.compute_confidence = config.clustering.compute_confidence ? 1 : 0;
   SherpaOnnxOfflineSpeakerDiarizationSetConfig(p_, &c);
+}
+
+static std::vector<OfflineSpeakerDiarizationSegment> CollectSegments(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  std::vector<OfflineSpeakerDiarizationSegment> ans;
+  if (!r) {
+    return ans;
+  }
+  int32_t num_segments =
+      SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);
+  const SherpaOnnxOfflineSpeakerDiarizationSegment *segments =
+      SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(r);
+  for (int32_t i = 0; i < num_segments; ++i) {
+    OfflineSpeakerDiarizationSegment seg;
+    seg.start = segments[i].start;
+    seg.end = segments[i].end;
+    seg.speaker = segments[i].speaker;
+    seg.confidence = segments[i].confidence;
+    ans.push_back(seg);
+  }
+  SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
+  return ans;
 }
 
 std::vector<OfflineSpeakerDiarizationSegment>
 OfflineSpeakerDiarization::Process(const float *samples, int32_t n) const {
   const SherpaOnnxOfflineSpeakerDiarizationResult *r =
       SherpaOnnxOfflineSpeakerDiarizationProcess(p_, samples, n);
-  std::vector<OfflineSpeakerDiarizationSegment> ans;
+  auto ans = CollectSegments(r);
   if (r) {
-    int32_t num_segments =
-        SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);
-    const SherpaOnnxOfflineSpeakerDiarizationSegment *segments =
-        SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(r);
-    for (int32_t i = 0; i < num_segments; ++i) {
-      OfflineSpeakerDiarizationSegment seg;
-      seg.start = segments[i].start;
-      seg.end = segments[i].end;
-      seg.speaker = segments[i].speaker;
-      ans.push_back(seg);
-    }
-    SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
     SherpaOnnxOfflineSpeakerDiarizationDestroyResult(r);
   }
   return ans;
@@ -1540,20 +1552,8 @@ OfflineSpeakerDiarization::Process(
   const SherpaOnnxOfflineSpeakerDiarizationResult *r =
       SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
           p_, samples, n, DiarizationProgressCallback, &cb);
-  std::vector<OfflineSpeakerDiarizationSegment> ans;
+  auto ans = CollectSegments(r);
   if (r) {
-    int32_t num_segments =
-        SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);
-    const SherpaOnnxOfflineSpeakerDiarizationSegment *segments =
-        SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(r);
-    for (int32_t i = 0; i < num_segments; ++i) {
-      OfflineSpeakerDiarizationSegment seg;
-      seg.start = segments[i].start;
-      seg.end = segments[i].end;
-      seg.speaker = segments[i].speaker;
-      ans.push_back(seg);
-    }
-    SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
     SherpaOnnxOfflineSpeakerDiarizationDestroyResult(r);
   }
   return ans;
