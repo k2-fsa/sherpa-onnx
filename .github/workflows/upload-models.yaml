@@ -1264,6 +1264,32 @@ jobs:
             ls -lh $d.tar.bz2
           done
 
+      - name: Quds v4 Persian
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          git clone https://huggingface.co/hojreh/Quds-v4-sherpa-onnx
+          cd Quds-v4-sherpa-onnx
+          rm -rf .git
+          rm -rf *.int8.onnx
+          rm -rf .gitattributes
+          tar cjfv sherpa-onnx-Quds-v4-fa.tar.bz2 *
+          ls -lh sherpa-onnx-Quds-v4-fa.tar.bz2
+
+      - name: Quds v4 Persian (INT8)
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          git clone https://huggingface.co/hojreh/Quds-v4-sherpa-onnx
+          cd Quds-v4-sherpa-onnx
+          rm -rf .git
+          find . -type f -name "*.onnx" ! -name "*.int8.onnx" -delete
+          rm -rf .gitattributes
+          tar cjfv sherpa-onnx-Quds-v4-fa-int8.tar.bz2 *
+          ls -lh sherpa-onnx-Quds-v4-fa-int8.tar.bz2
+      
       - name: Release
         if: true
         uses: svenstaro/upload-release-action@v2
@@ -1318,6 +1344,8 @@ jobs:
               sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-non-streaming-int8-2026-06-26
               sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-2026-06-26
               sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-int8-2026-06-26
+              sherpa-onnx-Quds-v4-fa
+              sherpa-onnx-Quds-v4-fa-int8
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
