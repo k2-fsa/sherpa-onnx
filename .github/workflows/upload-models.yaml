@@ -1267,7 +1267,7 @@ jobs:
       - name: Quds v4 Persian
         shell: bash
         run: |
-          d=sherpa-onnx-Quds-v4-fa
+          d=sherpa-onnx-Quds-v4-fa-non-commercial-only
           git clone https://huggingface.co/hojreh/Quds-v4-sherpa-onnx "$d"
           pushd "$d"
           rm -rf .git
@@ -1280,7 +1280,7 @@ jobs:
       - name: Quds v4 Persian (INT8)
         shell: bash
         run: |
-          d=sherpa-onnx-Quds-v4-fa-int8
+          d=sherpa-onnx-Quds-v4-fa-int8-non-commercial-only
           git clone https://huggingface.co/hojreh/Quds-v4-sherpa-onnx "$d"
           pushd "$d"
           rm -rf .git
@@ -1344,8 +1344,8 @@ jobs:
               sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-non-streaming-int8-2026-06-26
               sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-2026-06-26
               sherpa-onnx-nemo-ctc-fa-shenava-rizeh-pizeh-v1.0-streaming-int8-2026-06-26
-              sherpa-onnx-Quds-v4-fa
-              sherpa-onnx-Quds-v4-fa-int8
+              sherpa-onnx-Quds-v4-fa-non-commercial-only
+              sherpa-onnx-Quds-v4-fa-int8-non-commercial-only
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
