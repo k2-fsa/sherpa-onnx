@@ -47,6 +47,7 @@ Most users just get this behavior automatically.
 | macOS | x86_64 | `sherpa-onnx-v1.13.6-osx-x64-static-lib.tar.bz2` |
 | macOS | arm64 | `sherpa-onnx-v1.13.6-osx-arm64-static-lib.tar.bz2` |
 | Windows | x86_64 | `sherpa-onnx-v1.13.6-win-x64-static-MT-Release-lib.tar.bz2` |
+| Windows | arm64 | `sherpa-onnx-v1.13.6-win-arm64-static-MT-Release-lib.tar.bz2` |
 
 ### Shared mode
 
@@ -60,6 +61,7 @@ archives instead:
 | macOS | x86_64 | `sherpa-onnx-v1.13.6-osx-x64-shared-lib.tar.bz2` |
 | macOS | arm64 | `sherpa-onnx-v1.13.6-osx-arm64-shared-lib.tar.bz2` |
 | Windows | x86_64 | `sherpa-onnx-v1.13.6-win-x64-shared-MT-Release-lib.tar.bz2` |
+| Windows | arm64 | `sherpa-onnx-v1.13.6-win-arm64-shared-MT-Release-lib.tar.bz2` |
 
 In practice, use the latest release tag instead of the example version above.
 
