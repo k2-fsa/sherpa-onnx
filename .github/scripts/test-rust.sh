@@ -6,10 +6,8 @@ cd rust-api-examples
 
 trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
 
-if [[ "${SHERPA_ONNX_SKIP_COHERE_TRANSCRIBE:-0}" != "1" ]]; then
-  ./run-cohere-transcribe.sh
-  rm -rf sherpa-onnx-cohere-transcribe-*
-fi
+./run-cohere-transcribe.sh
+rm -rf sherpa-onnx-cohere-transcribe-*
 
 ./run-qwen3-asr.sh
 rm -rf sherpa-onnx-qwen3-*

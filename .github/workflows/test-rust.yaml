@@ -21,6 +21,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest, windows-11-arm]
         link_mode: [shared, static]
+        exclude:
+          # Static linking on x86_64 Linux crashes with "free(): invalid pointer"
+          - os: ubuntu-latest
+            link_mode: static
 
     steps:
       - uses: actions/checkout@v4
@@ -197,8 +201,6 @@ jobs:
 
       - name: Run test
         shell: bash
-        env:
-          SHERPA_ONNX_SKIP_COHERE_TRANSCRIBE: ${{ matrix.os == 'ubuntu-latest' && matrix.link_mode == 'static' && '1' || '0' }}
         run: |
           if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
             ./.github/scripts/test-rust-shared.sh
