@@ -30,6 +30,13 @@ jobs:
         with:
           key: ${{ matrix.os }}-rust-${{ matrix.link_mode }}
 
+      - name: Cache installed libs
+        id: cache-libs
+        uses: actions/cache@v4
+        with:
+          path: build/install
+          key: rust-libs-${{ matrix.os }}-${{ matrix.link_mode }}-${{ hashFiles('CMakeLists.txt') }}
+
       - name: Update version
         shell: bash
         run: |
@@ -43,6 +50,7 @@ jobs:
           arch: ${{ matrix.os == 'windows-11-arm' && 'amd64_arm64' || 'x64' }}
 
       - name: Configure sherpa-onnx
+        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -85,6 +93,7 @@ jobs:
           fi
 
       - name: Build sherpa-onnx
+        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -101,23 +110,44 @@ jobs:
           fi
           ls -lh install/lib
 
-          echo "SHERPA_ONNX_LIB_DIR=$PWD/install/lib" >> "$GITHUB_ENV"
+      - name: Set library paths
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/build/install/lib" >> "$GITHUB_ENV"
 
           if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
             if [[ "${{ matrix.os }}" == ubuntu-* ]]; then
-              echo "LD_LIBRARY_PATH=$PWD/install/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "LD_LIBRARY_PATH=$PWD/build/install/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
             elif [[ "${{ matrix.os }}" == macos-* ]]; then
-              echo "DYLD_LIBRARY_PATH=$PWD/install/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "DYLD_LIBRARY_PATH=$PWD/build/install/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
             elif [[ "${{ matrix.os }}" == windows-* ]]; then
               # Copy DLLs next to the test binary so the linker can find them
-              cp -v install/bin/*.dll install/lib/ 2>/dev/null || true
+              cp -v build/install/bin/*.dll build/install/lib/ 2>/dev/null || true
             fi
           fi
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          targets: ${{ matrix.os == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
+          target: ${{ matrix.os == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
+
+      - name: Select MSVC linker
+        if: startsWith(matrix.os, 'windows')
+        shell: pwsh
+        run: |
+          if ("${{ matrix.os }}" -eq "windows-11-arm") {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\ARM64\link.exe'
+            $env_var = "CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER"
+          } else {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+            $env_var = "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
+          }
+          if (-not (Test-Path $linker)) {
+            throw "MSVC linker not found: $linker"
+          }
+          "$env_var=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Using linker: $linker"
+          & where.exe link
 
       - name: Show libs
         shell: bash
