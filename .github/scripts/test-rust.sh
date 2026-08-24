@@ -6,8 +6,7 @@ cd rust-api-examples
 
 trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
 
-./run-cohere-transcribe.sh
-rm -rf sherpa-onnx-cohere-transcribe-*
+./run-version.sh
 
 ./run-qwen3-asr.sh
 rm -rf sherpa-onnx-qwen3-*
@@ -76,8 +75,6 @@ rm -rf sherpa-onnx-whisper-tiny spoken-language-identification-test-wavs
 ./run-offline-punctuation.sh
 rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8
 
-./run-version.sh
-
 ./run-moonshine-v2.sh
 
 ./run-fire-red-asr-ctc.sh
@@ -103,3 +100,6 @@ rm -rf sherpa-onnx-paraformer-zh-small-2024-03-09
 ./run-offline-speech-enhancement-dpdfnet.sh
 ./run-streaming-speech-enhancement-gtcrn.sh
 ./run-streaming-speech-enhancement-dpdfnet.sh
+
+./run-cohere-transcribe.sh
+rm -rf sherpa-onnx-cohere-transcribe-*
