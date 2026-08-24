@@ -110,43 +110,6 @@ jobs:
           fi
           ls -lh install/lib
 
-      - name: Check for duplicate symbols in static libs
-        if: matrix.link_mode == 'static' && !startsWith(matrix.os, 'windows')
-        shell: bash
-        run: |
-          lib_dir="$PWD/build/install/lib"
-          echo "=== Checking for duplicate symbols between piper_phonemize and espeak-ng ==="
-
-          # Get defined (T) symbols from each library
-          nm --defined-only -g "$lib_dir/libpiper_phonemize.a" 2>/dev/null | awk '{print $3}' | sort -u > /tmp/piper_syms.txt
-          nm --defined-only -g "$lib_dir/libespeak-ng.a" 2>/dev/null | awk '{print $3}' | sort -u > /tmp/espeak_syms.txt
-
-          echo "piper_phonemize symbols: $(wc -l < /tmp/piper_syms.txt)"
-          echo "espeak-ng symbols: $(wc -l < /tmp/espeak_syms.txt)"
-
-          dups=$(comm -12 /tmp/piper_syms.txt /tmp/espeak_syms.txt)
-          dup_count=$(echo "$dups" | grep -c . || true)
-          echo "Duplicate symbols: $dup_count"
-          if [[ $dup_count -gt 0 ]]; then
-            echo "First 30 duplicates:"
-            echo "$dups" | head -30
-          fi
-
-          echo ""
-          echo "=== Checking all static libs for duplicate symbols ==="
-          for a in "$lib_dir"/*.a; do
-            for b in "$lib_dir"/*.a; do
-              [[ "$a" < "$b" ]] || continue
-              nm --defined-only -g "$a" 2>/dev/null | awk '{print $3}' | sort -u > /tmp/a_syms.txt
-              nm --defined-only -g "$b" 2>/dev/null | awk '{print $3}' | sort -u > /tmp/b_syms.txt
-              count=$(comm -12 /tmp/a_syms.txt /tmp/b_syms.txt | wc -l)
-              if [[ $count -gt 0 ]]; then
-                echo "$(basename "$a") <-> $(basename "$b"): $count duplicates"
-                comm -12 /tmp/a_syms.txt /tmp/b_syms.txt | head -5
-              fi
-            done
-          done
-
       - name: Set library paths
         shell: bash
         run: |
