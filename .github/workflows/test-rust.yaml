@@ -19,12 +19,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm]
+        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest, windows-11-arm]
         link_mode: [shared, static]
         exclude:
+          # Static linking on x86_64 Linux crashes with "free(): invalid pointer"
           - os: ubuntu-latest
-            link_mode: static
-          - os: ubuntu-22.04-arm
             link_mode: static
 
     steps:
@@ -35,13 +34,27 @@ jobs:
         with:
           key: ${{ matrix.os }}-rust-${{ matrix.link_mode }}
 
+      - name: Cache installed libs
+        id: cache-libs
+        uses: actions/cache@v4
+        with:
+          path: build/install
+          key: rust-libs-${{ matrix.os }}-${{ matrix.link_mode }}-${{ hashFiles('CMakeLists.txt') }}
+
       - name: Update version
         shell: bash
         run: |
           ./new-release.sh
           git diff .
 
+      - name: Set up MSVC
+        if: startsWith(matrix.os, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.os == 'windows-11-arm' && 'amd64_arm64' || 'x64' }}
+
       - name: Configure sherpa-onnx
+        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -57,13 +70,34 @@ jobs:
             build_shared_libs=OFF
           fi
 
-          cmake \
-            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            -D BUILD_SHARED_LIBS=$build_shared_libs \
-            -D CMAKE_INSTALL_PREFIX=./install \
-            ..
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cmake \
+              -A x64 \
+              -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+              -D BUILD_SHARED_LIBS=$build_shared_libs \
+              -D SHERPA_ONNX_USE_STATIC_CRT=ON \
+              -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -D CMAKE_INSTALL_PREFIX=./install \
+              ..
+          elif [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            cmake \
+              -A ARM64 \
+              -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+              -D BUILD_SHARED_LIBS=$build_shared_libs \
+              -D SHERPA_ONNX_USE_STATIC_CRT=ON \
+              -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -D CMAKE_INSTALL_PREFIX=./install \
+              ..
+          else
+            cmake \
+              -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+              -D BUILD_SHARED_LIBS=$build_shared_libs \
+              -D CMAKE_INSTALL_PREFIX=./install \
+              ..
+          fi
 
       - name: Build sherpa-onnx
+        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -71,23 +105,53 @@ jobs:
           cmake --version
 
           cd build
-          make -j2
-          make install
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
+            cmake --build . --config Release -- -m:2
+            cmake --build . --config Release --target install -- -m:2
+          else
+            make -j2
+            make install
+          fi
           ls -lh install/lib
 
-          echo "SHERPA_ONNX_LIB_DIR=$PWD/install/lib" >> "$GITHUB_ENV"
+      - name: Set library paths
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/build/install/lib" >> "$GITHUB_ENV"
 
           if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
             if [[ "${{ matrix.os }}" == ubuntu-* ]]; then
-              echo "LD_LIBRARY_PATH=$PWD/install/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "LD_LIBRARY_PATH=$PWD/build/install/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
             elif [[ "${{ matrix.os }}" == macos-* ]]; then
-              echo "DYLD_LIBRARY_PATH=$PWD/install/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "DYLD_LIBRARY_PATH=$PWD/build/install/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+            elif [[ "${{ matrix.os }}" == windows-* ]]; then
+              # Copy DLLs next to the test binary so the linker can find them
+              cp -v build/install/bin/*.dll build/install/lib/ 2>/dev/null || true
             fi
           fi
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.os == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
+
+      - name: Select MSVC linker
+        if: startsWith(matrix.os, 'windows')
+        shell: pwsh
+        run: |
+          if ("${{ matrix.os }}" -eq "windows-11-arm") {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\ARM64\link.exe'
+            $env_var = "CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER"
+          } else {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+            $env_var = "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
+          }
+          if (-not (Test-Path $linker)) {
+            throw "MSVC linker not found: $linker"
+          }
+          "$env_var=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Using linker: $linker"
+          & where.exe link
 
       - name: Show libs
         shell: bash
