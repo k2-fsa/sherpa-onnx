@@ -244,6 +244,9 @@ fn archive_name(
         (LinkMode::Static, "windows", "x86_64") => {
             format!("sherpa-onnx-v{version}-win-x64-static-MT-Release-lib.tar.bz2")
         }
+        (LinkMode::Static, "windows", "aarch64") => {
+            format!("sherpa-onnx-v{version}-win-arm64-static-MT-Release-lib.tar.bz2")
+        }
         (LinkMode::Shared, "linux", "x86_64") => {
             format!("sherpa-onnx-v{version}-linux-x64-shared-lib.tar.bz2")
         }
@@ -258,6 +261,9 @@ fn archive_name(
         }
         (LinkMode::Shared, "windows", "x86_64") => {
             format!("sherpa-onnx-v{version}-win-x64-shared-MT-Release-lib.tar.bz2")
+        }
+        (LinkMode::Shared, "windows", "aarch64") => {
+            format!("sherpa-onnx-v{version}-win-arm64-shared-MT-Release-lib.tar.bz2")
         }
         // Android: one archive with all ABIs under jniLibs/{abi}/.
         (LinkMode::Shared, "android", "aarch64" | "arm" | "x86" | "x86_64") => {
