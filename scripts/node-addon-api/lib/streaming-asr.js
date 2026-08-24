@@ -94,6 +94,18 @@ class OnlineRecognizer {
   }
 
   /**
+   * Decode multiple streams of this recognizer in parallel.
+   *
+   * The caller must ensure every stream in the array is ready for decoding,
+   * i.e. isReady() returns true for each of them.
+   * @param {OnlineStream[]} streams
+   */
+  decodeStreams(streams) {
+    addon.decodeMultipleOnlineStreams(
+        this.handle, streams.map((stream) => stream.handle));
+  }
+
+  /**
    * Check endpoint condition for a stream.
    * @param {OnlineStream} stream
    * @returns {boolean}
