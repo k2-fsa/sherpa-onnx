@@ -23,6 +23,7 @@ homepage: https://github.com/k2-fsa/sherpa-onnx
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.10.0"
 
 dependencies:
   ffi: ^2.1.0

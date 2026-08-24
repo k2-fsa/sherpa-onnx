@@ -945,9 +945,9 @@ jobs:
           unzip sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
           rm sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
 
-          mv sherpa-onnx.xcframework sherpa_onnx_ios/sherpa-onnx.xcframework
+          mv SherpaOnnxC.xcframework sherpa_onnx_ios/SherpaOnnxC.xcframework
 
-          ls -lh sherpa_onnx_ios/sherpa-onnx.xcframework/
+          ls -lh sherpa_onnx_ios/SherpaOnnxC.xcframework/
 
       - name: Prepare for publish
         shell: bash

@@ -133,7 +133,7 @@ jobs:
         shell: bash
         run: |
           ls -lh build-ios-shared-sherpa-with-static-onnxruntime/
-          cd build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          cd build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework
           du -h -d1 .
           tree .
 
@@ -148,10 +148,10 @@ jobs:
           mkdir -p /tmp/test-xcframework
           cd /tmp/test-xcframework
           unzip -o $GITHUB_WORKSPACE/build-ios-shared-sherpa-with-static-onnxruntime/*.xcframework.zip -d .
-          ls -lh sherpa-onnx.xcframework/
+          ls -lh SherpaOnnxC.xcframework/
 
           # Verify xcframework structure (framework bundle)
-          fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          fw_path=$(find SherpaOnnxC.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
           echo "fw_path: $fw_path"
 
           test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }

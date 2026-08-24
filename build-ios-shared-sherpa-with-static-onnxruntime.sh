@@ -175,7 +175,7 @@ lipo \
   -output \
     ios-arm64_x86_64-simulator/libsherpa-onnx-c-api.dylib
 
-rm -rf sherpa-onnx.xcframework
+rm -rf SherpaOnnxC.xcframework
 
 # Create framework bundles so SPM can resolve the module
 create_framework() {
@@ -238,9 +238,9 @@ create_framework ios-arm64_x86_64-simulator/libsherpa-onnx-c-api.dylib ios-arm64
 xcodebuild -create-xcframework \
   -framework "ios-arm64/SherpaOnnxC.framework" \
   -framework "ios-arm64_x86_64-simulator/SherpaOnnxC.framework" \
-  -output sherpa-onnx.xcframework
+  -output SherpaOnnxC.xcframework
 
-cd sherpa-onnx.xcframework
+cd SherpaOnnxC.xcframework
 echo "PWD: $PWD"
 ls -lh
 echo "---"
@@ -250,7 +250,7 @@ cd ..
 
 SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 rm -f sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
-zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip sherpa-onnx.xcframework
+zip -r -y sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip SherpaOnnxC.xcframework
 
 echo "Checksum:"
 swift package compute-checksum sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip | tee checksum.txt
