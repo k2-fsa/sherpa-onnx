@@ -76,6 +76,7 @@ std::string OnlineRecognizerResult::AsJsonString() const {
   os << "\"context_scores\": " << VecToString(context_scores, 6) << ", ";
   os << "\"segment\": " << segment << ", ";
   os << "\"words\": " << VecToString(words, 0) << ", ";
+  os << "\"num_trailing_blanks\": " << num_trailing_blanks << ", ";
   os << "\"start_time\": " << std::fixed << std::setprecision(2) << start_time
      << ", ";
   os << "\"is_final\": " << (is_final ? "true" : "false") << ", ";
