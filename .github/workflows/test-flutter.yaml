@@ -260,8 +260,8 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa-onnx.xcframework
-          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa-onnx.xcframework/
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework/
 
       - name: Use local sherpa_onnx_ios
         shell: bash
@@ -336,8 +336,8 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa-onnx.xcframework
-          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa-onnx.xcframework/
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework/
 
       - name: Use local sherpa_onnx_ios
         shell: bash
