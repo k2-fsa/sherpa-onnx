@@ -45,13 +45,6 @@ struct OnlineRecognizerResult {
 
   std::vector<int32_t> words;
 
-  /// Number of trailing blank frames the decoder has seen after the last
-  /// non-blank token, measured at the model's output frame rate (i.e., after
-  /// subsampling). It is reset to 0 whenever a non-blank token is emitted.
-  /// It stays 0 for decoders that do not track it (e.g., streaming
-  /// Paraformer).
-  int32_t num_trailing_blanks = 0;
-
   /// ID of this segment
   /// When an endpoint is detected, it is incremented
   int32_t segment = 0;
@@ -67,6 +60,15 @@ struct OnlineRecognizerResult {
   /// used only in ./online-websocket-server-impl.cc
   /// If it is true, it means the server has processed all received samples
   bool is_eof = false;
+
+  /// Number of trailing blank frames the decoder has seen after the last
+  /// non-blank token, measured at the model's output frame rate (i.e., after
+  /// subsampling). It is reset to 0 whenever a non-blank token is emitted.
+  /// It stays 0 for decoders that do not track it (e.g., streaming
+  /// Paraformer).
+  /// Note: appended after the existing members so that positional aggregate
+  /// initialization of this struct keeps working.
+  int32_t num_trailing_blanks = 0;
 
   /** Return a json string.
    *
