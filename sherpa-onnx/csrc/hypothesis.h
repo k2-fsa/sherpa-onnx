@@ -63,6 +63,10 @@ struct Hypothesis {
   // the nn lm states
   std::vector<CopyableOrtValue> nn_lm_states;
 
+  // Decoder (prediction network) states of a stateful NeMo transducer.
+  // Used only by OnlineTransducerModifiedBeamSearchNeMoDecoder.
+  std::vector<CopyableOrtValue> nemo_decoder_states;
+
   // the LODR states
   std::shared_ptr<LodrStateCost> lodr_state;
 
