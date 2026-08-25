@@ -88,11 +88,23 @@ jobs:
         run: |
           cargo install tauri-cli
 
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: tauri-examples/hello_world/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('tauri-examples/hello_world/package-lock.json') }}
+
       - name: Install npm dependencies
         shell: bash
         run: |
           cd tauri-examples/hello_world
           npm install
+
+      - name: Cache Tauri build
+        uses: actions/cache@v4
+        with:
+          path: tauri-examples/hello_world/src-tauri/target
+          key: tauri-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tauri-examples/hello_world/src-tauri/Cargo.lock', 'tauri-examples/hello_world/src-tauri/Cargo.toml') }}
 
       - name: Use local sherpa-onnx crates
         shell: bash
@@ -241,13 +253,13 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          npm run tauri ios init
+          tauri ios init
 
       - name: Build iOS
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          npm run tauri ios build -- --no-sign
+          tauri ios build --no-sign
 
       - name: Show artifacts
         shell: bash
@@ -340,11 +352,23 @@ jobs:
         run: |
           cargo install tauri-cli
 
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: tauri-examples/hello_world/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('tauri-examples/hello_world/package-lock.json') }}
+
       - name: Install npm dependencies
         shell: bash
         run: |
           cd tauri-examples/hello_world
           npm install
+
+      - name: Cache Tauri build
+        uses: actions/cache@v4
+        with:
+          path: tauri-examples/hello_world/src-tauri/target
+          key: tauri-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tauri-examples/hello_world/src-tauri/Cargo.lock', 'tauri-examples/hello_world/src-tauri/Cargo.toml') }}
 
       - name: Use local sherpa-onnx crates
         shell: bash
@@ -365,17 +389,21 @@ jobs:
       - name: Show artifacts
         shell: bash
         run: |
-          ls -lhR tauri-examples/hello_world/src-tauri/target/release/bundle/
+          ls -lhR tauri-examples/hello_world/src-tauri/target/release/bundle/ 2>/dev/null || echo "No bundle directory"
+          ls -lh tauri-examples/hello_world/src-tauri/target/release/hello_world 2>/dev/null || true
 
-      - name: Zip app folder
+      - name: Zip app
         shell: bash
         run: |
-          app_dir=$(find tauri-examples/hello_world/src-tauri/target/release/bundle -maxdepth 1 -type d -name "app" | head -1)
+          app_dir=$(find tauri-examples/hello_world/src-tauri/target/release/bundle -maxdepth 1 -type d -name "app" 2>/dev/null | head -1)
           if [ -n "$app_dir" ]; then
             cd "$app_dir"
             zip -r -y "$GITHUB_WORKSPACE/tauri-hello-world-linux-${{ matrix.arch }}.zip" .
-            ls -lh "$GITHUB_WORKSPACE/tauri-hello-world-linux-${{ matrix.arch }}.zip"
+          else
+            cd tauri-examples/hello_world/src-tauri/target/release/
+            zip -r -y "$GITHUB_WORKSPACE/tauri-hello-world-linux-${{ matrix.arch }}.zip" hello_world
           fi
+          ls -lh "$GITHUB_WORKSPACE/tauri-hello-world-linux-${{ matrix.arch }}.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -511,11 +539,23 @@ jobs:
         run: |
           cargo install tauri-cli
 
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: tauri-examples/hello_world/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('tauri-examples/hello_world/package-lock.json') }}
+
       - name: Install npm dependencies
         shell: bash
         run: |
           cd tauri-examples/hello_world
           npm install
+
+      - name: Cache Tauri build
+        uses: actions/cache@v4
+        with:
+          path: tauri-examples/hello_world/src-tauri/target
+          key: tauri-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tauri-examples/hello_world/src-tauri/Cargo.lock', 'tauri-examples/hello_world/src-tauri/Cargo.toml') }}
 
       - name: Use local sherpa-onnx crates
         shell: bash
@@ -536,17 +576,21 @@ jobs:
       - name: Show artifacts
         shell: bash
         run: |
-          ls -lhR tauri-examples/hello_world/src-tauri/target/release/bundle/
+          ls -lhR tauri-examples/hello_world/src-tauri/target/release/bundle/ 2>/dev/null || echo "No bundle directory"
+          ls -lh tauri-examples/hello_world/src-tauri/target/release/hello_world.exe 2>/dev/null || true
 
-      - name: Zip app folder
+      - name: Zip app
         shell: bash
         run: |
-          app_dir=$(find tauri-examples/hello_world/src-tauri/target/release/bundle -maxdepth 1 -type d -name "app" | head -1)
+          app_dir=$(find tauri-examples/hello_world/src-tauri/target/release/bundle -maxdepth 1 -type d -name "app" 2>/dev/null | head -1)
           if [ -n "$app_dir" ]; then
             cd "$app_dir"
             zip -r -y "$GITHUB_WORKSPACE/tauri-hello-world-win-${{ matrix.arch }}.zip" .
-            ls -lh "$GITHUB_WORKSPACE/tauri-hello-world-win-${{ matrix.arch }}.zip"
+          else
+            cd tauri-examples/hello_world/src-tauri/target/release/
+            zip -r -y "$GITHUB_WORKSPACE/tauri-hello-world-win-${{ matrix.arch }}.zip" hello_world.exe
           fi
+          ls -lh "$GITHUB_WORKSPACE/tauri-hello-world-win-${{ matrix.arch }}.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -675,13 +719,13 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          npm run tauri android init
+          tauri android init
 
       - name: Build Android
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          npm run tauri android build -- --target ${{ matrix.abi }}
+          tauri android build --target ${{ matrix.abi }}
 
       - name: Show artifacts
         shell: bash

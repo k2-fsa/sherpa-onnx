@@ -17,3 +17,8 @@ sherpa-onnx = "1.13.6"
 
 [target.'cfg(target_os = "android")'.dependencies]
 sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
