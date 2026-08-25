@@ -69,6 +69,8 @@
 //!   [sherpa-onnx-v1.13.6-win-x64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-x64-static-MT-Release-lib.tar.bz2)
 //! - Windows arm64:
 //!   [sherpa-onnx-v1.13.6-win-arm64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-arm64-static-MT-Release-lib.tar.bz2)
+//! - iOS arm64:
+//!   [sherpa-onnx-v1.13.6-ios-static.xcframework.zip](https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.6-ios-static.xcframework.zip)
 //!
 //! Optional shared archives:
 //!
@@ -84,6 +86,8 @@
 //!   [sherpa-onnx-v1.13.6-win-x64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-x64-shared-MT-Release-lib.tar.bz2)
 //! - Windows arm64:
 //!   [sherpa-onnx-v1.13.6-win-arm64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-arm64-shared-MT-Release-lib.tar.bz2)
+//! - iOS arm64 (shared, onnxruntime statically linked):
+//!   [sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static.xcframework.zip](https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static.xcframework.zip)
 //!
 //! # How the Rust API is organized
 //!

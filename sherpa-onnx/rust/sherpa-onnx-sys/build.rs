@@ -11,6 +11,8 @@ use bzip2::read::BzDecoder;
 use tar::Archive;
 
 const RELEASE_BASE_URL: &str = "https://github.com/k2-fsa/sherpa-onnx/releases/download";
+const XCFRAMEWORK_RELEASE_URL: &str =
+    "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework";
 const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
     "sherpa-onnx-c-api",
     "sherpa-onnx-core",
@@ -60,7 +62,7 @@ fn try_main() -> Result<(), DynError> {
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
     if link_mode == LinkMode::Shared
-        && matches!(target_os.as_str(), "linux" | "macos" | "android")
+        && matches!(target_os.as_str(), "linux" | "macos" | "android" | "ios")
     {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
         emit_relative_rpath(&target_os);
@@ -73,7 +75,7 @@ fn try_main() -> Result<(), DynError> {
 
     match link_mode {
         LinkMode::Static => emit_static_link_directives(&target_os),
-        LinkMode::Shared => emit_shared_link_directives(),
+        LinkMode::Shared => emit_shared_link_directives(&target_os),
     }
 
     Ok(())
@@ -114,13 +116,28 @@ fn resolve_lib_dir(
     download_prebuilt_libs(link_mode, target_os, target_arch)
 }
 
+/// Return the download URL for a given archive.
+fn download_url(archive_name: &str) -> String {
+    // iOS xcframework archives live under the "xcframework" release tag;
+    // everything else is under the versioned release tag.
+    if archive_name.ends_with(".xcframework.zip") {
+        format!("{XCFRAMEWORK_RELEASE_URL}/{archive_name}")
+    } else {
+        let version = env!("CARGO_PKG_VERSION");
+        format!("{RELEASE_BASE_URL}/v{version}/{archive_name}")
+    }
+}
+
 fn download_prebuilt_libs(
     link_mode: LinkMode,
     target_os: &str,
     target_arch: &str,
 ) -> Result<PathBuf, DynError> {
     let archive_name = archive_name(link_mode, target_os, target_arch)?;
-    let archive_stem = archive_name.trim_end_matches(".tar.bz2");
+    let archive_stem = archive_name
+        .strip_suffix(".tar.bz2")
+        .or_else(|| archive_name.strip_suffix(".xcframework.zip"))
+        .unwrap_or(&archive_name);
 
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let cache_root = target_dir_from_out_dir(&out_dir)?.join("sherpa-onnx-prebuilt");
@@ -135,6 +152,15 @@ fn download_prebuilt_libs(
     let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
     if android_lib_dir.is_dir() {
         return Ok(android_lib_dir);
+    }
+
+    // iOS archives use xcframework bundles. Check for a symlink lib/ dir
+    // created by a previous run.
+    if target_os == "ios" {
+        let ios_lib = extracted_dir.join("lib");
+        if ios_lib.is_dir() {
+            return Ok(ios_lib);
+        }
     }
 
     fs::create_dir_all(&cache_root)?;
@@ -153,8 +179,7 @@ fn download_prebuilt_libs(
 
             copy_file_atomically(&local_archive_path, &archive_path)?;
         } else {
-            let version = env!("CARGO_PKG_VERSION");
-            let url = format!("{RELEASE_BASE_URL}/v{version}/{archive_name}");
+            let url = download_url(&archive_name);
             eprintln!("Downloading sherpa-onnx libs from {url}");
 
             let response = ureq::builder()
@@ -173,10 +198,21 @@ fn download_prebuilt_libs(
     }
 
     let unpack_result: Result<(), DynError> = (|| {
-        let tar_file = File::open(&archive_path)?;
-        let decoder = BzDecoder::new(tar_file);
-        let mut archive = Archive::new(decoder);
-        archive.unpack(&cache_root)?;
+        if archive_name.ends_with(".xcframework.zip") {
+            // iOS archives are plain zip files containing the xcframework.
+            let zip_file = File::open(&archive_path)?;
+            let mut archive = zip::ZipArchive::new(zip_file).map_err(|e| {
+                format!("Failed to open zip archive {}: {e}", archive_path.display())
+            })?;
+            archive
+                .extract(&cache_root)
+                .map_err(|e| format!("Failed to extract zip archive: {e}"))?;
+        } else {
+            let tar_file = File::open(&archive_path)?;
+            let decoder = BzDecoder::new(tar_file);
+            let mut archive = Archive::new(decoder);
+            archive.unpack(&cache_root)?;
+        }
         Ok(())
     })();
     if let Err(err) = unpack_result {
@@ -198,6 +234,17 @@ fn download_prebuilt_libs(
             eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
             return Ok(android_lib_dir);
         }
+
+        // iOS archives contain xcframework bundles. Create a lib/ directory
+        // with symlinks so Rust's linker can find the library under the
+        // expected name (libsherpa-onnx-c-api.a / .dylib).
+        if target_os == "ios" {
+            if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir, link_mode)? {
+                eprintln!("Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
+                return Ok(ios_lib);
+            }
+        }
+
         return Err(format!(
             "Downloaded archive did not contain a lib directory: {}",
             lib_dir.display()
@@ -220,6 +267,81 @@ fn android_abi(target_arch: &str) -> &str {
         "x86_64" => "x86_64",
         _ => "arm64-v8a",
     }
+}
+
+/// Find the SherpaOnnxC binary inside an extracted iOS xcframework archive
+/// and create a `lib/` directory with a symlink named `libsherpa-onnx-c-api.{a,dylib}`
+/// so that Rust's linker can find it under the expected name.
+fn setup_ios_lib_dir(
+    extracted_dir: &Path,
+    link_mode: LinkMode,
+) -> Result<Option<PathBuf>, DynError> {
+    // The iOS archive structure is:
+    //   build-ios/sherpa-onnx.xcframework/ios-arm64/SherpaOnnxC.framework/SherpaOnnxC
+    // or for the shared-onnxruntime-static variant:
+    //   sherpa-onnx.xcframework/ios-arm64/SherpaOnnxC.framework/SherpaOnnxC
+    //   SherpaOnnxC.xcframework/ios-arm64/SherpaOnnxC.framework/SherpaOnnxC
+    let candidates = [
+        extracted_dir
+            .join("build-ios")
+            .join("sherpa-onnx.xcframework"),
+        extracted_dir.join("sherpa-onnx.xcframework"),
+        extracted_dir.join("SherpaOnnxC.xcframework"),
+    ];
+
+    let xcframework = match candidates.iter().find(|p| p.is_dir()) {
+        Some(p) => p,
+        None => return Ok(None),
+    };
+
+    let binary = xcframework
+        .join("ios-arm64")
+        .join("SherpaOnnxC.framework")
+        .join("SherpaOnnxC");
+
+    if !binary.is_file() {
+        return Ok(None);
+    }
+
+    let lib_dir = extracted_dir.join("lib");
+    fs::create_dir_all(&lib_dir)?;
+
+    // For shared mode, we only need the sherpa-onnx-c-api dylib.
+    // For static mode, the iOS xcframework contains a single merged archive
+    // with all symbols. Create symlinks for every library name that
+    // emit_static_link_directives() will ask for, so the linker finds them all.
+    let link_names: Vec<&str> = match link_mode {
+        LinkMode::Shared => vec!["libsherpa-onnx-c-api.dylib"],
+        LinkMode::Static => SHERPA_ONNX_STATIC_LIBS
+            .iter()
+            .map(|lib| {
+                // "sherpa-onnx-c-api" -> "libsherpa-onnx-c-api.a"
+                // We leak a String to get a &'static str. This is fine for a
+                // build script that runs once and exits.
+                let s = format!("lib{lib}.a");
+                Box::leak(s.into_boxed_str()) as &str
+            })
+            .collect(),
+    };
+
+    let abs_binary = fs::canonicalize(&binary)?;
+    for link_name in &link_names {
+        let link_path = lib_dir.join(link_name);
+        if link_path.exists() {
+            continue;
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+            symlink(&abs_binary, &link_path)?;
+        }
+        #[cfg(not(unix))]
+        {
+            fs::copy(&abs_binary, &link_path)?;
+        }
+    }
+
+    Ok(Some(lib_dir))
 }
 
 fn archive_name(
@@ -269,6 +391,13 @@ fn archive_name(
         (LinkMode::Shared, "android", "aarch64" | "arm" | "x86" | "x86_64") => {
             format!("sherpa-onnx-v{version}-android.tar.bz2")
         }
+        // iOS: xcframework archives from the xcframework release tag.
+        (LinkMode::Static, "ios", "aarch64") => {
+            format!("sherpa-onnx-v{version}-ios-static.xcframework.zip")
+        }
+        (LinkMode::Shared, "ios", "aarch64") => {
+            format!("sherpa-onnx-v{version}-ios-shared-onnxruntime-static.xcframework.zip")
+        }
         _ => return Err(format!(
             "Unsupported target for sherpa-onnx prebuilt libs: os={target_os}, arch={target_arch}"
         )
@@ -278,9 +407,13 @@ fn archive_name(
     Ok(name)
 }
 
-fn emit_shared_link_directives() {
+fn emit_shared_link_directives(target_os: &str) {
     println!("cargo:rustc-link-lib=dylib=sherpa-onnx-c-api");
-    println!("cargo:rustc-link-lib=dylib=onnxruntime");
+    // The iOS shared archive bundles onnxruntime statically into the
+    // sherpa-onnx dylib, so no separate onnxruntime dylib is needed.
+    if target_os != "ios" {
+        println!("cargo:rustc-link-lib=dylib=onnxruntime");
+    }
 }
 
 fn emit_static_link_directives(target_os: &str) {
@@ -295,7 +428,7 @@ fn emit_static_link_directives(target_os: &str) {
             println!("cargo:rustc-link-lib=dylib=pthread");
             println!("cargo:rustc-link-lib=dylib=dl");
         }
-        "macos" => {
+        "macos" | "ios" => {
             println!("cargo:rustc-link-lib=dylib=c++");
             println!("cargo:rustc-link-lib=framework=Foundation");
         }
@@ -321,7 +454,7 @@ fn target_dir_from_out_dir(out_dir: &Path) -> Result<PathBuf, DynError> {
 fn emit_relative_rpath(target_os: &str) {
     match target_os {
         "linux" | "android" => println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"),
-        "macos" => println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path"),
+        "macos" | "ios" => println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path"),
         _ => {}
     }
 }
@@ -351,7 +484,7 @@ fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynErro
                 .and_then(OsStr::to_str)
                  .map(|name| match target_os {
                      "linux" | "android" => name.contains(".so"),
-                     "macos" => name.ends_with(".dylib"),
+                     "macos" | "ios" => name.ends_with(".dylib"),
                     _ => false,
                 })
                 .unwrap_or(false)

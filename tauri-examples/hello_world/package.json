@@ -1,0 +1,13 @@
+{
+  "name": "hello_world",
+  "private": true,
+  "version": "1.13.6",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
