@@ -145,6 +145,9 @@ jobs:
             rm -rf tauri-hello-world-macos-${{ matrix.arch }}
             mkdir -p tauri-hello-world-macos-${{ matrix.arch }}
             mv "${app_name}.app" tauri-hello-world-macos-${{ matrix.arch }}/
+            if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+              cp -v $PWD/build/install/lib/*.dylib tauri-hello-world-macos-${{ matrix.arch }}/
+            fi
             zip -r -y "$zip_name" tauri-hello-world-macos-${{ matrix.arch }}/
             ls -lh "$zip_name"
           fi
@@ -400,7 +403,11 @@ jobs:
         run: |
           zip_name="tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
           cd tauri-examples/hello_world/src-tauri/target/release/
-          zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world *.so
+          else
+            zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world
+          fi
           ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
@@ -576,7 +583,11 @@ jobs:
         run: |
           zip_name="tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
           cd tauri-examples/hello_world/src-tauri/target/release/
-          powershell -Command "Compress-Archive -Path hello_world.exe -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            powershell -Command "Compress-Archive -Path hello_world.exe,*.dll -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          else
+            powershell -Command "Compress-Archive -Path hello_world.exe -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          fi
           ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact

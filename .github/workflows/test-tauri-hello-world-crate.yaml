@@ -92,6 +92,9 @@ jobs:
             rm -rf tauri-hello-world-macos-${{ matrix.arch }}
             mkdir -p tauri-hello-world-macos-${{ matrix.arch }}
             mv "${app_name}.app" tauri-hello-world-macos-${{ matrix.arch }}/
+            if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+              cp -v ../../*.dylib tauri-hello-world-macos-${{ matrix.arch }}/ 2>/dev/null || true
+            fi
             zip -r -y "$zip_name" tauri-hello-world-macos-${{ matrix.arch }}/
             ls -lh "$zip_name"
           fi
@@ -123,8 +126,14 @@ jobs:
           tag: tauri
 
   ios:
-    name: iOS
+    name: iOS (${{ matrix.link_mode }})
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - link_mode: static
+          - link_mode: shared
     steps:
       - uses: actions/checkout@v4
 
@@ -144,6 +153,7 @@ jobs:
           npm install
 
       - name: Set sherpa-onnx feature for shared mode
+        if: matrix.link_mode == 'shared'
         shell: bash
         run: |
           cd tauri-examples/hello_world/src-tauri
@@ -172,7 +182,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-crate-ios
+          name: tauri-hello-world-crate-ios-${{ matrix.link_mode }}
           path: tauri-examples/hello_world/src-tauri/target/apple/**/*.ipa
           if-no-files-found: ignore
 
@@ -243,7 +253,11 @@ jobs:
         run: |
           zip_name="tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
           cd tauri-examples/hello_world/src-tauri/target/release/
-          zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world *.so
+          else
+            zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world
+          fi
           ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
@@ -357,7 +371,11 @@ jobs:
         run: |
           zip_name="tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
           cd tauri-examples/hello_world/src-tauri/target/release/
-          powershell -Command "Compress-Archive -Path hello_world.exe -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            powershell -Command "Compress-Archive -Path hello_world.exe,*.dll -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          else
+            powershell -Command "Compress-Archive -Path hello_world.exe -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          fi
           ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
