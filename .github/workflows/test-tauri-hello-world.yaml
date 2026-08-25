@@ -697,12 +697,12 @@ jobs:
       - name: Show artifacts
         shell: bash
         run: |
-          find tauri-examples/hello_world/src-tauri/target -name "*.apk" 2>/dev/null | head -10
+          find tauri-examples/hello_world/src-tauri -name "*.apk" 2>/dev/null | head -10
 
       - name: Rename APK
         shell: bash
         run: |
-          apk=$(find tauri-examples/hello_world/src-tauri/target -name "*.apk" | head -1)
+          apk=$(find tauri-examples/hello_world/src-tauri -name "*.apk" | head -1)
           if [ -n "$apk" ]; then
             cp "$apk" "tauri-hello-world-${{ matrix.abi }}.apk"
             ls -lh "tauri-hello-world-${{ matrix.abi }}.apk"
