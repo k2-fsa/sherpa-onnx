@@ -201,30 +201,37 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
       }
     }
 
-    // Merge candidates that have an identical token sequence at the same
-    // frame. Their decoder states and context states are identical, since
-    // both are deterministic functions of the emitted tokens, so combining
-    // their probabilities with log-sum-exp is exact. Without this, blank-only
-    // paths systematically win over paths that emit tokens in low-confidence
-    // regions (they accumulate fewer probability terms), which causes
-    // deletions on long audio.
+    // Recombine candidates that have an identical token sequence at the
+    // same frame with the same per-frame symbol count, keeping only the
+    // best-scoring alignment (Viterbi-style). Their decoder states and
+    // context states are identical, since both are deterministic functions
+    // of the emitted tokens. Without recombination, the beam fills up with
+    // alignments of one and the same token sequence, and paths that emit
+    // tokens in low-confidence regions get pruned in favor of blank-only
+    // paths, which causes deletions on long audio. Keeping the maximum
+    // instead of summing (marginalizing over emission positions) matches
+    // the offline decoder and greedy search; summing would let a weak but
+    // consistent token accumulate mass across all possible emission
+    // positions and beat silence on noise-only audio.
     {
       std::unordered_map<std::string, size_t> index;
       std::vector<std::pair<double, Candidate>> merged;
       merged.reserve(all_candidates.size());
 
       for (auto &p : all_candidates) {
-        std::string key =
-            p.second.hyp.Key() + "#" + std::to_string(p.second.frame);
+        std::string key = p.second.hyp.Key() + "#" +
+                          std::to_string(p.second.frame) + "#" +
+                          std::to_string(p.second.num_symbols);
         auto it = index.find(key);
         if (it == index.end()) {
           index[key] = merged.size();
           merged.push_back(std::move(p));
-        } else {
-          auto &dst = merged[it->second];
-          dst.second.hyp.log_prob = LogAdd<double>()(dst.second.hyp.log_prob,
-                                                     p.second.hyp.log_prob);
-          dst.first = dst.second.hyp.log_prob;
+          continue;
+        }
+
+        auto &dst = merged[it->second];
+        if (p.second.hyp.log_prob > dst.second.hyp.log_prob) {
+          dst = std::move(p);
         }
       }
 
@@ -255,7 +262,12 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     hyps.Add(std::move(c.hyp));
   }
 
-  Hypothesis best = hyps.GetMostProbable(true /*length_norm*/);
+  // Select the best hypothesis by raw score, matching the offline decoder.
+  // Length normalization must not be used here: a blank-only hypothesis
+  // (valid for silent audio) has an empty token sequence, and dividing
+  // token-emitting paths by their length lets weak tokens beat silence on
+  // noise-only audio.
+  Hypothesis best = hyps.GetMostProbable(false /*length_norm*/);
 
   r.hyps = std::move(hyps);
   r.tokens = std::move(best.ys);
