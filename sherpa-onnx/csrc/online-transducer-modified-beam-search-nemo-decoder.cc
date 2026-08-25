@@ -114,18 +114,24 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         continue;
       }
 
-      int32_t last_token =
-          c.hyp.ys.empty() ? blank_id : static_cast<int32_t>(c.hyp.ys.back());
+      if (!c.hyp.nemo_decoder_out.value) {
+        // Consume the most recently emitted token (or the initial blank) to
+        // obtain the decoder output of this hypothesis. It is cached on the
+        // hypothesis, so blank transitions and later frames reuse it without
+        // running the decoder again; the decoder thus runs only for tokens
+        // whose hypothesis survived pruning.
+        int32_t last_token =
+            c.hyp.ys.empty() ? blank_id
+                             : static_cast<int32_t>(c.hyp.ys.back());
 
-      Ort::Value decoder_input = BuildDecoderInput(last_token, allocator);
+        auto decoder_result =
+            model->RunDecoder(BuildDecoderInput(last_token, allocator),
+                              Convert(std::move(c.hyp.nemo_decoder_states)));
 
-      // Copying CopyableOrtValue clones the underlying tensors, so this
-      // expansion runs on its own copy of the hypothesis' decoder states.
-      auto decoder_result = model->RunDecoder(
-          std::move(decoder_input), Convert(c.hyp.nemo_decoder_states));
-
-      Ort::Value &decoder_out = decoder_result.first;
-      std::vector<Ort::Value> &next_states = decoder_result.second;
+        c.hyp.nemo_decoder_out =
+            CopyableOrtValue(std::move(decoder_result.first));
+        c.hyp.nemo_decoder_states = Convert(std::move(decoder_result.second));
+      }
 
       std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
 
@@ -133,8 +139,8 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
           memory_info, const_cast<float *>(encoder_out) + c.frame * num_cols,
           num_cols, encoder_shape.data(), encoder_shape.size());
 
-      Ort::Value logit =
-          model->RunJoiner(View(&cur_encoder_out), View(&decoder_out));
+      Ort::Value logit = model->RunJoiner(
+          View(&cur_encoder_out), View(&c.hyp.nemo_decoder_out.value));
 
       float *p_logit = logit.GetTensorMutableData<float>();
       if (blank_penalty > 0) {
@@ -144,17 +150,26 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
       LogSoftmax(p_logit, vocab_size);
 
       // Boost hotword continuations before the top-k selection so that they
-      // have a chance to be selected even if their base probability is low
+      // have a chance to be selected even if their base probability is low.
+      // The boost is used for ranking only: the original values are restored
+      // right after, so path scores and ys_probs stay purely acoustic and
+      // the context-graph score is added exactly once via ForwardOneStep().
+      std::vector<std::pair<int32_t, float>> boosted;
       if (context_graph != nullptr && c.hyp.context_state != nullptr) {
         for (const auto &pair : c.hyp.context_state->next) {
           int32_t token_id = pair.first;
           if (token_id >= 0 && token_id < vocab_size) {
+            boosted.emplace_back(token_id, p_logit[token_id]);
             p_logit[token_id] += hotwords_score;
           }
         }
       }
 
       auto top_k = TopkIndex(p_logit, vocab_size, max_active_paths);
+
+      for (const auto &b : boosted) {
+        p_logit[b.first] = b.second;
+      }
 
       for (int32_t token : top_k) {
         Candidate nc;
@@ -167,8 +182,9 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         nc.hyp.log_prob = c.hyp.log_prob + p_logit[token];
 
         if (token == blank_id) {
-          // Keep the decoder states, advance the frame
+          // Keep the decoder output and states, advance the frame
           nc.hyp.nemo_decoder_states = c.hyp.nemo_decoder_states;
+          nc.hyp.nemo_decoder_out = c.hyp.nemo_decoder_out;
           nc.frame = c.frame + 1;
           nc.num_symbols = 0;
           nc.hyp.num_trailing_blanks += 1;
@@ -178,10 +194,10 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
           nc.hyp.ys_probs.push_back(p_logit[token]);
           nc.hyp.num_trailing_blanks = 0;
 
-          nc.hyp.nemo_decoder_states.reserve(next_states.size());
-          for (auto &state : next_states) {
-            nc.hyp.nemo_decoder_states.emplace_back(Clone(allocator, &state));
-          }
+          // The states stay one token behind; the new token is consumed
+          // lazily at this candidate's next expansion (nemo_decoder_out is
+          // left unset), and only if the candidate survives pruning.
+          nc.hyp.nemo_decoder_states = c.hyp.nemo_decoder_states;
 
           // Stay on the same frame to allow emitting more tokens
           nc.frame = c.frame;
