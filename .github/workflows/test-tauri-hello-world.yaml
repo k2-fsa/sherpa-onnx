@@ -709,7 +709,7 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          cargo-tauri android build --target ${{ matrix.tauri_target }} --apk
+          cargo-tauri android build --target ${{ matrix.tauri_target }} --apk --debug
 
       - name: Show artifacts
         shell: bash
@@ -724,13 +724,6 @@ jobs:
             cp "$apk" "tauri-hello-world-${{ matrix.abi }}.apk"
             ls -lh "tauri-hello-world-${{ matrix.abi }}.apk"
           fi
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tauri-hello-world-android-${{ matrix.abi }}
-          path: tauri-hello-world-${{ matrix.abi }}.apk
-          if-no-files-found: ignore
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'

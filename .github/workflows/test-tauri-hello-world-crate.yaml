@@ -444,7 +444,7 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          cargo-tauri android build --target ${{ matrix.tauri_target }} --apk
+          cargo-tauri android build --target ${{ matrix.tauri_target }} --apk --debug
 
       - name: Show artifacts
         shell: bash
