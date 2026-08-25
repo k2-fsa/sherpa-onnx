@@ -101,8 +101,13 @@ class OnlineRecognizer {
    * @param {OnlineStream[]} streams
    */
   decodeStreams(streams) {
-    addon.decodeMultipleOnlineStreams(
-        this.handle, streams.map((stream) => stream.handle));
+    const handles = streams.map((stream) => {
+      if (!(stream instanceof OnlineStream)) {
+        throw new TypeError('Every element should be an OnlineStream');
+      }
+      return stream.handle;
+    });
+    addon.decodeMultipleOnlineStreams(this.handle, handles);
   }
 
   /**
