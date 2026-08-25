@@ -402,12 +402,15 @@ jobs:
         shell: bash
         run: |
           zip_name="tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
+          dir_name="tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}"
           cd tauri-examples/hello_world/src-tauri/target/release/
+          rm -rf "$dir_name"
+          mkdir -p "$dir_name"
+          cp hello_world "$dir_name/"
           if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
-            zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world *.so
-          else
-            zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world
+            cp *.so "$dir_name/"
           fi
+          zip -r -y "$GITHUB_WORKSPACE/$zip_name" "$dir_name"
           ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
@@ -582,12 +585,15 @@ jobs:
         shell: bash
         run: |
           zip_name="tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
+          dir_name="tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}"
           cd tauri-examples/hello_world/src-tauri/target/release/
+          rm -rf "$dir_name"
+          mkdir -p "$dir_name"
+          cp hello_world.exe "$dir_name/"
           if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
-            powershell -Command "Compress-Archive -Path hello_world.exe,*.dll -DestinationPath $GITHUB_WORKSPACE/$zip_name"
-          else
-            powershell -Command "Compress-Archive -Path hello_world.exe -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+            cp *.dll "$dir_name/"
           fi
+          powershell -Command "Compress-Archive -Path $dir_name -DestinationPath $GITHUB_WORKSPACE/$zip_name"
           ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
