@@ -176,8 +176,14 @@ jobs:
           tag: tauri
 
   ios:
-    name: iOS
+    name: iOS (${{ matrix.link_mode }})
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - link_mode: static
+          - link_mode: shared
     steps:
       - uses: actions/checkout@v4
         with:
@@ -192,28 +198,28 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ios-tauri
+          key: ios-tauri-${{ matrix.link_mode }}
 
       - name: Build iOS xcframework from source
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+          else
+            ./build-ios.sh
+          fi
 
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
-          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework/
-
-      - name: Set sherpa-onnx feature for shared mode
-        shell: bash
-        run: |
-          cd tauri-examples/hello_world/src-tauri
-          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
-          rm -f Cargo.toml.bak
-          cat Cargo.toml
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
+          else
+            cp -av build-ios/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa-onnx.xcframework
+          fi
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -240,6 +246,15 @@ jobs:
           sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
           EOF
 
+      - name: Set sherpa-onnx feature for shared mode
+        if: matrix.link_mode == 'shared'
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
+          rm -f Cargo.toml.bak
+          cat Cargo.toml
+
       - name: Init iOS
         shell: bash
         run: |
@@ -261,7 +276,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-ios
+          name: tauri-hello-world-ios-${{ matrix.link_mode }}
           path: tauri-examples/hello_world/src-tauri/target/apple/**/*.ipa
           if-no-files-found: ignore
 
