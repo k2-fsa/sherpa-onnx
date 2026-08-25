@@ -79,7 +79,7 @@ jobs:
         id: cache-tauri
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/tauri
+          path: ~/.cargo/bin/cargo-tauri
           key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install Tauri CLI
@@ -224,7 +224,7 @@ jobs:
         id: cache-tauri
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/tauri
+          path: ~/.cargo/bin/cargo-tauri
           key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install Tauri CLI
@@ -253,13 +253,13 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          tauri ios init
+          cargo-tauri ios init
 
       - name: Build iOS
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          tauri ios build --no-sign
+          cargo-tauri ios build --no-sign
 
       - name: Show artifacts
         shell: bash
@@ -343,7 +343,7 @@ jobs:
         id: cache-tauri
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/tauri
+          path: ~/.cargo/bin/cargo-tauri
           key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install Tauri CLI
@@ -530,7 +530,7 @@ jobs:
         id: cache-tauri
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/tauri
+          path: ~/.cargo/bin/cargo-tauri
           key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install Tauri CLI
@@ -690,7 +690,7 @@ jobs:
         id: cache-tauri
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/tauri
+          path: ~/.cargo/bin/cargo-tauri
           key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install Tauri CLI
@@ -719,13 +719,13 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          tauri android init
+          cargo-tauri android init
 
       - name: Build Android
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          tauri android build --target ${{ matrix.abi }}
+          cargo-tauri android build --target ${{ matrix.abi }}
 
       - name: Show artifacts
         shell: bash

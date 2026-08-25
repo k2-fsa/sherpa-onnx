@@ -44,7 +44,7 @@ jobs:
         id: cache-tauri
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/tauri
+          path: ~/.cargo/bin/cargo-tauri
           key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install Tauri CLI
