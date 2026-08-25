@@ -48,7 +48,6 @@ Most users just get this behavior automatically.
 | macOS | arm64 | [`sherpa-onnx-v1.13.6-osx-arm64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-osx-arm64-static-lib.tar.bz2) |
 | Windows | x86_64 | [`sherpa-onnx-v1.13.6-win-x64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-x64-static-MT-Release-lib.tar.bz2) |
 | Windows | arm64 | [`sherpa-onnx-v1.13.6-win-arm64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-arm64-static-MT-Release-lib.tar.bz2) |
-| iOS | arm64 | [`sherpa-onnx-v1.13.6-ios-static.xcframework.zip`](https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.6-ios-static.xcframework.zip) |
 
 ### Shared mode
 
@@ -64,6 +63,7 @@ archives instead:
 | Windows | x86_64 | [`sherpa-onnx-v1.13.6-win-x64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-x64-shared-MT-Release-lib.tar.bz2) |
 | Windows | arm64 | [`sherpa-onnx-v1.13.6-win-arm64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-win-arm64-shared-MT-Release-lib.tar.bz2) |
 | iOS | arm64 | [`sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static.xcframework.zip`](https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static.xcframework.zip) |
+| Android | all ABIs | [`sherpa-onnx-v1.13.6-android.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-v1.13.6-android.tar.bz2) |
 
 In practice, use the latest release tag instead of the example version above.
 
@@ -129,7 +129,8 @@ from your directory instead of an auto-downloaded archive.
 ## Cross-compiling for iOS
 
 iOS support targets real devices (`aarch64-apple-ios`). Simulator targets are
-not supported.
+not supported. iOS only supports **shared** linking (the build script
+auto-selects shared mode for iOS, like Android).
 
 ### Prerequisites
 
@@ -152,43 +153,26 @@ npm run tauri ios build
 The build script automatically downloads the iOS xcframework archive and creates
 symlinks so the linker finds the libraries under the expected names.
 
-### Build a static library for iOS
+### Build for iOS
 
 ```bash
 cargo build --target aarch64-apple-ios --release
 ```
 
-This downloads the `sherpa-onnx-v{VERSION}-ios-static.xcframework.zip` archive
-from the
-[xcframework release tag](https://github.com/k2-fsa/sherpa-onnx/releases/tag/xcframework),
-extracts the xcframework, and creates symlinks (`libsherpa-onnx-c-api.a`,
-`libsherpa-onnx-core.a`, etc.) pointing to the merged static archive inside
-`SherpaOnnxC.framework/SherpaOnnxC`.
-
-### Build a shared library for iOS
-
-```bash
-cargo build --target aarch64-apple-ios --release --no-default-features --features shared
-```
-
 This downloads the
-`sherpa-onnx-v{VERSION}-ios-shared-onnxruntime-static.xcframework.zip` archive.
+`sherpa-onnx-v{VERSION}-ios-shared-onnxruntime-static.xcframework.zip` archive
+from the
+[xcframework release tag](https://github.com/k2-fsa/sherpa-onnx/releases/tag/xcframework).
 The shared dylib has onnxruntime statically linked in, so no separate onnxruntime
 framework is needed.
 
 ### Use your own iOS xcframework
 
 If you already have an iOS xcframework, set `SHERPA_ONNX_LIB_DIR` to a directory
-containing the library files:
+containing `libsherpa-onnx-c-api.dylib`:
 
 ```bash
-# For static linking, the directory should contain libsherpa-onnx-c-api.a
-# (or the merged SherpaOnnxC binary with symlinks)
-export SHERPA_ONNX_LIB_DIR=/path/to/ios-lib-dir
-
-# For shared linking, the directory should contain libsherpa-onnx-c-api.dylib
 export SHERPA_ONNX_LIB_DIR=/path/to/ios-dylib-dir
-
 cargo build --target aarch64-apple-ios --release
 ```
 
@@ -198,46 +182,36 @@ downloading:
 
 ```bash
 export SHERPA_ONNX_ARCHIVE_DIR=/path/to/archives
-# The build script looks for sherpa-onnx-v{VERSION}-ios-static.xcframework.zip
+# The build script looks for sherpa-onnx-v{VERSION}-ios-shared-onnxruntime-static.xcframework.zip
 # in this directory.
 ```
 
 ### iOS archive structure
 
-The iOS xcframework archives are published on the
+The iOS xcframework archive is published on the
 [xcframework release tag](https://github.com/k2-fsa/sherpa-onnx/releases/tag/xcframework)
-(not the versioned release tag). The archives are `.xcframework.zip` files:
+(not the versioned release tag):
 
-| Mode | Archive |
-|------|---------|
-| Static | `sherpa-onnx-v{VERSION}-ios-static.xcframework.zip` |
-| Shared | `sherpa-onnx-v{VERSION}-ios-shared-onnxruntime-static.xcframework.zip` |
+`sherpa-onnx-v{VERSION}-ios-shared-onnxruntime-static.xcframework.zip`
 
 After extraction, the xcframework contains:
 
 ```
-<XcframeworkName>.xcframework/
+SherpaOnnxC.xcframework/
   ios-arm64/
-    <FrameworkName>.framework/
-      <BinaryName>          # static archive or shared dylib
+    SherpaOnnxC.framework/
+      SherpaOnnxC          # shared dylib with onnxruntime statically linked
       Headers/
       Modules/
       Info.plist
   ios-arm64_x86_64-simulator/
-    <FrameworkName>.framework/
+    SherpaOnnxC.framework/
       ...
 ```
 
-The xcframework and framework names vary by archive:
-
-| Archive | XCFramework dir | Framework dir | Binary |
-|---------|----------------|---------------|--------|
-| `ios-static` | `sherpa-onnx.xcframework` | `SherpaOnnxC.framework` | `SherpaOnnxC` |
-| `ios-shared-onnxruntime-static` | `SherpaOnnxC.xcframework` | `SherpaOnnxC.framework` | `SherpaOnnxC` |
-
-The build script finds the binary inside `ios-arm64/<FrameworkName>.framework/<BinaryName>` and
-creates symlinks in a `lib/` directory so the Rust linker finds the libraries
-under the expected names.
+The build script finds `ios-arm64/SherpaOnnxC.framework/SherpaOnnxC` and
+creates a symlink `libsherpa-onnx-c-api.dylib` in a `lib/` directory so the
+Rust linker finds the library under the expected name.
 
 ## Cross-compiling for Android
 

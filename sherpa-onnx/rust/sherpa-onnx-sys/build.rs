@@ -91,8 +91,8 @@ fn resolve_link_mode(target_os: &str) -> Result<LinkMode, DynError> {
 
     if shared_enabled {
         Ok(LinkMode::Shared)
-    } else if target_os == "android" {
-        // Android only supports shared linking.
+    } else if target_os == "android" || target_os == "ios" {
+        // Android and iOS only support shared linking.
         Ok(LinkMode::Shared)
     } else {
         Ok(LinkMode::Static)
@@ -396,10 +396,9 @@ fn archive_name(
         (LinkMode::Shared, "android", "aarch64" | "arm" | "x86" | "x86_64") => {
             format!("sherpa-onnx-v{version}-android.tar.bz2")
         }
-        // iOS: xcframework archives from the xcframework release tag.
-        (LinkMode::Static, "ios", "aarch64") => {
-            format!("sherpa-onnx-v{version}-ios-static.xcframework.zip")
-        }
+        // iOS: shared xcframework from the xcframework release tag.
+        // iOS only supports shared linking (onnxruntime statically linked
+        // into the sherpa-onnx dylib).
         (LinkMode::Shared, "ios", "aarch64") => {
             format!("sherpa-onnx-v{version}-ios-shared-onnxruntime-static.xcframework.zip")
         }
