@@ -200,12 +200,14 @@ fn download_prebuilt_libs(
     let unpack_result: Result<(), DynError> = (|| {
         if archive_name.ends_with(".xcframework.zip") {
             // iOS archives are plain zip files containing the xcframework.
+            // Extract to extracted_dir so the xcframework ends up at
+            // extracted_dir/<XcframeworkName>.xcframework/.
             let zip_file = File::open(&archive_path)?;
             let mut archive = zip::ZipArchive::new(zip_file).map_err(|e| {
                 format!("Failed to open zip archive {}: {e}", archive_path.display())
             })?;
             archive
-                .extract(&cache_root)
+                .extract(&extracted_dir)
                 .map_err(|e| format!("Failed to extract zip archive: {e}"))?;
         } else {
             let tar_file = File::open(&archive_path)?;
