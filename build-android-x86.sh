@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
 set -ex
 
-if [ x$BUILD_SHARED_LIBS == xOFF ]; then
-  echo "BUILD_SHARED_LIBS=OFF is ignored for Android x86."
-  echo "Always link with libonnxruntime.so"
-  sleep 2
+# If BUILD_SHARED_LIBS is ON, we use libonnxruntime.so
+# If BUILD_SHARED_LIBS is OFF, we use libonnxruntime.a
+#
+# In any case, we will have libsherpa-onnx-jni.so
+#
+# If BUILD_SHARED_LIBS is OFF, then libonnxruntime.a is linked into libsherpa-onnx-jni.so
+# and you only need to copy libsherpa-onnx-jni.so to your Android projects.
+#
+# If BUILD_SHARED_LIBS is ON, then you need to copy both libsherpa-onnx-jni.so
+# and libonnxruntime.so to your Android projects.
+#
+if [ -z $BUILD_SHARED_LIBS ]; then
+  BUILD_SHARED_LIBS=ON
 fi
 
-dir=$PWD/build-android-x86
+if [ $BUILD_SHARED_LIBS == ON ]; then
+  dir=$PWD/build-android-x86
+else
+  dir=$PWD/build-android-x86-static
+fi
 
 if [ -n "${SHERPA_ONNXRUNTIME_LIB_DIR:-}" ] && [ -n "${SHERPA_ONNXRUNTIME_INCLUDE_DIR:-}" ]; then
   if [ ! -d "$SHERPA_ONNXRUNTIME_LIB_DIR" ]; then
@@ -127,7 +140,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DBUILD_ESPEAK_NG_EXE=OFF \
     -DBUILD_ESPEAK_NG_TESTS=OFF \
     -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=ON \
+    -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
     -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -142,22 +155,9 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
-cp -fv "$SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime.so" install/lib
-rm -rf install/lib/pkgconfig
 
-if [ -f install/lib/libsherpa-onnx-c-api.so ]; then
-  cat >install/lib/README.md <<EOF
-# Introduction
-
-Note that if you use Android Studio, then you only need to
-copy libonnxruntime.so and libsherpa-onnx-jni.so
-to your jniLibs, and you don't need libsherpa-onnx-c-api.so or
-libsherpa-onnx-cxx-api.so.
-
-libsherpa-onnx-c-api.so and libsherpa-onnx-cxx-api.so are for users
-who don't use JNI. In that case, libsherpa-onnx-jni.so is not needed.
-
-In any case, libonnxruntime.so is always needed.
-EOF
-  ls -lh install/lib/README.md
+if [ $BUILD_SHARED_LIBS == ON ]; then
+  cp -fv "$SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime.so" install/lib
 fi
+
+rm -rf install/lib/pkgconfig

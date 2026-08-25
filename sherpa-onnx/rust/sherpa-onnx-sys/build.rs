@@ -56,7 +56,7 @@ fn try_main() -> Result<(), DynError> {
 
     let target_os = env::var("CARGO_CFG_TARGET_OS")?;
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
-    let link_mode = resolve_link_mode()?;
+    let link_mode = resolve_link_mode(&target_os)?;
     let lib_dir = resolve_lib_dir(link_mode, &target_os, &target_arch)?;
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
@@ -81,7 +81,7 @@ fn try_main() -> Result<(), DynError> {
     Ok(())
 }
 
-fn resolve_link_mode() -> Result<LinkMode, DynError> {
+fn resolve_link_mode(target_os: &str) -> Result<LinkMode, DynError> {
     let static_enabled = env::var_os("CARGO_FEATURE_STATIC").is_some();
     let shared_enabled = env::var_os("CARGO_FEATURE_SHARED").is_some();
 
@@ -90,6 +90,9 @@ fn resolve_link_mode() -> Result<LinkMode, DynError> {
     }
 
     if shared_enabled {
+        Ok(LinkMode::Shared)
+    } else if target_os == "android" {
+        // Android only supports shared linking.
         Ok(LinkMode::Shared)
     } else {
         Ok(LinkMode::Static)
