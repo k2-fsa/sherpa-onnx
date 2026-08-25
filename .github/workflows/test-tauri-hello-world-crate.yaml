@@ -125,14 +125,8 @@ jobs:
           tag: tauri
 
   ios:
-    name: iOS (${{ matrix.link_mode }})
+    name: iOS
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - link_mode: static
-          - link_mode: shared
     steps:
       - uses: actions/checkout@v4
 
@@ -150,15 +144,6 @@ jobs:
         run: |
           cd tauri-examples/hello_world
           npm install
-
-      - name: Set sherpa-onnx feature for shared mode
-        if: matrix.link_mode == 'shared'
-        shell: bash
-        run: |
-          cd tauri-examples/hello_world/src-tauri
-          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
-          rm -f Cargo.toml.bak
-          cat Cargo.toml
 
       - name: Init iOS
         shell: bash
@@ -181,7 +166,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-crate-ios-${{ matrix.link_mode }}
+          name: tauri-hello-world-crate-ios
           path: tauri-examples/hello_world/src-tauri/target/apple/**/*.ipa
           if-no-files-found: ignore
 

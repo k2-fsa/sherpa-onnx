@@ -146,7 +146,7 @@ jobs:
             mkdir -p tauri-hello-world-macos-${{ matrix.arch }}
             mv "${app_name}.app" tauri-hello-world-macos-${{ matrix.arch }}/
             if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
-              cp -v $PWD/build/install/lib/*.dylib tauri-hello-world-macos-${{ matrix.arch }}/
+              cp -v $GITHUB_WORKSPACE/build/install/lib/*.dylib tauri-hello-world-macos-${{ matrix.arch }}/
             fi
             zip -r -y "$zip_name" tauri-hello-world-macos-${{ matrix.arch }}/
             ls -lh "$zip_name"
@@ -179,14 +179,8 @@ jobs:
           tag: tauri
 
   ios:
-    name: iOS (${{ matrix.link_mode }})
+    name: iOS
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - link_mode: static
-          - link_mode: shared
     steps:
       - uses: actions/checkout@v4
         with:
@@ -201,28 +195,20 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ios-tauri-${{ matrix.link_mode }}
+          key: ios-tauri
 
       - name: Build iOS xcframework from source
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
-            ./build-ios-shared-sherpa-with-static-onnxruntime.sh
-          else
-            ./build-ios.sh
-          fi
+          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
 
       - name: Copy xcframework
         shell: bash
         run: |
-          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
-            cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
-          else
-            cp -av build-ios/sherpa-onnx.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/sherpa-onnx.xcframework
-          fi
-          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
+          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework/
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -250,7 +236,6 @@ jobs:
           EOF
 
       - name: Set sherpa-onnx feature for shared mode
-        if: matrix.link_mode == 'shared'
         shell: bash
         run: |
           cd tauri-examples/hello_world/src-tauri
@@ -279,7 +264,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-ios-${{ matrix.link_mode }}
+          name: tauri-hello-world-ios
           path: tauri-examples/hello_world/src-tauri/target/apple/**/*.ipa
           if-no-files-found: ignore
 
