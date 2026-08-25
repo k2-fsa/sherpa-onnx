@@ -43,6 +43,20 @@ npm install
 npm run dev
 ```
 
+## Running a downloaded app on macOS
+
+If you download the `.zip` from GitHub Releases and see:
+
+> "hello_world" is damaged and can't be opened. You should move it to the Trash.
+
+This is macOS Gatekeeper blocking an unsigned app. Fix it with:
+
+```bash
+xattr -cr hello_world.app
+```
+
+Then double-click `hello_world.app` to run it.
+
 ## Build for specific platforms
 
 ### Desktop (Linux, macOS, Windows)
