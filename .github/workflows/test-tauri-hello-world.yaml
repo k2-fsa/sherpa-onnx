@@ -26,7 +26,7 @@ jobs:
           - arch: arm64
             os: macos-latest
           - arch: x64
-            os: macos-13
+            os: macos-15-intel
     steps:
       - uses: actions/checkout@v4
         with:
@@ -75,7 +75,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -92,8 +100,8 @@ jobs:
           mkdir -p tauri-examples/hello_world/src-tauri/.cargo
           cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
           [patch.crates-io]
-          sherpa-onnx = { path = "../../sherpa-onnx/rust/sherpa-onnx" }
-          sherpa-onnx-sys = { path = "../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
           EOF
 
       - name: Build
@@ -183,6 +191,7 @@ jobs:
           key: rust-libs-ios-shared-${{ hashFiles('CMakeLists.txt') }}
 
       - name: Build iOS xcframework from source
+        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -199,7 +208,15 @@ jobs:
         with:
           targets: aarch64-apple-ios
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -216,8 +233,8 @@ jobs:
           mkdir -p tauri-examples/hello_world/src-tauri/.cargo
           cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
           [patch.crates-io]
-          sherpa-onnx = { path = "../../sherpa-onnx/rust/sherpa-onnx" }
-          sherpa-onnx-sys = { path = "../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
           EOF
 
       - name: Init iOS
@@ -310,7 +327,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -327,8 +352,8 @@ jobs:
           mkdir -p tauri-examples/hello_world/src-tauri/.cargo
           cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
           [patch.crates-io]
-          sherpa-onnx = { path = "../../sherpa-onnx/rust/sherpa-onnx" }
-          sherpa-onnx-sys = { path = "../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
           EOF
 
       - name: Build
@@ -473,7 +498,15 @@ jobs:
           Write-Host "Using linker: $linker"
           & where.exe link
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -490,8 +523,8 @@ jobs:
           mkdir -p tauri-examples/hello_world/src-tauri/.cargo
           cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
           [patch.crates-io]
-          sherpa-onnx = { path = "../../sherpa-onnx/rust/sherpa-onnx" }
-          sherpa-onnx-sys = { path = "../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
           EOF
 
       - name: Build
@@ -550,10 +583,16 @@ jobs:
         include:
           - abi: arm64-v8a
             rust_target: aarch64-linux-android
+            build_script: build-android-arm64-v8a.sh
+            build_dir: build-android-arm64-v8a
           - abi: armeabi-v7a
             rust_target: armv7-linux-androideabi
+            build_script: build-android-armv7-eabi.sh
+            build_dir: build-android-armv7-eabi
           - abi: x86_64
             rust_target: x86_64-linux-android
+            build_script: build-android-x86-64.sh
+            build_dir: build-android-x86-64
     steps:
       - uses: actions/checkout@v4
         with:
@@ -565,6 +604,18 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-${{ matrix.abi }}-tauri
+
+      - name: Cache installed libs
+        id: cache-libs
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.build_dir }}/install
+          key: rust-libs-android-${{ matrix.abi }}-shared-${{ hashFiles('CMakeLists.txt') }}
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.rust_target }}
@@ -575,7 +626,31 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Build ${{ matrix.abi }} from source
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export SHERPA_ONNX_ENABLE_C_API=ON
+          export SHERPA_ONNX_ENABLE_JNI=OFF
+          export SHERPA_ONNX_ENABLE_BINARY=OFF
+          ./${{ matrix.build_script }}
+
+      - name: Set library paths
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/${{ matrix.build_dir }}/install/lib" >> "$GITHUB_ENV"
+
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -592,8 +667,8 @@ jobs:
           mkdir -p tauri-examples/hello_world/src-tauri/.cargo
           cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
           [patch.crates-io]
-          sherpa-onnx = { path = "../../sherpa-onnx/rust/sherpa-onnx" }
-          sherpa-onnx-sys = { path = "../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
           EOF
 
       - name: Init Android

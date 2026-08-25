@@ -31,7 +31,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -112,7 +120,15 @@ jobs:
         with:
           targets: aarch64-apple-ios
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -164,7 +180,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -268,7 +292,15 @@ jobs:
           Write-Host "Using linker: $linker"
           & where.exe link
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli
@@ -352,7 +384,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri
+          key: tauri-cli-${{ runner.os }}-${{ runner.arch }}
+
       - name: Install Tauri CLI
+        if: steps.cache-tauri.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cargo install tauri-cli

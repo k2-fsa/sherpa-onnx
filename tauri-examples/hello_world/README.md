@@ -25,8 +25,8 @@ cd tauri-examples/hello_world
 mkdir -p src-tauri/.cargo
 cat > src-tauri/.cargo/config.toml <<'EOF'
 [patch.crates-io]
-sherpa-onnx = { path = "../../sherpa-onnx/rust/sherpa-onnx" }
-sherpa-onnx-sys = { path = "../../sherpa-onnx/rust/sherpa-onnx-sys" }
+sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
 EOF
 
 npm install
