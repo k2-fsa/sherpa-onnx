@@ -357,7 +357,7 @@ jobs:
         run: |
           zip_name="tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
           cd tauri-examples/hello_world/src-tauri/target/release/
-          zip -r -y "$GITHUB_WORKSPACE/$zip_name" hello_world.exe
+          powershell -Command "Compress-Archive -Path hello_world.exe -DestinationPath $GITHUB_WORKSPACE/$zip_name"
           ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
