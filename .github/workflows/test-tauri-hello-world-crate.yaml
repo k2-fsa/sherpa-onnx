@@ -125,8 +125,14 @@ jobs:
           tag: tauri
 
   ios:
-    name: iOS
+    name: iOS (${{ matrix.link_mode }})
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - link_mode: static
+          - link_mode: shared
     steps:
       - uses: actions/checkout@v4
 
@@ -145,6 +151,22 @@ jobs:
           cd tauri-examples/hello_world
           npm install
 
+      - name: Set sherpa-onnx feature for shared mode
+        if: matrix.link_mode == 'shared'
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
+          rm -f Cargo.toml.bak
+
+      - name: Add onnxruntime.xcframework for static mode
+        if: matrix.link_mode == 'static'
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          sed -i.bak 's|"sherpa-onnx.xcframework"|"sherpa-onnx.xcframework",\n        "onnxruntime.xcframework"|' tauri.conf.json
+          rm -f tauri.conf.json.bak
+
       - name: Init iOS
         shell: bash
         run: |
@@ -160,14 +182,13 @@ jobs:
       - name: Show artifacts
         shell: bash
         run: |
-          find tauri-examples/hello_world/src-tauri/target -name "*.ipa" -o -name "*.app" 2>/dev/null | head -10
-          ls -lhR tauri-examples/hello_world/src-tauri/target/apple/ 2>/dev/null || true
+          find tauri-examples/hello_world/src-tauri -name "*.ipa" 2>/dev/null | head -10
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-crate-ios
-          path: tauri-examples/hello_world/src-tauri/target/apple/**/*.ipa
+          name: tauri-hello-world-crate-ios-${{ matrix.link_mode }}
+          path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
           if-no-files-found: ignore
 
   linux:

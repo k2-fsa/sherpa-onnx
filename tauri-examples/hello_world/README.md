@@ -67,16 +67,141 @@ npm run build
 
 ### iOS
 
+There are two link modes for iOS:
+
+| Mode | `Cargo.toml` | `tauri.conf.json` frameworks | Xcframeworks downloaded by `build.rs` |
+|------|-------------|------------------------------|--------------------------------------|
+| **Shared** (default) | `features = ["shared"]` | `["sherpa-onnx.xcframework"]` | `sherpa-onnx-v{ver}-ios-shared-onnxruntime-static.xcframework.zip` |
+| **Static** | default features | `["sherpa-onnx.xcframework", "onnxruntime.xcframework"]` | `sherpa-onnx-v{ver}-ios-static.xcframework.zip` + `onnxruntime.xcframework.zip` |
+
+`build.rs` downloads the xcframework(s) automatically during `cargo tauri ios build`.
+No manual download is needed.
+
+#### Build
+
 ```bash
-# Requires Xcode and an iOS device/simulator
-npm run tauri ios init
-npm run tauri ios build
+cd tauri-examples/hello_world
+npm install
+
+# Generate the Xcode project (one-time)
+cargo tauri ios init
+
+# Build the IPA (build.rs downloads xcframeworks here)
+cargo tauri ios build --no-sign
 ```
+
+The IPA is generated at `src-tauri/gen/apple/build/arm64/hello_world.ipa`.
+
+#### Run on iOS simulator
+
+List available simulators:
+
+```bash
+xcrun simctl list devices | grep iPhone
+```
+
+Boot a simulator and run:
+
+```bash
+# Boot
+xcrun simctl boot "iPhone 16"
+
+# Extract .app from .ipa
+unzip -o src-tauri/gen/apple/build/arm64/hello_world.ipa -d /tmp/hello_world/
+
+# Install and launch
+xcrun simctl install "iPhone 16" /tmp/hello_world/Payload/hello_world.app
+xcrun simctl launch "iPhone 16" com.k2fsa.sherpa.onnx.hello.world
+
+# Open Simulator app to see it
+open -a Simulator
+```
+
+Or open the Xcode project directly and press **⌘R**:
+
+```bash
+open src-tauri/gen/apple/hello_world.xcodeproj
+```
+
+Then select a simulator in Xcode's destination picker and hit Run.
+
+#### Run on a real iOS device
+
+The `--no-sign` IPA is unsigned. To install on a real device, re-sign it:
+
+```bash
+codesign --force --sign "iPhone Developer: Your Name (TEAMID)" \
+  --entitlements entitlements.plist \
+  hello_world.ipa
+```
+
+Then install via Xcode (Window → Devices and Simulators) or `ios-deploy`:
+
+```bash
+brew install ios-deploy
+ios-deploy --bundle hello_world.ipa
+```
+
+See [README-iOS.md](../README-iOS.md) for the full iOS guide.
 
 ### Android
 
+`build.rs` downloads the pre-built `.so` libraries automatically and copies them
+into the Tauri Android project's `jniLibs` directory so Gradle bundles them into
+the APK.
+
+#### Build
+
 ```bash
-# Requires Android Studio and SDK
-npm run tauri android init
-npm run tauri android build
+cd tauri-examples/hello_world
+npm install
+
+# Generate the Android project (one-time)
+cargo tauri android init
+
+# Build a debug APK (build.rs downloads .so files here)
+cargo tauri android build --apk --debug
+```
+
+The APK is generated at
+`src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`.
+
+#### Install on a connected device or emulator
+
+```bash
+# List connected devices
+adb devices
+
+# Install the APK
+adb install src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+
+# Launch the app
+adb shell am start -n com.k2fsa.sherpa.onnx.hello.world/.MainActivity
+```
+
+#### Build for a specific architecture
+
+```bash
+# arm64 (most modern phones)
+cargo tauri android build --target aarch64 --apk --debug
+
+# armv7 (older phones)
+cargo tauri android build --target armv7 --apk --debug
+
+# x86_64 (emulators)
+cargo tauri android build --target x86_64 --apk --debug
+```
+
+#### Run on an emulator
+
+```bash
+# List available emulators
+emulator -list-avds
+
+# Start an emulator
+emulator -avd Pixel_6_API_34 &
+
+# Then build and install
+cargo tauri android build --target x86_64 --apk --debug
+adb install path/to/app-universal-debug.apk
 ```

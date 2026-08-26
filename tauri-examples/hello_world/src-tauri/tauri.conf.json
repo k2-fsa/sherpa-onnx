@@ -25,7 +25,7 @@
     ],
     "iOS": {
       "frameworks": [
-        "SherpaOnnxC.xcframework"
+        "sherpa-onnx.xcframework"
       ]
     }
   }

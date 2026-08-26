@@ -179,8 +179,14 @@ jobs:
           tag: tauri
 
   ios:
-    name: iOS
+    name: iOS (${{ matrix.link_mode }})
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - link_mode: static
+          - link_mode: shared
     steps:
       - uses: actions/checkout@v4
         with:
@@ -218,6 +224,7 @@ jobs:
           EOF
 
       - name: Set sherpa-onnx feature for shared mode
+        if: matrix.link_mode == 'shared'
         shell: bash
         run: |
           cd tauri-examples/hello_world/src-tauri
@@ -229,15 +236,39 @@ jobs:
         shell: bash
         run: |
           version=$(grep '^version' sherpa-onnx/rust/sherpa-onnx-sys/Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-          url="https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v${version}-ios-shared-onnxruntime-static.xcframework.zip"
-          echo "Downloading $url"
+          ort_version="1.27.1"
           cd tauri-examples/hello_world/src-tauri
-          curl -L -o xcframework.zip "$url"
-          unzip -q xcframework.zip
-          rm xcframework.zip
-          # The archive extracts to sherpa-onnx.xcframework/; rename to match tauri.conf.json
-          mv sherpa-onnx.xcframework SherpaOnnxC.xcframework
-          ls -lh SherpaOnnxC.xcframework/
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            url="https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v${version}-ios-shared-onnxruntime-static.xcframework.zip"
+            echo "Downloading $url"
+            curl -L -o xcframework.zip "$url"
+            unzip -q xcframework.zip
+            rm xcframework.zip
+          else
+            url="https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v${version}-ios-static.xcframework.zip"
+            echo "Downloading $url"
+            curl -L -o xcframework.zip "$url"
+            unzip -q xcframework.zip
+            rm xcframework.zip
+            ort_url="https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ort_version}/onnxruntime-ios-static-xcframework-${ort_version}.xcframework.zip"
+            echo "Downloading $ort_url"
+            curl -L -o onnxruntime.zip "$ort_url"
+            unzip -q onnxruntime.zip
+            rm onnxruntime.zip
+          fi
+          ls -lh sherpa-onnx.xcframework/
+          ls -lh onnxruntime.xcframework/ 2>/dev/null || true
+
+      - name: Update tauri.conf.json for iOS link mode
+        shell: bash
+        run: |
+          if [[ "${{ matrix.link_mode }}" == "static" ]]; then
+            # Add onnxruntime.xcframework to bundle.ios.frameworks
+            cd tauri-examples/hello_world/src-tauri
+            sed -i.bak 's|"sherpa-onnx.xcframework"|"sherpa-onnx.xcframework",\n        "onnxruntime.xcframework"|' tauri.conf.json
+            rm -f tauri.conf.json.bak
+            cat tauri.conf.json
+          fi
 
       - name: Init iOS
         shell: bash
@@ -254,14 +285,13 @@ jobs:
       - name: Show artifacts
         shell: bash
         run: |
-          find tauri-examples/hello_world/src-tauri/target -name "*.ipa" -o -name "*.app" 2>/dev/null | head -10
-          ls -lhR tauri-examples/hello_world/src-tauri/target/apple/ 2>/dev/null || true
+          find tauri-examples/hello_world/src-tauri -name "*.ipa" 2>/dev/null | head -10
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-ios
-          path: tauri-examples/hello_world/src-tauri/target/apple/**/*.ipa
+          name: tauri-hello-world-ios-${{ matrix.link_mode }}
+          path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
           if-no-files-found: ignore
 
   linux:
