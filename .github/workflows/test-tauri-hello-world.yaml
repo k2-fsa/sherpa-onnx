@@ -192,6 +192,32 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ios-tauri
+
+      - name: Cache iOS xcframework
+        id: cache-xcframework
+        uses: actions/cache@v4
+        with:
+          path: build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework
+          key: ios-xcframework-${{ hashFiles('CMakeLists.txt') }}
+
+      - name: Build iOS xcframework from source
+        if: steps.cache-xcframework.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework to Tauri project
+        shell: bash
+        run: |
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework \
+            tauri-examples/hello_world/src-tauri/sherpa-onnx.xcframework
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-ios,aarch64-apple-ios-sim
@@ -216,12 +242,6 @@ jobs:
           sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
           sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
           EOF
-
-      - name: Download pre-built iOS xcframework
-        shell: bash
-        run: |
-          cd tauri-examples/hello_world
-          src-tauri/setup-ios.sh
 
       - name: Init iOS
         shell: bash
