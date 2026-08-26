@@ -200,7 +200,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-ios
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
 
       - name: Install Tauri CLI
         shell: bash
@@ -280,23 +280,22 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          cargo-tauri ios build --no-sign
+          cargo-tauri ios build --target aarch64 --no-sign
 
       - name: Build iOS for simulator
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          xcodebuild -project src-tauri/gen/apple/hello_world.xcodeproj \
-            -scheme hello_world_iOS \
-            -destination 'generic/platform=iOS Simulator' \
-            -configuration Release \
-            build
+          cargo-tauri ios build --target aarch64-sim --no-sign
 
       - name: Package simulator app
         shell: bash
         run: |
-          cd tauri-examples/hello_world/src-tauri/gen/apple
-          app_path=$(find . -path "*/Release-iphonesimulator/hello_world.app" | head -1)
+          cd tauri-examples/hello_world/src-tauri
+          app_path=$(find . -path "*simulator*/hello_world.app" -o -path "*iphonesimulator*/hello_world.app" 2>/dev/null | head -1)
+          if [ -z "$app_path" ]; then
+            app_path=$(find . -name "hello_world.app" 2>/dev/null | head -1)
+          fi
           if [ -n "$app_path" ]; then
             zip_name="tauri-hello-world-ios-simulator-${{ matrix.link_mode }}.zip"
             ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip_name"
@@ -306,7 +305,7 @@ jobs:
       - name: Show artifacts
         shell: bash
         run: |
-          find tauri-examples/hello_world/src-tauri/gen/apple -name "*.ipa" -o -name "*.zip" 2>/dev/null | head -10
+          find tauri-examples/hello_world/src-tauri -name "*.ipa" -o -name "*.zip" -o -name "*.app" 2>/dev/null | head -10
 
       - name: Upload device IPA
         uses: actions/upload-artifact@v4
@@ -319,7 +318,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tauri-hello-world-ios-simulator-${{ matrix.link_mode }}
-          path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.zip
+          path: tauri-examples/hello_world/src-tauri/**/*.zip
           if-no-files-found: ignore
 
   linux:

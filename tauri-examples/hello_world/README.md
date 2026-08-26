@@ -87,7 +87,7 @@ npm install
 cargo tauri ios init
 
 # Build unsigned IPA for real device
-cargo tauri ios build --no-sign
+cargo tauri ios build --target aarch64 --no-sign
 ```
 
 Output: `src-tauri/gen/apple/build/arm64/hello_world.ipa`
@@ -95,14 +95,10 @@ Output: `src-tauri/gen/apple/build/arm64/hello_world.ipa`
 #### Build for simulator
 
 ```bash
-xcodebuild -project src-tauri/gen/apple/hello_world.xcodeproj \
-  -scheme hello_world_iOS \
-  -destination 'generic/platform=iOS Simulator' \
-  -configuration Release \
-  build
+cargo tauri ios build --target aarch64-sim --no-sign
 ```
 
-Output: `src-tauri/gen/apple/build/Debug-iphonesimulator/hello_world.app`
+Output: look for `hello_world.app` in `src-tauri/gen/apple/`
 
 #### Run on simulator
 

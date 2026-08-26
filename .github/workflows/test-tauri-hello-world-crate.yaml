@@ -138,7 +138,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-ios
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
 
       - name: Install Tauri CLI
         shell: bash
@@ -173,22 +173,46 @@ jobs:
           cd tauri-examples/hello_world
           cargo-tauri ios init
 
-      - name: Build iOS
+      - name: Build iOS for device
         shell: bash
         run: |
           cd tauri-examples/hello_world
-          cargo-tauri ios build --no-sign
+          cargo-tauri ios build --target aarch64 --no-sign
+
+      - name: Build iOS for simulator
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          cargo-tauri ios build --target aarch64-sim --no-sign
+
+      - name: Package simulator app
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          app_path=$(find . -name "hello_world.app" 2>/dev/null | head -1)
+          if [ -n "$app_path" ]; then
+            zip_name="tauri-hello-world-crate-ios-simulator-${{ matrix.link_mode }}.zip"
+            ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip_name"
+            ls -lh "$zip_name"
+          fi
 
       - name: Show artifacts
         shell: bash
         run: |
-          find tauri-examples/hello_world/src-tauri -name "*.ipa" 2>/dev/null | head -10
+          find tauri-examples/hello_world/src-tauri -name "*.ipa" -o -name "*.zip" 2>/dev/null | head -10
 
-      - name: Upload artifact
+      - name: Upload device IPA
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-crate-ios-${{ matrix.link_mode }}
+          name: tauri-hello-world-crate-ios-device-${{ matrix.link_mode }}
           path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
+          if-no-files-found: ignore
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-hello-world-crate-ios-simulator-${{ matrix.link_mode }}
+          path: tauri-examples/hello_world/src-tauri/**/*.zip
           if-no-files-found: ignore
 
   linux:
