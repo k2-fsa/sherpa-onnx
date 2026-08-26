@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""Stamp sherpa-onnx Kokoro metadata onto a Nabra-82M ONNX model.
+
+Also bakes an FIR notch (4800/9600 Hz) into the graph tail to remove
+iSTFT image tones, so no player-side post-processing is needed."""
 # Stamp sherpa-onnx Kokoro metadata onto a Nabra-82M ONNX model and bake in
 # the iSTFT image-tone notch FIR.
 #
@@ -11,6 +15,7 @@ from onnx import TensorProto, helper, numpy_helper
 
 
 def main():
+    """Stamp metadata and bake the notch FIR into the given Nabra ONNX file."""
     src, dst = sys.argv[1], sys.argv[2]
 
     meta = {
