@@ -276,22 +276,50 @@ jobs:
           cd tauri-examples/hello_world
           cargo-tauri ios init
 
-      - name: Build iOS
+      - name: Build iOS for device
         shell: bash
         run: |
           cd tauri-examples/hello_world
           cargo-tauri ios build --no-sign
 
+      - name: Build iOS for simulator
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          xcodebuild -project src-tauri/gen/apple/hello_world.xcodeproj \
+            -scheme hello_world \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            build
+
+      - name: Package simulator app
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri/gen/apple
+          app_path=$(find . -path "*/Debug-iphonesimulator/hello_world.app" | head -1)
+          if [ -n "$app_path" ]; then
+            zip_name="tauri-hello-world-ios-simulator-${{ matrix.link_mode }}.zip"
+            ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip_name"
+            ls -lh "$zip_name"
+          fi
+
       - name: Show artifacts
         shell: bash
         run: |
-          find tauri-examples/hello_world/src-tauri -name "*.ipa" 2>/dev/null | head -10
+          find tauri-examples/hello_world/src-tauri/gen/apple -name "*.ipa" -o -name "*.zip" 2>/dev/null | head -10
 
-      - name: Upload artifact
+      - name: Upload device IPA
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-ios-${{ matrix.link_mode }}
+          name: tauri-hello-world-ios-device-${{ matrix.link_mode }}
           path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
+          if-no-files-found: ignore
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-hello-world-ios-simulator-${{ matrix.link_mode }}
+          path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.zip
           if-no-files-found: ignore
 
   linux:

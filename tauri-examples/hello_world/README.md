@@ -74,10 +74,10 @@ There are two link modes for iOS:
 | **Shared** (default) | `features = ["shared"]` | `["sherpa-onnx.xcframework"]` | `sherpa-onnx-v{ver}-ios-shared-onnxruntime-static.xcframework.zip` |
 | **Static** | default features | `["sherpa-onnx.xcframework", "onnxruntime.xcframework"]` | `sherpa-onnx-v{ver}-ios-static.xcframework.zip` + `onnxruntime.xcframework.zip` |
 
-`build.rs` downloads the xcframework(s) automatically during `cargo tauri ios build`.
+`build.rs` downloads the xcframework(s) automatically during the build.
 No manual download is needed.
 
-#### Build
+#### Build for a real device
 
 ```bash
 cd tauri-examples/hello_world
@@ -86,48 +86,53 @@ npm install
 # Generate the Xcode project (one-time)
 cargo tauri ios init
 
-# Build the IPA (build.rs downloads xcframeworks here)
+# Build unsigned IPA for real device
 cargo tauri ios build --no-sign
 ```
 
-The IPA is generated at `src-tauri/gen/apple/build/arm64/hello_world.ipa`.
+Output: `src-tauri/gen/apple/build/arm64/hello_world.ipa`
 
-#### Run on iOS simulator
-
-List available simulators:
+#### Build for simulator
 
 ```bash
-xcrun simctl list devices | grep iPhone
+xcodebuild -project src-tauri/gen/apple/hello_world.xcodeproj \
+  -scheme hello_world \
+  -destination 'generic/platform=iOS Simulator' \
+  -configuration Debug \
+  build
 ```
 
-Boot a simulator and run:
+Output: `src-tauri/gen/apple/build/Debug-iphonesimulator/hello_world.app`
+
+#### Run on simulator
 
 ```bash
-# Boot
+# List available simulators
+xcrun simctl list devices | grep iPhone
+
+# Boot a simulator
 xcrun simctl boot "iPhone 16"
 
-# Extract .app from .ipa
-unzip -o src-tauri/gen/apple/build/arm64/hello_world.ipa -d /tmp/hello_world/
+# Install the .app (from simulator build)
+xcrun simctl install "iPhone 16" \
+  src-tauri/gen/apple/build/Debug-iphonesimulator/hello_world.app
 
-# Install and launch
-xcrun simctl install "iPhone 16" /tmp/hello_world/Payload/hello_world.app
+# Launch
 xcrun simctl launch "iPhone 16" com.k2fsa.sherpa.onnx.hello.world
 
 # Open Simulator app to see it
 open -a Simulator
 ```
 
-Or open the Xcode project directly and press **⌘R**:
+Or open the Xcode project and press **⌘R** with a simulator selected:
 
 ```bash
 open src-tauri/gen/apple/hello_world.xcodeproj
 ```
 
-Then select a simulator in Xcode's destination picker and hit Run.
+#### Run on a real device
 
-#### Run on a real iOS device
-
-The `--no-sign` IPA is unsigned. To install on a real device, re-sign it:
+The IPA from `cargo tauri ios build --no-sign` is unsigned. Re-sign it first:
 
 ```bash
 codesign --force --sign "iPhone Developer: Your Name (TEAMID)" \

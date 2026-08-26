@@ -50,6 +50,35 @@
 
 It also supports WebAssembly.
 
+### Supported frameworks
+
+#### [Flutter][flutter-url]
+
+|Architecture| Android | iOS     | Windows | macOS | Linux | Web |
+|------------|---------|---------|---------|-------|-------|-----|
+|   x64      |  ✔️      |         |  ✔️     | ✔️    |  ✔️    |  ✔️  |
+|   x86      |  ✔️      |         |         |       |       |  ✔️  |
+|   arm64    |  ✔️      |  ✔️     |  ✔️     | ✔️    |  ✔️    |  ✔️  |
+|   arm32    |  ✔️      |         |         |       |       |  ✔️  |
+
+- Pre-built Flutter demo apps: [flutter releases][flutter-releases]
+
+#### [Tauri][tauri-url]
+
+|Architecture| Android | iOS     | Windows | macOS | Linux |
+|------------|---------|---------|---------|-------|-------|
+|   x64      |  ✔️      |         |  ✔️     | ✔️    |  ✔️    |
+|   x86      |  ✔️      |         |         |       |       |
+|   arm64    |  ✔️      |  ✔️     |  ✔️     | ✔️    |  ✔️    |
+|   arm32    |  ✔️      |         |         |       |       |
+
+- Pre-built Tauri demo apps: [tauri releases][tauri-releases]
+
+[flutter-url]: https://flutter.dev
+[tauri-url]: https://v2.tauri.app
+[flutter-releases]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/flutter
+[tauri-releases]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/tauri
+
 ### Supported NPUs
 
 | [1. Rockchip NPU (RKNN)][rknpu-doc] | [2. Qualcomm NPU (QNN)][qnn-doc]  | [3. Ascend NPU][ascend-doc] |
