@@ -62,6 +62,36 @@ fn try_main() -> Result<(), DynError> {
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
+    // For static iOS, add the onnxruntime xcframework's framework directory
+    // to the search path so the linker can find it.
+    // The xcframework contains multiple slices; we pick the right one
+    // based on the target triple (device vs simulator).
+    if link_mode == LinkMode::Static && target_os == "ios" {
+        let cache_root = lib_dir.parent().unwrap_or(&lib_dir);
+        let ort_xcframework = cache_root
+            .parent()
+            .unwrap_or(cache_root)
+            .join(format!("onnxruntime-{ONNXRUNTIME_VERSION}"))
+            .join("onnxruntime.xcframework");
+        // Determine the correct slice from the target triple.
+        // aarch64-apple-ios        -> ios-arm64 (device)
+        // aarch64-apple-ios-sim    -> ios-arm64_x86_64-simulator
+        // x86_64-apple-ios         -> ios-arm64_x86_64-simulator (x86_64 is always simulator)
+        let target_triple = env::var("TARGET").unwrap_or_default();
+        let ort_slice = if target_triple.contains("sim") || target_arch == "x86_64" {
+            "ios-arm64_x86_64-simulator"
+        } else {
+            "ios-arm64"
+        };
+        let ort_framework_dir = ort_xcframework.join(ort_slice);
+        if ort_framework_dir.is_dir() {
+            println!(
+                "cargo:rustc-link-search=framework={}",
+                ort_framework_dir.display()
+            );
+        }
+    }
+
     if link_mode == LinkMode::Shared && matches!(target_os.as_str(), "linux" | "macos" | "ios") {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
         emit_relative_rpath(&target_os);
@@ -482,9 +512,10 @@ fn emit_shared_link_directives(target_os: &str) {
 
 fn emit_static_link_directives(target_os: &str) {
     for lib in SHERPA_ONNX_STATIC_LIBS {
-        // For iOS, onnxruntime is a separate xcframework linked via
-        // bundle.ios.frameworks in tauri.conf.json, not a static lib in lib_dir.
+        // For iOS, onnxruntime is a separate xcframework linked as a framework,
+        // not a static archive in lib_dir.
         if *lib == "onnxruntime" && target_os == "ios" {
+            println!("cargo:rustc-link-lib=framework=onnxruntime");
             continue;
         }
         println!("cargo:rustc-link-lib=static={lib}");
@@ -520,6 +551,24 @@ fn target_dir_from_out_dir(out_dir: &Path) -> Result<PathBuf, DynError> {
     Ok(out_dir.to_path_buf())
 }
 
+/// Find the Tauri project root (the directory containing `tauri.conf.json`)
+/// by walking up from `OUT_DIR`.
+///
+/// Returns `None` if the directory cannot be determined (e.g., not a Tauri
+/// project, or `CARGO_TARGET_DIR` points outside the project).
+fn find_tauri_project_dir() -> Option<PathBuf> {
+    let out_dir = PathBuf::from(env::var("OUT_DIR").ok()?);
+    let target_dir = target_dir_from_out_dir(&out_dir).ok()?;
+    let candidate = target_dir.parent()?;
+
+    // Validate that this is actually a Tauri project directory.
+    if candidate.join("tauri.conf.json").exists() {
+        return Some(candidate.to_path_buf());
+    }
+
+    None
+}
+
 fn emit_relative_rpath(target_os: &str) {
     match target_os {
         "linux" | "android" => println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"),
@@ -552,20 +601,7 @@ fn profile_output_dirs() -> Result<[PathBuf; 2], DynError> {
 /// `CARGO_MANIFEST_DIR` points to the *sherpa-onnx-sys* crate (not the Tauri
 /// project), we walk up from `OUT_DIR` to locate the Tauri project root.
 fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<(), DynError> {
-    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let abi = android_abi(target_arch);
-
-    // OUT_DIR is typically:
-    //   <project>/src-tauri/target/<triple>/<profile>/build/sherpa-onnx-sys-<hash>/out
-    // The Tauri project root (src-tauri/) is the parent of "target/".
-    let target_dir = target_dir_from_out_dir(&out_dir)?;
-    let project_dir = match target_dir.parent() {
-        Some(p) => p,
-        None => return Ok(()),
-    };
-
-    // Also try CARGO_MANIFEST_DIR as a fallback (works for non-Tauri setups).
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_default());
 
     let jni_base_suffix = PathBuf::from("gen")
         .join("android")
@@ -574,10 +610,14 @@ fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<()
         .join("main")
         .join("jniLibs");
 
-    let candidates = [
-        project_dir.join(&jni_base_suffix),
-        manifest_dir.join(&jni_base_suffix),
-    ];
+    let mut candidates = Vec::new();
+    if let Some(project_dir) = find_tauri_project_dir() {
+        candidates.push(project_dir.join(&jni_base_suffix));
+    }
+    // Fallback: CARGO_MANIFEST_DIR (works for non-Tauri setups).
+    if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+        candidates.push(PathBuf::from(manifest_dir).join(&jni_base_suffix));
+    }
 
     let tauri_jni_base = candidates.iter().find(|p| {
         // Check that the parent (main/) exists, meaning
@@ -635,8 +675,6 @@ fn copy_xcframework_to_tauri_project(
     lib_dir: &Path,
     link_mode: LinkMode,
 ) -> Result<(), DynError> {
-    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
-
     // lib_dir is something like
     //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.6-ios-static/lib
     // The xcframework sits next to lib/:
@@ -654,8 +692,7 @@ fn copy_xcframework_to_tauri_project(
     };
 
     // Navigate from OUT_DIR to the Tauri project root (src-tauri/).
-    let target_dir = target_dir_from_out_dir(&out_dir)?;
-    let project_dir = match target_dir.parent() {
+    let project_dir = match find_tauri_project_dir() {
         Some(p) => p,
         None => return Ok(()),
     };
