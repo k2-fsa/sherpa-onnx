@@ -11,7 +11,7 @@ import sys
 
 import numpy as np
 import onnx
-from onnx import TensorProto, helper, numpy_helper
+from onnx import helper, numpy_helper
 
 
 def main():
@@ -70,10 +70,36 @@ def main():
     g.initializer.append(
         numpy_helper.from_array(h.reshape(1, 1, -1).astype(np.float32),
                                 "notch_fir_w"))
+    idx = list(g.node).index(squeeze)
     for i, inp in enumerate(squeeze.input):
         if inp == src_tensor:
             squeeze.input[i] = "audio_notched"
-    g.node.append(conv)
+    g.node.insert(idx, conv)
+
+    # ONNX requires nodes in topological order; appending the Conv at the
+    # end left it after its consumer. Re-sort the node list so every
+    # producer precedes its consumers.
+    nodes = list(g.node)
+    produced = {t.name for t in g.initializer}
+    for inp in g.input:
+        produced.add(inp.name)
+    sorted_nodes = []
+    pending = nodes[:]
+    while pending:
+        progressed = False
+        for n in list(pending):
+            if all((inp in produced or inp == "") for inp in n.input):
+                sorted_nodes.append(n)
+                produced.update(n.output)
+                pending.remove(n)
+                progressed = True
+        if not progressed:
+            break  # cyclic or external refs; leave remaining as-is
+    del g.node[:]
+    g.node.extend(sorted_nodes)
+
+    # ONNX requires nodes in topological order; re-sort defensively.
+
 
     onnx.save(m, dst)
     print(f"saved {dst}")
