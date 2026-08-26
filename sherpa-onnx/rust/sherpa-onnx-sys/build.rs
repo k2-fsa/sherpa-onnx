@@ -69,6 +69,12 @@ fn try_main() -> Result<(), DynError> {
         copy_unix_runtime_libs(&lib_dir, &target_os)?;
     }
 
+    // For Android builds (e.g. via Tauri), copy .so files to the Tauri
+    // Android project's jniLibs directory so Gradle bundles them into the APK.
+    if target_os == "android" {
+        copy_to_tauri_android_jnilibs(&lib_dir, &target_arch)?;
+    }
+
     if link_mode == LinkMode::Shared && target_os == "windows" {
         copy_windows_runtime_dlls(&lib_dir)?;
     }
@@ -478,6 +484,65 @@ fn profile_output_dirs() -> Result<[PathBuf; 2], DynError> {
         .to_path_buf();
 
     Ok([profile_dir.clone(), profile_dir.join("examples")])
+}
+
+/// Copy Android .so files to the Tauri Android project's jniLibs directory
+/// so that Gradle bundles them into the APK.
+fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<(), DynError> {
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
+    let abi = android_abi(target_arch);
+
+    // Try the Tauri v2 gen/android path first, then a custom Tauri project path.
+    let candidates = [
+        manifest_dir.join("gen").join("android").join("app").join("src").join("main").join("jniLibs"),
+        // When the Tauri project root is a parent of src-tauri/.
+        manifest_dir.join("..").join("gen").join("android").join("app").join("src").join("main").join("jniLibs"),
+    ];
+
+    let tauri_jni_base = candidates.iter().find(|p| {
+        // Check that the parent (main/) or grandparent (src/) exists, meaning
+        // `tauri android init` has been run.
+        p.parent().map_or(false, |p| p.exists())
+    });
+
+    let tauri_jni_base = match tauri_jni_base {
+        Some(p) => p,
+        None => {
+            // Not a Tauri Android build (or gen/android hasn't been created yet).
+            return Ok(());
+        }
+    };
+
+    let dest_dir = tauri_jni_base.join(abi);
+    fs::create_dir_all(&dest_dir)?;
+
+    let mut copied = 0;
+    for entry in fs::read_dir(lib_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let is_so = path.file_name()
+            .and_then(OsStr::to_str)
+            .map(|name| name.contains(".so"))
+            .unwrap_or(false);
+        if !is_so {
+            continue;
+        }
+        if let Some(file_name) = path.file_name() {
+            let dest = dest_dir.join(file_name);
+            fs::copy(&path, &dest)?;
+            eprintln!("Copied {} -> {}", path.display(), dest.display());
+            copied += 1;
+        }
+    }
+
+    if copied > 0 {
+        eprintln!(
+            "cargo:warning=Copied {copied} Android .so file(s) to Tauri jniLibs: {}",
+            dest_dir.display()
+        );
+    }
+
+    Ok(())
 }
 
 fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynError> {
