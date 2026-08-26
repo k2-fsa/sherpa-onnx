@@ -4,26 +4,11 @@ This guide explains how to use the `sherpa-onnx` Rust crate in a Tauri v2 iOS pr
 
 ## Overview
 
-On iOS, sherpa-onnx provides pre-built xcframeworks that Xcode links at build
-time.  Tauri's `bundle.ios.frameworks` in `tauri.conf.json` tells Xcode where
-to find them.
+On iOS, sherpa-onnx uses **shared linking only**. The pre-built xcframework
+contains a shared dylib (`SherpaOnnxC.framework/SherpaOnnxC`) with onnxruntime
+statically linked in.
 
-`build.rs` downloads the xcframework(s) automatically during
-`cargo tauri ios build` — no manual download is needed.
-
-There are **three** xcframework variants:
-
-| Variant | Archive name | Contents | Extra dependencies |
-|---------|-------------|----------|-------------------|
-| **static** | `sherpa-onnx-v{ver}-ios-static.xcframework.zip` | Static `.a` (all sherpa-onnx libs merged) | **Requires** `onnxruntime.xcframework` |
-| **shared (onnxruntime static)** | `sherpa-onnx-v{ver}-ios-shared-onnxruntime-static.xcframework.zip` | Shared dylib, onnxruntime baked in | None |
-| **shared** | `sherpa-onnx-v{ver}-ios-shared.xcframework.zip` | Shared dylib only | Requires separate shared `onnxruntime.xcframework` |
-
-The **shared-onnxruntime-static** variant is the simplest: one xcframework, no
-extra dependencies.  The **static** variant produces the smallest binary since
-everything is statically linked.
-
-## Quick start (shared)
+## Quick start
 
 1. Add `sherpa-onnx` to your `src-tauri/Cargo.toml`:
 
@@ -44,65 +29,47 @@ everything is statically linked.
    }
    ```
 
-3. Build:
+3. Run the setup script to download the xcframework (first build only):
+
+   ```bash
+   src-tauri/setup-ios.sh
+   ```
+
+4. Build:
 
    ```bash
    cargo tauri ios init
-   cargo tauri ios build --no-sign
+   cargo tauri ios build --target aarch64 --no-sign          # device
+   cargo tauri ios build --target aarch64-sim --no-sign       # simulator
    ```
 
-   `build.rs` downloads `sherpa-onnx-v{ver}-ios-shared-onnxruntime-static.xcframework.zip`
-   automatically.
-
-## Quick start (static)
-
-1. Add `sherpa-onnx` to your `src-tauri/Cargo.toml` (default features = static):
-
-   ```toml
-   [dependencies]
-   sherpa-onnx = "1.13.6"
-   ```
-
-2. Tell Tauri to link **both** xcframeworks in `src-tauri/tauri.conf.json`:
-
-   ```json
-   {
-     "bundle": {
-       "iOS": {
-         "frameworks": [
-           "sherpa-onnx.xcframework",
-           "onnxruntime.xcframework"
-         ]
-       }
-     }
-   }
-   ```
-
-3. Build:
-
-   ```bash
-   cargo tauri ios init
-   cargo tauri ios build --no-sign
-   ```
-
-   `build.rs` downloads both `sherpa-onnx-v{ver}-ios-static.xcframework.zip` and
-   `onnxruntime-ios-static-xcframework-{ver}.xcframework.zip` automatically.
+   After the first build, `build.rs` caches the xcframework and subsequent
+   builds are automatic.
 
 ## How it works
 
-`build.rs` in `sherpa-onnx-sys` determines the link mode from Cargo features:
+### Why is `setup-ios.sh` needed?
 
-1. Downloads the appropriate pre-built xcframework(s) from GitHub Releases into
-   the Cargo target cache (`target/.../sherpa-onnx-prebuilt/`).
-2. Copies them to the Tauri project root (`src-tauri/`) so that Xcode can find
-   them via `bundle.ios.frameworks`.
+Xcode checks for xcframework existence **before** running any build phases.
+`build.rs` downloads the xcframework during the build (inside the "Build Rust
+Code" script phase), which is too late — Xcode has already failed.
 
-For static builds, the onnxruntime xcframework is downloaded from
-`csukuangfj/onnxruntime-libs` on GitHub.
+`setup-ios.sh` bridges this gap by downloading the xcframework before the
+first build. It is idempotent — if the xcframework already exists, it exits
+immediately.
 
-## Adding to `.gitignore`
+### What `build.rs` does
 
-The xcframeworks are large binary files.  Add them to `src-tauri/.gitignore`:
+`build.rs` in `sherpa-onnx-sys` handles subsequent builds:
+
+1. Downloads `sherpa-onnx-v{ver}-ios-shared-onnxruntime-static.xcframework.zip`
+   from GitHub Releases into the Cargo target cache.
+2. Copies the xcframework to the Tauri project root (`src-tauri/`) so that
+   Xcode can find it via `bundle.ios.frameworks`.
+
+### Adding to `.gitignore`
+
+The xcframework is a large binary. Add it to `src-tauri/.gitignore`:
 
 ```
 *.xcframework
@@ -111,11 +78,19 @@ The xcframeworks are large binary files.  Add them to `src-tauri/.gitignore`:
 ## CI example (GitHub Actions)
 
 ```yaml
+- name: Download pre-built iOS xcframework
+  shell: bash
+  run: |
+    cd tauri-examples/hello_world
+    src-tauri/setup-ios.sh
+
 - name: Init iOS
-  run: cargo tauri ios init
+  run: |
+    cd tauri-examples/hello_world
+    cargo tauri ios init
 
 - name: Build iOS
-  run: cargo tauri ios build --no-sign
+  run: |
+    cd tauri-examples/hello_world
+    cargo tauri ios build --target aarch64 --no-sign
 ```
-
-No manual xcframework download step is needed — `build.rs` handles it.

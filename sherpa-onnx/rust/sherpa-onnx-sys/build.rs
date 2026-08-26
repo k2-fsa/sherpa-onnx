@@ -13,7 +13,6 @@ use tar::Archive;
 const RELEASE_BASE_URL: &str = "https://github.com/k2-fsa/sherpa-onnx/releases/download";
 const XCFRAMEWORK_RELEASE_URL: &str =
     "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework";
-const ONNXRUNTIME_VERSION: &str = "1.27.1";
 const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
     "sherpa-onnx-c-api",
     "sherpa-onnx-core",
@@ -62,25 +61,6 @@ fn try_main() -> Result<(), DynError> {
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
-    // For static iOS, add the onnxruntime xcframework's lib directory
-    // to the search path so the linker can find it.
-    // The xcframework contains multiple slices; we pick the right one
-    // based on the target triple (device vs simulator).
-    if link_mode == LinkMode::Static && target_os == "ios" {
-        let cache_root = lib_dir.parent().unwrap_or(&lib_dir);
-        let ort_lib_dir = cache_root
-            .parent()
-            .unwrap_or(cache_root)
-            .join(format!("onnxruntime-{ONNXRUNTIME_VERSION}"))
-            .join("lib");
-        if ort_lib_dir.is_dir() {
-            println!(
-                "cargo:rustc-link-search=native={}",
-                ort_lib_dir.display()
-            );
-        }
-    }
-
     if link_mode == LinkMode::Shared && matches!(target_os.as_str(), "linux" | "macos" | "ios") {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
         emit_relative_rpath(&target_os);
@@ -96,7 +76,7 @@ fn try_main() -> Result<(), DynError> {
     // For iOS builds (e.g. via Tauri), copy the xcframework to the Tauri
     // project directory so Xcode can find it via bundle.ios.frameworks.
     if target_os == "ios" {
-        copy_xcframework_to_tauri_project(&lib_dir, link_mode)?;
+        copy_xcframework_to_tauri_project(&lib_dir)?;
     }
 
     if link_mode == LinkMode::Shared && target_os == "windows" {
@@ -121,15 +101,9 @@ fn resolve_link_mode(target_os: &str) -> Result<LinkMode, DynError> {
 
     if shared_enabled {
         Ok(LinkMode::Shared)
-    } else if target_os == "android" {
-        // Android only supports shared linking.
+    } else if target_os == "android" || target_os == "ios" {
+        // Android and iOS only support shared linking.
         Ok(LinkMode::Shared)
-    } else if target_os == "ios" {
-        // iOS supports both static and shared linking.
-        // - Static: sherpa-onnx.xcframework (static .a) + onnxruntime.xcframework
-        // - Shared-onnxruntime-static: sherpa-onnx.xcframework (dylib, onnxruntime baked in)
-        // - Shared: sherpa-onnx.xcframework (dylib) + separate onnxruntime.xcframework
-        Ok(LinkMode::Static)
     } else {
         Ok(LinkMode::Static)
     }
@@ -264,11 +238,6 @@ fn download_prebuilt_libs(
         .into());
     }
 
-    // For static iOS, also download the onnxruntime static xcframework.
-    if link_mode == LinkMode::Static && target_os == "ios" {
-        download_onnxruntime_xcframework(&cache_root)?;
-    }
-
     if !lib_dir.is_dir() {
         // Android archives use jniLibs/{abi}/ instead of lib/.
         let android_lib_dir = extracted_dir
@@ -283,7 +252,7 @@ fn download_prebuilt_libs(
         // with symlinks so Rust's linker can find the library under the
         // expected name (libsherpa-onnx-c-api.a / .dylib).
         if target_os == "ios" {
-            if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir, link_mode)? {
+            if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir)? {
                 eprintln!("Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
                 return Ok(ios_lib);
             }
@@ -301,76 +270,6 @@ fn download_prebuilt_libs(
     Ok(lib_dir)
 }
 
-/// Download the onnxruntime static iOS xcframework into `cache_root`.
-/// This is only needed for static iOS builds where onnxruntime is NOT
-/// baked into the sherpa-onnx dylib.
-fn download_onnxruntime_xcframework(cache_root: &Path) -> Result<(), DynError> {
-    let ort_dir = cache_root.join(format!("onnxruntime-{ONNXRUNTIME_VERSION}"));
-    let ort_xcframework = ort_dir.join("onnxruntime.xcframework");
-    if ort_xcframework.is_dir() {
-        return Ok(());
-    }
-
-    let zip_name =
-        format!("onnxruntime-ios-static-xcframework-{ONNXRUNTIME_VERSION}.xcframework.zip");
-    let url = format!(
-        "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v{ONNXRUNTIME_VERSION}/{zip_name}"
-    );
-    let zip_path = cache_root.join(&zip_name);
-
-    if !zip_path.is_file() {
-        eprintln!("Downloading onnxruntime xcframework from {url}");
-        let response = ureq::builder()
-            .try_proxy_from_env(true)
-            .build()
-            .get(&url)
-            .call()
-            .map_err(|e| format!("Failed to download onnxruntime xcframework from {url}: {e}"))?;
-        let mut reader = response.into_reader();
-        write_reader_atomically(&mut reader, &zip_path)?;
-    }
-
-    fs::create_dir_all(&ort_dir)?;
-    let zip_file = File::open(&zip_path)?;
-    let mut archive = zip::ZipArchive::new(zip_file)
-        .map_err(|e| format!("Failed to open onnxruntime zip {}: {e}", zip_path.display()))?;
-    archive
-        .extract(&ort_dir)
-        .map_err(|e| format!("Failed to extract onnxruntime zip: {e}"))?;
-
-    // Create a lib/ directory with the arm64 slice so that Rust's linker
-    // can find it via cargo:rustc-link-search=native.  The onnxruntime
-    // binary is a Mach-O universal binary (fat archive) which Rust's
-    // archive parser cannot handle, so we extract the arm64 slice with lipo.
-    let ort_binary = ort_xcframework
-        .join("ios-arm64")
-        .join("onnxruntime.framework")
-        .join("onnxruntime");
-    if ort_binary.is_file() {
-        let lib_dir = ort_dir.join("lib");
-        fs::create_dir_all(&lib_dir)?;
-        let link_path = lib_dir.join("libonnxruntime.a");
-        if !link_path.exists() {
-            // Use lipo to extract the arm64 slice (works even for single-arch fat binaries).
-            let status = std::process::Command::new("lipo")
-                .args([
-                    ort_binary.to_str().unwrap(),
-                    "-thin",
-                    "arm64",
-                    "-output",
-                    link_path.to_str().unwrap(),
-                ])
-                .status();
-            if !status.map(|s| s.success()).unwrap_or(false) {
-                // Fallback: copy the binary as-is if lipo fails.
-                fs::copy(&ort_binary, &link_path)?;
-            }
-        }
-    }
-
-    eprintln!("Downloaded onnxruntime xcframework to {}", ort_xcframework.display());
-    Ok(())
-}
 
 /// Map a Rust target architecture to the Android ABI directory name used
 /// in the prebuilt jniLibs/ layout.
@@ -384,23 +283,10 @@ fn android_abi(target_arch: &str) -> &str {
     }
 }
 
-/// Return a path for an architecture-specific extracted binary.
-fn lib_dir_with_arch(extracted_dir: &Path, arch: &str) -> PathBuf {
-    extracted_dir.join(format!("lib-{arch}"))
-}
-
 /// Find the SherpaOnnxC binary inside an extracted iOS xcframework archive
-/// and create a `lib/` directory with a symlink named `libsherpa-onnx-c-api.{a,dylib}`
+/// and create a `lib/` directory with a symlink named `libsherpa-onnx-c-api.dylib`
 /// so that Rust's linker can find it under the expected name.
-fn setup_ios_lib_dir(
-    extracted_dir: &Path,
-    link_mode: LinkMode,
-) -> Result<Option<PathBuf>, DynError> {
-    // The iOS archive structure is:
-    //   build-ios/sherpa-onnx.xcframework/ios-arm64/SherpaOnnxC.framework/SherpaOnnxC
-    // or for the shared-onnxruntime-static variant:
-    //   sherpa-onnx.xcframework/ios-arm64/SherpaOnnxC.framework/SherpaOnnxC
-    //   SherpaOnnxC.xcframework/ios-arm64/SherpaOnnxC.framework/SherpaOnnxC
+fn setup_ios_lib_dir(extracted_dir: &Path) -> Result<Option<PathBuf>, DynError> {
     let candidates = [
         extracted_dir
             .join("build-ios")
@@ -415,9 +301,6 @@ fn setup_ios_lib_dir(
     };
 
     // Select the correct slice based on the target triple.
-    // The simulator slice (ios-arm64_x86_64-simulator) contains a fat archive
-    // (universal binary) which Rust's archive parser cannot handle.
-    // For simulator builds, we extract the arm64 slice using lipo.
     let target_triple = env::var("TARGET").unwrap_or_default();
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
     let is_simulator = target_triple.contains("sim") || target_arch == "x86_64";
@@ -437,64 +320,16 @@ fn setup_ios_lib_dir(
         return Ok(None);
     }
 
-    // For simulator builds, the binary may be a fat archive (universal binary)
-    // containing both x86_64 and arm64. Rust's archive parser cannot handle
-    // fat archives, so we extract the arm64 slice using lipo.
-    let link_binary = if is_simulator && link_mode == LinkMode::Static {
-        let extracted_arm64 = lib_dir_with_arch(&extracted_dir, "arm64-sim");
-        if !extracted_arm64.exists() {
-            let status = std::process::Command::new("lipo")
-                .args([
-                    binary.to_str().unwrap(),
-                    "-thin",
-                    "arm64",
-                    "-output",
-                    extracted_arm64.to_str().unwrap(),
-                ])
-                .status();
-            match status {
-                Ok(s) if s.success() => extracted_arm64,
-                _ => binary.clone(), // fallback to original if lipo fails
-            }
-        } else {
-            extracted_arm64
-        }
-    } else {
-        binary.clone()
-    };
-
     // Use target-specific lib directory to avoid caching conflicts between
     // device and simulator builds sharing the same prebuilt cache.
     let lib_dir_name = if is_simulator { "lib-sim" } else { "lib" };
     let lib_dir = extracted_dir.join(lib_dir_name);
     fs::create_dir_all(&lib_dir)?;
 
-    // For shared mode, we only need the sherpa-onnx-c-api dylib.
-    // For static mode, the iOS xcframework contains a single merged archive
-    // with all sherpa-onnx symbols (but NOT onnxruntime — that's a separate
-    // xcframework). Create symlinks for every library name that
-    // emit_static_link_directives() will ask for, so the linker finds them all.
-    let link_names: Vec<&str> = match link_mode {
-        LinkMode::Shared => vec!["libsherpa-onnx-c-api.dylib"],
-        LinkMode::Static => SHERPA_ONNX_STATIC_LIBS
-            .iter()
-            .filter(|lib| **lib != "onnxruntime") // onnxruntime is a separate xcframework
-            .map(|lib| {
-                // "sherpa-onnx-c-api" -> "libsherpa-onnx-c-api.a"
-                // We leak a String to get a &'static str. This is fine for a
-                // build script that runs once and exits.
-                let s = format!("lib{lib}.a");
-                Box::leak(s.into_boxed_str()) as &str
-            })
-            .collect(),
-    };
-
-    let abs_binary = fs::canonicalize(&link_binary)?;
-    for link_name in &link_names {
-        let link_path = lib_dir.join(link_name);
-        if link_path.exists() {
-            continue;
-        }
+    // Create a symlink for the dylib.
+    let link_path = lib_dir.join("libsherpa-onnx-c-api.dylib");
+    if !link_path.exists() {
+        let abs_binary = fs::canonicalize(&binary)?;
         #[cfg(unix)]
         {
             use std::os::unix::fs::symlink;
@@ -556,12 +391,7 @@ fn archive_name(
         (LinkMode::Shared, "android", "aarch64" | "arm" | "x86" | "x86_64") => {
             format!("sherpa-onnx-v{version}-android.tar.bz2")
         }
-        // iOS static: static .a archive. Also needs a separate onnxruntime
-        // xcframework (downloaded separately in download_prebuilt_libs).
-        (LinkMode::Static, "ios", "aarch64") => {
-            format!("sherpa-onnx-v{version}-ios-static.xcframework.zip")
-        }
-        // iOS shared: shared dylib with onnxruntime statically linked in.
+        // iOS: shared xcframework from the xcframework release tag.
         (LinkMode::Shared, "ios", "aarch64") => {
             format!("sherpa-onnx-v{version}-ios-shared-onnxruntime-static.xcframework.zip")
         }
@@ -738,13 +568,13 @@ fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<()
 /// `tauri.conf.json` references the xcframework by name relative to the
 /// project root.
 ///
-/// For static iOS builds, also copies the onnxruntime xcframework.
-fn copy_xcframework_to_tauri_project(
-    lib_dir: &Path,
-    link_mode: LinkMode,
-) -> Result<(), DynError> {
+/// Note: This runs during `cargo build` (inside Xcode's "Build Rust Code"
+/// script phase), which is AFTER Xcode checks for xcframework existence.
+/// For the very first build, the xcframework must already be present.
+/// Use `setup-ios.sh` to download it before `cargo tauri ios init`.
+fn copy_xcframework_to_tauri_project(lib_dir: &Path) -> Result<(), DynError> {
     // lib_dir is something like
-    //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.6-ios-static/lib
+    //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static/lib
     // The xcframework sits next to lib/:
     //   .../sherpa-onnx.xcframework/
     let extracted_dir = lib_dir.parent().unwrap_or(lib_dir);
@@ -774,30 +604,6 @@ fn copy_xcframework_to_tauri_project(
             "cargo:warning=Copied sherpa-onnx.xcframework to {}",
             dest.display()
         );
-    }
-
-    // For static iOS, also copy the onnxruntime xcframework.
-    if link_mode == LinkMode::Static {
-        // onnxruntime was downloaded to cache_root/onnxruntime-{version}/
-        // cache_root is the parent of extracted_dir.
-        let cache_root = extracted_dir.parent().unwrap_or(extracted_dir);
-        let ort_xcframework = cache_root
-            .join(format!("onnxruntime-{ONNXRUNTIME_VERSION}"))
-            .join("onnxruntime.xcframework");
-
-        let ort_dest = project_dir.join("onnxruntime.xcframework");
-        if ort_xcframework.is_dir() && !ort_dest.exists() {
-            eprintln!(
-                "Copying onnxruntime.xcframework {} -> {}",
-                ort_xcframework.display(),
-                ort_dest.display()
-            );
-            copy_dir_recursively(&ort_xcframework, &ort_dest)?;
-            println!(
-                "cargo:warning=Copied onnxruntime.xcframework to {}",
-                ort_dest.display()
-            );
-        }
     }
 
     Ok(())

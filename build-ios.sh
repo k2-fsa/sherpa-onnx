@@ -6,9 +6,6 @@ dir=build-ios
 mkdir -p $dir
 cd $dir
 
-# NOTE: If you change onnxruntime_version here, also update the
-# ONNXRUNTIME_VERSION constant in sherpa-onnx/rust/sherpa-onnx-sys/build.rs
-# so that the Rust build downloads the matching xcframework for iOS.
 onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.1}
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 

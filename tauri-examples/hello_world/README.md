@@ -67,15 +67,18 @@ npm run build
 
 ### iOS
 
-There are two link modes for iOS:
+iOS uses **shared linking only**. For the very first build, run the setup
+script to download the xcframework:
 
-| Mode | `Cargo.toml` | `tauri.conf.json` frameworks | Xcframeworks downloaded by `build.rs` |
-|------|-------------|------------------------------|--------------------------------------|
-| **Shared** (default) | `features = ["shared"]` | `["sherpa-onnx.xcframework"]` | `sherpa-onnx-v{ver}-ios-shared-onnxruntime-static.xcframework.zip` |
-| **Static** | default features | `["sherpa-onnx.xcframework", "onnxruntime.xcframework"]` | `sherpa-onnx-v{ver}-ios-static.xcframework.zip` + `onnxruntime.xcframework.zip` |
+```bash
+cd tauri-examples/hello_world
+src-tauri/setup-ios.sh
+cargo tauri ios init
+cargo tauri ios build --target aarch64 --no-sign
+```
 
-`build.rs` downloads the xcframework(s) automatically during the build.
-No manual download is needed.
+After the first build, `build.rs` caches the xcframework and subsequent
+builds are automatic.
 
 #### Build for a real device
 

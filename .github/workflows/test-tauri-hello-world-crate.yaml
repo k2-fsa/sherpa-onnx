@@ -125,14 +125,8 @@ jobs:
           tag: tauri
 
   ios:
-    name: iOS (${{ matrix.link_mode }})
+    name: iOS
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - link_mode: static
-          - link_mode: shared
     steps:
       - uses: actions/checkout@v4
 
@@ -151,21 +145,11 @@ jobs:
           cd tauri-examples/hello_world
           npm install
 
-      - name: Set sherpa-onnx feature for shared mode
-        if: matrix.link_mode == 'shared'
+      - name: Download pre-built iOS xcframework
         shell: bash
         run: |
-          cd tauri-examples/hello_world/src-tauri
-          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
-          rm -f Cargo.toml.bak
-
-      - name: Add onnxruntime.xcframework for static mode
-        if: matrix.link_mode == 'static'
-        shell: bash
-        run: |
-          cd tauri-examples/hello_world/src-tauri
-          sed -i.bak 's|"sherpa-onnx.xcframework"|"sherpa-onnx.xcframework",\n        "onnxruntime.xcframework"|' tauri.conf.json
-          rm -f tauri.conf.json.bak
+          cd tauri-examples/hello_world
+          src-tauri/setup-ios.sh
 
       - name: Init iOS
         shell: bash
@@ -191,7 +175,7 @@ jobs:
           cd tauri-examples/hello_world/src-tauri
           app_path=$(find . -name "hello_world.app" 2>/dev/null | head -1)
           if [ -n "$app_path" ]; then
-            zip_name="tauri-hello-world-crate-ios-simulator-${{ matrix.link_mode }}.zip"
+            zip_name="tauri-hello-world-crate-ios-simulator.zip"
             ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip_name"
             ls -lh "$zip_name"
           fi
@@ -204,16 +188,56 @@ jobs:
       - name: Upload device IPA
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-crate-ios-device-${{ matrix.link_mode }}
+          name: tauri-hello-world-crate-ios-device
           path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
           if-no-files-found: ignore
 
       - name: Upload simulator app
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-hello-world-crate-ios-simulator-${{ matrix.link_mode }}
-          path: tauri-examples/hello_world/src-tauri/**/*.zip
+          name: tauri-hello-world-crate-ios-simulator
+          path: tauri-examples/hello_world/src-tauri/tauri-hello-world-crate-ios-simulator.zip
           if-no-files-found: ignore
+
+      - name: Release device IPA
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release device IPA
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
+          tag: tauri
+
+      - name: Release simulator app
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/tauri-hello-world-crate-ios-simulator.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release simulator app
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/tauri-hello-world-crate-ios-simulator.zip
+          tag: tauri
 
   linux:
     name: Linux (${{ matrix.arch }}, ${{ matrix.link_mode }})
