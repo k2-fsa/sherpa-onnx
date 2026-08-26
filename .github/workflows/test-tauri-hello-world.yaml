@@ -287,7 +287,7 @@ jobs:
         run: |
           cd tauri-examples/hello_world
           xcodebuild -project src-tauri/gen/apple/hello_world.xcodeproj \
-            -scheme hello_world \
+            -scheme hello_world_iOS \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             build

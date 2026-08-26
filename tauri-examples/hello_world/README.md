@@ -96,7 +96,7 @@ Output: `src-tauri/gen/apple/build/arm64/hello_world.ipa`
 
 ```bash
 xcodebuild -project src-tauri/gen/apple/hello_world.xcodeproj \
-  -scheme hello_world \
+  -scheme hello_world_iOS \
   -destination 'generic/platform=iOS Simulator' \
   -configuration Debug \
   build
