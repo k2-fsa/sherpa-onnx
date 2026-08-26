@@ -20,19 +20,22 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Auto-detect version from sherpa-onnx-sys Cargo.toml
+# Auto-detect version from CMakeLists.txt (search upward from SCRIPT_DIR).
 VERSION=""
-for candidate in \
-  "$SCRIPT_DIR/../../sherpa-onnx/rust/sherpa-onnx-sys/Cargo.toml" \
-  "$SCRIPT_DIR/../sherpa-onnx-sys/Cargo.toml"; do
-  if [ -f "$candidate" ]; then
-    VERSION=$(grep '^version' "$candidate" | head -1 | sed 's/.*"\(.*\)"/\1/')
-    break
+dir="$SCRIPT_DIR"
+while [ "$dir" != "/" ]; do
+  if [ -f "$dir/CMakeLists.txt" ]; then
+    VERSION=$(grep 'SHERPA_ONNX_VERSION' "$dir/CMakeLists.txt" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+    if [ -n "$VERSION" ]; then
+      break
+    fi
   fi
+  dir="$(dirname "$dir")"
 done
 
 if [ -z "$VERSION" ]; then
   echo "Error: Cannot determine sherpa-onnx version."
+  echo "Searched upward from: $SCRIPT_DIR"
   echo "Please set VERSION environment variable manually, e.g.:"
   echo "  VERSION=1.13.6 ./setup-ios.sh"
   exit 1
