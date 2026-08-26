@@ -62,32 +62,21 @@ fn try_main() -> Result<(), DynError> {
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
-    // For static iOS, add the onnxruntime xcframework's framework directory
+    // For static iOS, add the onnxruntime xcframework's lib directory
     // to the search path so the linker can find it.
     // The xcframework contains multiple slices; we pick the right one
     // based on the target triple (device vs simulator).
     if link_mode == LinkMode::Static && target_os == "ios" {
         let cache_root = lib_dir.parent().unwrap_or(&lib_dir);
-        let ort_xcframework = cache_root
+        let ort_lib_dir = cache_root
             .parent()
             .unwrap_or(cache_root)
             .join(format!("onnxruntime-{ONNXRUNTIME_VERSION}"))
-            .join("onnxruntime.xcframework");
-        // Determine the correct slice from the target triple.
-        // aarch64-apple-ios        -> ios-arm64 (device)
-        // aarch64-apple-ios-sim    -> ios-arm64_x86_64-simulator
-        // x86_64-apple-ios         -> ios-arm64_x86_64-simulator (x86_64 is always simulator)
-        let target_triple = env::var("TARGET").unwrap_or_default();
-        let ort_slice = if target_triple.contains("sim") || target_arch == "x86_64" {
-            "ios-arm64_x86_64-simulator"
-        } else {
-            "ios-arm64"
-        };
-        let ort_framework_dir = ort_xcframework.join(ort_slice);
-        if ort_framework_dir.is_dir() {
+            .join("lib");
+        if ort_lib_dir.is_dir() {
             println!(
-                "cargo:rustc-link-search=framework={}",
-                ort_framework_dir.display()
+                "cargo:rustc-link-search=native={}",
+                ort_lib_dir.display()
             );
         }
     }
@@ -192,7 +181,14 @@ fn download_prebuilt_libs(
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let cache_root = target_dir_from_out_dir(&out_dir)?.join("sherpa-onnx-prebuilt");
     let extracted_dir = cache_root.join(archive_stem);
-    let lib_dir = extracted_dir.join("lib");
+
+    // For iOS simulator builds, use a separate lib directory to avoid
+    // caching conflicts with device builds.
+    let target_triple = env::var("TARGET").unwrap_or_default();
+    let is_ios_sim = target_os == "ios"
+        && (target_triple.contains("sim") || target_arch == "x86_64");
+    let lib_dir_name = if is_ios_sim { "lib-sim" } else { "lib" };
+    let lib_dir = extracted_dir.join(lib_dir_name);
 
     if lib_dir.is_dir() {
         return Ok(lib_dir);
@@ -342,6 +338,36 @@ fn download_onnxruntime_xcframework(cache_root: &Path) -> Result<(), DynError> {
         .extract(&ort_dir)
         .map_err(|e| format!("Failed to extract onnxruntime zip: {e}"))?;
 
+    // Create a lib/ directory with the arm64 slice so that Rust's linker
+    // can find it via cargo:rustc-link-search=native.  The onnxruntime
+    // binary is a Mach-O universal binary (fat archive) which Rust's
+    // archive parser cannot handle, so we extract the arm64 slice with lipo.
+    let ort_binary = ort_xcframework
+        .join("ios-arm64")
+        .join("onnxruntime.framework")
+        .join("onnxruntime");
+    if ort_binary.is_file() {
+        let lib_dir = ort_dir.join("lib");
+        fs::create_dir_all(&lib_dir)?;
+        let link_path = lib_dir.join("libonnxruntime.a");
+        if !link_path.exists() {
+            // Use lipo to extract the arm64 slice (works even for single-arch fat binaries).
+            let status = std::process::Command::new("lipo")
+                .args([
+                    ort_binary.to_str().unwrap(),
+                    "-thin",
+                    "arm64",
+                    "-output",
+                    link_path.to_str().unwrap(),
+                ])
+                .status();
+            if !status.map(|s| s.success()).unwrap_or(false) {
+                // Fallback: copy the binary as-is if lipo fails.
+                fs::copy(&ort_binary, &link_path)?;
+            }
+        }
+    }
+
     eprintln!("Downloaded onnxruntime xcframework to {}", ort_xcframework.display());
     Ok(())
 }
@@ -356,6 +382,11 @@ fn android_abi(target_arch: &str) -> &str {
         "x86_64" => "x86_64",
         _ => "arm64-v8a",
     }
+}
+
+/// Return a path for an architecture-specific extracted binary.
+fn lib_dir_with_arch(extracted_dir: &Path, arch: &str) -> PathBuf {
+    extracted_dir.join(format!("lib-{arch}"))
 }
 
 /// Find the SherpaOnnxC binary inside an extracted iOS xcframework archive
@@ -384,9 +415,14 @@ fn setup_ios_lib_dir(
     };
 
     // Select the correct slice based on the target triple.
+    // The simulator slice (ios-arm64_x86_64-simulator) contains a fat archive
+    // (universal binary) which Rust's archive parser cannot handle.
+    // For simulator builds, we extract the arm64 slice using lipo.
     let target_triple = env::var("TARGET").unwrap_or_default();
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
-    let ios_slice = if target_triple.contains("sim") || target_arch == "x86_64" {
+    let is_simulator = target_triple.contains("sim") || target_arch == "x86_64";
+
+    let ios_slice = if is_simulator {
         "ios-arm64_x86_64-simulator"
     } else {
         "ios-arm64"
@@ -401,7 +437,36 @@ fn setup_ios_lib_dir(
         return Ok(None);
     }
 
-    let lib_dir = extracted_dir.join("lib");
+    // For simulator builds, the binary may be a fat archive (universal binary)
+    // containing both x86_64 and arm64. Rust's archive parser cannot handle
+    // fat archives, so we extract the arm64 slice using lipo.
+    let link_binary = if is_simulator && link_mode == LinkMode::Static {
+        let extracted_arm64 = lib_dir_with_arch(&extracted_dir, "arm64-sim");
+        if !extracted_arm64.exists() {
+            let status = std::process::Command::new("lipo")
+                .args([
+                    binary.to_str().unwrap(),
+                    "-thin",
+                    "arm64",
+                    "-output",
+                    extracted_arm64.to_str().unwrap(),
+                ])
+                .status();
+            match status {
+                Ok(s) if s.success() => extracted_arm64,
+                _ => binary.clone(), // fallback to original if lipo fails
+            }
+        } else {
+            extracted_arm64
+        }
+    } else {
+        binary.clone()
+    };
+
+    // Use target-specific lib directory to avoid caching conflicts between
+    // device and simulator builds sharing the same prebuilt cache.
+    let lib_dir_name = if is_simulator { "lib-sim" } else { "lib" };
+    let lib_dir = extracted_dir.join(lib_dir_name);
     fs::create_dir_all(&lib_dir)?;
 
     // For shared mode, we only need the sherpa-onnx-c-api dylib.
@@ -424,7 +489,7 @@ fn setup_ios_lib_dir(
             .collect(),
     };
 
-    let abs_binary = fs::canonicalize(&binary)?;
+    let abs_binary = fs::canonicalize(&link_binary)?;
     for link_name in &link_names {
         let link_path = lib_dir.join(link_name);
         if link_path.exists() {
@@ -521,12 +586,6 @@ fn emit_shared_link_directives(target_os: &str) {
 
 fn emit_static_link_directives(target_os: &str) {
     for lib in SHERPA_ONNX_STATIC_LIBS {
-        // For iOS, onnxruntime is a separate xcframework linked as a framework,
-        // not a static archive in lib_dir.
-        if *lib == "onnxruntime" && target_os == "ios" {
-            println!("cargo:rustc-link-lib=framework=onnxruntime");
-            continue;
-        }
         println!("cargo:rustc-link-lib=static={lib}");
     }
 
