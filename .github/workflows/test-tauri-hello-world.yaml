@@ -192,24 +192,6 @@ jobs:
           ./new-release.sh
           git diff .
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ios-tauri
-
-      - name: Build iOS xcframework from source
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
-
-      - name: Copy xcframework
-        shell: bash
-        run: |
-          cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework
-          ls -lh flutter/sherpa_onnx_ios/ios/sherpa_onnx_ios/SherpaOnnxC.xcframework/
-
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-ios
@@ -242,6 +224,20 @@ jobs:
           sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
           rm -f Cargo.toml.bak
           cat Cargo.toml
+
+      - name: Download pre-built iOS xcframework
+        shell: bash
+        run: |
+          version=$(grep '^version' sherpa-onnx/rust/sherpa-onnx-sys/Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          url="https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v${version}-ios-shared-onnxruntime-static.xcframework.zip"
+          echo "Downloading $url"
+          cd tauri-examples/hello_world/src-tauri
+          curl -L -o xcframework.zip "$url"
+          unzip -q xcframework.zip
+          rm xcframework.zip
+          # The archive extracts to sherpa-onnx.xcframework/; rename to match tauri.conf.json
+          mv sherpa-onnx.xcframework SherpaOnnxC.xcframework
+          ls -lh SherpaOnnxC.xcframework/
 
       - name: Init iOS
         shell: bash

@@ -22,6 +22,11 @@
     "icon": [
       "icons/icon.png",
       "icons/icon.ico"
-    ]
+    ],
+    "iOS": {
+      "frameworks": [
+        "SherpaOnnxC.xcframework"
+      ]
+    }
   }
 }

@@ -2,3 +2,4 @@
 # files are not committed to the repository.
 /target/
 /gen/
+*.xcframework

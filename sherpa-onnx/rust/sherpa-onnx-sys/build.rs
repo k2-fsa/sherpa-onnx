@@ -75,6 +75,12 @@ fn try_main() -> Result<(), DynError> {
         copy_to_tauri_android_jnilibs(&lib_dir, &target_arch)?;
     }
 
+    // For iOS builds (e.g. via Tauri), copy the xcframework to the Tauri
+    // project directory so Xcode can find it via bundle.ios.frameworks.
+    if target_os == "ios" {
+        copy_xcframework_to_tauri_project(&lib_dir)?;
+    }
+
     if link_mode == LinkMode::Shared && target_os == "windows" {
         copy_windows_runtime_dlls(&lib_dir)?;
     }
@@ -488,19 +494,40 @@ fn profile_output_dirs() -> Result<[PathBuf; 2], DynError> {
 
 /// Copy Android .so files to the Tauri Android project's jniLibs directory
 /// so that Gradle bundles them into the APK.
+///
+/// We need to find the Tauri project's `gen/android/` directory.  Since
+/// `CARGO_MANIFEST_DIR` points to the *sherpa-onnx-sys* crate (not the Tauri
+/// project), we walk up from `OUT_DIR` to locate the Tauri project root.
 fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<(), DynError> {
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
+    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let abi = android_abi(target_arch);
 
-    // Try the Tauri v2 gen/android path first, then a custom Tauri project path.
+    // OUT_DIR is typically:
+    //   <project>/src-tauri/target/<triple>/<profile>/build/sherpa-onnx-sys-<hash>/out
+    // The Tauri project root (src-tauri/) is the parent of "target/".
+    let target_dir = target_dir_from_out_dir(&out_dir)?;
+    let project_dir = match target_dir.parent() {
+        Some(p) => p,
+        None => return Ok(()),
+    };
+
+    // Also try CARGO_MANIFEST_DIR as a fallback (works for non-Tauri setups).
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_default());
+
+    let jni_base_suffix = PathBuf::from("gen")
+        .join("android")
+        .join("app")
+        .join("src")
+        .join("main")
+        .join("jniLibs");
+
     let candidates = [
-        manifest_dir.join("gen").join("android").join("app").join("src").join("main").join("jniLibs"),
-        // When the Tauri project root is a parent of src-tauri/.
-        manifest_dir.join("..").join("gen").join("android").join("app").join("src").join("main").join("jniLibs"),
+        project_dir.join(&jni_base_suffix),
+        manifest_dir.join(&jni_base_suffix),
     ];
 
     let tauri_jni_base = candidates.iter().find(|p| {
-        // Check that the parent (main/) or grandparent (src/) exists, meaning
+        // Check that the parent (main/) exists, meaning
         // `tauri android init` has been run.
         p.parent().map_or(false, |p| p.exists())
     });
@@ -536,12 +563,88 @@ fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<()
     }
 
     if copied > 0 {
-        eprintln!(
+        println!(
             "cargo:warning=Copied {copied} Android .so file(s) to Tauri jniLibs: {}",
             dest_dir.display()
         );
     }
 
+    Ok(())
+}
+
+/// Copy the iOS xcframework to the Tauri project directory so that
+/// Xcode can find it when linking.  `bundle.ios.frameworks` in
+/// `tauri.conf.json` references the xcframework by name relative to the
+/// project root.
+fn copy_xcframework_to_tauri_project(lib_dir: &Path) -> Result<(), DynError> {
+    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
+
+    // lib_dir is something like
+    //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static/lib
+    // The xcframework sits next to lib/:
+    //   .../sherpa-onnx.xcframework/   or   .../SherpaOnnxC.xcframework/
+    let extracted_dir = lib_dir.parent().unwrap_or(lib_dir);
+
+    let candidates = [
+        extracted_dir.join("build-ios").join("sherpa-onnx.xcframework"),
+        extracted_dir.join("sherpa-onnx.xcframework"),
+        extracted_dir.join("SherpaOnnxC.xcframework"),
+    ];
+
+    let xcframework = match candidates.iter().find(|p| p.is_dir()) {
+        Some(p) => p,
+        None => return Ok(()),
+    };
+
+    // Navigate from OUT_DIR to the Tauri project root (src-tauri/).
+    // OUT_DIR is typically: <project>/src-tauri/target/<triple>/<profile>/build/sherpa-onnx-sys-<hash>/out
+    let target_dir = target_dir_from_out_dir(&out_dir)?;
+    let project_dir = match target_dir.parent() {
+        Some(p) => p,
+        None => return Ok(()),
+    };
+
+    // Destination: src-tauri/SherpaOnnxC.xcframework
+    let dest = project_dir.join("SherpaOnnxC.xcframework");
+    if dest.exists() {
+        // Already copied (e.g. from a previous build or CI pre-download).
+        return Ok(());
+    }
+
+    eprintln!("Copying xcframework {} -> {}", xcframework.display(), dest.display());
+    copy_dir_recursively(xcframework, &dest)?;
+    println!(
+        "cargo:warning=Copied SherpaOnnxC.xcframework to {}",
+        dest.display()
+    );
+    Ok(())
+}
+
+/// Recursively copy a directory.
+fn copy_dir_recursively(src: &Path, dst: &Path) -> Result<(), DynError> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let dest_path = dst.join(entry.file_name());
+        if ty.is_dir() {
+            copy_dir_recursively(&entry.path(), &dest_path)?;
+        } else if ty.is_symlink() {
+            let target = fs::read_link(entry.path())?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::symlink;
+                symlink(&target, &dest_path)?;
+            }
+            #[cfg(not(unix))]
+            {
+                // On non-Unix, just copy the target file.
+                fs::copy(entry.path(), &dest_path)?;
+            }
+        } else {
+            fs::copy(entry.path(), &dest_path)?;
+        }
+    }
     Ok(())
 }
 
