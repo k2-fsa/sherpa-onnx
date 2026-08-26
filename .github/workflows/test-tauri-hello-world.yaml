@@ -252,16 +252,25 @@ jobs:
             ls -lh "$zip_name"
           fi
 
+      - name: Rename IPA
+        shell: bash
+        run: |
+          ipa=$(find tauri-examples/hello_world/src-tauri -name "*.ipa" | head -1)
+          if [ -n "$ipa" ]; then
+            cp "$ipa" tauri-hello-world-ios-device.ipa
+            ls -lh tauri-hello-world-ios-device.ipa
+          fi
+
       - name: Show artifacts
         shell: bash
         run: |
-          find tauri-examples/hello_world/src-tauri -name "*.ipa" -o -name "*.zip" -o -name "*.app" 2>/dev/null | head -10
+          ls -lh tauri-hello-world-ios-device.ipa tauri-examples/hello_world/src-tauri/tauri-hello-world-ios-simulator.zip 2>/dev/null
 
       - name: Upload device IPA
         uses: actions/upload-artifact@v4
         with:
           name: tauri-hello-world-ios-device
-          path: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
+          path: tauri-hello-world-ios-device.ipa
           if-no-files-found: ignore
 
       - name: Upload simulator app
@@ -275,9 +284,8 @@ jobs:
         if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
-          file_glob: true
           overwrite: true
-          file: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
+          file: tauri-hello-world-ios-device.ipa
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: tauri
@@ -286,9 +294,8 @@ jobs:
         if: github.repository_owner == 'k2-fsa'
         uses: svenstaro/upload-release-action@v2
         with:
-          file_glob: true
           overwrite: true
-          file: tauri-examples/hello_world/src-tauri/gen/apple/**/*.ipa
+          file: tauri-hello-world-ios-device.ipa
           tag: tauri
 
       - name: Release simulator app

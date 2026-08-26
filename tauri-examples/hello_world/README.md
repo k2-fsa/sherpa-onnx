@@ -103,7 +103,28 @@ cargo tauri ios build --target aarch64-sim --no-sign
 
 Output: look for `hello_world.app` in `src-tauri/gen/apple/`
 
-#### Run on simulator
+#### Run on simulator (using pre-built app)
+
+Download `tauri-hello-world-ios-simulator.zip` from
+[tauri releases](https://github.com/k2-fsa/sherpa-onnx/releases/tag/tauri),
+then:
+
+```bash
+# Unzip
+unzip tauri-hello-world-ios-simulator.zip
+
+# Boot a simulator
+xcrun simctl boot "iPhone 16"
+
+# Open Simulator app
+open -a Simulator
+
+# Install and launch
+xcrun simctl install "iPhone 16" hello_world.app
+xcrun simctl launch "iPhone 16" com.k2fsa.sherpa.onnx.hello.world
+```
+
+#### Run on simulator (building from source)
 
 ```bash
 # List available simulators
@@ -114,7 +135,7 @@ xcrun simctl boot "iPhone 16"
 
 # Install the .app (from simulator build)
 xcrun simctl install "iPhone 16" \
-  src-tauri/gen/apple/build/Debug-iphonesimulator/hello_world.app
+  src-tauri/gen/apple/build/arm64-sim/hello_world.app
 
 # Launch
 xcrun simctl launch "iPhone 16" com.k2fsa.sherpa.onnx.hello.world
