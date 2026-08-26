@@ -289,14 +289,14 @@ jobs:
           xcodebuild -project src-tauri/gen/apple/hello_world.xcodeproj \
             -scheme hello_world_iOS \
             -destination 'generic/platform=iOS Simulator' \
-            -configuration Debug \
+            -configuration Release \
             build
 
       - name: Package simulator app
         shell: bash
         run: |
           cd tauri-examples/hello_world/src-tauri/gen/apple
-          app_path=$(find . -path "*/Debug-iphonesimulator/hello_world.app" | head -1)
+          app_path=$(find . -path "*/Release-iphonesimulator/hello_world.app" | head -1)
           if [ -n "$app_path" ]; then
             zip_name="tauri-hello-world-ios-simulator-${{ matrix.link_mode }}.zip"
             ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip_name"
