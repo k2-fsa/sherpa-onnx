@@ -15,6 +15,10 @@ tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 sherpa-onnx = "1.13.6"
 
+[profile.dev]
+debug = false    # no debug info (~90 MB smaller .so)
+strip = "symbols" # strip symbol tables too
+
 [profile.release]
 opt-level = "z"
 lto = true

@@ -24,3 +24,7 @@ cpal = "0.16"
 
 # chrono: wall-clock timestamps for segment results.
 chrono = "0.4"
+
+[profile.dev]
+debug = false
+strip = "symbols"
