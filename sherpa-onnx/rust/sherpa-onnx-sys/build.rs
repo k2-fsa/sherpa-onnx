@@ -383,8 +383,17 @@ fn setup_ios_lib_dir(
         None => return Ok(None),
     };
 
+    // Select the correct slice based on the target triple.
+    let target_triple = env::var("TARGET").unwrap_or_default();
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    let ios_slice = if target_triple.contains("sim") || target_arch == "x86_64" {
+        "ios-arm64_x86_64-simulator"
+    } else {
+        "ios-arm64"
+    };
+
     let binary = xcframework
-        .join("ios-arm64")
+        .join(ios_slice)
         .join("SherpaOnnxC.framework")
         .join("SherpaOnnxC");
 
