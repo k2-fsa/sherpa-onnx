@@ -482,6 +482,11 @@ fn emit_shared_link_directives(target_os: &str) {
 
 fn emit_static_link_directives(target_os: &str) {
     for lib in SHERPA_ONNX_STATIC_LIBS {
+        // For iOS, onnxruntime is a separate xcframework linked via
+        // bundle.ios.frameworks in tauri.conf.json, not a static lib in lib_dir.
+        if *lib == "onnxruntime" && target_os == "ios" {
+            continue;
+        }
         println!("cargo:rustc-link-lib=static={lib}");
     }
 
