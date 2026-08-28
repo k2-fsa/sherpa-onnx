@@ -11,6 +11,8 @@ use bzip2::read::BzDecoder;
 use tar::Archive;
 
 const RELEASE_BASE_URL: &str = "https://github.com/k2-fsa/sherpa-onnx/releases/download";
+const XCFRAMEWORK_RELEASE_URL: &str =
+    "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework";
 const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
     "sherpa-onnx-c-api",
     "sherpa-onnx-core",
@@ -54,17 +56,27 @@ fn try_main() -> Result<(), DynError> {
 
     let target_os = env::var("CARGO_CFG_TARGET_OS")?;
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
-    let link_mode = resolve_link_mode()?;
-    let lib_dir = resolve_lib_dir(link_mode, &target_os, &target_arch)?;
+    let link_mode = resolve_link_mode(&target_os)?;
+    let (lib_dir, archive_stem) = resolve_lib_dir(link_mode, &target_os, &target_arch)?;
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
-    if link_mode == LinkMode::Shared
-        && matches!(target_os.as_str(), "linux" | "macos" | "android")
-    {
+    if link_mode == LinkMode::Shared && matches!(target_os.as_str(), "linux" | "macos" | "ios") {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
         emit_relative_rpath(&target_os);
         copy_unix_runtime_libs(&lib_dir, &target_os)?;
+    }
+
+    // For Android builds (e.g. via Tauri), copy .so files to the Tauri
+    // Android project's jniLibs directory so Gradle bundles them into the APK.
+    if target_os == "android" {
+        copy_to_tauri_android_jnilibs(&lib_dir, &target_arch, archive_stem.as_deref())?;
+    }
+
+    // For iOS builds (e.g. via Tauri), copy the xcframework to the Tauri
+    // project directory so Xcode can find it via bundle.ios.frameworks.
+    if target_os == "ios" {
+        copy_xcframework_to_tauri_project(&lib_dir, archive_stem.as_deref())?;
     }
 
     if link_mode == LinkMode::Shared && target_os == "windows" {
@@ -73,13 +85,13 @@ fn try_main() -> Result<(), DynError> {
 
     match link_mode {
         LinkMode::Static => emit_static_link_directives(&target_os),
-        LinkMode::Shared => emit_shared_link_directives(),
+        LinkMode::Shared => emit_shared_link_directives(&target_os),
     }
 
     Ok(())
 }
 
-fn resolve_link_mode() -> Result<LinkMode, DynError> {
+fn resolve_link_mode(target_os: &str) -> Result<LinkMode, DynError> {
     let static_enabled = env::var_os("CARGO_FEATURE_STATIC").is_some();
     let shared_enabled = env::var_os("CARGO_FEATURE_SHARED").is_some();
 
@@ -88,6 +100,9 @@ fn resolve_link_mode() -> Result<LinkMode, DynError> {
     }
 
     if shared_enabled {
+        Ok(LinkMode::Shared)
+    } else if target_os == "android" || target_os == "ios" {
+        // Android and iOS only support shared linking.
         Ok(LinkMode::Shared)
     } else {
         Ok(LinkMode::Static)
@@ -98,7 +113,7 @@ fn resolve_lib_dir(
     link_mode: LinkMode,
     target_os: &str,
     target_arch: &str,
-) -> Result<PathBuf, DynError> {
+) -> Result<(PathBuf, Option<String>), DynError> {
     if let Some(path) = env::var_os("SHERPA_ONNX_LIB_DIR") {
         let path = PathBuf::from(path);
         if !path.is_dir() {
@@ -108,33 +123,55 @@ fn resolve_lib_dir(
             )
             .into());
         }
-        return Ok(path);
+        return Ok((path, None));
     }
 
-    download_prebuilt_libs(link_mode, target_os, target_arch)
+    download_prebuilt_libs(link_mode, target_os, target_arch).map(|(p, s)| (p, Some(s)))
+}
+
+/// Return the download URL for a given archive.
+fn download_url(archive_name: &str) -> String {
+    // iOS xcframework archives live under the "xcframework" release tag;
+    // everything else is under the versioned release tag.
+    if archive_name.ends_with(".xcframework.zip") {
+        format!("{XCFRAMEWORK_RELEASE_URL}/{archive_name}")
+    } else {
+        let version = env!("CARGO_PKG_VERSION");
+        format!("{RELEASE_BASE_URL}/v{version}/{archive_name}")
+    }
 }
 
 fn download_prebuilt_libs(
     link_mode: LinkMode,
     target_os: &str,
     target_arch: &str,
-) -> Result<PathBuf, DynError> {
+) -> Result<(PathBuf, String), DynError> {
     let archive_name = archive_name(link_mode, target_os, target_arch)?;
-    let archive_stem = archive_name.trim_end_matches(".tar.bz2");
+    let archive_stem = archive_name
+        .strip_suffix(".tar.bz2")
+        .or_else(|| archive_name.strip_suffix(".xcframework.zip"))
+        .unwrap_or(&archive_name);
 
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let cache_root = target_dir_from_out_dir(&out_dir)?.join("sherpa-onnx-prebuilt");
     let extracted_dir = cache_root.join(archive_stem);
-    let lib_dir = extracted_dir.join("lib");
+
+    // For iOS simulator builds, use a separate lib directory to avoid
+    // caching conflicts with device builds.
+    let target_triple = env::var("TARGET").unwrap_or_default();
+    let is_ios_sim = target_os == "ios"
+        && (target_triple.contains("sim") || target_arch == "x86_64");
+    let lib_dir_name = if is_ios_sim { "lib-sim" } else { "lib" };
+    let lib_dir = extracted_dir.join(lib_dir_name);
 
     if lib_dir.is_dir() {
-        return Ok(lib_dir);
+        return Ok((lib_dir, archive_stem.to_string()));
     }
 
     // Android archives use jniLibs/{abi}/ instead of lib/. Check both.
     let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
     if android_lib_dir.is_dir() {
-        return Ok(android_lib_dir);
+        return Ok((android_lib_dir, archive_stem.to_string()));
     }
 
     fs::create_dir_all(&cache_root)?;
@@ -153,8 +190,7 @@ fn download_prebuilt_libs(
 
             copy_file_atomically(&local_archive_path, &archive_path)?;
         } else {
-            let version = env!("CARGO_PKG_VERSION");
-            let url = format!("{RELEASE_BASE_URL}/v{version}/{archive_name}");
+            let url = download_url(&archive_name);
             eprintln!("Downloading sherpa-onnx libs from {url}");
 
             let response = ureq::builder()
@@ -173,10 +209,23 @@ fn download_prebuilt_libs(
     }
 
     let unpack_result: Result<(), DynError> = (|| {
-        let tar_file = File::open(&archive_path)?;
-        let decoder = BzDecoder::new(tar_file);
-        let mut archive = Archive::new(decoder);
-        archive.unpack(&cache_root)?;
+        if archive_name.ends_with(".xcframework.zip") {
+            // iOS archives are plain zip files containing the xcframework.
+            // Extract to extracted_dir so the xcframework ends up at
+            // extracted_dir/<XcframeworkName>.xcframework/.
+            let zip_file = File::open(&archive_path)?;
+            let mut archive = zip::ZipArchive::new(zip_file).map_err(|e| {
+                format!("Failed to open zip archive {}: {e}", archive_path.display())
+            })?;
+            archive
+                .extract(&extracted_dir)
+                .map_err(|e| format!("Failed to extract zip archive: {e}"))?;
+        } else {
+            let tar_file = File::open(&archive_path)?;
+            let decoder = BzDecoder::new(tar_file);
+            let mut archive = Archive::new(decoder);
+            archive.unpack(&cache_root)?;
+        }
         Ok(())
     })();
     if let Err(err) = unpack_result {
@@ -196,8 +245,19 @@ fn download_prebuilt_libs(
             .join(android_abi(target_arch));
         if android_lib_dir.is_dir() {
             eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
-            return Ok(android_lib_dir);
+            return Ok((android_lib_dir, archive_stem.to_string()));
         }
+
+        // iOS archives contain xcframework bundles. Create a lib/ directory
+        // with symlinks so Rust's linker can find the library under the
+        // expected name (libsherpa-onnx-c-api.a / .dylib).
+        if target_os == "ios" {
+            if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir)? {
+                eprintln!("Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
+                return Ok((ios_lib, archive_stem.to_string()));
+            }
+        }
+
         return Err(format!(
             "Downloaded archive did not contain a lib directory: {}",
             lib_dir.display()
@@ -207,8 +267,9 @@ fn download_prebuilt_libs(
 
     eprintln!("Downloaded sherpa-onnx libs to {}", extracted_dir.display());
 
-    Ok(lib_dir)
+    Ok((lib_dir, archive_stem.to_string()))
 }
+
 
 /// Map a Rust target architecture to the Android ABI directory name used
 /// in the prebuilt jniLibs/ layout.
@@ -220,6 +281,67 @@ fn android_abi(target_arch: &str) -> &str {
         "x86_64" => "x86_64",
         _ => "arm64-v8a",
     }
+}
+
+/// Find the SherpaOnnxC binary inside an extracted iOS xcframework archive
+/// and create a `lib/` directory with a symlink named `libsherpa-onnx-c-api.dylib`
+/// so that Rust's linker can find it under the expected name.
+fn setup_ios_lib_dir(extracted_dir: &Path) -> Result<Option<PathBuf>, DynError> {
+    let candidates = [
+        extracted_dir
+            .join("build-ios")
+            .join("sherpa-onnx.xcframework"),
+        extracted_dir.join("sherpa-onnx.xcframework"),
+        extracted_dir.join("SherpaOnnxC.xcframework"),
+    ];
+
+    let xcframework = match candidates.iter().find(|p| p.is_dir()) {
+        Some(p) => p,
+        None => return Ok(None),
+    };
+
+    // Select the correct slice based on the target triple.
+    let target_triple = env::var("TARGET").unwrap_or_default();
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    let is_simulator = target_triple.contains("sim") || target_arch == "x86_64";
+
+    let ios_slice = if is_simulator {
+        "ios-arm64_x86_64-simulator"
+    } else {
+        "ios-arm64"
+    };
+
+    let binary = xcframework
+        .join(ios_slice)
+        .join("SherpaOnnxC.framework")
+        .join("SherpaOnnxC");
+
+    if !binary.is_file() {
+        return Ok(None);
+    }
+
+    // Use target-specific lib directory to avoid caching conflicts between
+    // device and simulator builds sharing the same prebuilt cache.
+    let lib_dir_name = if is_simulator { "lib-sim" } else { "lib" };
+    let lib_dir = extracted_dir.join(lib_dir_name);
+    fs::create_dir_all(&lib_dir)?;
+
+    // Create a symlink for the dylib.
+    let link_path = lib_dir.join("libsherpa-onnx-c-api.dylib");
+    if !link_path.exists() {
+        let abs_binary = fs::canonicalize(&binary)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+            symlink(&abs_binary, &link_path)?;
+        }
+        #[cfg(not(unix))]
+        {
+            fs::copy(&abs_binary, &link_path)?;
+        }
+    }
+
+    Ok(Some(lib_dir))
 }
 
 fn archive_name(
@@ -269,6 +391,12 @@ fn archive_name(
         (LinkMode::Shared, "android", "aarch64" | "arm" | "x86" | "x86_64") => {
             format!("sherpa-onnx-v{version}-android.tar.bz2")
         }
+        // iOS: shared xcframework from the xcframework release tag.
+        // The xcframework contains both device (arm64) and simulator
+        // (arm64 + x86_64) slices, so one archive serves all iOS targets.
+        (LinkMode::Shared, "ios", "aarch64" | "x86_64") => {
+            format!("sherpa-onnx-v{version}-ios-shared-onnxruntime-static.xcframework.zip")
+        }
         _ => return Err(format!(
             "Unsupported target for sherpa-onnx prebuilt libs: os={target_os}, arch={target_arch}"
         )
@@ -278,9 +406,14 @@ fn archive_name(
     Ok(name)
 }
 
-fn emit_shared_link_directives() {
+fn emit_shared_link_directives(target_os: &str) {
     println!("cargo:rustc-link-lib=dylib=sherpa-onnx-c-api");
-    println!("cargo:rustc-link-lib=dylib=onnxruntime");
+    // The iOS shared-onnxruntime-static xcframework bundles onnxruntime
+    // statically into the sherpa-onnx dylib, so no separate onnxruntime
+    // dylib is needed.
+    if target_os != "ios" {
+        println!("cargo:rustc-link-lib=dylib=onnxruntime");
+    }
 }
 
 fn emit_static_link_directives(target_os: &str) {
@@ -295,7 +428,7 @@ fn emit_static_link_directives(target_os: &str) {
             println!("cargo:rustc-link-lib=dylib=pthread");
             println!("cargo:rustc-link-lib=dylib=dl");
         }
-        "macos" => {
+        "macos" | "ios" => {
             println!("cargo:rustc-link-lib=dylib=c++");
             println!("cargo:rustc-link-lib=framework=Foundation");
         }
@@ -318,10 +451,28 @@ fn target_dir_from_out_dir(out_dir: &Path) -> Result<PathBuf, DynError> {
     Ok(out_dir.to_path_buf())
 }
 
+/// Find the Tauri project root (the directory containing `tauri.conf.json`)
+/// by walking up from `OUT_DIR`.
+///
+/// Returns `None` if the directory cannot be determined (e.g., not a Tauri
+/// project, or `CARGO_TARGET_DIR` points outside the project).
+fn find_tauri_project_dir() -> Option<PathBuf> {
+    let out_dir = PathBuf::from(env::var("OUT_DIR").ok()?);
+    let target_dir = target_dir_from_out_dir(&out_dir).ok()?;
+    let candidate = target_dir.parent()?;
+
+    // Validate that this is actually a Tauri project directory.
+    if candidate.join("tauri.conf.json").exists() {
+        return Some(candidate.to_path_buf());
+    }
+
+    None
+}
+
 fn emit_relative_rpath(target_os: &str) {
     match target_os {
         "linux" | "android" => println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"),
-        "macos" => println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path"),
+        "macos" | "ios" => println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path"),
         _ => {}
     }
 }
@@ -343,6 +494,205 @@ fn profile_output_dirs() -> Result<[PathBuf; 2], DynError> {
     Ok([profile_dir.clone(), profile_dir.join("examples")])
 }
 
+/// Copy Android .so files to the Tauri Android project's jniLibs directory
+/// so that Gradle bundles them into the APK.
+///
+/// We need to find the Tauri project's `gen/android/` directory.  Since
+/// `CARGO_MANIFEST_DIR` points to the *sherpa-onnx-sys* crate (not the Tauri
+/// project), we walk up from `OUT_DIR` to locate the Tauri project root.
+fn copy_to_tauri_android_jnilibs(
+    lib_dir: &Path,
+    target_arch: &str,
+    archive_stem: Option<&str>,
+) -> Result<(), DynError> {
+    let abi = android_abi(target_arch);
+
+    let jni_base_suffix = PathBuf::from("gen")
+        .join("android")
+        .join("app")
+        .join("src")
+        .join("main")
+        .join("jniLibs");
+
+    let mut candidates = Vec::new();
+    if let Some(project_dir) = find_tauri_project_dir() {
+        candidates.push(project_dir.join(&jni_base_suffix));
+    }
+    // Fallback: CARGO_MANIFEST_DIR (works for non-Tauri setups).
+    if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+        candidates.push(PathBuf::from(manifest_dir).join(&jni_base_suffix));
+    }
+
+    let tauri_jni_base = candidates.iter().find(|p| {
+        // Check that the parent (main/) exists, meaning
+        // `tauri android init` has been run.
+        p.parent().map_or(false, |p| p.exists())
+    });
+
+    let tauri_jni_base = match tauri_jni_base {
+        Some(p) => p,
+        None => {
+            eprintln!("Tauri jniLibs directory not found; skipping Android .so copy");
+            return Ok(());
+        }
+    };
+
+    let dest_dir = tauri_jni_base.join(abi);
+
+    // Check if the .so files are already up-to-date.
+    let version_file = dest_dir.join(".sherpa-onnx-version");
+    if dest_dir.is_dir() {
+        if let Some(stem) = archive_stem {
+            if let Ok(prev) = fs::read_to_string(&version_file) {
+                if prev.trim() == stem {
+                    eprintln!("Skipping Tauri Android .so copy: already up-to-date ({stem})");
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    fs::create_dir_all(&dest_dir)?;
+
+    let mut copied = 0;
+    for entry in fs::read_dir(lib_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let is_so = path
+            .file_name()
+            .and_then(OsStr::to_str)
+            .map(|name| name.contains(".so") && !name.contains("c++"))
+            .unwrap_or(false);
+        if !is_so {
+            continue;
+        }
+        if let Some(file_name) = path.file_name() {
+            let dest = dest_dir.join(file_name);
+            fs::copy(&path, &dest)?;
+            eprintln!("Copied {} -> {}", path.display(), dest.display());
+            copied += 1;
+        }
+    }
+
+    if copied > 0 {
+        // Record the archive stem so we can skip re-copying on subsequent builds.
+        if let Some(stem) = archive_stem {
+            let _ = fs::write(&version_file, stem);
+        }
+        println!(
+            "cargo:warning=Copied {copied} Android .so file(s) to Tauri jniLibs: {}",
+            dest_dir.display()
+        );
+    }
+
+    Ok(())
+}
+
+/// Copy the iOS xcframework to the Tauri project directory so that
+/// Xcode can find it when linking.  `bundle.ios.frameworks` in
+/// `tauri.conf.json` references the xcframework by name relative to the
+/// project root.
+///
+/// Note: This runs during `cargo build` (inside Xcode's "Build Rust Code"
+/// script phase), which is AFTER Xcode checks for xcframework existence.
+/// For the very first build, the xcframework must already be present.
+/// Use `setup-ios.sh` to download it before `cargo tauri ios init`.
+fn copy_xcframework_to_tauri_project(
+    lib_dir: &Path,
+    archive_stem: Option<&str>,
+) -> Result<(), DynError> {
+    // lib_dir is something like
+    //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static/lib
+    // The xcframework sits next to lib/:
+    //   .../sherpa-onnx.xcframework/
+    let extracted_dir = lib_dir.parent().unwrap_or(lib_dir);
+
+    let candidates = [
+        extracted_dir.join("build-ios").join("sherpa-onnx.xcframework"),
+        extracted_dir.join("sherpa-onnx.xcframework"),
+        extracted_dir.join("SherpaOnnxC.xcframework"),
+    ];
+
+    let xcframework = match candidates.iter().find(|p| p.is_dir()) {
+        Some(p) => p,
+        None => {
+            eprintln!("No xcframework found in {}; skipping Tauri iOS copy", extracted_dir.display());
+            return Ok(());
+        }
+    };
+
+    // Navigate from OUT_DIR to the Tauri project root (src-tauri/).
+    let project_dir = match find_tauri_project_dir() {
+        Some(p) => p,
+        None => {
+            eprintln!("Tauri project directory not found; skipping iOS xcframework copy");
+            return Ok(());
+        }
+    };
+
+    // Destination: src-tauri/sherpa-onnx.xcframework
+    let dest = project_dir.join("sherpa-onnx.xcframework");
+    let version_file = project_dir.join(".sherpa-onnx-xcframework-version");
+
+    // Check if the xcframework is already up-to-date.
+    let needs_update = if dest.exists() {
+        archive_stem.map_or(true, |stem| {
+            fs::read_to_string(&version_file).map_or(true, |prev| prev.trim() != stem)
+        })
+    } else {
+        true
+    };
+
+    if needs_update {
+        let _ = fs::remove_dir_all(&dest);
+        eprintln!(
+            "Copying sherpa-onnx.xcframework {} -> {}",
+            xcframework.display(),
+            dest.display()
+        );
+        copy_dir_recursively(xcframework, &dest)?;
+        if let Some(stem) = archive_stem {
+            let _ = fs::write(&version_file, stem);
+        }
+        println!(
+            "cargo:warning=Copied sherpa-onnx.xcframework to {}",
+            dest.display()
+        );
+    } else {
+        eprintln!("Skipping Tauri iOS xcframework copy: already up-to-date");
+    }
+
+    Ok(())
+}
+
+/// Recursively copy a directory.
+fn copy_dir_recursively(src: &Path, dst: &Path) -> Result<(), DynError> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let dest_path = dst.join(entry.file_name());
+        if ty.is_dir() {
+            copy_dir_recursively(&entry.path(), &dest_path)?;
+        } else if ty.is_symlink() {
+            let target = fs::read_link(entry.path())?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::symlink;
+                symlink(&target, &dest_path)?;
+            }
+            #[cfg(not(unix))]
+            {
+                // On non-Unix, just copy the target file.
+                fs::copy(entry.path(), &dest_path)?;
+            }
+        } else {
+            fs::copy(entry.path(), &dest_path)?;
+        }
+    }
+    Ok(())
+}
+
 fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynError> {
     let runtime_libs: Vec<PathBuf> = fs::read_dir(lib_dir)?
         .filter_map(|entry| entry.ok().map(|e| e.path()))
@@ -351,7 +701,7 @@ fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynErro
                 .and_then(OsStr::to_str)
                  .map(|name| match target_os {
                      "linux" | "android" => name.contains(".so"),
-                     "macos" => name.ends_with(".dylib"),
+                     "macos" | "ios" => name.ends_with(".dylib"),
                     _ => false,
                 })
                 .unwrap_or(false)

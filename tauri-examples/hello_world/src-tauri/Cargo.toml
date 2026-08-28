@@ -1,0 +1,25 @@
+[package]
+name = "hello_world"
+version = "1.13.6"
+edition = "2021"
+
+[lib]
+name = "hello_world_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+sherpa-onnx = "1.13.6"
+
+[profile.dev]
+debug = false    # no debug info (~90 MB smaller .so)
+strip = "symbols" # strip symbol tables too
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true

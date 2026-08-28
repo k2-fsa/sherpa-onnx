@@ -60,21 +60,16 @@ find java-api-examples -name "build.gradle" -type f -exec sed -i.bak "$replace_s
 find java-api-examples -name "build.gradle.kts" -type f -exec sed -i.bak "$replace_str" {} \;
 find java-api-examples -name "pom.xml" -type f -exec sed -i.bak "$replace_str" {} \;
 
-sed -i.bak "$replace_str" ./rust-api-examples/Cargo.toml
-sed -i.bak "$replace_str" ./rust-api-examples/for-advanced-users.md
-sed -i.bak "$replace_str" ./rust-api-examples/README.md
-sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx-sys/Cargo.toml
-sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/Cargo.toml
-sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/src/lib.rs
-sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/README.md
+find ./rust-api-examples -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
+find ./rust-api-examples -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} \;
 
-sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/package.json
-sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/src-tauri/Cargo.toml
-sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/src-tauri/tauri.conf.json
+find sherpa-onnx/rust -name "*.rs" -type f -exec sed -i.bak "$replace_str" {} \;
+find sherpa-onnx/rust -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
+find sherpa-onnx/rust -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} \;
 
-sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-microphone/package.json
-sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-microphone/src-tauri/Cargo.toml
-sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-microphone/src-tauri/tauri.conf.json
+find tauri-examples -name "package.json" -type f -exec sed -i.bak "$replace_str" {} \;
+find tauri-examples -name "Cargo.toml" -type f -exec sed -i.bak "$replace_str" {} \;
+find tauri-examples -name "tauri.conf.json" -type f -exec sed -i.bak "$replace_str" {} \;
 
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;

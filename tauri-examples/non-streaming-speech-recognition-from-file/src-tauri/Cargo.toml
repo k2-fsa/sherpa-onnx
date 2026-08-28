@@ -37,3 +37,7 @@ symphonia = { version = "0.5.5", features = [
     "aiff",
     "caf",
 ] }
+
+[profile.dev]
+debug = false
+strip = "symbols"

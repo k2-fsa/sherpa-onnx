@@ -1,0 +1,816 @@
+name: test-tauri-hello-world
+
+on:
+  push:
+    branches:
+      - master
+      - rust-ios
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-tauri-hello-world-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    name: macOS (${{ matrix.arch }}, ${{ matrix.link_mode }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            os: macos-latest
+            link_mode: static
+          - arch: arm64
+            os: macos-latest
+            link_mode: shared
+          - arch: x64
+            os: macos-15-intel
+            link_mode: static
+          - arch: x64
+            os: macos-15-intel
+            link_mode: shared
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-tauri-${{ matrix.link_mode }}
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          mkdir build
+          cd build
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            build_shared=ON
+          else
+            build_shared=OFF
+          fi
+          cmake \
+            -DBUILD_SHARED_LIBS=$build_shared \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Set library paths
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/build/install/lib" >> "$GITHUB_ENV"
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            echo "DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm install
+
+      - name: Use local sherpa-onnx crates
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/hello_world/src-tauri/.cargo
+          cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
+          [patch.crates-io]
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          EOF
+
+      - name: Set sherpa-onnx feature for shared mode
+        if: matrix.link_mode == 'shared'
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
+          rm -f Cargo.toml.bak
+          cat Cargo.toml
+
+      - name: Build
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm run build
+
+      - name: Show artifacts
+        shell: bash
+        run: |
+          ls -lhR tauri-examples/hello_world/src-tauri/target/release/bundle/
+
+      - name: Ad-hoc sign the app
+        if: matrix.arch == 'arm64'
+        shell: bash
+        run: |
+          app_path=$(find tauri-examples/hello_world/src-tauri/target/release/bundle/macos -name "*.app" | head -1)
+          if [ -n "$app_path" ]; then
+            codesign --force --deep -s - "$app_path"
+            xattr -cr "$app_path"
+          fi
+
+      - name: Zip app
+        shell: bash
+        run: |
+          zip_name="tauri-hello-world-macos-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
+          app_path=$(find tauri-examples/hello_world/src-tauri/target/release/bundle/macos -name "*.app" | head -1)
+          if [ -n "$app_path" ]; then
+            app_name=$(basename "$app_path" .app)
+            cd tauri-examples/hello_world/src-tauri/target/release/bundle/macos/
+            rm -rf tauri-hello-world-macos-${{ matrix.arch }}
+            mkdir -p tauri-hello-world-macos-${{ matrix.arch }}
+            mv "${app_name}.app" tauri-hello-world-macos-${{ matrix.arch }}/
+            if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+              cp -v $GITHUB_WORKSPACE/build/install/lib/*.dylib tauri-hello-world-macos-${{ matrix.arch }}/
+            fi
+            zip -r -y "$zip_name" tauri-hello-world-macos-${{ matrix.arch }}/
+            ls -lh "$zip_name"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-hello-world-macos-${{ matrix.arch }}-${{ matrix.link_mode }}
+          path: tauri-examples/hello_world/src-tauri/target/release/bundle/macos/tauri-hello-world-macos-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/target/release/bundle/macos/tauri-hello-world-macos-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/target/release/bundle/macos/tauri-hello-world-macos-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+          tag: tauri
+
+  ios:
+    name: iOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ios-tauri
+
+      - name: Cache iOS xcframework
+        id: cache-xcframework
+        uses: actions/cache@v4
+        with:
+          path: build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework
+          key: ios-xcframework-${{ hashFiles('CMakeLists.txt') }}
+
+      - name: Build iOS xcframework from source
+        if: steps.cache-xcframework.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ./build-ios-shared-sherpa-with-static-onnxruntime.sh
+
+      - name: Copy xcframework to Tauri project
+        shell: bash
+        run: |
+          cp -av build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework \
+            tauri-examples/hello_world/src-tauri/sherpa-onnx.xcframework
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm install
+
+      - name: Use local sherpa-onnx crates
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/hello_world/src-tauri/.cargo
+          cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
+          [patch.crates-io]
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          EOF
+
+      - name: Init iOS
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          cargo-tauri ios init
+
+      - name: Build iOS for device
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          cargo-tauri ios build --target aarch64 --no-sign
+
+      - name: Build iOS for simulator
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          cargo-tauri ios build --target aarch64-sim --no-sign
+
+      - name: Package simulator app
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          app_path=$(find . -name "hello_world.app" 2>/dev/null | head -1)
+          if [ -n "$app_path" ]; then
+            zip_name="tauri-hello-world-ios-simulator.zip"
+            ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip_name"
+            ls -lh "$zip_name"
+          fi
+
+      - name: Rename IPA
+        shell: bash
+        run: |
+          ipa=$(find tauri-examples/hello_world/src-tauri -name "*.ipa" | head -1)
+          if [ -n "$ipa" ]; then
+            cp "$ipa" tauri-hello-world-ios-device.ipa
+            ls -lh tauri-hello-world-ios-device.ipa
+          fi
+
+      - name: Show artifacts
+        shell: bash
+        run: |
+          ls -lh tauri-hello-world-ios-device.ipa tauri-examples/hello_world/src-tauri/tauri-hello-world-ios-simulator.zip 2>/dev/null
+
+      - name: Upload device IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-hello-world-ios-device
+          path: tauri-hello-world-ios-device.ipa
+          if-no-files-found: ignore
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-hello-world-ios-simulator
+          path: tauri-examples/hello_world/src-tauri/tauri-hello-world-ios-simulator.zip
+          if-no-files-found: ignore
+
+      - name: Release device IPA
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          overwrite: true
+          file: tauri-hello-world-ios-device.ipa
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release device IPA
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          overwrite: true
+          file: tauri-hello-world-ios-device.ipa
+          tag: tauri
+
+      - name: Release simulator app
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/tauri-hello-world-ios-simulator.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release simulator app
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/hello_world/src-tauri/tauri-hello-world-ios-simulator.zip
+          tag: tauri
+
+  linux:
+    name: Linux (${{ matrix.arch }}, ${{ matrix.link_mode }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            os: ubuntu-latest
+            link_mode: static
+          - arch: x64
+            os: ubuntu-latest
+            link_mode: shared
+          - arch: arm64
+            os: ubuntu-24.04-arm
+            link_mode: static
+          - arch: arm64
+            os: ubuntu-24.04-arm
+            link_mode: shared
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-tauri-${{ matrix.link_mode }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          mkdir build
+          cd build
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            build_shared=ON
+          else
+            build_shared=OFF
+          fi
+          cmake \
+            -DBUILD_SHARED_LIBS=$build_shared \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          cmake --build . --target install --config Release
+
+      - name: Set library paths
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/build/install/lib" >> "$GITHUB_ENV"
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            echo "LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm install
+
+      - name: Use local sherpa-onnx crates
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/hello_world/src-tauri/.cargo
+          cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
+          [patch.crates-io]
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          EOF
+
+      - name: Set sherpa-onnx feature for shared mode
+        if: matrix.link_mode == 'shared'
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
+          rm -f Cargo.toml.bak
+          cat Cargo.toml
+
+      - name: Build
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm run build
+
+      - name: Show artifacts
+        shell: bash
+        run: |
+          ls -lhR tauri-examples/hello_world/src-tauri/target/release/bundle/ 2>/dev/null || echo "No bundle directory"
+          ls -lh tauri-examples/hello_world/src-tauri/target/release/hello_world 2>/dev/null || true
+
+      - name: Zip app
+        shell: bash
+        run: |
+          zip_name="tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
+          dir_name="tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}"
+          cd tauri-examples/hello_world/src-tauri/target/release/
+          rm -rf "$dir_name"
+          mkdir -p "$dir_name"
+          cp hello_world "$dir_name/"
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            cp *.so "$dir_name/"
+          fi
+          zip -r -y "$GITHUB_WORKSPACE/$zip_name" "$dir_name"
+          ls -lh "$GITHUB_WORKSPACE/$zip_name"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}
+          path: tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-hello-world-linux-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+          tag: tauri
+
+  windows:
+    name: Windows (${{ matrix.arch }}, ${{ matrix.link_mode }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            os: windows-latest
+            link_mode: static
+          - arch: x64
+            os: windows-latest
+            link_mode: shared
+          - arch: arm64
+            os: windows-11-arm
+            link_mode: static
+          - arch: arm64
+            os: windows-11-arm
+            link_mode: shared
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-tauri-${{ matrix.link_mode }}
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch == 'arm64' && 'amd64_arm64' || 'x64' }}
+
+      - name: Build sherpa-onnx from source
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            build_shared=ON
+          else
+            build_shared=OFF
+          fi
+          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            cmake \
+              -A ARM64 \
+              -DBUILD_SHARED_LIBS=$build_shared \
+              -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+              -DBUILD_ESPEAK_NG_EXE=OFF \
+              -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+              -DCMAKE_INSTALL_PREFIX=./install \
+              ..
+          else
+            cmake \
+              -A x64 \
+              -DBUILD_SHARED_LIBS=$build_shared \
+              -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+              -DBUILD_ESPEAK_NG_EXE=OFF \
+              -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+              -DCMAKE_INSTALL_PREFIX=./install \
+              ..
+          fi
+          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
+
+      - name: Set library paths
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/build/install/lib" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.arch == 'arm64' && 'aarch64-pc-windows-msvc' || '' }}
+
+      - name: Select MSVC linker
+        shell: pwsh
+        run: |
+          if ("${{ matrix.arch }}" -eq "arm64") {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\ARM64\link.exe'
+            $env_var = "CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER"
+          } else {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+            $env_var = "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
+          }
+          if (-not (Test-Path $linker)) {
+            throw "MSVC linker not found: $linker"
+          }
+          "$env_var=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Using linker: $linker"
+          & where.exe link
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm install
+
+      - name: Use local sherpa-onnx crates
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/hello_world/src-tauri/.cargo
+          cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
+          [patch.crates-io]
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          EOF
+
+      - name: Set sherpa-onnx feature for shared mode
+        if: matrix.link_mode == 'shared'
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world/src-tauri
+          sed -i.bak 's/sherpa-onnx = "1.13.6"/sherpa-onnx = { version = "1.13.6", default-features = false, features = ["shared"] }/' Cargo.toml
+          rm -f Cargo.toml.bak
+          cat Cargo.toml
+
+      - name: Build
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm run build
+
+      - name: Show artifacts
+        shell: bash
+        run: |
+          ls -lhR tauri-examples/hello_world/src-tauri/target/release/bundle/ 2>/dev/null || echo "No bundle directory"
+          ls -lh tauri-examples/hello_world/src-tauri/target/release/hello_world.exe 2>/dev/null || true
+
+      - name: Zip app
+        shell: bash
+        run: |
+          zip_name="tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip"
+          dir_name="tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}"
+          cd tauri-examples/hello_world/src-tauri/target/release/
+          rm -rf "$dir_name"
+          mkdir -p "$dir_name"
+          cp hello_world.exe "$dir_name/"
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            cp *.dll "$dir_name/"
+          fi
+          powershell -Command "Compress-Archive -Path $dir_name -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          ls -lh "$GITHUB_WORKSPACE/$zip_name"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}
+          path: tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-hello-world-win-${{ matrix.arch }}-${{ matrix.link_mode }}.zip
+          tag: tauri
+
+  android:
+    name: Android (${{ matrix.abi }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            rust_target: aarch64-linux-android
+            tauri_target: aarch64
+            build_script: build-android-arm64-v8a.sh
+            build_dir: build-android-arm64-v8a
+          - abi: armeabi-v7a
+            rust_target: armv7-linux-androideabi
+            tauri_target: armv7
+            build_script: build-android-armv7-eabi.sh
+            build_dir: build-android-armv7-eabi
+          - abi: x86_64
+            rust_target: x86_64-linux-android
+            tauri_target: x86_64
+            build_script: build-android-x86-64.sh
+            build_dir: build-android-x86-64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-${{ matrix.abi }}-tauri
+
+      - name: Cache installed libs
+        id: cache-libs
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.build_dir }}/install
+          key: rust-libs-android-${{ matrix.abi }}-shared-${{ hashFiles('CMakeLists.txt') }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build ${{ matrix.abi }} from source
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export SHERPA_ONNX_ENABLE_C_API=ON
+          export SHERPA_ONNX_ENABLE_JNI=OFF
+          export SHERPA_ONNX_ENABLE_BINARY=OFF
+          ./${{ matrix.build_script }}
+
+      - name: Set library paths
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/${{ matrix.build_dir }}/install/lib" >> "$GITHUB_ENV"
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          npm install
+
+      - name: Use local sherpa-onnx crates
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/hello_world/src-tauri/.cargo
+          cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
+          [patch.crates-io]
+          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
+          EOF
+
+      - name: Init Android
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          cargo-tauri android init
+
+      - name: Build Android
+        shell: bash
+        run: |
+          cd tauri-examples/hello_world
+          cargo-tauri android build --target ${{ matrix.tauri_target }} --apk --debug
+
+      - name: Show artifacts
+        shell: bash
+        run: |
+          find tauri-examples/hello_world/src-tauri -name "*.apk" 2>/dev/null | head -10
+
+      - name: Rename APK
+        shell: bash
+        run: |
+          apk=$(find tauri-examples/hello_world/src-tauri -name "*.apk" | head -1)
+          if [ -n "$apk" ]; then
+            cp "$apk" "tauri-hello-world-${{ matrix.abi }}.apk"
+            ls -lh "tauri-hello-world-${{ matrix.abi }}.apk"
+          fi
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-hello-world-${{ matrix.abi }}.apk
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-hello-world-${{ matrix.abi }}.apk
+          tag: tauri

@@ -25,6 +25,7 @@ set -e
 dir=build-ios-shared-sherpa-with-static-onnxruntime
 mkdir -p $dir
 cd $dir
+
 onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.1}
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
