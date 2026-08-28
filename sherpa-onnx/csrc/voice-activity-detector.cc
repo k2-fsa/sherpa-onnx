@@ -58,6 +58,10 @@ class VoiceActivityDetector::Impl {
       } else if (!config_.ten_vad.model.empty()) {
         model_->SetMinSilenceDuration(config_.ten_vad.min_silence_duration);
         model_->SetThreshold(config_.ten_vad.threshold);
+      } else if (!config_.fire_red_vad.model.empty()) {
+        model_->SetMinSilenceDuration(
+            config_.fire_red_vad.min_silence_duration);
+        model_->SetThreshold(config_.fire_red_vad.threshold);
       } else {
         SHERPA_ONNX_LOGE("Unknown vad model");
         SHERPA_ONNX_EXIT(-1);
@@ -94,7 +98,7 @@ class VoiceActivityDetector::Impl {
     if (is_speech) {
       if (start_ == -1) {
         // beginning of speech
-        start_ = std::max(buffer_.Tail() - 2 * model_->WindowSize() -
+        start_ = std::max(buffer_.Tail() - 12 * model_->WindowSize() -
                               model_->MinSpeechDurationSamples(),
                           buffer_.Head());
         cur_segment_.start = start_;
@@ -109,7 +113,10 @@ class VoiceActivityDetector::Impl {
 
       if (start_ != -1 && buffer_.Size()) {
         // end of speech, save the speech segment
-        int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
+        int32_t end =
+            std::min(buffer_.Tail() - model_->MinSilenceDurationSamples() +
+                         model_->WindowSize(),
+                     buffer_.Tail());
 
         std::vector<float> s = buffer_.Get(start_, end - start_);
         SpeechSegment segment;
@@ -123,8 +130,7 @@ class VoiceActivityDetector::Impl {
       }
 
       if (start_ == -1) {
-        int32_t end = buffer_.Tail() - 2 * model_->WindowSize() -
-                      model_->MinSpeechDurationSamples();
+        int32_t end = buffer_.Tail() - model_->MinSpeechDurationSamples();
         int32_t n = std::max(0, end - buffer_.Head());
         if (n > 0) {
           buffer_.Pop(n);
@@ -207,6 +213,9 @@ class VoiceActivityDetector::Impl {
     } else if (!config_.ten_vad.model.empty()) {
       max_utterance_length_ =
           config_.sample_rate * config_.ten_vad.max_speech_duration;
+    } else if (!config_.fire_red_vad.model.empty()) {
+      max_utterance_length_ =
+          config_.sample_rate * config_.fire_red_vad.max_speech_duration;
     } else {
       SHERPA_ONNX_LOGE("Unsupported VAD model");
       SHERPA_ONNX_EXIT(-1);
