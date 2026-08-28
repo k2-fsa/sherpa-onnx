@@ -63,9 +63,9 @@ find java-api-examples -name "pom.xml" -type f -exec sed -i.bak "$replace_str" {
 find ./rust-api-examples -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
 find ./rust-api-examples -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} \;
 
-find sherpa-onnx/rust -name "lib.rs" -type f -exec sed -i.bak "$replace_str" {} \;
-find sherpa-onnx/rust -name "README.md" -type f -exec sed -i.bak "$replace_str" {} \;
-find sherpa-onnx/rust -name "Cargo.toml" -type f -exec sed -i.bak "$replace_str" {} \;
+find sherpa-onnx/rust -name "*.rs" -type f -exec sed -i.bak "$replace_str" {} \;
+find sherpa-onnx/rust -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
+find sherpa-onnx/rust -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} \;
 
 find tauri-examples -name "package.json" -type f -exec sed -i.bak "$replace_str" {} \;
 find tauri-examples -name "Cargo.toml" -type f -exec sed -i.bak "$replace_str" {} \;

@@ -128,14 +128,15 @@ from your directory instead of an auto-downloaded archive.
 
 ## Cross-compiling for iOS
 
-iOS support targets real devices (`aarch64-apple-ios`). Simulator targets are
-not supported. iOS only supports **shared** linking (the build script
-auto-selects shared mode for iOS, like Android).
+iOS supports real devices (`aarch64-apple-ios`) and simulators
+(`aarch64-apple-ios-sim`, `x86_64-apple-ios`). iOS only supports **shared**
+linking (the build script auto-selects shared mode for iOS, like Android).
 
 ### Prerequisites
 
 - macOS with Xcode installed
 - Rust iOS target: `rustup target add aarch64-apple-ios`
+- Tauri CLI: `cargo install tauri-cli`
 
 ### Build with Tauri
 
@@ -146,8 +147,8 @@ The easiest way to build an iOS app with sherpa-onnx is through
 ```bash
 cd tauri-examples/hello_world
 npm install
-npm run tauri ios init
-npm run tauri ios build
+cargo tauri ios init
+cargo tauri ios build
 ```
 
 The build script automatically downloads the iOS xcframework archive and creates
@@ -230,8 +231,9 @@ supported). The build script downloads a single archive containing all ABIs.
 ### Prerequisites
 
 - Android NDK (r27 or later recommended)
-- Rust Android targets: `rustup target add aarch64-linux-android`
+- Rust Android targets: `rustup target add aarch64-linux-android armv7-linux-androideabi`
 - Set `ANDROID_NDK_HOME` or `ANDROID_NDK_ROOT` to your NDK installation
+- Tauri CLI: `cargo install tauri-cli`
 
 ### Build with Tauri
 
@@ -242,8 +244,8 @@ The easiest way to build an Android app with sherpa-onnx is through
 ```bash
 cd tauri-examples/hello_world
 npm install
-npm run tauri android init
-npm run tauri android build
+cargo tauri android init
+cargo tauri android build
 ```
 
 The build script automatically downloads the Android archive and places the

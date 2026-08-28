@@ -57,7 +57,7 @@ fn try_main() -> Result<(), DynError> {
     let target_os = env::var("CARGO_CFG_TARGET_OS")?;
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
     let link_mode = resolve_link_mode(&target_os)?;
-    let lib_dir = resolve_lib_dir(link_mode, &target_os, &target_arch)?;
+    let (lib_dir, archive_stem) = resolve_lib_dir(link_mode, &target_os, &target_arch)?;
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
@@ -70,13 +70,13 @@ fn try_main() -> Result<(), DynError> {
     // For Android builds (e.g. via Tauri), copy .so files to the Tauri
     // Android project's jniLibs directory so Gradle bundles them into the APK.
     if target_os == "android" {
-        copy_to_tauri_android_jnilibs(&lib_dir, &target_arch)?;
+        copy_to_tauri_android_jnilibs(&lib_dir, &target_arch, archive_stem.as_deref())?;
     }
 
     // For iOS builds (e.g. via Tauri), copy the xcframework to the Tauri
     // project directory so Xcode can find it via bundle.ios.frameworks.
     if target_os == "ios" {
-        copy_xcframework_to_tauri_project(&lib_dir)?;
+        copy_xcframework_to_tauri_project(&lib_dir, archive_stem.as_deref())?;
     }
 
     if link_mode == LinkMode::Shared && target_os == "windows" {
@@ -113,7 +113,7 @@ fn resolve_lib_dir(
     link_mode: LinkMode,
     target_os: &str,
     target_arch: &str,
-) -> Result<PathBuf, DynError> {
+) -> Result<(PathBuf, Option<String>), DynError> {
     if let Some(path) = env::var_os("SHERPA_ONNX_LIB_DIR") {
         let path = PathBuf::from(path);
         if !path.is_dir() {
@@ -123,10 +123,10 @@ fn resolve_lib_dir(
             )
             .into());
         }
-        return Ok(path);
+        return Ok((path, None));
     }
 
-    download_prebuilt_libs(link_mode, target_os, target_arch)
+    download_prebuilt_libs(link_mode, target_os, target_arch).map(|(p, s)| (p, Some(s)))
 }
 
 /// Return the download URL for a given archive.
@@ -145,7 +145,7 @@ fn download_prebuilt_libs(
     link_mode: LinkMode,
     target_os: &str,
     target_arch: &str,
-) -> Result<PathBuf, DynError> {
+) -> Result<(PathBuf, String), DynError> {
     let archive_name = archive_name(link_mode, target_os, target_arch)?;
     let archive_stem = archive_name
         .strip_suffix(".tar.bz2")
@@ -165,13 +165,13 @@ fn download_prebuilt_libs(
     let lib_dir = extracted_dir.join(lib_dir_name);
 
     if lib_dir.is_dir() {
-        return Ok(lib_dir);
+        return Ok((lib_dir, archive_stem.to_string()));
     }
 
     // Android archives use jniLibs/{abi}/ instead of lib/. Check both.
     let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
     if android_lib_dir.is_dir() {
-        return Ok(android_lib_dir);
+        return Ok((android_lib_dir, archive_stem.to_string()));
     }
 
     fs::create_dir_all(&cache_root)?;
@@ -245,7 +245,7 @@ fn download_prebuilt_libs(
             .join(android_abi(target_arch));
         if android_lib_dir.is_dir() {
             eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
-            return Ok(android_lib_dir);
+            return Ok((android_lib_dir, archive_stem.to_string()));
         }
 
         // iOS archives contain xcframework bundles. Create a lib/ directory
@@ -254,7 +254,7 @@ fn download_prebuilt_libs(
         if target_os == "ios" {
             if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir)? {
                 eprintln!("Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
-                return Ok(ios_lib);
+                return Ok((ios_lib, archive_stem.to_string()));
             }
         }
 
@@ -267,7 +267,7 @@ fn download_prebuilt_libs(
 
     eprintln!("Downloaded sherpa-onnx libs to {}", extracted_dir.display());
 
-    Ok(lib_dir)
+    Ok((lib_dir, archive_stem.to_string()))
 }
 
 
@@ -392,7 +392,9 @@ fn archive_name(
             format!("sherpa-onnx-v{version}-android.tar.bz2")
         }
         // iOS: shared xcframework from the xcframework release tag.
-        (LinkMode::Shared, "ios", "aarch64") => {
+        // The xcframework contains both device (arm64) and simulator
+        // (arm64 + x86_64) slices, so one archive serves all iOS targets.
+        (LinkMode::Shared, "ios", "aarch64" | "x86_64") => {
             format!("sherpa-onnx-v{version}-ios-shared-onnxruntime-static.xcframework.zip")
         }
         _ => return Err(format!(
@@ -498,7 +500,11 @@ fn profile_output_dirs() -> Result<[PathBuf; 2], DynError> {
 /// We need to find the Tauri project's `gen/android/` directory.  Since
 /// `CARGO_MANIFEST_DIR` points to the *sherpa-onnx-sys* crate (not the Tauri
 /// project), we walk up from `OUT_DIR` to locate the Tauri project root.
-fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<(), DynError> {
+fn copy_to_tauri_android_jnilibs(
+    lib_dir: &Path,
+    target_arch: &str,
+    archive_stem: Option<&str>,
+) -> Result<(), DynError> {
     let abi = android_abi(target_arch);
 
     let jni_base_suffix = PathBuf::from("gen")
@@ -526,21 +532,36 @@ fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<()
     let tauri_jni_base = match tauri_jni_base {
         Some(p) => p,
         None => {
-            // Not a Tauri Android build (or gen/android hasn't been created yet).
+            eprintln!("Tauri jniLibs directory not found; skipping Android .so copy");
             return Ok(());
         }
     };
 
     let dest_dir = tauri_jni_base.join(abi);
+
+    // Check if the .so files are already up-to-date.
+    let version_file = dest_dir.join(".sherpa-onnx-version");
+    if dest_dir.is_dir() {
+        if let Some(stem) = archive_stem {
+            if let Ok(prev) = fs::read_to_string(&version_file) {
+                if prev.trim() == stem {
+                    eprintln!("Skipping Tauri Android .so copy: already up-to-date ({stem})");
+                    return Ok(());
+                }
+            }
+        }
+    }
+
     fs::create_dir_all(&dest_dir)?;
 
     let mut copied = 0;
     for entry in fs::read_dir(lib_dir)? {
         let entry = entry?;
         let path = entry.path();
-        let is_so = path.file_name()
+        let is_so = path
+            .file_name()
             .and_then(OsStr::to_str)
-            .map(|name| name.contains(".so") && !name.contains("cxx"))
+            .map(|name| name.contains(".so") && !name.contains("c++"))
             .unwrap_or(false);
         if !is_so {
             continue;
@@ -554,6 +575,10 @@ fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<()
     }
 
     if copied > 0 {
+        // Record the archive stem so we can skip re-copying on subsequent builds.
+        if let Some(stem) = archive_stem {
+            let _ = fs::write(&version_file, stem);
+        }
         println!(
             "cargo:warning=Copied {copied} Android .so file(s) to Tauri jniLibs: {}",
             dest_dir.display()
@@ -572,7 +597,10 @@ fn copy_to_tauri_android_jnilibs(lib_dir: &Path, target_arch: &str) -> Result<()
 /// script phase), which is AFTER Xcode checks for xcframework existence.
 /// For the very first build, the xcframework must already be present.
 /// Use `setup-ios.sh` to download it before `cargo tauri ios init`.
-fn copy_xcframework_to_tauri_project(lib_dir: &Path) -> Result<(), DynError> {
+fn copy_xcframework_to_tauri_project(
+    lib_dir: &Path,
+    archive_stem: Option<&str>,
+) -> Result<(), DynError> {
     // lib_dir is something like
     //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.6-ios-shared-onnxruntime-static/lib
     // The xcframework sits next to lib/:
@@ -582,28 +610,56 @@ fn copy_xcframework_to_tauri_project(lib_dir: &Path) -> Result<(), DynError> {
     let candidates = [
         extracted_dir.join("build-ios").join("sherpa-onnx.xcframework"),
         extracted_dir.join("sherpa-onnx.xcframework"),
+        extracted_dir.join("SherpaOnnxC.xcframework"),
     ];
 
     let xcframework = match candidates.iter().find(|p| p.is_dir()) {
         Some(p) => p,
-        None => return Ok(()),
+        None => {
+            eprintln!("No xcframework found in {}; skipping Tauri iOS copy", extracted_dir.display());
+            return Ok(());
+        }
     };
 
     // Navigate from OUT_DIR to the Tauri project root (src-tauri/).
     let project_dir = match find_tauri_project_dir() {
         Some(p) => p,
-        None => return Ok(()),
+        None => {
+            eprintln!("Tauri project directory not found; skipping iOS xcframework copy");
+            return Ok(());
+        }
     };
 
     // Destination: src-tauri/sherpa-onnx.xcframework
     let dest = project_dir.join("sherpa-onnx.xcframework");
-    if !dest.exists() {
-        eprintln!("Copying sherpa-onnx.xcframework {} -> {}", xcframework.display(), dest.display());
+    let version_file = project_dir.join(".sherpa-onnx-xcframework-version");
+
+    // Check if the xcframework is already up-to-date.
+    let needs_update = if dest.exists() {
+        archive_stem.map_or(true, |stem| {
+            fs::read_to_string(&version_file).map_or(true, |prev| prev.trim() != stem)
+        })
+    } else {
+        true
+    };
+
+    if needs_update {
+        let _ = fs::remove_dir_all(&dest);
+        eprintln!(
+            "Copying sherpa-onnx.xcframework {} -> {}",
+            xcframework.display(),
+            dest.display()
+        );
         copy_dir_recursively(xcframework, &dest)?;
+        if let Some(stem) = archive_stem {
+            let _ = fs::write(&version_file, stem);
+        }
         println!(
             "cargo:warning=Copied sherpa-onnx.xcframework to {}",
             dest.display()
         );
+    } else {
+        eprintln!("Skipping Tauri iOS xcframework copy: already up-to-date");
     }
 
     Ok(())

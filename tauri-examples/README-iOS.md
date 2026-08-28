@@ -8,6 +8,11 @@ On iOS, sherpa-onnx uses **shared linking only**. The pre-built xcframework
 contains a shared dylib (`SherpaOnnxC.framework/SherpaOnnxC`) with onnxruntime
 statically linked in.
 
+## Prerequisites
+
+- macOS with Xcode installed
+- [Tauri CLI](https://v2.tauri.app/start/prerequisites/): `cargo install tauri-cli`
+
 ## Quick start
 
 1. Add `sherpa-onnx` to your `src-tauri/Cargo.toml`:

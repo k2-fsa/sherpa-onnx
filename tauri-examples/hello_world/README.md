@@ -13,6 +13,7 @@ It supports **Linux, macOS, Windows, iOS, and Android**.
 
 - [Rust](https://www.rust-lang.org/tools/install) (stable)
 - [Node.js](https://nodejs.org/) (for the Tauri CLI)
+- Tauri CLI: `cargo install tauri-cli`
 - Platform-specific Tauri prerequisites: see [Tauri prerequisites guide](https://v2.tauri.app/start/prerequisites/)
 
 ## Build from source (using local sherpa-onnx)

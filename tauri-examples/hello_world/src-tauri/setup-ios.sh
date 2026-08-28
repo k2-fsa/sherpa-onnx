@@ -21,17 +21,19 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Auto-detect version from CMakeLists.txt (search upward from SCRIPT_DIR).
-VERSION=""
-dir="$SCRIPT_DIR"
-while [ "$dir" != "/" ]; do
-  if [ -f "$dir/CMakeLists.txt" ]; then
-    VERSION=$(grep 'SHERPA_ONNX_VERSION' "$dir/CMakeLists.txt" | head -1 | sed 's/.*"\(.*\)".*/\1/')
-    if [ -n "$VERSION" ]; then
-      break
+# Skip if VERSION is already set in the environment.
+if [ -z "${VERSION:-}" ]; then
+  dir="$SCRIPT_DIR"
+  while [ "$dir" != "/" ]; do
+    if [ -f "$dir/CMakeLists.txt" ]; then
+      VERSION=$(grep 'SHERPA_ONNX_VERSION' "$dir/CMakeLists.txt" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+      if [ -n "$VERSION" ]; then
+        break
+      fi
     fi
-  fi
-  dir="$(dirname "$dir")"
-done
+    dir="$(dirname "$dir")"
+  done
+fi
 
 if [ -z "$VERSION" ]; then
   echo "Error: Cannot determine sherpa-onnx version."
@@ -54,9 +56,9 @@ echo "Downloading sherpa-onnx xcframework v${VERSION}..."
 echo "  $URL"
 
 TMPFILE=$(mktemp /tmp/sherpa-onnx-XXXXXX.zip)
-trap "rm -f $TMPFILE" EXIT
+trap 'rm -f "$TMPFILE"' EXIT
 
-curl -L -o "$TMPFILE" "$URL"
+curl --fail -L -o "$TMPFILE" "$URL"
 unzip -q "$TMPFILE" -d "$DEST"
 
 echo "Installed sherpa-onnx.xcframework to $XCFRAMEWORK"
