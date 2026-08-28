@@ -61,6 +61,15 @@ struct OnlineRecognizerResult {
   /// If it is true, it means the server has processed all received samples
   bool is_eof = false;
 
+  /// Number of trailing blank frames the decoder has seen after the last
+  /// non-blank token, measured at the model's output frame rate (i.e., after
+  /// subsampling). It is reset to 0 whenever a non-blank token is emitted.
+  /// It stays 0 for decoders that do not track it (e.g., streaming
+  /// Paraformer).
+  /// Note: appended after the existing members so that positional aggregate
+  /// initialization of this struct keeps working.
+  int32_t num_trailing_blanks = 0;
+
   /** Return a json string.
    *
    * The returned string contains:
@@ -72,6 +81,8 @@ struct OnlineRecognizerResult {
    *     "lm_probs": [x, x, x],
    *     "context_scores": [x, x, x],
    *     "segment": x,
+   *     "words": [x, x, x],
+   *     "num_trailing_blanks": x,
    *     "start_time": x,
    *     "is_final": true|false
    *     "is_eof": true|false

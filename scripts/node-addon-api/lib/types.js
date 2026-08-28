@@ -739,6 +739,7 @@
  * @property {number[]} context_scores
  * @property {number} segment
  * @property {number[]} words
+ * @property {number} num_trailing_blanks
  * @property {number} start_time
  * @property {boolean} is_final
  * @property {boolean} is_eof
