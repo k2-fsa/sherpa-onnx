@@ -298,6 +298,7 @@ for a list of pre-trained models to download.
   fprintf(stderr, "decoding method: %s\n", config.decoding_method.c_str());
   if (config.decoding_method == "modified_beam_search") {
     fprintf(stderr, "max active paths: %d\n", config.max_active_paths);
+    fprintf(stderr, "num return paths: %d\n", config.num_return_paths);
   }
   fprintf(stderr, "Elapsed seconds: %.3f s\n", total_time);
   float rtf = total_time / total_length;

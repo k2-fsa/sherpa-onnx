@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -392,23 +393,40 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
       }
     }
 
-    // Find best hypothesis
-    auto best_it =
-        std::max_element(cur_hyps.begin(), cur_hyps.end(),
-                         [](const NeMoHypothesis &a, const NeMoHypothesis &b) {
-                           return a.log_prob < b.log_prob;
-                         });
+    std::sort(cur_hyps.begin(), cur_hyps.end(),
+              [](const NeMoHypothesis &a, const NeMoHypothesis &b) {
+                return a.log_prob > b.log_prob;
+              });
 
-    if (best_it != cur_hyps.end()) {
-      // Convert int32_t to int64_t for tokens
-      results[b].tokens.assign(best_it->ys.begin(), best_it->ys.end());
-      results[b].timestamps = best_it->timestamps;
-      results[b].ys_log_probs = best_it->ys_probs;
-      // Convert int32_t durations to float
-      results[b].durations.reserve(best_it->durations.size());
-      for (int32_t d : best_it->durations) {
-        results[b].durations.push_back(static_cast<float>(d));
+    std::set<std::vector<int32_t>> seen;
+    for (const auto &hyp : cur_hyps) {
+      if (!seen.insert(hyp.ys).second) {
+        continue;
       }
+
+      OfflineTransducerDecoderHypothesis h;
+      h.tokens.assign(hyp.ys.begin(), hyp.ys.end());
+      h.timestamps = hyp.timestamps;
+      h.ys_log_probs = hyp.ys_probs;
+      h.score = hyp.log_prob;
+      h.durations.reserve(hyp.durations.size());
+      for (int32_t d : hyp.durations) {
+        h.durations.push_back(static_cast<float>(d));
+      }
+      results[b].hypotheses.push_back(std::move(h));
+
+      if (static_cast<int32_t>(results[b].hypotheses.size()) ==
+          num_return_paths_) {
+        break;
+      }
+    }
+
+    if (!results[b].hypotheses.empty()) {
+      const auto &best = results[b].hypotheses.front();
+      results[b].tokens = best.tokens;
+      results[b].timestamps = best.timestamps;
+      results[b].durations = best.durations;
+      results[b].ys_log_probs = best.ys_log_probs;
     }
   }
 

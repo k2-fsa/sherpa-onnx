@@ -65,7 +65,8 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
       decoder_ =
           std::make_unique<OfflineTransducerModifiedBeamSearchNeMoDecoder>(
               model_.get(), config_.max_active_paths, unk_id_,
-              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score);
+              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score,
+              config_.num_return_paths);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -105,7 +106,8 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
       decoder_ =
           std::make_unique<OfflineTransducerModifiedBeamSearchNeMoDecoder>(
               model_.get(), config_.max_active_paths, unk_id_,
-              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score);
+              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score,
+              config_.num_return_paths);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -217,6 +219,15 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       r.text = ApplyHomophoneReplacer(std::move(r.text));
+      for (auto &hyp : r.hypotheses) {
+        // Keep N-best text preprocessing consistent with the 1-best result.
+        if (!hyp.text.empty() && hyp.text.front() == ' ') {
+          hyp.text.erase(0, 1);
+        }
+
+        hyp.text = ApplyInverseTextNormalization(std::move(hyp.text));
+        hyp.text = ApplyHomophoneReplacer(std::move(hyp.text));
+      }
 
       ss[i]->SetResult(r);
     }

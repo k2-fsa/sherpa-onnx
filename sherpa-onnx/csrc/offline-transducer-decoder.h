@@ -12,6 +12,28 @@
 
 namespace sherpa_onnx {
 
+struct OfflineTransducerDecoderHypothesis {
+  /// The decoded token IDs
+  std::vector<int64_t> tokens;
+
+  /// timestamps[i] contains the output frame index where tokens[i] is decoded.
+  /// Note: The index is after subsampling
+  std::vector<int32_t> timestamps;
+
+  /// durations[i] contains the duration for tokens[i] in output frames
+  /// (post-subsampling). It is converted to seconds by higher layers
+  /// (e.g., Convert() in offline-recognizer-transducer-impl.h).
+  std::vector<float> durations;
+
+  /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_log_probs;
+
+  /// The decoder score used to rank this hypothesis. It is the
+  /// length-normalized total log probability for the regular transducer
+  /// decoder and the accumulated log probability for the NeMo decoder.
+  double score = 0;
+};
+
 struct OfflineTransducerDecoderResult {
   /// The decoded token IDs
   std::vector<int64_t> tokens;
@@ -27,6 +49,10 @@ struct OfflineTransducerDecoderResult {
 
   /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
   std::vector<float> ys_log_probs;
+
+  /// N-best hypotheses in descending score order. It is populated only by
+  /// modified beam search and includes the 1-best hypothesis as the first item.
+  std::vector<OfflineTransducerDecoderHypothesis> hypotheses;
 };
 
 class OfflineTransducerDecoder {
