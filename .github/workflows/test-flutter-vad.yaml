@@ -110,7 +110,6 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: 1.13.6|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.6$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter config --no-enable-swift-package-manager
@@ -278,7 +277,6 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: 1.13.6|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.6$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -395,7 +393,6 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: 1.13.6|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.6$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -531,7 +528,6 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: 1.13.6|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.6$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -626,7 +622,6 @@ jobs:
         run: |
           cd flutter/sherpa_onnx
           sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: 1.13.6\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx_web: 1.13.6$|sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
       - name: Build Flutter web app
@@ -635,7 +630,6 @@ jobs:
           cd flutter-examples/${{ matrix.demo }}
 
           sed -i.bak 's|sherpa_onnx: 1.13.6|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.6$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
