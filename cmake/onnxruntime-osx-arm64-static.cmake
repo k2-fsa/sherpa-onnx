@@ -13,7 +13,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.1/onnxruntime-osx-arm64-static_lib-1.28.1.zip")
-set(onnxruntime_HASH "SHA256=227abb689eb4b9a793a268c7ee7af120a94043041d255cc361d95f3846acbbb0")
+set(onnxruntime_HASH "SHA256=78d26ded3dee8cf4eff925b4a34a2994e153fb075e0497e6bc80d7d0768a3f58")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
