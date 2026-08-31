@@ -124,8 +124,10 @@ inline float ReadFloatOrHalfBitsValue(const float *data_f32,
   return HalfBitsToFloat(data_f16_bits[index]);
 }
 
-Ort::Value TrimAudioFeatures(Ort::Value audio_features,
-                             OrtAllocator *allocator) {
+}  // namespace
+
+Ort::Value TrimAudioFeatures(Ort::Value audio_features, OrtAllocator *allocator,
+                             bool *all_silent) {
   auto info = audio_features.GetTensorTypeAndShapeInfo();
   auto shape = info.GetShape();
   if (shape.size() != 3 || shape[0] != 1 || shape[1] <= 0 || shape[2] <= 0) {
@@ -170,6 +172,12 @@ Ort::Value TrimAudioFeatures(Ort::Value audio_features,
   }
 
   if (A_valid <= 0) {
+    // The whole clip is silence. Report it so the caller can short-circuit
+    // before building any hotwords/language prompt tokens, instead of
+    // silently falling through to decoding on an all-silence input.
+    if (all_silent != nullptr) {
+      *all_silent = true;
+    }
     return audio_features;
   }
 
@@ -197,6 +205,8 @@ Ort::Value TrimAudioFeatures(Ort::Value audio_features,
 
   return trimmed;
 }
+
+namespace {
 
 Ort::Value TruncateAudioFeatures(Ort::Value audio_features, int32_t keep_frames,
                                  OrtAllocator *allocator) {
@@ -680,14 +690,22 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       stream->GetOptionFloat("temperature", qwen3_config.temperature);
   const float top_p = stream->GetOptionFloat("top_p", qwen3_config.top_p);
 
-  Ort::Value trimmed_audio_features =
-      TrimAudioFeatures(std::move(audio_features), model_->Allocator());
+  bool all_silent = false;
+  Ort::Value trimmed_audio_features = TrimAudioFeatures(
+      std::move(audio_features), model_->Allocator(), &all_silent);
 
   auto trimmed_shape =
       trimmed_audio_features.GetTensorTypeAndShapeInfo().GetShape();
   if (trimmed_shape.size() == 3 && trimmed_shape[1] > 0) {
     audio_token_len = std::min<int32_t>(audio_token_len,
                                         static_cast<int32_t>(trimmed_shape[1]));
+  }
+
+  if (all_silent) {
+    // The whole clip is silence. Force an empty result now, before any
+    // hotwords/language prompt tokens are built, so they cannot bias the
+    // decoder into hallucinating text for silent audio.
+    audio_token_len = 0;
   }
 
   if (config_.model_config.debug) {

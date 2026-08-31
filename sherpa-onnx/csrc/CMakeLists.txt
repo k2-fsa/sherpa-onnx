@@ -830,6 +830,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     lfr-test.cc
     math-test.cc
+    offline-recognizer-qwen3-asr-impl-test.cc
     offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc

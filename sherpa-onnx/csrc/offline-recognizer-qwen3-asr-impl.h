@@ -20,6 +20,14 @@
 
 namespace sherpa_onnx {
 
+// Trims trailing near-silent frames from audio_features (shape [1, A, H]).
+// If every frame's energy stays below the silence threshold, the tensor is
+// returned unmodified and, when |all_silent| is not null, |*all_silent| is
+// set to true so the caller can treat the clip as having no speech content.
+// Exposed here (rather than kept file-local) so it can be unit tested.
+Ort::Value TrimAudioFeatures(Ort::Value audio_features, OrtAllocator *allocator,
+                             bool *all_silent = nullptr);
+
 class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerQwen3ASRImpl(const OfflineRecognizerConfig &config);
