@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.k2-fsa:sherpa-onnx:v1.13.6'
+    implementation 'com.github.k2-fsa:sherpa-onnx:v1.13.7'
 }
 ```
 
@@ -40,10 +40,10 @@ repositories {
 
 dependencies {
     // 1. JVM core API
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v1.13.6'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v1.13.7'
 
     // 2. Platform native lib — pick ONE for your target platform
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:v1.13.6'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:v1.13.7'
 }
 ```
 

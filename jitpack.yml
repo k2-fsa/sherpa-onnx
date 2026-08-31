@@ -2,21 +2,21 @@ jdk:
   - openjdk17
 
 before_install:
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-1.13.6.aar
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-jvm-1.13.6.jar
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-native-lib-linux-aarch64-1.13.6.jar
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-native-lib-linux-x64-1.13.6.jar
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-native-lib-osx-aarch64-1.13.6.jar
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-native-lib-osx-x64-1.13.6.jar
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-native-lib-win-x64-1.13.6.jar
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.6/sherpa-onnx-native-lib-win-arm64-1.13.6.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-1.13.7.aar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-jvm-1.13.7.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-native-lib-linux-aarch64-1.13.7.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-native-lib-linux-x64-1.13.7.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-native-lib-osx-aarch64-1.13.7.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-native-lib-osx-x64-1.13.7.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-native-lib-win-x64-1.13.7.jar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-native-lib-win-arm64-1.13.7.jar
 
 install:
-  - mvn install:install-file -Dfile=sherpa-onnx-1.13.6.aar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx -Dversion=1.13.6 -Dpackaging=aar -DgeneratePom=true
-  - mvn install:install-file -Dfile=sherpa-onnx-jvm-1.13.6.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-jvm -Dversion=1.13.6 -Dpackaging=jar -DgeneratePom=true
-  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-linux-aarch64-1.13.6.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-linux-aarch64 -Dversion=1.13.6 -Dpackaging=jar -DgeneratePom=true
-  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-linux-x64-1.13.6.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-linux-x64 -Dversion=1.13.6 -Dpackaging=jar -DgeneratePom=true
-  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-osx-aarch64-1.13.6.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-osx-aarch64 -Dversion=1.13.6 -Dpackaging=jar -DgeneratePom=true
-  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-osx-x64-1.13.6.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-osx-x64 -Dversion=1.13.6 -Dpackaging=jar -DgeneratePom=true
-  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-win-x64-1.13.6.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-win-x64 -Dversion=1.13.6 -Dpackaging=jar -DgeneratePom=true
-  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-win-arm64-1.13.6.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-win-arm64 -Dversion=1.13.6 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-1.13.7.aar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx -Dversion=1.13.7 -Dpackaging=aar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-jvm-1.13.7.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-jvm -Dversion=1.13.7 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-linux-aarch64-1.13.7.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-linux-aarch64 -Dversion=1.13.7 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-linux-x64-1.13.7.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-linux-x64 -Dversion=1.13.7 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-osx-aarch64-1.13.7.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-osx-aarch64 -Dversion=1.13.7 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-osx-x64-1.13.7.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-osx-x64 -Dversion=1.13.7 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-win-x64-1.13.7.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-win-x64 -Dversion=1.13.7 -Dpackaging=jar -DgeneratePom=true
+  - mvn install:install-file -Dfile=sherpa-onnx-native-lib-win-arm64-1.13.7.jar -DgroupId=com.github.k2-fsa -DartifactId=sherpa-onnx-native-lib-win-arm64 -Dversion=1.13.7 -Dpackaging=jar -DgeneratePom=true

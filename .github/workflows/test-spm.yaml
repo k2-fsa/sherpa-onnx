@@ -20,7 +20,7 @@ jobs:
         run: |
           cd spm-examples/macOS
           # Use local package for CI testing
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.6")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.7")|.package(path: "../../")|' Package.swift
           git diff
           cat Package.swift
           rm -rf .build
@@ -60,7 +60,7 @@ jobs:
           cd spm-examples/iOS
 
           # Use local package for CI testing
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.6")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.7")|.package(path: "../../")|' Package.swift
           git diff
           cat Package.swift
 

@@ -5,7 +5,7 @@ let package = Package(
   name: "SherpaOnnxExample",
   platforms: [.iOS(.v15)],
   dependencies: [
-    .package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.6"),
+    .package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.7"),
   ],
   targets: [
     .executableTarget(

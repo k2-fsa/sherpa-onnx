@@ -255,7 +255,7 @@ jobs:
           file: ./sherpa-onnx/java-api/sherpa-onnx-native*.jar
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.6
+          tag: v1.13.7
 
       - name: Release jar
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-24.04-arm'
@@ -274,7 +274,7 @@ jobs:
           file: ./sherpa-onnx/java-api/sherpa-onnx-jvm*.jar
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.6
+          tag: v1.13.7
 
       - name: Test KittenTTS
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
