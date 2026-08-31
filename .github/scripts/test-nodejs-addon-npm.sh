@@ -486,6 +486,16 @@ rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 node ./test_asr_streaming_paraformer.js
 rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
+echo "----------streaming ASR Nemotron multilingual----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11.tar.bz2
+tar xvf sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11.tar.bz2
+rm sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11.tar.bz2
+
+node ./test_asr_streaming_nemotron.js
+
+rm -rf sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
+
 echo "----------non-streaming asr----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
