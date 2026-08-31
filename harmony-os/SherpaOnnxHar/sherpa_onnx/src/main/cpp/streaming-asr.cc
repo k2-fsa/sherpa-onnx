@@ -4,6 +4,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
@@ -512,6 +513,64 @@ static void DecodeOnlineStreamWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxDecodeOnlineStream(recognizer, stream);
 }
 
+static void DecodeMultipleOnlineStreamsWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be an online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsArray()) {
+    Napi::TypeError::New(
+        env, "Argument 1 should be an array of online stream pointers.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  const SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  Napi::Array arr = info[1].As<Napi::Array>();
+
+  std::vector<const SherpaOnnxOnlineStream *> streams;
+  streams.reserve(arr.Length());
+
+  for (uint32_t i = 0; i != arr.Length(); ++i) {
+    Napi::Value v = arr.Get(i);
+    if (!v.IsExternal()) {
+      std::ostringstream os;
+      os << "Element " << i << " should be an online stream pointer.";
+
+      Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+      return;
+    }
+
+    streams.push_back(v.As<Napi::External<SherpaOnnxOnlineStream>>().Data());
+  }
+
+  if (streams.empty()) {
+    return;
+  }
+
+  SherpaOnnxDecodeMultipleOnlineStreams(recognizer, streams.data(),
+                                        static_cast<int32_t>(streams.size()));
+}
+
 static Napi::String GetOnlineStreamResultAsJsonWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
@@ -737,6 +796,9 @@ void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "decodeOnlineStream"),
               Napi::Function::New(env, DecodeOnlineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "decodeMultipleOnlineStreams"),
+              Napi::Function::New(env, DecodeMultipleOnlineStreamsWrapper));
 
   exports.Set(Napi::String::New(env, "getOnlineStreamResultAsJson"),
               Napi::Function::New(env, GetOnlineStreamResultAsJsonWrapper));
