@@ -4,8 +4,8 @@ set -ex
 
 cd "$(dirname "$0")"
 
-old_version_code=20260818
-new_version_code=20260831
+old_version_code=20260831
+new_version_code=20260901
 
 old_version="1\.13\.6"
 new_version="1\.13\.7"
