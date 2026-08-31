@@ -312,6 +312,82 @@ inline float TensorAbsMax(const Ort::Value &t, int64_t limit) {
   return abs_max;
 }
 
+// Number of trailing tokens to inspect for degenerate repetition, and the
+// maximum number of distinct token ids such a window may contain before the
+// decode is treated as a repetition loop rather than speech. A degenerate
+// greedy decode cycles over two or three token ids until max_new_tokens;
+// real transcriptions -- even of repetitive lyrics -- vary more than that
+// within 64 consecutive tokens.
+constexpr int32_t kQwen3LoopWindow = 64;
+constexpr int32_t kQwen3LoopMaxDistinct = 3;
+
+// Returns true if the last kQwen3LoopWindow entries of ids consist of at
+// most kQwen3LoopMaxDistinct distinct token ids.
+bool IsDegenerateRepetition(const std::vector<int64_t> &ids) {
+  if (static_cast<int32_t>(ids.size()) < kQwen3LoopWindow) {
+    return false;
+  }
+
+  std::array<int64_t, kQwen3LoopMaxDistinct> distinct{};
+  int32_t num_distinct = 0;
+  for (size_t i = ids.size() - kQwen3LoopWindow; i != ids.size(); ++i) {
+    bool seen = false;
+    for (int32_t k = 0; k != num_distinct; ++k) {
+      if (distinct[k] == ids[i]) {
+        seen = true;
+        break;
+      }
+    }
+    if (seen) {
+      continue;
+    }
+    if (num_distinct == kQwen3LoopMaxDistinct) {
+      return false;
+    }
+    distinct[num_distinct++] = ids[i];
+  }
+  return true;
+}
+
+// Removes the degenerate tail from ids: trailing tokens drawn from the token
+// set of the final kQwen3LoopWindow entries, scanning no further back than
+// that window so text decoded before the collapse is never removed even when
+// it ends with a token the loop happens to reuse. What remains is the text
+// decoded before the loop started (possibly nothing).
+void TrimDegenerateTail(std::vector<int64_t> *ids) {
+  std::array<int64_t, kQwen3LoopMaxDistinct> distinct{};
+  int32_t num_distinct = 0;
+  for (size_t i = ids->size() - kQwen3LoopWindow; i != ids->size(); ++i) {
+    bool seen = false;
+    for (int32_t k = 0; k != num_distinct; ++k) {
+      if (distinct[k] == (*ids)[i]) {
+        seen = true;
+        break;
+      }
+    }
+    if (!seen && num_distinct < kQwen3LoopMaxDistinct) {
+      distinct[num_distinct++] = (*ids)[i];
+    }
+  }
+
+  const size_t window_start = ids->size() - kQwen3LoopWindow;
+  size_t keep = ids->size();
+  while (keep > window_start) {
+    bool in_loop_set = false;
+    for (int32_t k = 0; k != num_distinct; ++k) {
+      if (distinct[k] == (*ids)[keep - 1]) {
+        in_loop_set = true;
+        break;
+      }
+    }
+    if (!in_loop_set) {
+      break;
+    }
+    --keep;
+  }
+  ids->resize(keep);
+}
+
 inline void RemoveUtf8ReplacementChars(std::string *s) {
   if (!s || s->empty()) {
     return;
@@ -351,7 +427,13 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
 
 std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream()
     const {
-  return std::make_unique<OfflineStream>(WhisperTag{kQwen3MelDim});
+  WhisperTag tag;
+  tag.dim = kQwen3MelDim;
+  // Qwen3-ASR's feature extractor uses a centered STFT; the kaldi-style
+  // half-shift frame offset is enough to make the 1.7B model collapse into
+  // repetition loops on some inputs (k2-fsa/sherpa-onnx#3535).
+  tag.align_to_stft_center = true;
+  return std::make_unique<OfflineStream>(tag);
 }
 
 void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
@@ -995,6 +1077,21 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
     generated_ids.push_back(next_id);
     ++cur_len;
+
+    if (IsDegenerateRepetition(generated_ids)) {
+      // The decoder has collapsed into cycling over a couple of token ids;
+      // it will not recover under greedy decoding and would only repeat
+      // them until max_new_tokens. Stop, and drop the repetition so the
+      // caller sees the text decoded before the collapse instead of a
+      // window full of one syllable. Seen with the Qwen3-ASR 1.7B model on
+      // some sung inputs; see k2-fsa/sherpa-onnx#3535.
+      SHERPA_ONNX_LOGE(
+          "qwen3-asr: decode collapsed into a repetition loop after %d "
+          "tokens; truncating the repetition",
+          static_cast<int32_t>(generated_ids.size()));
+      TrimDegenerateTail(&generated_ids);
+      break;
+    }
   }
 
   std::vector<int64_t> cleaned_ids = generated_ids;
