@@ -10,7 +10,7 @@ dir=build-macos-shared-sherpa-with-static-onnxruntime
 mkdir -p $dir
 cd $dir
 
-onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.1}
+onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.28.1}
 onnxruntime_dir=onnxruntime-static/$onnxruntime_version
 
 if [ ! -f $onnxruntime_dir/lib/libonnxruntime.a ]; then
