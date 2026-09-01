@@ -559,16 +559,16 @@ jobs:
           cd java-api-examples/maven-examples
 
           echo "=== Jar size ==="
-          ls -lh target/sherpa-onnx-maven-example-1.13.6.jar
+          ls -lh target/sherpa-onnx-maven-example-1.13.7.jar
 
           echo "=== Native libs in jar ==="
-          unzip -l target/sherpa-onnx-maven-example-1.13.6.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+          unzip -l target/sherpa-onnx-maven-example-1.13.7.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
 
       - name: Run maven example
         shell: bash
         run: |
           cd java-api-examples/maven-examples
-          java -jar target/sherpa-onnx-maven-example-1.13.6.jar
+          java -jar target/sherpa-onnx-maven-example-1.13.7.jar
 
   run_maven_test_approach1:
     runs-on: ${{ matrix.os }}
@@ -623,7 +623,7 @@ jobs:
 
               <groupId>com.k2fsa.sherpa.onnx</groupId>
               <artifactId>sherpa-onnx-maven-example</artifactId>
-              <version>1.13.6</version>
+              <version>1.13.7</version>
               <packaging>jar</packaging>
 
               <name>sherpa-onnx Maven Example</name>
@@ -640,7 +640,7 @@ jobs:
                   <dependency>
                       <groupId>com.github.k2-fsa</groupId>
                       <artifactId>sherpa-onnx</artifactId>
-                      <version>1.13.6</version>
+                      <version>1.13.7</version>
                   </dependency>
               </dependencies>
 
@@ -704,16 +704,16 @@ jobs:
           cd java-api-examples/maven-examples
 
           echo "=== Jar size ==="
-          ls -lh target/sherpa-onnx-maven-example-1.13.6.jar
+          ls -lh target/sherpa-onnx-maven-example-1.13.7.jar
 
           echo "=== Native libs in jar ==="
-          unzip -l target/sherpa-onnx-maven-example-1.13.6.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+          unzip -l target/sherpa-onnx-maven-example-1.13.7.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
 
       - name: Run maven example
         shell: bash
         run: |
           cd java-api-examples/maven-examples
-          java -jar target/sherpa-onnx-maven-example-1.13.6.jar
+          java -jar target/sherpa-onnx-maven-example-1.13.7.jar
 
   run_gradle_test:
     runs-on: ${{ matrix.os }}
@@ -912,7 +912,7 @@ jobs:
           }
 
           dependencies {
-              implementation 'com.github.k2-fsa:sherpa-onnx:1.13.6'
+              implementation 'com.github.k2-fsa:sherpa-onnx:1.13.7'
           }
 
           java {

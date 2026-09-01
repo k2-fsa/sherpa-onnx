@@ -1,6 +1,6 @@
 [package]
 name = "hello_world"
-version = "1.13.6"
+version = "1.13.7"
 edition = "2021"
 
 [lib]
@@ -13,7 +13,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
-sherpa-onnx = "1.13.6"
+sherpa-onnx = "1.13.7"
 
 [profile.dev]
 debug = false    # no debug info (~90 MB smaller .so)

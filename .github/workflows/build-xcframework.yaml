@@ -314,7 +314,7 @@ jobs:
           cd spm-examples/macOS
 
           # Patch Package.swift to use local package
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.6")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.7")|.package(path: "../../")|' Package.swift
 
           # Patch root Package.swift to use local xcframework paths
           cd ../..
@@ -366,7 +366,7 @@ jobs:
           cd spm-examples/iOS
 
           # Patch Package.swift to use local package
-          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.6")|.package(path: "../../")|' Package.swift
+          sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "1.13.7")|.package(path: "../../")|' Package.swift
 
           echo "=== Package.swift ==="
           cat Package.swift

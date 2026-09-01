@@ -11,8 +11,8 @@ android {
         applicationId = "com.k2fsa.sherpa.onnx.simulate.streaming.asr.wear.os"
         minSdk = 28
         targetSdk = 34
-        versionCode = 20260818
-        versionName = "1.13.6"
+        versionCode = 20260901
+        versionName = "1.13.7"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.activity.compose)
     implementation(libs.core.splashscreen)
-    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx:v1.13.6")
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx:v1.13.7")
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)

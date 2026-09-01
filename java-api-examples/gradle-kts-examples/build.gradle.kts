@@ -33,10 +33,10 @@ logger.lifecycle("--> Auto-detected platform native lib: $targetNativeClassifier
 
 dependencies {
     // 1. JVM core API
-    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v1.13.6")
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v1.13.7")
 
     // 2. Platform native lib (auto-detected)
-    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-$targetNativeClassifier:v1.13.6")
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-$targetNativeClassifier:v1.13.7")
 }
 
 java {

@@ -1,3 +1,18 @@
+## 1.13.7
+
+* Add iOS support for Rust and add hello world tauri example (#3901)
+* Remove caret prefix from sherpa_onnx flutter dependencies (#3905)
+* Fix Flutter packages for iOS (#3887)
+* Fix building APKs in CI (#3896)
+* Support Windows arm64 for Rust (#3889)
+* Fix Unicode paths for punctuation BPE vocab (#3906)
+* Fix Qwen3-ASR hallucinating text on silent audio with hotwords/language set (#3907)
+* Populate ys_probs in the online NeMo transducer greedy search decoders (#3893)
+* Align Qwen3-ASR whisper features to the centered-STFT convention (#3873)
+* Support per-stream runtime options in the JavaScript (node-addon) API for streaming ASR (#3891)
+* Support batched decoding of multiple online streams in the JavaScript (node-addon) API (#3894)
+* Expose num_trailing_blanks in the online recognizer result JSON (#3892)
+
 ## 1.13.6
 
 * Add VAD+ASR Flutter examples with 9 ASR models (#3877)

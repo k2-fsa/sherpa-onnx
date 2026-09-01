@@ -4,11 +4,11 @@ set -ex
 
 cd "$(dirname "$0")"
 
-old_version_code=20260810
-new_version_code=20260818
+old_version_code=20260831
+new_version_code=20260901
 
-old_version="1\.13\.5"
-new_version="1\.13\.6"
+old_version="1\.13\.6"
+new_version="1\.13\.7"
 
 replace_str="s/$old_version/$new_version/g"
 
@@ -67,9 +67,9 @@ find sherpa-onnx/rust -name "*.rs" -type f -exec sed -i.bak "$replace_str" {} \;
 find sherpa-onnx/rust -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
 find sherpa-onnx/rust -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} \;
 
-find tauri-examples -name "package.json" -type f -exec sed -i.bak "$replace_str" {} \;
-find tauri-examples -name "Cargo.toml" -type f -exec sed -i.bak "$replace_str" {} \;
-find tauri-examples -name "tauri.conf.json" -type f -exec sed -i.bak "$replace_str" {} \;
+find tauri-examples -name "*.json" -type f -exec sed -i.bak "$replace_str" {} \;
+find tauri-examples -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} \;
+find tauri-examples -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
 
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;

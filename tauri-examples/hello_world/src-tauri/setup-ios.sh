@@ -39,7 +39,7 @@ if [ -z "$VERSION" ]; then
   echo "Error: Cannot determine sherpa-onnx version."
   echo "Searched upward from: $SCRIPT_DIR"
   echo "Please set VERSION environment variable manually, e.g.:"
-  echo "  VERSION=1.13.6 ./setup-ios.sh"
+  echo "  VERSION=1.13.7 ./setup-ios.sh"
   exit 1
 fi
 
