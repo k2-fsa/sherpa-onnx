@@ -540,14 +540,22 @@ fn copy_to_tauri_android_jnilibs(
     let dest_dir = tauri_jni_base.join(abi);
 
     // Check if the .so files are already up-to-date.
+    // When archive_stem is None (e.g. SHERPA_ONNX_LIB_DIR or crates.io),
+    // trust whatever is already at dest_dir — don't re-copy.
     let version_file = dest_dir.join(".sherpa-onnx-version");
     if dest_dir.is_dir() {
-        if let Some(stem) = archive_stem {
-            if let Ok(prev) = fs::read_to_string(&version_file) {
-                if prev.trim() == stem {
-                    eprintln!("Skipping Tauri Android .so copy: already up-to-date ({stem})");
-                    return Ok(());
+        match archive_stem {
+            Some(stem) => {
+                if let Ok(prev) = fs::read_to_string(&version_file) {
+                    if prev.trim() == stem {
+                        eprintln!("Skipping Tauri Android .so copy: already up-to-date ({stem})");
+                        return Ok(());
+                    }
                 }
+            }
+            None => {
+                eprintln!("Skipping Tauri Android .so copy: no archive stem (crates.io or SHERPA_ONNX_LIB_DIR)");
+                return Ok(());
             }
         }
     }
@@ -635,10 +643,15 @@ fn copy_xcframework_to_tauri_project(
     let version_file = project_dir.join(".sherpa-onnx-xcframework-version");
 
     // Check if the xcframework is already up-to-date.
+    // When archive_stem is None (e.g. SHERPA_ONNX_LIB_DIR or crates.io),
+    // trust whatever is already at dest — don't delete it.
     let needs_update = if dest.exists() {
-        archive_stem.map_or(true, |stem| {
-            fs::read_to_string(&version_file).map_or(true, |prev| prev.trim() != stem)
-        })
+        match archive_stem {
+            Some(stem) => {
+                fs::read_to_string(&version_file).map_or(true, |prev| prev.trim() != stem)
+            }
+            None => false,
+        }
     } else {
         true
     };
