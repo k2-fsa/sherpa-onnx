@@ -148,8 +148,8 @@ jobs:
       - name: Use local sherpa-onnx crates
         shell: bash
         run: |
-          mkdir -p tauri-examples/hello_world/src-tauri/.cargo
-          cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
+          cat >> tauri-examples/hello_world/src-tauri/Cargo.toml <<'EOF'
+
           [patch.crates-io]
           sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
           sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
@@ -523,8 +523,8 @@ jobs:
       - name: Use local sherpa-onnx crates
         shell: bash
         run: |
-          mkdir -p tauri-examples/hello_world/src-tauri/.cargo
-          cat > tauri-examples/hello_world/src-tauri/.cargo/config.toml <<'EOF'
+          cat >> tauri-examples/hello_world/src-tauri/Cargo.toml <<'EOF'
+
           [patch.crates-io]
           sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
           sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
