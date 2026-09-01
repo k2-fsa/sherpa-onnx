@@ -240,9 +240,22 @@ fn download_prebuilt_libs(
 
     if !lib_dir.is_dir() {
         // Android archives use jniLibs/{abi}/ instead of lib/.
+        // Check both extracted_dir/jniLibs/ and cache_root/jniLibs/ because
+        // some archives have a top-level directory (e.g. sherpa-onnx-v1.13.7-android/)
+        // while others extract jniLibs/ directly into the cache root.
         let android_lib_dir = extracted_dir
             .join("jniLibs")
             .join(android_abi(target_arch));
+        let android_lib_dir_alt = cache_root
+            .join("jniLibs")
+            .join(android_abi(target_arch));
+        let android_lib_dir = if android_lib_dir.is_dir() {
+            android_lib_dir
+        } else if android_lib_dir_alt.is_dir() {
+            android_lib_dir_alt
+        } else {
+            PathBuf::new()
+        };
         if android_lib_dir.is_dir() {
             eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
             return Ok((android_lib_dir, archive_stem.to_string()));
