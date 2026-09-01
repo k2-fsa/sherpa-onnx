@@ -130,7 +130,7 @@ jobs:
       - name: Fix wheel name
         shell: bash
         run: |
-          python3 -m pip install auditwheel
+          python3 -m pip install auditwheel patchelf
 
           auditwheel show ./wheelhouse/*.whl
 
