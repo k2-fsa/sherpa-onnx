@@ -145,14 +145,6 @@ jobs:
           cd tauri-examples/hello_world
           npm install
 
-      - name: Use local sherpa-onnx crates
-        shell: bash
-        run: |
-          cat >> tauri-examples/hello_world/src-tauri/Cargo.toml <<'EOF'
-          [patch.crates-io]
-          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
-          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
-          EOF
 
       - name: Download pre-built iOS xcframework
         shell: bash
@@ -519,14 +511,6 @@ jobs:
           cd tauri-examples/hello_world
           npm install
 
-      - name: Use local sherpa-onnx crates
-        shell: bash
-        run: |
-          cat >> tauri-examples/hello_world/src-tauri/Cargo.toml <<'EOF'
-          [patch.crates-io]
-          sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx" }
-          sherpa-onnx-sys = { path = "../../../sherpa-onnx/rust/sherpa-onnx-sys" }
-          EOF
 
       - name: Init Android
         shell: bash
