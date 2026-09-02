@@ -168,10 +168,16 @@ fn download_prebuilt_libs(
         return Ok((lib_dir, archive_stem.to_string()));
     }
 
-    // Android archives use jniLibs/{abi}/ instead of lib/. Check both.
+    // Android archives use jniLibs/{abi}/ instead of lib/. Check both
+    // extracted_dir/jniLibs/ and cache_root/jniLibs/ because some archives
+    // have a top-level directory while others extract directly into cache_root.
     let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
+    let android_lib_dir_alt = cache_root.join("jniLibs").join(android_abi(target_arch));
     if android_lib_dir.is_dir() {
         return Ok((android_lib_dir, archive_stem.to_string()));
+    }
+    if android_lib_dir_alt.is_dir() {
+        return Ok((android_lib_dir_alt, archive_stem.to_string()));
     }
 
     fs::create_dir_all(&cache_root)?;
@@ -240,10 +246,23 @@ fn download_prebuilt_libs(
 
     if !lib_dir.is_dir() {
         // Android archives use jniLibs/{abi}/ instead of lib/.
+        // Check both extracted_dir/jniLibs/ and cache_root/jniLibs/ because
+        // some archives have a top-level directory while others extract
+        // jniLibs/ directly into the cache root.
         let android_lib_dir = extracted_dir
             .join("jniLibs")
             .join(android_abi(target_arch));
-        if android_lib_dir.is_dir() {
+        let android_lib_dir_alt = cache_root
+            .join("jniLibs")
+            .join(android_abi(target_arch));
+        let android_lib_dir = if android_lib_dir.is_dir() {
+            Some(android_lib_dir)
+        } else if android_lib_dir_alt.is_dir() {
+            Some(android_lib_dir_alt)
+        } else {
+            None
+        };
+        if let Some(android_lib_dir) = android_lib_dir {
             eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
             return Ok((android_lib_dir, archive_stem.to_string()));
         }
@@ -540,12 +559,32 @@ fn copy_to_tauri_android_jnilibs(
     let dest_dir = tauri_jni_base.join(abi);
 
     // Check if the .so files are already up-to-date.
+    // When archive_stem is None (e.g. SHERPA_ONNX_LIB_DIR or crates.io),
+    // trust whatever is already at dest_dir — don't re-copy.
     let version_file = dest_dir.join(".sherpa-onnx-version");
     if dest_dir.is_dir() {
-        if let Some(stem) = archive_stem {
-            if let Ok(prev) = fs::read_to_string(&version_file) {
-                if prev.trim() == stem {
-                    eprintln!("Skipping Tauri Android .so copy: already up-to-date ({stem})");
+        match archive_stem {
+            Some(stem) => {
+                if let Ok(prev) = fs::read_to_string(&version_file) {
+                    if prev.trim() == stem {
+                        eprintln!("Skipping Tauri Android .so copy: already up-to-date ({stem})");
+                        return Ok(());
+                    }
+                }
+            }
+            None => {
+                // Only skip if dest_dir has at least one .so file;
+                // otherwise proceed with the copy to self-heal partial outputs.
+                let has_so = fs::read_dir(&dest_dir)?
+                    .filter_map(|e| e.ok())
+                    .any(|e| {
+                        e.path()
+                            .file_name()
+                            .and_then(OsStr::to_str)
+                            .map_or(false, |n| n.contains(".so"))
+                    });
+                if has_so {
+                    eprintln!("Skipping Tauri Android .so copy: no archive stem but .so files present");
                     return Ok(());
                 }
             }
@@ -635,10 +674,15 @@ fn copy_xcframework_to_tauri_project(
     let version_file = project_dir.join(".sherpa-onnx-xcframework-version");
 
     // Check if the xcframework is already up-to-date.
+    // When archive_stem is None (e.g. SHERPA_ONNX_LIB_DIR or crates.io),
+    // trust whatever is already at dest — don't delete it.
     let needs_update = if dest.exists() {
-        archive_stem.map_or(true, |stem| {
-            fs::read_to_string(&version_file).map_or(true, |prev| prev.trim() != stem)
-        })
+        match archive_stem {
+            Some(stem) => {
+                fs::read_to_string(&version_file).map_or(true, |prev| prev.trim() != stem)
+            }
+            None => false,
+        }
     } else {
         true
     };

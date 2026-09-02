@@ -74,9 +74,8 @@ jobs:
       - name: Install patchelf
         shell: bash
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y patchelf
-          patchelf --help
+          pip install patchelf
+          patchelf --version
 
       - name: Patch wheels
         shell: bash

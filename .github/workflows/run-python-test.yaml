@@ -194,8 +194,8 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update -q
-          sudo apt-get install -q -y patchelf
-          patchelf --help
+          pip install patchelf
+          patchelf --version
 
       - name: Build sherpa-onnx (Linux)
         if: runner.os == 'Linux'
