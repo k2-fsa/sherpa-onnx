@@ -61,4 +61,10 @@ trap 'rm -f "$TMPFILE"' EXIT
 curl --fail -L -o "$TMPFILE" "$URL"
 unzip -q "$TMPFILE" -d "$DEST"
 
+# The zip may extract as SherpaOnnxC.xcframework or sherpa-onnx.xcframework.
+# Rename to the expected name if needed.
+if [ -d "$DEST/SherpaOnnxC.xcframework" ] && [ ! -d "$XCFRAMEWORK" ]; then
+  mv "$DEST/SherpaOnnxC.xcframework" "$XCFRAMEWORK"
+fi
+
 echo "Installed sherpa-onnx.xcframework to $XCFRAMEWORK"
