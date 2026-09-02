@@ -46,8 +46,10 @@ build-openvino/bin/sherpa-onnx-keyword-spotter \
 
 For transducer keyword-spotting models, sherpa-onnx runs the compute-heavy
 encoder on OpenVINO and keeps the small decoder and joiner on CPU. This avoids
-unnecessary NPU dispatch overhead and preserves decoder accuracy. VAD models
-run entirely on OpenVINO.
+unnecessary NPU dispatch overhead and preserves decoder accuracy. The Silero
+VAD model tested for this integration ran entirely on OpenVINO. Other VAD
+models may be partitioned by ONNX Runtime, with unsupported nodes assigned to
+the CPU provider.
 
 For a microphone, use `sherpa-onnx-keyword-spotter-microphone` (PortAudio) or
 `sherpa-onnx-keyword-spotter-alsa` with the same `--provider` value.
@@ -93,7 +95,10 @@ keyword spotting and `--vad-provider` for VAD:
 ```
 
 Any OpenVINO V2 provider option can be used. `device_type` may also be `CPU`,
-`GPU`, `AUTO`, `HETERO`, or `MULTI`. If `GraphOptimizationLevel` is omitted,
+`GPU`, or `AUTO`. Multi-device modes require at least two devices; for example,
+use `HETERO:GPU,CPU` or `MULTI:GPU,CPU`. Bare `HETERO` and `MULTI` values are
+incomplete device selections. `AUTO:GPU,NPU,CPU` can be used to give automatic
+selection an explicit device priority. If `GraphOptimizationLevel` is omitted,
 sherpa-onnx disables ONNX Runtime graph optimizations as recommended by the
 OpenVINO Execution Provider. Set it explicitly in the config file to override
 that behavior.
