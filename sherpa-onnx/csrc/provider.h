@@ -22,6 +22,7 @@ enum class Provider {
   kTRT = 5,       // TensorRTExecutionProvider
   kDirectML = 6,  // DmlExecutionProvider
   kSpacemiT = 7,  // SpacemiTExecutionProvider
+  kOpenVINO = 8,  // OpenVINOExecutionProvider
 };
 
 /**

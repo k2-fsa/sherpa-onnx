@@ -85,9 +85,11 @@ It also supports WebAssembly.
 |-------------------------------------|-----------------------------------|-----------------------------|
 |     ✔️                              |                  ✔️               |     ✔️                      |
 
-| [4. Axera NPU][axera-npu] |
-|---------------------------|
-|     ✔️                    |
+| [4. Axera NPU][axera-npu] | [5. Intel NPU (OpenVINO)][openvino-npu] |
+|---------------------------|------------------------------------------|
+|     ✔️                    |                    ✔️                    |
+
+[openvino-npu]: OPENVINO.md
 
 [Join our discord](https://discord.gg/fJdxzg2VbG)
 
