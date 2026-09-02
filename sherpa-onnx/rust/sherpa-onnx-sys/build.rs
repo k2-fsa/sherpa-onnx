@@ -168,10 +168,16 @@ fn download_prebuilt_libs(
         return Ok((lib_dir, archive_stem.to_string()));
     }
 
-    // Android archives use jniLibs/{abi}/ instead of lib/. Check both.
+    // Android archives use jniLibs/{abi}/ instead of lib/. Check both
+    // extracted_dir/jniLibs/ and cache_root/jniLibs/ because some archives
+    // have a top-level directory while others extract directly into cache_root.
     let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
+    let android_lib_dir_alt = cache_root.join("jniLibs").join(android_abi(target_arch));
     if android_lib_dir.is_dir() {
         return Ok((android_lib_dir, archive_stem.to_string()));
+    }
+    if android_lib_dir_alt.is_dir() {
+        return Ok((android_lib_dir_alt, archive_stem.to_string()));
     }
 
     fs::create_dir_all(&cache_root)?;
@@ -241,8 +247,8 @@ fn download_prebuilt_libs(
     if !lib_dir.is_dir() {
         // Android archives use jniLibs/{abi}/ instead of lib/.
         // Check both extracted_dir/jniLibs/ and cache_root/jniLibs/ because
-        // some archives have a top-level directory (e.g. sherpa-onnx-v1.13.7-android/)
-        // while others extract jniLibs/ directly into the cache root.
+        // some archives have a top-level directory while others extract
+        // jniLibs/ directly into the cache root.
         let android_lib_dir = extracted_dir
             .join("jniLibs")
             .join(android_abi(target_arch));
@@ -250,13 +256,13 @@ fn download_prebuilt_libs(
             .join("jniLibs")
             .join(android_abi(target_arch));
         let android_lib_dir = if android_lib_dir.is_dir() {
-            android_lib_dir
+            Some(android_lib_dir)
         } else if android_lib_dir_alt.is_dir() {
-            android_lib_dir_alt
+            Some(android_lib_dir_alt)
         } else {
-            PathBuf::new()
+            None
         };
-        if android_lib_dir.is_dir() {
+        if let Some(android_lib_dir) = android_lib_dir {
             eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
             return Ok((android_lib_dir, archive_stem.to_string()));
         }
@@ -567,8 +573,20 @@ fn copy_to_tauri_android_jnilibs(
                 }
             }
             None => {
-                eprintln!("Skipping Tauri Android .so copy: no archive stem (crates.io or SHERPA_ONNX_LIB_DIR)");
-                return Ok(());
+                // Only skip if dest_dir has at least one .so file;
+                // otherwise proceed with the copy to self-heal partial outputs.
+                let has_so = fs::read_dir(&dest_dir)?
+                    .filter_map(|e| e.ok())
+                    .any(|e| {
+                        e.path()
+                            .file_name()
+                            .and_then(OsStr::to_str)
+                            .map_or(false, |n| n.contains(".so"))
+                    });
+                if has_so {
+                    eprintln!("Skipping Tauri Android .so copy: no archive stem but .so files present");
+                    return Ok(());
+                }
             }
         }
     }

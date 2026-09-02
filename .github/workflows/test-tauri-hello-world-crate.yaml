@@ -145,7 +145,6 @@ jobs:
           cd tauri-examples/hello_world
           npm install
 
-
       - name: Download pre-built iOS xcframework
         shell: bash
         run: |
@@ -510,7 +509,6 @@ jobs:
         run: |
           cd tauri-examples/hello_world
           npm install
-
 
       - name: Init Android
         shell: bash
