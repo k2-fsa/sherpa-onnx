@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <string>
 #include <utility>
@@ -64,6 +65,12 @@ class OfflineRecognizerFunASRNanoImpl : public OfflineRecognizerImpl {
   std::unique_ptr<OfflineFunASRNanoModel> model_;
   std::unique_ptr<FunASRNanoTokenizer> tokenizer_;
   mutable std::mt19937 rng_;
+  // Protects rng_, which is shared and drawn from by
+  // SampleTokenWithTemperatureAndTopP(). DecodeStreams() may be called
+  // concurrently from multiple threads on the same recognizer instance (see
+  // sherpa-onnx-offline-parallel.cc), so draws from rng_ must be serialized to
+  // avoid a data race.
+  mutable std::mutex rng_mutex_;
 };
 
 }  // namespace sherpa_onnx
