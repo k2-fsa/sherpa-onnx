@@ -372,7 +372,11 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
 
   if (top_p >= 1.0f) {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    float sample = dist(rng_);
+    float sample;
+    {
+      std::lock_guard<std::mutex> lock(rng_mutex_);
+      sample = dist(rng_);
+    }
     float cumsum = 0.0f;
     for (int32_t i = 0; i < vocab_size; ++i) {
       cumsum += probs[i];
@@ -413,7 +417,11 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
   if (renorm_sum <= 0.0f) return 0;
 
   std::uniform_real_distribution<float> dist(0.0f, renorm_sum);
-  float sample = dist(rng_);
+  float sample;
+  {
+    std::lock_guard<std::mutex> lock(rng_mutex_);
+    sample = dist(rng_);
+  }
   float cumsum_sample = 0.0f;
   for (int32_t i = 0; i < cutoff; ++i) {
     cumsum_sample += probs[idx[i]];

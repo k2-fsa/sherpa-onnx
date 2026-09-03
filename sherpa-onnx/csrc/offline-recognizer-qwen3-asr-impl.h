@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <string>
 #include <utility>
@@ -73,6 +74,12 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
   std::vector<int64_t> prompt_ids_after_;
   int64_t asr_text_token_id_ = -1;
   mutable std::mt19937 rng_;
+  // Protects rng_, which is shared and drawn from by
+  // SampleTokenWithTemperatureAndTopP(). DecodeStreams() may be called
+  // concurrently from multiple threads on the same recognizer instance (see
+  // sherpa-onnx-offline-parallel.cc), so draws from rng_ must be serialized to
+  // avoid a data race.
+  mutable std::mutex rng_mutex_;
 };
 
 }  // namespace sherpa_onnx

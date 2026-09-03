@@ -730,7 +730,11 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
       return prob_idx[0].first;
     }
 
-    float r = std::uniform_real_distribution<float>(0.0f, kept_sum)(rng_);
+    float r;
+    {
+      std::lock_guard<std::mutex> lock(rng_mutex_);
+      r = std::uniform_real_distribution<float>(0.0f, kept_sum)(rng_);
+    }
     float cumsum = 0.0f;
     for (int32_t i = 0; i < cutoff; ++i) {
       cumsum += prob_idx[i].second;
@@ -742,7 +746,11 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
     return prob_idx[cutoff - 1].first;
   }
 
-  float r = std::uniform_real_distribution<float>(0.0f, sum)(rng_);
+  float r;
+  {
+    std::lock_guard<std::mutex> lock(rng_mutex_);
+    r = std::uniform_real_distribution<float>(0.0f, sum)(rng_);
+  }
   float cumsum = 0.0f;
   for (int32_t i = 0; i < vocab_size; ++i) {
     cumsum += probs[i];
