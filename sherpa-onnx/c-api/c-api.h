@@ -2055,7 +2055,7 @@ SherpaOnnxCircularBufferSize(const SherpaOnnxCircularBuffer *buffer);
 /**
  * @brief Return the current head index of the buffer timeline.
  *
- * The value is monotonically non-decreasing until
+ * The value wraps to 0 after reaching INT32_MAX. It is also reset to 0 when
  * SherpaOnnxCircularBufferReset() is called.
  *
  * @param buffer A pointer returned by SherpaOnnxCreateCircularBuffer().
