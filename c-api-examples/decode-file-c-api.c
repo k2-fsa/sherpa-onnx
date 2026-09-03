@@ -65,7 +65,8 @@ static struct cag_option options[] = {
      .access_name = "hotwords-score",
      .value_name = "hotwords-score",
      .description = "The bonus score for each token in hotwords. Used only "
-                    "when decoding_method is modified_beam_search"},
+                    "when decoding_method is modified_beam_search or "
+                    "prefix_beam_search"},
 };
 
 const char *kUsage =
@@ -80,7 +81,8 @@ const char *kUsage =
     "    /path/to/foo.wav\n"
     "\n\n"
     "Default num_threads is 1.\n"
-    "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
+    "Valid decoding_method: greedy_search (default), modified_beam_search,\n"
+    "  prefix_beam_search (for CTC models)\n\n"
     "Valid provider: cpu (default), cuda, coreml\n\n"
     "Please refer to \n"
     "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/"

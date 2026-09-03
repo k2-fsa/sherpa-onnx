@@ -172,7 +172,10 @@ def get_args():
         "--decoding-method",
         type=str,
         default="greedy_search",
-        help="Valid values are greedy_search and modified_beam_search",
+        help=(
+            "Valid values are greedy_search, modified_beam_search "
+            "(for transducer), and prefix_beam_search (for CTC)"
+        ),
     )
 
     parser.add_argument(
@@ -368,7 +371,12 @@ def main():
             provider=args.provider,
             sample_rate=16000,
             feature_dim=80,
-            decoding_method="greedy_search",
+            decoding_method=args.decoding_method,
+            max_active_paths=args.max_active_paths,
+            hotwords_file=args.hotwords_file,
+            hotwords_score=args.hotwords_score,
+            modeling_unit=args.modeling_unit,
+            bpe_vocab=args.bpe_vocab,
         )
     elif args.paraformer_encoder:
         recognizer = sherpa_onnx.OnlineRecognizer.from_paraformer(
@@ -391,7 +399,12 @@ def main():
             provider=args.provider,
             sample_rate=16000,
             feature_dim=80,
-            decoding_method="greedy_search",
+            decoding_method=args.decoding_method,
+            max_active_paths=args.max_active_paths,
+            hotwords_file=args.hotwords_file,
+            hotwords_score=args.hotwords_score,
+            modeling_unit=args.modeling_unit,
+            bpe_vocab=args.bpe_vocab,
         )
     else:
         raise ValueError("Please provide a model")
