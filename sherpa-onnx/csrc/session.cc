@@ -474,13 +474,6 @@ Ort::SessionOptions GetSessionOptionsImpl(
         provider_options.emplace("device_type", "NPU");
       }
 
-      // OpenVINO performs its own graph optimizations and recommends receiving
-      // the original ONNX graph. Users can override this in the config file.
-      if (!has_graph_optimization_level) {
-        sess_opts.SetGraphOptimizationLevel(
-            GraphOptimizationLevel::ORT_DISABLE_ALL);
-      }
-
       std::vector<const char *> option_keys;
       std::vector<const char *> option_values;
       option_keys.reserve(provider_options.size());
@@ -501,6 +494,14 @@ Ort::SessionOptions GetSessionOptionsImpl(
             "providers: %s. Fallback to cpu",
             msg, os.str().c_str());
         api.ReleaseStatus(status);
+      } else if (!has_graph_optimization_level) {
+        // OpenVINO performs its own graph optimizations and recommends
+        // receiving the original ONNX graph. Only disable ORT optimizations
+        // after successfully enabling OpenVINO so that a CPU fallback keeps
+        // its normal optimization level. Users can override this in the
+        // config file.
+        sess_opts.SetGraphOptimizationLevel(
+            GraphOptimizationLevel::ORT_DISABLE_ALL);
       }
 #else
       SHERPA_ONNX_LOGE(
