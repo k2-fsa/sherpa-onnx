@@ -18,14 +18,19 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/context-graph.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-decoder.h"
+#include "sherpa-onnx/csrc/online-transducer-modified-beam-search-nemo-decoder.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
 #include "sherpa-onnx/csrc/utils.h"
+#include "ssentencepiece/csrc/ssentencepiece.h"
 
 namespace sherpa_onnx {
 
@@ -54,6 +59,22 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
+    } else if (config.decoding_method == "modified_beam_search") {
+      if (!config_.model_config.bpe_vocab.empty()) {
+        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
+            config_.model_config.bpe_vocab);
+      }
+
+      if (!config_.hotwords_buf.empty()) {
+        InitHotwordsFromBufStr();
+      } else if (!config_.hotwords_file.empty()) {
+        InitHotwords();
+      }
+
+      decoder_ =
+          std::make_unique<OnlineTransducerModifiedBeamSearchNeMoDecoder>(
+              model_.get(), config_.max_active_paths, config_.blank_penalty,
+              config_.hotwords_score);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
@@ -78,6 +99,23 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
+    } else if (config.decoding_method == "modified_beam_search") {
+      if (!config_.model_config.bpe_vocab.empty()) {
+        auto buf = ReadFile(mgr, config_.model_config.bpe_vocab);
+        std::istringstream iss(std::string(buf.begin(), buf.end()));
+        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
+      }
+
+      if (!config_.hotwords_buf.empty()) {
+        InitHotwordsFromBufStr();
+      } else if (!config_.hotwords_file.empty()) {
+        InitHotwords(mgr);
+      }
+
+      decoder_ =
+          std::make_unique<OnlineTransducerModifiedBeamSearchNeMoDecoder>(
+              model_.get(), config_.max_active_paths, config_.blank_penalty,
+              config_.hotwords_score);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
@@ -88,7 +126,48 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   }
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
-    auto stream = std::make_unique<OnlineStream>(config_.feat_config);
+    auto stream =
+        std::make_unique<OnlineStream>(config_.feat_config, hotwords_graph_);
+    InitOnlineStream(stream.get());
+    return stream;
+  }
+
+  std::unique_ptr<OnlineStream> CreateStream(
+      const std::string &hotwords) const override {
+    auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
+    std::istringstream is(hws);
+    std::vector<std::vector<int32_t>> current;
+    std::vector<float> current_scores;
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &current, &current_scores)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
+                       hotwords.c_str());
+    }
+
+    int32_t num_default_hws = hotwords_.size();
+    int32_t num_hws = current.size();
+
+    current.insert(current.end(), hotwords_.begin(), hotwords_.end());
+
+    if (!current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else if (!current_scores.empty() && boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_default_hws,
+                            config_.hotwords_score);
+    } else if (current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_hws,
+                            config_.hotwords_score);
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else {
+      // Do nothing.
+    }
+
+    auto context_graph = std::make_shared<ContextGraph>(
+        current, config_.hotwords_score, current_scores);
+    auto stream =
+        std::make_unique<OnlineStream>(config_.feat_config, context_graph);
     InitOnlineStream(stream.get());
     return stream;
   }
@@ -223,6 +302,64 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   }
 
  private:
+  void InitHotwords() {
+    // each line in hotwords_file contains space-separated words
+
+    auto is = OpenInputFile(config_.hotwords_file);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+                       config_.hotwords_file.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
+    }
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
+  }
+
+  template <typename Manager>
+  void InitHotwords(Manager *mgr) {
+    // each line in hotwords_file contains space-separated words
+
+    auto buf = ReadFile(mgr, config_.hotwords_file);
+
+    std::istringstream is(std::string(buf.begin(), buf.end()));
+
+    if (!is) {
+      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+                       config_.hotwords_file.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
+    }
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
+  }
+
+  void InitHotwordsFromBufStr() {
+    // each line in hotwords_file contains space-separated words
+
+    std::istringstream iss(config_.hotwords_buf);
+    if (!EncodeHotwords(iss, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
+    }
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
+  }
+
   static bool IsLanguageTagToken(const std::string &sym) {
     if (sym.size() < 4 || sym.front() != '<' || sym.back() != '>') {
       return false;
@@ -382,7 +519,11 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   SymbolTable symbol_table_;
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
   std::unordered_set<int64_t> language_tag_token_ids_;
-  std::unique_ptr<OnlineTransducerGreedySearchNeMoDecoder> decoder_;
+  std::vector<std::vector<int32_t>> hotwords_;
+  std::vector<float> boost_scores_;
+  ContextGraphPtr hotwords_graph_;
+  std::unique_ptr<ssentencepiece::Ssentencepiece> bpe_encoder_;
+  std::unique_ptr<OnlineTransducerNeMoDecoder> decoder_;
   Endpoint endpoint_;
 };
 
