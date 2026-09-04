@@ -12,9 +12,11 @@ namespace SherpaOnnx
         {
             NumClusters = -1;
             Threshold = 0.5F;
+            ComputeConfidence = 0;
         }
 
         public int NumClusters;
         public float Threshold;
+        public int ComputeConfidence;
     }
 }

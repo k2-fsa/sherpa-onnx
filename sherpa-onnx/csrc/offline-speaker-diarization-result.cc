@@ -13,9 +13,14 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/fast-clustering.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
+
+static_assert(kUnavailableConfidence == kSilhouetteUnavailable,
+              "kUnavailableConfidence must match the sentinel value used in "
+              "fast-clustering.h.");
 
 OfflineSpeakerDiarizationSegment::OfflineSpeakerDiarizationSegment(
     float start, float end, int32_t speaker, const std::string &text /*= {}*/) {
@@ -50,11 +55,22 @@ OfflineSpeakerDiarizationSegment::Merge(
   }
 }
 
-std::string OfflineSpeakerDiarizationSegment::ToString() const {
-  std::array<char, 128> s{};
+std::string OfflineSpeakerDiarizationSegment::ToString(
+    bool with_confidence /*= false*/) const {
+  std::array<char, 160> s{};
 
-  snprintf(s.data(), s.size(), "%.3f -- %.3f speaker_%02d", start_, end_,
-           speaker_);
+  if (!with_confidence) {
+    snprintf(s.data(), s.size(), "%.3f -- %.3f speaker_%02d", start_, end_,
+             speaker_);
+  } else if (confidence_ == kUnavailableConfidence) {
+    snprintf(s.data(), s.size(),
+             "%.3f -- %.3f speaker_%02d confidence=n/a", start_, end_,
+             speaker_);
+  } else {
+    snprintf(s.data(), s.size(),
+             "%.3f -- %.3f speaker_%02d confidence=%.3f", start_, end_,
+             speaker_, confidence_);
+  }
 
   std::ostringstream os;
   os << s.data();

@@ -124,7 +124,7 @@ function initSherpaOnnxSpeakerEmbeddingExtractorConfig(config, Module) {
 }
 
 function initSherpaOnnxFastClusteringConfig(config, Module) {
-  const len = 2 * 4;
+  const len = 3 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -132,6 +132,9 @@ function initSherpaOnnxFastClusteringConfig(config, Module) {
   offset += 4;
 
   Module.setValue(ptr + offset, config.threshold || 0.5, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.computeConfidence ? 1 : 0, 'i32');
   offset += 4;
 
   return {
@@ -261,15 +264,16 @@ class OfflineSpeakerDiarization {
 
     let ans = [];
 
-    let sizeOfSegment = 3 * 4;
+    let sizeOfSegment = 4 * 4;
     for (let i = 0; i < numSegments; ++i) {
       let p = segments + i * sizeOfSegment
 
       let start = this.Module.HEAPF32[p / 4 + 0];
       let end = this.Module.HEAPF32[p / 4 + 1];
       let speaker = this.Module.HEAP32[p / 4 + 2];
+      let confidence = this.Module.HEAPF32[p / 4 + 3];
 
-      ans.push({start: start, end: end, speaker: speaker});
+      ans.push({start: start, end: end, speaker: speaker, confidence: confidence});
     }
 
     this.Module._SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);

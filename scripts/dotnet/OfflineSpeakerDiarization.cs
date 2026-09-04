@@ -46,7 +46,7 @@ namespace SherpaOnnx
             OfflineSpeakerDiarizationSegment[] ans = new OfflineSpeakerDiarizationSegment[numSegments];
             unsafe
             {
-              int size = sizeof(float) * 2 + sizeof(int);
+              int size = sizeof(float) * 3 + sizeof(int);
               for (int i = 0; i != numSegments; ++i)
               {
                 IntPtr t = new IntPtr((byte*)p + i * size);

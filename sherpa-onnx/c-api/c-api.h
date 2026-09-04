@@ -3875,6 +3875,8 @@ typedef struct SherpaOnnxFastClusteringConfig {
   int32_t num_clusters;
   /** Distance threshold used when the number of speakers is unknown. */
   float threshold;
+  /** When non-zero, per-segment confidence values are computed. */
+  int32_t compute_confidence;
 } SherpaOnnxFastClusteringConfig;
 
 /**
@@ -3965,6 +3967,12 @@ typedef struct SherpaOnnxOfflineSpeakerDiarizationSegment {
   float end;
   /** Speaker label, typically an integer cluster ID. */
   int32_t speaker;
+  /**
+   * Per-segment confidence in [-1, 1] (higher is more confident), or -2 if
+   * unavailable (compute_confidence disabled, or the score could not be
+   * computed for this segment).
+   */
+  float confidence;
 } SherpaOnnxOfflineSpeakerDiarizationSegment;
 
 /**
