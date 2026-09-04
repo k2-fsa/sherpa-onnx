@@ -43,12 +43,12 @@ function(download_simple_sentencepiece)
   endif()
   message(STATUS "simple-sentencepiece is downloaded to ${simple-sentencepiece_SOURCE_DIR}")
 
-  # Patch ssentencepiece to disable threading on WASM (std::thread not available)
-  # and on Android/Termux (std::promise requires __cxa_init_primary_exception).
-  if(SHERPA_ONNX_ENABLE_WASM OR CMAKE_SYSTEM_NAME STREQUAL Android)
+  # Patch ssentencepiece to disable threading on WASM (std::thread not available).
+  if(SHERPA_ONNX_ENABLE_WASM)
+    # Replace threadpool.h with a WASM-safe stub that provides a no-op ThreadPool.
     set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
     file(WRITE "${_tp_header}" [=[
-// Synchronous ThreadPool stub — no threading, no std::promise.
+// WASM-safe ThreadPool stub (std::thread not available).
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
@@ -63,7 +63,7 @@ class ThreadPool {
   template<class F, class... Args>
   auto enqueue(F&& f, Args&&... args)
       -> std::future<decltype(f(args...))> {
-    // Run synchronously — no threading.
+    // Run synchronously — no threading in WASM.
     using return_type = decltype(f(args...));
     auto task = std::make_shared<std::packaged_task<return_type()>>(
         std::bind(std::forward<F>(f), std::forward<Args>(args)...));
@@ -75,7 +75,46 @@ class ThreadPool {
 
 #endif  // THREAD_POOL_H
 ]=])
-    message(STATUS "Patched ssentencepiece: synchronous ThreadPool (no threading)")
+    message(STATUS "Patched ssentencepiece for WASM (ThreadPool stub installed)")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Android)
+    # Replace threadpool.h with a version that avoids std::promise, std::future,
+    # and std::packaged_task — none of these work on Termux because the static
+    # onnxruntime lib references __cxa_init_primary_exception which is missing.
+    set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
+    file(WRITE "${_tp_header}" [=[
+// Android/Termux-safe synchronous ThreadPool — no std::promise/packaged_task/future.
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
+
+#include <functional>
+#include <memory>
+#include <utility>
+
+// A minimal future that does not use std::promise, std::future, or
+// std::packaged_task. It runs the callable synchronously and stores the result.
+template<typename T>
+class SimpleFuture {
+ public:
+  explicit SimpleFuture(T value) : value_(std::move(value)) {}
+  T get() { return std::move(value_); }
+ private:
+  T value_;
+};
+
+class ThreadPool {
+ public:
+  ThreadPool(size_t) {}
+  template<class F, class... Args>
+  auto enqueue(F&& f, Args&&... args)
+      -> SimpleFuture<decltype(f(args...))> {
+    using return_type = decltype(f(args...));
+    return SimpleFuture<return_type>(f(args...));
+  }
+};
+
+#endif  // THREAD_POOL_H
+]=])
+    message(STATUS "Patched ssentencepiece for Android (synchronous ThreadPool, no std::promise)")
   endif()
 
   if(BUILD_SHARED_LIBS)
