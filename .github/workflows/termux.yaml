@@ -38,6 +38,7 @@ jobs:
       - name: Build sherpa-onnx (shared)
         run: |
           docker run --rm \
+            --user root \
             -v ${{ github.workspace }}:/workspace \
             termux/termux-docker:aarch64 \
             sh -c "
@@ -212,6 +213,7 @@ jobs:
       - name: Build sherpa-onnx (static)
         run: |
           docker run --rm \
+            --user root \
             -v ${{ github.workspace }}:/workspace \
             termux/termux-docker:aarch64 \
             sh -c "
