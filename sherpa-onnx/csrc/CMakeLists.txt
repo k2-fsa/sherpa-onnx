@@ -384,7 +384,7 @@ if(APPLE)
   )
 endif()
 
-if(ANDROID_NDK)
+if(ANDROID)
   target_link_libraries(sherpa-onnx-core android log)
 endif()
 
