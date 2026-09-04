@@ -43,12 +43,12 @@ function(download_simple_sentencepiece)
   endif()
   message(STATUS "simple-sentencepiece is downloaded to ${simple-sentencepiece_SOURCE_DIR}")
 
-  # Patch ssentencepiece to disable threading on WASM (std::thread not available).
-  if(SHERPA_ONNX_ENABLE_WASM)
-    # Replace threadpool.h with a WASM-safe stub that provides a no-op ThreadPool.
+  # Patch ssentencepiece to disable threading on WASM (std::thread not available)
+  # and on Android/Termux (std::promise requires __cxa_init_primary_exception).
+  if(SHERPA_ONNX_ENABLE_WASM OR CMAKE_SYSTEM_NAME STREQUAL Android)
     set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
     file(WRITE "${_tp_header}" [=[
-// WASM-safe ThreadPool stub (std::thread not available).
+// Synchronous ThreadPool stub — no threading, no std::promise.
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
@@ -63,7 +63,7 @@ class ThreadPool {
   template<class F, class... Args>
   auto enqueue(F&& f, Args&&... args)
       -> std::future<decltype(f(args...))> {
-    // Run synchronously — no threading in WASM.
+    // Run synchronously — no threading.
     using return_type = decltype(f(args...));
     auto task = std::make_shared<std::packaged_task<return_type()>>(
         std::bind(std::forward<F>(f), std::forward<Args>(args)...));
@@ -75,7 +75,7 @@ class ThreadPool {
 
 #endif  // THREAD_POOL_H
 ]=])
-    message(STATUS "Patched ssentencepiece for WASM (ThreadPool stub installed)")
+    message(STATUS "Patched ssentencepiece: synchronous ThreadPool (no threading)")
   endif()
 
   if(BUILD_SHARED_LIBS)
