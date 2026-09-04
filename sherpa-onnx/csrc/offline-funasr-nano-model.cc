@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -1286,7 +1286,7 @@ bool OfflineFunASRNanoModel::HasEmbeddingModel() const {
   return impl_->HasEmbeddingModel();
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineFunASRNanoModel::OfflineFunASRNanoModel(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

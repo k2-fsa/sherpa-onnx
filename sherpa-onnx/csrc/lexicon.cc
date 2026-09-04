@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -397,7 +397,7 @@ void Lexicon::InitPunctuations(const std::string &punctuations) {
   }
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
                           const std::string &tokens,
                           const std::string &punctuations,

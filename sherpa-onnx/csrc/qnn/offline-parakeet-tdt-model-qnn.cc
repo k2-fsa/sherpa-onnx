@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -643,7 +643,7 @@ int32_t OfflineParakeetTdtModelQnn::NumEncoderFrames(
   return impl_->NumEncoderFrames(num_frames);
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineParakeetTdtModelQnn::OfflineParakeetTdtModelQnn(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -402,7 +402,7 @@ void SupertonicUnicodeProcessor::Process(
   text_mask_shape->assign({1, 1, static_cast<int64_t>(seq_len)});
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
     AAssetManager *mgr, const std::string &unicode_indexer_path);
 #endif

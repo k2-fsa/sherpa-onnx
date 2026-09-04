@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -363,7 +363,7 @@ int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
 
 int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineTts::OfflineTts(AAssetManager *mgr,
                                 const OfflineTtsConfig &config);
 #endif

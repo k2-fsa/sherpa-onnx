@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -268,7 +268,7 @@ OrtAllocator *OnlineParaformerModel::Allocator() const {
   return impl_->Allocator();
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OnlineParaformerModel::OnlineParaformerModel(
     AAssetManager *mgr, const OnlineModelConfig &config);
 #endif

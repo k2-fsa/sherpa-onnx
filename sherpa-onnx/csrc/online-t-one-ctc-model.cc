@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -270,7 +270,7 @@ std::vector<std::vector<Ort::Value>> OnlineToneCtcModel::UnStackStates(
   return impl_->UnStackStates(std::move(states));
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OnlineToneCtcModel::OnlineToneCtcModel(
     AAssetManager *mgr, const OnlineModelConfig &config);
 #endif

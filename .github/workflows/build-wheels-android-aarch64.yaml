@@ -80,6 +80,8 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_ENABLE_C_API=ON \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
+                -DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF \
+                -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF \
                 ..
 
               make -j$(nproc) install

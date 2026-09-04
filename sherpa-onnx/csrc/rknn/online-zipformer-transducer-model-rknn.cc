@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -499,7 +499,7 @@ rknn_tensor_attr OnlineZipformerTransducerModelRknn::GetEncoderOutAttr() const {
   return impl_->GetEncoderOutAttr();
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OnlineZipformerTransducerModelRknn::OnlineZipformerTransducerModelRknn(
     AAssetManager *mgr, const OnlineModelConfig &config);
 #endif

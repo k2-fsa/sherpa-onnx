@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -106,7 +106,7 @@ OfflineSpeakerDiarizationResult OfflineSpeakerDiarization::Process(
   return impl_->Process(audio, n, std::move(callback), callback_arg);
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineSpeakerDiarization::OfflineSpeakerDiarization(
     AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config);
 #endif

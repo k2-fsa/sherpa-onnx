@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -175,7 +175,7 @@ std::unique_ptr<Vocoder> Vocoder::Create(Manager *mgr,
   }
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template std::unique_ptr<Vocoder> Vocoder::Create(
     AAssetManager *mgr, const OfflineTtsModelConfig &config);
 #endif

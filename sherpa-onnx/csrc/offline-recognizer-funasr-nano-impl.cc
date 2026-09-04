@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -907,7 +907,7 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
   }
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
     AAssetManager *mgr, const OfflineRecognizerConfig &config);
 #endif

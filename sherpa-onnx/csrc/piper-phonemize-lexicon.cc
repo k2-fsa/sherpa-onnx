@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -374,7 +374,7 @@ static std::vector<int64_t> CoquiPhonemesToIds(
 void InitEspeak(const std::string &data_dir) {
   static std::once_flag init_flag;
   std::call_once(init_flag, [data_dir]() {
-#if __ANDROID_API__ >= 9 || defined(__OHOS__)
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER) || defined(__OHOS__)
     if (data_dir[0] != '/') {
       SHERPA_ONNX_LOGE(
           "You need to follow our examples to copy the espeak-ng-data "
@@ -659,7 +659,7 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsVits(
   return ans;
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
     const OfflineTtsVitsModelMetaData &vits_meta_data);

@@ -15,7 +15,7 @@
 
 #include "sherpa-onnx/csrc/offline-canary-model-meta-data.h"
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -272,7 +272,7 @@ OfflineCanaryModelMetaData &OfflineCanaryModel::GetModelMetadata() {
   return impl_->GetModelMetadata();
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineCanaryModel::OfflineCanaryModel(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

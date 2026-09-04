@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - termux-python
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -80,6 +81,8 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_ENABLE_C_API=ON \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
+                -DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF \
+                -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF \
                 ..
 
               make -j$(nproc) install
@@ -93,17 +96,16 @@ jobs:
               echo "=== include ==="
               find install/include -type f
 
-              echo "=== file install/bin/sherpa-onnx ==="
-              file install/bin/sherpa-onnx
-
               echo "=== readelf -d install/bin/sherpa-onnx ==="
               readelf -d install/bin/sherpa-onnx
 
-              echo "=== file install/lib/libsherpa-onnx-c-api.so ==="
-              file install/lib/libsherpa-onnx-c-api.so
-
               echo "=== readelf -d install/lib/libsherpa-onnx-c-api.so ==="
               readelf -d install/lib/libsherpa-onnx-c-api.so
+
+              echo "=== Test binaries ==="
+              export LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH
+              ./install/bin/sherpa-onnx-version
+              ./install/bin/sherpa-onnx --help || true
             '
 
       - name: Copy files
@@ -254,6 +256,8 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
+                -DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF \
+                -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF \
                 ..
 
               make -j$(nproc) install
@@ -266,11 +270,12 @@ jobs:
               echo "=== bin after strip ==="
               ls -lh install/bin/
 
-              echo "=== file install/bin/sherpa-onnx ==="
-              file install/bin/sherpa-onnx
-
               echo "=== readelf -d install/bin/sherpa-onnx ==="
               readelf -d install/bin/sherpa-onnx
+
+              echo "=== Test binaries ==="
+              ./install/bin/sherpa-onnx-version
+              ./install/bin/sherpa-onnx --help || true
             '
 
       - name: Copy files

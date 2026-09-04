@@ -10,7 +10,7 @@
 #include <vector>
 
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -186,7 +186,7 @@ std::string OfflineNemoEncDecCtcModel::FeatureNormalizationMethod() const {
 
 bool OfflineNemoEncDecCtcModel::IsGigaAM() const { return impl_->IsGigaAM(); }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

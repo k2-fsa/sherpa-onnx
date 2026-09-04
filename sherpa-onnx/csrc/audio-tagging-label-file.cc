@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -28,7 +28,7 @@ AudioTaggingLabels::AudioTaggingLabels(const std::string &filename) {
   Init(is);
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 AudioTaggingLabels::AudioTaggingLabels(AAssetManager *mgr,
                                        const std::string &filename) {
   auto buf = ReadFile(mgr, filename);

@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -62,7 +62,7 @@ int32_t OnlineSpeechDenoiser::GetFrameShiftInSamples() const {
   return impl_->GetFrameShiftInSamples();
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OnlineSpeechDenoiser::OnlineSpeechDenoiser(
     AAssetManager *mgr, const OnlineSpeechDenoiserConfig &config);
 #endif

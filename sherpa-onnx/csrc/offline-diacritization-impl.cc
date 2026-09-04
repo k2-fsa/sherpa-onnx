@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -51,7 +51,7 @@ std::unique_ptr<OfflineDiacritizationImpl> OfflineDiacritizationImpl::Create(
   return std::make_unique<OfflineDiacritizationCATTImpl>(mgr, config);
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template std::unique_ptr<OfflineDiacritizationImpl>
 OfflineDiacritizationImpl::Create(AAssetManager *mgr,
                                   const OfflineDiacritizationConfig &config);

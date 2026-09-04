@@ -9,7 +9,7 @@
 
 #include "sherpa-onnx/csrc/offline-source-separation-impl.h"
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -62,7 +62,7 @@ int32_t OfflineSourceSeparation::GetNumberOfStems() const {
   return impl_->GetNumberOfStems();
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineSourceSeparation::OfflineSourceSeparation(
     AAssetManager *mgr, const OfflineSourceSeparationConfig &config);
 #endif

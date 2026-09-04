@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -1235,7 +1235,7 @@ void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
   stream->SetResult(r);
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
     AAssetManager *mgr, const OfflineRecognizerConfig &config);
 #endif

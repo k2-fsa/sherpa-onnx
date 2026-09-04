@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -18,7 +18,7 @@ namespace sherpa_onnx {
 class AudioTaggingLabels {
  public:
   explicit AudioTaggingLabels(const std::string &filename);
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
   AudioTaggingLabels(AAssetManager *mgr, const std::string &filename);
 #endif
 

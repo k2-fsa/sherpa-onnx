@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -351,7 +351,7 @@ std::string OnlineRecognizerImpl::ApplyHomophoneReplacer(
   return text;
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OnlineRecognizerImpl::OnlineRecognizerImpl(
     AAssetManager *mgr, const OnlineRecognizerConfig &config);
 

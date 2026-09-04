@@ -29,7 +29,7 @@ class OfflineZipformerAudioTaggingModel::Impl {
     Init(nullptr, 0);
   }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
   Impl(AAssetManager *mgr, const AudioTaggingModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
@@ -105,7 +105,7 @@ OfflineZipformerAudioTaggingModel::OfflineZipformerAudioTaggingModel(
     const AudioTaggingModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 OfflineZipformerAudioTaggingModel::OfflineZipformerAudioTaggingModel(
     AAssetManager *mgr, const AudioTaggingModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}

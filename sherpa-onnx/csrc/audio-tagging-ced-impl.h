@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -35,7 +35,7 @@ class AudioTaggingCEDImpl : public AudioTaggingImpl {
     }
   }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
   explicit AudioTaggingCEDImpl(AAssetManager *mgr,
                                const AudioTaggingConfig &config)
       : config_(config),

@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -277,7 +277,7 @@ float VoiceActivityDetector::Compute(const float *samples, int32_t n) {
   return impl_->Compute(samples, n);
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template VoiceActivityDetector::VoiceActivityDetector(
     AAssetManager *mgr, const VadModelConfig &config,
     float buffer_size_in_seconds = 60);

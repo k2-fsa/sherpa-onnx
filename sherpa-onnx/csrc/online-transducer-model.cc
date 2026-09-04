@@ -4,7 +4,7 @@
 // Copyright (c)  2023  Pingfeng Luo
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -266,7 +266,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   return nullptr;
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
     AAssetManager *mgr, const OnlineModelConfig &config);
 #endif

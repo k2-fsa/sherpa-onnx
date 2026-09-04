@@ -11,7 +11,7 @@
 #include <vector>
 
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -936,7 +936,7 @@ void OfflineRecognizerImpl::SetConfig(const OfflineRecognizerConfig &config) {
   config_ = config;
 }
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 template OfflineRecognizerImpl::OfflineRecognizerImpl(
     AAssetManager *mgr, const OfflineRecognizerConfig &config);
 

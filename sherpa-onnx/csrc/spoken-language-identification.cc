@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -111,7 +111,7 @@ SpokenLanguageIdentification::SpokenLanguageIdentification(
     const SpokenLanguageIdentificationConfig &config)
     : impl_(SpokenLanguageIdentificationImpl::Create(config)) {}
 
-#if __ANDROID_API__ >= 9
+#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
 SpokenLanguageIdentification::SpokenLanguageIdentification(
     AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
     : impl_(SpokenLanguageIdentificationImpl::Create(mgr, config)) {}
