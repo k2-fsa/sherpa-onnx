@@ -103,7 +103,8 @@ static void SplitProviderAndConfig(
     std::unordered_map<std::string, std::string> &config) {
   // provider string format: provider_name[:config_path], e.g.,
   // tensorrt:trt_config.config or spacemit:spacemit_config.config or cpu. The
-  // config file is optional. If it is not provided, default config will be used.
+  // config file is optional. If it is not provided, default config will be
+  // used.
   provider_str = Trim(s);
   config.clear();
 
@@ -157,7 +158,9 @@ Ort::SessionOptions GetSessionOptionsImpl(
   }
 
   // Other possible options
-  if (config.find("GraphOptimizationLevel") != config.end()) {
+  bool has_graph_optimization_level =
+      config.find("GraphOptimizationLevel") != config.end();
+  if (has_graph_optimization_level) {
     int32_t graph_optimization_level = ToIntOrDefault(
         config["GraphOptimizationLevel"],
         static_cast<int32_t>(GraphOptimizationLevel::ORT_ENABLE_ALL));
@@ -176,7 +179,8 @@ Ort::SessionOptions GetSessionOptionsImpl(
   }
 
   if (config.find("ProfilingFilePrefix") != config.end()) {
-    sess_opts.EnableProfiling(SHERPA_ONNX_TO_ORT_PATH(config["ProfilingFilePrefix"]));
+    sess_opts.EnableProfiling(
+        SHERPA_ONNX_TO_ORT_PATH(config["ProfilingFilePrefix"]));
     config.erase("ProfilingFilePrefix");
   }
 
@@ -452,6 +456,61 @@ Ort::SessionOptions GetSessionOptionsImpl(
 #endif
       break;
     }
+    case Provider::kOpenVINO: {
+#if ORT_API_VERSION >= 17
+      if (std::find(available_providers.begin(), available_providers.end(),
+                    "OpenVINOExecutionProvider") == available_providers.end()) {
+        SHERPA_ONNX_LOGE(
+            "OpenVINOExecutionProvider is not available. Install an "
+            "OpenVINO-enabled ONNX Runtime. Available providers: %s. "
+            "Fallback to cpu!",
+            os.str().c_str());
+        break;
+      }
+
+      std::unordered_map<std::string, std::string> provider_options(config);
+      provider_options.erase("DEBUG");
+      if (provider_options.find("device_type") == provider_options.end()) {
+        provider_options.emplace("device_type", "NPU");
+      }
+
+      std::vector<const char *> option_keys;
+      std::vector<const char *> option_values;
+      option_keys.reserve(provider_options.size());
+      option_values.reserve(provider_options.size());
+      for (const auto &kv : provider_options) {
+        option_keys.push_back(kv.first.c_str());
+        option_values.push_back(kv.second.c_str());
+      }
+
+      const auto &api = Ort::GetApi();
+      OrtStatus *status = api.SessionOptionsAppendExecutionProvider_OpenVINO_V2(
+          sess_opts, option_keys.data(), option_values.data(),
+          option_keys.size());
+      if (status) {
+        const char *msg = api.GetErrorMessage(status);
+        SHERPA_ONNX_LOGE(
+            "Failed to enable OpenVINO Execution Provider: %s. Available "
+            "providers: %s. Fallback to cpu",
+            msg, os.str().c_str());
+        api.ReleaseStatus(status);
+      } else if (!has_graph_optimization_level) {
+        // OpenVINO performs its own graph optimizations and recommends
+        // receiving the original ONNX graph. Only disable ORT optimizations
+        // after successfully enabling OpenVINO so that a CPU fallback keeps
+        // its normal optimization level. Users can override this in the
+        // config file.
+        sess_opts.SetGraphOptimizationLevel(
+            GraphOptimizationLevel::ORT_DISABLE_ALL);
+      }
+#else
+      SHERPA_ONNX_LOGE(
+          "OpenVINO requires ONNX Runtime 1.17 or newer. Current API version: "
+          "%d. Fallback to cpu!",
+          static_cast<int32_t>(ORT_API_VERSION));
+#endif
+      break;
+    }
   }
   return sess_opts;
 }
@@ -471,6 +530,17 @@ Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config,
   if (config.provider_config.provider == "trt" &&
       (model_type == "decoder" || model_type == "joiner")) {
     return GetSessionOptionsImpl(config.num_threads, "cuda",
+                                 &config.provider_config);
+  }
+
+  // The transducer decoder and joiner are tiny, latency-sensitive graphs.
+  // Keep them on CPU for OpenVINO: the encoder contains nearly all of the
+  // compute and is the graph that benefits from NPU acceleration.
+  std::string provider_name = config.provider_config.provider.substr(
+      0, config.provider_config.provider.find(':'));
+  if (ToLowerAscii(provider_name) == "openvino" &&
+      (model_type == "decoder" || model_type == "joiner")) {
+    return GetSessionOptionsImpl(config.num_threads, "cpu",
                                  &config.provider_config);
   }
   return GetSessionOptionsImpl(config.num_threads,

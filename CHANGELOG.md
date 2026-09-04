@@ -1,5 +1,6 @@
 ## 1.13.7
 
+* Add Intel NPU support through the OpenVINO Execution Provider
 * Add iOS support for Rust and add hello world tauri example (#3901)
 * Remove caret prefix from sherpa_onnx flutter dependencies (#3905)
 * Fix Flutter packages for iOS (#3887)
