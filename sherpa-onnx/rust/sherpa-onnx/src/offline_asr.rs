@@ -621,6 +621,7 @@ pub struct OfflineRecognizerResult {
     pub tokens: Vec<String>,
     pub timestamps: Option<Vec<f32>>,
     pub durations: Option<Vec<f32>>,
+    pub ys_log_probs: Option<Vec<f32>>,
 }
 
 /// Offline speech recognizer.
