@@ -36,16 +36,19 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx (shared)
+        shell: bash
         run: |
-          docker run --rm \
-            --user root \
-            -v ${{ github.workspace }}:/workspace \
-            termux/termux-docker:aarch64 \
-            sh -c "
-              apt update -y &&
-              apt install -y cmake make git &&
-              cd /workspace &&
-              mkdir -p build && cd build &&
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              termux/termux-docker:aarch64 \
+            bash -c '
+              apt update -y
+              apt install -y cmake make git
+
+              cd /k2-fsa/sherpa-onnx/
+
+              mkdir build
+              cd build
               cmake \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DBUILD_SHARED_LIBS=ON \
@@ -64,9 +67,10 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_ENABLE_C_API=ON \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
-                .. &&
-              make -j\$(nproc) install
-            "
+                ..
+
+              make -j$(nproc) install
+            '
 
       - name: Display generated files
         shell: bash
@@ -211,16 +215,19 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx (static)
+        shell: bash
         run: |
-          docker run --rm \
-            --user root \
-            -v ${{ github.workspace }}:/workspace \
-            termux/termux-docker:aarch64 \
-            sh -c "
-              apt update -y &&
-              apt install -y cmake make git &&
-              cd /workspace &&
-              mkdir -p build && cd build &&
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              termux/termux-docker:aarch64 \
+            bash -c '
+              apt update -y
+              apt install -y cmake make git
+
+              cd /k2-fsa/sherpa-onnx/
+
+              mkdir build
+              cd build
               cmake \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DBUILD_SHARED_LIBS=OFF \
@@ -238,9 +245,10 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
-                .. &&
-              make -j\$(nproc) install
-            "
+                ..
+
+              make -j$(nproc) install
+            '
 
       - name: Display generated files
         shell: bash
