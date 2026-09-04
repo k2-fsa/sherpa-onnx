@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - support-termux
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -38,16 +37,30 @@ jobs:
       - name: Build sherpa-onnx (shared)
         shell: bash
         run: |
+            id
+            mkdir -p ${{ github.workspace }}/build
+            chmod 777 ${{ github.workspace }}/build
+            ls -lh ${{ github.workspace }}/
             docker run --rm \
+              --user 0:0 \
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
               termux/termux-docker:aarch64 \
             bash -c '
+              id
+              whoami
+              pwd
+              ls -lh
+              echo "---"
+              ls -lh ../
+              echo "path: $PATH"
+              uname -a
+
+              ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
               apt install -y cmake make git
 
               cd /k2-fsa/sherpa-onnx/
 
-              mkdir build
               cd build
               cmake \
                 -DCMAKE_BUILD_TYPE=Release \
@@ -70,39 +83,28 @@ jobs:
                 ..
 
               make -j$(nproc) install
+
+              echo "=== bin ==="
+              ls -lh install/bin/
+
+              echo "=== lib ==="
+              ls -lh install/lib/
+
+              echo "=== include ==="
+              find install/include -type f
+
+              echo "=== file install/bin/sherpa-onnx ==="
+              file install/bin/sherpa-onnx
+
+              echo "=== readelf -d install/bin/sherpa-onnx ==="
+              readelf -d install/bin/sherpa-onnx
+
+              echo "=== file install/lib/libsherpa-onnx-c-api.so ==="
+              file install/lib/libsherpa-onnx-c-api.so
+
+              echo "=== readelf -d install/lib/libsherpa-onnx-c-api.so ==="
+              readelf -d install/lib/libsherpa-onnx-c-api.so
             '
-
-      - name: Display generated files
-        shell: bash
-        run: |
-          cd build/install
-
-          echo "=== bin ==="
-          ls -lh bin/
-
-          echo "=== lib ==="
-          ls -lh lib/
-
-          echo "=== include ==="
-          find include -type f
-
-          echo "=== file bin/sherpa-onnx ==="
-          file bin/sherpa-onnx
-
-          echo "=== readelf -d bin/sherpa-onnx ==="
-          readelf -d bin/sherpa-onnx
-
-          echo "=== file lib/libsherpa-onnx-core.so ==="
-          file lib/libsherpa-onnx-core.so
-
-          echo "=== readelf -d lib/libsherpa-onnx-core.so ==="
-          readelf -d lib/libsherpa-onnx-core.so
-
-          echo "=== file lib/libsherpa-onnx-c-api.so ==="
-          file lib/libsherpa-onnx-c-api.so
-
-          echo "=== readelf -d lib/libsherpa-onnx-c-api.so ==="
-          readelf -d lib/libsherpa-onnx-c-api.so
 
       - name: Copy files
         shell: bash
@@ -115,6 +117,11 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
+
+          rm -fv $dst/lib/cargs.h
+          rm -fv $dst/lib/libcargs.so
+          rm -fv $dst/lib/libonnxruntime4j_jni.so
+          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -129,12 +136,6 @@ jobs:
 
           echo "=== readelf -d dst/bin/sherpa-onnx ==="
           readelf -d $dst/bin/sherpa-onnx
-
-          echo "=== file dst/lib/libsherpa-onnx-core.so ==="
-          file $dst/lib/libsherpa-onnx-core.so
-
-          echo "=== readelf -d dst/lib/libsherpa-onnx-core.so ==="
-          readelf -d $dst/lib/libsherpa-onnx-core.so
 
           echo "=== file dst/lib/libsherpa-onnx-c-api.so ==="
           file $dst/lib/libsherpa-onnx-c-api.so
@@ -217,16 +218,24 @@ jobs:
       - name: Build sherpa-onnx (static)
         shell: bash
         run: |
+            id
+            mkdir -p ${{ github.workspace }}/build
+            chmod 777 ${{ github.workspace }}/build
+            ls -lh ${{ github.workspace }}/
             docker run --rm \
+              --user 0:0 \
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
               termux/termux-docker:aarch64 \
             bash -c '
+              id
+              whoami
+              pwd
+              ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
               apt install -y cmake make git
 
               cd /k2-fsa/sherpa-onnx/
 
-              mkdir build
               cd build
               cmake \
                 -DCMAKE_BUILD_TYPE=Release \
@@ -248,24 +257,21 @@ jobs:
                 ..
 
               make -j$(nproc) install
+
+              echo "=== bin before strip ==="
+              ls -lh install/bin/
+
+              strip install/bin/*
+
+              echo "=== bin after strip ==="
+              ls -lh install/bin/
+
+              echo "=== file install/bin/sherpa-onnx ==="
+              file install/bin/sherpa-onnx
+
+              echo "=== readelf -d install/bin/sherpa-onnx ==="
+              readelf -d install/bin/sherpa-onnx
             '
-
-      - name: Display generated files
-        shell: bash
-        run: |
-          cd build/install
-
-          echo "=== bin ==="
-          ls -lh bin/
-
-          echo "=== lib ==="
-          ls -lh lib/
-
-          echo "=== file bin/sherpa-onnx ==="
-          file bin/sherpa-onnx
-
-          echo "=== readelf -d bin/sherpa-onnx ==="
-          readelf -d bin/sherpa-onnx
 
       - name: Copy files
         shell: bash
@@ -276,11 +282,6 @@ jobs:
           mkdir $dst
 
           cp -a build/install/bin $dst/
-
-          echo "strip"
-          strip $dst/bin/*
-          echo "after strip"
-          ls -lh $dst/bin/
 
           echo "=== Contents of the package ==="
           tree $dst
