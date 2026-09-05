@@ -1,0 +1,359 @@
+name: build-wheels-android-arm
+
+on:
+  push:
+    branches:
+      - wheel
+
+  workflow_dispatch:
+
+concurrency:
+  group: build-wheels-android-arm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-core-bin:
+    runs-on: ubuntu-24.04-arm
+    name: build core and bin wheels
+
+    steps:
+      - name: Free disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          df -h
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Build wheels
+        shell: bash
+        run: |
+            mkdir -p ${{ github.workspace }}/build
+            chmod 777 ${{ github.workspace }}/build
+            mkdir -p ${{ github.workspace }}/scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+            mkdir -p ${{ github.workspace }}/scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+            mkdir -p ${{ github.workspace }}/scripts/wheel/sherpa-onnx-bin/bin
+            chmod -R 777 ${{ github.workspace }}/scripts/wheel
+            chmod -R a+w ${{ github.workspace }}/
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              termux/termux-docker:arm \
+            bash -c '
+              set -e
+              apt update -y
+              apt install -y cmake make git python python-pip clang patchelf
+              apt install -y android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
+              pip install --upgrade pip setuptools wheel
+
+              PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
+              RPATH="/data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib:/data/data/com.termux/files/usr/lib"
+              echo "RPATH: $RPATH"
+
+              cd /k2-fsa/sherpa-onnx/build
+              cmake \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DBUILD_SHARED_LIBS=ON \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                -DSHERPA_ONNX_ENABLE_TTS=ON \
+                -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
+                -DSHERPA_ONNX_ENABLE_BINARY=ON \
+                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+                -DBUILD_ESPEAK_NG_EXE=OFF \
+                -DBUILD_ESPEAK_NG_TESTS=OFF \
+                -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+                -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+                -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+                -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -DSHERPA_ONNX_ENABLE_JNI=OFF \
+                -DSHERPA_ONNX_ENABLE_C_API=ON \
+                -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
+                ..
+
+              make -j$(nproc) install
+
+              echo "=== Fix RPATH ==="
+              rm -fv ./install/lib/libonnxruntime4j_jni.so
+              for f in ./install/lib/lib*.so; do
+                patchelf --set-rpath "$RPATH" "$f"
+              done
+              for f in ./install/bin/sherpa-onnx*; do
+                [ -f "$f" ] && patchelf --set-rpath "$RPATH" "$f"
+              done
+
+              readelf -d ./install/lib/libsherpa-onnx-c-api.so | grep RUNPATH
+              readelf -d ./install/bin/sherpa-onnx | grep RUNPATH
+
+              readelf -d ./install/lib/libsherpa-onnx-c-api.so
+              readelf -d ./install/bin/sherpa-onnx
+
+              echo "=== Build sherpa-onnx-core wheel ==="
+              mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+              cp -v ./install/lib/lib*.so ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+              mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+              cp -v ./install/include/sherpa-onnx/c-api/*.h ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+              rm -fv ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib/libcargs.so
+              rm -fv ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib/libonnxruntime4j_jni.so
+
+              pushd ../scripts/wheel/sherpa-onnx-core
+              python3 setup.py bdist_wheel --plat-name android_24_armeabi_v7a
+              ls -lh dist
+              popd
+
+              echo "=== Build sherpa-onnx-bin wheel ==="
+              mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
+              cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
+
+              pushd ../scripts/wheel/sherpa-onnx-bin
+              python3 setup.py bdist_wheel --plat-name android_24_armeabi_v7a
+              ls -lh dist
+              popd
+            '
+
+      - name: Collect wheels
+        shell: bash
+        run: |
+          sudo chown -R $USER ./scripts/wheel
+          mkdir wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl ./wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl ./wheelhouse
+          ls -lh ./wheelhouse/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-core-bin-android-arm
+          path: ./wheelhouse/*.whl
+
+  build-sherpa-onnx:
+    runs-on: ubuntu-24.04-arm
+    name: build sherpa-onnx wheel
+
+    steps:
+      - name: Free disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          df -h
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Build wheel
+        shell: bash
+        run: |
+            mkdir -p ${{ github.workspace }}/build
+            chmod 777 ${{ github.workspace }}/build
+            mkdir -p ${{ github.workspace }}/dist
+            chmod 777 ${{ github.workspace }}/dist
+            chmod -R a+w ${{ github.workspace }}/
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              termux/termux-docker:arm \
+            bash -c '
+              set -e
+              apt update -y
+              apt install -y cmake make git python python-pip clang patchelf zip
+              apt install -y android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
+              pip install --upgrade pip setuptools wheel
+
+              PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
+              RPATH="/data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib:/data/data/com.termux/files/usr/lib"
+              echo "RPATH: $RPATH"
+
+              cd /k2-fsa/sherpa-onnx
+              SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_armeabi_v7a
+              ls -lh dist
+
+              echo "=== Fix RPATH in sherpa-onnx wheel ==="
+              for whl in dist/*.whl; do
+                echo "Processing $whl"
+                tmpdir=$(mktemp -d)
+                unzip -q "$whl" -d "$tmpdir"
+                for so in $(find "$tmpdir" -name "*.so"); do
+                  echo "  patching $so"
+                  patchelf --set-rpath "$RPATH" "$so"
+                done
+                rm "$whl"
+                (cd "$tmpdir" && zip -qr "$OLDPWD/$whl" .)
+                rm -rf "$tmpdir"
+              done
+              ls -lh dist
+            '
+
+      - name: Collect wheel
+        shell: bash
+        run: |
+          sudo chown -R $USER ./dist
+          mkdir wheelhouse
+          cp -v ./dist/*.whl ./wheelhouse
+          ls -lh ./wheelhouse/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-sherpa-onnx-android-arm
+          path: ./wheelhouse/*.whl
+
+  test:
+    name: test
+    needs: [build-core-bin, build-sherpa-onnx]
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/wheels
+
+      - name: Collect all wheels
+        shell: bash
+        run: |
+          mkdir -p /tmp/all_wheels
+          find /tmp/wheels -name "*.whl" -exec cp -v {} /tmp/all_wheels/ \;
+          ls -lh /tmp/all_wheels/
+
+      - name: Download KWS model
+        shell: bash
+        run: |
+          cd /tmp
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          ls -lh /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/
+
+      - name: Test wheels
+        shell: bash
+        run: |
+            chmod -R a+w /tmp/all_wheels /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20
+            docker run --rm \
+              --user 0:0 \
+              --volume /tmp/all_wheels:/wheels \
+              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
+              --volume ${{ github.workspace }}/python-api-examples:/test \
+              termux/termux-docker:arm \
+            bash -c '
+              set -e
+              apt update -y
+              apt install -y python python-pip libc++ clang
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
+              pip install --upgrade pip setuptools wheel
+
+              pip install /wheels/*.whl
+
+              echo "=== readelf -d sherpa-onnx ==="
+              readelf -d /data/data/com.termux/files/usr/bin/sherpa-onnx
+
+              echo "=== readelf -d libsherpa-onnx-c-api.so ==="
+              PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
+              readelf -d /data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib/libsherpa-onnx-c-api.so
+
+              sherpa-onnx-version
+
+              sherpa-onnx --help || true
+
+              python3 /test/version-test.py
+
+              echo "=== Test KWS model ==="
+              sherpa-onnx-keyword-spotter \
+                --encoder=/model/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --decoder=/model/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --joiner=/model/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --tokens=/model/tokens.txt \
+                --keywords-file=/model/test_wavs/keywords.txt \
+                /model/test_wavs/zh_3.wav \
+                /model/test_wavs/zh_4.wav \
+                /model/test_wavs/zh_5.wav \
+                /model/test_wavs/en_0.wav \
+                /model/test_wavs/en_1.wav
+            '
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+          twine upload --skip-existing --verbose /tmp/all_wheels/*.whl
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels huggingface
+
+            cd huggingface
+            d=cpu/$SHERPA_ONNX_VERSION
+            mkdir -p $d
+
+            cp -v /tmp/all_wheels/*.whl $d/
+
+            git status
+            git add .
+            git commit -m "add android arm wheels for $SHERPA_ONNX_VERSION"
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
