@@ -272,6 +272,13 @@ jobs:
 
               pip install /wheels/*.whl
 
+              echo "=== readelf -d sherpa-onnx ==="
+              readelf -d $(which sherpa-onnx)
+
+              echo "=== readelf -d libsherpa-onnx-c-api.so ==="
+              PYTHON_VERSION=$(python3 -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')")
+              readelf -d /data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib/libsherpa-onnx-c-api.so
+
               sherpa-onnx-version
 
               sherpa-onnx --help || true
