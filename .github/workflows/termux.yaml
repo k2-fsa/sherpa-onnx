@@ -910,7 +910,7 @@ jobs:
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
   build-shared-arm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     name: termux arm shared
 
     steps:
@@ -1066,7 +1066,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-arm-termux-shared
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-armeabi-v7a-termux-shared
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -1102,7 +1102,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-termux-arm-shared
+          name: sherpa-onnx-termux-armeabi-v7a-shared
           path: sherpa-onnx-*-termux-shared.tar.bz2
 
       - name: Release pre-compiled binaries and libs
@@ -1143,7 +1143,7 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
-            dst=arm-termux/$SHERPA_ONNX_VERSION
+            dst=armeabi-v7a-termux/$SHERPA_ONNX_VERSION
             mkdir -p $dst
 
             cp -v ../sherpa-onnx-*-termux-shared.tar.bz2 $dst/
@@ -1312,7 +1312,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-i686-termux-shared
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-x86-termux-shared
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -1348,7 +1348,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-termux-i686-shared
+          name: sherpa-onnx-termux-x86-shared
           path: sherpa-onnx-*-termux-shared.tar.bz2
 
       - name: Release pre-compiled binaries and libs
@@ -1389,7 +1389,7 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
-            dst=i686-termux/$SHERPA_ONNX_VERSION
+            dst=x86-termux/$SHERPA_ONNX_VERSION
             mkdir -p $dst
 
             cp -v ../sherpa-onnx-*-termux-shared.tar.bz2 $dst/
@@ -1399,4 +1399,419 @@ jobs:
 
             git add .
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-android-i686-termux-shared.tar.bz2"
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
+
+  build-static-arm:
+    runs-on: ubuntu-24.04-arm
+    name: termux arm static
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download KWS model
+        shell: bash
+        run: |
+          cd /tmp
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          ls -lh /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/
+
+      - name: Build sherpa-onnx (static)
+        shell: bash
+        run: |
+            id
+            mkdir -p ${{ github.workspace }}/build
+            chmod 777 ${{ github.workspace }}/build
+            ls -lh ${{ github.workspace }}/
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              termux/termux-docker:arm \
+            bash -c '
+              id
+              whoami
+              pwd
+              ls -lh /k2-fsa/sherpa-onnx/
+              apt update -y
+              apt install -y cmake make git libc++ clang
+              apt install -y android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
+              apt clean
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
+              cd /k2-fsa/sherpa-onnx/
+
+              cd build
+              cmake \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DBUILD_SHARED_LIBS=OFF \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                -DSHERPA_ONNX_ENABLE_TTS=ON \
+                -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
+                -DSHERPA_ONNX_ENABLE_BINARY=ON \
+                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+                -DBUILD_ESPEAK_NG_EXE=OFF \
+                -DBUILD_ESPEAK_NG_TESTS=OFF \
+                -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+                -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+                -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+                -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -DSHERPA_ONNX_ENABLE_JNI=OFF \
+                -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
+                ..
+
+              make -j$(nproc) install
+
+              echo "=== bin before strip ==="
+              ls -lh install/bin/
+
+              strip install/bin/*
+
+              echo "=== bin after strip ==="
+              ls -lh install/bin/
+
+              echo "=== readelf -d install/bin/sherpa-onnx ==="
+              readelf -d install/bin/sherpa-onnx
+            '
+
+      - name: Test sherpa-onnx (static)
+        shell: bash
+        run: |
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
+              termux/termux-docker:arm \
+            bash -c '
+              set -e
+              apt update -y
+              apt install -y clang
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
+              echo "=== readelf -d sherpa-onnx ==="
+              readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx
+
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-version
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx --help || true
+
+              echo "=== Test KWS model ==="
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-keyword-spotter \
+                --encoder=/model/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --decoder=/model/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --joiner=/model/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --tokens=/model/tokens.txt \
+                --keywords-file=/model/test_wavs/keywords.txt \
+                /model/test_wavs/zh_3.wav \
+                /model/test_wavs/zh_4.wav \
+                /model/test_wavs/zh_5.wav \
+                /model/test_wavs/en_0.wav \
+                /model/test_wavs/en_1.wav
+            '
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-armeabi-v7a-termux-static
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+
+          echo "=== Contents of the package ==="
+          tree $dst
+
+          echo "=== file dst/bin/sherpa-onnx ==="
+          file $dst/bin/sherpa-onnx
+
+          echo "=== readelf -d dst/bin/sherpa-onnx ==="
+          readelf -d $dst/bin/sherpa-onnx
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-termux-armeabi-v7a-static
+          path: sherpa-onnx-*-termux-static.tar.bz2
+
+      - name: Release pre-compiled binaries
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-termux-static.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.13.7
+
+      - name: Release pre-compiled binaries
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-termux-static.tar.bz2
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            dst=armeabi-v7a-termux/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+
+            cp -v ../sherpa-onnx-*-termux-static.tar.bz2 $dst/
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-android-arm-termux-static.tar.bz2"
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
+
+  build-static-i686:
+    runs-on: ubuntu-latest
+    name: termux i686 static
+
+    steps:
+      - name: Free disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          df -h
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download KWS model
+        shell: bash
+        run: |
+          cd /tmp
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          ls -lh /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/
+
+      - name: Build sherpa-onnx (static)
+        shell: bash
+        run: |
+            id
+            mkdir -p ${{ github.workspace }}/build
+            chmod 777 ${{ github.workspace }}/build
+            ls -lh ${{ github.workspace }}/
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              termux/termux-docker:i686 \
+            bash -c '
+              id
+              whoami
+              pwd
+              ls -lh /k2-fsa/sherpa-onnx/
+              apt update -y
+              apt install -y cmake make git libc++ clang
+              apt install -y android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
+              apt clean
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
+              cd /k2-fsa/sherpa-onnx/
+
+              cd build
+              cmake \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DBUILD_SHARED_LIBS=OFF \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                -DSHERPA_ONNX_ENABLE_TTS=ON \
+                -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
+                -DSHERPA_ONNX_ENABLE_BINARY=ON \
+                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+                -DBUILD_ESPEAK_NG_EXE=OFF \
+                -DBUILD_ESPEAK_NG_TESTS=OFF \
+                -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+                -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+                -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+                -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -DSHERPA_ONNX_ENABLE_JNI=OFF \
+                -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
+                ..
+
+              make -j$(nproc) install
+
+              echo "=== bin before strip ==="
+              ls -lh install/bin/
+
+              strip install/bin/*
+
+              echo "=== bin after strip ==="
+              ls -lh install/bin/
+
+              echo "=== readelf -d install/bin/sherpa-onnx ==="
+              readelf -d install/bin/sherpa-onnx
+            '
+
+      - name: Test sherpa-onnx (static)
+        shell: bash
+        run: |
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
+              termux/termux-docker:i686 \
+            bash -c '
+              set -e
+              apt update -y
+              apt install -y clang
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
+              echo "=== readelf -d sherpa-onnx ==="
+              readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx
+
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-version
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx --help || true
+
+              echo "=== Test KWS model ==="
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-keyword-spotter \
+                --encoder=/model/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --decoder=/model/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --joiner=/model/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --tokens=/model/tokens.txt \
+                --keywords-file=/model/test_wavs/keywords.txt \
+                /model/test_wavs/zh_3.wav \
+                /model/test_wavs/zh_4.wav \
+                /model/test_wavs/zh_5.wav \
+                /model/test_wavs/en_0.wav \
+                /model/test_wavs/en_1.wav
+            '
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-x86-termux-static
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+
+          echo "=== Contents of the package ==="
+          tree $dst
+
+          echo "=== file dst/bin/sherpa-onnx ==="
+          file $dst/bin/sherpa-onnx
+
+          echo "=== readelf -d dst/bin/sherpa-onnx ==="
+          readelf -d $dst/bin/sherpa-onnx
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-termux-x86-static
+          path: sherpa-onnx-*-termux-static.tar.bz2
+
+      - name: Release pre-compiled binaries
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-termux-static.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.13.7
+
+      - name: Release pre-compiled binaries
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-termux-static.tar.bz2
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            dst=x86-termux/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+
+            cp -v ../sherpa-onnx-*-termux-static.tar.bz2 $dst/
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-android-i686-termux-static.tar.bz2"
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main

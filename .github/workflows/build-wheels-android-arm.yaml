@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-core-bin:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     name: build core and bin wheels
 
     steps:
@@ -151,7 +151,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build-sherpa-onnx:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     name: build sherpa-onnx wheel
 
     steps:
@@ -243,7 +243,7 @@ jobs:
   test:
     name: test
     needs: [build-core-bin, build-sherpa-onnx]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4

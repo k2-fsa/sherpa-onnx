@@ -122,7 +122,7 @@ jobs:
               rm -fv ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib/libonnxruntime4j_jni.so
 
               pushd ../scripts/wheel/sherpa-onnx-core
-              python3 setup.py bdist_wheel --plat-name android_24_i686
+              python3 setup.py bdist_wheel --plat-name android_24_x86
               ls -lh dist
               popd
 
@@ -131,7 +131,7 @@ jobs:
               cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
 
               pushd ../scripts/wheel/sherpa-onnx-bin
-              python3 setup.py bdist_wheel --plat-name android_24_i686
+              python3 setup.py bdist_wheel --plat-name android_24_x86
               ls -lh dist
               popd
             '
@@ -208,7 +208,7 @@ jobs:
               echo "RPATH: $RPATH"
 
               cd /k2-fsa/sherpa-onnx
-              SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_i686
+              SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_x86
               ls -lh dist
 
               echo "=== Fix RPATH in sherpa-onnx wheel ==="
