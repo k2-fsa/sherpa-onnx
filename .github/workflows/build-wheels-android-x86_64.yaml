@@ -1,23 +1,23 @@
-name: build-wheels-android-aarch64
+name: build-wheels-android-x86_64
 
 on:
   push:
     branches:
       - master
       - wheel
-      - termux-python-2
+      - termux-python
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
 concurrency:
-  group: build-wheels-android-aarch64-${{ github.ref }}
+  group: build-wheels-android-x86_64-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build-core-bin:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     name: build core and bin wheels
 
     steps:
@@ -44,7 +44,7 @@ jobs:
             docker run --rm \
               --user 0:0 \
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
-              termux/termux-docker:aarch64 \
+              termux/termux-docker:x86_64 \
             bash -c '
               apt update -y
               apt install -y cmake make git python python-pip clang patchelf
@@ -110,7 +110,7 @@ jobs:
               rm -fv ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib/libonnxruntime4j_jni.so
 
               pushd ../scripts/wheel/sherpa-onnx-core
-              python3 setup.py bdist_wheel --plat-name android_24_arm64_v8a
+              python3 setup.py bdist_wheel --plat-name android_24_x86_64
               ls -lh dist
               popd
 
@@ -119,7 +119,7 @@ jobs:
               cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
 
               pushd ../scripts/wheel/sherpa-onnx-bin
-              python3 setup.py bdist_wheel --plat-name android_24_arm64_v8a
+              python3 setup.py bdist_wheel --plat-name android_24_x86_64
               ls -lh dist
               popd
             '
@@ -135,11 +135,11 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-core-bin-android-aarch64
+          name: wheels-core-bin-android-x86_64
           path: ./wheelhouse/*.whl
 
   build-sherpa-onnx:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     name: build sherpa-onnx wheel
 
     steps:
@@ -164,7 +164,7 @@ jobs:
             docker run --rm \
               --user 0:0 \
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
-              termux/termux-docker:aarch64 \
+              termux/termux-docker:x86_64 \
             bash -c '
               apt update -y
               apt install -y cmake make git python python-pip clang patchelf zip
@@ -184,7 +184,7 @@ jobs:
               echo "RPATH: $RPATH"
 
               cd /k2-fsa/sherpa-onnx
-              SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_arm64_v8a
+              SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_x86_64
               ls -lh dist
 
               echo "=== Fix RPATH in sherpa-onnx wheel ==="
@@ -213,13 +213,13 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-sherpa-onnx-android-aarch64
+          name: wheel-sherpa-onnx-android-x86_64
           path: ./wheelhouse/*.whl
 
   test:
     name: test
     needs: [build-core-bin, build-sherpa-onnx]
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -256,7 +256,7 @@ jobs:
               --volume /tmp/all_wheels:/wheels \
               --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
               --volume ${{ github.workspace }}/python-api-examples:/test \
-              termux/termux-docker:aarch64 \
+              termux/termux-docker:x86_64 \
             bash -c '
               set -e
               apt update -y
@@ -330,5 +330,5 @@ jobs:
 
             git status
             git add .
-            git commit -m "add android aarch64 wheels for $SHERPA_ONNX_VERSION"
+            git commit -m "add android x86_64 wheels for $SHERPA_ONNX_VERSION"
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
