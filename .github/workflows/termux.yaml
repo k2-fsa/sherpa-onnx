@@ -54,7 +54,6 @@ jobs:
             docker run --rm \
               --user 0:0 \
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
-              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
               termux/termux-docker:aarch64 \
             bash -c '
               id
@@ -117,15 +116,34 @@ jobs:
 
               echo "=== readelf -d install/lib/libsherpa-onnx-c-api.so ==="
               readelf -d install/lib/libsherpa-onnx-c-api.so
+            '
 
-              echo "=== Test binaries ==="
+      - name: Test sherpa-onnx (shared)
+        shell: bash
+        run: |
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
+              termux/termux-docker:aarch64 \
+            bash -c '
               set -e
-              export LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH
-              ./install/bin/sherpa-onnx-version
-              ./install/bin/sherpa-onnx --help || true
+              apt update -y
+              apt install -y libc++
+
+              export LD_LIBRARY_PATH=/k2-fsa/sherpa-onnx/build/install/lib:$LD_LIBRARY_PATH
+
+              echo "=== readelf -d sherpa-onnx ==="
+              readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx
+
+              echo "=== readelf -d libsherpa-onnx-c-api.so ==="
+              readelf -d /k2-fsa/sherpa-onnx/build/install/lib/libsherpa-onnx-c-api.so
+
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-version
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx --help || true
 
               echo "=== Test KWS model ==="
-              ./install/bin/sherpa-onnx-keyword-spotter \
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-keyword-spotter \
                 --encoder=/model/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
                 --decoder=/model/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
                 --joiner=/model/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
@@ -266,7 +284,6 @@ jobs:
             docker run --rm \
               --user 0:0 \
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
-              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
               termux/termux-docker:aarch64 \
             bash -c '
               id
@@ -318,14 +335,28 @@ jobs:
 
               echo "=== readelf -d install/bin/sherpa-onnx ==="
               readelf -d install/bin/sherpa-onnx
+            '
 
-              echo "=== Test binaries ==="
+      - name: Test sherpa-onnx (static)
+        shell: bash
+        run: |
+            docker run --rm \
+              --user 0:0 \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
+              termux/termux-docker:aarch64 \
+            bash -c '
               set -e
-              ./install/bin/sherpa-onnx-version
-              ./install/bin/sherpa-onnx --help || true
+              apt update -y
+
+              echo "=== readelf -d sherpa-onnx ==="
+              readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx
+
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-version
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx --help || true
 
               echo "=== Test KWS model ==="
-              ./install/bin/sherpa-onnx-keyword-spotter \
+              /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx-keyword-spotter \
                 --encoder=/model/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
                 --decoder=/model/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
                 --joiner=/model/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
