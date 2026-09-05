@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -86,7 +86,7 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
   return {};
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     AAssetManager *mgr, const OfflineTtsConfig &config);
 #endif

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -70,7 +70,7 @@ std::string AudioTaggingConfig::ToString() const {
 AudioTagging::AudioTagging(const AudioTaggingConfig &config)
     : impl_(AudioTaggingImpl::Create(config)) {}
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 AudioTagging::AudioTagging(AAssetManager *mgr, const AudioTaggingConfig &config)
     : impl_(AudioTaggingImpl::Create(mgr, config)) {}
 #endif

@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -205,7 +205,7 @@ OfflineSenseVoiceModelRknn::GetModelMetadata() const {
   return impl_->GetModelMetadata();
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OfflineSenseVoiceModelRknn::OfflineSenseVoiceModelRknn(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

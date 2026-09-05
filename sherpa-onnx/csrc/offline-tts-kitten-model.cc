@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -332,7 +332,7 @@ Ort::Value OfflineTtsKittenModel::Run(Ort::Value x, int64_t sid /*= 0*/,
   return impl_->Run(std::move(x), sid, speed);
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OfflineTtsKittenModel::OfflineTtsKittenModel(
     AAssetManager *mgr, const OfflineTtsModelConfig &config);
 #endif

@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -140,7 +140,7 @@ OfflineCATTModel::OfflineCATTModel(
     Manager *mgr, const OfflineDiacritizationModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OfflineCATTModel::OfflineCATTModel(
     AAssetManager *mgr, const OfflineDiacritizationModelConfig &config);
 #endif

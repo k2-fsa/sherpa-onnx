@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -516,7 +516,7 @@ Ort::Value OnlineZipformer2TransducerModel::RunJoiner(Ort::Value encoder_out,
   return std::move(logit[0]);
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     AAssetManager *mgr, const OnlineModelConfig &config);
 #endif

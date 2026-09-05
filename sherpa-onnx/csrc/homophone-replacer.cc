@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -308,7 +308,7 @@ std::string HomophoneReplacer::Apply(const std::string &text) const {
   return RemoveInvalidUtf8Sequences(impl_->Apply(text));
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template HomophoneReplacer::HomophoneReplacer(
     AAssetManager *mgr, const HomophoneReplacerConfig &config);
 #endif

@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -73,7 +73,7 @@ std::unique_ptr<KeywordSpotterImpl> KeywordSpotterImpl::Create(
   SHERPA_ONNX_EXIT(-1);
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template std::unique_ptr<KeywordSpotterImpl> KeywordSpotterImpl::Create(
     AAssetManager *mgr, const KeywordSpotterConfig &config);
 #endif

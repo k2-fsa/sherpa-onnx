@@ -103,7 +103,7 @@ OfflineSenseVoiceModelAxcl::GetModelMetadata() const {
   return impl_->GetModelMetadata();
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OfflineSenseVoiceModelAxcl::OfflineSenseVoiceModelAxcl(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

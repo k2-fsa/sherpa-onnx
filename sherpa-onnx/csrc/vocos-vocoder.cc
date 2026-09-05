@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -211,7 +211,7 @@ std::vector<float> VocosVocoder::Run(Ort::Value mel) const {
   return impl_->Run(std::move(mel));
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template VocosVocoder::VocosVocoder(AAssetManager *mgr,
                                     const OfflineTtsModelConfig &config);
 #endif

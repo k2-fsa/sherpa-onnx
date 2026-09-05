@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -452,7 +452,7 @@ OfflineMoonshineDecoderResult OfflineMoonshineModelQnn::Run(
   return impl_->Run(audio_samples);
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OfflineMoonshineModelQnn::OfflineMoonshineModelQnn(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

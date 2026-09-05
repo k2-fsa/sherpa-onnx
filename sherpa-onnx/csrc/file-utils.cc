@@ -82,7 +82,7 @@ std::vector<char> ReadFile(const std::string &filename) {
   return buffer;
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
   if (!filename.empty() && filename[0] == '/') {
     SHERPA_ONNX_LOGE(

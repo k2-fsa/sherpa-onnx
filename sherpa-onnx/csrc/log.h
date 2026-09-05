@@ -165,7 +165,7 @@ class Logger {
 
       fflush(nullptr);
 
-#if !defined(__ANDROID_API__) || !defined(SHERPA_ONNX_ENABLE_ANDROID_LOG)
+#ifndef __ANDROID_API__
       if (EnableAbort()) {
         // NOTE: abort() will terminate the program immediately without
         // printing the Python stack backtrace.

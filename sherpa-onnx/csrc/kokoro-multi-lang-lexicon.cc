@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -576,7 +576,7 @@ std::vector<TokenIDs> KokoroMultiLangLexicon::ConvertTextToTokenIds(
   return impl_->ConvertTextToTokenIds(text, voice);
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template KokoroMultiLangLexicon::KokoroMultiLangLexicon(
     AAssetManager *mgr, const std::string &tokens, const std::string &lexicon,
     const std::string &data_dir, const OfflineTtsKokoroModelMetaData &meta_data,

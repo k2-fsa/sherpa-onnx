@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <utility>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -272,7 +272,7 @@ std::string SymbolTable::DecodeByteBpe(const std::string &text) const {
   return ans;
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template SymbolTable::SymbolTable(AAssetManager *mgr,
                                   const std::string &filename);
 #endif

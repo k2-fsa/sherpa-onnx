@@ -6,7 +6,7 @@
 
 #include <string>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -49,7 +49,7 @@ OfflinePunctuation::OfflinePunctuation(Manager *mgr,
                                        const OfflinePunctuationConfig &config)
     : impl_(OfflinePunctuationImpl::Create(mgr, config)) {}
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OfflinePunctuation::OfflinePunctuation(
     AAssetManager *mgr, const OfflinePunctuationConfig &config);
 #endif

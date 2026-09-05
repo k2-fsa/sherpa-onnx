@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -264,7 +264,7 @@ bool OnlineRecognizer::IsEndpoint(OnlineStream *s) const {
 
 void OnlineRecognizer::Reset(OnlineStream *s) const { impl_->Reset(s); }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OnlineRecognizer::OnlineRecognizer(
     AAssetManager *mgr, const OnlineRecognizerConfig &config);
 #endif

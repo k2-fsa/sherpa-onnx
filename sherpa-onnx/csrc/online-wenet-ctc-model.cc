@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -275,7 +275,7 @@ std::vector<std::vector<Ort::Value>> OnlineWenetCtcModel::UnStackStates(
   return ans;
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OnlineWenetCtcModel::OnlineWenetCtcModel(
     AAssetManager *mgr, const OnlineModelConfig &config);
 #endif

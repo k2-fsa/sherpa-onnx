@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -162,7 +162,7 @@ OrtAllocator *OfflineDolphinModel::Allocator() const {
   return impl_->Allocator();
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template OfflineDolphinModel::OfflineDolphinModel(
     AAssetManager *mgr, const OfflineModelConfig &config);
 #endif

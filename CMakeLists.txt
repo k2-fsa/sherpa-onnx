@@ -57,9 +57,6 @@ option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
 option(SHERPA_ONNX_ENABLE_DIRECTML "Enable ONNX Runtime DirectML support" OFF)
 option(SHERPA_ONNX_LINK_D3D "Whether static ONNX runtime lib with DML" OFF)
 
-option(SHERPA_ONNX_ENABLE_ANDROID_LOG "Whether to enable Android log" ON)
-option(SHERPA_ONNX_ENABLE_ASSET_MANAGER "Whether to enable Android asset manager" ON)
-
 option(SHERPA_ONNX_ENABLE_WASM "Whether to enable WASM" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_SPEAKER_DIARIZATION "Whether to enable WASM for speaker diarization" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_TTS "Whether to enable WASM for TTS" OFF)

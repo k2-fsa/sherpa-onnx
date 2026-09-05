@@ -53,15 +53,7 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf
-
-              pwd
-              id
-              ls ../usr/lib
-
-              find / -name "libandroid.so" 2>/dev/null
-              find / -name "liblog.so" 2>/dev/null
-              find / -name "libc++_shared.so" 2>/dev/null
+              apt install -y cmake make git python python-pip clang patchelf libandroid ndk-sysroot wget
 
               pip install --upgrade pip setuptools wheel
 
@@ -88,8 +80,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_ENABLE_C_API=ON \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
-                -DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF \
-                -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF \
                 ..
 
               make -j$(nproc) install
@@ -175,7 +165,7 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf zip
+              apt install -y cmake make git python python-pip clang patchelf zip libandroid ndk-sysroot wget
 
               pip install --upgrade pip setuptools wheel
 
@@ -184,7 +174,6 @@ jobs:
               echo "RPATH: $RPATH"
 
               cd /k2-fsa/sherpa-onnx
-              export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF"
               SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_arm64_v8a
               ls -lh dist
 
@@ -251,7 +240,7 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y python python-pip libc++
+              apt install -y python python-pip libc++ wget
 
               pip install --upgrade pip setuptools wheel
 
@@ -262,6 +251,24 @@ jobs:
               sherpa-onnx --help || true
 
               python3 /test/version-test.py
+
+              echo "=== Test KWS model ==="
+              cd /tmp
+              wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+              tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+              rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+
+              sherpa-onnx-keyword-spotter \
+                --encoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --decoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --joiner=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --tokens=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/tokens.txt \
+                --keywords-file=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/keywords.txt \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_3.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_4.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_5.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_0.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_1.wav
             '
 
       - name: Publish to PyPI

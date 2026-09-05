@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -47,7 +47,7 @@ std::string ReadTextFile(const std::string &path) {
   return ToString(ReadFile(path));
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 std::string ReadTextFile(AAssetManager *mgr, const std::string &path) {
   return ToString(ReadFile(mgr, path));
 }
@@ -1326,7 +1326,7 @@ std::string QwenAsrTokenizer::GetTokenStringStreaming(
   return ConsumeAvailableUtf8(state, /*flush_incomplete=*/false);
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template QwenAsrTokenizer::QwenAsrTokenizer(AAssetManager *mgr,
                                             const std::string &tokenizer_dir);
 #endif

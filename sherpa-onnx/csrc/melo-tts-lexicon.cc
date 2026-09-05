@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -345,7 +345,7 @@ std::vector<TokenIDs> MeloTtsLexicon::ConvertTextToTokenIds(
   return impl_->ConvertTextToTokenIds(text);
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template MeloTtsLexicon::MeloTtsLexicon(
     AAssetManager *mgr, const std::string &lexicon, const std::string &tokens,
     const OfflineTtsVitsModelMetaData &meta_data, bool debug);

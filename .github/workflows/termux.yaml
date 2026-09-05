@@ -58,7 +58,7 @@ jobs:
 
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git libc++
+              apt install -y cmake make git libc++ libandroid ndk-sysroot wget
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -81,8 +81,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_ENABLE_C_API=ON \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
-                -DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF \
-                -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF \
                 ..
 
               make -j$(nproc) install
@@ -107,6 +105,24 @@ jobs:
               export LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH
               ./install/bin/sherpa-onnx-version
               ./install/bin/sherpa-onnx --help || true
+
+              echo "=== Test KWS model ==="
+              cd /tmp
+              wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+              tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+              rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+
+              $OLDPWD/install/bin/sherpa-onnx-keyword-spotter \
+                --encoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --decoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --joiner=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --tokens=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/tokens.txt \
+                --keywords-file=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/keywords.txt \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_3.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_4.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_5.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_0.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_1.wav
             '
 
       - name: Copy files
@@ -235,7 +251,7 @@ jobs:
               pwd
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git libc++
+              apt install -y cmake make git libc++ libandroid ndk-sysroot wget
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -257,8 +273,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
                 -DSHERPA_ONNX_ENABLE_JNI=OFF \
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
-                -DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF \
-                -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF \
                 ..
 
               make -j$(nproc) install
@@ -278,6 +292,24 @@ jobs:
               set -e
               ./install/bin/sherpa-onnx-version
               ./install/bin/sherpa-onnx --help || true
+
+              echo "=== Test KWS model ==="
+              cd /tmp
+              wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+              tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+              rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+
+              $OLDPWD/install/bin/sherpa-onnx-keyword-spotter \
+                --encoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --decoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --joiner=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --tokens=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/tokens.txt \
+                --keywords-file=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/keywords.txt \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_3.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_4.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_5.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_0.wav \
+                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_1.wav
             '
 
       - name: Copy files

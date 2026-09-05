@@ -4,7 +4,7 @@
 
 #include "sherpa-onnx/csrc/funasr-nano-tokenizer.h"
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -56,7 +56,7 @@ static std::string LoadBytesFromFile(const std::string &path) {
   return std::string(data.data(), data.size());
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 static std::string LoadBytesFromFile(AAssetManager *mgr,
                                      const std::string &path) {
   std::vector<char> data = ReadFile(mgr, path);
@@ -1522,7 +1522,7 @@ std::string FunASRNanoTokenizer::Decode(const std::vector<int64_t> &token_ids) {
   return out;
 }
 
-#if __ANDROID_API__ >= 9 && defined(SHERPA_ONNX_ENABLE_ASSET_MANAGER)
+#if __ANDROID_API__ >= 9
 template FunASRNanoTokenizer::FunASRNanoTokenizer(
     AAssetManager *mgr, const std::string &tokenizer_dir);
 #endif
