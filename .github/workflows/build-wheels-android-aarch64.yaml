@@ -53,7 +53,7 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf wget
+              apt install -y cmake make git python python-pip clang patchelf
               apt install -y android-liblog || true
               apt install -y libandroid-dev || true
               apt install -y android-libandroid || true
@@ -173,7 +173,7 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf zip wget
+              apt install -y cmake make git python python-pip clang patchelf zip
               apt install -y android-liblog || true
               apt install -y libandroid-dev || true
               apt install -y android-libandroid || true
@@ -244,19 +244,29 @@ jobs:
           find /tmp/wheels -name "*.whl" -exec cp -v {} /tmp/all_wheels/ \;
           ls -lh /tmp/all_wheels/
 
+      - name: Download KWS model
+        shell: bash
+        run: |
+          cd /tmp
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+          ls -lh /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/
+
       - name: Test wheels
         shell: bash
         run: |
-            chmod -R a+w /tmp/all_wheels
+            chmod -R a+w /tmp/all_wheels /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20
             docker run --rm \
               --user 0:0 \
               --volume /tmp/all_wheels:/wheels \
+              --volume /tmp/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20:/model \
               --volume ${{ github.workspace }}/python-api-examples:/test \
               termux/termux-docker:aarch64 \
             bash -c '
               set -e
               apt update -y
-              apt install -y python python-pip libc++ wget
+              apt install -y python python-pip libc++
 
               pip install --upgrade pip setuptools wheel
 
@@ -269,22 +279,17 @@ jobs:
               python3 /test/version-test.py
 
               echo "=== Test KWS model ==="
-              cd /tmp
-              wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
-              tar xf sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
-              rm sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
-
               sherpa-onnx-keyword-spotter \
-                --encoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
-                --decoder=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
-                --joiner=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
-                --tokens=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/tokens.txt \
-                --keywords-file=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/keywords.txt \
-                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_3.wav \
-                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_4.wav \
-                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/zh_5.wav \
-                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_0.wav \
-                sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20/test_wavs/en_1.wav
+                --encoder=/model/encoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --decoder=/model/decoder-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --joiner=/model/joiner-epoch-13-avg-2-chunk-16-left-64.onnx \
+                --tokens=/model/tokens.txt \
+                --keywords-file=/model/test_wavs/keywords.txt \
+                /model/test_wavs/zh_3.wav \
+                /model/test_wavs/zh_4.wav \
+                /model/test_wavs/zh_5.wav \
+                /model/test_wavs/en_0.wav \
+                /model/test_wavs/en_1.wav
             '
 
       - name: Publish to PyPI
