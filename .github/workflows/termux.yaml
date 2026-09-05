@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - termux-python
+      - termux-python-2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -202,7 +202,7 @@ jobs:
           path: sherpa-onnx-*-termux-shared.tar.bz2
 
       - name: Release pre-compiled binaries and libs
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -404,7 +404,7 @@ jobs:
           path: sherpa-onnx-*-termux-static.tar.bz2
 
       - name: Release pre-compiled binaries
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -649,7 +649,7 @@ jobs:
           path: sherpa-onnx-*-termux-shared.tar.bz2
 
       - name: Release pre-compiled binaries and libs
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -860,7 +860,7 @@ jobs:
           path: sherpa-onnx-*-termux-static.tar.bz2
 
       - name: Release pre-compiled binaries
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -1106,7 +1106,7 @@ jobs:
           path: sherpa-onnx-*-termux-shared.tar.bz2
 
       - name: Release pre-compiled binaries and libs
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -1352,7 +1352,7 @@ jobs:
           path: sherpa-onnx-*-termux-shared.tar.bz2
 
       - name: Release pre-compiled binaries and libs
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -1555,7 +1555,7 @@ jobs:
           path: sherpa-onnx-*-termux-static.tar.bz2
 
       - name: Release pre-compiled binaries
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -1767,7 +1767,7 @@ jobs:
           path: sherpa-onnx-*-termux-static.tar.bz2
 
       - name: Release pre-compiled binaries
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
