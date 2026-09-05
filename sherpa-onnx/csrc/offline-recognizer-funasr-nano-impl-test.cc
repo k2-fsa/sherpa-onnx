@@ -23,6 +23,12 @@ TEST(FunASRNanoAudioIsSilent, ConstantFramesAreSilence) {
   EXPECT_TRUE(FunASRNanoAudioIsSilent(features.data(), features.size()));
 }
 
+TEST(FunASRNanoAudioIsSilent, RepeatedNonUniformFramesAreSignal) {
+  // alternating values still vary frame to frame, so this is signal
+  std::vector<float> features = {1.0f, 2.0f, 1.0f, 2.0f};
+  EXPECT_FALSE(FunASRNanoAudioIsSilent(features.data(), features.size()));
+}
+
 TEST(FunASRNanoAudioIsSilent, VaryingFramesAreSignal) {
   std::vector<float> features = {2.5f, 2.5f, -1.25f, 2.5f, 2.5f, 2.5f};
   EXPECT_FALSE(FunASRNanoAudioIsSilent(features.data(), features.size()));
