@@ -58,7 +58,9 @@ jobs:
 
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git libc++ libandroid ndk-sysroot wget
+              apt install -y cmake make git libc++ wget android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -251,7 +253,9 @@ jobs:
               pwd
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git libc++ libandroid ndk-sysroot wget
+              apt install -y cmake make git libc++ wget android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
 
               cd /k2-fsa/sherpa-onnx/
 

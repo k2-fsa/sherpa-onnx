@@ -53,7 +53,9 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf libandroid ndk-sysroot wget
+              apt install -y cmake make git python python-pip clang patchelf wget android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
 
               pip install --upgrade pip setuptools wheel
 
@@ -165,7 +167,9 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf zip libandroid ndk-sysroot wget
+              apt install -y cmake make git python python-pip clang patchelf zip wget android-liblog || true
+              apt install -y libandroid-dev || true
+              apt install -y android-libandroid || true
 
               pip install --upgrade pip setuptools wheel
 
