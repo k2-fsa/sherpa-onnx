@@ -6,8 +6,8 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Android)
   message(FATAL_ERROR "This file is for Android only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL armv7-a)
-  message(FATAL_ERROR "This file is for armv7-a only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
+if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL armv7-a AND NOT CMAKE_SYSTEM_PROCESSOR STREQUAL armv8l)
+  message(FATAL_ERROR "This file is for armv7-a/armv8l only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
 if(NOT BUILD_SHARED_LIBS)

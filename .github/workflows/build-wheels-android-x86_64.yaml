@@ -55,6 +55,7 @@ jobs:
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
               termux/termux-docker:x86_64 \
             bash -c '
+              set -e
               apt update -y
               apt install -y cmake make git python python-pip clang patchelf
               apt install -y android-liblog || true
@@ -187,6 +188,7 @@ jobs:
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
               termux/termux-docker:x86_64 \
             bash -c '
+              set -e
               apt update -y
               apt install -y cmake make git python python-pip clang patchelf zip
               apt install -y android-liblog || true
