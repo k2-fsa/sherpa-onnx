@@ -58,9 +58,15 @@ jobs:
 
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git libc++ wget android-liblog || true
+              apt install -y cmake make git libc++ wget
+              apt install -y android-liblog || true
               apt install -y libandroid-dev || true
               apt install -y android-libandroid || true
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -253,9 +259,15 @@ jobs:
               pwd
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git libc++ wget android-liblog || true
+              apt install -y cmake make git libc++ wget
+              apt install -y android-liblog || true
               apt install -y libandroid-dev || true
               apt install -y android-libandroid || true
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
               cd /k2-fsa/sherpa-onnx/
 

@@ -53,9 +53,15 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf wget android-liblog || true
+              apt install -y cmake make git python python-pip clang patchelf wget
+              apt install -y android-liblog || true
               apt install -y libandroid-dev || true
               apt install -y android-libandroid || true
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
               pip install --upgrade pip setuptools wheel
 
@@ -167,9 +173,15 @@ jobs:
               termux/termux-docker:aarch64 \
             bash -c '
               apt update -y
-              apt install -y cmake make git python python-pip clang patchelf zip wget android-liblog || true
+              apt install -y cmake make git python python-pip clang patchelf zip wget
+              apt install -y android-liblog || true
               apt install -y libandroid-dev || true
               apt install -y android-libandroid || true
+
+              echo "=== Available .so files in usr/lib ==="
+              ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
+              echo "---"
+              find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
               pip install --upgrade pip setuptools wheel
 
