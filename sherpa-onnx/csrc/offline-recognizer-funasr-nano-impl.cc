@@ -177,6 +177,21 @@ static std::string BuildUserPrompt(const std::vector<std::string> &hotwords,
 
 }  // namespace
 
+bool FunASRNanoAudioIsSilent(const float *features, int32_t n) {
+  if (n <= 0) {
+    return false;
+  }
+
+  const float v0 = features[0];
+  for (int32_t i = 1; i != n; ++i) {
+    if (features[i] != v0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
     const OfflineRecognizerConfig &config)
     : OfflineRecognizerImpl(config),
@@ -862,6 +877,16 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
     int32_t num_frames = static_cast<int32_t>(
         f.size() / (config_.feat_config.feature_dim * model_->LfrWindowSize()));
     if (num_frames <= 0) {
+      OfflineRecognitionResult r;
+      r.text = "";
+      ss[i]->SetResult(r);
+      continue;
+    }
+
+    if (FunASRNanoAudioIsSilent(f.data(), static_cast<int32_t>(f.size()))) {
+      // The whole clip is silence. Return an empty result now, before any
+      // hotwords/language prompt tokens are built, so they cannot bias the
+      // LLM decoder into hallucinating text for silent audio.
       OfflineRecognitionResult r;
       r.text = "";
       ss[i]->SetResult(r);
