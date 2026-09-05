@@ -124,7 +124,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y libc++
+              apt install -y libc++ binutils
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
 
               export LD_LIBRARY_PATH=/k2-fsa/sherpa-onnx/build/install/lib:$LD_LIBRARY_PATH
 
@@ -343,6 +346,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
+              apt install -y binutils
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
 
               echo "=== readelf -d sherpa-onnx ==="
               readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx
@@ -549,7 +556,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y libc++
+              apt install -y libc++ binutils
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
 
               export LD_LIBRARY_PATH=/k2-fsa/sherpa-onnx/build/install/lib:$LD_LIBRARY_PATH
 
@@ -768,6 +778,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
+              apt install -y binutils
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
 
               echo "=== readelf -d sherpa-onnx ==="
               readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx

@@ -260,14 +260,17 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y python python-pip libc++
+              apt install -y python python-pip libc++ binutils
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
 
               pip install --upgrade pip setuptools wheel
 
               pip install /wheels/*.whl
 
               echo "=== readelf -d sherpa-onnx ==="
-              readelf -d $(which sherpa-onnx)
+              readelf -d /data/data/com.termux/files/usr/bin/sherpa-onnx
 
               echo "=== readelf -d libsherpa-onnx-c-api.so ==="
               PYTHON_VERSION=$(python3 -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')")
