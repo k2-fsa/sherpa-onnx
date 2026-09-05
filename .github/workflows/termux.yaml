@@ -58,7 +58,7 @@ jobs:
 
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git
+              apt install -y cmake make git libc++
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -103,6 +103,7 @@ jobs:
               readelf -d install/lib/libsherpa-onnx-c-api.so
 
               echo "=== Test binaries ==="
+              set -e
               export LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH
               ./install/bin/sherpa-onnx-version
               ./install/bin/sherpa-onnx --help || true
@@ -234,7 +235,7 @@ jobs:
               pwd
               ls -lh /k2-fsa/sherpa-onnx/
               apt update -y
-              apt install -y cmake make git
+              apt install -y cmake make git libc++
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -274,6 +275,7 @@ jobs:
               readelf -d install/bin/sherpa-onnx
 
               echo "=== Test binaries ==="
+              set -e
               ./install/bin/sherpa-onnx-version
               ./install/bin/sherpa-onnx --help || true
             '

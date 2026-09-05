@@ -55,10 +55,18 @@ jobs:
               apt update -y
               apt install -y cmake make git python python-pip clang patchelf
 
+              pwd
+              id
+              ls ../usr/lib
+
+              find / -name "libandroid.so" 2>/dev/null
+              find / -name "liblog.so" 2>/dev/null
+              find / -name "libc++_shared.so" 2>/dev/null
+
               pip install --upgrade pip setuptools wheel
 
               PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
-              RPATH="/data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib"
+              RPATH="/data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib:/data/data/com.termux/files/usr/lib"
               echo "RPATH: $RPATH"
 
               cd /k2-fsa/sherpa-onnx/build
@@ -97,6 +105,9 @@ jobs:
 
               readelf -d ./install/lib/libsherpa-onnx-c-api.so | grep RUNPATH
               readelf -d ./install/bin/sherpa-onnx | grep RUNPATH
+
+              readelf -d ./install/lib/libsherpa-onnx-c-api.so
+              readelf -d ./install/bin/sherpa-onnx
 
               echo "=== Build sherpa-onnx-core wheel ==="
               mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
@@ -169,10 +180,11 @@ jobs:
               pip install --upgrade pip setuptools wheel
 
               PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
-              RPATH="/data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib"
+              RPATH="/data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib:/data/data/com.termux/files/usr/lib"
               echo "RPATH: $RPATH"
 
               cd /k2-fsa/sherpa-onnx
+              export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_ANDROID_LOG=OFF -DSHERPA_ONNX_ENABLE_ASSET_MANAGER=OFF"
               SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_arm64_v8a
               ls -lh dist
 
@@ -237,18 +249,19 @@ jobs:
               --volume ${{ github.workspace }}/python-api-examples:/test \
               termux/termux-docker:aarch64 \
             bash -c '
+              set -e
               apt update -y
-              apt install -y python python-pip
+              apt install -y python python-pip libc++
 
               pip install --upgrade pip setuptools wheel
 
               pip install /wheels/*.whl
 
-              python3 /test/version-test.py
-
               sherpa-onnx-version
 
               sherpa-onnx --help || true
+
+              python3 /test/version-test.py
             '
 
       - name: Publish to PyPI

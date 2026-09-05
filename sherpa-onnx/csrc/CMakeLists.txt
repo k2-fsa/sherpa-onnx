@@ -384,9 +384,13 @@ if(APPLE)
   )
 endif()
 
-if(ANDROID AND SHERPA_ONNX_ENABLE_ANDROID_LOG)
-  target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_ANDROID_LOG)
+if(ANDROID)
+  # log is always needed on Android because libonnxruntime.a depends on it
   target_link_libraries(sherpa-onnx-core log)
+
+  if(SHERPA_ONNX_ENABLE_ANDROID_LOG)
+    target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_ANDROID_LOG)
+  endif()
 endif()
 
 if(ANDROID AND SHERPA_ONNX_ENABLE_ASSET_MANAGER)
