@@ -72,6 +72,9 @@ jobs:
               echo "---"
               find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
               cd /k2-fsa/sherpa-onnx/
 
               cd build
@@ -124,10 +127,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y libc++ binutils
+              apt install -y libc++ clang
 
               echo "=== Available binaries in usr/bin ==="
-              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
 
               export LD_LIBRARY_PATH=/k2-fsa/sherpa-onnx/build/install/lib:$LD_LIBRARY_PATH
 
@@ -299,6 +302,9 @@ jobs:
               echo "---"
               find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
               cd /k2-fsa/sherpa-onnx/
 
               cd build
@@ -346,10 +352,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y binutils
+              apt install -y clang
 
               echo "=== Available binaries in usr/bin ==="
-              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
 
               echo "=== readelf -d sherpa-onnx ==="
               readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx
@@ -452,6 +458,15 @@ jobs:
     name: termux x86_64 shared
 
     steps:
+      - name: Free disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          df -h
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -503,6 +518,9 @@ jobs:
               ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
               echo "---"
               find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -556,10 +574,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y libc++ binutils
+              apt install -y libc++ clang
 
               echo "=== Available binaries in usr/bin ==="
-              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
 
               export LD_LIBRARY_PATH=/k2-fsa/sherpa-onnx/build/install/lib:$LD_LIBRARY_PATH
 
@@ -685,6 +703,15 @@ jobs:
     name: termux x86_64 static
 
     steps:
+      - name: Free disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          df -h
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -730,6 +757,9 @@ jobs:
               ls -lh /data/data/com.termux/files/usr/lib/*.so 2>/dev/null
               echo "---"
               find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
+
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
 
               cd /k2-fsa/sherpa-onnx/
 
@@ -778,10 +808,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y binutils
+              apt install -y clang
 
               echo "=== Available binaries in usr/bin ==="
-              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
 
               echo "=== readelf -d sherpa-onnx ==="
               readelf -d /k2-fsa/sherpa-onnx/build/install/bin/sherpa-onnx

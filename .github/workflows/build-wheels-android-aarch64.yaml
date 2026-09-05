@@ -57,6 +57,9 @@ jobs:
               echo "---"
               find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
               pip install --upgrade pip setuptools wheel
 
               PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
@@ -177,6 +180,9 @@ jobs:
               echo "---"
               find /data/data/com.termux/files/usr/lib -name "libandroid*" -o -name "liblog*" -o -name "libc++*" 2>/dev/null
 
+              echo "=== Available binaries in usr/bin ==="
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
+
               pip install --upgrade pip setuptools wheel
 
               PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
@@ -260,10 +266,10 @@ jobs:
             bash -c '
               set -e
               apt update -y
-              apt install -y python python-pip libc++ binutils
+              apt install -y python python-pip libc++ clang
 
               echo "=== Available binaries in usr/bin ==="
-              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null | head -30
+              ls -lh /data/data/com.termux/files/usr/bin/ 2>/dev/null
 
               pip install --upgrade pip setuptools wheel
 
@@ -273,7 +279,7 @@ jobs:
               readelf -d /data/data/com.termux/files/usr/bin/sherpa-onnx
 
               echo "=== readelf -d libsherpa-onnx-c-api.so ==="
-              PYTHON_VERSION=$(python3 -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')")
+              PYTHON_VERSION=python$(python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")")
               readelf -d /data/data/com.termux/files/usr/lib/${PYTHON_VERSION}/site-packages/sherpa_onnx/lib/libsherpa-onnx-c-api.so
 
               sherpa-onnx-version
