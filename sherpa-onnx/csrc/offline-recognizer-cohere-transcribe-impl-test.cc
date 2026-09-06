@@ -32,6 +32,19 @@ TEST(CohereHasSignal, EmptyFeaturesAreNotSignal) {
   EXPECT_FALSE(CohereHasSignal(&unused, 0));
 }
 
+TEST(CohereHasSignal, ThresholdIsStrict) {
+  // the comparison is strictly greater-than, so a value equal to
+  // kCohereSilenceFeatureAbsMax still counts as silent
+  std::vector<float> below = {0.999f};
+  EXPECT_FALSE(CohereHasSignal(below.data(), below.size()));
+
+  std::vector<float> exact = {1.0f};
+  EXPECT_FALSE(CohereHasSignal(exact.data(), exact.size()));
+
+  std::vector<float> above = {1.001f};
+  EXPECT_TRUE(CohereHasSignal(above.data(), above.size()));
+}
+
 TEST(CohereHasSignal, LoudSingleSampleIsSignal) {
   std::vector<float> features(1024, 0.001f);
   features[512] = 3.0f;
