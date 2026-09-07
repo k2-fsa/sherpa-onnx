@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/fast-clustering.h"
 
+#include <cmath>
 #include <vector>
 
 #include "Eigen/Dense"
@@ -41,6 +42,16 @@ class FastClustering::Impl {
 
         if (consine_dissimilarity < 0) {
           consine_dissimilarity = 0;
+        }
+
+        // hclust_fast() throws fastclustercpp::nan_error (which is not a
+        // std::exception) if the condensed distance matrix contains NaN, and
+        // that exception would unwind out through the C API. A non-finite
+        // distance can only come from a degenerate embedding, so treat it as
+        // "maximally dissimilar" instead of letting it abort the whole
+        // diarization.
+        if (!std::isfinite(consine_dissimilarity)) {
+          consine_dissimilarity = 2;
         }
 
         distance[k] = consine_dissimilarity;
