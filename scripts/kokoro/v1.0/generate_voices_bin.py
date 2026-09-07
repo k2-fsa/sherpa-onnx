@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
-import torch
+import os
 from pathlib import Path
+
+import torch
 
 
 id2speaker = {
@@ -58,26 +60,42 @@ id2speaker = {
     50: "zm_yunxi",
     51: "zm_yunxia",
     52: "zm_yunyang",
+    53: "em_santa",
 }
 
 speaker2id = {speaker: idx for idx, speaker in id2speaker.items()}
 
+EXPECTED_STYLE_SHAPE = (510, 1, 256)
+
 
 def main():
-    if Path("./voices.bin").is_file():
-        print("./voices.bin exists - skip")
-        return
+    output_path = Path("voices.bin")
+    temp_path = output_path.with_name(f".{output_path.name}.tmp")
+    try:
+        with temp_path.open("wb") as f:
+            for _, speaker in id2speaker.items():
+                m = torch.load(
+                    f"Kokoro-82M/voices/{speaker}.pt",
+                    weights_only=True,
+                    map_location="cpu",
+                ).numpy()
+                if m.shape != EXPECTED_STYLE_SHAPE:
+                    raise ValueError(
+                        f"Unexpected style shape for {speaker}: {m.shape}; "
+                        f"expected {EXPECTED_STYLE_SHAPE}"
+                    )
+                if str(m.dtype) != "float32":
+                    raise TypeError(
+                        f"Unexpected style dtype for {speaker}: {m.dtype}; "
+                        "expected float32"
+                    )
 
-    with open("voices.bin", "wb") as f:
-        for _, speaker in id2speaker.items():
-            m = torch.load(
-                f"Kokoro-82M/voices/{speaker}.pt",
-                weights_only=True,
-                map_location="cpu",
-            ).numpy()
-            # m.shape (510, 1, 256)
-
-            f.write(m.tobytes())
+                f.write(m.tobytes())
+            f.flush()
+            os.fsync(f.fileno())
+        temp_path.replace(output_path)
+    finally:
+        temp_path.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
