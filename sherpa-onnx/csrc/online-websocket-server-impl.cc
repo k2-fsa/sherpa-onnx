@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/log.h"
 
 namespace sherpa_onnx {
 
@@ -31,9 +30,18 @@ void OnlineWebsocketDecoderConfig::Register(ParseOptions *po) {
 
 void OnlineWebsocketDecoderConfig::Validate() const {
   recognizer_config.Validate();
-  SHERPA_ONNX_CHECK_GT(loop_interval_ms, 0);
-  SHERPA_ONNX_CHECK_GT(max_batch_size, 0);
-  SHERPA_ONNX_CHECK_GT(end_tail_padding, 0);
+  if (loop_interval_ms <= 0) {
+    SHERPA_ONNX_LOGE("loop_interval_ms must be > 0, given %d", loop_interval_ms);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (max_batch_size <= 0) {
+    SHERPA_ONNX_LOGE("max_batch_size must be > 0, given %d", max_batch_size);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (end_tail_padding <= 0) {
+    SHERPA_ONNX_LOGE("end_tail_padding must be > 0, given %d", end_tail_padding);
+    SHERPA_ONNX_EXIT(-1);
+  }
 }
 
 void OnlineWebsocketServerConfig::Register(sherpa_onnx::ParseOptions *po) {
@@ -114,7 +122,8 @@ void OnlineWebsocketDecoder::Run() {
 
 void OnlineWebsocketDecoder::ProcessConnections(const asio::error_code &ec) {
   if (ec) {
-    SHERPA_ONNX_LOG(FATAL) << "The decoder loop is aborted!";
+    SHERPA_ONNX_LOGE("The decoder loop is aborted!");
+    SHERPA_ONNX_EXIT(-1);
   }
 
   std::lock_guard<std::mutex> lock(mutex_);
@@ -300,19 +309,16 @@ void OnlineWebsocketServer::OnOpen(connection_hdl hdl) {
   std::lock_guard<std::mutex> lock(mutex_);
   connections_.insert(hdl);
 
-  std::ostringstream os;
-  os << "New connection: "
-     << server_.get_con_from_hdl(hdl)->get_remote_endpoint() << ". "
-     << "Number of active connections: " << connections_.size() << ".\n";
-  SHERPA_ONNX_LOG(INFO) << os.str();
+  SHERPA_ONNX_LOGE("New connection. Number of active connections: %d",
+                   static_cast<int>(connections_.size()));
 }
 
 void OnlineWebsocketServer::OnClose(connection_hdl hdl) {
   std::lock_guard<std::mutex> lock(mutex_);
   connections_.erase(hdl);
 
-  SHERPA_ONNX_LOG(INFO) << "Number of active connections: "
-                        << connections_.size() << "\n";
+  SHERPA_ONNX_LOGE("Number of active connections: %d",
+                   static_cast<int>(connections_.size()));
 }
 
 bool OnlineWebsocketServer::Contains(connection_hdl hdl) const {

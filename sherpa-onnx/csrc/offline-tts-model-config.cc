@@ -17,6 +17,7 @@ void OfflineTtsModelConfig::Register(ParseOptions *po) {
   zipvoice.Register(po);
   kitten.Register(po);
   pocket.Register(po);
+  pocket_zh_en.Register(po);
   supertonic.Register(po);
 
   po->Register("num-threads", &num_threads,
@@ -59,6 +60,10 @@ bool OfflineTtsModelConfig::Validate() const {
     return pocket.Validate();
   }
 
+  if (!pocket_zh_en.step_model.empty()) {
+    return pocket_zh_en.Validate();
+  }
+
   if (!supertonic.tts_json.empty()) {
     return supertonic.Validate();
   }
@@ -78,6 +83,7 @@ std::string OfflineTtsModelConfig::ToString() const {
   os << "zipvoice=" << zipvoice.ToString() << ", ";
   os << "kitten=" << kitten.ToString() << ", ";
   os << "pocket=" << pocket.ToString() << ", ";
+  os << "pocket_zh_en=" << pocket_zh_en.ToString() << ", ";
   os << "supertonic=" << supertonic.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";

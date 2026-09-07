@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
-#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"

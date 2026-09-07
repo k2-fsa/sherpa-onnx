@@ -16,7 +16,13 @@
 
 static int32_t AudioCallback(const float * /*samples*/, int32_t n,
                              float progress) {
-  printf("sample=%d, progress=%f\n", n, progress);
+  if (progress >= 1.0f) {
+    // Done - clear line and print100%
+    printf("\r\033[K100%%\n");
+  } else if (progress >= 0) {
+    printf("\rsample=%d, progress=%.2f%%", n, progress * 100);
+  }
+  fflush(stdout);
   return 1;
 }
 
@@ -89,6 +95,20 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/voco
  --num-steps=4 \
  --output-filename=./generated-zipvoice.wav \
  "小米的价值观是真诚, 热爱. 真诚，就是不欺人也不自欺. 热爱, 就是全心投入并享受其中."
+
+Pocket TTS ZhEn:
+
+Please refer to
+https://modelscope.cn/models/dengcunqin/pocket-tts-zh-en
+for model files.
+
+./bin/sherpa-onnx-offline-tts \
+ --pocket-zh-en-step-model=./pocket-tts-zh-en/step_onnx_int8/step_model.onnx \
+ --pocket-zh-en-step-encoder=./pocket-tts-zh-en/step_onnx_int8/step_encoder.onnx \
+ --pocket-zh-en-lexicon=./pocket-tts-zh-en/lexicon.txt \
+ --reference-audio=./pocket-tts-zh-en/Vivian.wav \
+ --output-filename=./generated-pocket-zh-en.wav \
+ "欢迎使用图灵云语音合成服务!我们提供高质量的中文语音合成技术，支持多种音色和语音参数调节。"
 
 It will generate a file specified by --output-filename.
 
@@ -179,6 +199,7 @@ or details.
   sherpa_onnx::GeneratedAudio audio;
 
   bool is_pocket_tts = !config.model.pocket.lm_flow.empty();
+  bool is_pocket_zh_en_tts = !config.model.pocket_zh_en.step_model.empty();
   bool is_supertonic_tts = !config.model.supertonic.tts_json.empty();
   bool is_zipvoice_tts = !config.model.zipvoice.encoder.empty() &&
                          !config.model.zipvoice.decoder.empty();
@@ -193,7 +214,7 @@ or details.
     gen_config.extra["lang"] = lang;
   }
 
-  if (is_pocket_tts || is_zipvoice_tts) {
+  if (is_pocket_tts || is_pocket_zh_en_tts || is_zipvoice_tts) {
     if (reference_audio.empty()) {
       fprintf(stderr,
               "You need to provide --reference-audio for this TTS model");
@@ -223,6 +244,8 @@ or details.
   }
 
   audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
+
+  printf("\n");
 
   const auto end = std::chrono::steady_clock::now();
 

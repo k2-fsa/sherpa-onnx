@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
@@ -20,9 +20,10 @@ static bool RuleActivated(const EndpointRule &rule,
              trailing_silence >= rule.min_trailing_silence &&
              utterance_length >= rule.min_utterance_length;
   if (ans) {
-    SHERPA_ONNX_LOG(DEBUG) << "Endpointing rule " << rule_name << " activated: "
-                           << (contain_nonsilence ? "true" : "false") << ','
-                           << trailing_silence << ',' << utterance_length;
+    SHERPA_ONNX_LOGE("Endpointing rule %s activated: %s, %f, %f",
+                     rule_name.c_str(),
+                     contain_nonsilence ? "true" : "false", trailing_silence,
+                     utterance_length);
   }
   return ans;
 }

@@ -220,7 +220,10 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     std::vector<int64_t> all_processed_frames(n);
 
     for (int32_t i = 0; i != n; ++i) {
-      SHERPA_ONNX_CHECK(ss[i]->GetContextGraph() != nullptr);
+      if (ss[i]->GetContextGraph() == nullptr) {
+        SHERPA_ONNX_LOGE("ss[%d]->GetContextGraph() is nullptr", i);
+        SHERPA_ONNX_EXIT(-1);
+      }
 
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
       std::vector<float> features =
@@ -344,9 +347,16 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
   void InitOnlineStream(OnlineStream *stream) const {
     auto r = decoder_->GetEmptyResult();
-    SHERPA_ONNX_CHECK_EQ(r.hyps.Size(), 1);
+    if (r.hyps.Size() != 1) {
+      SHERPA_ONNX_LOGE("r.hyps.Size() != 1: %d",
+                       static_cast<int>(r.hyps.Size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
 
-    SHERPA_ONNX_CHECK(stream->GetContextGraph() != nullptr);
+    if (stream->GetContextGraph() == nullptr) {
+      SHERPA_ONNX_LOGE("stream->GetContextGraph() == nullptr");
+      SHERPA_ONNX_EXIT(-1);
+    }
     r.hyps.begin()->second.context_state = stream->GetContextGraph()->Root();
 
     stream->SetKeywordResult(r);

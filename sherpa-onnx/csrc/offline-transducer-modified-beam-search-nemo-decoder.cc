@@ -11,7 +11,7 @@
 
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
-#include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/packed-sequence.h"
 #include "sherpa-onnx/csrc/slice.h"
@@ -90,7 +90,10 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
   int32_t num_frames = static_cast<int32_t>(encoder_shape[1]);
   int32_t encoder_dim = static_cast<int32_t>(encoder_shape[2]);
 
-  if (ss != nullptr) SHERPA_ONNX_CHECK_EQ(batch_size, n);
+  if (ss != nullptr && batch_size != n) {
+    SHERPA_ONNX_LOGE("batch_size != n: %d vs %d", batch_size, n);
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   int32_t vocab_size = model_->VocabSize();
   int32_t blank_id = vocab_size - 1;  // NeMo models have blank at the end

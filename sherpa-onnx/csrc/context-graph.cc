@@ -20,14 +20,24 @@ void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids,
                          const std::vector<float> &scores,
                          const std::vector<std::string> &phrases,
                          const std::vector<float> &ac_thresholds) const {
-  if (!scores.empty()) {
-    SHERPA_ONNX_CHECK_EQ(token_ids.size(), scores.size());
+  if (!scores.empty() && token_ids.size() != scores.size()) {
+    SHERPA_ONNX_LOGE("token_ids.size() != scores.size(): %d vs %d",
+                     static_cast<int>(token_ids.size()),
+                     static_cast<int>(scores.size()));
+    SHERPA_ONNX_EXIT(-1);
   }
-  if (!phrases.empty()) {
-    SHERPA_ONNX_CHECK_EQ(token_ids.size(), phrases.size());
+  if (!phrases.empty() && token_ids.size() != phrases.size()) {
+    SHERPA_ONNX_LOGE("token_ids.size() != phrases.size(): %d vs %d",
+                     static_cast<int>(token_ids.size()),
+                     static_cast<int>(phrases.size()));
+    SHERPA_ONNX_EXIT(-1);
   }
-  if (!ac_thresholds.empty()) {
-    SHERPA_ONNX_CHECK_EQ(token_ids.size(), ac_thresholds.size());
+  if (!ac_thresholds.empty() && token_ids.size() != ac_thresholds.size()) {
+    SHERPA_ONNX_LOGE(
+        "token_ids.size() != ac_thresholds.size(): %d vs %d",
+        static_cast<int>(token_ids.size()),
+        static_cast<int>(ac_thresholds.size()));
+    SHERPA_ONNX_EXIT(-1);
   }
   for (int32_t i = 0; i < static_cast<int32_t>(token_ids.size()); ++i) {
     auto node = root_.get();
@@ -95,7 +105,10 @@ ContextGraph::ForwardOneStep(const ContextState *state, int32_t token,
       node->is_end ? node : (node->output != nullptr ? node->output : nullptr);
 
   if (!strict_mode && node->output_score != 0) {
-    SHERPA_ONNX_CHECK(nullptr != matched_node);
+    if (matched_node == nullptr) {
+      SHERPA_ONNX_LOGE("matched_node is nullptr");
+      SHERPA_ONNX_EXIT(-1);
+    }
     float output_score =
         node->is_end ? node->node_score
                      : (node->output != nullptr ? node->output->node_score

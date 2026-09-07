@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/bbpe.h"
-#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 

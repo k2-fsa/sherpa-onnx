@@ -198,3 +198,8 @@ vits-inflect-*-v2
 assets-2
 swiftpm
 .sherpa-onnx-xcframework-version
+todo*.md
+plan-notes*.md
+notes.md
+path.sh
+compile_commands.json

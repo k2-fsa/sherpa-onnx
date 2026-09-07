@@ -58,6 +58,16 @@
     _Exit(code);               \
   } while (0)
 
+#define SHERPA_ONNX_CHECK_EQ(actual, expected, name)                       \
+  do {                                                                     \
+    if ((actual) != (expected)) {                                          \
+      SHERPA_ONNX_LOGE("Check failed for %s: expected %d, got %d",        \
+                        (name), static_cast<int32_t>(expected),            \
+                        static_cast<int32_t>(actual));                     \
+      SHERPA_ONNX_EXIT(-1);                                                \
+    }                                                                      \
+  } while (0)
+
 // Read an integer
 #define SHERPA_ONNX_READ_META_DATA(dst, src_key)                           \
   do {                                                                     \

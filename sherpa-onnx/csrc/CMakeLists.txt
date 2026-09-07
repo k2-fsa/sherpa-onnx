@@ -304,6 +304,8 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-model-config.cc
     offline-tts-pocket-model-config.cc
     offline-tts-pocket-model.cc
+    offline-tts-pocket-zh-en-model-config.cc
+    offline-tts-pocket-zh-en-model.cc
     offline-tts-supertonic-impl.cc
     offline-tts-supertonic-model-config.cc
     offline-tts-supertonic-model.cc
@@ -314,6 +316,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-zipvoice-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
+    pocket-zh-en-lexicon.cc
     sentence-piece-tokenizer.cc
     vocoder.cc
     vocos-vocoder.cc
@@ -351,10 +354,6 @@ if(APPLE)
     PROPERTIES
       COMPILE_OPTIONS "-Wno-unknown-pragmas"
   )
-endif()
-
-if(SHERPA_ONNX_ENABLE_CHECK)
-  list(APPEND sources log.cc)
 endif()
 
 # Always static build
@@ -479,18 +478,6 @@ target_link_libraries(sherpa-onnx-core fstfar fst)
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core
     piper_phonemize)
-endif()
-
-if(SHERPA_ONNX_ENABLE_CHECK)
-  target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
-
-  if(SHERPA_ONNX_HAVE_EXECINFO_H)
-    target_compile_definitions(sherpa-onnx-core PRIVATE SHERPA_ONNX_HAVE_EXECINFO_H=1)
-  endif()
-
-  if(SHERPA_ONNX_HAVE_CXXABI_H)
-    target_compile_definitions(sherpa-onnx-core PRIVATE SHERPA_ONNX_HAVE_CXXABI_H=1)
-  endif()
 endif()
 
 if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
