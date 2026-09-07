@@ -247,9 +247,9 @@ jobs:
           else
             win_lib_dir=x86_64-pc-windows-gnu
           fi
-          # Download the module so DLLs are in the cache
+          # go mod tidy to download the module so DLLs are in the cache
           cd go-api-examples/hello-world
-          go mod download
+          go mod tidy
           cd ../..
           gopath=$(go env GOPATH)
           for dir in go-api-examples/*/; do
