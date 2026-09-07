@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - go
-      - fix-go
+      - fix-go-2
     paths:
       - '.github/workflows/test-go.yaml'
       - '.github/scripts/go/**'
