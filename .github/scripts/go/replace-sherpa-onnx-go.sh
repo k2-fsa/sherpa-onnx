@@ -41,6 +41,12 @@ cp -r "$windows_mod" "$local_dir"
 chmod -R u+w "$local_dir"
 cp -v "$local_file" "$local_dir/sherpa_onnx.go"
 
+# The local sherpa_onnx.go has no #cgo LDFLAGS — those live in separate
+# build_*.go files under scripts/go/_internal/.  Copy them so the linker
+# can find the DLLs at build time.
+internal_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)/scripts/go/_internal"
+cp -v "$internal_dir"/build_*.go "$local_dir/" 2>/dev/null || true
+
 # Use go mod edit -replace so go build uses the local copy.
 # This is more reliable than modifying the module cache, especially on Windows.
 go mod edit -replace "github.com/k2-fsa/sherpa-onnx-go-windows=./_sherpa_onnx_go_windows"
