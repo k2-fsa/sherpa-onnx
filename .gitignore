@@ -203,3 +203,4 @@ plan-notes*.md
 notes.md
 path.sh
 compile_commands.json
+lexicon-*.txt

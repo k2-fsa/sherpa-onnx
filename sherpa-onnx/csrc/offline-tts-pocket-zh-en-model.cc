@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-tts-pocket-zh-en-model.h"
 
+#include <array>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -83,15 +84,7 @@ class OfflineTtsPocketZhEnModel::Impl {
 
   // Get* public functions return View of pre-initialized tensors
   // Make* private functions create the tensors (called once in InitTensors)
-  Ort::Value GetZeroLatent() const {
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-    std::vector<float> data(meta_data_.latent_dim, 0.0f);
-    std::vector<int64_t> shape = {1, 1, meta_data_.latent_dim};
-    return Ort::Value::CreateTensor(memory_info, data.data(), data.size(),
-                                    shape.data(), shape.size());
-  }
-
+  Ort::Value GetZeroLatent() const { return View(&zero_latent_); }
   Ort::Value GetBosFlag() const { return View(&bos_flag_); }
   Ort::Value GetNonBosFlag() const { return View(&non_bos_flag_); }
   Ort::Value GetTextGates() const { return View(&text_gates_); }
@@ -107,6 +100,7 @@ class OfflineTtsPocketZhEnModel::Impl {
 
  private:
   void InitTensors() {
+    zero_latent_ = MakeZeroLatent();
     bos_flag_ = MakeBosFlag();
     non_bos_flag_ = MakeNonBosFlag();
     text_gates_ = MakeTextGates();
@@ -121,8 +115,19 @@ class OfflineTtsPocketZhEnModel::Impl {
     decode_steps_ = MakeDecodeSteps();
   }
 
+  Ort::Value MakeZeroLatent() const {
+    std::array<int64_t, 3> shape = {1, 1, meta_data_.latent_dim};
+    auto tensor =
+        Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
+    float *p = tensor.GetTensorMutableData<float>();
+    p[0] = 0.0f;
+    p[1] = 0.0f;
+    p[2] = 0.0f;
+    return tensor;
+  }
+
   Ort::Value MakeBosFlag() const {
-    std::vector<int64_t> shape = {1, 1, 1};
+    std::array<int64_t, 3> shape = {1, 1, 1};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     *tensor.GetTensorMutableData<float>() = 1.0f;
@@ -130,7 +135,7 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeNonBosFlag() const {
-    std::vector<int64_t> shape = {1, 1, 1};
+    std::array<int64_t, 3> shape = {1, 1, 1};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     *tensor.GetTensorMutableData<float>() = 0.0f;
@@ -138,7 +143,7 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeTextGates() const {
-    std::vector<int64_t> shape = {3};
+    std::array<int64_t, 1> shape = {3};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     float *p = tensor.GetTensorMutableData<float>();
@@ -149,7 +154,7 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeLatentGates() const {
-    std::vector<int64_t> shape = {3};
+    std::array<int64_t, 1> shape = {3};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     float *p = tensor.GetTensorMutableData<float>();
@@ -160,7 +165,7 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeCondGates() const {
-    std::vector<int64_t> shape = {3};
+    std::array<int64_t, 1> shape = {3};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     float *p = tensor.GetTensorMutableData<float>();
@@ -171,7 +176,7 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeZeroNoise() const {
-    std::vector<int64_t> shape = {1, meta_data_.latent_dim};
+    std::array<int64_t, 2> shape = {1, meta_data_.latent_dim};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     Fill<float>(&tensor, 0);
@@ -179,23 +184,22 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeEmptyFlowKv() const {
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-    std::vector<int64_t> shape = {
+    std::array<int64_t, 6> shape = {
         0, meta_data_.flow_layers, 2,
         1, meta_data_.flow_heads,  meta_data_.flow_head_dim};
-    return Ort::Value::CreateTensor<float>(memory_info, nullptr, 0,
-                                           shape.data(), shape.size());
+    return Ort::Value::CreateTensor<float>(allocator_, shape.data(),
+                                           shape.size());
   }
 
   Ort::Value MakeZeroFlowOffset() const {
-    auto tensor = Ort::Value::CreateTensor<int64_t>(allocator_, nullptr, 0);
-    *tensor.GetTensorMutableData<int64_t>() = 0;
-    return tensor;
+    static int64_t zero = 0;
+    return Ort::Value::CreateTensor<int64_t>(
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault),
+        &zero, 1, nullptr, 0);
   }
 
   Ort::Value MakeZeroMimiKv() const {
-    std::vector<int64_t> shape = {
+    std::array<int64_t, 6> shape = {
         meta_data_.mimi_kv_len, meta_data_.mimi_layers,  2, 1,
         meta_data_.mimi_heads,  meta_data_.mimi_head_dim};
     auto tensor =
@@ -205,13 +209,14 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeZeroMimiOffset() const {
-    auto tensor = Ort::Value::CreateTensor<int64_t>(allocator_, nullptr, 0);
-    *tensor.GetTensorMutableData<int64_t>() = 0;
-    return tensor;
+    static int64_t zero = 0;
+    return Ort::Value::CreateTensor<int64_t>(
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault),
+        &zero, 1, nullptr, 0);
   }
 
   Ort::Value MakeZeroMimiConv() const {
-    std::vector<int64_t> shape = {meta_data_.conv_state_size};
+    std::array<int64_t, 1> shape = {meta_data_.conv_state_size};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     Fill<float>(&tensor, 0);
@@ -219,9 +224,10 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   Ort::Value MakeDecodeSteps() const {
-    auto tensor = Ort::Value::CreateTensor<float>(allocator_, nullptr, 0);
-    *tensor.GetTensorMutableData<float>() = 1.0f;
-    return tensor;
+    static float one = 1.0f;
+    return Ort::Value::CreateTensor<float>(
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault),
+        &one, 1, nullptr, 0);
   }
 
   void InitEncoder(void *model_data, size_t model_data_length) {
@@ -334,9 +340,8 @@ class OfflineTtsPocketZhEnModel::Impl {
 
       auto flow_kv_shape = get_shape(6);
       if (flow_kv_shape.size() != 6) {
-        SHERPA_ONNX_LOGE(
-            "step input[6] (flow_kv) expected rank 6, got %d",
-            static_cast<int32_t>(flow_kv_shape.size()));
+        SHERPA_ONNX_LOGE("step input[6] (flow_kv) expected rank 6, got %d",
+                         static_cast<int32_t>(flow_kv_shape.size()));
         SHERPA_ONNX_EXIT(-1);
       }
       meta_data_.flow_layers = static_cast<int32_t>(flow_kv_shape[1]);
@@ -345,9 +350,8 @@ class OfflineTtsPocketZhEnModel::Impl {
 
       auto mimi_kv_shape = get_shape(8);
       if (mimi_kv_shape.size() != 6) {
-        SHERPA_ONNX_LOGE(
-            "step input[8] (mimi_kv) expected rank 6, got %d",
-            static_cast<int32_t>(mimi_kv_shape.size()));
+        SHERPA_ONNX_LOGE("step input[8] (mimi_kv) expected rank 6, got %d",
+                         static_cast<int32_t>(mimi_kv_shape.size()));
         SHERPA_ONNX_EXIT(-1);
       }
       meta_data_.mimi_kv_len = static_cast<int32_t>(mimi_kv_shape[0]);
@@ -357,9 +361,8 @@ class OfflineTtsPocketZhEnModel::Impl {
 
       auto conv_shape = get_shape(10);
       if (conv_shape.size() != 1) {
-        SHERPA_ONNX_LOGE(
-            "step input[10] (mimi_conv) expected rank 1, got %d",
-            static_cast<int32_t>(conv_shape.size()));
+        SHERPA_ONNX_LOGE("step input[10] (mimi_conv) expected rank 1, got %d",
+                         static_cast<int32_t>(conv_shape.size()));
         SHERPA_ONNX_EXIT(-1);
       }
       meta_data_.conv_state_size = static_cast<int32_t>(conv_shape[0]);
@@ -429,6 +432,7 @@ class OfflineTtsPocketZhEnModel::Impl {
 
   // Pre-initialized tensors (created once in InitTensors)
   // Mutable because View() requires non-const pointer
+  mutable Ort::Value zero_latent_{nullptr};
   mutable Ort::Value bos_flag_{nullptr};
   mutable Ort::Value non_bos_flag_{nullptr};
   mutable Ort::Value text_gates_{nullptr};

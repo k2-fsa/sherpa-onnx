@@ -92,6 +92,22 @@ python3 ./python-api-examples/pocket-tts.py
 
 rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
 
+log "test PocketTTS ZhEn"
+
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/step_onnx_int8/step_model.onnx
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/step_onnx_int8/step_encoder.onnx
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/lexicon-en.txt
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/lexicon-zh.txt
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/trump.wav
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/number-zh.fst
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/phone-zh.fst
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/date-zh.fst
+
+python3 ./python-api-examples/pocket-tts-zh-en.py
+
+rm -f step_model.onnx step_encoder.onnx lexicon-en.txt lexicon-zh.txt trump.wav number-zh.fst phone-zh.fst date-zh.fst
+rm -f generated-pocket-zh-en-*.wav
+
 log "test ZipVoice TTS"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
