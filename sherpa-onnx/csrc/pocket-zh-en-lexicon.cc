@@ -118,6 +118,11 @@ class PocketZhEnLexicon::Impl {
 
     std::vector<int32_t> ids;
     for (const std::string &w : matcher) {
+      // Skip spaces (word separators)
+      if (w == " ") {
+        continue;
+      }
+
       auto it = word2ids_.find(w);
       if (it != word2ids_.end()) {
         ids.insert(ids.end(), it->second.begin(), it->second.end());

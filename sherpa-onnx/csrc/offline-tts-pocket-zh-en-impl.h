@@ -173,7 +173,8 @@ class OfflineTtsPocketZhEnImpl : public OfflineTtsImpl {
       }
 
       GeneratedAudio cur = GenerateAudio(
-          token_ids, gen_config, View(&voice_embedding), wrapped_cb, dbg);
+          token_ids, gen_config, View(&voice_embedding), should_continue,
+          wrapped_cb, dbg);
 
       if (cur.samples.empty()) {
         continue;
@@ -195,6 +196,7 @@ class OfflineTtsPocketZhEnImpl : public OfflineTtsImpl {
   GeneratedAudio GenerateAudio(const std::vector<int32_t> &token_ids,
                                const GenerationConfig &gen_config,
                                Ort::Value voice_embedding,
+                               bool &should_continue,
                                const GeneratedAudioCallback &callback,
                                bool dbg) const {
     const auto &meta = model_->GetMetaData();
@@ -372,7 +374,6 @@ class OfflineTtsPocketZhEnImpl : public OfflineTtsImpl {
     std::vector<float> audio_samples;
     int32_t eos_frame = -1;
     int32_t total_frames = max_frames;  // default, updated if EOS detected
-    bool should_continue = true;
     std::vector<Ort::Value> outputs;
 
     // mimi_kv cache: sliding window of last mimi_kv_len entries

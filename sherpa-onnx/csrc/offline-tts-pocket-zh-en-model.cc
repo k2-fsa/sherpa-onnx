@@ -385,6 +385,17 @@ class OfflineTtsPocketZhEnModel::Impl {
 
     meta_data_.sample_rate = 24000;
 
+    // Validate all dimensions are positive
+    if (meta_data_.model_dim <= 0 || meta_data_.latent_dim <= 0 ||
+        meta_data_.flow_layers <= 0 || meta_data_.flow_heads <= 0 ||
+        meta_data_.flow_head_dim <= 0 || meta_data_.mimi_kv_len <= 0 ||
+        meta_data_.mimi_layers <= 0 || meta_data_.mimi_heads <= 0 ||
+        meta_data_.mimi_head_dim <= 0 || meta_data_.conv_state_size <= 0 ||
+        meta_data_.frame_size <= 0) {
+      SHERPA_ONNX_LOGE("Invalid model dimensions detected");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     if (config_.debug) {
       std::ostringstream os;
       os << "---pocket-zh-en model---\n";

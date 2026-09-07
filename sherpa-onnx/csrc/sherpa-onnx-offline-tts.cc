@@ -128,7 +128,8 @@ or details.
   std::string reference_audio;
   po.Register(
       "reference-audio", &reference_audio,
-      "Path to reference audio. Required by Pocket TTS and ZipVoice TTS.");
+      "Path to reference audio. Required by Pocket TTS, Pocket TTS ZhEn, "
+      "and ZipVoice TTS.");
 
   std::string reference_text;
   po.Register(

@@ -64,6 +64,10 @@ LoadTextNormalizers(const std::string &rule_fsts, const std::string &rule_fars,
       }
       std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
           fst::FarReader<fst::StdArc>::Open(f));
+      if (!reader) {
+        SHERPA_ONNX_LOGE("Failed to open FAR file: %s", f.c_str());
+        continue;
+      }
       for (; !reader->Done(); reader->Next()) {
         std::unique_ptr<fst::StdConstFst> r(
             fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
