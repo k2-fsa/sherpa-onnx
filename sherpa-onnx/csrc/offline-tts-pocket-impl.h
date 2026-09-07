@@ -5,7 +5,6 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_IMPL_H_
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -13,29 +12,24 @@
 #include <iomanip>
 #include <ios>
 #include <limits>
-#include <list>
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <string>
 #include <tuple>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "fst/extensions/far/far.h"
-#include "kaldifst/csrc/kaldi-fst-io.h"
-#include "kaldifst/csrc/text-normalizer.h"
-#include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/fst-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/normal-data-generator.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-pocket-model.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/sentence-piece-tokenizer.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/tts-text-normalizer.h"
+#include "sherpa-onnx/csrc/tts-voice-embedding-cache.h"
 
 namespace sherpa_onnx {
 
@@ -48,54 +42,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     cache_.SetCapacity(config.model.pocket.voice_embedding_cache_capacity);
 
-    if (!config.rule_fsts.empty()) {
-      std::vector<std::string> files;
-      SplitStringToVector(config.rule_fsts, ",", false, &files);
-      tn_list_.reserve(files.size());
-      for (const auto &f : files) {
-        if (config.model.debug) {
-#if __OHOS__
-          SHERPA_ONNX_LOGE("rule fst: %{public}s", f.c_str());
-#else
-          SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
-#endif
-        }
-        tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(f));
-      }
-    }
-
-    if (!config.rule_fars.empty()) {
-      if (config.model.debug) {
-        SHERPA_ONNX_LOGE("Loading FST archives");
-      }
-      std::vector<std::string> files;
-      SplitStringToVector(config.rule_fars, ",", false, &files);
-
-      tn_list_.reserve(files.size() + tn_list_.size());
-
-      for (const auto &f : files) {
-        if (config.model.debug) {
-#if __OHOS__
-          SHERPA_ONNX_LOGE("rule far: %{public}s", f.c_str());
-#else
-          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
-#endif
-        }
-        std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
-            fst::FarReader<fst::StdArc>::Open(f));
-        for (; !reader->Done(); reader->Next()) {
-          std::unique_ptr<fst::StdConstFst> r(
-              fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
-
-          tn_list_.push_back(
-              std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
-        }
-      }
-
-      if (config.model.debug) {
-        SHERPA_ONNX_LOGE("FST archives loaded!");
-      }
-    }
+    tn_list_ = LoadTextNormalizers(config.rule_fsts, config.rule_fars,
+                                   config.model.debug);
   }
 
   template <typename Manager>
@@ -105,47 +53,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     InitTokenizer(mgr);
     cache_.SetCapacity(config.model.pocket.voice_embedding_cache_capacity);
 
-    if (!config.rule_fsts.empty()) {
-      std::vector<std::string> files;
-      SplitStringToVector(config.rule_fsts, ",", false, &files);
-      tn_list_.reserve(files.size());
-      for (const auto &f : files) {
-        if (config.model.debug) {
-#if __OHOS__
-          SHERPA_ONNX_LOGE("rule fst: %{public}s", f.c_str());
-#else
-          SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
-#endif
-        }
-        auto buf = ReadFile(mgr, f);
-        std::istringstream is(std::string(buf.data(), buf.size()));
-        tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
-      }
-    }
-
-    if (!config.rule_fars.empty()) {
-      std::vector<std::string> files;
-      SplitStringToVector(config.rule_fars, ",", false, &files);
-      tn_list_.reserve(files.size() + tn_list_.size());
-
-      for (const auto &f : files) {
-        if (config.model.debug) {
-#if __OHOS__
-          SHERPA_ONNX_LOGE("rule far: %{public}s", f.c_str());
-#else
-          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
-#endif
-        }
-
-        auto buf = ReadFile(mgr, f);
-
-        auto fsts = ReadFstsFromFar(buf);
-        for (auto &r : fsts) {
-          tn_list_.push_back(
-              std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
-        }
-      }  // for (const auto &f : files)
-    }  // if (!config.rule_fars.empty())
+    tn_list_ = LoadTextNormalizers(mgr, config.rule_fsts, config.rule_fars,
+                                   config.model.debug);
   }
 
   int32_t SampleRate() const override { return 24000; }
@@ -283,28 +192,10 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     return result;
   }
 
-  static size_t ComputeHash(const float *p, size_t n) {
-    size_t hash = 0;
-
-    auto hash_combine = [](size_t &seed, size_t value) {
-      seed ^= value + 0x9e3779b97f4a7c15ull + (seed << 6) + (seed >> 2);
-    };
-
-    hash_combine(hash, n);
-
-    for (size_t i = 0; i < n; ++i) {
-      uint32_t bits;
-      std::memcpy(&bits, &p[i], sizeof(float));
-      hash_combine(hash, bits);
-    }
-
-    return hash;
-  }
-
   GeneratedAudio GenerateSingleSentence(
       const std::string &text, const GenerationConfig &gen_config,
       Ort::Value voice_embedding, bool &should_continue,
-      GeneratedAudioCallback callback = nullptr) const {
+      const GeneratedAudioCallback &callback = nullptr) const {
     Ort::Value text_embedding = GetTextEmbedding(text);
 
     auto lm_main_state = model_->GetLmMainInitState();
@@ -525,7 +416,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     // Compute hash of reference audio for cache lookup
-    size_t audio_hash = ComputeHash(p_audio, num_samples);
+    size_t audio_hash = ComputeVoiceEmbeddingHash(p_audio, num_samples);
 
     auto cached_embedding = cache_.Get(audio_hash);
     if (cached_embedding) {
@@ -665,114 +556,6 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
   std::unique_ptr<OfflineTtsPocketModel> model_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
   std::unique_ptr<SentencePieceTokenizer> tokenizer_;
-
-  // Shared Thread-Safe LRU Cache for Voice Embeddings
-  struct VoiceEmbeddingCache {
-    using Embedding = std::pair<std::vector<float>, std::vector<int64_t>>;
-    using EmbeddingPtr = std::shared_ptr<Embedding>;
-
-   private:
-    using ListNode = std::pair<size_t, EmbeddingPtr>;
-    using ListIt = std::list<ListNode>::iterator;
-
-    mutable std::mutex mutex_;
-    size_t capacity_;
-
-    // Front = most recently used
-    std::list<ListNode> lru_list_;
-
-    // Key -> iterator into lru_list_
-    std::unordered_map<size_t, ListIt> map_;
-
-   public:
-    static constexpr size_t kDefaultCapacity = 50;
-
-    explicit VoiceEmbeddingCache(size_t cap = kDefaultCapacity)
-        : capacity_(cap) {}
-
-    EmbeddingPtr Get(size_t key) {
-      std::lock_guard<std::mutex> lock(mutex_);
-
-      auto it = map_.find(key);
-      if (it == map_.end()) {
-        return nullptr;  // cache miss
-      }
-
-      // Move to front (most recently used)
-      if (it->second != lru_list_.begin()) {
-        lru_list_.splice(lru_list_.begin(), lru_list_, it->second);
-      }
-
-      return it->second->second;  // copy shared_ptr
-    }
-
-    void Put(size_t key, std::vector<float> data, std::vector<int64_t> shape) {
-      std::lock_guard<std::mutex> lock(mutex_);
-
-      if (capacity_ == 0) {
-        return;
-      }
-
-      auto it = map_.find(key);
-
-      // If exists, update and move to front
-      if (it != map_.end()) {
-        it->second->second =
-            std::make_shared<Embedding>(std::move(data), std::move(shape));
-
-        if (it->second != lru_list_.begin()) {
-          lru_list_.splice(lru_list_.begin(), lru_list_, it->second);
-        }
-        return;
-      }
-
-      // Evict if full
-      if (lru_list_.size() >= capacity_) {
-        auto &last = lru_list_.back();
-        size_t last_key = last.first;
-
-        map_.erase(last_key);
-        lru_list_.pop_back();  // shared_ptr released here
-      }
-
-      // Insert new at front
-      lru_list_.emplace_front(
-          key, std::make_shared<Embedding>(std::move(data), std::move(shape)));
-
-      map_[key] = lru_list_.begin();
-    }
-
-    void SetCapacity(int32_t cap) {
-      if (cap < 0) {
-        SHERPA_ONNX_LOGE(
-            "voice_embedding_cache_capacity must be >= 0. Given: %d", cap);
-        SHERPA_ONNX_EXIT(-1);
-      }
-
-      std::lock_guard<std::mutex> lock(mutex_);
-      capacity_ = cap;
-
-      while (lru_list_.size() > capacity_) {
-        auto &last = lru_list_.back();
-        size_t last_key = last.first;
-
-        map_.erase(last_key);
-        lru_list_.pop_back();
-      }
-    }
-
-    size_t Size() const {
-      std::lock_guard<std::mutex> lock(mutex_);
-      return lru_list_.size();
-    }
-
-    void Clear() {
-      std::lock_guard<std::mutex> lock(mutex_);
-      map_.clear();
-      lru_list_.clear();
-    }
-  };
-
   mutable VoiceEmbeddingCache cache_;
 };
 

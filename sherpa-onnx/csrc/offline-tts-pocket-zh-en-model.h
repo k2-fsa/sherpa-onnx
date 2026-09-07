@@ -45,44 +45,44 @@ class OfflineTtsPocketZhEnModel {
   // ===== Helper functions to create initial values =====
 
   // Create zeros [1, 1, latent_dim]
-  Ort::Value CreateZeroLatent() const;
+  Ort::Value GetZeroLatent() const;
 
   // Create ones [1, 1, 1] (for is_bos at first step)
-  Ort::Value CreateBosFlag() const;
+  Ort::Value GetBosFlag() const;
 
   // Create zeros [1, 1, 1] (for is_bos after first step)
-  Ort::Value CreateNonBosFlag() const;
+  Ort::Value GetNonBosFlag() const;
 
   // gates = [1, 0, 0] for text prefill
-  Ort::Value CreateTextGates() const;
+  Ort::Value GetTextGates() const;
 
   // gates = [0, 1, 0] for latent generation
-  Ort::Value CreateLatentGates() const;
+  Ort::Value GetLatentGates() const;
 
   // gates = [0, 0, 1] for voice conditioning
-  Ort::Value CreateCondGates() const;
+  Ort::Value GetCondGates() const;
 
   // Create zeros [1, latent_dim] for noise
-  Ort::Value CreateZeroNoise() const;
+  Ort::Value GetZeroNoise() const;
 
   // Create empty flow_kv [0, flow_layers, 2, 1, flow_heads, flow_head_dim]
-  Ort::Value CreateEmptyFlowKv() const;
+  Ort::Value GetEmptyFlowKv() const;
 
   // Create zero flow_offset (int64 scalar)
-  Ort::Value CreateZeroFlowOffset() const;
+  Ort::Value GetZeroFlowOffset() const;
 
   // Create zero mimi_kv [mimi_kv_len, mimi_layers, 2, 1, mimi_heads,
   // mimi_head_dim]
-  Ort::Value CreateZeroMimiKv() const;
+  Ort::Value GetZeroMimiKv() const;
 
   // Create zero mimi_offset (int64 scalar)
-  Ort::Value CreateZeroMimiOffset() const;
+  Ort::Value GetZeroMimiOffset() const;
 
   // Create zero mimi_conv [conv_state_size]
-  Ort::Value CreateZeroMimiConv() const;
+  Ort::Value GetZeroMimiConv() const;
 
   // Create decode_steps = 1.0 (float scalar)
-  Ort::Value CreateDecodeSteps() const;
+  Ort::Value GetDecodeSteps() const;
 
  private:
   class Impl;

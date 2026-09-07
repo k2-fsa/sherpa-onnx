@@ -81,7 +81,8 @@ class OfflineTtsPocketZhEnModel::Impl {
     return outputs;
   }
 
-  // Get* functions return View of pre-initialized tensors
+  // Get* public functions return View of pre-initialized tensors
+  // Make* private functions create the tensors (called once in InitTensors)
   Ort::Value GetZeroLatent() const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -106,37 +107,37 @@ class OfflineTtsPocketZhEnModel::Impl {
 
  private:
   void InitTensors() {
-    bos_flag_ = CreateBosFlag();
-    non_bos_flag_ = CreateNonBosFlag();
-    text_gates_ = CreateTextGates();
-    latent_gates_ = CreateLatentGates();
-    cond_gates_ = CreateCondGates();
-    zero_noise_ = CreateZeroNoise();
-    empty_flow_kv_ = CreateEmptyFlowKv();
-    zero_flow_offset_ = CreateZeroFlowOffset();
-    zero_mimi_kv_ = CreateZeroMimiKv();
-    zero_mimi_offset_ = CreateZeroMimiOffset();
-    zero_mimi_conv_ = CreateZeroMimiConv();
-    decode_steps_ = CreateDecodeSteps();
+    bos_flag_ = MakeBosFlag();
+    non_bos_flag_ = MakeNonBosFlag();
+    text_gates_ = MakeTextGates();
+    latent_gates_ = MakeLatentGates();
+    cond_gates_ = MakeCondGates();
+    zero_noise_ = MakeZeroNoise();
+    empty_flow_kv_ = MakeEmptyFlowKv();
+    zero_flow_offset_ = MakeZeroFlowOffset();
+    zero_mimi_kv_ = MakeZeroMimiKv();
+    zero_mimi_offset_ = MakeZeroMimiOffset();
+    zero_mimi_conv_ = MakeZeroMimiConv();
+    decode_steps_ = MakeDecodeSteps();
   }
 
-  Ort::Value CreateBosFlag() const {
+  Ort::Value MakeBosFlag() const {
     std::vector<int64_t> shape = {1, 1, 1};
-    auto tensor = Ort::Value::CreateTensor<float>(allocator_, shape.data(),
-                                                  shape.size());
+    auto tensor =
+        Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     *tensor.GetTensorMutableData<float>() = 1.0f;
     return tensor;
   }
 
-  Ort::Value CreateNonBosFlag() const {
+  Ort::Value MakeNonBosFlag() const {
     std::vector<int64_t> shape = {1, 1, 1};
-    auto tensor = Ort::Value::CreateTensor<float>(allocator_, shape.data(),
-                                                  shape.size());
+    auto tensor =
+        Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     *tensor.GetTensorMutableData<float>() = 0.0f;
     return tensor;
   }
 
-  Ort::Value CreateTextGates() const {
+  Ort::Value MakeTextGates() const {
     std::vector<int64_t> shape = {3};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
@@ -147,7 +148,7 @@ class OfflineTtsPocketZhEnModel::Impl {
     return tensor;
   }
 
-  Ort::Value CreateLatentGates() const {
+  Ort::Value MakeLatentGates() const {
     std::vector<int64_t> shape = {3};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
@@ -158,7 +159,7 @@ class OfflineTtsPocketZhEnModel::Impl {
     return tensor;
   }
 
-  Ort::Value CreateCondGates() const {
+  Ort::Value MakeCondGates() const {
     std::vector<int64_t> shape = {3};
     auto tensor =
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
@@ -169,63 +170,55 @@ class OfflineTtsPocketZhEnModel::Impl {
     return tensor;
   }
 
-  Ort::Value CreateZeroNoise() const {
+  Ort::Value MakeZeroNoise() const {
     std::vector<int64_t> shape = {1, meta_data_.latent_dim};
-    auto tensor = Ort::Value::CreateTensor<float>(
-        allocator_, shape.data(), shape.size());
+    auto tensor =
+        Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     Fill<float>(&tensor, 0);
     return tensor;
   }
 
-  Ort::Value CreateEmptyFlowKv() const {
+  Ort::Value MakeEmptyFlowKv() const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-    std::vector<int64_t> shape = {0,
-                                  meta_data_.flow_layers,
-                                  2,
-                                  1,
-                                  meta_data_.flow_heads,
-                                  meta_data_.flow_head_dim};
+    std::vector<int64_t> shape = {
+        0, meta_data_.flow_layers, 2,
+        1, meta_data_.flow_heads,  meta_data_.flow_head_dim};
     return Ort::Value::CreateTensor<float>(memory_info, nullptr, 0,
                                            shape.data(), shape.size());
   }
 
-  Ort::Value CreateZeroFlowOffset() const {
-    auto tensor =
-        Ort::Value::CreateTensor<int64_t>(allocator_, nullptr, 0);
+  Ort::Value MakeZeroFlowOffset() const {
+    auto tensor = Ort::Value::CreateTensor<int64_t>(allocator_, nullptr, 0);
     *tensor.GetTensorMutableData<int64_t>() = 0;
     return tensor;
   }
 
-  Ort::Value CreateZeroMimiKv() const {
-    std::vector<int64_t> shape = {meta_data_.mimi_kv_len,
-                                  meta_data_.mimi_layers,
-                                  2,
-                                  1,
-                                  meta_data_.mimi_heads,
-                                  meta_data_.mimi_head_dim};
-    auto tensor = Ort::Value::CreateTensor<float>(
-        allocator_, shape.data(), shape.size());
+  Ort::Value MakeZeroMimiKv() const {
+    std::vector<int64_t> shape = {
+        meta_data_.mimi_kv_len, meta_data_.mimi_layers,  2, 1,
+        meta_data_.mimi_heads,  meta_data_.mimi_head_dim};
+    auto tensor =
+        Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     Fill<float>(&tensor, 0);
     return tensor;
   }
 
-  Ort::Value CreateZeroMimiOffset() const {
-    auto tensor =
-        Ort::Value::CreateTensor<int64_t>(allocator_, nullptr, 0);
+  Ort::Value MakeZeroMimiOffset() const {
+    auto tensor = Ort::Value::CreateTensor<int64_t>(allocator_, nullptr, 0);
     *tensor.GetTensorMutableData<int64_t>() = 0;
     return tensor;
   }
 
-  Ort::Value CreateZeroMimiConv() const {
+  Ort::Value MakeZeroMimiConv() const {
     std::vector<int64_t> shape = {meta_data_.conv_state_size};
-    auto tensor = Ort::Value::CreateTensor<float>(
-        allocator_, shape.data(), shape.size());
+    auto tensor =
+        Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
     Fill<float>(&tensor, 0);
     return tensor;
   }
 
-  Ort::Value CreateDecodeSteps() const {
+  Ort::Value MakeDecodeSteps() const {
     auto tensor = Ort::Value::CreateTensor<float>(allocator_, nullptr, 0);
     *tensor.GetTensorMutableData<float>() = 1.0f;
     return tensor;
@@ -284,13 +277,13 @@ class OfflineTtsPocketZhEnModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       os << "----------step model input names----------\n";
-      for (int32_t i = 0;
-           i < static_cast<int32_t>(step_input_names_.size()); ++i) {
+      for (int32_t i = 0; i < static_cast<int32_t>(step_input_names_.size());
+           ++i) {
         os << i << " " << step_input_names_[i] << "\n";
       }
       os << "----------step model output names----------\n";
-      for (int32_t i = 0;
-           i < static_cast<int32_t>(step_output_names_.size()); ++i) {
+      for (int32_t i = 0; i < static_cast<int32_t>(step_output_names_.size());
+           ++i) {
         os << i << " " << step_output_names_[i] << "\n";
       }
 
@@ -303,18 +296,90 @@ class OfflineTtsPocketZhEnModel::Impl {
   }
 
   void ReadMetaData() {
-    // Read dimensions from ONNX model shapes
-    meta_data_.model_dim = 1024;
-    meta_data_.latent_dim = 32;
-    meta_data_.flow_layers = 6;
-    meta_data_.flow_heads = 16;
-    meta_data_.flow_head_dim = 64;
-    meta_data_.mimi_kv_len = 266;
-    meta_data_.mimi_layers = 2;
-    meta_data_.mimi_heads = 8;
-    meta_data_.mimi_head_dim = 64;
-    meta_data_.conv_state_size = 14720;
-    meta_data_.frame_size = 1920;
+    // Read dimensions from encoder output: cond [1, frames, model_dim]
+    {
+      auto shape = encoder_sess_->GetOutputTypeInfo(0)
+                       .GetTensorTypeAndShapeInfo()
+                       .GetShape();
+      if (shape.size() != 3 || shape[0] != 1) {
+        SHERPA_ONNX_LOGE(
+            "encoder output[0] expected shape [1, frames, model_dim], "
+            "got rank %d",
+            static_cast<int32_t>(shape.size()));
+        SHERPA_ONNX_EXIT(-1);
+      }
+      meta_data_.model_dim = static_cast<int32_t>(shape[2]);
+    }
+
+    // Read dimensions from step model inputs
+    // input[5]: noise [1, latent_dim]
+    // input[6]: flow_kv [past, flow_layers, 2, 1, flow_heads, flow_head_dim]
+    // input[8]: mimi_kv [mimi_kv_len, mimi_layers, 2, 1, mimi_heads,
+    // mimi_head_dim] input[10]: mimi_conv [conv_state_size]
+    {
+      auto get_shape = [&](int32_t i) {
+        return step_sess_->GetInputTypeInfo(i)
+            .GetTensorTypeAndShapeInfo()
+            .GetShape();
+      };
+
+      auto noise_shape = get_shape(5);
+      if (noise_shape.size() != 2 || noise_shape[0] != 1) {
+        SHERPA_ONNX_LOGE(
+            "step input[5] (noise) expected shape [1, latent_dim], got rank %d",
+            static_cast<int32_t>(noise_shape.size()));
+        SHERPA_ONNX_EXIT(-1);
+      }
+      meta_data_.latent_dim = static_cast<int32_t>(noise_shape[1]);
+
+      auto flow_kv_shape = get_shape(6);
+      if (flow_kv_shape.size() != 6) {
+        SHERPA_ONNX_LOGE(
+            "step input[6] (flow_kv) expected rank 6, got %d",
+            static_cast<int32_t>(flow_kv_shape.size()));
+        SHERPA_ONNX_EXIT(-1);
+      }
+      meta_data_.flow_layers = static_cast<int32_t>(flow_kv_shape[1]);
+      meta_data_.flow_heads = static_cast<int32_t>(flow_kv_shape[4]);
+      meta_data_.flow_head_dim = static_cast<int32_t>(flow_kv_shape[5]);
+
+      auto mimi_kv_shape = get_shape(8);
+      if (mimi_kv_shape.size() != 6) {
+        SHERPA_ONNX_LOGE(
+            "step input[8] (mimi_kv) expected rank 6, got %d",
+            static_cast<int32_t>(mimi_kv_shape.size()));
+        SHERPA_ONNX_EXIT(-1);
+      }
+      meta_data_.mimi_kv_len = static_cast<int32_t>(mimi_kv_shape[0]);
+      meta_data_.mimi_layers = static_cast<int32_t>(mimi_kv_shape[1]);
+      meta_data_.mimi_heads = static_cast<int32_t>(mimi_kv_shape[4]);
+      meta_data_.mimi_head_dim = static_cast<int32_t>(mimi_kv_shape[5]);
+
+      auto conv_shape = get_shape(10);
+      if (conv_shape.size() != 1) {
+        SHERPA_ONNX_LOGE(
+            "step input[10] (mimi_conv) expected rank 1, got %d",
+            static_cast<int32_t>(conv_shape.size()));
+        SHERPA_ONNX_EXIT(-1);
+      }
+      meta_data_.conv_state_size = static_cast<int32_t>(conv_shape[0]);
+    }
+
+    // Read frame_size from step model output[0]: audio [1, 1, frame_size]
+    {
+      auto shape = step_sess_->GetOutputTypeInfo(0)
+                       .GetTensorTypeAndShapeInfo()
+                       .GetShape();
+      if (shape.size() != 3 || shape[0] != 1 || shape[1] != 1) {
+        SHERPA_ONNX_LOGE(
+            "step output[0] (audio) expected shape [1, 1, frame_size], "
+            "got rank %d",
+            static_cast<int32_t>(shape.size()));
+        SHERPA_ONNX_EXIT(-1);
+      }
+      meta_data_.frame_size = static_cast<int32_t>(shape[2]);
+    }
+
     meta_data_.sample_rate = 24000;
 
     if (config_.debug) {
@@ -403,55 +468,55 @@ std::vector<Ort::Value> OfflineTtsPocketZhEnModel::RunStep(
   return impl_->RunStep(std::move(inputs));
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateZeroLatent() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetZeroLatent() const {
   return impl_->GetZeroLatent();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateBosFlag() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetBosFlag() const {
   return impl_->GetBosFlag();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateNonBosFlag() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetNonBosFlag() const {
   return impl_->GetNonBosFlag();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateTextGates() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetTextGates() const {
   return impl_->GetTextGates();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateLatentGates() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetLatentGates() const {
   return impl_->GetLatentGates();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateCondGates() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetCondGates() const {
   return impl_->GetCondGates();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateZeroNoise() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetZeroNoise() const {
   return impl_->GetZeroNoise();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateEmptyFlowKv() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetEmptyFlowKv() const {
   return impl_->GetEmptyFlowKv();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateZeroFlowOffset() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetZeroFlowOffset() const {
   return impl_->GetZeroFlowOffset();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateZeroMimiKv() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetZeroMimiKv() const {
   return impl_->GetZeroMimiKv();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateZeroMimiOffset() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetZeroMimiOffset() const {
   return impl_->GetZeroMimiOffset();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateZeroMimiConv() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetZeroMimiConv() const {
   return impl_->GetZeroMimiConv();
 }
 
-Ort::Value OfflineTtsPocketZhEnModel::CreateDecodeSteps() const {
+Ort::Value OfflineTtsPocketZhEnModel::GetDecodeSteps() const {
   return impl_->GetDecodeSteps();
 }
 
