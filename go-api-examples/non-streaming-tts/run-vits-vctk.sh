@@ -11,6 +11,7 @@ if [ ! -d vits-vctk ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 for sid in 0 10 108; do

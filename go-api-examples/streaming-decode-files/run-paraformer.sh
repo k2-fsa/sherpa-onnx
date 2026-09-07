@@ -11,6 +11,7 @@ if [ ! -d ./sherpa-onnx-streaming-paraformer-bilingual-zh-en ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./streaming-decode-files \

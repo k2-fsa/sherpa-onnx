@@ -11,6 +11,7 @@ if [ ! -f ./sherpa-onnx-moonshine-tiny-en-int8/tokens.txt ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-decode-files \

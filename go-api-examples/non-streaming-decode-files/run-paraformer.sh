@@ -11,6 +11,7 @@ if [ ! -d sherpa-onnx-paraformer-zh-2023-09-14 ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-decode-files \

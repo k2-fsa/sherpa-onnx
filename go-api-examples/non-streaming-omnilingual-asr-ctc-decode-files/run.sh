@@ -11,5 +11,6 @@ if [ ! -f sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/to
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 ./non-streaming-omnilingual-asr-ctc-decode-files

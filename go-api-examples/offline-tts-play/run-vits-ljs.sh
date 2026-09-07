@@ -11,6 +11,7 @@ if [ ! -d vits-ljs ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./offline-tts-play \

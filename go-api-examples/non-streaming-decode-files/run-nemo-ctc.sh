@@ -11,6 +11,7 @@ if [ ! -d sherpa-onnx-nemo-ctc-en-conformer-medium ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-decode-files \

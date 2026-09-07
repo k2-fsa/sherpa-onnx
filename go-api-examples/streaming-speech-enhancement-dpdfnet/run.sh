@@ -13,6 +13,7 @@ if [ ! -f ./inp_16k.wav ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./streaming-speech-enhancement-dpdfnet

@@ -12,6 +12,7 @@ if [ ! -f ./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/tokens.txt ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-decode-files \

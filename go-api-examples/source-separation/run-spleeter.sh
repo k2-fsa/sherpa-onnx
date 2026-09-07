@@ -14,6 +14,7 @@ if [ ! -f ./qi-feng-le-zh.wav ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./source-separation spleeter
