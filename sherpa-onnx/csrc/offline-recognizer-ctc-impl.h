@@ -77,6 +77,16 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
 
   r.words = std::move(src.words);
 
+  if (!src.token_log_probs.empty() &&
+      src.token_log_probs.size() == src.tokens.size()) {
+    r.ys_log_probs = src.token_log_probs;
+  }
+
+  if (!src.vocab_log_probs.empty() &&
+      src.vocab_log_probs.size() == src.tokens.size()) {
+    r.vocab_log_probs = src.vocab_log_probs;
+  }
+
   return r;
 }
 
