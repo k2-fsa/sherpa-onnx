@@ -476,10 +476,6 @@ endif()
 
 target_link_libraries(sherpa-onnx-core fstfar fst)
 
-if(SHERPA_ONNX_ENABLE_TTS)
-  target_link_libraries(sherpa-onnx-core
-    piper_phonemize)
-endif()
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
@@ -848,7 +844,6 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
       sentence-piece-tokenizer-test.cc
-      piper-phonemize-test.cc
       offline-tts-supertonic-unicode-processor-test.cc
     )
   endif()

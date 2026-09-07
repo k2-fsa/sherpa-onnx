@@ -40,10 +40,6 @@ echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 if [[ ! -f build/simulator_x86_64/install/lib/libsherpa-onnx-c-api.dylib ]]; then
   cmake \
     -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
     -S .. -D CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE \
     -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
     -DPLATFORM=SIMULATOR64 \
@@ -73,10 +69,6 @@ echo "Building for simulator (arm64)"
 if [[ ! -f build/simulator_arm64/install/lib/libsherpa-onnx-c-api.dylib ]]; then
   cmake \
     -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
     -S .. -D CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE \
     -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
     -DPLATFORM=SIMULATORARM64 \
@@ -109,10 +101,6 @@ if [[ ! -f build/os64/install/lib/libsherpa-onnx-c-api.dylib ]]; then
 
   cmake \
     -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
     -S .. -D CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE \
     -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
     -DPLATFORM=OS64 \

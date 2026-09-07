@@ -845,9 +845,6 @@ const
      {$linklib sherpa-onnx-fst}
      {$linklib kissfft-float}
      {$linklib kaldi-native-fbank-core}
-     {$linklib piper_phonemize}
-     {$linklib espeak-ng}
-     {$linklib ucd}
      {$linklib onnxruntime}
      {$linklib ssentencepiece_core}
 

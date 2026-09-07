@@ -26,9 +26,6 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "espeak-ng/speak_lib.h"
-#include "phoneme_ids.hpp"  // NOLINT
-#include "phonemize.hpp"    // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -38,88 +35,12 @@
 
 namespace sherpa_onnx {
 
-namespace {
-// Please see https://github.com/k2-fsa/sherpa-onnx/pull/2853
-// for why we need to do the replacement
-static const std::vector<std::pair<std::string, std::string>> kReplacements = {
-    {"ɝ", "ɜɹ"}, {"ɚ", "əɹ"},
-
-    {"eɪ", "A"}, {"aɪ", "I"}, {"ɔɪ", "Y"},
-    {"oʊ", "O"}, {"əʊ", "O"}, {"aʊ", "W"},
-
-    {"tʃ", "ʧ"}, {"dʒ", "ʤ"},
-
-    {"ː", ""},
-
-    {"g", "ɡ"},  {"r", "ɹ"},
-
-    {"e", "ɛ"},
-};
-
-std::vector<std::string> ConvertPhonemesToUTF8(
-    const std::vector<std::vector<char32_t>> &phonemes) {
-  std::vector<std::string> out;
-
-  for (const auto &word : phonemes) {
-    for (char32_t cp : word) {
-      out.push_back(Utf32ToUtf8(cp));
-    }
-  }
-
-  return out;
-}
-
-std::string ApplyReplacements(std::string s) {
-  for (const auto &p : kReplacements) {
-    const std::string &from = p.first;
-    const std::string &to = p.second;
-
-    size_t pos = 0;
-    while ((pos = s.find(from, pos)) != std::string::npos) {
-      s.replace(pos, from.size(), to);
-      pos += to.size();
-    }
-  }
-  return s;
-}
-
-std::vector<std::string> SplitTokensUTF8(const std::string &s) {
-  std::vector<std::string> out;
-
-  for (size_t i = 0; i < s.size();) {
-    unsigned char c = s[i];
-    size_t len = (c < 0x80) ? 1 : (c < 0xE0) ? 2 : (c < 0xF0) ? 3 : 4;
-
-    out.push_back(s.substr(i, len));
-    i += len;
-  }
-
-  return out;
-}
-
-std::vector<std::string> ProcessPhonemes(
-    const std::vector<std::vector<char32_t>> &phonemes, bool skip_replacement) {
-  auto tokens = ConvertPhonemesToUTF8(phonemes);
-  if (skip_replacement) {
-    return tokens;
-  }
-
-  std::string joined = Join(tokens);
-  std::string replaced = ApplyReplacements(joined);
-  return SplitTokensUTF8(replaced);
-}
-
-}  // namespace
-
-void CallPhonemizeEspeak(const std::string &text,
-                         piper::eSpeakPhonemeConfig &config,  // NOLINT
-                         std::vector<std::vector<piper::Phoneme>> *phonemes);
-
 class MatchaTtsLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &data_dir, bool debug, bool skip_replacement)
-      : debug_(debug), skip_replacement_(skip_replacement) {
+       const std::string & /*data_dir*/, bool debug,
+       bool /*skip_replacement*/)
+      : debug_(debug) {
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
       SHERPA_ONNX_EXIT(-1);
@@ -132,18 +53,15 @@ class MatchaTtsLexicon::Impl {
 
     InitLexicon(lexicon);
 
-    if (data_dir.empty()) {
-      SHERPA_ONNX_LOGE("Please provide data dir for this model");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
+    // data_dir (the eSpeak-ng phoneme-data directory) has no purpose in this
+    // build; the parameter is kept for config compatibility and ignored.
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
-       const std::string &data_dir, bool debug, bool skip_replacement)
-      : debug_(debug), skip_replacement_(skip_replacement) {
+       const std::string & /*data_dir*/, bool debug,
+       bool /*skip_replacement*/)
+      : debug_(debug) {
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
       SHERPA_ONNX_EXIT(-1);
@@ -165,12 +83,7 @@ class MatchaTtsLexicon::Impl {
       InitLexicon(is);
     }
 
-    if (data_dir.empty()) {
-      SHERPA_ONNX_LOGE("Please provide data dir for this model");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
+    // data_dir has no purpose in this build; ignored (see above).
   }
 
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
@@ -330,23 +243,16 @@ class MatchaTtsLexicon::Impl {
           }
         }
       } else {
+        // The eSpeak-based phonemization engine that upstream used for
+        // out-of-lexicon words has been removed from this build, so such a
+        // word cannot be converted to tokens; drop it and warn once.
+        OfflineTtsLogPhonemizationRemovedOnce();
         if (debug_) {
-          SHERPA_ONNX_LOGE("use espeak for %s", w.c_str());
-        }
-        // use espeak
-        piper::eSpeakPhonemeConfig config;
-        config.voice = "en-us";
-        std::vector<std::vector<piper::Phoneme>> phonemes;
-        CallPhonemizeEspeak(w, config, &phonemes);
-
-        auto pp = ProcessPhonemes(phonemes, skip_replacement_);
-
-        for (const auto &p : pp) {
-          if (token2id_.count(p)) {
-            ans.push_back(token2id_.at(p));
-          } else {
-            SHERPA_ONNX_LOGE("Skip token: %s", p.c_str());
-          }
+#if __OHOS__
+          SHERPA_ONNX_LOGE("Drop OOV word not in lexicon: %{public}s", w.c_str());
+#else
+          SHERPA_ONNX_LOGE("Drop OOV word not in lexicon: %s", w.c_str());
+#endif
         }
       }
     }
@@ -456,7 +362,6 @@ class MatchaTtsLexicon::Impl {
   std::unordered_map<int32_t, std::string> id2token_;
 
   bool debug_ = false;
-  bool skip_replacement_ = false;
 };  // namespace sherpa_onnx
 
 MatchaTtsLexicon::~MatchaTtsLexicon() = default;

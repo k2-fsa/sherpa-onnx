@@ -22,9 +22,6 @@ const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
     "sherpa-onnx-fst",
     "kaldi-native-fbank-core",
     "kissfft-float",
-    "piper_phonemize",
-    "espeak-ng",
-    "ucd",
     "onnxruntime",
     "ssentencepiece_core",
 ];

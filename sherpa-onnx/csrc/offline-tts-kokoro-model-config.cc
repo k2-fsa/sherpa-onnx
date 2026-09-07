@@ -32,7 +32,10 @@ void OfflineTtsKokoroModelConfig::Register(ParseOptions *po) {
       "You can pass multiple files, separated by ','. Example: "
       "./lexicon-us-en.txt,./lexicon-zh.txt");
   po->Register("kokoro-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng.");
+               "Optional in this build of sherpa-onnx (the eSpeak-based "
+               "phonemization engine was removed): path to the directory "
+               "containing espeak-ng data. You can leave it empty for "
+               "Kokoro >= v1.0 models used with --kokoro-lexicon.");
   po->Register("kokoro-dict-dir", &dict_dir,
                "Not used. You don't need to provide a value for it");
   po->Register("kokoro-length-scale", &length_scale,
@@ -83,37 +86,38 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
     }
   }
 
-  if (data_dir.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --kokoro-data-dir");
-    return false;
-  }
+  // The eSpeak-based phonemization engine is not part of this build, so the
+  // espeak-ng data directory (phontab/phonindex/phondata/intonations) is no
+  // longer required. It remains accepted for configuration compatibility; if
+  // provided, its expected files are still checked.
+  if (!data_dir.empty()) {
+    if (!FileExists(data_dir + "/phontab")) {
+      SHERPA_ONNX_LOGE(
+          "'%s/phontab' does not exist. Please check --kokoro-data-dir",
+          data_dir.c_str());
+      return false;
+    }
 
-  if (!FileExists(data_dir + "/phontab")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/phontab' does not exist. Please check --kokoro-data-dir",
-        data_dir.c_str());
-    return false;
-  }
+    if (!FileExists(data_dir + "/phonindex")) {
+      SHERPA_ONNX_LOGE(
+          "'%s/phonindex' does not exist. Please check --kokoro-data-dir",
+          data_dir.c_str());
+      return false;
+    }
 
-  if (!FileExists(data_dir + "/phonindex")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/phonindex' does not exist. Please check --kokoro-data-dir",
-        data_dir.c_str());
-    return false;
-  }
+    if (!FileExists(data_dir + "/phondata")) {
+      SHERPA_ONNX_LOGE(
+          "'%s/phondata' does not exist. Please check --kokoro-data-dir",
+          data_dir.c_str());
+      return false;
+    }
 
-  if (!FileExists(data_dir + "/phondata")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/phondata' does not exist. Please check --kokoro-data-dir",
-        data_dir.c_str());
-    return false;
-  }
-
-  if (!FileExists(data_dir + "/intonations")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/intonations' does not exist. Please check --kokoro-data-dir",
-        data_dir.c_str());
-    return false;
+    if (!FileExists(data_dir + "/intonations")) {
+      SHERPA_ONNX_LOGE(
+          "'%s/intonations' does not exist. Please check --kokoro-data-dir",
+          data_dir.c_str());
+      return false;
+    }
   }
 
   if (!dict_dir.empty()) {

@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_FRONTEND_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_FRONTEND_H_
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -55,14 +56,20 @@ class OfflineTtsFrontend {
       const std::string &text, const std::string &voice = "") const = 0;
 };
 
-// implementation is in ./piper-phonemize-lexicon.cc
-void InitEspeak(const std::string &data_dir);
-
-// implementation in ./piper-phonemize-lexicon.cc
-std::vector<TokenIDs> ConvertTextToTokenIdsKokoroOrKitten(
-    const std::unordered_map<char32_t, int32_t> &token2id,
-    int32_t max_token_len, const std::string &text,
-    const std::string &voice = "");
+// This build of sherpa-onnx does not include the eSpeak-based phonemization
+// engine (removed for licensing). Lexicon frontends whose upstream fallback
+// relied on it now drop affected words instead; report that fact exactly
+// once per process so long synthesis sessions do not spam the log.
+inline void OfflineTtsLogPhonemizationRemovedOnce() {
+  static std::once_flag flag;
+  std::call_once(flag, [] {
+    SHERPA_ONNX_LOGE(
+        "This build of sherpa-onnx has no built-in text-to-phoneme engine "
+        "(eSpeak removed); dropping out-of-lexicon words instead of "
+        "phonemizing them. Provide a lexicon covering the spoken text, or "
+        "use an upstream sherpa-onnx build.");
+  });
+}
 
 }  // namespace sherpa_onnx
 

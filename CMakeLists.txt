@@ -566,12 +566,9 @@ endif()
 
 include(json)
 
-if(SHERPA_ONNX_ENABLE_TTS)
-  include(espeak-ng-for-piper)
-  set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
-  message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
-  include(piper-phonemize)
-endif()
+# The espeak-based phonemization engine (espeak-ng + piper-phonemize) has
+# been removed from this distribution for licensing reasons; TTS frontends
+# that need it fail at runtime with an actionable message instead.
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   include(hclust-cpp)

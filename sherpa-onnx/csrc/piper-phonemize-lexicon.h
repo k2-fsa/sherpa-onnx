@@ -55,22 +55,9 @@ class PiperPhonemizeLexicon : public OfflineTtsFrontend {
       const std::string &text, const std::string &voice = "") const override;
 
  private:
-  std::vector<TokenIDs> ConvertTextToTokenIdsVits(
-      const std::string &text, const std::string &voice = "") const;
-
-  std::vector<TokenIDs> ConvertTextToTokenIdsMatcha(
-      const std::string &text, const std::string &voice = "") const;
-
- private:
-  // map unicode codepoint to an integer ID
+  // map unicode codepoint to an integer ID; populated by every constructor
+  // before it exits, preserving the original token-file validation.
   std::unordered_map<char32_t, int32_t> token2id_;
-  OfflineTtsVitsModelMetaData vits_meta_data_;
-  OfflineTtsMatchaModelMetaData matcha_meta_data_;
-  OfflineTtsKokoroModelMetaData kokoro_meta_data_;
-  OfflineTtsKittenModelMetaData kitten_meta_data_;
-  bool is_matcha_ = false;
-  bool is_kokoro_ = false;
-  bool is_kitten_ = false;
 };
 
 }  // namespace sherpa_onnx

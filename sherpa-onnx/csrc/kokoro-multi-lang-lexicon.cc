@@ -23,9 +23,6 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "espeak-ng/speak_lib.h"
-#include "phoneme_ids.hpp"  // NOLINT
-#include "phonemize.hpp"    // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/phrase-matcher.h"
@@ -33,10 +30,6 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-void CallPhonemizeEspeak(const std::string &text,
-                         piper::eSpeakPhonemeConfig &config,  // NOLINT
-                         std::vector<std::vector<piper::Phoneme>> *phonemes);
 
 class KokoroMultiLangLexicon::Impl {
  public:
@@ -48,7 +41,6 @@ class KokoroMultiLangLexicon::Impl {
 
     InitLexicon(lexicon);
 
-    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
 
   template <typename Manager>
@@ -61,8 +53,6 @@ class KokoroMultiLangLexicon::Impl {
     InitLexicon(mgr, lexicon);
 
     // we assume you have copied data_dir from assets to some path
-
-    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
 
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text,
@@ -280,33 +270,17 @@ class KokoroMultiLangLexicon::Impl {
     return ans;
   }
 
-  std::vector<std::vector<int32_t>> ConvertTextToTokenIDsWithEspeak(
-      const std::string &text, const std::string &voice) const {
-    auto temp = ConvertTextToTokenIdsKokoroOrKitten(
-        phoneme2id_, meta_data_.max_token_len, text, voice);
-    std::vector<std::vector<int32_t>> ans;
-    ans.reserve(temp.size());
-
-    for (const auto &i : temp) {
-      ans.emplace_back(i.tokens.begin(), i.tokens.end());
-    }
-
-    return ans;
-  }
-
   std::vector<std::vector<int32_t>> ConvertNonChineseToTokenIDs(
-      const std::string &text, const std::string &voice) const {
+      const std::string &text, const std::string & /*voice*/) const {
     if (IsPunctuation(text)) {
       return {std::vector<int32_t>{0, token2id_.at(text), 0}};
     }
 
-    if (!voice.empty()) {
-      return ConvertTextToTokenIDsWithEspeak(text, voice);
-    }
-
-    // If voice is empty, we split the text into words and use the lexicon
-    // to lookup the pronunciation of each word, fallback to espeak if
-    // a word is not in the lexicon.
+    // The eSpeak-based phonemization engine has been removed from this
+    // build, so a requested voice/language cannot be used to phonemize
+    // text. We always use per-word lexicon lookup below; words missing
+    // from the lexicon are dropped (reported once via
+    // OfflineTtsLogPhonemizationRemovedOnce).
 
     std::vector<std::string> words = SplitUtf8(text);
     if (debug_) {
@@ -362,45 +336,13 @@ class KokoroMultiLangLexicon::Impl {
         this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
         this_sentence.push_back(space_id);
       } else {
+        // The eSpeak-based fallback has been removed from this build, so an
+        // out-of-lexicon word cannot be phonemized; drop it and warn once.
+        OfflineTtsLogPhonemizationRemovedOnce();
         if (debug_) {
-          SHERPA_ONNX_LOGE("Use espeak-ng to handle the OOV: '%s'",
+          SHERPA_ONNX_LOGE("Drop OOV word not in lexicon: '%s'",
                            word.c_str());
         }
-
-        piper::eSpeakPhonemeConfig config;
-
-        config.voice = meta_data_.voice;
-
-        std::vector<std::vector<piper::Phoneme>> phonemes;
-
-        CallPhonemizeEspeak(word, config, &phonemes);
-        // Note phonemes[i] contains a vector of unicode codepoints;
-        // we need to convert them to utf8
-
-        std::vector<int32_t> ids;
-        for (const auto &v : phonemes) {
-          for (const auto p : v) {
-            auto token = Utf32ToUtf8(p);
-            if (token2id_.count(token)) {
-              ids.push_back(token2id_.at(token));
-            } else {
-              if (debug_) {
-                SHERPA_ONNX_LOGE("Skip OOV token '%s' from '%s'", token.c_str(),
-                                 word.c_str());
-              }
-            }
-          }
-        }
-
-        if (this_sentence.size() + ids.size() + 3 > max_len - 2) {
-          this_sentence.push_back(0);
-          ans.push_back(std::move(this_sentence));
-
-          this_sentence.push_back(0);
-        }
-
-        this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
-        this_sentence.push_back(space_id);
       }
     }
 
@@ -448,19 +390,6 @@ class KokoroMultiLangLexicon::Impl {
       }
     }
 
-    std::u32string s;
-    for (const auto &p : token2id_) {
-      s = Utf8ToUtf32(p.first);
-
-      if (s.size() != 1) {
-        SHERPA_ONNX_LOGE("Error for token %s with id %d", p.first.c_str(),
-                         p.second);
-        SHERPA_ONNX_EXIT(-1);
-      }
-
-      char32_t c = s[0];
-      phoneme2id_.insert({c, p.second});
-    }
   }
 
   void InitLexicon(const std::string &lexicon) {
@@ -548,8 +477,6 @@ class KokoroMultiLangLexicon::Impl {
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
   std::unordered_map<int32_t, std::string> id2token_;
-
-  std::unordered_map<char32_t, int32_t> phoneme2id_;
 
   bool debug_ = false;
 };
