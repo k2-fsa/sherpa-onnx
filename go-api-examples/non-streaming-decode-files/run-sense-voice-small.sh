@@ -11,7 +11,6 @@ if [ ! -d sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17  ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-decode-files \

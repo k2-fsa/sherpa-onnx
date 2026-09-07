@@ -11,7 +11,6 @@ if [ ! -d ./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12 ]; the
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./add-punctuation

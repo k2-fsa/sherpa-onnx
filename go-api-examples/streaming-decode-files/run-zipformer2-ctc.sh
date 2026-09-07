@@ -11,7 +11,6 @@ if [ ! -d sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13 ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./streaming-decode-files \

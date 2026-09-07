@@ -12,7 +12,6 @@ if [ ! -f ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx ];
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-decode-files \

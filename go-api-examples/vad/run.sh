@@ -13,6 +13,5 @@ if [ ! -f ./ten-vad.onnx ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 ./vad

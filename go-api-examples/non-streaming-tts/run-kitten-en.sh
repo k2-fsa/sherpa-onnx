@@ -11,7 +11,6 @@ if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-tts \

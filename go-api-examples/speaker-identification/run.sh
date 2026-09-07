@@ -13,6 +13,5 @@ if [ ! -f ./sr-data/enroll/fangjun-sr-1.wav ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 ./speaker-identification

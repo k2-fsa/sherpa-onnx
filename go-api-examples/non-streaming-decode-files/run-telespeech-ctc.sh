@@ -11,7 +11,6 @@ if [ ! -d sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-decode-files \
