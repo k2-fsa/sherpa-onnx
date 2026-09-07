@@ -1,41 +1,52 @@
 #!/usr/bin/env bash
+#
+# Usage:  ./run.sh [2stems|4stems]      (default: 2stems)
+#
+# 4stems is not simply "the same thing with more stems". Spleeter's
+# configs/4stems/base_config.json asks for ELU activations where 2stems takes
+# the unet.unet defaults (LeakyReLU/ReLU). The architecture and every weight
+# shape are identical, so the wrong activation loads without complaint and
+# quietly returns garbage. convert_to_torch.py's ACTIVATIONS table keeps the
+# two apart.
 
+set -e
 
-if [ ! -f 2stems.tar.gz ]; then
-  curl -SL -O https://github.com/deezer/spleeter/releases/download/v1.4.0/2stems.tar.gz
+model=${1:-2stems}
+
+case "$model" in
+  2stems) stems="vocals accompaniment" ;;
+  4stems) stems="vocals drums bass other" ;;
+  *) echo "usage: $0 [2stems|4stems]" >&2; exit 1 ;;
+esac
+
+if [ ! -f $model.tar.gz ]; then
+  curl -SL -O https://github.com/deezer/spleeter/releases/download/v1.4.0/$model.tar.gz
 fi
 
-if [ ! -d ./2stems ]; then
-  mkdir -p 2stems
-  cd 2stems
-  tar xvf ../2stems.tar.gz
+if [ ! -d ./$model ]; then
+  mkdir -p $model
+  cd $model
+  tar xvf ../$model.tar.gz
   cd ..
 fi
 
 ls -lh
 
-ls -lh 2stems
+ls -lh $model
 
-if [ ! -f 2stems/frozen_vocals_model.pb ]; then
-  python3 ./convert_to_pb.py \
-    --model-dir ./2stems \
-    --output-node-names vocals_spectrogram/mul \
-    --output-filename ./2stems/frozen_vocals_model.pb
-fi
+for s in $stems; do
+  if [ ! -f $model/frozen_${s}_model.pb ]; then
+    python3 ./convert_to_pb.py \
+      --model-dir ./$model \
+      --output-node-names ${s}_spectrogram/mul \
+      --output-filename ./$model/frozen_${s}_model.pb
+  fi
 
-ls -lh 2stems
+  ls -lh $model
 
-if [ ! -f 2stems/frozen_accompaniment_model.pb ]; then
-  python3 ./convert_to_pb.py \
-    --model-dir ./2stems \
-    --output-node-names accompaniment_spectrogram/mul \
-    --output-filename ./2stems/frozen_accompaniment_model.pb
-fi
+  python3 ./convert_to_torch.py --model $model --name $s
+done
 
-ls -lh 2stems
+python3 ./export_onnx.py --model $model
 
-python3 ./convert_to_torch.py --name vocals
-python3 ./convert_to_torch.py --name accompaniment
-python3 ./export_onnx.py
-
-ls -lh 2stems
+ls -lh $model
