@@ -71,13 +71,23 @@ class KokoroMultiLangLexicon::Impl {
     // how piper_phonemize handles punctuations inside the text
     std::string text = _text;
 
-    std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
-        {"，", ","}, {":", ","},  {"、", ","}, {"；", ";"},   {"：", ":"},
-        {"。", "."}, {"？", "?"}, {"！", "!"}, {"\\s+", " "},
-    };
+    // The patterns are static; compile them only once.
+    static const std::vector<std::pair<std::regex, std::string>>
+        replace_str_pairs = [] {
+          std::vector<std::pair<std::string, std::string>> pairs = {
+              {"，", ","}, {":", ","},  {"、", ","}, {"；", ";"},  {"：", ":"},
+              {"。", "."}, {"？", "?"}, {"！", "!"}, {"「", "“"}, {"」", "”"},
+              {"『", "“"}, {"』", "”"}, {"・", " "}, {"　", " "}, {"\\s+", " "},
+          };
+          std::vector<std::pair<std::regex, std::string>> ans;
+          ans.reserve(pairs.size());
+          for (const auto &p : pairs) {
+            ans.emplace_back(std::regex(p.first), p.second);
+          }
+          return ans;
+        }();
     for (const auto &p : replace_str_pairs) {
-      std::regex re(p.first);
-      text = std::regex_replace(text, re, p.second);
+      text = std::regex_replace(text, p.first, p.second);
     }
 
     if (debug_) {
@@ -85,10 +95,25 @@ class KokoroMultiLangLexicon::Impl {
                        text.c_str());
     }
 
+    // If the language is Japanese, CJK runs (kana + kanji) are looked up
+    // in the Japanese lexicon (e.g., lexicon-ja.txt), and non-CJK runs
+    // fall back to the word lexicon + espeak-ng path.
+    // The comparison is case-insensitive (e.g., "ja", "JA", "Jpn").
+    std::string voice_lower = ToLowerCase(voice);
+    bool is_ja =
+        (voice_lower == "ja" || voice_lower == "jp" || voice_lower == "jpn");
+
     // https://en.cppreference.com/w/cpp/regex
     // https://stackoverflow.com/questions/37989081/how-to-use-unicode-range-in-c-regex
-    std::string expr_chinese = "([\\u4e00-\\u9fff]+)";
-    std::string expr_not_chinese = "([^\\u4e00-\\u9fff]+)";
+    // For Japanese we also match hiragana/katakana (぀-ヿ),
+    // the iteration mark 々 (々) and the long vowel mark ー (ー,
+    // included in the katakana block).
+    std::string expr_chinese = is_ja
+                                   ? "([\\u3005\\u3040-\\u30ff\\u4e00-\\u9fff]+)"
+                                   : "([\\u4e00-\\u9fff]+)";
+    std::string expr_not_chinese =
+        is_ja ? "([^\\u3005\\u3040-\\u30ff\\u4e00-\\u9fff]+)"
+              : "([^\\u4e00-\\u9fff]+)";
 
     std::string expr_both = expr_chinese + "|" + expr_not_chinese;
 
@@ -114,15 +139,21 @@ class KokoroMultiLangLexicon::Impl {
       std::vector<std::vector<int32_t>> ids_vec;
       if (std::regex_match(match_str, we_zh)) {
         if (debug_) {
-          SHERPA_ONNX_LOGE("Chinese: %s", ms.c_str());
+          SHERPA_ONNX_LOGE("%s: %s", is_ja ? "Japanese" : "Chinese", ms.c_str());
         }
-        ids_vec = ConvertChineseToTokenIDs(ms);
+        // For Japanese, insert a space token between matched words to
+        // keep the prosody close to the reference misaki G2P output.
+        ids_vec = ConvertChineseToTokenIDs(ms, /*add_space=*/is_ja);
       } else {
         if (debug_) {
-          SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
+          SHERPA_ONNX_LOGE("%s: %s", is_ja ? "Non-Japanese" : "Non-Chinese",
+                           ms.c_str());
         }
 
-        ids_vec = ConvertNonChineseToTokenIDs(ms, voice);
+        // In Japanese mode, non-CJK runs (e.g., embedded English words)
+        // use the word lexicon + espeak-ng fallback instead of
+        // phonemizing everything with an espeak "ja" voice.
+        ids_vec = ConvertNonChineseToTokenIDs(ms, is_ja ? "" : voice);
       }
 
       for (const auto &ids : ids_vec) {
@@ -210,7 +241,7 @@ class KokoroMultiLangLexicon::Impl {
   }
 
   std::vector<std::vector<int32_t>> ConvertChineseToTokenIDs(
-      const std::string &text) const {
+      const std::string &text, bool add_space = false) const {
     std::vector<std::string> words = SplitUtf8(text);
 
     if (debug_) {
@@ -255,6 +286,22 @@ class KokoroMultiLangLexicon::Impl {
         this_sentence.push_back(0);
       }
 
+      if (add_space && this_sentence.size() > 1) {
+        // 促音 ʔ の直後や長音 ː の直前で区切ると不自然な破裂音になるため
+        // その場合はスペースを入れない
+        bool skip = false;
+        if (token2id_.count("ʔ") &&
+            this_sentence.back() == token2id_.at("ʔ")) {
+          skip = true;
+        }
+        if (!ids.empty() && token2id_.count("ː") &&
+            ids[0] == token2id_.at("ː")) {
+          skip = true;
+        }
+        if (!skip) {
+          this_sentence.push_back(token2id_.at(" "));
+        }
+      }
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
     }  // for (const std::string &w : matcher)
 
