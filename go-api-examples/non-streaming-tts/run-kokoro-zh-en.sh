@@ -11,7 +11,6 @@ if [ ! -f ./kokoro-multi-lang-v1_0/model.onnx ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-tts \

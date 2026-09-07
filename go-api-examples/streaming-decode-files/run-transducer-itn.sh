@@ -19,7 +19,6 @@ if [ ! -f ./itn_zh_number.fst ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./streaming-decode-files \

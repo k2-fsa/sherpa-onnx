@@ -5,14 +5,7 @@ on:
     branches:
       - master
       - go
-      - fix-go-2
-    paths:
-      - '.github/workflows/test-go.yaml'
-      - '.github/scripts/go/**'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'go-api-examples/**'
-      - 'scripts/go/**'
+      - fix-go
 
   workflow_dispatch:
 

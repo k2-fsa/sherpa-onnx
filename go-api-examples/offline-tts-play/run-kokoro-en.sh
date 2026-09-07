@@ -11,7 +11,6 @@ if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./offline-tts-play \

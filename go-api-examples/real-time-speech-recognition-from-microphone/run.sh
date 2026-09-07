@@ -11,7 +11,6 @@ if [ ! -d icefall-asr-zipformer-streaming-wenetspeech-20230615 ]; then
 fi
 
 go mod tidy
-. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./real-time-speech-recognition-from-microphone \
