@@ -19,6 +19,7 @@ if [ ! -f ./vocos-22khz-univ.onnx ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./offline-tts-play \

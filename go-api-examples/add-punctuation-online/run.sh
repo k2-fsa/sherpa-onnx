@@ -11,6 +11,7 @@ if [ ! -d ./sherpa-onnx-online-punct-en-2024-08-06 ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./add-punctuation-online

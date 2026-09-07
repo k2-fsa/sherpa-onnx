@@ -10,6 +10,7 @@ if [ ! -d vits-icefall-zh-aishell3 ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 for sid in 10 33 99; do

@@ -17,5 +17,6 @@ if [ ! -f ./silero_vad.onnx ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 ./vad-speaker-identification

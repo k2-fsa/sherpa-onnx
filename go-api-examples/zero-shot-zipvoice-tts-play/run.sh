@@ -15,6 +15,7 @@ if [ ! -f vocos_24khz.onnx ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./zero-shot-zipvoice-tts-play \

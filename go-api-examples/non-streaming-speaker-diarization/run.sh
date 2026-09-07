@@ -19,5 +19,6 @@ if [ ! -f ./0-four-speakers-zh.wav ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 ./non-streaming-speaker-diarization

@@ -11,6 +11,7 @@ if [ ! -f ./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./non-streaming-funasr-nano-decode-files

@@ -21,6 +21,7 @@ if [ ! -d dict ]; then
 fi
 
 go mod tidy
+. "../../.github/scripts/go/replace-sherpa-onnx-go.sh"
 go build
 
 ./streaming-decode-files \
