@@ -142,8 +142,6 @@ jobs:
             cp -v "$go_lib_dir"/*.dll $upload_dir
             cp -v "$go_lib_dir"/*.lib $upload_dir
           else
-            # go_lib_dir may be a symlink to build/lib (same as ./lib/).
-            # Use cp -f and ignore "are identical" errors.
             cp -v -f _deps/onnxruntime-src/lib/libonnxruntime* "$go_lib_dir/" 2>/dev/null || true
             cp -v -f lib/libsherpa-onnx-c-api* "$go_lib_dir/" 2>/dev/null || true
             cp -v -f _deps/onnxruntime-src/lib/libonnxruntime* $upload_dir/ 2>/dev/null || true
