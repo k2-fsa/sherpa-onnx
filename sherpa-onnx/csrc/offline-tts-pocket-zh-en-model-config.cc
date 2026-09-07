@@ -6,9 +6,11 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -18,7 +20,9 @@ void OfflineTtsPocketZhEnModelConfig::Register(ParseOptions *po) {
   po->Register("pocket-zh-en-step-encoder", &step_encoder,
                "Path to step_encoder.onnx for PocketTTS ZhEn");
   po->Register("pocket-zh-en-lexicon", &lexicon,
-               "Path to lexicon.txt for PocketTTS ZhEn");
+               "Path to lexicon file(s) for PocketTTS ZhEn. "
+               "You can pass multiple files separated by comma, e.g., "
+               "lexicon-zh.txt,lexicon-en.txt");
   po->Register("pocket-zh-en-voice-embedding-cache-capacity",
                &voice_embedding_cache_capacity,
                "Capacity of the voice embedding cache (number of items). "
@@ -53,10 +57,18 @@ bool OfflineTtsPocketZhEnModelConfig::Validate() const {
     return false;
   }
 
-  if (!FileExists(lexicon)) {
-    SHERPA_ONNX_LOGE("--pocket-zh-en-lexicon '%s' does not exist",
-                     lexicon.c_str());
-    return false;
+  {
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE(
+            "--pocket-zh-en-lexicon '%s' does not exist. "
+            "Please re-check --pocket-zh-en-lexicon",
+            f.c_str());
+        return false;
+      }
+    }
   }
 
   if (voice_embedding_cache_capacity < 0) {

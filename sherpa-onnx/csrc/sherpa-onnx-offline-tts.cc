@@ -8,8 +8,8 @@
 #include <string>
 #include <utility>
 
-#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
@@ -105,10 +105,10 @@ for model files.
 ./bin/sherpa-onnx-offline-tts \
  --pocket-zh-en-step-model=./pocket-tts-zh-en/step_onnx_int8/step_model.onnx \
  --pocket-zh-en-step-encoder=./pocket-tts-zh-en/step_onnx_int8/step_encoder.onnx \
- --pocket-zh-en-lexicon=./pocket-tts-zh-en/lexicon.txt \
+ --pocket-zh-en-lexicon=./pocket-tts-zh-en/lexicon-zh.txt,./pocket-tts-zh-en/lexicon-en.txt \
  --reference-audio=./pocket-tts-zh-en/Vivian.wav \
  --output-filename=./generated-pocket-zh-en.wav \
- "欢迎使用图灵云语音合成服务!我们提供高质量的中文语音合成技术，支持多种音色和语音参数调节。"
+ "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长. How are you doing today? 我很好! Thank you."
 
 It will generate a file specified by --output-filename.
 
@@ -223,8 +223,7 @@ or details.
 
     int32_t sample_rate;
     bool is_ok = false;
-    auto samples =
-        sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+    auto samples = sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
@@ -236,8 +235,7 @@ or details.
 
   if (is_zipvoice_tts) {
     if (reference_text.empty()) {
-      fprintf(stderr,
-              "You need to provide --reference-text for ZipVoice TTS");
+      fprintf(stderr, "You need to provide --reference-text for ZipVoice TTS");
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
     gen_config.reference_text = reference_text;

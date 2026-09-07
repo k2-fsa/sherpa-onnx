@@ -33,15 +33,37 @@ namespace sherpa_onnx {
 class PocketZhEnLexicon::Impl {
  public:
   Impl(const std::string &lexicon, bool debug) : debug_(debug) {
-    auto is = OpenInputFile(lexicon);
-    InitLexicon(is);
+    // Support comma-separated lexicon files
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+
+    for (const auto &f : files) {
+      if (debug_) {
+        SHERPA_ONNX_LOGE("Loading lexicon: %s", f.c_str());
+      }
+      auto is = OpenInputFile(f);
+      InitLexicon(is, f);
+    }
+
+    AddPunctuationMappings();
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const std::string &lexicon, bool debug) : debug_(debug) {
-    auto buf = ReadFile(mgr, lexicon);
-    std::istringstream is(std::string(buf.data(), buf.size()));
-    InitLexicon(is);
+    // Support comma-separated lexicon files
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+
+    for (const auto &f : files) {
+      if (debug_) {
+        SHERPA_ONNX_LOGE("Loading lexicon: %s", f.c_str());
+      }
+      auto buf = ReadFile(mgr, f);
+      std::istringstream is(std::string(buf.data(), buf.size()));
+      InitLexicon(is, f);
+    }
+
+    AddPunctuationMappings();
   }
 
   std::vector<int32_t> ConvertTextToTokenIds(const std::string &text) const {
@@ -53,16 +75,46 @@ class PocketZhEnLexicon::Impl {
       SHERPA_ONNX_LOGE("After normalize punctuation: %s", normalized.c_str());
     }
 
-    // 2. Split into UTF-8 characters
-    std::vector<std::string> chars = SplitUtf8(normalized);
+    // 2. Lowercase the entire text for English word matching
+    std::string lowered = ToLowerCase(normalized);
+
+    if (debug_) {
+      SHERPA_ONNX_LOGE("After lowercase: %s", lowered.c_str());
+    }
+
+    // 3. Split into UTF-8 characters
+    std::vector<std::string> chars = SplitUtf8(lowered);
 
     if (debug_) {
       SHERPA_ONNX_LOGE("After split into UTF-8 chars: %d",
                        static_cast<int32_t>(chars.size()));
     }
 
-    // 3. Use PhraseMatcher for longest match
-    PhraseMatcher matcher(&all_words_, chars, debug_);
+    // 4. Merge consecutive ASCII letters into words for English matching
+    std::vector<std::string> tokens;
+    std::string english_buf;
+    for (const auto &ch : chars) {
+      if (ch.size() == 1 && std::isalpha(static_cast<unsigned char>(ch[0]))) {
+        english_buf += ch;
+      } else {
+        if (!english_buf.empty()) {
+          tokens.push_back(english_buf);
+          english_buf.clear();
+        }
+        tokens.push_back(ch);
+      }
+    }
+    if (!english_buf.empty()) {
+      tokens.push_back(english_buf);
+    }
+
+    if (debug_) {
+      SHERPA_ONNX_LOGE("After merging English words: %d tokens",
+                       static_cast<int32_t>(tokens.size()));
+    }
+
+    // 5. Use PhraseMatcher for longest match (Chinese phrases)
+    PhraseMatcher matcher(&all_words_, tokens, debug_);
 
     std::vector<int32_t> ids;
     for (const std::string &w : matcher) {
@@ -70,10 +122,8 @@ class PocketZhEnLexicon::Impl {
       if (it != word2ids_.end()) {
         ids.insert(ids.end(), it->second.begin(), it->second.end());
       } else {
-        // OOV: skip with warning
-        if (debug_) {
-          SHERPA_ONNX_LOGE("OOV: '%s', skipping", w.c_str());
-        }
+        // OOV: always warn
+        SHERPA_ONNX_LOGE("OOV: '%s', skipping", w.c_str());
       }
     }
 
@@ -81,51 +131,99 @@ class PocketZhEnLexicon::Impl {
   }
 
  private:
-  void InitLexicon(std::istream &is) {
+  void InitLexicon(std::istream &is, const std::string &filename) {
+    // Determine if this is an English lexicon by filename
+    bool is_en = (filename.find("-en") != std::string::npos);
+
     std::string line;
     int32_t line_num = 0;
 
     while (std::getline(is, line)) {
       ++line_num;
 
-      std::istringstream iss(line);
-      std::string word;
-      iss >> word;
+      // Skip empty lines
+      if (line.empty()) continue;
 
-      if (word.empty()) {
+      // Split on " || " separator
+      auto sep_pos = line.find(" || ");
+      if (sep_pos == std::string::npos) {
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Line %d: no ' || ' separator found, skipping: %s",
+                           line_num, line.c_str());
+        }
         continue;
       }
 
+      std::string word = line.substr(0, sep_pos);
+      std::string ids_str = line.substr(sep_pos + 4);
+
+      if (word.empty()) continue;
+
+      // Parse token IDs using existing utility
       std::vector<int32_t> ids;
-      int32_t id;
-      while (iss >> id) {
-        ids.push_back(id);
+      if (!SplitStringToIntegers(ids_str.c_str(), " ", true, &ids)) {
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Line %d: failed to parse token IDs, skipping: %s",
+                           line_num, line.c_str());
+        }
+        continue;
       }
 
-      if (!ids.empty()) {
-        if (word2ids_.count(word)) {
-          if (debug_) {
-            SHERPA_ONNX_LOGE("Duplicated word '%s' at line %d, ignoring",
-                             word.c_str(), line_num);
-          }
-          continue;
+      if (ids.empty()) continue;
+
+      std::string key = word;
+
+      if (word2ids_.count(key)) {
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Duplicated word '%s' at line %d, ignoring",
+                           key.c_str(), line_num);
         }
-        word2ids_[word] = ids;
-        all_words_.insert(word);
+        continue;
+      }
+      word2ids_[key] = ids;
+      all_words_.insert(key);
+
+      // If English, also store lowercase version using existing utility
+      if (is_en) {
+        std::string lower = ToLowerCase(word);
+        if (lower != key) {
+          word2ids_[lower] = ids;
+          all_words_.insert(lower);
+        }
       }
     }
 
+    if (debug_) {
+      SHERPA_ONNX_LOGE("Loaded lexicon from %s: %d entries", filename.c_str(),
+                       static_cast<int32_t>(word2ids_.size()));
+    }
+  }
+
+  void AddPunctuationMappings() {
     // Add punctuation mappings (from SentencePiece, without space marker 124)
-    // These are the token IDs that SentencePiece produces for punctuation
-    // after removing the space marker (124) and UNK (0)
     std::vector<std::pair<std::string, int32_t>> punct_map = {
-        {"!", 9676},   {"?", 9705},  {".", 9688},   {",", 9686},
-        {";", 9701},   {":", 9700},  {"(", 9682},   {")", 9683},
-        {"[", 9707},   {"]", 9709},  {"-", 9687},   {"\"", 9677},
-        {"'", 9},      {"/", 9689},
-        // Full-width punctuation that should be kept as-is
-        {"，", 24879}, {"。", 9729}, {"？", 20046}, {"、", 20094},
-        {"！", 20046}, {"；", 20094}, {"：", 20094},
+        {"!", 9676},
+        {"?", 9705},
+        {".", 9688},
+        {",", 9686},
+        {";", 9701},
+        {":", 9700},
+        {"(", 9682},
+        {")", 9683},
+        {"[", 9707},
+        {"]", 9709},
+        {"-", 9687},
+        {"\"", 9677},
+        {"'", 9},
+        {"/", 9689},
+        // Full-width punctuation
+        {"，", 24879},
+        {"。", 9729},
+        {"？", 20046},
+        {"、", 20094},
+        {"！", 20046},
+        {"；", 20094},
+        {"：", 20094},
     };
 
     for (const auto &[punct, id] : punct_map) {

@@ -73,6 +73,8 @@ class OfflineTtsPocketZhEnImpl : public OfflineTtsImpl {
    *  - max_reference_audio_len, float, default 10, in seconds
    *  - seed, int, default 0
    *  - debug, int, default 0. Set to 1 to enable debug messages
+   *  - max_char_in_sentence, int, default 200
+   *  - min_char_in_sentence, int, default 30
    */
   GeneratedAudio Generate(
       const std::string &_text, const GenerationConfig &gen_config,
@@ -100,35 +102,86 @@ class OfflineTtsPocketZhEnImpl : public OfflineTtsImpl {
       }
     }
 
-    // Get voice embedding
+    // Split text into sentences
+    auto sentences = SplitByPunctuation(text);
+
+    if (sentences.empty()) {
+      return {};
+    }
+
+    int32_t max_char_in_sentence =
+        gen_config.GetExtraInt("max_char_in_sentence", 200);
+
+    int32_t min_char_in_sentence =
+        gen_config.GetExtraInt("min_char_in_sentence", 30);
+
+    sentences = MergeShortSentences(sentences, min_char_in_sentence);
+
+    std::vector<std::string> final_chunks;
+    for (const auto &s : sentences) {
+      auto pieces = SplitLongSentence(s, max_char_in_sentence);
+      final_chunks.insert(final_chunks.end(), pieces.begin(), pieces.end());
+    }
+
+    sentences = std::move(final_chunks);
+
+    // Get voice embedding (shared across all sentences)
     Ort::Value voice_embedding = GetVoiceEmbedding(gen_config);
     if (!voice_embedding) {
       return {};
     }
 
-    // Convert text to token IDs
-    std::vector<int32_t> token_ids = lexicon_->ConvertTextToTokenIds(text);
-    if (token_ids.empty()) {
-      SHERPA_ONNX_LOGE("Empty token IDs for text: %s", text.c_str());
-      return {};
-    }
-
-    if (dbg) {
-      SHERPA_ONNX_LOGE("Token IDs count: %d",
-                       static_cast<int32_t>(token_ids.size()));
-    }
-
     GeneratedAudio result;
     result.sample_rate = SampleRate();
 
-    GeneratedAudio cur = GenerateAudio(token_ids, gen_config,
-                                       View(&voice_embedding), callback, dbg);
+    const int32_t total = sentences.size();
+    bool should_continue = true;
 
-    if (cur.samples.empty()) {
-      return {};
+    for (int32_t i = 0; i < total && should_continue; ++i) {
+      if (dbg) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Processing %{public}d/%{public}d: %{public}s", i + 1,
+                         total, sentences[i].c_str());
+#else
+        SHERPA_ONNX_LOGE("Processing %d/%d: %s", i + 1, total,
+                         sentences[i].c_str());
+#endif
+      }
+
+      // Convert text to token IDs
+      std::vector<int32_t> token_ids =
+          lexicon_->ConvertTextToTokenIds(sentences[i]);
+      if (token_ids.empty()) {
+        SHERPA_ONNX_LOGE("Empty token IDs for sentence: %s",
+                         sentences[i].c_str());
+        continue;
+      }
+
+      if (dbg) {
+        SHERPA_ONNX_LOGE("Token IDs count: %d",
+                         static_cast<int32_t>(token_ids.size()));
+      }
+
+      // Wrap callback to compute global progress
+      GeneratedAudioCallback wrapped_cb = nullptr;
+      if (callback) {
+        wrapped_cb = [&, i](const float *samples, int32_t n,
+                            float sentence_progress) -> bool {
+          float global_progress = (i + sentence_progress) / total;
+          return callback(samples, n, global_progress);
+        };
+      }
+
+      GeneratedAudio cur = GenerateAudio(
+          token_ids, gen_config, View(&voice_embedding), wrapped_cb, dbg);
+
+      if (cur.samples.empty()) {
+        continue;
+      }
+
+      result.samples.insert(result.samples.end(), cur.samples.begin(),
+                            cur.samples.end());
     }
-
-    result.samples = std::move(cur.samples);
 
     float silence_scale = gen_config.silence_scale;
     if (silence_scale != 1) {
