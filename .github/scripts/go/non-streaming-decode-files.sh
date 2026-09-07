@@ -2,6 +2,7 @@
 set -ex
 cd go-api-examples/non-streaming-decode-files
 go mod tidy
+. "$(dirname "$0")/replace-sherpa-onnx-go.sh"
 go build
 ./run-dolphin-ctc-base.sh
 ./run-fire-red-asr.sh
