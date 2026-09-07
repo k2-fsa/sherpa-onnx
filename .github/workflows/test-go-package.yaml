@@ -247,9 +247,11 @@ jobs:
           else
             win_lib_dir=x86_64-pc-windows-gnu
           fi
+          # Download the module so DLLs are in the cache
+          cd go-api-examples/hello-world
+          go mod download
+          cd ../..
           gopath=$(go env GOPATH)
-          echo "=== DLLs in module cache ==="
-          ls -lh $gopath/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/$win_lib_dir/ 2>/dev/null || echo "No DLLs found in cache"
           for dir in go-api-examples/*/; do
             if [ -f "$dir/go.mod" ]; then
               cp -v $gopath/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/$win_lib_dir/*.dll "$dir" 2>/dev/null || true
