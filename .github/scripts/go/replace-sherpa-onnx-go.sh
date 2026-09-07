@@ -1,21 +1,12 @@
 #!/usr/bin/env bash
-# Replace the published sherpa_onnx.go with a local version that uses
-# unsafe.Slice instead of fixed-size arrays.
-#
-# On Windows the published file contains a [1073741824]float32 array (4 GB)
-# that causes compilation failures on x86 and runtime allocation failures
-# on x64.  The local version uses unsafe.Slice instead.
+# On Windows, copy the published DLLs into scripts/go/_internal/lib/ and add a
+# go.mod replace directive so that the sherpa_onnx package is resolved from the
+# local _internal directory (which has the fixed sherpa_onnx.go using
+# unsafe.Slice instead of a [1073741824]float32 fixed-size array).
 #
 # Must be called AFTER "go mod tidy" (which downloads the module)
 # and BEFORE "go build".
 set -e
-
-local_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)/scripts/go/sherpa_onnx.go"
-
-if [ ! -f "$local_file" ]; then
-  echo "[replace-sherpa-onnx-go] local file not found: $local_file — skipping"
-  exit 0
-fi
 
 goos=$(go env GOOS)
 if [[ "$goos" != "windows" ]]; then
@@ -23,7 +14,22 @@ if [[ "$goos" != "windows" ]]; then
   exit 0
 fi
 
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+internal_dir="$repo_root/scripts/go/_internal"
+
+if [ ! -f "$internal_dir/sherpa_onnx.go" ]; then
+  echo "[replace-sherpa-onnx-go] $internal_dir/sherpa_onnx.go not found — skipping"
+  exit 0
+fi
+
 gopath=$(go env GOPATH)
+goarch=$(go env GOARCH)
+
+if [[ "$goarch" == "386" ]]; then
+  win_lib_dir=i686-pc-windows-gnu
+else
+  win_lib_dir=x86_64-pc-windows-gnu
+fi
 
 # Find the published sherpa-onnx-go-windows module in the cache
 windows_mod=$(find "$gopath/pkg/mod/github.com/k2-fsa/" \
@@ -34,21 +40,13 @@ if [ -z "$windows_mod" ]; then
   exit 0
 fi
 
-# Create a local copy of the module with the fixed sherpa_onnx.go
-local_dir="./_sherpa_onnx_go_windows"
-rm -rf "$local_dir"
-cp -r "$windows_mod" "$local_dir"
-chmod -R u+w "$local_dir"
-cp -v "$local_file" "$local_dir/sherpa_onnx.go"
+# Copy DLLs from the published module into _internal/lib/<arch>/
+mkdir -p "$internal_dir/lib/$win_lib_dir"
+cp -v "$windows_mod/lib/$win_lib_dir"/* "$internal_dir/lib/$win_lib_dir/" 2>/dev/null || true
 
-# The local sherpa_onnx.go has no #cgo LDFLAGS — those live in separate
-# build_*.go files under scripts/go/_internal/.  Copy them so the linker
-# can find the DLLs at build time.
-internal_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)/scripts/go/_internal"
-cp -v "$internal_dir"/build_*.go "$local_dir/" 2>/dev/null || true
+# Point go.mod at the local _internal directory (same approach as test-go.yaml).
+# The _internal directory already contains the fixed sherpa_onnx.go and the
+# platform-specific build_*.go files with the correct #cgo LDFLAGS.
+go mod edit -replace "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx=$internal_dir"
 
-# Use go mod edit -replace so go build uses the local copy.
-# This is more reliable than modifying the module cache, especially on Windows.
-go mod edit -replace "github.com/k2-fsa/sherpa-onnx-go-windows=./_sherpa_onnx_go_windows"
-
-echo "[replace-sherpa-onnx-go] Done. Using local copy at $local_dir"
+echo "[replace-sherpa-onnx-go] Done. Using $internal_dir"
