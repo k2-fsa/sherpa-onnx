@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <chrono>  // NOLINT
 #include <fstream>
 #include <mutex>  // NOLINT
 #include <sstream>

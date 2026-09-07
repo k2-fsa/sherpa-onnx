@@ -206,8 +206,8 @@ jobs:
             export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           fi
           cmake --version
-          export SHERPA_ONNX_CMAKE_ARGS="-G Ninja -DCMAKE_BUILD_TYPE=Release"
-          export SHERPA_ONNX_MAKE_ARGS="-j 6"
+          export SHERPA_ONNX_CMAKE_ARGS="-G Ninja -DCMAKE_BUILD_TYPE=Release -DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF"
+          export SHERPA_ONNX_MAKE_ARGS="-j 2"
 
           python3 setup.py bdist_wheel
 
@@ -234,6 +234,8 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
+          export SHERPA_ONNX_CMAKE_ARGS="-G Ninja -DCMAKE_BUILD_TYPE=Release -DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF"
+
           python3 -m pip install .
 
       - name: Build and install sherpa-onnx (Windows)
@@ -242,6 +244,8 @@ jobs:
         run: |
           export CMAKE_C_COMPILER_LAUNCHER=sccache
           export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+
+          export SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF"
 
           python3 -m pip install .
 
@@ -267,10 +271,6 @@ jobs:
           unzip ../*.whl
           readelf -d sherpa_onnx/lib/_sherpa_onnx*.so
 
-          echo "----"
-
-          readelf -d sherpa_onnx-*.data/data/bin/sherpa-onnx
-
       - name: Show dependencies - patched (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -280,10 +280,6 @@ jobs:
           cd t
           unzip ../*.whl
           readelf -d sherpa_onnx/lib/_sherpa_onnx*.so
-
-          echo "----"
-
-          readelf -d sherpa_onnx-*.data/data/bin/sherpa-onnx
 
       - name: Test sherpa-onnx (Linux)
         if: runner.os == 'Linux'

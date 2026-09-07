@@ -139,6 +139,7 @@ class BuildExtension(build_ext):
         os.makedirs(self.build_lib, exist_ok=True)
 
         out_bin_dir = Path(self.build_lib).resolve().parent / "sherpa_onnx" / "bin"
+        os.makedirs(out_bin_dir, exist_ok=True)
         install_dir = Path(self.build_lib).resolve() / "sherpa_onnx"
 
         sherpa_onnx_dir = Path(__file__).parent.parent.resolve()

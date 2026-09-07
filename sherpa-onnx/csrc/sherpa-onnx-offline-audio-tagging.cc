@@ -3,6 +3,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include <stdio.h>
 
+#include <chrono>  // NOLINT
 #include <string>
 #include <vector>
 
