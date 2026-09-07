@@ -68,6 +68,14 @@
     }                                                                      \
   } while (0)
 
+#define SHERPA_ONNX_CHECK(cond)                                            \
+  do {                                                                     \
+    if (!(cond)) {                                                         \
+      SHERPA_ONNX_LOGE("Check failed: %s", #cond);                        \
+      SHERPA_ONNX_EXIT(-1);                                                \
+    }                                                                      \
+  } while (0)
+
 // Read an integer
 #define SHERPA_ONNX_READ_META_DATA(dst, src_key)                           \
   do {                                                                     \
