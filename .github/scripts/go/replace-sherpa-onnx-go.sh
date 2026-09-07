@@ -44,9 +44,9 @@ fi
 mkdir -p "$internal_dir/lib/$win_lib_dir"
 cp -v "$windows_mod/lib/$win_lib_dir"/* "$internal_dir/lib/$win_lib_dir/" 2>/dev/null || true
 
-# Point go.mod at the local _internal directory (same approach as test-go.yaml).
+# Point go.mod at the local _internal directory.
 # The _internal directory already contains the fixed sherpa_onnx.go and the
 # platform-specific build_*.go files with the correct #cgo LDFLAGS.
-go mod edit -replace "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx=$internal_dir"
+go mod edit -replace "github.com/k2-fsa/sherpa-onnx-go-windows=$internal_dir"
 
 echo "[replace-sherpa-onnx-go] Done. Using $internal_dir"
