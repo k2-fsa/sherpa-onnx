@@ -8,7 +8,7 @@
 set -e
 
 gopath=$(go env GOPATH)
-local_file="$(cd "$(dirname "$0")/../.." && pwd)/scripts/go/sherpa_onnx.go"
+local_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/scripts/go/sherpa_onnx.go"
 
 if [ ! -f "$local_file" ]; then
   echo "[replace-sherpa-onnx-go] local file not found: $local_file — skipping"

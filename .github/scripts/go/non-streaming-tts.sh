@@ -2,7 +2,7 @@
 set -ex
 cd go-api-examples/non-streaming-tts
 go mod tidy
-. "$(dirname "$0")/replace-sherpa-onnx-go.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/replace-sherpa-onnx-go.sh"
 go build
 ./run-kitten-en.sh
 ./run-kokoro-en.sh
