@@ -173,7 +173,6 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
       // encoder/decoder run, so they cannot hallucinate text for silent
       // audio.
       OfflineRecognitionResult r;
-      r.text = "";
       s->SetResult(r);
       return;
     }
