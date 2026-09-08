@@ -888,7 +888,6 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
       // hotwords/language prompt tokens are built, so they cannot bias the
       // LLM decoder into hallucinating text for silent audio.
       OfflineRecognitionResult r;
-      r.text = "";
       ss[i]->SetResult(r);
       continue;
     }
