@@ -278,10 +278,10 @@ class PocketZhEnLexicon::Impl {
         result += "[";
       } else if (ch == "】") {
         result += "]";
-      } else if (ch == "\"" || ch == "\"" || ch == "「" || ch == "」" ||
+      } else if (ch == "\"" || ch == "「" || ch == "」" ||
                  ch == "『" || ch == "』") {
         result += "\"";
-      } else if (ch == "'" || ch == "'") {
+      } else if (ch == "'") {
         result += "'";
       } else if (ch == "…") {
         result += "...";
