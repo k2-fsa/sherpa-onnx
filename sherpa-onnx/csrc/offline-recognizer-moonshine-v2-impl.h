@@ -114,7 +114,6 @@ class OfflineRecognizerMoonshineV2Impl : public OfflineRecognizerImpl {
       // encoder, so the decoder cannot hallucinate text (e.g. "You") for
       // silent audio.
       OfflineRecognitionResult r;
-      r.text = "";
       s->SetResult(r);
       return;
     }
