@@ -3,4 +3,5 @@ set -ex
 cd go-api-examples/hello-world
 go mod tidy
 go build
+ls -lh
 ./run.sh

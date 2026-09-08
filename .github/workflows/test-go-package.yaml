@@ -252,11 +252,16 @@ jobs:
           go mod tidy
           cd ../..
           gopath=$(go env GOPATH)
+          echo "=== Module cache contents ==="
+          ls -lhR "$gopath/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows@v1.13.7/lib/" 2>/dev/null || echo "lib/ not found"
+          echo "=== End module cache ==="
           for dir in go-api-examples/*/; do
             if [ -f "$dir/go.mod" ]; then
               cp -v $gopath/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/$win_lib_dir/*.dll "$dir" 2>/dev/null || true
             fi
           done
+          echo "=== hello-world dir ==="
+          ls -lh go-api-examples/hello-world/ 2>/dev/null
 
       - name: Run tests
         shell: bash
