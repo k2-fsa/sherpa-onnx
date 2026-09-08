@@ -202,6 +202,35 @@ jobs:
             arch: x86
             index: 6
             tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding speaker-identification"
+          # Windows arm64
+          - os: windows-11-arm
+            arch: arm64
+            index: 0
+            tests: "hello-world non-streaming-decode-files"
+          - os: windows-11-arm
+            arch: arm64
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: windows-11-arm
+            arch: arm64
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: windows-11-arm
+            arch: arm64
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: windows-11-arm
+            arch: arm64
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: windows-11-arm
+            arch: arm64
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: windows-11-arm
+            arch: arm64
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding speaker-identification"
 
     steps:
       - uses: actions/checkout@v4
@@ -232,6 +261,12 @@ jobs:
           go env -w GOARCH=386
           go env -w CGO_ENABLED=1
 
+      - name: Set up MSVC for ARM64
+        if: matrix.os == 'windows-11-arm' && matrix.arch == 'arm64'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: arm64
+
       - name: Update version
         shell: bash
         run: |
@@ -239,11 +274,16 @@ jobs:
           git diff .
 
       - name: Copy DLLs to example directories (Windows)
-        if: matrix.os == 'windows-2022'
+        if: matrix.os == 'windows-2022' || matrix.os == 'windows-11-arm'
         shell: bash
+        env:
+          CC: ${{ matrix.os == 'windows-11-arm' && 'clang' || '' }}
+          CXX: ${{ matrix.os == 'windows-11-arm' && 'clang++' || '' }}
         run: |
           if [[ "${{ matrix.arch }}" == "x86" ]]; then
             win_lib_dir=i686-pc-windows-gnu
+          elif [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            win_lib_dir=aarch64-pc-windows-gnu
           else
             win_lib_dir=x86_64-pc-windows-gnu
           fi
@@ -261,6 +301,9 @@ jobs:
 
       - name: Run tests
         shell: bash
+        env:
+          CC: ${{ matrix.os == 'windows-11-arm' && 'clang' || '' }}
+          CXX: ${{ matrix.os == 'windows-11-arm' && 'clang++' || '' }}
         run: |
           for test in ${{ matrix.tests }}; do
             echo "=== Running ${test} ==="
