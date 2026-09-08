@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - go-win-arm64
 
   workflow_dispatch:
 
@@ -31,6 +32,8 @@ jobs:
             arch: x64
           - os: windows-2022
             arch: x86
+          - os: windows-11-arm
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +64,12 @@ jobs:
           platform: x86
           version: '12.2.0'
 
+      - name: Set up MSVC for ARM64
+        if: matrix.os == 'windows-11-arm' && matrix.arch == 'arm64'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: arm64
+
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.17'
@@ -88,7 +97,7 @@ jobs:
           upload_dir=$PWD/to-upload
           mkdir -p $upload_dir
 
-          if [[ "${{ matrix.os }}" != "windows-2022" ]]; then
+          if [[ "${{ matrix.os }}" != "windows-2022" && "${{ matrix.os }}" != "windows-11-arm" ]]; then
             export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           fi
           mkdir build
@@ -97,6 +106,8 @@ jobs:
           cmake_extra_args=""
           if [[ "${{ matrix.os }}" == "windows-2022" && "${{ matrix.arch }}" == "x86" ]]; then
             cmake_extra_args="-A Win32"
+          elif [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            cmake_extra_args="-A ARM64"
           fi
 
           cmake \
@@ -110,7 +121,7 @@ jobs:
             $cmake_extra_args \
             ..
 
-          if [[ "${{ matrix.os }}" == "windows-2022" ]]; then
+          if [[ "${{ matrix.os }}" == "windows-2022" || "${{ matrix.os }}" == "windows-11-arm" ]]; then
             cmake --build . --target install --config Release -- -m:2
           else
             make -j2 install
@@ -129,10 +140,12 @@ jobs:
             go_lib_dir=../scripts/go/_internal/lib/i686-pc-windows-gnu
           elif [[ "${{ matrix.os }}" == windows-2022 ]]; then
             go_lib_dir=../scripts/go/_internal/lib/x86_64-pc-windows-gnu
+          elif [[ "${{ matrix.os }}" == windows-11-arm ]]; then
+            go_lib_dir=../scripts/go/_internal/lib/aarch64-pc-windows-gnu
           fi
           mkdir -p "$go_lib_dir"
 
-          if [[ ${{ matrix.os }} == windows-2022 ]]; then
+          if [[ "${{ matrix.os }}" == windows-2022 || "${{ matrix.os }}" == windows-11-arm ]]; then
             cp -v ./install/lib/sherpa-onnx-c-api.dll "$go_lib_dir/"
             cp -v ./install/lib/onnxruntime.dll "$go_lib_dir/"
             cp -v ./install/lib/sherpa-onnx-c-api.lib "$go_lib_dir/"
@@ -149,14 +162,20 @@ jobs:
 
           cd ../scripts/go/_internal/
           go mod tidy
-          go build
+          if [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            CC=clang CXX=clang++ CGO_ENABLED=1 go build
+          else
+            go build
+          fi
 
       - name: Copy DLLs to example directories (Windows)
-        if: matrix.os == 'windows-2022'
+        if: matrix.os == 'windows-2022' || matrix.os == 'windows-11-arm'
         shell: bash
         run: |
-          if [[ ${{ matrix.arch }} == x86 ]]; then
+          if [[ "${{ matrix.arch }}" == "x86" ]]; then
             win_lib_dir=i686-pc-windows-gnu
+          elif [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            win_lib_dir=aarch64-pc-windows-gnu
           else
             win_lib_dir=x86_64-pc-windows-gnu
           fi
@@ -172,14 +191,14 @@ jobs:
           done
 
       - name: Remove non-Windows lib dirs before upload
-        if: matrix.os == 'windows-2022'
+        if: matrix.os == 'windows-2022' || matrix.os == 'windows-11-arm'
         shell: bash
         run: |
           # On Windows, remove non-Windows lib dirs and broken symlinks.
           # The upload-artifact action can't stat() broken symlinks.
           cd scripts/go/_internal/lib
           for d in *; do
-            if [[ "$d" != "i686-pc-windows-gnu" && "$d" != "x86_64-pc-windows-gnu" ]]; then
+            if [[ "$d" != "i686-pc-windows-gnu" && "$d" != "x86_64-pc-windows-gnu" && "$d" != "aarch64-pc-windows-gnu" ]]; then
               echo "Removing: $d"
               rm -rf "$d"
             fi
@@ -425,6 +444,43 @@ jobs:
             arch: x86
             index: 8
             tests: "non-streaming-speaker-diarization"
+          # Windows arm64
+          - os: windows-11-arm
+            arch: arm64
+            index: 0
+            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+          - os: windows-11-arm
+            arch: arm64
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files non-streaming-qwen3-asr-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: windows-11-arm
+            arch: arm64
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: windows-11-arm
+            arch: arm64
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: windows-11-arm
+            arch: arm64
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: windows-11-arm
+            arch: arm64
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: windows-11-arm
+            arch: arm64
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding"
+          - os: windows-11-arm
+            arch: arm64
+            index: 7
+            tests: "non-streaming-speaker-diarization"
+          - os: windows-11-arm
+            arch: arm64
+            index: 8
+            tests: "non-streaming-speaker-diarization"
 
     steps:
       - uses: actions/checkout@v4
@@ -447,6 +503,12 @@ jobs:
           go env -w GOARCH=386
           go env -w CGO_ENABLED=1
 
+      - name: Set up MSVC for ARM64
+        if: matrix.os == 'windows-11-arm' && matrix.arch == 'arm64'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: arm64
+
       - name: Download built libraries
         uses: actions/download-artifact@v4
         with:
@@ -465,6 +527,9 @@ jobs:
 
       - name: Run tests
         shell: bash
+        env:
+          CC: ${{ matrix.os == 'windows-11-arm' && 'clang' || '' }}
+          CXX: ${{ matrix.os == 'windows-11-arm' && 'clang++' || '' }}
         run: |
           for test in ${{ matrix.tests }}; do
             echo "=== Running ${test} ==="

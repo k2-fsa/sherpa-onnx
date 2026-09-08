@@ -9,7 +9,7 @@ It does not need to access the network during recognition and everything
 runs locally.
 
 It supports a variety of platforms, such as Linux (x86_64, aarch64, arm),
-Windows (x86_64, x86), macOS (x86_64, arm64), etc.
+Windows (x86_64, x86, arm64), macOS (x86_64, arm64), etc.
 
 Usage examples:
 
