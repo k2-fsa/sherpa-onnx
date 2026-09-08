@@ -1524,7 +1524,7 @@ func (tts *OfflineTts) GenerateWithConfig(
 	var cReferenceAudio *C.float
 	if len(cfg.ReferenceAudio) > 0 {
 		cReferenceAudio = (*C.float)(C.malloc(C.size_t(len(cfg.ReferenceAudio)) * C.size_t(unsafe.Sizeof(C.float(0)))))
-		slice := (*[1 << 30]C.float)(unsafe.Pointer(cReferenceAudio))[:len(cfg.ReferenceAudio):len(cfg.ReferenceAudio)]
+		slice := unsafe.Slice((*C.float)(unsafe.Pointer(cReferenceAudio)), len(cfg.ReferenceAudio))
 		for i, v := range cfg.ReferenceAudio {
 			slice[i] = C.float(v)
 		}
@@ -2820,7 +2820,7 @@ func ReadWaveMultiChannel(filename string) *AudioBuffer {
 
 	total := buf.ChannelCount * buf.SamplesPerChannel
 	// View C memory as a Go slice
-	buf.Samples = (*[1 << 30]float32)(unsafe.Pointer(*ptr.samples))[:total:total]
+	buf.Samples = unsafe.Slice((*float32)(unsafe.Pointer(*ptr.samples)), total)
 	return buf
 }
 
@@ -2954,8 +2954,8 @@ func (ss *SourceSeparator) Process(buf *AudioBuffer) []*AudioBuffer {
 
 		flat := make([]float32, chCount*sCount)
 		for c := 0; c < chCount; c++ {
-			cChannelPtr := (*[1 << 20]*C.float)(unsafe.Pointer(cStem.samples))[c]
-			source := (*[1 << 30]float32)(unsafe.Pointer(cChannelPtr))[:sCount:sCount]
+			cChannelPtr := unsafe.Slice((**C.float)(unsafe.Pointer(cStem.samples)), chCount)[c]
+			source := unsafe.Slice((*float32)(unsafe.Pointer(cChannelPtr)), sCount)
 			copy(flat[c*sCount:], source)
 		}
 		stems[i] = NewAudioBuffer(flat, chCount, sampleRate)

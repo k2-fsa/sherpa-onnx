@@ -1,6 +1,9 @@
 name: test-go-package
 
 on:
+  push:
+    branches:
+      - fix-go-2
   schedule:
     # minute (0-59)
     # hour (0-23)
@@ -17,47 +20,197 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-go-package:
+  test:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
-    name: ${{ matrix.os }} ${{matrix.arch }}
+    name: "Test group ${{ matrix.index }} (${{ matrix.os }} ${{ matrix.arch }})"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            arch: amd64
-          - os: ubuntu-22.04-arm
+          # macOS arm64
+          - os: macos-latest
             arch: arm64
+            index: 0
+            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+          - os: macos-latest
+            arch: arm64
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files non-streaming-qwen3-asr-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: macos-latest
+            arch: arm64
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: macos-latest
+            arch: arm64
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: macos-latest
+            arch: arm64
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: macos-latest
+            arch: arm64
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: macos-latest
+            arch: arm64
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding"
+          # macOS x64
           - os: macos-15-intel
             arch: amd64
-          - os: macos-14
+            index: 0
+            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+          - os: macos-15-intel
+            arch: amd64
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files non-streaming-qwen3-asr-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: macos-15-intel
+            arch: amd64
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: macos-15-intel
+            arch: amd64
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: macos-15-intel
+            arch: amd64
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: macos-15-intel
+            arch: amd64
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: macos-15-intel
+            arch: amd64
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding"
+          # Linux x64
+          - os: ubuntu-latest
+            arch: amd64
+            index: 0
+            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+          - os: ubuntu-latest
+            arch: amd64
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: ubuntu-latest
+            arch: amd64
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: ubuntu-latest
+            arch: amd64
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: ubuntu-latest
+            arch: amd64
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: ubuntu-latest
+            arch: amd64
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: ubuntu-latest
+            arch: amd64
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding"
+          # Linux arm64
+          - os: ubuntu-22.04-arm
             arch: arm64
+            index: 0
+            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files non-streaming-qwen3-asr-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding"
+          # Windows x64
           - os: windows-2022
             arch: x64
+            index: 0
+            tests: "hello-world non-streaming-decode-files"
           - os: windows-2022
-            arch: x86 # use 386 for GOARCH
+            arch: x64
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: windows-2022
+            arch: x64
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: windows-2022
+            arch: x64
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: windows-2022
+            arch: x64
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: windows-2022
+            arch: x64
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: windows-2022
+            arch: x64
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding speaker-identification"
+          # Windows x86 (source-separation skipped on x86)
+          - os: windows-2022
+            arch: x86
+            index: 0
+            tests: "hello-world non-streaming-decode-files"
+          - os: windows-2022
+            arch: x86
+            index: 1
+            tests: "non-streaming-cohere-transcribe-decode-files supertonic-tts non-streaming-moonshine-v2-decode-files"
+          - os: windows-2022
+            arch: x86
+            index: 2
+            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+          - os: windows-2022
+            arch: x86
+            index: 3
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+          - os: windows-2022
+            arch: x86
+            index: 4
+            tests: "non-streaming-canary-decode-files speech-enhancement-gtcrn speech-enhancement-dpdfnet streaming-speech-enhancement-gtcrn"
+          - os: windows-2022
+            arch: x86
+            index: 5
+            tests: "streaming-speech-enhancement-dpdfnet audio-tagging keyword-spotting-from-file add-punctuation"
+          - os: windows-2022
+            arch: x86
+            index: 6
+            tests: "add-punctuation-online non-streaming-speaker-diarization streaming-hlg-decoding speaker-identification"
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.17'
-
-      - name: Update version
-        shell: bash
-        run: |
-          ./new-release.sh
-          git diff .
-
-      - name: Display go version
-        shell: bash
-        run: |
-          go version
-          go env GOPATH
-          go env GOARCH
 
       - name: Set up MinGW for x64
         if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
@@ -72,615 +225,52 @@ jobs:
           platform: ${{ matrix.arch }}
           version: '12.2.0'
 
-      - name: Show gcc
+      - name: Set GOARCH for x86
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
+        shell: bash
+        run: |
+          go env -w GOARCH=386
+          go env -w CGO_ENABLED=1
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Copy DLLs to example directories (Windows)
         if: matrix.os == 'windows-2022'
-        run: |
-          gcc --version
-
-      - name: Test source separation (Spleeter & UVR)
-        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
-          cd go-api-examples/source-separation
-          ./run-spleeter.sh
-          rm -rf sherpa-onnx-spleeter-*
-
-          ./run-uvr.sh
-          rm -rf UVR-MDX-NET-*
-
-      - name: Test Qwen3 ASR
-        if: matrix.os != 'windows-2022' && matrix.os != 'ubuntu-latest'
-        shell: bash
-        run: |
-          cd go-api-examples/non-streaming-qwen3-asr-decode-files
-          ./run.sh
-          rm -rf sherpa-onnx-qwen3-*
-
-      - name: Test NeMo Canary ASR
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/non-streaming-canary-decode-files
-          ./run.sh
-          rm -rf sherpa-onnx-nemo-*
-
-      - name: Test speech enhancement (GTCRN)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/speech-enhancement-gtcrn/
-          ./run.sh
-
-      - name: Test speech enhancement (DPDFNet)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/speech-enhancement-dpdfnet/
-          ./run.sh
-
-      - name: Test streaming speech enhancement (GTCRN)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/streaming-speech-enhancement-gtcrn/
-          ./run.sh
-
-      - name: Test streaming speech enhancement (DPDFNet)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/streaming-speech-enhancement-dpdfnet/
-          ./run.sh
-
-      - name: Test Keyword spotting
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/keyword-spotting-from-file/
-          ./run.sh
-
-      - name: Test adding punctuation
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/add-punctuation/
-          ./run.sh
-
-      - name: Test non-streaming speaker diarization
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/non-streaming-speaker-diarization/
-          ./run.sh
-
-      - name: Test non-streaming speaker diarization
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
-        shell: bash
-        run: |
-          cd go-api-examples/non-streaming-speaker-diarization/
+          if [[ "${{ matrix.arch }}" == "x86" ]]; then
+            win_lib_dir=i686-pc-windows-gnu
+          else
+            win_lib_dir=x86_64-pc-windows-gnu
+          fi
+          # go mod tidy to download the module so DLLs are in the cache
+          cd go-api-examples/hello-world
           go mod tidy
-          cat go.mod
-          go build
+          cd ../..
+          gopath=$(go env GOPATH)
+          win_mod=$(find "$gopath/pkg/mod/github.com/k2-fsa/" -maxdepth 1 -name "sherpa-onnx-go-windows@*" -type d | head -1)
+          for dir in go-api-examples/*/; do
+            if [ -f "$dir/go.mod" ]; then
+              cp -v "$win_mod/lib/$win_lib_dir"/*.dll "$dir" || true
+            fi
+          done
 
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
-
-          ./run.sh
-
-      - name: Test non-streaming speaker diarization
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
+      - name: Run tests
         shell: bash
         run: |
-          cd go-api-examples/non-streaming-speaker-diarization/
-
-          go env GOARCH
-          go env -w GOARCH=386
-          go env -w CGO_ENABLED=1
-
-          go mod tidy
-          cat go.mod
-          go build
-
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
-
-          ./run.sh
-
-      - name: Test streaming HLG decoding (Linux/macOS)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/streaming-hlg-decoding/
-          ./run.sh
-
-      - name: Test speaker identification (Linux/macOS)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/speaker-identification
-          ./run.sh
-
-      - name: Test speaker identification (Win64)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
-        shell: bash
-        run: |
-          cd go-api-examples/speaker-identification
-          go mod tidy
-          cat go.mod
-          go build
-
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
-          git clone https://github.com/csukuangfj/sr-data
-          ls -lh
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
-          ls -lh
-          go mod tidy
-          go build
-          go run ./main.go
-
-      - name: Test speaker identification (Win32)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
-        shell: bash
-        run: |
-          cd go-api-examples/speaker-identification
-          go mod tidy
-          cat go.mod
-          ls -lh
-
-          go env GOARCH
-          go env
-          echo "------------------------------"
-          go env -w GOARCH=386
-          go env -w CGO_ENABLED=1
-          go env
-
-          go clean
-          go build
-
-          echo $PWD
-
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
-          git clone https://github.com/csukuangfj/sr-data
-          ls -lh
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
-          ls -lh
-          go mod tidy
-          go build
-          go run ./main.go
-
-          rm -rf sr-data
-          rm -rf *.onnx
-
-      - name: Test non-streaming TTS (Linux/macOS)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          mkdir tts-waves
-          cd go-api-examples/non-streaming-tts
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo "Test kokoro zh+en"
-          ./run-kokoro-zh-en.sh
-          rm -rf kokoro-multi-*
-          ls -lh
-
-          echo "Test kokoro en"
-          ./run-kokoro-en.sh
-          rm -rf kokoro-en-*
-          ls -lh
-
-          echo "Test matcha zh"
-          ./run-matcha-zh.sh
-          rm -rf matcha-icefall-*
-
-          echo "Test matcha en"
-          ./run-matcha-en.sh
-          rm -rf matcha-icefall-*
-          ls -lh *.wav
-
-          echo "Test vits-ljs"
-          ./run-vits-ljs.sh
-          rm -rf vits-ljs
-
-          echo "Test vits-vctk"
-          ./run-vits-vctk.sh
-          rm -rf vits-vctk
-
-          echo "Test vits-icefall-zh-aishell3"
-          ./run-vits-zh-aishell3.sh
-          rm -rf vits-icefall-zh-aishell3
-
-          echo "Test vits-piper-en_US-lessac-medium"
-          ./run-vits-piper-en_US-lessac-medium.sh
-          rm -rf vits-piper-en_US-lessac-medium
-
-          ls -lh *.wav
-          cp *.wav ../../tts-waves/
-
-      - name: Test zero-shot ZipVoice TTS (Linux/macOS)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          mkdir -p tts-waves
-          cd go-api-examples/zero-shot-zipvoice-tts
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          ./run.sh
-          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
-          rm -f vocos_24khz.onnx
-          ls -lh *.wav
-          cp *.wav ../../tts-waves/
-
-      - name: Test non-streaming TTS (Win64)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
-        shell: bash
-        run: |
-          mkdir tts-waves
-          cd go-api-examples/non-streaming-tts
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
-          ls -lh
-
-          echo "Test matcha zh"
-          ./run-matcha-zh.sh
-          rm -rf matcha-icefall-*
-
-          echo "Test matcha en"
-          ./run-matcha-en.sh
-          rm -rf matcha-icefall-*
-          ls -lh *.wav
-
-          echo "Test vits-ljs"
-          ./run-vits-ljs.sh
-          rm -rf vits-ljs
-
-          echo "Test vits-vctk"
-          ./run-vits-vctk.sh
-          rm -rf vits-vctk
-
-          echo "Test vits-zh-aishell3"
-          ./run-vits-zh-aishell3.sh
-          rm -rf vits-icefall-zh-aishell3
-
-          echo "Test vits-piper-en_US-lessac-medium"
-          ./run-vits-piper-en_US-lessac-medium.sh
-          rm -rf vits-piper-en_US-lessac-medium
-
-          ls -lh *.wav
-          cp *.wav ../../tts-waves/
-
-      - name: Test zero-shot ZipVoice TTS (Win64)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
-        shell: bash
-        run: |
-          mkdir -p tts-waves
-          cd go-api-examples/zero-shot-zipvoice-tts
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo $PWD
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
-          ls -lh
-
-          ./run.sh
-          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
-          rm -f vocos_24khz.onnx
-          ls -lh *.wav
-          cp *.wav ../../tts-waves/
-
-      - name: Test non-streaming TTS (Win32)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
-        shell: bash
-        run: |
-          mkdir tts-waves
-          cd go-api-examples/non-streaming-tts
-          ls -lh
-          go mod tidy
-          cat go.mod
-          ls -lh
-
-          go env GOARCH
-          go env
-          echo "------------------------------"
-          go env -w GOARCH=386
-          go env -w CGO_ENABLED=1
-          go env
-
-          go clean
-          go build
-
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
-          ls -lh
-
-          echo "Test matcha zh"
-          ./run-matcha-zh.sh
-          rm -rf matcha-icefall-*
-
-          echo "Test matcha en"
-          ./run-matcha-en.sh
-          rm -rf matcha-icefall-*
-          ls -lh *.wav
-
-          echo "Test vits-ljs"
-          ./run-vits-ljs.sh
-          rm -rf vits-ljs
-
-          echo "Test vits-vctk"
-          ./run-vits-vctk.sh
-          rm -rf vits-vctk
-
-          echo "Test vits-zh-aishell3"
-          ./run-vits-zh-aishell3.sh
-          rm -rf vits-zh-aishell3
-
-          echo "Test vits-piper-en_US-lessac-medium"
-          ./run-vits-piper-en_US-lessac-medium.sh
-          rm -rf vits-piper-en_US-lessac-medium
-
-          ls -lh *.wav
-          cp *.wav ../../tts-waves/
-
-      - name: Test zero-shot ZipVoice TTS (Win32)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
-        shell: bash
-        run: |
-          mkdir -p tts-waves
-          cd go-api-examples/zero-shot-zipvoice-tts
-          ls -lh
-          go mod tidy
-          cat go.mod
-          ls -lh
-
-          go env -w GOARCH=386
-          go env -w CGO_ENABLED=1
-          go clean
-          go build
-
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
-          ls -lh
-
-          ./run.sh
-          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
-          rm -f vocos_24khz.onnx
-          ls -lh *.wav
-          cp *.wav ../../tts-waves/
-
-      - name: Test non-streaming decoding files (Linux/macOS)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/non-streaming-decode-files
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-zipformer-en-2023-06-26
-
-          echo "Test paraformer"
-          ./run-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
-
-          echo "Test NeMo CTC"
-          ./run-nemo-ctc.sh
-          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
-
-          echo "Test Whisper tiny.en"
-          ./run-whisper.sh
-          rm -rf sherpa-onnx-whisper-tiny.en
-
-          echo "Test Tdnn yesno"
-          ./run-tdnn-yesno.sh
-          rm -rf sherpa-onnx-tdnn-yesno
-
-      - name: Test non-streaming decoding files (Win64)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
-        shell: bash
-        run: |
-          cd go-api-examples/non-streaming-decode-files
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
-          ls -lh
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-zipformer-en-2023-06-26
-
-          echo "Test paraformer"
-          ./run-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
-
-          echo "Test NeMo CTC"
-          ./run-nemo-ctc.sh
-          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
-
-          echo "Test Whisper tiny.en"
-          ./run-whisper.sh
-          rm -rf sherpa-onnx-whisper-tiny.en
-
-          echo "Test Tdnn yesno"
-          ./run-tdnn-yesno.sh
-          rm -rf sherpa-onnx-tdnn-yesno
-
-      - name: Test non-streaming decoding files (Win32)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
-        shell: bash
-        run: |
-          cd go-api-examples/non-streaming-decode-files
-          ls -lh
-          go mod tidy
-          cat go.mod
-          ls -lh
-
-          go env GOARCH
-          go env
-          echo "------------------------------"
-          go env -w GOARCH=386
-          go env -w CGO_ENABLED=1
-          go env
-
-          go clean
-          go build
-
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
-          ls -lh
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-zipformer-en-2023-06-26
-
-          echo "Test paraformer"
-          ./run-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
-
-          echo "Test NeMo CTC"
-          ./run-nemo-ctc.sh
-          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
-
-          echo "Test Whisper tiny.en"
-          ./run-whisper.sh
-          rm -rf sherpa-onnx-whisper-tiny.en
-
-          echo "Test Tdnn yesno"
-          ./run-tdnn-yesno.sh
-          rm -rf sherpa-onnx-tdnn-yesno
-
-      - name: Test audio tagging (Linux/macOS)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/audio-tagging
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          ./run.sh
-
-      - name: Test streaming decoding files (Linux/macOS)
-        if: matrix.os != 'windows-2022'
-        shell: bash
-        run: |
-          cd go-api-examples/streaming-decode-files
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
-
-          echo "Test paraformer"
-          ./run-paraformer.sh
-          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
-
-      - name: Test streaming decoding files (Win64)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
-        shell: bash
-        run: |
-          cd go-api-examples/streaming-decode-files
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
-          ls -lh
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
-
-          echo "Test paraformer"
-          ./run-paraformer.sh
-          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
-
-      - name: Test streaming decoding files (Win32)
-        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
-        shell: bash
-        run: |
-          cd go-api-examples/streaming-decode-files
-          ls -lh
-          go mod tidy
-          cat go.mod
-          ls -lh
-
-          go env GOARCH
-          go env
-          echo "------------------------------"
-          go env -w GOARCH=386
-          go env -w CGO_ENABLED=1
-          go env
-
-          go clean
-          go build
-
-          echo $PWD
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
-          ls -lh
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
-
-          echo "Test paraformer"
-          ./run-paraformer.sh
-          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          for test in ${{ matrix.tests }}; do
+            echo "=== Running ${test} ==="
+            chmod +x .github/scripts/go/${test}.sh
+            .github/scripts/go/${test}.sh
+            echo "=== ${test} passed ==="
+          done
 
       - uses: actions/upload-artifact@v4
+        if: contains(matrix.tests, 'non-streaming-tts') || contains(matrix.tests, 'zero-shot-zipvoice-tts')
         with:
           name: tts-waves-${{ matrix.os }}-${{ matrix.arch }}
           path: tts-waves

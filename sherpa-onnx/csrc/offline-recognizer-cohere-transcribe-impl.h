@@ -24,6 +24,31 @@
 
 namespace sherpa_onnx {
 
+// The decoder in this file happily transcribes silence into hallucinated
+// sentences for most languages (measured with
+// sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01: e.g. "Herr
+// Präsident, meine Damen und Herren!" for de, "Sous-titrage Société
+// Radio-Canada" for fr, "谢谢" for zh; only en returns an empty string), so
+// digitally silent clips must be detected and short-circuited before the
+// decoder runs.
+//
+// Silence is detected on the normalized fbank features returned by
+// OfflineStream::GetFrames(). Those features are scale invariant, so the
+// recording level does not matter. The fbank configuration is the same as
+// for Canary (see offline-recognizer-canary-impl.h), where digital silence
+// measures a max |feature| of about 0.09 while audio with content stays
+// above 4 regardless of its level.
+inline constexpr float kCohereSilenceFeatureAbsMax = 1.0f;
+
+inline bool CohereHasSignal(const float *features, int32_t n) {
+  float abs_max = 0;
+  for (int32_t i = 0; i != n; ++i) {
+    abs_max = std::max(abs_max, std::abs(features[i]));
+  }
+
+  return abs_max > kCohereSilenceFeatureAbsMax;
+}
+
 class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerCohereTranscribeImpl(
@@ -142,6 +167,15 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
     int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
     int32_t num_frames = f.size() / feat_dim;
+
+    if (!CohereHasSignal(f.data(), static_cast<int32_t>(f.size()))) {
+      // The whole clip is silence. Return an empty result before the
+      // encoder/decoder run, so they cannot hallucinate text for silent
+      // audio.
+      OfflineRecognitionResult r;
+      s->SetResult(r);
+      return;
+    }
 
     f = Transpose(f.data(), num_frames, feat_dim);
     // now f is (1, feat_dim, num_frames)
