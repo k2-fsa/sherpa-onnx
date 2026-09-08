@@ -54,6 +54,13 @@ jobs:
         with:
           platform: ${{ matrix.arch }}
 
+      - name: Set up MinGW for x86
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
+        uses: csukuangfj/setup-mingw@v2.2.1
+        with:
+          platform: x86
+          version: '12.2.0'
+
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.17'
