@@ -3,7 +3,7 @@ name: test-go-package
 on:
   push:
     branches:
-      - fix-go
+      - fix-go-2
   schedule:
     # minute (0-59)
     # hour (0-23)
@@ -253,16 +253,11 @@ jobs:
           cd ../..
           gopath=$(go env GOPATH)
           win_mod=$(find "$gopath/pkg/mod/github.com/k2-fsa/" -maxdepth 1 -name "sherpa-onnx-go-windows@*" -type d | head -1)
-          echo "win_mod=$win_mod"
-          echo "win_lib_dir=$win_lib_dir"
-          ls -lh "$win_mod/lib/$win_lib_dir/" || echo "DLL dir not found"
           for dir in go-api-examples/*/; do
             if [ -f "$dir/go.mod" ]; then
               cp -v "$win_mod/lib/$win_lib_dir"/*.dll "$dir" || true
             fi
           done
-          echo "=== hello-world dir ==="
-          ls -lh go-api-examples/hello-world/
 
       - name: Run tests
         shell: bash

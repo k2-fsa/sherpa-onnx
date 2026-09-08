@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-      - go
-      - fix-go-2
 
   workflow_dispatch:
 
