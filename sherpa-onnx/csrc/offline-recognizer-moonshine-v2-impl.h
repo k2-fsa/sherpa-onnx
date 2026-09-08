@@ -28,6 +28,27 @@ namespace sherpa_onnx {
 OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
                                  const SymbolTable &sym_table);
 
+// Returns true when the raw audio samples are all (numerically) zero, i.e.
+// the clip is digital silence. GetFrames() returns raw samples for moonshine,
+// so no feature extraction is involved.
+//
+// Exposed here (rather than kept file-local) so it can be unit tested.
+inline constexpr float kMoonshineSilenceSampleAbsMax = 1e-6f;
+
+inline bool MoonshineV2AudioIsSilent(const float *samples, int32_t n) {
+  if (n <= 0) {
+    return false;
+  }
+
+  for (int32_t i = 0; i != n; ++i) {
+    if (std::abs(samples[i]) > kMoonshineSilenceSampleAbsMax) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 class OfflineRecognizerMoonshineV2Impl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerMoonshineV2Impl(
@@ -86,6 +107,16 @@ class OfflineRecognizerMoonshineV2Impl : public OfflineRecognizerImpl {
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
     std::vector<float> audio = s->GetFrames();
+
+    if (MoonshineV2AudioIsSilent(audio.data(),
+                                 static_cast<int32_t>(audio.size()))) {
+      // The whole clip is silence. Return an empty result before running the
+      // encoder, so the decoder cannot hallucinate text (e.g. "You") for
+      // silent audio.
+      OfflineRecognitionResult r;
+      s->SetResult(r);
+      return;
+    }
 
     try {
       std::array<int64_t, 2> shape{1, static_cast<int64_t>(audio.size())};

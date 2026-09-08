@@ -3,4 +3,4 @@
 set -ex
 
 go build
-./version
+./hello-world

@@ -22,6 +22,14 @@
 
 namespace sherpa_onnx {
 
+// Returns true when the (LFR-stacked) fbank frames are all identical, which
+// for this model family means the clip is digital silence: dither is disabled
+// and the fbank is deterministic, so constant samples produce constant frames
+// while any real signal varies from frame to frame.
+//
+// Exposed here (rather than kept file-local) so it can be unit tested.
+bool FunASRNanoAudioIsSilent(const float *features, int32_t n);
+
 class OfflineRecognizerFunASRNanoImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerFunASRNanoImpl(
