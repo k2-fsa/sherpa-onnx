@@ -16,8 +16,10 @@ class OfflineCtcGreedySearchDecoder : public OfflineCtcDecoder {
   explicit OfflineCtcGreedySearchDecoder(int32_t blank_id)
       : blank_id_(blank_id) {}
 
-  std::vector<OfflineCtcDecoderResult> Decode(
-      Ort::Value log_probs, Ort::Value log_probs_length) override;
+  std::vector<OfflineCtcDecoderResult> Decode(Ort::Value log_probs,
+                                              Ort::Value log_probs_length,
+                                              OfflineStream **ss = nullptr,
+                                              int32_t n = 0) override;
 
  private:
   int32_t blank_id_;
