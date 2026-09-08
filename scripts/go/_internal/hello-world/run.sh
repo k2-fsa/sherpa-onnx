@@ -1,0 +1,1 @@
+../../../../go-api-examples/hello-world/run.sh
