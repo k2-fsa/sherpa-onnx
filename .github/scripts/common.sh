@@ -18,8 +18,9 @@ download() {
     log "Download attempt $i/$max_retries: $url"
     if curl -SL --fail -o "$output" "$url"; then
       # Verify the file is not an HTML error page
-      if file "$output" | grep -q "HTML\|text"; then
-        log "Warning: Downloaded file appears to be HTML, not the expected content"
+      # Check for HTML tags in the first few bytes, but allow legitimate text files
+      if head -c 1000 "$output" 2>/dev/null | grep -qi "<!doctype\|<html\|<head\|<body"; then
+        log "Warning: Downloaded file appears to be an HTML error page"
         if [ "$i" -lt "$max_retries" ]; then
           local sleep_seconds=$(( RANDOM % 10 + 1 ))
           log "Retrying in $sleep_seconds seconds..."
