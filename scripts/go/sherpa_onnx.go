@@ -2092,8 +2092,9 @@ type OfflineSpeakerSegmentationModelConfig struct {
 }
 
 type FastClusteringConfig struct {
-	NumClusters int
-	Threshold   float32
+	NumClusters       int
+	Threshold         float32
+	ComputeConfidence int // 1 to enable per-segment confidence computation
 }
 
 type OfflineSpeakerDiarizationConfig struct {
@@ -2138,6 +2139,7 @@ func NewOfflineSpeakerDiarization(config *OfflineSpeakerDiarizationConfig) *Offl
 
 	c.clustering.num_clusters = C.int(config.Clustering.NumClusters)
 	c.clustering.threshold = C.float(config.Clustering.Threshold)
+	c.clustering.compute_confidence = C.int(config.Clustering.ComputeConfidence)
 	c.min_duration_on = C.float(config.MinDurationOn)
 	c.min_duration_off = C.float(config.MinDurationOff)
 
@@ -2163,14 +2165,16 @@ func (sd *OfflineSpeakerDiarization) SetConfig(config *OfflineSpeakerDiarization
 
 	c.clustering.num_clusters = C.int(config.Clustering.NumClusters)
 	c.clustering.threshold = C.float(config.Clustering.Threshold)
+	c.clustering.compute_confidence = C.int(config.Clustering.ComputeConfidence)
 
 	C.SherpaOnnxOfflineSpeakerDiarizationSetConfig(sd.impl, &c)
 }
 
 type OfflineSpeakerDiarizationSegment struct {
-	Start   float32
-	End     float32
-	Speaker int
+	Start      float32
+	End        float32
+	Speaker    int
+	Confidence float32 // range between [-1, 1], -2 if unavailable
 }
 
 func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeakerDiarizationSegment {
@@ -2194,6 +2198,7 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 		ans[i].Start = float32(p[i].start)
 		ans[i].End = float32(p[i].end)
 		ans[i].Speaker = int(p[i].speaker)
+		ans[i].Confidence = float32(p[i].confidence)
 	}
 
 	return ans

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	"log"
 )
@@ -53,6 +54,9 @@ func initSpeakerDiarization() *sherpa.OfflineSpeakerDiarization {
 	// A larger Threshold leads to fewer clusters
 	// A smaller Threshold leads to more clusters
 
+	// Set ComputeConfidence to 1 to enable per-segment confidence computation
+	// config.Clustering.ComputeConfidence = 1
+
 	sd := sherpa.NewOfflineSpeakerDiarization(&config)
 	return sd
 }
@@ -82,7 +86,13 @@ func main() {
 	segments := sd.Process(wave.Samples)
 	n := len(segments)
 
+	const confidenceUnavailable = -2.0
 	for i := 0; i < n; i++ {
-		log.Printf("%.3f -- %.3f speaker_%02d\n", segments[i].Start, segments[i].End, segments[i].Speaker)
+		suffix := ""
+		if float64(segments[i].Confidence) != confidenceUnavailable {
+			suffix = fmt.Sprintf(" confidence=%.3f", segments[i].Confidence)
+		}
+		log.Printf("%.3f -- %.3f speaker_%02d%s\n",
+			segments[i].Start, segments[i].End, segments[i].Speaker, suffix)
 	}
 }
