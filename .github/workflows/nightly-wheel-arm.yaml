@@ -20,13 +20,11 @@ jobs:
   nightly-wheel-arm:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     name: ${{ matrix.python-version }}
-    # see https://github.com/actions/virtual-environments/blob/win19/20210525.0/images/win/Windows2019-Readme.md
-    runs-on: ${{ matrix.os}}
+    runs-on: ubuntu-22.04-arm
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v4
@@ -39,33 +37,54 @@ jobs:
           ./new-release.sh
           git diff .
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: arm
-
       - name: Run docker
         shell: bash
         run: |
             docker run --rm \
               --platform linux/arm/v7 \
-              --volume ${{ github.workspace }}/:/workspace \
-              balenalib/raspberrypi3-python:${{ matrix.python-version }}-bullseye-build \
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+              quay.io/pypa/manylinux_2_35_armv7l${{ matrix.python-version == '3.8' && ':2025.11.29-1' || '' }} \
             bash -c '
               uname -a
-              cd /workspace
-              ls -lh
 
-              v=${{ matrix.python-version }}
-              PYTHON_VERSION=${v/./}
-              echo PYTHON_VERSION=$PYTHON_VERSION >> $GITHUB_ENV
-              extra=""
-              if [[ ${PYTHON_VERSION} == "37" ]]; then
-                extra="m"
+              python_version=${{ matrix.python-version }}
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              echo "--------------------"
+              PY_GLOB="/opt/_internal/cpython-${python_version}*/bin"
+
+              shopt -s nullglob
+              matches=($PY_GLOB)
+              shopt -u nullglob
+
+              if [[ ${#matches[@]} -eq 0 ]]; then
+                echo "No Python installation found for version $python_version"
+                exit 1
+              elif [[ ${#matches[@]} -gt 1 ]]; then
+                echo "Multiple Python installations found for version $python_version:"
+                printf "  %s\n" "${matches[@]}"
+                echo "Using the first one: ${matches[0]}"
               fi
 
-              # pip install -i https://www.piwheels.org/simple numpy sentencepiece click
-              pip install https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/sentencepiece-0.2.0-cp${PYTHON_VERSION}-cp${PYTHON_VERSION}${extra}-linux_armv7l.whl
+              PY_PATH="${matches[0]}"
+
+              echo "$PY_PATH"
+              export PATH="$PY_PATH:$PATH"
+              which python3
+              python3 --version
+
+              python3 -m venv my
+
+              source ./my/bin/activate
+
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
+
+              export LD_LIBRARY_PATH=$PWD/alsa-lib/src/.libs:$LD_LIBRARY_PATH
+
               pip install --no-deps sherpa-onnx
               python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__, sherpa_onnx.__version__); print(dir(sherpa_onnx)); print(help(sherpa_onnx))"
             '
