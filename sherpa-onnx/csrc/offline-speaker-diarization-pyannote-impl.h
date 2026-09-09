@@ -564,8 +564,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     if (k != cur_row_index) {
-      auto seq = Eigen::seqN(0, cur_row_index);
-      ans = ans(seq, Eigen::placeholders::all);
+      ans.conservativeResize(cur_row_index, ans.cols());
     }
 
     return ans;

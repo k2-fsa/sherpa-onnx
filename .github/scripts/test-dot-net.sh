@@ -196,6 +196,15 @@ cp -v dotnet-examples/zipvoice-tts/*.wav ./tts
 popd
 
 cd ../offline-speaker-diarization
+echo "=== DEBUG: /tmp/packages contents ==="
+ls -lh /tmp/packages/ 2>/dev/null || echo "/tmp/packages does not exist"
+echo "=== DEBUG: Common.csproj ==="
+cat ../Common/Common.csproj
+echo "=== DEBUG: NuGet global-packages ==="
+dotnet nuget locals global-packages --list 2>/dev/null || true
+echo "=== DEBUG: restore offline-speaker-diarization ==="
+dotnet restore --verbosity detailed 2>&1 | grep -iE "org.k2fsa.sherpa.onnx|source|version|1\.13\." | head -30
+echo "=== END DEBUG ==="
 ./run.sh
 rm -rfv *.onnx
 rm -fv *.wav
