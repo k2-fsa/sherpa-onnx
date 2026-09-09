@@ -14,18 +14,18 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.1/onnxruntime-linux-x64-static_lib-1.27.1-glibc2_17.zip")
-set(onnxruntime_HASH "SHA256=6b4df7fc46d3367b6be73fdea80dee323b9dc9eaa8dc50136a33d8524e7f06bb")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip")
+set(onnxruntime_HASH "SHA256=2dada92465b40a16fb5011956d93eaf90e3091cf621a953e5371a5e6a687794e")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.27.1-glibc2_17.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.27.1-glibc2_17.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.27.1-glibc2_17.zip
-  /tmp/onnxruntime-linux-x64-static_lib-1.27.1-glibc2_17.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.27.1-glibc2_17.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
+  /tmp/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

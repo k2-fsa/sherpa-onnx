@@ -14,18 +14,18 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.1/onnxruntime-android-1.27.1.zip")
-set(onnxruntime_HASH "SHA256=defade26209f72cf4fa9769b18052c842833d6bef12924595d26f03b995548ca")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/onnxruntime-android-1.28.2.zip")
+set(onnxruntime_HASH "SHA256=01518867f78241138b6aa25925802e843a4fa9085af8d303d49e35bbb52aff4d")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-android-1.27.1.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-android-1.27.1.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-android-1.27.1.zip
-  /tmp/onnxruntime-android-1.27.1.zip
-  /star-fj/fangjun/download/github/onnxruntime-android-1.27.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-android-1.28.2.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-android-1.28.2.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-android-1.28.2.zip
+  /tmp/onnxruntime-android-1.28.2.zip
+  /star-fj/fangjun/download/github/onnxruntime-android-1.28.2.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

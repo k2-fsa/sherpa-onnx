@@ -14,14 +14,14 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.1/onnxruntime-android-armeabi-v7a-static_lib-1.27.1.zip")
-set(onnxruntime_HASH "SHA256=f2e339cbf0ea9bfc271d66daa8b4ae8c2681c3fab82a8d24b71b2577ec91a5af")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/onnxruntime-android-armeabi-v7a-static_lib-1.28.2.zip")
+set(onnxruntime_HASH "SHA256=21f8aaab5d536f397a11deeedc09c2ceecc740b45332d8a946c358e7717b5f18")
 
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-android-armeabi-v7a-static_lib-1.27.1.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-android-armeabi-v7a-static_lib-1.27.1.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-android-armeabi-v7a-static_lib-1.27.1.zip
-  /tmp/onnxruntime-android-armeabi-v7a-static_lib-1.27.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-android-armeabi-v7a-static_lib-1.28.2.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-android-armeabi-v7a-static_lib-1.28.2.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-android-armeabi-v7a-static_lib-1.28.2.zip
+  /tmp/onnxruntime-android-armeabi-v7a-static_lib-1.28.2.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

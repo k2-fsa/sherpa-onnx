@@ -14,7 +14,7 @@ let package = Package(
     .library(name: "sherpa-onnx-shared", targets: ["SherpaOnnxShared"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/csukuangfj/onnxruntime-libs", exact: "1.28.1")
+    .package(url: "https://github.com/csukuangfj/onnxruntime-libs", exact: "1.28.2")
   ],
   targets: [
     // --- Static binary targets ---
