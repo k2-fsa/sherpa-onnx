@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
 # Common utilities for CI scripts
+# Provides robust download functions with retry logic, validation, and automatic cleanup
 
 # Default log function (can be overridden by scripts that define their own)
+# Logs messages with timestamp, source file, line number, and function name
 log() {
   local fname=${BASH_SOURCE[1]##*/}
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
-# Download a file with retry logic
+# Download a file with retry logic and validation
+# Validates that downloaded files are not empty and not HTML error pages
+# Retries with random sleep (1-10 seconds) between attempts
 # Usage: download <url> [output_filename] [max_retries]
+# Arguments:
+#   url - The URL to download from
+#   output_filename - Optional. The local filename to save as (default: basename of URL)
+#   max_retries - Optional. Maximum number of retry attempts (default: 5)
+# Returns: 0 on success, 1 on failure
 download() {
   local url="$1"
   local output="${2:-$(basename "$url")}"
@@ -17,6 +26,20 @@ download() {
   for ((i = 1; i <= max_retries; i++)); do
     log "Download attempt $i/$max_retries: $url"
     if curl -SL --fail -o "$output" "$url"; then
+      # Check for empty file
+      if [ ! -s "$output" ]; then
+        log "Warning: Downloaded file is empty"
+        if [ "$i" -lt "$max_retries" ]; then
+          local sleep_seconds=$(( RANDOM % 10 + 1 ))
+          log "Retrying in $sleep_seconds seconds..."
+          sleep "$sleep_seconds"
+          continue
+        else
+          log "Error: Failed to download non-empty file after $max_retries attempts"
+          return 1
+        fi
+      fi
+
       # Verify the file is not an HTML error page
       # Check for HTML tags in the first few bytes, but allow legitimate text files
       if head -c 1000 "$output" 2>/dev/null | grep -qi "<!doctype\|<html\|<head\|<body"; then
@@ -46,8 +69,17 @@ download() {
   return 1
 }
 
-# Download and extract a tarball with retry logic
+# Download and extract an archive file with retry logic and validation
+# Supports multiple archive formats: .tar.bz2, .tar.gz, .tar.xz, .zip
+# Automatically removes the archive file after successful extraction
+# Validates downloads are not empty and not HTML error pages
+# Retries with random sleep (1-10 seconds) between attempts
 # Usage: download_and_extract <url> [output_dir] [max_retries]
+# Arguments:
+#   url - The URL of the archive to download
+#   output_dir - Optional. Directory to extract to (default: current directory)
+#   max_retries - Optional. Maximum number of retry attempts (default: 5)
+# Returns: 0 on success, 1 on failure
 download_and_extract() {
   local url="$1"
   local output_dir="${2:-.}"
