@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -23,9 +24,7 @@ url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-on
 name=$(basename $url)
 repo=$(basename -s .tar.bz2 $name)
 
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 ls -lh $repo
 
 $EXE \
@@ -40,9 +39,7 @@ rm -rf $repo
 log "------------------------------------------------------------"
 log "Run streaming Zipformer2 CTC HLG decoding                   "
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
-rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 repo=$PWD/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
 ls -lh $repo
 echo "pwd: $PWD"
@@ -63,9 +60,7 @@ log "------------------------------------------------------------"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 repo=$(basename -s .tar.bz2 $url)
-curl -SL -O $url
-tar xvf $repo.tar.bz2
-rm $repo.tar.bz2
+download_and_extract $url
 
 log "test fp32"
 
@@ -92,9 +87,7 @@ sherpa-onnx-en-wenet-librispeech
 )
 for name in ${wenet_models[@]}; do
   repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$name.tar.bz2
-  curl -SL -O $repo_url
-  tar xvf $name.tar.bz2
-  rm $name.tar.bz2
+  download_and_extract $repo_url
   repo=$name
   log "Start testing ${repo_url}"
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -32,8 +33,8 @@ wespeaker_zh_cnceleb_resnet34.onnx
 wespeaker_zh_cnceleb_resnet34_LM.onnx
 )
 for m in ${models[@]}; do
-  curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
-  curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/wespeaker_en_voxceleb_CAM++_LM.onnx
+  download https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
+  download https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/wespeaker_en_voxceleb_CAM++_LM.onnx
 done
 ls -lh
 popd
@@ -52,7 +53,7 @@ models=(
 3dspeaker_speech_eres2net_sv_zh-cn_16k-common.onnx
 )
 for m in ${models[@]}; do
-  curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
+  download https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
 done
 ls -lh
 popd
@@ -67,7 +68,7 @@ nemo_en_titanet_small.onnx
 nemo_en_speakerverification_speakernet.onnx
 )
 for m in ${models[@]}; do
-  curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
+  download https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
 done
 ls -lh
 popd

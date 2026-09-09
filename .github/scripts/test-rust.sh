@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 cd rust-api-examples
 
 trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -21,9 +22,7 @@ mkdir ./tts
 log "------------------------------------------------------------"
 log "sherpa-onnx-pocket-tts-int8-2026-01-26"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
-tar xvf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
-rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 
 $EXE \
   --pocket-lm-flow=./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx \
@@ -45,9 +44,7 @@ rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
 log "------------------------------------------------------------"
 log "kokoro-en-v0_19"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
-tar xf kokoro-en-v0_19.tar.bz2
-rm kokoro-en-v0_19.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
 
 # mapping of sid to voice name
 # 0->af, 1->af_bella, 2->af_nicole, 3->af_sarah, 4->af_sky, 5->am_adam
@@ -70,11 +67,9 @@ rm -rf kokoro-en-v0_19
 log "------------------------------------------------------------"
 log "matcha-tts-fa_en-musa"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-musa.tar.bz2
-tar xvf matcha-tts-fa_en-musa.tar.bz2
-rm matcha-tts-fa_en-musa.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-musa.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 
 $EXE \
@@ -93,11 +88,9 @@ ls -lh tts/*.wav
 log "------------------------------------------------------------"
 log "matcha-icefall-en_US-ljspeech"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
-tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
-rm matcha-icefall-en_US-ljspeech.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 
 $EXE \
@@ -117,11 +110,9 @@ ls -lh tts/*.wav
 log "------------------------------------------------------------"
 log "matcha-icefall-zh-baker"
 log "------------------------------------------------------------"
-curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
-tar xvf matcha-icefall-zh-baker.tar.bz2
-rm matcha-icefall-zh-baker.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 $EXE \
   --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
@@ -149,9 +140,7 @@ rm -rf matcha-icefall-zh-baker
 log "------------------------------------------------------------"
 log "vits-piper-en_US-amy-low"
 log "------------------------------------------------------------"
-curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-tar xf vits-piper-en_US-amy-low.tar.bz2
-rm vits-piper-en_US-amy-low.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 
 $EXE \
   --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
@@ -169,9 +158,7 @@ log "vits-ljs test"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-ljs.tar.bz2
-curl -SL -O $repo_url
-tar xvf vits-ljs.tar.bz2
-rm vits-ljs.tar.bz2
+download_and_extract $repo_url
 repo=vits-ljs
 
 log "Start testing ${repo_url}"
@@ -192,9 +179,7 @@ log "vits-vctk test"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2
-curl -SL -O $repo_url
-tar xvf vits-vctk.tar.bz2
-rm vits-vctk.tar.bz2
+download_and_extract $repo_url
 repo=vits-vctk
 
 log "Start testing ${repo_url}"
@@ -218,9 +203,7 @@ log "vits-zh-aishell3"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
-curl -SL -O $repo_url
-tar xvf vits-zh-aishell3.tar.bz2
-rm vits-zh-aishell3.tar.bz2
+download_and_extract $repo_url
 repo=vits-zh-aishell3
 
 log "Start testing ${repo_url}"

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -19,9 +20,7 @@ log "------------------------------------------------------------"
 log "Run NeMo transducer (English)"
 log "------------------------------------------------------------"
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
-rm sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms
 
 log "Start testing ${repo_url}"
@@ -59,9 +58,7 @@ log "Run LSTM transducer (English)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-lstm-en-2023-02-17.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-lstm-en-2023-02-17.tar.bz2
-rm sherpa-onnx-lstm-en-2023-02-17.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-lstm-en-2023-02-17
 
 log "Start testing ${repo_url}"
@@ -99,9 +96,7 @@ log "Run LSTM transducer (Chinese)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-lstm-zh-2023-02-20.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-lstm-zh-2023-02-20.tar.bz2
-rm sherpa-onnx-lstm-zh-2023-02-20.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-lstm-zh-2023-02-20
 
 log "Start testing ${repo_url}"
@@ -139,9 +134,7 @@ log "Run streaming Zipformer transducer (English)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2
-rm sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-streaming-zipformer-en-2023-02-21
 
 log "Start testing ${repo_url}"
@@ -234,9 +227,7 @@ log "Run streaming Zipformer transducer (Bilingual, Chinese + English)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
 log "Start testing ${repo_url}"
@@ -297,9 +288,7 @@ log "Run streaming Conformer transducer (English)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-conformer-en-2023-05-09.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-streaming-conformer-en-2023-05-09.tar.bz2
-rm sherpa-onnx-streaming-conformer-en-2023-05-09.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-streaming-conformer-en-2023-05-09
 
 log "Start testing ${repo_url}"
