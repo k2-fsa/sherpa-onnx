@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -60,13 +61,11 @@ da-danish.wav
 
 for wav in ${waves[@]}; do
   echo "Downloading $wav"
-  curl -SL -O https://hf-mirror.com/spaces/k2-fsa/spoken-language-identification/resolve/main/test_wavs/$wav
+  download https://hf-mirror.com/spaces/k2-fsa/spoken-language-identification/resolve/main/test_wavs/$wav
   ls -lh *.wav
 done
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
-tar xvf spoken-language-identification-test-wavs.tar.bz2
-rm spoken-language-identification-test-wavs.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
 data=spoken-language-identification-test-wavs
 
 for name in ${names[@]}; do
@@ -74,9 +73,7 @@ for name in ${names[@]}; do
   log "Run $name"
   log "------------------------------------------------------------"
   repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-$name.tar.bz2
-  curl -SL -O $repo_url
-  tar xvf sherpa-onnx-whisper-$name.tar.bz2
-  rm sherpa-onnx-whisper-$name.tar.bz2
+  download_and_extract $repo_url
 
   log "Start testing ${repo_url}"
   repo=sherpa-onnx-whisper-$name

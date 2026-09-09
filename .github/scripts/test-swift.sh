@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 echo "pwd: $PWD"
 
 cd swift-api-examples
@@ -130,7 +131,7 @@ rm -rf sherpa-onnx-whisper*
 
 mkdir -p /Users/fangjun/Desktop
 pushd /Users/fangjun/Desktop
-curl -SL -O https://huggingface.co/csukuangfj/test-data/resolve/main/Obama.wav
+download https://huggingface.co/csukuangfj/test-data/resolve/main/Obama.wav
 ls -lh
 popd
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 echo "TODO(fangjun): Skip this test since the sanitizer test is failed. We need to fix it"
 exit 0
 
@@ -20,10 +21,7 @@ log "------------------------------------------------------------"
 log "Download the punctuation model                             "
 log "------------------------------------------------------------"
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
-
-tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
-rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 repo=sherpa-onnx-online-punct-en-2024-08-06
 ls -lh $repo
 

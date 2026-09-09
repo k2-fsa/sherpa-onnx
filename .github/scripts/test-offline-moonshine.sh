@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -27,9 +28,7 @@ for name in ${names[@]}; do
 
   repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-$name.tar.bz2
   repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-$name-en-int8.tar.bz2
-  curl -SL -O $repo_url
-  tar xvf sherpa-onnx-moonshine-$name-en-int8.tar.bz2
-  rm sherpa-onnx-moonshine-$name-en-int8.tar.bz2
+  download_and_extract $repo_url
   repo=sherpa-onnx-moonshine-$name-en-int8
   log "Start testing ${repo_url}"
 

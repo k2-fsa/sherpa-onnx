@@ -8,6 +8,9 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
+
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
 echo "EXE is $EXE"
@@ -18,9 +21,7 @@ which $EXE
 log "------------------------------------------------------------"
 log "Run NeMo GigaAM Russian models v2"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2
-tar xvf sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2
-rm sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2
 
 $EXE \
   --encoder=./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/encoder.int8.onnx \
@@ -39,9 +40,7 @@ log "------------------------------------------------------------------------"
 for type in small-zipformer zipformer; do
   url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-$type-ru-2024-09-18.tar.bz2
   name=$(basename $url)
-  curl -SL -O $url
-  tar xvf $name
-  rm $name
+  download_and_extract $url
   repo=$(basename -s .tar.bz2 $name)
   ls -lh $repo
 
@@ -79,9 +78,7 @@ log "------------------------------------------------------------------------"
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
 
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -123,9 +120,7 @@ log "------------------------------------------------------------------------"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -155,9 +150,7 @@ rm -rf $repo
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-en-24500.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -175,9 +168,7 @@ rm -rf $repo
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-es-1424.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -195,9 +186,7 @@ rm -rf $repo
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-en-de-es-fr-14288.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -221,9 +210,7 @@ log "Run Conformer transducer (English)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-conformer-en-2023-03-18.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-conformer-en-2023-03-18.tar.bz2
-rm sherpa-onnx-conformer-en-2023-03-18.tar.bz2
+download_and_extract $repo_url
 log "Start testing ${repo_url}"
 repo=sherpa-onnx-conformer-en-2023-03-18
 log "Download pretrained model and test-data from $repo_url"
@@ -255,9 +242,7 @@ log "Run Zipformer transducer (English)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-03-30.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-zipformer-en-2023-03-30.tar.bz2
-rm sherpa-onnx-zipformer-en-2023-03-30.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-zipformer-en-2023-03-30
 log "Start testing ${repo_url}"
 
@@ -331,9 +316,7 @@ log "Run Paraformer (Chinese) with timestamps"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-paraformer-zh-2023-09-14
 
 log "Start testing ${repo_url}"
@@ -356,9 +339,7 @@ log "------------------------------------------------------------"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-en-24500.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 

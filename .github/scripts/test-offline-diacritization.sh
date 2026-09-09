@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -20,9 +21,7 @@ log "------------------------------------------------------------"
 tmp_dir=catt_eo_model_onnx
 mkdir -p $tmp_dir
 cd $tmp_dir
-curl -SL -O https://github.com/abjadai/catt/releases/download/v2/eo_model_onnx.zip
-unzip -o eo_model_onnx.zip
-rm eo_model_onnx.zip
+download_and_extract https://github.com/abjadai/catt/releases/download/v2/eo_model_onnx.zip
 cd ..
 
 assert_diacritized() {
