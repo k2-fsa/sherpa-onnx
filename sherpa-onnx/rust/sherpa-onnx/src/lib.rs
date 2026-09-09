@@ -42,6 +42,16 @@
 //!
 //! That override works for both static and shared builds.
 //!
+//! Alternatively, set `SHERPA_ONNX_ARCHIVE_DIR` to a directory that contains
+//! pre-downloaded archive files (`.tar.bz2` or `.xcframework.zip`). The build
+//! script copies the archive from this directory instead of downloading it from
+//! the internet. The archive must have the same filename that would normally be
+//! downloaded (e.g. `sherpa-onnx-v1.13.7-linux-x64-shared-lib.tar.bz2`).
+//!
+//! ```bash
+//! export SHERPA_ONNX_ARCHIVE_DIR=/path/to/downloaded/archives
+//! ```
+//!
 //! Shared mode is also intended to work out of the box for normal users:
 //!
 //! - Linux and macOS: the build script adds both absolute and relative rpath

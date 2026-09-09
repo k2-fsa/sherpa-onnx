@@ -719,10 +719,10 @@ fn copy_dir_recursively(src: &Path, dst: &Path) -> Result<(), DynError> {
         if ty.is_dir() {
             copy_dir_recursively(&entry.path(), &dest_path)?;
         } else if ty.is_symlink() {
-            let target = fs::read_link(entry.path())?;
             #[cfg(unix)]
             {
                 use std::os::unix::fs::symlink;
+                let target = fs::read_link(entry.path())?;
                 symlink(&target, &dest_path)?;
             }
             #[cfg(not(unix))]
