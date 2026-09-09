@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {

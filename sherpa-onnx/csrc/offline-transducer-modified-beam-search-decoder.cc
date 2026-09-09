@@ -10,7 +10,7 @@
 
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
-#include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/packed-sequence.h"
 #include "sherpa-onnx/csrc/slice.h"
@@ -27,7 +27,10 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
   int32_t batch_size =
       static_cast<int32_t>(packed_encoder_out.sorted_indexes.size());
 
-  if (ss != nullptr) SHERPA_ONNX_CHECK_EQ(batch_size, n);
+  if (ss != nullptr && batch_size != n) {
+    SHERPA_ONNX_LOGE("batch_size != n: %d vs %d", batch_size, n);
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   int32_t vocab_size = model_->VocabSize();
   int32_t context_size = model_->ContextSize();

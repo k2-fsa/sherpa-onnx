@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/offline-tts-kokoro-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-matcha-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-pocket-model-config.h"
+#include "sherpa-onnx/csrc/offline-tts-pocket-zh-en-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-supertonic-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
@@ -25,6 +26,7 @@ struct OfflineTtsModelConfig {
   OfflineTtsZipvoiceModelConfig zipvoice;
   OfflineTtsKittenModelConfig kitten;
   OfflineTtsPocketModelConfig pocket;
+  OfflineTtsPocketZhEnModelConfig pocket_zh_en;
   OfflineTtsSupertonicModelConfig supertonic;
 
   int32_t num_threads = 1;
@@ -39,6 +41,7 @@ struct OfflineTtsModelConfig {
                         const OfflineTtsZipvoiceModelConfig &zipvoice,
                         const OfflineTtsKittenModelConfig &kitten,
                         const OfflineTtsPocketModelConfig &pocket,
+                        const OfflineTtsPocketZhEnModelConfig &pocket_zh_en,
                         const OfflineTtsSupertonicModelConfig &supertonic,
                         int32_t num_threads, bool debug,
                         const std::string &provider)
@@ -48,6 +51,7 @@ struct OfflineTtsModelConfig {
         zipvoice(zipvoice),
         kitten(kitten),
         pocket(pocket),
+        pocket_zh_en(pocket_zh_en),
         supertonic(supertonic),
         num_threads(num_threads),
         debug(debug),

@@ -11,6 +11,7 @@
 #include "sherpa-onnx/python/csrc/offline-tts-kokoro-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tts-matcha-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tts-pocket-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-tts-pocket-zh-en-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tts-supertonic-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tts-vits-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tts-zipvoice-model-config.h"
@@ -24,6 +25,7 @@ void PybindOfflineTtsModelConfig(py::module *m) {
   PybindOfflineTtsZipvoiceModelConfig(m);
   PybindOfflineTtsKittenModelConfig(m);
   PybindOfflineTtsPocketModelConfig(m);
+  PybindOfflineTtsPocketZhEnModelConfig(m);
   PybindOfflineTtsSupertonicModelConfig(m);
 
   using PyClass = OfflineTtsModelConfig;
@@ -36,6 +38,7 @@ void PybindOfflineTtsModelConfig(py::module *m) {
                     const OfflineTtsZipvoiceModelConfig &,
                     const OfflineTtsKittenModelConfig &,
                     const OfflineTtsPocketModelConfig &,
+                    const OfflineTtsPocketZhEnModelConfig &,
                     const OfflineTtsSupertonicModelConfig &, int32_t, bool,
                     const std::string &>(),
            py::arg("vits") = OfflineTtsVitsModelConfig{},
@@ -44,6 +47,7 @@ void PybindOfflineTtsModelConfig(py::module *m) {
            py::arg("zipvoice") = OfflineTtsZipvoiceModelConfig{},
            py::arg("kitten") = OfflineTtsKittenModelConfig{},
            py::arg("pocket") = OfflineTtsPocketModelConfig{},
+           py::arg("pocket_zh_en") = OfflineTtsPocketZhEnModelConfig{},
            py::arg("supertonic") = OfflineTtsSupertonicModelConfig{},
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu")
@@ -53,6 +57,7 @@ void PybindOfflineTtsModelConfig(py::module *m) {
       .def_readwrite("zipvoice", &PyClass::zipvoice)
       .def_readwrite("kitten", &PyClass::kitten)
       .def_readwrite("pocket", &PyClass::pocket)
+      .def_readwrite("pocket_zh_en", &PyClass::pocket_zh_en)
       .def_readwrite("supertonic", &PyClass::supertonic)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)

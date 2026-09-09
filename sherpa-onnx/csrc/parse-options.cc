@@ -20,7 +20,6 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -83,9 +82,11 @@ void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
   if (other_parser_ == nullptr) {
     this->RegisterCommon(name, ptr, doc, false);
   } else {
-    SHERPA_ONNX_CHECK(prefix_ != "")
-        << "prefix: " << prefix_ << "\n"
-        << "Cannot use empty prefix when registering with prefix.";
+    if (prefix_ == "") {
+      SHERPA_ONNX_LOGE(
+          "Cannot use empty prefix when registering with prefix.");
+      SHERPA_ONNX_EXIT(-1);
+    }
     std::string new_name = prefix_ + '.' + name;  // name becomes prefix.name
     other_parser_->Register(new_name, ptr, doc);
   }
@@ -95,7 +96,10 @@ void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
 template <typename T>
 void ParseOptions::RegisterCommon(const std::string &name, T *ptr,
                                   const std::string &doc, bool is_standard) {
-  SHERPA_ONNX_CHECK(ptr != nullptr);
+  if (ptr == nullptr) {
+    SHERPA_ONNX_LOGE("ptr is nullptr");
+    SHERPA_ONNX_EXIT(-1);
+  }
   std::string idx = name;
   NormalizeArgName(&idx);
   if (doc_map_.find(idx) != doc_map_.end()) {
@@ -223,7 +227,10 @@ static ShellType kShellType = kBash;
 // the program echoes its command-line arguments to the screen.
 static bool MustBeQuoted(const std::string &str, ShellType st) {
   // Only Bash is supported (for the moment).
-  SHERPA_ONNX_CHECK_EQ(st, kBash) << "Invalid shell type.";
+  if (st != kBash) {
+    SHERPA_ONNX_LOGE("Invalid shell type: %d", static_cast<int>(st));
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   const char *c = str.c_str();
   if (*c == '\0') {
@@ -238,7 +245,10 @@ static bool MustBeQuoted(const std::string &str, ShellType st) {
 
     // Just want to make sure that a space character doesn't get automatically
     // inserted here via an automated style-checking script, like it did before.
-    SHERPA_ONNX_CHECK(!strchr(ok_chars[kBash], ' '));
+    if (strchr(ok_chars[kBash], ' ')) {
+      SHERPA_ONNX_LOGE("ok_chars contains space");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     for (; *c != '\0'; ++c) {
       // For non-alphanumeric characters we have a list of characters which
@@ -492,7 +502,10 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
 void ParseOptions::SplitLongArg(const std::string &in, std::string *key,
                                 std::string *value,
                                 bool *has_equal_sign) const {
-  SHERPA_ONNX_CHECK(in.substr(0, 2) == "--") << in;  // precondition.
+  if (in.substr(0, 2) != "--") {
+    SHERPA_ONNX_LOGE("Invalid option: %s", in.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
   size_t pos = in.find_first_of('=', 0);
   if (pos == std::string::npos) {  // we allow --option for bools
     // defaults to empty.  We handle this differently in different cases.
@@ -523,7 +536,10 @@ void ParseOptions::NormalizeArgName(std::string *str) const {
   }
   *str = out;
 
-  SHERPA_ONNX_CHECK_GT(str->length(), 0);
+  if (str->length() <= 0) {
+    SHERPA_ONNX_LOGE("str->length() is 0");
+    SHERPA_ONNX_EXIT(-1);
+  }
 }
 
 void ParseOptions::Trim(std::string *str) const {

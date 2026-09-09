@@ -16,7 +16,7 @@
 
 #include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
-#include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"

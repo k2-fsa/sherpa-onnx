@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <chrono>  // NOLINT
 #include <cstdio>
 #include <iostream>
 #include <string>

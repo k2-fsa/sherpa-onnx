@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 

@@ -8,33 +8,30 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+mkdir -p tts
+
 log "test version"
 python3 ./python-api-examples/version-test.py
 
-log "test Cohere Transcribe"
+log "test PocketTTS ZhEn"
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
-tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
-rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
-python3 ./python-api-examples/offline-cohere-transcribe-decode-files.py
-rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/step_onnx_int8/step_model.onnx
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/step_onnx_int8/step_encoder.onnx
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/lexicon-en.txt
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/lexicon-zh.txt
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/trump.wav
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/number-zh.fst
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/phone-zh.fst
+curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/date-zh.fst
 
-log "test Qwen3 ASR"
+python3 ./python-api-examples/pocket-tts-zh-en.py
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
-tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
-rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+ls -lh generated-pocket-zh-en-*.wav
 
-python3 ./python-api-examples/offline-qwen3-asr-decode-files.py \
-  --conv-frontend=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx \
-  --encoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx \
-  --decoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx \
-  --tokenizer=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer \
-  --max-new-tokens=128 \
-  --num-threads=2 \
-  ./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav
+mv generated-pocket-zh-en-*.wav ./tts/
 
-rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+rm -f step_model.onnx step_encoder.onnx lexicon-en.txt lexicon-zh.txt trump.wav number-zh.fst phone-zh.fst date-zh.fst
+rm -f generated-pocket-zh-en-*.wav
 
 log "test Supertonic TTS"
 
@@ -46,7 +43,6 @@ python3 python-api-examples/supertonic-tts.py
 
 rm -rf sherpa-onnx-supertonic-3-tts-int8-2026-05-11
 
-mkdir -p tts
 cp supertonic-en.wav tts/
 ls -lh tts
 
@@ -798,6 +794,31 @@ if [[ x$OS != x'windows-latest' ]]; then
 
   rm -rf $repo
 fi
+
+log "test Cohere Transcribe"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+python3 ./python-api-examples/offline-cohere-transcribe-decode-files.py
+rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+
+log "test Qwen3 ASR"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+python3 ./python-api-examples/offline-qwen3-asr-decode-files.py \
+  --conv-frontend=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx \
+  --encoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx \
+  --decoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx \
+  --tokenizer=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer \
+  --max-new-tokens=128 \
+  --num-threads=2 \
+  ./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav
+
+rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 
 log "Test non-streaming NeMo CTC models"
 

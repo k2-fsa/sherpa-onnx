@@ -452,7 +452,10 @@ OnlineZipformer2TransducerModel::GetEncoderInitStates() {
   }
 
   {
-    SHERPA_ONNX_CHECK_NE(feature_dim_, 0);
+    if (feature_dim_ == 0) {
+      SHERPA_ONNX_LOGE("feature_dim_ is 0");
+      SHERPA_ONNX_EXIT(-1);
+    }
     int32_t embed_dim = (((feature_dim_ - 1) / 2) - 1) / 2;
     std::array<int64_t, 4> s{1, 128, 3, embed_dim};
 

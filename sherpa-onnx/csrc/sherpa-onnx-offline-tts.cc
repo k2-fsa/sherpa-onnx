@@ -8,15 +8,21 @@
 #include <string>
 #include <utility>
 
-#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
 static int32_t AudioCallback(const float * /*samples*/, int32_t n,
                              float progress) {
-  printf("sample=%d, progress=%f\n", n, progress);
+  if (progress >= 1.0f) {
+    // Done - clear line and print100%
+    printf("\r\033[K100%%\n");
+  } else if (progress >= 0) {
+    printf("\rsample=%d, progress=%.2f%%", n, progress * 100);
+  }
+  fflush(stdout);
   return 1;
 }
 
@@ -90,6 +96,20 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/voco
  --output-filename=./generated-zipvoice.wav \
  "小米的价值观是真诚, 热爱. 真诚，就是不欺人也不自欺. 热爱, 就是全心投入并享受其中."
 
+Pocket TTS ZhEn:
+
+Please refer to
+https://modelscope.cn/models/dengcunqin/pocket-tts-zh-en
+for model files.
+
+./bin/sherpa-onnx-offline-tts \
+ --pocket-zh-en-step-model=./pocket-tts-zh-en/step_onnx_int8/step_model.onnx \
+ --pocket-zh-en-step-encoder=./pocket-tts-zh-en/step_onnx_int8/step_encoder.onnx \
+ --pocket-zh-en-lexicon=./pocket-tts-zh-en/lexicon-zh.txt,./pocket-tts-zh-en/lexicon-en.txt \
+ --reference-audio=./pocket-tts-zh-en/Vivian.wav \
+ --output-filename=./generated-pocket-zh-en.wav \
+ "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长. How are you doing today? 我很好! Thank you."
+
 It will generate a file specified by --output-filename.
 
 You can find more models at
@@ -108,7 +128,8 @@ or details.
   std::string reference_audio;
   po.Register(
       "reference-audio", &reference_audio,
-      "Path to reference audio. Required by Pocket TTS and ZipVoice TTS.");
+      "Path to reference audio. Required by Pocket TTS, Pocket TTS ZhEn, "
+      "and ZipVoice TTS.");
 
   std::string reference_text;
   po.Register(
@@ -179,6 +200,7 @@ or details.
   sherpa_onnx::GeneratedAudio audio;
 
   bool is_pocket_tts = !config.model.pocket.lm_flow.empty();
+  bool is_pocket_zh_en_tts = !config.model.pocket_zh_en.step_model.empty();
   bool is_supertonic_tts = !config.model.supertonic.tts_json.empty();
   bool is_zipvoice_tts = !config.model.zipvoice.encoder.empty() &&
                          !config.model.zipvoice.decoder.empty();
@@ -193,7 +215,7 @@ or details.
     gen_config.extra["lang"] = lang;
   }
 
-  if (is_pocket_tts || is_zipvoice_tts) {
+  if (is_pocket_tts || is_pocket_zh_en_tts || is_zipvoice_tts) {
     if (reference_audio.empty()) {
       fprintf(stderr,
               "You need to provide --reference-audio for this TTS model");
@@ -202,8 +224,7 @@ or details.
 
     int32_t sample_rate;
     bool is_ok = false;
-    auto samples =
-        sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+    auto samples = sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
@@ -215,14 +236,15 @@ or details.
 
   if (is_zipvoice_tts) {
     if (reference_text.empty()) {
-      fprintf(stderr,
-              "You need to provide --reference-text for ZipVoice TTS");
+      fprintf(stderr, "You need to provide --reference-text for ZipVoice TTS");
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
     gen_config.reference_text = reference_text;
   }
 
   audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
+
+  printf("\n");
 
   const auto end = std::chrono::steady_clock::now();
 

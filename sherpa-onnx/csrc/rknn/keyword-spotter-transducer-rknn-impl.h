@@ -283,7 +283,7 @@ class KeywordSpotterTransducerRknnImpl : public KeywordSpotterImpl {
 
   void InitOnlineStream(OnlineStreamRknn *stream) const {
     auto r = decoder_->GetEmptyResult();
-    SHERPA_ONNX_CHECK_EQ(r.hyps.Size(), 1);
+    SHERPA_ONNX_CHECK_EQ(r.hyps.Size(), 1, "r.hyps.Size()");
 
     SHERPA_ONNX_CHECK(stream->GetContextGraph() != nullptr);
     r.hyps.begin()->second.context_state = stream->GetContextGraph()->Root();
