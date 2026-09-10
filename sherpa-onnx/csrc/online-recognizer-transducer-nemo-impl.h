@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2022-2024  Xiaomi Corporation
 // Copyright (c)  2024  Sangeet Sagar
+// Copyright (c)  2026  Joseph Mills (github.com/josephomills)
 
 #ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
@@ -60,6 +61,13 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
     } else if (config.decoding_method == "modified_beam_search") {
+      if (!config_.lm_config.model.empty()) {
+        SHERPA_ONNX_LOGE(
+            "LM fusion is not implemented for modified_beam_search with "
+            "streaming NeMo transducer models. Please remove --lm.");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
       if (!config_.model_config.bpe_vocab.empty()) {
         bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
             config_.model_config.bpe_vocab);
@@ -100,6 +108,13 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
     } else if (config.decoding_method == "modified_beam_search") {
+      if (!config_.lm_config.model.empty()) {
+        SHERPA_ONNX_LOGE(
+            "LM fusion is not implemented for modified_beam_search with "
+            "streaming NeMo transducer models. Please remove --lm.");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
       if (!config_.model_config.bpe_vocab.empty()) {
         auto buf = ReadFile(mgr, config_.model_config.bpe_vocab);
         std::istringstream iss(std::string(buf.begin(), buf.end()));
