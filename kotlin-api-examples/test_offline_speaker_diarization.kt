@@ -34,7 +34,7 @@ fun testOfflineSpeakerDiarization() {
     // A larger threshold leads to fewer clusters, i.e., few speakers.
     // A smaller threshold leads to more clusters, i.e., more speakers.
     //
-    clustering=FastClusteringConfig(numClusters=4),
+    clustering=FastClusteringConfig(numClusters=4, computeConfidence=true),
   )
 
   val sd = OfflineSpeakerDiarization(config=config)
@@ -51,6 +51,6 @@ fun testOfflineSpeakerDiarization() {
   // val segments = sd.process(waveData.samples) // this one is also ok
   val segments = sd.processWithCallback(waveData.samples, callback=::callback)
   for (segment in segments) {
-    println("${segment.start} -- ${segment.end} speaker_${segment.speaker}")
+    println("${segment.start} -- ${segment.end} speaker_${segment.speaker} confidence=${segment.confidence}")
   }
 }

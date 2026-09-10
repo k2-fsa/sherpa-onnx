@@ -784,6 +784,7 @@ function testOfflineWenetCtc() {
 }
 
 testVersion
+testOfflineSpeakerDiarization
 testOfflineCohereTranscribe
 testOfflineQwen3Asr
 testOfflineMoonshineAsrV2
@@ -799,7 +800,6 @@ testOfflineNeMoCanary
 testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser
 testOnlineSpeechDenoiser
-testOfflineSpeakerDiarization
 testSpeakerEmbeddingExtractor
 testOnlineAsr
 testTts

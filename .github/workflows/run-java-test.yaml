@@ -154,6 +154,13 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run java test (speaker diarization)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-offline-speaker-diarization.sh
+          rm -rfv *.onnx *.wav sherpa-onnx-pyannote-*
+
       - name:  Run java test (Cohere Transcribe)
         if: runner.os != 'Windows'
         shell: bash
@@ -304,13 +311,6 @@ jobs:
           ./run-offline-add-diacritics.sh
           # Delete model files to save space
           rm -rf catt_eo_model_onnx
-
-      - name:  Run java test (speaker diarization)
-        shell: bash
-        run: |
-          cd ./java-api-examples
-          ./run-offline-speaker-diarization.sh
-          rm -rfv *.onnx *.wav sherpa-onnx-pyannote-*
 
       - name:  Run java test (kws)
         shell: bash
