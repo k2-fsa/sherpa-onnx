@@ -76,6 +76,9 @@ static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
   SHERPA_ONNX_JNI_READ_FLOAT(ans.clustering.threshold, threshold,
                              clustering_config_cls, clustering_config);
 
+  SHERPA_ONNX_JNI_READ_BOOL(ans.clustering.compute_confidence, computeConfidence,
+                            clustering_config_cls, clustering_config);
+
   SHERPA_ONNX_JNI_READ_FLOAT(ans.min_duration_on, minDurationOn, cls, config);
 
   SHERPA_ONNX_JNI_READ_FLOAT(ans.min_duration_off, minDurationOff, cls, config);
@@ -185,7 +188,7 @@ static jobjectArray ProcessImpl(
   jobjectArray obj_arr =
       (jobjectArray)env->NewObjectArray(segments.size(), cls, nullptr);
 
-  jmethodID constructor = env->GetMethodID(cls, "<init>", "(FFI)V");
+  jmethodID constructor = env->GetMethodID(cls, "<init>", "(FFIF)V");
   if (constructor == nullptr) {
     SHERPA_ONNX_LOGE(
         "Failed to get OfflineSpeakerDiarizationSegment constructor");
@@ -196,7 +199,7 @@ static jobjectArray ProcessImpl(
   for (int32_t i = 0; i != static_cast<int32_t>(segments.size()); ++i) {
     const auto &s = segments[i];
     jobject segment =
-        env->NewObject(cls, constructor, s.Start(), s.End(), s.Speaker());
+        env->NewObject(cls, constructor, s.Start(), s.End(), s.Speaker(), s.Confidence());
     env->SetObjectArrayElement(obj_arr, i, segment);
     env->DeleteLocalRef(segment);
   }

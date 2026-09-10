@@ -6,11 +6,13 @@ public class OfflineSpeakerDiarizationSegment {
     private final float start;
     private final float end;
     private final int speaker;
+    private final float confidence;
 
-    public OfflineSpeakerDiarizationSegment(float start, float end, int speaker) {
+    public OfflineSpeakerDiarizationSegment(float start, float end, int speaker, float confidence) {
         this.start = start;
         this.end = end;
         this.speaker = speaker;
+        this.confidence = confidence;
     }
 
     public float getStart() {
@@ -23,5 +25,9 @@ public class OfflineSpeakerDiarizationSegment {
 
     public int getSpeaker() {
         return speaker;
+    }
+
+    public float getConfidence() {
+        return confidence;
     }
 }

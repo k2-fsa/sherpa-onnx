@@ -61,6 +61,7 @@ public class OfflineSpeakerDiarizationDemo {
         FastClusteringConfig.builder()
             .setNumClusters(4) // set it to -1 if you don't know the actual number
             .setThreshold(0.5f)
+            .setComputeConfidence(true) // enable confidence computation
             .build();
 
     OfflineSpeakerDiarizationConfig config =
@@ -95,7 +96,7 @@ public class OfflineSpeakerDiarizationDemo {
             });
 
     for (OfflineSpeakerDiarizationSegment s : segments) {
-      System.out.printf("%.3f -- %.3f speaker_%02d\n", s.getStart(), s.getEnd(), s.getSpeaker());
+      System.out.printf("%.3f -- %.3f speaker_%02d confidence=%.3f\n", s.getStart(), s.getEnd(), s.getSpeaker(), s.getConfidence());
     }
 
     sd.release();
