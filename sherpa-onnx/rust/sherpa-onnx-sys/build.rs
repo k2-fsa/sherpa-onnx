@@ -61,7 +61,7 @@ fn try_main() -> Result<(), DynError> {
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
-    if link_mode == LinkMode::Shared && matches!(target_os.as_str(), "linux" | "macos" | "ios") {
+    if link_mode == LinkMode::Shared && matches!(target_os.as_str(), "linux" | "macos" | "ios" | "android") {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
         emit_relative_rpath(&target_os);
         copy_unix_runtime_libs(&lib_dir, &target_os)?;

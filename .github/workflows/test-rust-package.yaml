@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest, windows-11-arm]
-        lib_setup: [explicit, auto]
+        lib_setup: [explicit_lib, explicit_archive, auto]
 
     steps:
       - uses: actions/checkout@v4
@@ -63,11 +63,11 @@ jobs:
           sherpa-onnx-sys = { path = "../sherpa-onnx/rust/sherpa-onnx-sys" }
           PATCH
 
-      - name: Download shared libraries for explicit SHERPA_ONNX_LIB_DIR
-        if: matrix.lib_setup == 'explicit'
+      - name: Download shared libraries for explicit_lib
+        if: matrix.lib_setup == 'explicit_lib'
         shell: bash
         run: |
-          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
 
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-shared-lib
@@ -95,6 +95,34 @@ jobs:
           elif [[ "${{ matrix.os }}" == macos-* ]]; then
             echo "DYLD_LIBRARY_PATH=$PWD/$d/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
           fi
+
+      - name: Download shared libraries for explicit_archive
+        if: matrix.lib_setup == 'explicit_archive'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
+
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-shared-lib
+          elif [[ "${{ matrix.os }}" == "macos-15-intel" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-x64-shared-lib
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-shared-lib
+          elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-shared-cpu-lib
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-shared-MT-Release-lib
+          elif [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-arm64-shared-MT-Release-lib
+          else
+            echo "Unknown ${{ matrix.os }}"
+            exit 1
+          fi
+
+          curl -SsL -O "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/$d.tar.bz2"
+          mkdir -p /tmp/sherpa-onnx-archive
+          mv "$d.tar.bz2" /tmp/sherpa-onnx-archive/
+          echo "SHERPA_ONNX_ARCHIVE_DIR=/tmp/sherpa-onnx-archive" >> "$GITHUB_ENV"
 
       - name: Show library setup
         shell: bash
@@ -127,3 +155,183 @@ jobs:
         shell: bash
         run: |
           ./.github/scripts/test-rust-shared.sh
+
+  termux:
+    name: Termux ${{ matrix.arch }} (${{ matrix.lib_setup }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_lib
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_archive
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: auto
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_lib
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_archive
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: auto
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: explicit_lib
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: explicit_archive
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: auto
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: explicit_lib
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: explicit_archive
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: auto
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Free disk space
+        if: matrix.runner == 'ubuntu-latest'
+        shell: bash
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h
+
+      - name: Download shared libraries for explicit modes
+        if: matrix.lib_setup == 'explicit_lib' || matrix.lib_setup == 'explicit_archive'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION"
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v${SHERPA_ONNX_VERSION}/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+          ls -lh sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+
+          # Extract on host for explicit_lib mode
+          if [[ "${{ matrix.lib_setup }}" == "explicit_lib" ]]; then
+            mkdir -p /tmp/sherpa-onnx-android-lib
+            cd /tmp/sherpa-onnx-android-lib
+            tar -xvf ${{ github.workspace }}/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+            cd ${{ github.workspace }}
+          fi
+
+          # Move archive for explicit_archive mode
+          mkdir -p /tmp/sherpa-onnx-android-archive
+          mv sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2 /tmp/sherpa-onnx-android-archive/
+
+      - name: Make workspace writable
+        shell: bash
+        run: |
+          chmod -R 777 ${{ github.workspace }}
+
+      - name: Run Rust tests in Termux
+        shell: bash
+        env:
+          LIB_SETUP: ${{ matrix.lib_setup }}
+        run: |
+          # Set environment variables based on lib_setup mode before Docker
+          if [[ "$LIB_SETUP" == "explicit_lib" ]]; then
+            export SHERPA_ONNX_LIB_DIR=/lib/jniLibs/arm64-v8a
+          elif [[ "$LIB_SETUP" == "explicit_archive" ]]; then
+            export SHERPA_ONNX_ARCHIVE_DIR=/archive
+          fi
+
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+            --volume /tmp/sherpa-onnx-android-archive:/archive \
+            --volume /tmp/sherpa-onnx-android-lib:/lib \
+            -e LIB_SETUP \
+            -e SHERPA_ONNX_LIB_DIR \
+            -e SHERPA_ONNX_ARCHIVE_DIR \
+            termux/termux-docker:${{ matrix.arch }} \
+          bash -c '
+            set -e
+
+            apt update -y
+            apt install -y libc++ clang git
+
+            # Install Rust via Termux package manager (bypasses rustup file locking issues)
+            apt install -y rust
+            rustc --version
+            cargo --version
+
+            # Set library path for Android libraries
+            export LD_LIBRARY_PATH=/data/data/com.termux/files/usr/lib:$LD_LIBRARY_PATH
+
+
+            cd /k2-fsa/sherpa-onnx
+
+            # Detect and set library paths based on available directories
+            echo "=== Detecting library setup ==="
+
+            # Detect Android ABI based on architecture
+            ARCH=$(uname -m)
+            case "$ARCH" in
+              aarch64|arm64)
+                ABI="arm64-v8a"
+                ;;
+              armv7*|armv8l)
+                ABI="armeabi-v7a"
+                ;;
+              x86_64)
+                ABI="x86_64"
+                ;;
+              i*86)
+                ABI="x86"
+                ;;
+              *)
+                ABI="arm64-v8a"  # default
+                ;;
+            esac
+            echo "Detected architecture: $ARCH -> ABI: $ABI"
+
+            if [ -d "/lib/jniLibs/$ABI" ]; then
+              echo "Found pre-extracted libs at /lib/jniLibs/$ABI"
+              export SHERPA_ONNX_LIB_DIR=/lib/jniLibs/$ABI
+            fi
+            if [ -d "/archive" ]; then
+              echo "Found archive at /archive"
+              export SHERPA_ONNX_ARCHIVE_DIR=/archive
+            fi
+
+            # Add sherpa-onnx library path if available
+            if [ -n "$SHERPA_ONNX_LIB_DIR" ]; then
+              export LD_LIBRARY_PATH=$SHERPA_ONNX_LIB_DIR:$LD_LIBRARY_PATH
+            fi
+
+
+            echo ""
+            echo "=== Environment Variables ==="
+            echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
+            echo "SHERPA_ONNX_ARCHIVE_DIR: $SHERPA_ONNX_ARCHIVE_DIR"
+            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+            echo ""
+            echo "=== Checking directories ==="
+            if [ -n "$SHERPA_ONNX_LIB_DIR" ]; then
+              echo "SHERPA_ONNX_LIB_DIR contents:"
+              ls -lh "$SHERPA_ONNX_LIB_DIR"
+            fi
+            if [ -n "$SHERPA_ONNX_ARCHIVE_DIR" ]; then
+              echo "SHERPA_ONNX_ARCHIVE_DIR contents:"
+              ls -lh "$SHERPA_ONNX_ARCHIVE_DIR"
+            fi
+            echo ""
+
+            # Run all tests (Android only supports shared linking)
+            bash .github/scripts/test-rust-shared.sh
+          '

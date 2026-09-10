@@ -13,4 +13,4 @@ cargo() {
 
 export -f cargo
 
-./.github/scripts/test-rust.sh
+bash ./.github/scripts/test-rust.sh
