@@ -15,6 +15,7 @@
 #endif
 
 #include "gtest/gtest.h"
+#include "sherpa-onnx/csrc/provider.h"
 
 namespace sherpa_onnx {
 
@@ -121,6 +122,19 @@ TEST(SessionConfigPassthrough, ForwardsPrefixedKeysAndIgnoresOthers) {
   // registered under the empty key or under the raw spelling.
   EXPECT_FALSE(HasConfigEntry(sess_opts, ""));
   EXPECT_FALSE(HasConfigEntry(sess_opts, "SessionConfig."));
+}
+
+TEST(Provider, ConvertsOpenVINOCaseInsensitively) {
+  EXPECT_EQ(StringToProvider("openvino"), Provider::kOpenVINO);
+  EXPECT_EQ(StringToProvider("OpenVINO"), Provider::kOpenVINO);
+}
+
+TEST(Provider, OpenVINOSessionOptionsDoNotThrow) {
+  EXPECT_NO_THROW({
+    Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "openvino-session-test");
+    auto sess_opts = GetSessionOptionsImpl(1, "openvino");
+    (void)sess_opts;
+  });
 }
 
 }  // namespace sherpa_onnx

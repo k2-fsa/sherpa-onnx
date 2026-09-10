@@ -26,8 +26,8 @@ class OnnxruntimeConfig:
 
 # To add a new onnxruntime version, just add entries here.
 onnxruntime_configs = [
-    OnnxruntimeConfig("1.27.1", "12"),
-    OnnxruntimeConfig("1.27.1", "13"),
+    OnnxruntimeConfig("1.28.2", "12"),
+    OnnxruntimeConfig("1.28.2", "13"),
 ]
 
 python_versions = ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]

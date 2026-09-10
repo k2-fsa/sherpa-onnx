@@ -1,3 +1,23 @@
+//! Raw FFI bindings for [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
+//!
+//! # Environment variables
+//!
+//! The build script (`build.rs`) recognises the following environment
+//! variables, all of which are optional:
+//!
+//! | Variable | Purpose |
+//! |---|---|
+//! | `SHERPA_ONNX_LIB_DIR` | Path to a directory that already contains the |
+//! | | pre-built native libraries (`.so` / `.dylib` / `.dll` / `.a`). |
+//! | | When set, the build script skips downloading and uses these |
+//! | | libraries directly. |
+//! | `SHERPA_ONNX_ARCHIVE_DIR` | Path to a directory that contains |
+//! | | pre-downloaded archive files (`.tar.bz2` or `.xcframework.zip`). |
+//! | | When set, the build script copies the archive from this directory |
+//! | | instead of downloading it from the internet. The archive must have |
+//! | | the same filename that would normally be downloaded (e.g. |
+//! | | `sherpa-onnx-v1.13.8-linux-x64-shared-lib.tar.bz2`). |
+
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]

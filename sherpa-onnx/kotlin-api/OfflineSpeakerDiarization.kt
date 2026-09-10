@@ -17,6 +17,7 @@ data class OfflineSpeakerSegmentationModelConfig(
 data class FastClusteringConfig(
     var numClusters: Int = -1,
     var threshold: Float = 0.5f,
+    var computeConfidence: Boolean = false,
 )
 
 data class OfflineSpeakerDiarizationConfig(
@@ -31,6 +32,7 @@ data class OfflineSpeakerDiarizationSegment(
     val start: Float, // in seconds
     val end: Float, // in seconds
     val speaker: Int, // ID of the speaker; count from 0
+    val confidence: Float, // confidence score in [-1, 1], or -2 if unavailable
 )
 
 class OfflineSpeakerDiarization(

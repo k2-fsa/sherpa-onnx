@@ -42,7 +42,7 @@ jobs:
           TOTAL=$(( (COUNT + MODELS_PER_JOB - 1) / MODELS_PER_JOB ))
           echo "Total jobs: $TOTAL"
 
-          MATRIX=$(seq 0 $((TOTAL - 1)) | jq -R . | jq -s --arg t "$TOTAL" '{"include": [{"os":"ubuntu-latest","total":$t,"index":.}]}')
+          MATRIX=$(seq 0 $((TOTAL - 1)) | jq -R . | jq -sc --arg t "$TOTAL" '{"include": [(.[] | {"os":"ubuntu-latest","total":$t,"index":.})]}')
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   apk_vad_asr:

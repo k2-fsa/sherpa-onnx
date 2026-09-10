@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -17,9 +18,7 @@ log "------------------------------------------------------------"
 log "Run zipformer for audio tagging                             "
 log "------------------------------------------------------------"
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
-tar xvf sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
-rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
 repo=sherpa-onnx-zipformer-audio-tagging-2024-04-09
 ls -lh $repo
 

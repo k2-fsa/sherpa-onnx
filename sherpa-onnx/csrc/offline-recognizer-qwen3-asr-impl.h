@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <string>
 #include <utility>
@@ -19,6 +20,14 @@
 #include "sherpa-onnx/csrc/qwen-asr-tokenizer.h"
 
 namespace sherpa_onnx {
+
+// Trims trailing near-silent frames from audio_features (shape [1, A, H]).
+// If every frame's energy stays below the silence threshold, the tensor is
+// returned unmodified and, when |all_silent| is not null, |*all_silent| is
+// set to true so the caller can treat the clip as having no speech content.
+// Exposed here (rather than kept file-local) so it can be unit tested.
+Ort::Value TrimAudioFeatures(Ort::Value audio_features, OrtAllocator *allocator,
+                             bool *all_silent = nullptr);
 
 class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
  public:
@@ -65,6 +74,12 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
   std::vector<int64_t> prompt_ids_after_;
   int64_t asr_text_token_id_ = -1;
   mutable std::mt19937 rng_;
+  // Protects rng_, which is shared and drawn from by
+  // SampleTokenWithTemperatureAndTopP(). DecodeStreams() may be called
+  // concurrently from multiple threads on the same recognizer instance (see
+  // sherpa-onnx-offline-parallel.cc), so draws from rng_ must be serialized to
+  // avoid a data race.
+  mutable std::mutex rng_mutex_;
 };
 
 }  // namespace sherpa_onnx

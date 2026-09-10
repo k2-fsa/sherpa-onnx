@@ -34,8 +34,9 @@ class OnlinePunctuationCNNBiLSTMImpl : public OnlinePunctuationImpl {
   explicit OnlinePunctuationCNNBiLSTMImpl(const OnlinePunctuationConfig &config)
       : config_(config), model_(config.model) {
     if (!config_.model.bpe_vocab.empty()) {
-      bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
-          config_.model.bpe_vocab);
+      auto buf = ReadFile(config_.model.bpe_vocab);
+      std::istringstream iss(std::string(buf.begin(), buf.end()));
+      bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
     }
   }
 

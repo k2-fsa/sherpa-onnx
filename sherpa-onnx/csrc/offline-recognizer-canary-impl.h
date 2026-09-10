@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CANARY_IMPL_H_
 
 #include <algorithm>
+#include <cmath>
 #include <ios>
 #include <memory>
 #include <string>
@@ -21,6 +22,65 @@
 #include "sherpa-onnx/csrc/utils.h"
 
 namespace sherpa_onnx {
+
+// The greedy decoder in this file treats eos as "end of transcript". For
+// audio that contains signal, eos can win the argmax at the very first
+// generated position only as a numerical near-tie (a 0.1% amplitude change
+// of the input flips the result; see
+// https://github.com/k2-fsa/sherpa-onnx/issues/3919). Once eos has been
+// generated, the decoder keeps emitting eos, so the whole transcript would
+// be lost and the result would silently be an empty string.
+//
+// To avoid that, eos is never selected as the first token of an utterance
+// that contains signal. For silence, eos is the model's correct
+// "nothing was said" answer, so it is kept there.
+//
+// Silence is detected on the normalized fbank features returned by
+// OfflineStream::GetFrames(). Those features are scale invariant, so the
+// recording level does not matter. For
+// sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8, digital silence gives
+// a max |feature| of about 0.09 while any audio with content stays above 4,
+// regardless of its level.
+inline constexpr float kCanarySilenceFeatureAbsMax = 1.0f;
+
+inline bool CanaryHasSignal(const float *features, int32_t n) {
+  float abs_max = 0;
+  for (int32_t i = 0; i != n; ++i) {
+    abs_max = std::max(abs_max, std::abs(features[i]));
+  }
+
+  return abs_max > kCanarySilenceFeatureAbsMax;
+}
+
+inline int32_t SelectCanaryFirstToken(const float *logits, int32_t vocab_size,
+                                      int32_t eos_id, bool has_signal) {
+  int32_t first = static_cast<int32_t>(
+      std::distance(logits, std::max_element(logits, logits + vocab_size)));
+
+  if (first != eos_id || !has_signal) {
+    return first;
+  }
+
+  SHERPA_ONNX_LOGE(
+      "The first generated token is <|endoftext|> for audio that contains "
+      "signal. Using the best non-eos token instead, otherwise the "
+      "transcript would be empty (see issue #3919)");
+
+  int32_t best = eos_id;
+  float best_logit = 0;
+  for (int32_t i = 0; i != vocab_size; ++i) {
+    if (i == eos_id) {
+      continue;
+    }
+
+    if (best == eos_id || logits[i] > best_logit) {
+      best = i;
+      best_logit = logits[i];
+    }
+  }
+
+  return best;
+}
 
 class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
  public:
@@ -55,7 +115,8 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
   void DecodeStream(OfflineStream *s) const {
     auto meta = model_->GetModelMetadata();
-    auto enc_out = RunEncoder(s);
+    std::vector<float> frames = s->GetFrames();
+    auto enc_out = RunEncoder(frames);
     Ort::Value enc_states = std::move(enc_out[0]);
     Ort::Value enc_mask = std::move(enc_out[2]);
     // enc_out[1] is discarded
@@ -69,14 +130,16 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
                      View(&enc_states), View(&enc_mask));
     }
 
-    int32_t max_token_id = GetMaxTokenId(&logits);
     int32_t eos = symbol_table_["<|endoftext|>"];
 
     int32_t num_feature_frames =
         enc_states.GetTensorTypeAndShapeInfo().GetShape()[1] *
         meta.subsampling_factor;
 
-    std::vector<int32_t> tokens = {max_token_id};
+    bool has_signal = CanaryHasSignal(frames.data(), frames.size());
+
+    std::vector<int32_t> tokens = {SelectCanaryFirstToken(
+        logits.GetTensorData<float>(), meta.vocab_size, eos, has_signal)};
 
     // Assume 30 tokens per second. It is to avoid the following for loop
     // running indefinitely.
@@ -147,19 +210,18 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     return max_token_id;
   }
 
-  std::vector<Ort::Value> RunEncoder(OfflineStream *s) const {
+  std::vector<Ort::Value> RunEncoder(std::vector<float> &frames) const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
     int32_t feat_dim = config_.feat_config.feature_dim;
-    std::vector<float> f = s->GetFrames();
 
-    int32_t num_frames = f.size() / feat_dim;
+    int32_t num_frames = frames.size() / feat_dim;
 
     std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
 
-    Ort::Value x = Ort::Value::CreateTensor(memory_info, f.data(), f.size(),
-                                            shape.data(), shape.size());
+    Ort::Value x = Ort::Value::CreateTensor(
+        memory_info, frames.data(), frames.size(), shape.data(), shape.size());
 
     int64_t x_length_scalar = num_frames;
     std::array<int64_t, 1> x_length_shape = {1};

@@ -64,6 +64,8 @@ def main():
     m = ModelWrapper(asr_model)
     m.eval()
 
+    feat_dim = asr_model.cfg.preprocessor.features
+
     print("feat_dim", feat_dim)
     x = torch.rand(1, feat_dim, args.max_len, dtype=torch.float32)
 

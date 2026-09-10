@@ -52,7 +52,11 @@ show_one() {
 
   case "$os_name" in
     Linux)
-      ldd "$bin"
+      if command -v ldd >/dev/null 2>&1; then
+        ldd "$bin"
+      else
+        echo "ldd is not available on this system"
+      fi
       ;;
     macOS)
       otool -L "$bin"

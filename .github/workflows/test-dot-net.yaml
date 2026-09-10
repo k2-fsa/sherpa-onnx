@@ -196,6 +196,17 @@ jobs:
         run: |
           cp -v scripts/dotnet/examples/Common.csproj dotnet-examples/Common/
 
+          # RestoreSources in Common.csproj doesn't propagate to parent
+          # projects. Add it via Directory.Build.props so every .csproj
+          # in dotnet-examples/ picks up /tmp/packages as a source.
+          cat > dotnet-examples/Directory.Build.props << 'EOF'
+          <Project>
+            <PropertyGroup>
+              <RestoreSources>/tmp/packages;$(RestoreSources);https://api.nuget.org/v3/index.json</RestoreSources>
+            </PropertyGroup>
+          </Project>
+          EOF
+
           ls -lh /tmp
 
           df -h

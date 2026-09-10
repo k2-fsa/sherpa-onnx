@@ -20,16 +20,16 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "^(Release|Debug|RelWithDebInfo|MinSizeRel)$")
 endif()
 
 # Hashes for static CRT (/MT)
-set(ONNXRUNTIME_HASH_MT_Debug "SHA256=84ac0a5b0194d6983a848978145b8c38e5136ed7080011be53351052edbad8f3")
-set(ONNXRUNTIME_HASH_MT_RelWithDebInfo "SHA256=d8e936aa7d54d87d9d21041011faa25048408aaa9b13da4c48a1c4caa94d99b3")
-set(ONNXRUNTIME_HASH_MT_MinSizeRel "SHA256=507bfefd68bd26a96a5ea9465a51ddb3367636cc140e8d3891337674c4782ab4")
-set(ONNXRUNTIME_HASH_MT_Release "SHA256=8e9f6f484f5603e0ef862c50648ffb4b43b63d4b6db0388cd37a916587c20060")
+set(ONNXRUNTIME_HASH_MT_Debug "SHA256=08771cf4fa2229b4b6240e1dfea240953cb546ff05e2bb0ff6597028ab04104d")
+set(ONNXRUNTIME_HASH_MT_RelWithDebInfo "SHA256=212e423ac1bfeb5d4b32dea3d2bb4cfbf471c15db72021db55aac1dd1d67c0ba")
+set(ONNXRUNTIME_HASH_MT_MinSizeRel "SHA256=d7e3e0d7deaeffbd1eaf22666695285f6e1b9d3700f9295744e6970fba0c7bfc")
+set(ONNXRUNTIME_HASH_MT_Release "SHA256=59877bc38b2c1eed1375597b9da2403b314b1103693d1dd0397c00cbcad1c1ab")
 
 # Hashes for dynamic CRT (/MD)
-set(ONNXRUNTIME_HASH_MD_Debug "SHA256=05587cf876784930efe095ec860acd206a7959bc1a672e575dd52c6cce921ee4")
-set(ONNXRUNTIME_HASH_MD_RelWithDebInfo "SHA256=82af48fd15ba60a42254f3f7e7871cf56431386ce721ada07faa249fc774670d")
-set(ONNXRUNTIME_HASH_MD_MinSizeRel "SHA256=24abaafff607fd994dd7160f5f620061eb6c158ef0ecf948f8c21b94ac1e14ff")
-set(ONNXRUNTIME_HASH_MD_Release "SHA256=b689e75fdff33243226ed6fe70d39064df2129ae0464fdcd4821caa44ef739f7")
+set(ONNXRUNTIME_HASH_MD_Debug "SHA256=c1149f620e05e66aad4cb1f53d41bc031b06867aa26a523c38681197752db006")
+set(ONNXRUNTIME_HASH_MD_RelWithDebInfo "SHA256=3cbbee948a70c116627b3df80208184762d993e52da2e8ad0e923a2bb333f184")
+set(ONNXRUNTIME_HASH_MD_MinSizeRel "SHA256=3e722ee4a85098f6184e7f27a017ecf5de7f4157b36132788432651de6ce7fa4")
+set(ONNXRUNTIME_HASH_MD_Release "SHA256=82b68e70358030dcbe0901d3435db3398a6e34ef46e45f071088f94104062ef1")
 
 if(SHERPA_ONNX_USE_STATIC_CRT)
   set(onnxruntime_crt "MT")
@@ -39,8 +39,8 @@ endif()
 
 message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
 
-set(onnxruntime_filename "onnxruntime-win-arm64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.27.1.tar.bz2")
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.1/${onnxruntime_filename}")
+set(onnxruntime_filename "onnxruntime-win-arm64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.28.2.tar.bz2")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/${onnxruntime_filename}")
 set(onnxruntime_HASH "${ONNXRUNTIME_HASH_${onnxruntime_crt}_${CMAKE_BUILD_TYPE}}")
 
 # If you don't have access to the Internet,

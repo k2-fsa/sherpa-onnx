@@ -22,7 +22,7 @@ static_assert(
         sizeof(SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig) + 3 * 4,
     "");
 
-static_assert(sizeof(SherpaOnnxFastClusteringConfig) == 2 * 4, "");
+static_assert(sizeof(SherpaOnnxFastClusteringConfig) == 3 * 4, "");
 
 static_assert(sizeof(SherpaOnnxSpeakerEmbeddingExtractorConfig) == 4 * 4, "");
 
@@ -54,6 +54,7 @@ void MyPrint(const SherpaOnnxOfflineSpeakerDiarizationConfig *sd_config) {
   fprintf(stdout, "----------clustering config----------\n");
   fprintf(stdout, "num_clusters: %d\n", clustering.num_clusters);
   fprintf(stdout, "threshold: %.3f\n", clustering.threshold);
+  fprintf(stdout, "compute_confidence: %d\n", clustering.compute_confidence);
 
   fprintf(stdout, "min_duration_on: %.3f\n", sd_config->min_duration_on);
   fprintf(stdout, "min_duration_off: %.3f\n", sd_config->min_duration_off);

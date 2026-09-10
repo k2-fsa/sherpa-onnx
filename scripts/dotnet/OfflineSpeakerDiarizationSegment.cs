@@ -15,6 +15,7 @@ namespace SherpaOnnx
           Start = impl.Start;
           End = impl.End;
           Speaker = impl.Speaker;
+          Confidence = impl.Confidence;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -23,11 +24,13 @@ namespace SherpaOnnx
             public float Start;
             public float End;
             public int Speaker;
+            public float Confidence;
         }
 
         public float Start;
         public float End;
         public int Speaker;
+        public float Confidence;
     }
 }
 

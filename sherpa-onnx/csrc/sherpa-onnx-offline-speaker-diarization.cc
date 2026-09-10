@@ -119,7 +119,7 @@ a smaller threshold leads to more clusters, i.e., more speakers
           .SortByStartTime();
 
   for (const auto &r : result) {
-    std::cout << r.ToString() << "\n";
+    std::cout << r.ToString(config.clustering.compute_confidence) << "\n";
   }
 
   const auto end = std::chrono::steady_clock::now();

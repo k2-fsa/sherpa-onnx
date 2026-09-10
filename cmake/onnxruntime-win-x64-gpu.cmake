@@ -20,17 +20,17 @@ if(NOT SHERPA_ONNX_ENABLE_GPU)
 endif()
 
 # Requires cuda 12.x, cudnn 9.x
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.27.1/onnxruntime-win-x64-gpu_cuda12-1.27.1.zip")
-set(onnxruntime_HASH "SHA256=78d4de5ab262f79ac5dd59f08ff0d049b1cea605497f375f8df5ba1a52f26111")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.28.2/onnxruntime-win-x64-gpu_cuda12-1.28.2.zip")
+set(onnxruntime_HASH "SHA256=5b5ceb06e90405c7de9acdaf5aa06d288768e6a1e5dc54337281e09c03fc60f9")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu_cuda12-1.27.1.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-gpu_cuda12-1.27.1.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-gpu_cuda12-1.27.1.zip
-  /tmp/onnxruntime-win-x64-gpu_cuda12-1.27.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu_cuda12-1.28.2.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-gpu_cuda12-1.28.2.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-gpu_cuda12-1.28.2.zip
+  /tmp/onnxruntime-win-x64-gpu_cuda12-1.28.2.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

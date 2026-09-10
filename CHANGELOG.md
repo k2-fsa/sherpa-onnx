@@ -1,3 +1,39 @@
+## 1.13.8
+
+* Add per-segment confidence computation for OfflineSpeakerDiarization in Java and Kotlin APIs (#3943)
+* Add robust download retry logic with validation for CI test scripts (#3941)
+* Support running Rust examples in Termux on Android (#3942)
+* Update onnxruntime to v1.28.2 (#3935)
+* Add Go bindings for OfflineSpeakerDiarization confidence computation (#3936)
+* Add Go API for Windows arm64 (#3934)
+* Add per-segment confidence computation for OfflineSpeakerDiarization (#3881)
+* Add Intel NPU support through OpenVINO (#3910)
+* Fix Canary empty transcript when the first decoded token is eos (#3920)
+* Fix FunASR-Nano hallucinating text on silent audio (#3921)
+* Fix Moonshine v2 hallucinating text on silent audio (#3923)
+* Fix Cohere Transcribe hallucinating sentences on silent audio (#3924)
+* Add Nabra-82M Arabic TTS conversion scripts for Kokoro runtime (#3898)
+* Add Kokoro v1.0 em_santa voice (#3928)
+* Support sherpa-onnx with Python in Termux on Android (#3922)
+* Support building within a termux terminal on Android devices (#3916)
+* Fix data race on shared PRNG in FunASR-Nano and Qwen3-ASR offline recognizers (#3912)
+* Upload the nabra 82M Arabic TTS int8 model (#3933)
+
+## 1.13.7
+
+* Add iOS support for Rust and add hello world tauri example (#3901)
+* Remove caret prefix from sherpa_onnx flutter dependencies (#3905)
+* Fix Flutter packages for iOS (#3887)
+* Fix building APKs in CI (#3896)
+* Support Windows arm64 for Rust (#3889)
+* Fix Unicode paths for punctuation BPE vocab (#3906)
+* Fix Qwen3-ASR hallucinating text on silent audio with hotwords/language set (#3907)
+* Populate ys_probs in the online NeMo transducer greedy search decoders (#3893)
+* Align Qwen3-ASR whisper features to the centered-STFT convention (#3873)
+* Support per-stream runtime options in the JavaScript (node-addon) API for streaming ASR (#3891)
+* Support batched decoding of multiple online streams in the JavaScript (node-addon) API (#3894)
+* Expose num_trailing_blanks in the online recognizer result JSON (#3892)
+
 ## 1.13.6
 
 * Add VAD+ASR Flutter examples with 9 ASR models (#3877)

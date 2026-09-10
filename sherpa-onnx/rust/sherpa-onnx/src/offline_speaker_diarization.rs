@@ -75,6 +75,7 @@ impl OfflineSpeakerSegmentationModelConfig {
 pub struct FastClusteringConfig {
     pub num_clusters: i32,
     pub threshold: f32,
+    pub compute_confidence: bool,
 }
 
 impl Default for FastClusteringConfig {
@@ -82,6 +83,7 @@ impl Default for FastClusteringConfig {
         Self {
             num_clusters: -1,
             threshold: 0.5,
+            compute_confidence: false,
         }
     }
 }
@@ -91,6 +93,7 @@ impl FastClusteringConfig {
         sys::FastClusteringConfig {
             num_clusters: self.num_clusters,
             threshold: self.threshold,
+            compute_confidence: self.compute_confidence as i32,
         }
     }
 }
@@ -141,6 +144,7 @@ pub struct OfflineSpeakerDiarizationSegment {
     pub start: f32,
     pub end: f32,
     pub speaker: i32,
+    pub confidence: f32,
 }
 
 /// Offline speaker diarizer.
@@ -246,6 +250,7 @@ impl OfflineSpeakerDiarizationResult {
                     start: s.start,
                     end: s.end,
                     speaker: s.speaker,
+                    confidence: s.confidence,
                 })
                 .collect::<Vec<_>>();
             sys::SherpaOnnxOfflineSpeakerDiarizationDestroySegment(p);

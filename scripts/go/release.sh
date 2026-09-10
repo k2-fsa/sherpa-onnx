@@ -215,6 +215,19 @@ function windows() {
 
   cd ..
   rm -rf t
+
+  mkdir -p sherpa-onnx-go-windows/lib/aarch64-pc-windows-gnu
+  rm -fv sherpa-onnx-go-windows/lib/aarch64-pc-windows-gnu/*
+  dst=$(realpath sherpa-onnx-go-windows/lib/aarch64-pc-windows-gnu)
+  mkdir t
+  cd t
+  wget -q https://huggingface.co/csukuangfj2/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win_arm64.whl
+  unzip ./sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win_arm64.whl
+
+  cp -v sherpa_onnx/lib/*.dll $dst
+
+  cd ..
+  rm -rf t
   echo "------------------------------"
   cd sherpa-onnx-go-windows
   git status

@@ -177,6 +177,21 @@ static std::string BuildUserPrompt(const std::vector<std::string> &hotwords,
 
 }  // namespace
 
+bool FunASRNanoAudioIsSilent(const float *features, int32_t n) {
+  if (n <= 0) {
+    return false;
+  }
+
+  const float v0 = features[0];
+  for (int32_t i = 1; i != n; ++i) {
+    if (features[i] != v0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
     const OfflineRecognizerConfig &config)
     : OfflineRecognizerImpl(config),
@@ -372,7 +387,11 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
 
   if (top_p >= 1.0f) {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    float sample = dist(rng_);
+    float sample;
+    {
+      std::lock_guard<std::mutex> lock(rng_mutex_);
+      sample = dist(rng_);
+    }
     float cumsum = 0.0f;
     for (int32_t i = 0; i < vocab_size; ++i) {
       cumsum += probs[i];
@@ -413,7 +432,11 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
   if (renorm_sum <= 0.0f) return 0;
 
   std::uniform_real_distribution<float> dist(0.0f, renorm_sum);
-  float sample = dist(rng_);
+  float sample;
+  {
+    std::lock_guard<std::mutex> lock(rng_mutex_);
+    sample = dist(rng_);
+  }
   float cumsum_sample = 0.0f;
   for (int32_t i = 0; i < cutoff; ++i) {
     cumsum_sample += probs[idx[i]];
@@ -856,6 +879,15 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
     if (num_frames <= 0) {
       OfflineRecognitionResult r;
       r.text = "";
+      ss[i]->SetResult(r);
+      continue;
+    }
+
+    if (FunASRNanoAudioIsSilent(f.data(), static_cast<int32_t>(f.size()))) {
+      // The whole clip is silence. Return an empty result now, before any
+      // hotwords/language prompt tokens are built, so they cannot bias the
+      // LLM decoder into hallucinating text for silent audio.
+      OfflineRecognitionResult r;
       ss[i]->SetResult(r);
       continue;
     }

@@ -37,18 +37,23 @@ OnlineConformerTransducerModel::OnlineConformerTransducerModel(
     const OnlineModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
-      sess_opts_(GetSessionOptions(config)),
+      encoder_sess_opts_(GetSessionOptions(config)),
+      decoder_sess_opts_(GetSessionOptions(config, "decoder")),
+      joiner_sess_opts_(GetSessionOptions(config, "joiner")),
       allocator_{} {
   encoder_sess_ = std::make_unique<Ort::Session>(
-      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.encoder), sess_opts_);
+      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.encoder),
+      encoder_sess_opts_);
   InitEncoder(nullptr, 0);
 
   decoder_sess_ = std::make_unique<Ort::Session>(
-      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.decoder), sess_opts_);
+      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.decoder),
+      decoder_sess_opts_);
   InitDecoder(nullptr, 0);
 
   joiner_sess_ = std::make_unique<Ort::Session>(
-      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.joiner), sess_opts_);
+      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.joiner),
+      joiner_sess_opts_);
   InitJoiner(nullptr, 0);
 }
 
@@ -57,7 +62,9 @@ OnlineConformerTransducerModel::OnlineConformerTransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
-      sess_opts_(GetSessionOptions(config)),
+      encoder_sess_opts_(GetSessionOptions(config)),
+      decoder_sess_opts_(GetSessionOptions(config, "decoder")),
+      joiner_sess_opts_(GetSessionOptions(config, "joiner")),
       allocator_{} {
   {
     auto buf = ReadFile(mgr, config.transducer.encoder);
@@ -79,7 +86,7 @@ void OnlineConformerTransducerModel::InitEncoder(void *model_data,
                                                  size_t model_data_length) {
   if (model_data) {
     encoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+        env_, model_data, model_data_length, encoder_sess_opts_);
   } else if (!encoder_sess_) {
     SHERPA_ONNX_LOGE(
         "Please pass model data or initialize the encoder outside of "
@@ -120,7 +127,7 @@ void OnlineConformerTransducerModel::InitDecoder(void *model_data,
                                                  size_t model_data_length) {
   if (model_data) {
     decoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+        env_, model_data, model_data_length, decoder_sess_opts_);
   } else if (!decoder_sess_) {
     SHERPA_ONNX_LOGE(
         "Please pass model data or initialize the decoder outside of "
@@ -156,7 +163,7 @@ void OnlineConformerTransducerModel::InitJoiner(void *model_data,
                                                 size_t model_data_length) {
   if (model_data) {
     joiner_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+        env_, model_data, model_data_length, joiner_sess_opts_);
   } else if (!joiner_sess_) {
     SHERPA_ONNX_LOGE(
         "Please pass model data or initialize the joiner outside of "

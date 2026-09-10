@@ -8,6 +8,9 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
+
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
 echo "EXE is $EXE"
@@ -19,9 +22,7 @@ for type in base small; do
   log "------------------------------------------------------------"
   log "Run Dolphin CTC models ($type int8)"
   log "------------------------------------------------------------"
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
-  tar xvf sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
-  rm sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
+  download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
 
   $EXE \
     --dolphin-model=./sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02/model.int8.onnx \
@@ -34,9 +35,7 @@ for type in base small; do
   log "------------------------------------------------------------"
   log "Run Dolphin CTC models ($type)"
   log "------------------------------------------------------------"
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
-  tar xvf sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
-  rm sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
+  download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
 
   $EXE \
     --dolphin-model=./sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02/model.onnx \
@@ -50,9 +49,7 @@ done
 log "------------------------------------------------------------"
 log "Run NeMo GigaAM Russian models v2"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
-tar xvf sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
-rm sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
 
 $EXE \
   --nemo-ctc-model=./sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/model.int8.onnx \
@@ -65,9 +62,7 @@ rm -rf sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19
 log "------------------------------------------------------------"
 log "Run NeMo GigaAM Russian models v1"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
-tar xvf sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
-rm sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
 
 $EXE \
   --nemo-ctc-model=./sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24/model.int8.onnx \
@@ -80,9 +75,7 @@ rm -rf sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24
 log "------------------------------------------------------------"
 log "Run SenseVoice models"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
-tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
-rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 repo=sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17
 
 for m in model.int8.onnx; do
@@ -98,13 +91,11 @@ for m in model.int8.onnx; do
   done
 done
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
-tar xf dict.tar.bz2
-rm dict.tar.bz2
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
 
 for m in model.int8.onnx; do
   for use_itn in 0 1; do
@@ -136,7 +127,7 @@ waves=(
   float32-2-channel-zh.wav
 )
 for w in ${waves[@]}; do
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$w
+  download https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$w
 
   time $EXE \
     --tokens=$repo/tokens.txt \
@@ -165,9 +156,7 @@ if true; then
     log "Start testing ${repo_url}"
     repo=$name
     log "Download pretrained model and test-data from $repo_url"
-    curl -SL -O $repo_url
-    tar xvf $name.tar.bz2
-    rm $name.tar.bz2
+    download_and_extract $repo_url
 
     log "test float32 models"
     time $EXE \
@@ -195,9 +184,7 @@ url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-on
 name=$(basename $url)
 repo=$(basename -s .tar.bz2 $name)
 
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 ls -lh $repo
 
 test_wavs=(
@@ -229,9 +216,7 @@ log "-----------------------------------------------------------------"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -259,9 +244,7 @@ rm -rf $repo
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-en-24500.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -277,9 +260,7 @@ rm -rf $repo
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-es-1424.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -295,9 +276,7 @@ rm -rf $repo
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288.tar.bz2
 name=$(basename $url)
-curl -SL -O $url
-tar xvf $name
-rm $name
+download_and_extract $url
 repo=$(basename -s .tar.bz2 $name)
 ls -lh $repo
 
@@ -326,9 +305,7 @@ log "------------------------------------------------------------"
 log "Run tdnn yesno (Hebrew)"
 log "------------------------------------------------------------"
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-tdnn-yesno.tar.bz2
-curl -SL -O $url
-tar xvf sherpa-onnx-tdnn-yesno.tar.bz2
-rm sherpa-onnx-tdnn-yesno.tar.bz2
+download_and_extract $url
 log "Start testing ${url}"
 repo=sherpa-onnx-tdnn-yesno
 log "Download pretrained model and test-data from $url"
@@ -368,9 +345,7 @@ log "Run Citrinet (stt_en_citrinet_512, English)"
 log "------------------------------------------------------------"
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
-rm sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+download_and_extract $repo_url
 log "Start testing ${repo_url}"
 repo=sherpa-onnx-nemo-ctc-en-citrinet-512
 log "Download pretrained model and test-data from $repo_url"
@@ -397,10 +372,8 @@ log "------------------------------------------------------------"
 log "Run Librispeech zipformer CTC H/HL/HLG decoding (English)   "
 log "------------------------------------------------------------"
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
-curl -SL -O $repo_url
+download_and_extract $repo_url
 log "Start testing ${repo_url}"
-tar xvf sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
-rm sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
 repo=sherpa-onnx-zipformer-ctc-en-2023-10-02
 log "Download pretrained model and test-data from $repo_url"
 

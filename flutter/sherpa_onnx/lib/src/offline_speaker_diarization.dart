@@ -53,6 +53,8 @@ class OfflineSpeakerDiarization {
 
     c.ref.clustering.numClusters = config.clustering.numClusters;
     c.ref.clustering.threshold = config.clustering.threshold;
+    c.ref.clustering.computeConfidence =
+        config.clustering.computeConfidence ? 1 : 0;
 
     c.ref.minDurationOn = config.minDurationOn;
     c.ref.minDurationOff = config.minDurationOff;
@@ -183,7 +185,10 @@ class OfflineSpeakerDiarization {
       final s = segments + i;
 
       final tmp = OfflineSpeakerDiarizationSegment(
-          start: s.ref.start, end: s.ref.end, speaker: s.ref.speaker);
+          start: s.ref.start,
+          end: s.ref.end,
+          speaker: s.ref.speaker,
+          confidence: s.ref.confidence);
       ans.add(tmp);
     }
 

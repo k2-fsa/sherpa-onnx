@@ -256,9 +256,8 @@ jobs:
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
 
-          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
+          source .github/scripts/common.sh
+          download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
 
           qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx \
             --tokens=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/tokens.txt \
@@ -276,9 +275,8 @@ jobs:
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
 
-          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
-          tar xf vits-piper-en_US-lessac-medium.tar.bz2
-          rm vits-piper-en_US-lessac-medium.tar.bz2
+          source .github/scripts/common.sh
+          download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
 
           qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts \
             --vits-model=./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx \

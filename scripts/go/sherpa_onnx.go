@@ -9,7 +9,7 @@ It does not need to access the network during recognition and everything
 runs locally.
 
 It supports a variety of platforms, such as Linux (x86_64, aarch64, arm),
-Windows (x86_64, x86), macOS (x86_64, arm64), etc.
+Windows (x86_64, x86, arm64), macOS (x86_64, arm64), etc.
 
 Usage examples:
 
@@ -1524,7 +1524,7 @@ func (tts *OfflineTts) GenerateWithConfig(
 	var cReferenceAudio *C.float
 	if len(cfg.ReferenceAudio) > 0 {
 		cReferenceAudio = (*C.float)(C.malloc(C.size_t(len(cfg.ReferenceAudio)) * C.size_t(unsafe.Sizeof(C.float(0)))))
-		slice := (*[1 << 30]C.float)(unsafe.Pointer(cReferenceAudio))[:len(cfg.ReferenceAudio):len(cfg.ReferenceAudio)]
+		slice := unsafe.Slice((*C.float)(unsafe.Pointer(cReferenceAudio)), len(cfg.ReferenceAudio))
 		for i, v := range cfg.ReferenceAudio {
 			slice[i] = C.float(v)
 		}
@@ -2092,8 +2092,9 @@ type OfflineSpeakerSegmentationModelConfig struct {
 }
 
 type FastClusteringConfig struct {
-	NumClusters int
-	Threshold   float32
+	NumClusters       int
+	Threshold         float32
+	ComputeConfidence int // 1 to enable per-segment confidence computation
 }
 
 type OfflineSpeakerDiarizationConfig struct {
@@ -2138,6 +2139,7 @@ func NewOfflineSpeakerDiarization(config *OfflineSpeakerDiarizationConfig) *Offl
 
 	c.clustering.num_clusters = C.int(config.Clustering.NumClusters)
 	c.clustering.threshold = C.float(config.Clustering.Threshold)
+	c.clustering.compute_confidence = C.int(config.Clustering.ComputeConfidence)
 	c.min_duration_on = C.float(config.MinDurationOn)
 	c.min_duration_off = C.float(config.MinDurationOff)
 
@@ -2163,14 +2165,16 @@ func (sd *OfflineSpeakerDiarization) SetConfig(config *OfflineSpeakerDiarization
 
 	c.clustering.num_clusters = C.int(config.Clustering.NumClusters)
 	c.clustering.threshold = C.float(config.Clustering.Threshold)
+	c.clustering.compute_confidence = C.int(config.Clustering.ComputeConfidence)
 
 	C.SherpaOnnxOfflineSpeakerDiarizationSetConfig(sd.impl, &c)
 }
 
 type OfflineSpeakerDiarizationSegment struct {
-	Start   float32
-	End     float32
-	Speaker int
+	Start      float32
+	End        float32
+	Speaker    int
+	Confidence float32 // range between [-1, 1], -2 if unavailable
 }
 
 func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeakerDiarizationSegment {
@@ -2194,6 +2198,7 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 		ans[i].Start = float32(p[i].start)
 		ans[i].End = float32(p[i].end)
 		ans[i].Speaker = int(p[i].speaker)
+		ans[i].Confidence = float32(p[i].confidence)
 	}
 
 	return ans
@@ -2820,7 +2825,7 @@ func ReadWaveMultiChannel(filename string) *AudioBuffer {
 
 	total := buf.ChannelCount * buf.SamplesPerChannel
 	// View C memory as a Go slice
-	buf.Samples = (*[1 << 30]float32)(unsafe.Pointer(*ptr.samples))[:total:total]
+	buf.Samples = unsafe.Slice((*float32)(unsafe.Pointer(*ptr.samples)), total)
 	return buf
 }
 
@@ -2954,8 +2959,8 @@ func (ss *SourceSeparator) Process(buf *AudioBuffer) []*AudioBuffer {
 
 		flat := make([]float32, chCount*sCount)
 		for c := 0; c < chCount; c++ {
-			cChannelPtr := (*[1 << 20]*C.float)(unsafe.Pointer(cStem.samples))[c]
-			source := (*[1 << 30]float32)(unsafe.Pointer(cChannelPtr))[:sCount:sCount]
+			cChannelPtr := unsafe.Slice((**C.float)(unsafe.Pointer(cStem.samples)), chCount)[c]
+			source := unsafe.Slice((*float32)(unsafe.Pointer(cChannelPtr)), sCount)
 			copy(flat[c*sCount:], source)
 		}
 		stems[i] = NewAudioBuffer(flat, chCount, sampleRate)

@@ -109,6 +109,7 @@ The following tables list the examples in this folder.
 |[./test_asr_streaming_ctc.js](./test_asr_streaming_ctc.js)| Streaming speech recognition from a file using a Zipformer CTC model with greedy search|
 |[./test_asr_streaming_ctc_hlg.js](./test_asr_streaming_ctc_hlg.js)| Streaming speech recognition from a file using a Zipformer CTC model with HLG decoding|
 |[./test_asr_streaming_paraformer.js](./test_asr_streaming_paraformer.js)|Streaming speech recognition from a file using a [Paraformer](https://github.com/alibaba-damo-academy/FunASR) model|
+|[./test_asr_streaming_nemotron.js](./test_asr_streaming_nemotron.js)|Streaming speech recognition from a file using a multilingual [NeMo](https://github.com/NVIDIA/NeMo) Nemotron transducer model with per-stream language pinning|
 
 ## Streaming speech-to-text from a microphone
 
@@ -293,6 +294,16 @@ node ./test_asr_streaming_transducer.js
 npm install node-cpal
 
 node ./test_asr_streaming_transducer_microphone.js
+```
+
+### Streaming speech recognition with multilingual Nemotron
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11.tar.bz2
+tar xvf sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11.tar.bz2
+rm sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11.tar.bz2
+
+node ./test_asr_streaming_nemotron.js
 ```
 
 ### Streaming speech recognition with Zipformer CTC

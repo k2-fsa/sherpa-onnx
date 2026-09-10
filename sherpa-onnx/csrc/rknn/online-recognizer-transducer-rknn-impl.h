@@ -63,6 +63,7 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResultRknn &src,
     r.timestamps.push_back(time);
   }
 
+  r.num_trailing_blanks = src.num_trailing_blanks;
   r.segment = segment;
   r.start_time = frames_since_start * frame_shift_ms / 1000.;
 

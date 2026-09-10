@@ -1780,10 +1780,14 @@ public func sherpaOnnxOfflineSpeakerSegmentationModelConfig(
   )
 }
 
-public func sherpaOnnxFastClusteringConfig(numClusters: Int = -1, threshold: Float = 0.5)
+public func sherpaOnnxFastClusteringConfig(
+  numClusters: Int = -1, threshold: Float = 0.5, computeConfidence: Bool = false
+)
   -> SherpaOnnxFastClusteringConfig
 {
-  return SherpaOnnxFastClusteringConfig(num_clusters: Int32(numClusters), threshold: threshold)
+  return SherpaOnnxFastClusteringConfig(
+    num_clusters: Int32(numClusters), threshold: threshold,
+    compute_confidence: computeConfidence ? 1 : 0)
 }
 
 public func sherpaOnnxSpeakerEmbeddingExtractorConfig(

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 log() {
   # This function is from espnet
   local fname=${BASH_SOURCE[1]##*/}
@@ -16,9 +17,7 @@ echo "PATH: $PATH"
 which $EXE
 
 repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
-rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+download_and_extract $repo_url
 repo=sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
 
 log "Start testing ${repo_url}"

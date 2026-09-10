@@ -76,6 +76,95 @@ class ThreadPool {
 #endif  // THREAD_POOL_H
 ]=])
     message(STATUS "Patched ssentencepiece for WASM (ThreadPool stub installed)")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Android)
+    # On Termux, the static onnxruntime lib references __cxa_init_primary_exception
+    # which is missing from libc++abi. Remove all threading from ssentencepiece:
+    # no std::thread, std::future, std::promise, or ThreadPool.
+
+    # 1. Replace threadpool.h with an empty stub.
+    set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
+    file(WRITE "${_tp_header}" [=[
+// Empty stub — threading removed for Android/Termux.
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
+#endif  // THREAD_POOL_H
+]=])
+
+    # 2. Patch ssentencepiece.h: remove ThreadPool include, thread usage, and pool_ member.
+    set(_sph "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/ssentencepiece.h")
+    file(READ "${_sph}" _sph_content)
+    string(REPLACE "#include \"ssentencepiece/csrc/threadpool.h\"\n" "" _sph_content "${_sph_content}")
+    string(REPLACE "int32_t num_threads = std::thread::hardware_concurrency()" "int32_t num_threads = 1" _sph_content "${_sph_content}")
+    string(REPLACE "pool_ = std::make_unique<ThreadPool>(num_threads);\n    Build(is);" "Build(is);" _sph_content "${_sph_content}")
+    string(REPLACE "pool_ = std::make_unique<ThreadPool>(num_threads);\n    Build(vocab_path);" "Build(vocab_path);" _sph_content "${_sph_content}")
+    string(REPLACE "pool_ = std::make_unique<ThreadPool>(num_threads);" "" _sph_content "${_sph_content}")
+    string(REPLACE "std::unique_ptr<ThreadPool> pool_;" "" _sph_content "${_sph_content}")
+    file(WRITE "${_sph}" "${_sph_content}")
+
+    # 3. Patch ssentencepiece.cc: replace threaded Encode/Decode with synchronous loops.
+    set(_spc "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/ssentencepiece.cc")
+    file(READ "${_spc}" _spc_content)
+
+    # Replace threaded Encode (vector<string> version)
+    string(REPLACE
+      [==[  ostrs->resize(strs.size());
+  std::vector<std::future<void>> results;
+  for (int32_t i = 0; i < strs.size(); ++i) {
+    results.emplace_back(pool_->enqueue([this, i, &strs, ostrs] {
+      return this->Encode(strs[i], &((*ostrs)[i]));
+    }));
+  }
+
+  for (auto &&result : results) {
+    result.get();
+  }]==]
+      [==[  ostrs->resize(strs.size());
+  for (int32_t i = 0; i < strs.size(); ++i) {
+    this->Encode(strs[i], &((*ostrs)[i]));
+  }]==]
+      _spc_content "${_spc_content}")
+
+    # Replace threaded Encode (vector<int32_t> version)
+    string(REPLACE
+      [==[  oids->resize(strs.size());
+  std::vector<std::future<void>> results;
+  for (int32_t i = 0; i < strs.size(); ++i) {
+    results.emplace_back(pool_->enqueue([this, i, &strs, oids] {
+      return this->Encode(strs[i], &((*oids)[i]));
+    }));
+  }
+
+  for (auto &&result : results) {
+    result.get();
+  }]==]
+      [==[  oids->resize(strs.size());
+  for (int32_t i = 0; i < strs.size(); ++i) {
+    this->Encode(strs[i], &((*oids)[i]));
+  }]==]
+      _spc_content "${_spc_content}")
+
+    # Replace threaded Decode (vector version)
+    string(REPLACE
+      [==[  std::vector<std::string> res;
+  std::vector<std::future<std::string>> results;
+  for (const auto &id : ids) {
+    results.emplace_back(
+        pool_->enqueue([this, &id] { return this->Decode(id); }));
+  }
+  for (auto &&result : results) {
+    res.push_back(result.get());
+  }
+  return res;]==]
+      [==[  std::vector<std::string> res;
+  for (const auto &id : ids) {
+    res.push_back(this->Decode(id));
+  }
+  return res;]==]
+      _spc_content "${_spc_content}")
+
+    file(WRITE "${_spc}" "${_spc_content}")
+
+    message(STATUS "Patched ssentencepiece for Android: all threading removed")
   endif()
 
   if(BUILD_SHARED_LIBS)
