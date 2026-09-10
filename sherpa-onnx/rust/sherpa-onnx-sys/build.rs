@@ -641,7 +641,7 @@ fn copy_xcframework_to_tauri_project(
     archive_stem: Option<&str>,
 ) -> Result<(), DynError> {
     // lib_dir is something like
-    //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.7-ios-shared-onnxruntime-static/lib
+    //   target/.../sherpa-onnx-prebuilt/sherpa-onnx-v1.13.8-ios-shared-onnxruntime-static/lib
     // The xcframework sits next to lib/:
     //   .../sherpa-onnx.xcframework/
     let extracted_dir = lib_dir.parent().unwrap_or(lib_dir);
