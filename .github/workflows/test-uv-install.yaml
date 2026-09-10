@@ -1,0 +1,181 @@
+name: test-uv-install
+
+on:
+  push:
+    branches:
+      - test-uv-install
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 23:50 UTC time every day
+    - cron: "50 23 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: test-uv-install-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test_uv_install:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # See https://github.com/actions/runner-images
+        include:
+          # Linux x64
+          - os: ubuntu-latest
+            python-version: "3.8"
+          - os: ubuntu-latest
+            python-version: "3.9"
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
+
+          # Linux arm64
+          - os: ubuntu-24.04-arm
+            python-version: "3.10"
+          - os: ubuntu-24.04-arm
+            python-version: "3.11"
+          - os: ubuntu-24.04-arm
+            python-version: "3.12"
+          - os: ubuntu-24.04-arm
+            python-version: "3.13"
+          - os: ubuntu-24.04-arm
+            python-version: "3.14"
+
+          # macOS x64
+          - os: macos-15-intel
+            python-version: "3.8"
+          - os: macos-15-intel
+            python-version: "3.9"
+
+          # macOS arm64
+          - os: macos-14
+            python-version: "3.10"
+          - os: macos-14
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.13"
+
+          # Windows x64
+          - os: windows-2022
+            python-version: "3.8"
+          - os: windows-2022
+            python-version: "3.9"
+          - os: windows-2022
+            python-version: "3.10"
+          - os: windows-2022
+            python-version: "3.11"
+          - os: windows-2022
+            python-version: "3.12"
+          - os: windows-2022
+            python-version: "3.13"
+          - os: windows-2022
+            python-version: "3.14"
+
+          # Windows arm64
+          - os: windows-11-arm
+            python-version: "3.11"
+          - os: windows-11-arm
+            python-version: "3.12"
+          - os: windows-11-arm
+            python-version: "3.13"
+          - os: windows-11-arm
+            python-version: "3.14"
+
+          # Windows x86
+          - os: windows-2022
+            python-version: "3.8"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.9"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.10"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.11"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.12"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.13"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.14"
+            architecture: x86
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          uv venv
+
+      - name: Install sherpa-onnx Python package
+        shell: bash
+        run: |
+          uv pip install --verbose -U sherpa-onnx || \
+            uv pip install --verbose -U sherpa-onnx -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
+
+      - name: Test sherpa-onnx Python API
+        shell: bash
+        run: |
+          uv run python python-api-examples/version-test.py
+
+      - name: Install sherpa-onnx-bin CLI tools
+        shell: bash
+        run: |
+          uv pip install --verbose -U sherpa-onnx-bin || \
+            uv pip install --verbose -U sherpa-onnx-bin -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
+
+      - name: Test sherpa-onnx-bin CLI tools
+        shell: bash
+        run: |
+          uv run sherpa-onnx-version
+
+          uv run sherpa-onnx --help
+          uv run sherpa-onnx-keyword-spotter --help
+          uv run sherpa-onnx-offline --help
+          uv run sherpa-onnx-offline-tts --help
+
+          uv run sherpa-onnx-microphone --help
+          uv run sherpa-onnx-microphone-offline --help
+
+          uv run sherpa-onnx-offline-websocket-server --help
+
+          uv run sherpa-onnx-online-websocket-server --help
+          uv run sherpa-onnx-online-websocket-client --help
