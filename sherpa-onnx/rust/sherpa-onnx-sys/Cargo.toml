@@ -14,6 +14,7 @@ categories = ["external-ffi-bindings"]
 include = [
     "src/**",
     "build.rs",
+    "build_support/**",
     "Cargo.toml",
     "README.md",
     "LICENSE*",
@@ -26,9 +27,27 @@ shared = []
 
 [build-dependencies]
 bzip2 = "0.4"
+# `ring` matches the crypto provider that ureq links, so the build script does
+# not pull in a second one (rustls panics when it cannot pick between them).
+rustls = { version = "0.23", default-features = false, features = [
+    "ring",
+    "std",
+    "tls12",
+] }
+rustls-native-certs = "0.8"
 tar = "0.4"
 ureq = { version = "2.12", features = ["proxy-from-env"] }
+webpki-roots = "0.26"
 zip = "2"
+
+[dev-dependencies]
+rustls = { version = "0.23", default-features = false, features = [
+    "ring",
+    "std",
+    "tls12",
+] }
+rustls-pemfile = "2"
+webpki-roots = "0.26"
 
 [package.metadata.docs.rs]
 default-features = false
