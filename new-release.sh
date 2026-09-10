@@ -4,11 +4,11 @@ set -ex
 
 cd "$(dirname "$0")"
 
-old_version_code=20260831
-new_version_code=20260901
+old_version_code=20260901
+new_version_code=20260910
 
-old_version="1\.13\.6"
-new_version="1\.13\.7"
+old_version="1\.13\.7"
+new_version="1\.13\.8"
 
 replace_str="s/$old_version/$new_version/g"
 
@@ -70,6 +70,7 @@ find sherpa-onnx/rust -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} 
 find tauri-examples -name "*.json" -type f -exec sed -i.bak "$replace_str" {} \;
 find tauri-examples -name "*.toml" -type f -exec sed -i.bak "$replace_str" {} \;
 find tauri-examples -name "*.md" -type f -exec sed -i.bak "$replace_str" {} \;
+find tauri-examples -name "*.sh" -type f -exec sed -i.bak "$replace_str" {} \;
 
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;

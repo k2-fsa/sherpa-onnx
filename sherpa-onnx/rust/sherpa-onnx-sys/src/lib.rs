@@ -16,7 +16,7 @@
 //! | | When set, the build script copies the archive from this directory |
 //! | | instead of downloading it from the internet. The archive must have |
 //! | | the same filename that would normally be downloaded (e.g. |
-//! | | `sherpa-onnx-v1.13.7-linux-x64-shared-lib.tar.bz2`). |
+//! | | `sherpa-onnx-v1.13.8-linux-x64-shared-lib.tar.bz2`). |
 
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]

@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "sherpa-onnx": "^1.13.7",
+    "sherpa-onnx": "^1.13.8",
     "wav": "^1.0.2"
   }
 }
