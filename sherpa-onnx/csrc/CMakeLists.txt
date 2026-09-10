@@ -19,6 +19,8 @@ set(sources
   endpoint.cc
   features.cc
   file-utils.cc
+  fire-red-vad-model-config.cc
+  fire-red-vad-model.cc
   fst-utils.cc
   homophone-replacer.cc
   hypothesis.cc
