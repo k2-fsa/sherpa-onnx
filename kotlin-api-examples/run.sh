@@ -430,6 +430,25 @@ function testOfflinePunctuation() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineDiacritization() {
+  if [[ ! -f ./catt_eo_model_onnx/encoder.onnx || ! -f ./catt_eo_model_onnx/decoder.onnx ]]; then
+    curl -SL -O https://github.com/abjadai/catt/releases/download/v2/eo_model_onnx.zip
+    unzip eo_model_onnx.zip -d catt_eo_model_onnx
+    rm eo_model_onnx.zip
+  fi
+
+  out_filename=test_offline_diacritization.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    ./test_offline_diacritization.kt \
+    ./OfflineDiacritization.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testOnlinePunctuation() {
   if [ ! -f ./sherpa-onnx-online-punct-en-2024-08-06/model.int8.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
@@ -807,6 +826,7 @@ testAudioTagging
 testSpokenLanguageIdentification
 testOfflineAsr
 testOfflinePunctuation
+testOfflineDiacritization
 testOnlinePunctuation
 testInverseTextNormalizationOfflineAsr
 testInverseTextNormalizationOnlineAsr
