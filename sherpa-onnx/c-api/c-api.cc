@@ -2448,6 +2448,11 @@ int32_t SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(
   return p->impl->NumSpeakers();
 }
 
+int32_t SherpaOnnxSpeakerEmbeddingManagerDim(
+    const SherpaOnnxSpeakerEmbeddingManager *p) {
+  return p->impl->Dim();
+}
+
 const char *const *SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
     const SherpaOnnxSpeakerEmbeddingManager *manager) {
   std::vector<std::string> all_speakers = manager->impl->GetAllSpeakers();
@@ -2476,6 +2481,26 @@ void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
   }
 
   delete[] names;
+}
+
+const float *SherpaOnnxSpeakerEmbeddingManagerGetEmbedding(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name) {
+  if (!p || !name) {
+    return nullptr;
+  }
+
+  int32_t dim = p->impl->Dim();
+  float *ans = new float[dim];
+  if (!p->impl->GetEmbedding(name, ans)) {
+    delete[] ans;
+    return nullptr;
+  }
+  return ans;
+}
+
+void SherpaOnnxSpeakerEmbeddingManagerDestroyEmbedding(const float *v) {
+  if (!v) return;
+  delete[] v;
 }
 
 struct SherpaOnnxAudioTagging {
