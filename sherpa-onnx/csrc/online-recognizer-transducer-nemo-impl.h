@@ -81,8 +81,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
       decoder_ =
           std::make_unique<OnlineTransducerModifiedBeamSearchNeMoDecoder>(
-              model_.get(), config_.max_active_paths, config_.blank_penalty,
-              config_.hotwords_score);
+              model_.get(), config_.max_active_paths, config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
@@ -129,8 +128,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
       decoder_ =
           std::make_unique<OnlineTransducerModifiedBeamSearchNeMoDecoder>(
-              model_.get(), config_.max_active_paths, config_.blank_penalty,
-              config_.hotwords_score);
+              model_.get(), config_.max_active_paths, config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());

@@ -21,11 +21,10 @@ class OnlineTransducerModifiedBeamSearchNeMoDecoder
  public:
   OnlineTransducerModifiedBeamSearchNeMoDecoder(
       OnlineTransducerNeMoModel *model, int32_t max_active_paths,
-      float blank_penalty, float hotwords_score)
+      float blank_penalty)
       : model_(model),
         max_active_paths_(max_active_paths),
-        blank_penalty_(blank_penalty),
-        hotwords_score_(hotwords_score) {}
+        blank_penalty_(blank_penalty) {}
 
   void Decode(Ort::Value encoder_out, OnlineStream **ss,
               int32_t n) const override;
@@ -35,7 +34,6 @@ class OnlineTransducerModifiedBeamSearchNeMoDecoder
 
   int32_t max_active_paths_;
   float blank_penalty_;
-  float hotwords_score_;
 };
 
 }  // namespace sherpa_onnx

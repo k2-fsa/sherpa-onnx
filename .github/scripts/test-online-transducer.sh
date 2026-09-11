@@ -86,7 +86,19 @@ time $EXE \
   --bpe-vocab=$repo/bpe.vocab \
   --hotwords-file=$repo/hotwords.txt \
   --hotwords-score=1.5 \
-  $repo/test_wavs/0.wav
+  $repo/test_wavs/0.wav > $repo/hotwords.log 2>&1
+
+cat $repo/hotwords.log
+
+case "$EXE" in
+  *decode-file-c-api*)
+    # prints only the text
+    ;;
+  *)
+    # the matched hotwords must carry the hotwords score in context_scores
+    grep -q '"context_scores": \[[^]]*1.500000' $repo/hotwords.log
+    ;;
+esac
 
 rm -rf $repo
 

@@ -47,7 +47,7 @@ Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
 
 void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
                OnlineTransducerNeMoModel *model, int32_t max_active_paths,
-               float blank_penalty, float hotwords_score, OnlineStream *s) {
+               float blank_penalty, OnlineStream *s) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -149,18 +149,19 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
 
       LogSoftmax(p_logit, vocab_size);
 
-      // Boost hotword continuations before the top-k selection so that they
-      // have a chance to be selected even if their base probability is low.
-      // The boost is used for ranking only: the original values are restored
-      // right after, so path scores and ys_probs stay purely acoustic and
-      // the context-graph score is added exactly once via ForwardOneStep().
+      // Boost hotword continuations by their context-graph transition score
+      // before the top-k selection, so that they have a chance to be selected
+      // even if their base probability is low. The boost is used for ranking
+      // only: the original values are restored right after, so path scores
+      // and ys_probs stay purely acoustic and the context-graph score is
+      // added exactly once via ForwardOneStep().
       std::vector<std::pair<int32_t, float>> boosted;
       if (context_graph != nullptr && c.hyp.context_state != nullptr) {
         for (const auto &pair : c.hyp.context_state->next) {
           int32_t token_id = pair.first;
           if (token_id >= 0 && token_id < vocab_size) {
             boosted.emplace_back(token_id, p_logit[token_id]);
-            p_logit[token_id] += hotwords_score;
+            p_logit[token_id] += pair.second->token_score;
           }
         }
       }
@@ -316,7 +317,7 @@ void OnlineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     const float *this_p = p + dim1 * dim2 * i;
 
     DecodeOne(this_p, dim1, dim2, model_, max_active_paths_, blank_penalty_,
-              hotwords_score_, ss[i]);
+              ss[i]);
   }
 }
 
