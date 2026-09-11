@@ -327,7 +327,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -430,7 +430,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -531,7 +531,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -641,7 +641,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -751,7 +751,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -861,7 +861,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -960,7 +960,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -1075,7 +1075,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -1121,7 +1121,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
