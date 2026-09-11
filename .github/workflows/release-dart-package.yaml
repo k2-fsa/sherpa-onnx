@@ -233,6 +233,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -330,6 +332,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -433,6 +437,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - uses: actions/upload-artifact@v4
         with:
@@ -534,6 +540,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -644,6 +652,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -754,6 +764,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -864,6 +876,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -963,6 +977,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -1078,6 +1094,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Zip package for inspection
         shell: bash
@@ -1124,6 +1142,8 @@ jobs:
           version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.0
 
       - name: Fix version
         shell: bash
