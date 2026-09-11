@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -145,6 +146,47 @@ TEST(SpeakerEmbeddingManager, Verify) {
 
   status = manager.Verify("fourth", v.data(), threshold);
   ASSERT_FALSE(status);
+}
+
+TEST(SpeakerEmbeddingManager, GetEmbedding) {
+  int32_t dim = 2;
+  SpeakerEmbeddingManager manager(dim);
+
+  std::vector<float> out(dim, 0);
+  ASSERT_FALSE(manager.GetEmbedding("missing", out.data()));
+
+  std::vector<float> v1 = {0.1f, 0.1f};
+  ASSERT_TRUE(manager.Add("first", v1.data()));
+
+  ASSERT_TRUE(manager.GetEmbedding("first", out.data()));
+
+  float norm = std::sqrt(out[0] * out[0] + out[1] * out[1]);
+  EXPECT_NEAR(norm, 1.0f, 1e-5);
+
+  // Cosine similarity with L2-normalized input should be ~1.
+  float in_norm = std::sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+  float cosine =
+      (out[0] * v1[0] + out[1] * v1[1]) / (norm * in_norm);
+  EXPECT_NEAR(cosine, 1.0f, 1e-5);
+
+  ASSERT_TRUE(manager.Remove("first"));
+  ASSERT_FALSE(manager.GetEmbedding("first", out.data()));
+}
+
+TEST(SpeakerEmbeddingManager, GetEmbeddingFromList) {
+  int32_t dim = 2;
+  SpeakerEmbeddingManager manager(dim);
+
+  // Average of (1,0) and (0,1) then L2-normalize → (1/√2, 1/√2)
+  std::vector<std::vector<float>> list = {{1.0f, 0.0f}, {0.0f, 1.0f}};
+  ASSERT_TRUE(manager.Add("spk", list));
+
+  std::vector<float> out(dim, 0);
+  ASSERT_TRUE(manager.GetEmbedding("spk", out.data()));
+
+  float expected = 1.0f / std::sqrt(2.0f);
+  EXPECT_NEAR(out[0], expected, 1e-5);
+  EXPECT_NEAR(out[1], expected, 1e-5);
 }
 
 }  // namespace sherpa_onnx
