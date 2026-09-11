@@ -101,7 +101,12 @@ jobs:
             export GIT_CLONE_PROTECTION_ACTIVE=false
             export GIT_LFS_SKIP_SMUDGE=1
 
-            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface || true
+
+            if [ ! -d huggingface ]; then
+              echo "Failed to clone huggingface repo, skipping"
+              exit 1
+            fi
 
             cd huggingface
             git fetch
@@ -176,6 +181,10 @@ jobs:
 
           rm -fv /tmp/windows*/*.lib
           tree /tmp/windows*
+
+          # Copy windows tarballs to /tmp so run.sh can find them
+          cp -v /tmp/windows-x86/*.tar.bz2 /tmp/
+          cp -v /tmp/windows-arm64/*.tar.bz2 /tmp/
 
       - name: Build
         shell: bash

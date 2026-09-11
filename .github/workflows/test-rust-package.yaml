@@ -304,7 +304,7 @@ jobs:
               echo "Found pre-extracted libs at /lib/jniLibs/$ABI"
               export SHERPA_ONNX_LIB_DIR=/lib/jniLibs/$ABI
             fi
-            if [ -d "/archive" ]; then
+            if ls /archive/*.tar.bz2 &>/dev/null; then
               echo "Found archive at /archive"
               export SHERPA_ONNX_ARCHIVE_DIR=/archive
             fi
