@@ -130,6 +130,9 @@ target_link_libraries(moonshine-v2-c-api sherpa-onnx-c-api)
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 
+add_executable(zipformer-ctc-hlg-c-api zipformer-ctc-hlg-c-api.c)
+target_link_libraries(zipformer-ctc-hlg-c-api sherpa-onnx-c-api)
+
 add_executable(wenet-ctc-c-api wenet-ctc-c-api.c)
 target_link_libraries(wenet-ctc-c-api sherpa-onnx-c-api)
 

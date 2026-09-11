@@ -214,6 +214,34 @@ jobs:
           rm -rf sherpa-onnx-fire-red-*
           rm -v ./$name
 
+      - name: Test Zipformer CTC with an HLG graph
+        shell: bash
+        run: |
+          name=zipformer-ctc-hlg-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+          tar xvf sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+          rm sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+
+          echo "---"
+
+          # A clean exit proves nothing here: without a graph the decoder
+          # still succeeds, it just decodes freely. The word ids show up only
+          # when the FST decoder ran.
+          ./$name 2>&1 | tee /tmp/hlg.txt
+          grep -q '"words": \[[0-9]' /tmp/hlg.txt
+
+          rm -rf sherpa-onnx-zipformer-ctc-en-*
+          rm -v ./$name
+
       - name: Test FunASR Nano
         shell: bash
         run: |
