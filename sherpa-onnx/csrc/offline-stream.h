@@ -16,6 +16,27 @@
 
 namespace sherpa_onnx {
 
+/// One entry of an n-best list. Produced only by offline transducer models
+/// decoded with modified_beam_search and num_return_paths > 1.
+struct OfflineRecognitionHypothesis {
+  /// Recognition result for this hypothesis.
+  std::string text;
+
+  /// Decoded result at the token level.
+  std::vector<std::string> tokens;
+
+  /// timestamps.size() == tokens.size()
+  /// timestamps[i] records the time in seconds when tokens[i] is decoded.
+  std::vector<float> timestamps;
+
+  /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_log_probs;
+
+  /// Total score of this hypothesis in log space (acoustic + LM, if an LM is
+  /// used). Not length-normalized.
+  float score = 0;
+};
+
 struct OfflineRecognitionResult {
   // Recognition results.
   // For English, it consists of space separated words.
@@ -54,6 +75,13 @@ struct OfflineRecognitionResult {
   std::vector<float> segment_timestamps;   // start time of each segment
   std::vector<float> segment_durations;    // duration of each segment
   std::vector<std::string> segment_texts;  // text of each segment
+
+  /// The n-best list, ordered from best to worst, where hypotheses[0]
+  /// matches the fields above.
+  ///
+  /// Empty unless this is a transducer model decoded with
+  /// modified_beam_search and num_return_paths > 1.
+  std::vector<OfflineRecognitionHypothesis> hypotheses;
 
   std::string AsJsonString() const;
 };

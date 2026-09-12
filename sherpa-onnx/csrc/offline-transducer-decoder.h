@@ -12,6 +12,24 @@
 
 namespace sherpa_onnx {
 
+/// One hypothesis from the beam. Populated only by
+/// modified_beam_search when num_return_paths > 1.
+struct OfflineTransducerHypothesis {
+  /// The decoded token IDs (leading blanks already stripped)
+  std::vector<int64_t> tokens;
+
+  /// timestamps[i] contains the output frame index where tokens[i] is decoded.
+  /// Note: The index is after subsampling
+  std::vector<int32_t> timestamps;
+
+  /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_log_probs;
+
+  /// Total score of this hypothesis in log space (acoustic + LM, if an LM is
+  /// used). Not length-normalized.
+  float score = 0;
+};
+
 struct OfflineTransducerDecoderResult {
   /// The decoded token IDs
   std::vector<int64_t> tokens;
@@ -27,6 +45,13 @@ struct OfflineTransducerDecoderResult {
 
   /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
   std::vector<float> ys_log_probs;
+
+  /// The n-best list, ordered from best to worst, where hypotheses[0]
+  /// corresponds to the fields above.
+  ///
+  /// Empty unless the decoding method is modified_beam_search and
+  /// num_return_paths > 1.
+  std::vector<OfflineTransducerHypothesis> hypotheses;
 };
 
 class OfflineTransducerDecoder {
