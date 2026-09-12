@@ -108,7 +108,6 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         // frame without emitting a token
         c.frame += 1;
         c.num_symbols = 0;
-        c.hyp.num_trailing_blanks += 1;
         double log_prob = c.hyp.log_prob;
         all_candidates.emplace_back(log_prob, std::move(c));
         continue;
