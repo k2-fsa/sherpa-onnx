@@ -433,7 +433,8 @@ function testOfflinePunctuation() {
 function testOfflineDiacritization() {
   if [[ ! -f ./catt_eo_model_onnx/encoder.onnx || ! -f ./catt_eo_model_onnx/decoder.onnx ]]; then
     curl -SL -O https://github.com/abjadai/catt/releases/download/v2/eo_model_onnx.zip
-    unzip eo_model_onnx.zip -d catt_eo_model_onnx
+    rm -rf catt_eo_model_onnx
+    unzip -o eo_model_onnx.zip -d catt_eo_model_onnx
     rm eo_model_onnx.zip
   fi
 
