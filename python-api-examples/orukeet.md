@@ -86,6 +86,7 @@ For microphone input, download `silero_vad.onnx` as described in
 
 ```bash
 python3 -m pip install sounddevice
+model=./sherpa-onnx-orukeet-v0.1.0-int8
 python3 python-api-examples/vad-with-non-streaming-asr.py \
   --silero-vad-model ./silero_vad.onnx \
   --model-type nemo_transducer \
