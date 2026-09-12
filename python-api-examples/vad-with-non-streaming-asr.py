@@ -116,6 +116,13 @@ def get_args():
     )
 
     parser.add_argument(
+        "--model-type",
+        default="transducer",
+        choices=["transducer", "nemo_transducer"],
+        help="Transducer family. Use nemo_transducer for Parakeet TDT and Orukeet.",
+    )
+
+    parser.add_argument(
         "--encoder",
         default="",
         type=str,
@@ -321,6 +328,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             decoder=args.decoder,
             joiner=args.joiner,
             tokens=args.tokens,
+            model_type=args.model_type,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
