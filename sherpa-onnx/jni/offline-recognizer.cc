@@ -35,6 +35,17 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_FLOAT(ans.blank_penalty, blankPenalty, cls, config);
 
+  fid = env->GetFieldID(cls, "ctcFstDecoderConfig",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineCtcFstDecoderConfig;");
+  jobject fst_decoder_config = env->GetObjectField(config, fid);
+  jclass fst_decoder_config_cls = env->GetObjectClass(fst_decoder_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.ctc_fst_decoder_config.graph, graph,
+                              fst_decoder_config_cls, fst_decoder_config);
+
+  SHERPA_ONNX_JNI_READ_INT(ans.ctc_fst_decoder_config.max_active, maxActive,
+                           fst_decoder_config_cls, fst_decoder_config);
+
   fid = env->GetFieldID(cls, "featConfig",
                         "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");
   jobject feat_config = env->GetObjectField(config, fid);
@@ -661,7 +672,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   jmethodID ctor =
       env->GetMethodID(cls, "<init>",
                        "(Ljava/lang/String;[Ljava/lang/String;[FLjava/lang/"
-                       "String;Ljava/lang/String;Ljava/lang/String;[F)V");
+                       "String;Ljava/lang/String;Ljava/lang/String;[F[I)V");
   jstring jtext = SafeNewStringUTF(env, result.text);
 
   jclass string_cls = env->FindClass("java/lang/String");
@@ -687,8 +698,14 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   env->SetFloatArrayRegion(jdurations, 0, result.durations.size(),
                            result.durations.data());
 
+  jintArray jwords = env->NewIntArray(result.words.size());
+  if (!result.words.empty()) {
+    env->SetIntArrayRegion(jwords, 0, result.words.size(),
+                           result.words.data());
+  }
+
   jobject jresult = env->NewObject(cls, ctor, jtext, jtokens, jtimestamps,
-                                   jlang, jemotion, jevent, jdurations);
+                                   jlang, jemotion, jevent, jdurations, jwords);
 
   env->DeleteLocalRef(jtext);
   env->DeleteLocalRef(jtokens);
@@ -697,6 +714,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   env->DeleteLocalRef(jemotion);
   env->DeleteLocalRef(jevent);
   env->DeleteLocalRef(jdurations);
+  env->DeleteLocalRef(jwords);
   env->DeleteLocalRef(cls);
 
   return jresult;  // returned object is safe

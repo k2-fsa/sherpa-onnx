@@ -12,6 +12,9 @@ data class OfflineRecognizerResult(
 
     // valid only for TDT models
     val durations: FloatArray,
+
+    // valid only when ctcFstDecoderConfig.graph is set
+    val words: IntArray = IntArray(0),
 )
 
 data class OfflineTransducerModelConfig(
@@ -163,6 +166,11 @@ data class OfflineModelConfig(
     var bpeVocab: String = "",
 )
 
+data class OfflineCtcFstDecoderConfig(
+    var graph: String = "",
+    var maxActive: Int = 3000,
+)
+
 data class OfflineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OfflineModelConfig = OfflineModelConfig(),
@@ -175,6 +183,7 @@ data class OfflineRecognizerConfig(
     var ruleFsts: String = "",
     var ruleFars: String = "",
     var blankPenalty: Float = 0.0f,
+    var ctcFstDecoderConfig: OfflineCtcFstDecoderConfig = OfflineCtcFstDecoderConfig(),
 )
 
 class OfflineRecognizer(

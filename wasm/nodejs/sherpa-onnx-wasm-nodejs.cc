@@ -58,7 +58,8 @@ static_assert(sizeof(SherpaOnnxOfflineRecognizerConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
                       sizeof(SherpaOnnxOfflineLMConfig) +
                       sizeof(SherpaOnnxOfflineModelConfig) + 7 * 4 +
-                      sizeof(SherpaOnnxHomophoneReplacerConfig),
+                      sizeof(SherpaOnnxHomophoneReplacerConfig) +
+                      sizeof(SherpaOnnxOfflineCtcFstDecoderConfig),
               "");
 
 void PrintOfflineTtsConfig(SherpaOnnxOfflineTtsConfig *tts_config) {

@@ -10,8 +10,9 @@ public class OfflineRecognizerResult {
     private final String emotion;
     private final String event;
     private final float[] durations;
+    private final int[] words;
 
-    public OfflineRecognizerResult(String text, String[] tokens, float[] timestamps, String lang, String emotion, String event, float[] durations) {
+    public OfflineRecognizerResult(String text, String[] tokens, float[] timestamps, String lang, String emotion, String event, float[] durations, int[] words) {
         this.text = text;
         this.tokens = tokens;
         this.timestamps = timestamps;
@@ -19,6 +20,7 @@ public class OfflineRecognizerResult {
         this.emotion = emotion;
         this.event = event;
         this.durations = durations;
+        this.words = words;
     }
 
     public String getText() {
@@ -47,5 +49,9 @@ public class OfflineRecognizerResult {
 
     public float[] getDurations() {
         return durations;
+    }
+
+    public int[] getWords() {
+        return words;
     }
 }
