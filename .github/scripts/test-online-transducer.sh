@@ -51,6 +51,55 @@ time $EXE \
   $repo/test_wavs/1.wav \
   $repo/test_wavs/8k.wav
 
+log "Test NeMo transducer with modified_beam_search (no hotwords)"
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --num-threads=2 \
+  --decoding-method=modified_beam_search \
+  $repo/test_wavs/0.wav
+
+log "Test NeMo transducer with modified_beam_search and hotwords"
+
+# The model does not ship a bpe.vocab; derive one from tokens.txt so that
+# hotwords can be given as words. Equal scores make the encoder use the
+# longest match.
+awk '{print $1 "\t-1.0"}' $repo/tokens.txt > $repo/bpe.vocab
+
+cat > $repo/hotwords.txt << EOF
+the
+and
+that
+EOF
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --num-threads=2 \
+  --decoding-method=modified_beam_search \
+  --modeling-unit=bpe \
+  --bpe-vocab=$repo/bpe.vocab \
+  --hotwords-file=$repo/hotwords.txt \
+  --hotwords-score=1.5 \
+  $repo/test_wavs/0.wav > $repo/hotwords.log 2>&1
+
+cat $repo/hotwords.log
+
+case "$EXE" in
+  *decode-file-c-api*)
+    # prints only the text
+    ;;
+  *)
+    # the matched hotwords must carry the hotwords score in context_scores
+    grep -q '"context_scores": \[[^]]*1.500000' $repo/hotwords.log
+    ;;
+esac
+
 rm -rf $repo
 
 log "------------------------------------------------------------"
