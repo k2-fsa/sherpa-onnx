@@ -24,6 +24,10 @@
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
+#ifdef SHERPA_ONNX_ENABLE_AXCL
+#include "sherpa-onnx/csrc/axcl/offline-tts-kokoro-axcl-impl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
@@ -40,6 +44,29 @@ std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
 
 std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     const OfflineTtsConfig &config) {
+  if (config.model.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+    if (!config.model.kokoro.model.empty()) {
+      return std::make_unique<OfflineTtsKokoroAxclImpl<OfflineTtsKokoroModelAxcl>>(
+          config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only Kokoro models are currently supported by axcl for "
+          "non-streaming TTS.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
+    }
+
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXCL=ON if you "
+        "want to use axcl. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/axcl/install.html");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
   if (!config.model.vits.model.empty()) {
     return std::make_unique<OfflineTtsVitsImpl>(config);
   } else if (!config.model.matcha.acoustic_model.empty()) {
