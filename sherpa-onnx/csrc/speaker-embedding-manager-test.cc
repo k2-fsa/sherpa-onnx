@@ -189,4 +189,38 @@ TEST(SpeakerEmbeddingManager, GetEmbeddingFromList) {
   EXPECT_NEAR(out[1], expected, 1e-5);
 }
 
+TEST(SpeakerEmbeddingManager, GetEmbeddingAfterRemoveMiddle) {
+  int32_t dim = 2;
+  SpeakerEmbeddingManager manager(dim);
+
+  std::vector<float> va = {1.0f, 0.0f};
+  std::vector<float> vb = {0.0f, 1.0f};
+  std::vector<float> vc = {1.0f, 1.0f};
+  ASSERT_TRUE(manager.Add("a", va.data()));
+  ASSERT_TRUE(manager.Add("b", vb.data()));
+  ASSERT_TRUE(manager.Add("c", vc.data()));
+
+  ASSERT_TRUE(manager.Remove("b"));
+
+  std::vector<float> a = manager.GetEmbedding("a");
+  std::vector<float> c = manager.GetEmbedding("c");
+  ASSERT_EQ(a.size(), dim);
+  ASSERT_EQ(c.size(), dim);
+  ASSERT_TRUE(manager.GetEmbedding("b").empty());
+
+  EXPECT_NEAR(a[0], 1.0f, 1e-5);
+  EXPECT_NEAR(a[1], 0.0f, 1e-5);
+
+  float expected = 1.0f / std::sqrt(2.0f);
+  EXPECT_NEAR(c[0], expected, 1e-5);
+  EXPECT_NEAR(c[1], expected, 1e-5);
+
+  // Re-add under the removed name should restore readout for that name only.
+  ASSERT_TRUE(manager.Add("b", vb.data()));
+  std::vector<float> b = manager.GetEmbedding("b");
+  ASSERT_EQ(b.size(), dim);
+  EXPECT_NEAR(b[0], 0.0f, 1e-5);
+  EXPECT_NEAR(b[1], 1.0f, 1e-5);
+}
+
 }  // namespace sherpa_onnx
