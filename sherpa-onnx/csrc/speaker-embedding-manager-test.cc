@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -145,6 +146,81 @@ TEST(SpeakerEmbeddingManager, Verify) {
 
   status = manager.Verify("fourth", v.data(), threshold);
   ASSERT_FALSE(status);
+}
+
+TEST(SpeakerEmbeddingManager, GetEmbedding) {
+  int32_t dim = 2;
+  SpeakerEmbeddingManager manager(dim);
+
+  ASSERT_TRUE(manager.GetEmbedding("missing").empty());
+
+  std::vector<float> v1 = {0.1f, 0.1f};
+  ASSERT_TRUE(manager.Add("first", v1.data()));
+
+  std::vector<float> out = manager.GetEmbedding("first");
+  ASSERT_EQ(out.size(), dim);
+
+  float norm = std::sqrt(out[0] * out[0] + out[1] * out[1]);
+  EXPECT_NEAR(norm, 1.0f, 1e-5);
+
+  // Cosine similarity with L2-normalized input should be ~1.
+  float in_norm = std::sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+  float cosine =
+      (out[0] * v1[0] + out[1] * v1[1]) / (norm * in_norm);
+  EXPECT_NEAR(cosine, 1.0f, 1e-5);
+
+  ASSERT_TRUE(manager.Remove("first"));
+  ASSERT_TRUE(manager.GetEmbedding("first").empty());
+}
+
+TEST(SpeakerEmbeddingManager, GetEmbeddingFromList) {
+  int32_t dim = 2;
+  SpeakerEmbeddingManager manager(dim);
+
+  // Average of (1,0) and (0,1) then L2-normalize → (1/√2, 1/√2)
+  std::vector<std::vector<float>> list = {{1.0f, 0.0f}, {0.0f, 1.0f}};
+  ASSERT_TRUE(manager.Add("spk", list));
+
+  std::vector<float> out = manager.GetEmbedding("spk");
+  ASSERT_EQ(out.size(), dim);
+
+  float expected = 1.0f / std::sqrt(2.0f);
+  EXPECT_NEAR(out[0], expected, 1e-5);
+  EXPECT_NEAR(out[1], expected, 1e-5);
+}
+
+TEST(SpeakerEmbeddingManager, GetEmbeddingAfterRemoveMiddle) {
+  int32_t dim = 2;
+  SpeakerEmbeddingManager manager(dim);
+
+  std::vector<float> va = {1.0f, 0.0f};
+  std::vector<float> vb = {0.0f, 1.0f};
+  std::vector<float> vc = {1.0f, 1.0f};
+  ASSERT_TRUE(manager.Add("a", va.data()));
+  ASSERT_TRUE(manager.Add("b", vb.data()));
+  ASSERT_TRUE(manager.Add("c", vc.data()));
+
+  ASSERT_TRUE(manager.Remove("b"));
+
+  std::vector<float> a = manager.GetEmbedding("a");
+  std::vector<float> c = manager.GetEmbedding("c");
+  ASSERT_EQ(a.size(), dim);
+  ASSERT_EQ(c.size(), dim);
+  ASSERT_TRUE(manager.GetEmbedding("b").empty());
+
+  EXPECT_NEAR(a[0], 1.0f, 1e-5);
+  EXPECT_NEAR(a[1], 0.0f, 1e-5);
+
+  float expected = 1.0f / std::sqrt(2.0f);
+  EXPECT_NEAR(c[0], expected, 1e-5);
+  EXPECT_NEAR(c[1], expected, 1e-5);
+
+  // Re-add under the removed name should restore readout for that name only.
+  ASSERT_TRUE(manager.Add("b", vb.data()));
+  std::vector<float> b = manager.GetEmbedding("b");
+  ASSERT_EQ(b.size(), dim);
+  EXPECT_NEAR(b[0], 0.0f, 1e-5);
+  EXPECT_NEAR(b[1], 1.0f, 1e-5);
 }
 
 }  // namespace sherpa_onnx

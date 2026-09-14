@@ -1897,8 +1897,14 @@ class SHERPA_ONNX_API SpeakerEmbeddingManager
   /** @brief Return the number of enrolled speakers. */
   int32_t NumSpeakers() const;
 
+  /** @brief Return the embedding dimension. */
+  int32_t Dim() const;
+
   /** @brief Return all enrolled speaker names. */
   std::vector<std::string> GetAllSpeakers() const;
+
+  /** @brief Return a copy of the embedding of a speaker. Empty if missing. */
+  std::vector<float> GetEmbedding(const std::string &name) const;
 
  private:
   explicit SpeakerEmbeddingManager(const SherpaOnnxSpeakerEmbeddingManager *p);

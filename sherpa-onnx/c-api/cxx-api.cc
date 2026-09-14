@@ -1433,6 +1433,10 @@ int32_t SpeakerEmbeddingManager::NumSpeakers() const {
   return SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(p_);
 }
 
+int32_t SpeakerEmbeddingManager::Dim() const {
+  return SherpaOnnxSpeakerEmbeddingManagerDim(p_);
+}
+
 std::vector<std::string> SpeakerEmbeddingManager::GetAllSpeakers() const {
   const char *const *names =
       SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(p_);
@@ -1443,6 +1447,19 @@ std::vector<std::string> SpeakerEmbeddingManager::GetAllSpeakers() const {
     }
     SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(names);
   }
+  return ans;
+}
+
+std::vector<float> SpeakerEmbeddingManager::GetEmbedding(
+    const std::string &name) const {
+  const float *v =
+      SherpaOnnxSpeakerEmbeddingManagerGetEmbedding(p_, name.c_str());
+  if (!v) {
+    return {};
+  }
+  int32_t dim = Dim();
+  std::vector<float> ans(v, v + dim);
+  SherpaOnnxSpeakerEmbeddingManagerDestroyEmbedding(v);
   return ans;
 }
 
