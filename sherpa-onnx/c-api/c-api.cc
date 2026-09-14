@@ -2489,12 +2489,13 @@ const float *SherpaOnnxSpeakerEmbeddingManagerGetEmbedding(
     return nullptr;
   }
 
-  int32_t dim = p->impl->Dim();
-  float *ans = new float[dim];
-  if (!p->impl->GetEmbedding(name, ans)) {
-    delete[] ans;
+  std::vector<float> embedding = p->impl->GetEmbedding(name);
+  if (embedding.empty()) {
     return nullptr;
   }
+
+  float *ans = new float[embedding.size()];
+  std::copy(embedding.begin(), embedding.end(), ans);
   return ans;
 }
 

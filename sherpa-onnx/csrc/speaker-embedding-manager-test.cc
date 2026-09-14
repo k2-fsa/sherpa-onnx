@@ -152,13 +152,13 @@ TEST(SpeakerEmbeddingManager, GetEmbedding) {
   int32_t dim = 2;
   SpeakerEmbeddingManager manager(dim);
 
-  std::vector<float> out(dim, 0);
-  ASSERT_FALSE(manager.GetEmbedding("missing", out.data()));
+  ASSERT_TRUE(manager.GetEmbedding("missing").empty());
 
   std::vector<float> v1 = {0.1f, 0.1f};
   ASSERT_TRUE(manager.Add("first", v1.data()));
 
-  ASSERT_TRUE(manager.GetEmbedding("first", out.data()));
+  std::vector<float> out = manager.GetEmbedding("first");
+  ASSERT_EQ(out.size(), dim);
 
   float norm = std::sqrt(out[0] * out[0] + out[1] * out[1]);
   EXPECT_NEAR(norm, 1.0f, 1e-5);
@@ -170,7 +170,7 @@ TEST(SpeakerEmbeddingManager, GetEmbedding) {
   EXPECT_NEAR(cosine, 1.0f, 1e-5);
 
   ASSERT_TRUE(manager.Remove("first"));
-  ASSERT_FALSE(manager.GetEmbedding("first", out.data()));
+  ASSERT_TRUE(manager.GetEmbedding("first").empty());
 }
 
 TEST(SpeakerEmbeddingManager, GetEmbeddingFromList) {
@@ -181,8 +181,8 @@ TEST(SpeakerEmbeddingManager, GetEmbeddingFromList) {
   std::vector<std::vector<float>> list = {{1.0f, 0.0f}, {0.0f, 1.0f}};
   ASSERT_TRUE(manager.Add("spk", list));
 
-  std::vector<float> out(dim, 0);
-  ASSERT_TRUE(manager.GetEmbedding("spk", out.data()));
+  std::vector<float> out = manager.GetEmbedding("spk");
+  ASSERT_EQ(out.size(), dim);
 
   float expected = 1.0f / std::sqrt(2.0f);
   EXPECT_NEAR(out[0], expected, 1e-5);

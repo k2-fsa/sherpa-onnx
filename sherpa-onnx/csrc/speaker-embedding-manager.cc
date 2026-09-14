@@ -224,14 +224,16 @@ class SpeakerEmbeddingManager::Impl {
     return all_speakers;
   }
 
-  bool CopyRow(const std::string &name, float *out) const {
-    if (!out || !name2row_.count(name)) {
-      return false;
+  std::vector<float> GetEmbedding(const std::string &name) const {
+    if (!name2row_.count(name)) {
+      return {};
     }
 
     int32_t row_idx = name2row_.at(name);
-    Eigen::Map<Eigen::RowVectorXf>(out, dim_) = embedding_matrix_.row(row_idx);
-    return true;
+    std::vector<float> out(dim_);
+    Eigen::Map<Eigen::RowVectorXf>(out.data(), dim_) =
+        embedding_matrix_.row(row_idx);
+    return out;
   }
 
  private:
@@ -295,9 +297,9 @@ std::vector<std::string> SpeakerEmbeddingManager::GetAllSpeakers() const {
   return impl_->GetAllSpeakers();
 }
 
-bool SpeakerEmbeddingManager::GetEmbedding(const std::string &name,
-                                           float *out) const {
-  return impl_->CopyRow(name, out);
+std::vector<float> SpeakerEmbeddingManager::GetEmbedding(
+    const std::string &name) const {
+  return impl_->GetEmbedding(name);
 }
 
 }  // namespace sherpa_onnx

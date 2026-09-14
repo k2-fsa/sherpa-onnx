@@ -110,12 +110,9 @@ class SpeakerEmbeddingManager {
   // Return a list of speaker names
   std::vector<std::string> GetAllSpeakers() const;
 
-  /* Copy the embedding of a speaker into `out`.
-   *
-   * Return true if the speaker exists; return false otherwise.
-   * `out` must point to an array of Dim() elements.
-   */
-  bool GetEmbedding(const std::string &name, float *out) const;
+  // Return the embedding of a speaker.
+  // Return an empty vector if the speaker does not exist.
+  std::vector<float> GetEmbedding(const std::string &name) const;
 
  private:
   class Impl;
