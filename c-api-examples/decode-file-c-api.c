@@ -66,6 +66,18 @@ static struct cag_option options[] = {
      .value_name = "hotwords-score",
      .description = "The bonus score for each token in hotwords. Used only "
                     "when decoding_method is modified_beam_search"},
+    {.identifier = 'u',
+     .access_letters = NULL,
+     .access_name = "modeling-unit",
+     .value_name = "modeling-unit",
+     .description = "Modeling unit of the hotwords: cjkchar (default), bpe, "
+                    "cjkchar+bpe"},
+    {.identifier = 'b',
+     .access_letters = NULL,
+     .access_name = "bpe-vocab",
+     .value_name = "bpe-vocab",
+     .description = "The bpe.vocab file. Used only when modeling-unit is bpe "
+                    "or cjkchar+bpe"},
 };
 
 const char *kUsage =
@@ -150,6 +162,12 @@ int32_t main(int32_t argc, char *argv[]) {
         break;
       case 's':
         config.hotwords_score = atof(value);
+        break;
+      case 'u':
+        config.model_config.modeling_unit = value;
+        break;
+      case 'b':
+        config.model_config.bpe_vocab = value;
         break;
       case 'h': {
         fprintf(stderr, "%s\n", kUsage);

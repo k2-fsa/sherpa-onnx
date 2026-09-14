@@ -120,6 +120,7 @@ set(sources
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
+  online-transducer-modified-beam-search-nemo-decoder.cc
   online-transducer-nemo-parakeet-unified-model.cc
   online-transducer-nemo-model.cc
   online-wenet-ctc-model-config.cc
