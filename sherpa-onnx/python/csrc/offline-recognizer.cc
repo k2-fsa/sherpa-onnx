@@ -33,6 +33,12 @@ Args:
   max_active_paths:
     Number of active paths for beam search decoding. Only effective when
     ``decoding_method`` is ``modified_beam_search``.
+  num_return_paths:
+    Number of hypotheses to return per utterance. Only effective for
+    transducer models when ``decoding_method`` is ``modified_beam_search``.
+    It is clamped to ``max_active_paths``. When greater than 1, each result
+    exposes an n-best list via ``result.hypotheses``; the top-level fields
+    always describe the 1-best.
   hotwords_file:
     Path to a file containing hotwords, one per line.
   hotwords_score:
@@ -113,7 +119,7 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
                     const OfflineLMConfig &, const OfflineCtcFstDecoderConfig &,
                     const std::string &, int32_t, const std::string &, float,
                     float, const std::string &, const std::string &,
-                    const HomophoneReplacerConfig &>(),
+                    const HomophoneReplacerConfig &, int32_t>(),
            py::arg("feat_config") = FeatureExtractorConfig(),
            py::arg("model_config") = OfflineModelConfig(),
            py::arg("lm_config") = OfflineLMConfig(),
@@ -123,13 +129,14 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
            py::arg("hotwords_score") = 1.5, py::arg("blank_penalty") = 0.0,
            py::arg("rule_fsts") = "", py::arg("rule_fars") = "",
            py::arg("hr") = HomophoneReplacerConfig{},
-           kOfflineRecognizerConfigInitDoc)
+           py::arg("num_return_paths") = 1, kOfflineRecognizerConfigInitDoc)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
       .def_readwrite("ctc_fst_decoder_config", &PyClass::ctc_fst_decoder_config)
       .def_readwrite("decoding_method", &PyClass::decoding_method)
       .def_readwrite("max_active_paths", &PyClass::max_active_paths)
+      .def_readwrite("num_return_paths", &PyClass::num_return_paths)
       .def_readwrite("hotwords_file", &PyClass::hotwords_file)
       .def_readwrite("hotwords_score", &PyClass::hotwords_score)
       .def_readwrite("blank_penalty", &PyClass::blank_penalty)
