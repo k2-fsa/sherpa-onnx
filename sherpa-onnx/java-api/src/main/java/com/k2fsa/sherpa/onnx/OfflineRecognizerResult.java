@@ -10,6 +10,8 @@ public class OfflineRecognizerResult {
     private final String emotion;
     private final String event;
     private final float[] durations;
+    // The decoded word IDs. Empty for greedy search decoding, non-empty when
+    // an HLG graph is used, i.e. when ctcFstDecoderConfig.graph is set.
     private final int[] words;
 
     public OfflineRecognizerResult(String text, String[] tokens, float[] timestamps, String lang, String emotion, String event, float[] durations, int[] words) {

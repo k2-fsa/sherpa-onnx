@@ -13,7 +13,8 @@ data class OfflineRecognizerResult(
     // valid only for TDT models
     val durations: FloatArray,
 
-    // valid only when ctcFstDecoderConfig.graph is set
+    // The decoded word IDs. Empty for greedy search decoding, non-empty when
+    // an HLG graph is used, i.e. when ctcFstDecoderConfig.graph is set.
     val words: IntArray = IntArray(0),
 )
 
