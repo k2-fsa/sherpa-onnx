@@ -236,7 +236,8 @@ jobs:
           # A clean exit proves nothing here: without a graph the decoder
           # still succeeds, it just decodes freely. The word ids show up only
           # when the FST decoder ran.
-          ./$name 2>&1 | tee /tmp/hlg.txt
+          ./$name > /tmp/hlg.txt 2>&1
+          cat /tmp/hlg.txt
           grep -q '"words": \[[0-9]' /tmp/hlg.txt
 
           rm -rf sherpa-onnx-zipformer-ctc-en-*
