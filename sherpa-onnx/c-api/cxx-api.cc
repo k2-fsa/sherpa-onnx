@@ -394,6 +394,10 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
   c.hr.lexicon = config.hr.lexicon.c_str();
   c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
+  c.ctc_fst_decoder_config.graph = config.ctc_fst_decoder_config.graph.c_str();
+  c.ctc_fst_decoder_config.max_active =
+      config.ctc_fst_decoder_config.max_active;
+
   return c;
 }
 

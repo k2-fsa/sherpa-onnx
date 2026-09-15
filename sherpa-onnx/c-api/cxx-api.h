@@ -689,6 +689,14 @@ struct OfflineLMConfig {
   float scale = 1.0;
 };
 
+/** @brief Decoder graph configuration for offline CTC + FST decoding. */
+struct OfflineCtcFstDecoderConfig {
+  /** FST graph file. */
+  std::string graph;
+  /** Maximum number of active states during search. */
+  int32_t max_active = 3000;
+};
+
 /**
  * @brief Configuration for offline ASR.
  *
@@ -747,6 +755,8 @@ struct OfflineRecognizerConfig {
   float blank_penalty = 0;
   /** Optional homophone replacement configuration. */
   HomophoneReplacerConfig hr;
+  /** Optional CTC+FST decoder configuration. */
+  OfflineCtcFstDecoderConfig ctc_fst_decoder_config;
 };
 
 /** @brief Offline ASR result copied into C++ containers. */

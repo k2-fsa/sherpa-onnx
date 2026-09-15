@@ -12,6 +12,9 @@ target_link_libraries(streaming-nemotron-cxx-api sherpa-onnx-cxx-api)
 add_executable(streaming-zipformer-with-hr-cxx-api ./streaming-zipformer-with-hr-cxx-api.cc)
 target_link_libraries(streaming-zipformer-with-hr-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(zipformer-ctc-hlg-cxx-api ./zipformer-ctc-hlg-cxx-api.cc)
+target_link_libraries(zipformer-ctc-hlg-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(speech-enhancement-gtcrn-cxx-api ./speech-enhancement-gtcrn-cxx-api.cc)
 target_link_libraries(speech-enhancement-gtcrn-cxx-api sherpa-onnx-cxx-api)
 
