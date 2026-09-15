@@ -18,6 +18,12 @@ import sys
 import numpy as np
 import torch
 
+# Minimum spectral cosine between the torch reference and the exported graph.
+# Measured on these models: two torch runs of the same input score 0.89-0.94
+# (SineGen randomness), a correct export scores the same, and unrelated noise
+# scores 0.23. 0.70 sits clear of both.
+SPECTRAL_MIN = 0.70
+
 
 class SherpaWrapper(torch.nn.Module):
     """KModel -> (waveform, duration) becomes just the squeezed waveform."""
@@ -130,13 +136,30 @@ def main():
     ref = ref_audio.squeeze(0).numpy()
     n = min(len(ref), len(audio))
     if n == 0:
-        print("!! empty audio, cannot compare")
-        return
-    max_abs = float(np.abs(ref[:n] - audio[:n]).max())
-    denom = float(np.abs(ref[:n]).max()) or 1.0
-    print(f"max|torch-onnx| = {max_abs:.3e}  (rel {max_abs / denom:.3e})")
+        raise SystemExit("export produced empty audio; refusing to ship it")
     if len(ref) != len(audio):
-        print(f"!! length mismatch: torch {len(ref)} vs onnx {len(audio)}")
+        raise SystemExit(
+            f"length mismatch: torch {len(ref)} vs onnx {len(audio)}. The "
+            "export does not reproduce the reference pipeline."
+        )
+
+    # A sample-wise tolerance is not meaningful for this decoder: SineGen draws
+    # a fresh random excitation per run, so two *torch* runs of the same input
+    # differ by more than torch differs from ONNX (measured: 1.59 vs 1.48
+    # relative). Compare long-term spectra instead, which are stable under that
+    # randomness and still catch a genuinely broken export.
+    def spectrum(x):
+        s = np.abs(np.fft.rfft(x))
+        return s / (s.sum() + 1e-12)
+
+    p, q = spectrum(ref[:n]), spectrum(audio[:n])
+    cos = float(p @ q / (np.linalg.norm(p) * np.linalg.norm(q) + 1e-12))
+    print(f"spectral cosine torch/onnx = {cos:.4f}")
+    if cos < SPECTRAL_MIN:
+        raise SystemExit(
+            f"spectral check failed: cosine {cos:.4f} < {SPECTRAL_MIN}. The "
+            "ONNX graph does not match the torch pipeline."
+        )
     size_mb = os.path.getsize(args.out) / 1e6
     print(f"wrote {args.out}  {size_mb:.1f} MB")
 

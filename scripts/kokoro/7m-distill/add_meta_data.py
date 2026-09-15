@@ -52,14 +52,43 @@ def design_notch(freqs=NOTCH_FREQS, taps=NOTCH_TAPS, sr=SAMPLE_RATE,
     return (kernel / kernel.sum()).astype(np.float32)
 
 
+NOTCH_CONV_NAME = "notch_fir"
+NOTCH_WEIGHT_NAME = "notch_fir_w"
+NOTCH_OUTPUT_NAME = "audio_notched"
+
+
+def _notch_markers(graph) -> dict:
+    """Which pieces of a previous notch insertion are present in the graph."""
+    return {
+        "conv": any(n.name == NOTCH_CONV_NAME for n in graph.node),
+        "weight": any(i.name == NOTCH_WEIGHT_NAME for i in graph.initializer),
+        "rewired": any(NOTCH_OUTPUT_NAME in n.input for n in graph.node),
+    }
+
+
 def bake_notch(model: onnx.ModelProto) -> bool:
     """Insert the FIR notch immediately before the final Squeeze.
 
     The exported graph ends Slice_3 -> Squeeze_3 -> ... -> audio, with an If
     node in between (dynamic-shape guard), so the Squeeze is located by name
     rather than by being the producer of the graph output.
+
+    Idempotent: a model that already carries the notch is returned untouched.
+    Re-running the insertion would otherwise wire the Conv's output back into
+    its own input and duplicate the initializer, producing a graph that
+    onnx.checker rejects.
     """
     graph = model.graph
+
+    markers = _notch_markers(graph)
+    if all(markers.values()):
+        return True
+    if any(markers.values()):
+        raise RuntimeError(
+            f"graph carries a partial notch insertion ({markers}); refusing to "
+            "mutate it. Re-export the model from the checkpoint."
+        )
+
     squeeze_idx = squeeze = None
     for i, node in enumerate(graph.node):
         if node.op_type == "Squeeze" and node.name.endswith("Squeeze_3"):
@@ -70,16 +99,16 @@ def bake_notch(model: onnx.ModelProto) -> bool:
 
     src = squeeze.input[0]
     kernel = design_notch().reshape(1, 1, -1)
-    graph.initializer.append(numpy_helper.from_array(kernel, "notch_fir_w"))
+    graph.initializer.append(numpy_helper.from_array(kernel, NOTCH_WEIGHT_NAME))
     conv = helper.make_node(
-        "Conv", inputs=[src, "notch_fir_w"], outputs=["audio_notched"],
-        name="notch_fir", kernel_shape=[NOTCH_TAPS],
+        "Conv", inputs=[src, NOTCH_WEIGHT_NAME], outputs=[NOTCH_OUTPUT_NAME],
+        name=NOTCH_CONV_NAME, kernel_shape=[NOTCH_TAPS],
         pads=[(NOTCH_TAPS - 1) // 2, (NOTCH_TAPS - 1) // 2], group=1,
     )
     # ONNX requires topological order: insert at the consumer's index rather
     # than appending, otherwise onnx.checker.check_model rejects the graph.
     graph.node.insert(squeeze_idx, conv)
-    squeeze.input[0] = "audio_notched"
+    squeeze.input[0] = NOTCH_OUTPUT_NAME
     return True
 
 
@@ -102,7 +131,13 @@ def main():
 
     model = onnx.load(args.model)
     if not args.skip_notch:
-        print("notch baked:", bake_notch(model))
+        if not bake_notch(model):
+            raise SystemExit(
+                "could not locate Squeeze_3: the FIR notch was NOT inserted. "
+                "Refusing to write an unfiltered model — re-export first, or "
+                "pass --skip-notch if that is genuinely intended."
+            )
+        print("notch baked: True")
 
     stamp(model, {
         "model_type": "kokoro",
@@ -119,9 +154,11 @@ def main():
         "speaker_names": "af_msa",
         "comment": args.comment,
     })
+    # Validate before overwriting the input: a failed check must not leave a
+    # corrupt file where a working model used to be.
+    onnx.checker.check_model(model)
     onnx.save(model, args.model)
-    onnx.checker.check_model(onnx.load(args.model, load_external_data=False))
-    print("saved + checked:", args.model)
+    print("checked + saved:", args.model)
 
 
 if __name__ == "__main__":

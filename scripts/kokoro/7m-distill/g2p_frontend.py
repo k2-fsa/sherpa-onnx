@@ -40,7 +40,7 @@ import json
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parent
 
 
 def _load_vocab(config_path: Path) -> dict:
