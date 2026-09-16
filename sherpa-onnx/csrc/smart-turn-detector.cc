@@ -34,21 +34,22 @@ class SmartTurnDetector::Impl {
 
   float Compute(const float *samples, int32_t n) const {
     const int32_t used_samples = static_cast<int32_t>(config_.window_size * sample_rate_);
-    const int32_t input_samples = std::min(n, used_samples);
-    samples += n - input_samples;
-    n = input_samples;
+    if (n > used_samples) {
+      samples += n - used_samples;
+      n = used_samples;
+    }
 
     const int32_t expected_samples = static_cast<int32_t>(config_.window_size * config_.sample_rate);
-    std::vector<float> waveform;
+    std::vector<float> waveform(expected_samples, 0), resample_buff;
     if (sample_rate_ != config_.sample_rate) {
       float min_freq = std::min(sample_rate_, config_.sample_rate);
       float lowpass_cutoff = 0.99 * 0.5 * min_freq;
       LinearResample resampler(sample_rate_, config_.sample_rate, lowpass_cutoff, 6);
-      resampler.Resample(samples, n, true, &waveform);
-    } else {
-      waveform.assign(samples, samples + n);
+      resampler.Resample(samples, n, true, &resample_buff);
+      samples = &resample_buff[0];
+      n = static_cast<int32_t>(resample_buff.size());
     }
-    waveform.resize(expected_samples, 0);
+    std::copy(samples, samples + n, &waveform[expected_samples - n]);
 
     const int64_t shape[] = {1, expected_samples};
     auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
