@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/silero-vad-model-config.h"
+#include "sherpa-onnx/csrc/smart-turn-config.h"
 #include "sherpa-onnx/csrc/ten-vad-model-config.h"
 
 namespace sherpa_onnx {
@@ -15,6 +16,7 @@ namespace sherpa_onnx {
 struct VadModelConfig {
   SileroVadModelConfig silero_vad;
   TenVadModelConfig ten_vad;
+  SmartTurnConfig smart_turn;
 
   int32_t sample_rate = 16000;
   int32_t num_threads = 1;

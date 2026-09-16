@@ -1298,6 +1298,19 @@ static sherpa_onnx::VadModelConfig GetVadModelConfig(
   vad_config.ten_vad.max_speech_duration =
       SHERPA_ONNX_OR(config->ten_vad.max_speech_duration, 20);
 
+    vad_config.smart_turn.model =
+      SHERPA_ONNX_OR(config->smart_turn.model, "");
+    vad_config.smart_turn.threshold =
+      SHERPA_ONNX_OR(config->smart_turn.threshold, 0.5);
+    vad_config.smart_turn.sample_rate =
+      SHERPA_ONNX_OR(config->smart_turn.sample_rate, 16000);
+    vad_config.smart_turn.window_size =
+      SHERPA_ONNX_OR(config->smart_turn.window_size, 8);
+    vad_config.smart_turn.min_silence_duration =
+      SHERPA_ONNX_OR(config->smart_turn.min_silence_duration, 0.1);
+    vad_config.smart_turn.max_silence_duration =
+      SHERPA_ONNX_OR(config->smart_turn.max_silence_duration, 1.5);
+
   vad_config.sample_rate = SHERPA_ONNX_OR(config->sample_rate, 16000);
   vad_config.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
   vad_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");

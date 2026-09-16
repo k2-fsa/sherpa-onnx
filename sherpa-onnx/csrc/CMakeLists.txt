@@ -139,6 +139,8 @@ set(sources
   silero-vad-model-config.cc
   silero-vad-model.cc
   slice.cc
+  smart-turn-config.cc
+  smart-turn-detector.cc
   spoken-language-identification-impl.cc
   spoken-language-identification.cc
   stack.cc
