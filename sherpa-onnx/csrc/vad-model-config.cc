@@ -50,16 +50,18 @@ bool VadModelConfig::Validate() const {
     }
   }
 
+  if (!smart_turn.model.empty() && !smart_turn.Validate()) {
+    SHERPA_ONNX_LOGE("smart_turn model validation failed for model '%s'",
+                  smart_turn.model.c_str());
+    return false;
+  }
+
   if (!silero_vad.model.empty()) {
     return silero_vad.Validate();
   }
 
   if (!ten_vad.model.empty()) {
     return ten_vad.Validate();
-  }
-
-  if (!smart_turn.model.empty()) {
-    return smart_turn.Validate();
   }
 
   SHERPA_ONNX_LOGE("Please provide one VAD model.");
