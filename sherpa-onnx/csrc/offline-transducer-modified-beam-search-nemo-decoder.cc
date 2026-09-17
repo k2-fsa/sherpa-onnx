@@ -94,7 +94,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
 
   int32_t vocab_size = model_->VocabSize();
   int32_t blank_id = vocab_size - 1;  // NeMo models have blank at the end
-  int32_t max_symbols_per_frame = 10;
+  int32_t max_symbols_per_frame = is_tdt_ ? 5 : 10;  // TDT: match greedy decoder limit
 
   // For TDT models, we need to know the number of duration bins
   // We'll detect this from the joiner output size on first run
@@ -294,11 +294,6 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
         // Create candidate hypotheses
         for (int32_t idx : top_k_tokens) {
           int32_t token = idx;
-          // For TDT: joint probability = P(token) * P(duration)
-          // In log space: log P(token, duration) = log P(token) + log
-          // P(duration)
-          float token_log_prob =
-              token_logits[token] + duration_log_prob + hyp.log_prob;
 
           NeMoHypothesis new_hyp;
           new_hyp.ys = hyp.ys;
@@ -307,22 +302,32 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           new_hyp.ys_probs = hyp.ys_probs;
           new_hyp.context_state = hyp.context_state;
           new_hyp.allocator = allocator;
-          new_hyp.log_prob = token_log_prob;
 
           float context_score = 0.0f;
 
           if (token == blank_id || token == unk_id_) {
-            // Blank or unk: keep decoder state, advance frame
+            // Blank/unk: score uses only token log-prob (no duration component,
+            // matching greedy decoder which scores tokens independently)
+            new_hyp.log_prob = token_logits[token] + hyp.log_prob;
+
+            // Keep decoder state unchanged for blank
             new_hyp.decoder_states.reserve(hyp.decoder_states.size());
             for (const auto &state : hyp.decoder_states) {
               new_hyp.decoder_states.push_back(Clone(allocator, &state));
             }
-            // For blank/unk in TDT, always advance by at least 1
-            new_hyp.frame_offset =
-                hyp.frame_offset + std::max(1, predicted_skip);
+
+            // For blank in TDT, always advance by at least 1 frame.
+            // This matches the greedy decoder's guard against blank+skip==0
+            // which would otherwise cause an infinite loop.
+            int32_t blank_skip = is_tdt_ ? std::max(1, predicted_skip) : 1;
+            new_hyp.frame_offset = hyp.frame_offset + blank_skip;
             new_hyp.num_symbols = 0;
           } else {
-            // Non-blank: add token, use new decoder state
+            // Non-blank: include duration log-prob in score
+            new_hyp.log_prob =
+                token_logits[token] + duration_log_prob + hyp.log_prob;
+
+            // Add token to sequence
             new_hyp.ys.push_back(token);
             new_hyp.timestamps.push_back(hyp.frame_offset);
             new_hyp.ys_probs.push_back(token_logits[token]);
@@ -336,8 +341,8 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
             }
 
             // For non-blank in TDT, advance by predicted duration (can be 0 to
-            // emit more tokens) For non-TDT, stay on same frame to allow more
-            // tokens
+            // emit more tokens). For non-TDT, stay on same frame to allow more
+            // tokens.
             if (is_tdt_) {
               new_hyp.frame_offset = hyp.frame_offset + predicted_skip;
               new_hyp.num_symbols =
