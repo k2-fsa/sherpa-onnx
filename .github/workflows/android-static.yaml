@@ -65,6 +65,10 @@ jobs:
           ./build-android-arm64-v8a.sh
           mkdir -p jniLibs/arm64-v8a/
           cp -v ./build-android-arm64-v8a-static/install/lib/*.so ./jniLibs/arm64-v8a/
+          # build-android-arm64-v8a.sh removes the static libraries from
+          # install/lib; they are still in the build tree.
+          mkdir -p ./android-arm64-v8a-static-lib/lib
+          cp -v ./build-android-arm64-v8a-static/lib/*.a ./android-arm64-v8a-static-lib/lib/
           rm -rf  ./build-android-arm64-v8a-static/
 
       - name: build android armv7-eabi
@@ -119,12 +123,23 @@ jobs:
 
           tar cjvf $filename ./jniLibs
 
+          # Static libraries for arm64-v8a, like the linux-x64-static-lib
+          # archive: for apps that link libespeak-ng.a and friends themselves.
+          d=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-arm64-v8a-static-lib
+          mv ./android-arm64-v8a-static-lib $d
+          tar cjvf $d.tar.bz2 $d
+
           ls -lh
 
       - uses: actions/upload-artifact@v4
         with:
           name: sherpa-onnx-android-libs-static
           path: ./jniLibs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-android-arm64-v8a-static-lib
+          path: ./sherpa-onnx-*-android-arm64-v8a-static-lib.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
