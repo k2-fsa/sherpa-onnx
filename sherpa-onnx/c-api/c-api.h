@@ -300,6 +300,14 @@ typedef struct SherpaOnnxOnlineCtcFstDecoderConfig {
   int32_t max_active;
 } SherpaOnnxOnlineCtcFstDecoderConfig;
 
+/** @brief Configuration for HLG/FST-based offline CTC decoding. */
+typedef struct SherpaOnnxOfflineCtcFstDecoderConfig {
+  /** Path to the decoding graph. */
+  const char *graph;
+  /** Decoder max-active setting. 0 means 3000. */
+  int32_t max_active;
+} SherpaOnnxOfflineCtcFstDecoderConfig;
+
 /** @brief Configuration for homophone replacement. */
 typedef struct SherpaOnnxHomophoneReplacerConfig {
   /** Unused legacy field kept for ABI compatibility. */
@@ -1200,6 +1208,9 @@ typedef struct SherpaOnnxOfflineRecognizerConfig {
 
   /** Optional homophone replacement configuration. */
   SherpaOnnxHomophoneReplacerConfig hr;
+
+  /** Optional CTC+FST decoder configuration. */
+  SherpaOnnxOfflineCtcFstDecoderConfig ctc_fst_decoder_config;
 } SherpaOnnxOfflineRecognizerConfig;
 
 /** @brief Non-streaming recognizer handle. */
