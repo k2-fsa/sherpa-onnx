@@ -389,8 +389,59 @@ jobs:
           flutter pub publish --force
 
 
+  # Builds the arm64 libraries that sherpa_onnx_windows ships next to its
+  # x64 ones (windows/arm64/). Same configuration as the x64 build below;
+  # the MSVC setup and -A ARM64 mirror windows-arm64.yaml.
+  sherpa_onnx_windows_arm64:
+    # if: false
+    name: sherpa_onnx_windows_arm64
+    runs-on: windows-11-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -A ARM64 \
+            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -D SHERPA_ONNX_ENABLE_TTS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_JNI=OFF \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            -D BUILD_ESPEAK_NG_EXE=OFF \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target install --config Release -- -m:2
+
+          ls -lh install/lib/*.dll
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa_onnx_windows_arm64_libs
+          path: build/install/lib/*.dll
+
   sherpa_onnx_windows:
     # if: false
+    needs: [sherpa_onnx_windows_arm64]
     permissions:
       id-token: write # Required for authentication using OIDC
     name: sherpa_onnx_windows
@@ -455,6 +506,12 @@ jobs:
 
           ls -lh install/lib/*.dll
 
+      - name: Download arm64 libs
+        uses: actions/download-artifact@v4
+        with:
+          name: sherpa_onnx_windows_arm64_libs
+          path: flutter/sherpa_onnx_windows/windows/arm64
+
       - name: Copy pre-built libs
         shell: bash
         run: |
@@ -462,6 +519,7 @@ jobs:
           mv -v flutter/sherpa_onnx_windows /tmp/to_be_published
 
           ls -lh /tmp/to_be_published/windows
+          ls -lh /tmp/to_be_published/windows/arm64
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
