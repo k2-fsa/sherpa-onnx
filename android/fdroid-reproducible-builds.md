@@ -86,11 +86,11 @@ reference with
 [reproducible-apk-tools](https://github.com/obfusk/reproducible-apk-tools):
 
 ```bash
-# align the rebuilt unsigned APK the way apksigner pads (page size 16)
-zipalign.py -p 16 --pad-like-apksigner rebuilt-unsigned.apk
+# align the rebuilt unsigned APK the way apksigner pads, 16 KiB pages
+zipalign.py -P 16384 --pad-like-apksigner rebuilt-unsigned.apk rebuilt-aligned-unsigned.apk
 
 # copy the reference APK's signature block onto the rebuilt APK
-apksigcopier copy --v1-only reference-signed.apk rebuilt-unsigned.apk rebuilt-signed.apk
+apksigcopier copy reference-signed.apk rebuilt-aligned-unsigned.apk rebuilt-signed.apk
 
 # byte comparison of the two
 apksigcopier compare reference-signed.apk rebuilt-signed.apk
