@@ -85,15 +85,16 @@ jobs:
           ./run-tts.sh
 
       - name: Release
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        #if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: ./*.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.12.19
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.13.8
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
