@@ -20,10 +20,10 @@ void OfflineCanaryModelConfig::Register(ParseOptions *po) {
                "Path to onnx decoder of Canary, e.g., decoder.int8.onnx");
 
   po->Register("canary-src-lang", &src_lang,
-               "Valid values: en, de, es, fr. If empty, default to use en");
+               "Any 2-letter language code carried by the model's tokens.txt ""(en, es, de, fr for canary-180m-flash; multilingual exports such ""as canary-1b-v2 carry more). Unknown codes warn and fall back to ""en. If empty, defaults to en");
 
   po->Register("canary-tgt-lang", &tgt_lang,
-               "Valid values: en, de, es, fr. If empty, default to use en");
+               "Any 2-letter language code carried by the model's tokens.txt ""(en, es, de, fr for canary-180m-flash; multilingual exports such ""as canary-1b-v2 carry more). Unknown codes warn and fall back to ""en. If empty, defaults to en");
 
   po->Register("canary-use-pnc", &use_pnc,
                "true to enable punctuations and casing. false to disable them");

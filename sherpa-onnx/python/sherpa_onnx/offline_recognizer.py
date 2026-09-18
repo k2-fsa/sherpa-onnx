@@ -1142,11 +1142,17 @@ class OfflineRecognizer(object):
                 symbol integer_id
 
           src_lang:
-            The language of the input audio. Valid values are: en, es, de, fr.
-            If you leave it empty, it uses en internally.
+            The language of the input audio. Any 2-letter code carried by
+            the model's tokens.txt (en, es, de, fr for canary-180m-flash;
+            multilingual exports such as canary-1b-v2 carry more). Unknown
+            codes warn and fall back to en. If you leave it empty, it uses
+            en internally.
           tgt_lang:
-            The language of the output text. Valid values are: en, es, de, fr.
-            If you leave it empty, it uses en internally.
+            The language of the output text. Any 2-letter code carried by
+            the model's tokens.txt (en, es, de, fr for canary-180m-flash;
+            multilingual exports such as canary-1b-v2 carry more). Unknown
+            codes warn and fall back to en. If you leave it empty, it uses
+            en internally.
           num_threads:
             Number of threads for neural network computation.
           sample_rate:
