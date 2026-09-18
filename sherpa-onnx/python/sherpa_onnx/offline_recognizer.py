@@ -1142,11 +1142,19 @@ class OfflineRecognizer(object):
                 symbol integer_id
 
           src_lang:
-            The language of the input audio. Valid values are: en, es, de, fr.
-            If you leave it empty, it uses en internally.
+            The language of the input audio, e.g. en, es, de, fr. The codes
+            this model offers are those in its tokens.txt. A code the model
+            does not offer falls back to en (or, if the vocabulary has no
+            en, to the language with the lowest token id) and a warning
+            is logged. If you leave it empty, the same fallback applies
+            without the warning.
           tgt_lang:
-            The language of the output text. Valid values are: en, es, de, fr.
-            If you leave it empty, it uses en internally.
+            The language of the output text, e.g. en, es, de, fr. The codes
+            this model offers are those in its tokens.txt. A code the model
+            does not offer falls back to en (or, if the vocabulary has no
+            en, to the language with the lowest token id) and a warning
+            is logged. If you leave it empty, the same fallback applies
+            without the warning.
           num_threads:
             Number of threads for neural network computation.
           sample_rate:
