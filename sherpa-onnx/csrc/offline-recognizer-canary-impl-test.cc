@@ -2,6 +2,8 @@
 //
 // Copyright (c)  2026  kyo-zzz
 
+#include <unordered_map>
+
 #include "sherpa-onnx/csrc/offline-recognizer-canary-impl.h"
 
 #include <vector>
@@ -64,6 +66,42 @@ TEST(CanaryHasSignal, SilenceVsSignal) {
 
   std::vector<float> signal = {0.0f, 0.05f, -1.5f, 0.02f};
   EXPECT_TRUE(CanaryHasSignal(signal.data(), signal.size()));
+}
+
+TEST(DeriveCanaryLang2Id, TwoLetterCodesOnly) {
+  std::unordered_map<std::string, int32_t> sym2id = {
+      {"<|en|>", 90},  {"<|es|>", 84},  {"<|de|>", 78},  {"<|fr|>", 71},
+      {"<|it|>", 99},  {"<|pt|>", 95},
+      // longer bracketed specials are not languages
+      {"<|pnc|>", 50},  {"<|noitn|>", 51}, {"<|0.00|>", 60},
+      {"<|endoftext|>", 61}, {"<|startoftranscript|>", 62},
+      {"hello", 1},
+  };
+  auto lang2id = DeriveCanaryLang2Id(sym2id);
+  EXPECT_EQ(lang2id.size(), 6u);
+  EXPECT_EQ(lang2id.at("en"), 90);
+  EXPECT_EQ(lang2id.at("it"), 99);
+  EXPECT_EQ(lang2id.at("fr"), 71);
+  EXPECT_EQ(lang2id.count("pc"), 0u);
+}
+
+TEST(DeriveCanaryLang2Id, EmptyWhenNoLanguageTokens) {
+  std::unordered_map<std::string, int32_t> sym2id = {{"a", 0}, {"<|pnc|>", 3}};
+  EXPECT_TRUE(DeriveCanaryLang2Id(sym2id).empty());
+}
+
+TEST(ResolveCanaryLang, PassthroughFallbackAndFirstLanguage) {
+  std::unordered_map<std::string, int32_t> lang2id = {
+      {"en", 10}, {"it", 99}};
+  EXPECT_EQ(ResolveCanaryLang(lang2id, "it", "src"), 99);
+  EXPECT_EQ(ResolveCanaryLang(lang2id, "", "src"), 10);      // silent en
+  EXPECT_EQ(ResolveCanaryLang(lang2id, "xx", "src"), 10);     // warn, en
+
+  // With no en in the vocab the fallback picks an unspecified language
+  // (unordered_map order); any of the offered ids is acceptable.
+  std::unordered_map<std::string, int32_t> no_en = {{"it", 99}, {"de", 78}};
+  int32_t resolved = ResolveCanaryLang(no_en, "xx", "tgt");
+  EXPECT_TRUE(resolved == 99 || resolved == 78);
 }
 
 }  // namespace sherpa_onnx
