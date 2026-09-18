@@ -97,11 +97,10 @@ TEST(ResolveCanaryLang, PassthroughFallbackAndFirstLanguage) {
   EXPECT_EQ(ResolveCanaryLang(lang2id, "", "src"), 10);      // silent en
   EXPECT_EQ(ResolveCanaryLang(lang2id, "xx", "src"), 10);     // warn, en
 
-  // With no en in the vocab the fallback picks an unspecified language
-  // (unordered_map order); any of the offered ids is acceptable.
+  // With no en in the vocab the fallback is deterministic: the language
+  // with the lowest token id.
   std::unordered_map<std::string, int32_t> no_en = {{"it", 99}, {"de", 78}};
-  int32_t resolved = ResolveCanaryLang(no_en, "xx", "tgt");
-  EXPECT_TRUE(resolved == 99 || resolved == 78);
+  EXPECT_EQ(ResolveCanaryLang(no_en, "xx", "tgt"), 78);
 }
 
 }  // namespace sherpa_onnx

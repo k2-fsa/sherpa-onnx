@@ -131,13 +131,14 @@ inline int32_t ResolveCanaryLang(
 
   std::string chosen = "en";
   if (lang2id.find("en") == lang2id.end()) {
-    if (lang2id.empty()) {
-      SHERPA_ONNX_LOGE(
-          "tokens.txt carries no canary language tokens <|xx|>; cannot "
-          "resolve %s_lang", which);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    chosen = lang2id.begin()->first;
+    // Deterministic across implementations: the language with the lowest
+    // token id (unordered_map order would be unspecified). lang2id is never
+    // empty here: PostInit exits at load time when the vocab carries no
+    // language tokens.
+    auto min_id = std::min_element(
+        lang2id.begin(), lang2id.end(),
+        [](const auto &a, const auto &b) { return a.second < b.second; });
+    chosen = min_id->first;
   }
   if (!lang.empty()) {
     SHERPA_ONNX_LOGE("Canary %s_lang '%s' is not offered by this model; "
@@ -185,7 +186,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     Ort::Value enc_states = std::move(enc_out[0]);
     Ort::Value enc_mask = std::move(enc_out[2]);
     // enc_out[1] is discarded
-    std::vector<int32_t> decoder_input = GetInitialDecoderInput();
+    std::vector<int32_t> decoder_input = GetInitialDecoderInput(*s);
     auto decoder_states = model_->GetInitialDecoderStates();
     Ort::Value logits{nullptr};
 
@@ -316,19 +317,27 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
   // see
   // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/nemo/canary/test_180m_flash.py#L242
-  std::vector<int32_t> GetInitialDecoderInput() const {
+  std::vector<int32_t> GetInitialDecoderInput(
+      const OfflineStream &stream) const {
     auto canary_config = config_.model_config.canary;
     const auto &meta = model_->GetModelMetadata();
+
+    // Per-stream languages take precedence over the recognizer-level config:
+    // one recognizer can decode streams with different languages.
+    std::string src_lang = stream.HasOption("src_lang")
+                               ? stream.GetOption("src_lang")
+                               : canary_config.src_lang;
+    std::string tgt_lang = stream.HasOption("tgt_lang")
+                               ? stream.GetOption("tgt_lang")
+                               : canary_config.tgt_lang;
 
     std::vector<int32_t> decoder_input(9);
     decoder_input[0] = symbol_table_["<|startofcontext|>"];
     decoder_input[1] = symbol_table_["<|startoftranscript|>"];
     decoder_input[2] = symbol_table_["<|emo:undefined|>"];
 
-    decoder_input[3] =
-        ResolveCanaryLang(meta.lang2id, canary_config.src_lang, "src");
-    decoder_input[4] =
-        ResolveCanaryLang(meta.lang2id, canary_config.tgt_lang, "tgt");
+    decoder_input[3] = ResolveCanaryLang(meta.lang2id, src_lang, "src");
+    decoder_input[4] = ResolveCanaryLang(meta.lang2id, tgt_lang, "tgt");
 
     if (canary_config.use_pnc) {
       decoder_input[5] = symbol_table_["<|pnc|>"];
@@ -359,6 +368,17 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     // Derived from the vocab (canary-1b-v2 and future multilingual exports
     // carry more than the four languages the 180m-flash port hardcoded).
     meta.lang2id = DeriveCanaryLang2Id(symbol_table_.sym2id());
+    if (meta.lang2id.empty()) {
+      SHERPA_ONNX_LOGE(
+          "tokens.txt carries no canary language tokens <|xx|>; this does "
+          "not look like a canary model. Language resolution is disabled.");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    // Surface unsupported recognizer-level languages at load time instead of
+    // warning on every decode (code-review round 2).
+    ResolveCanaryLang(meta.lang2id, config_.model_config.canary.src_lang, "src");
+    ResolveCanaryLang(meta.lang2id, config_.model_config.canary.tgt_lang, "tgt");
 
     if (symbol_table_.NumSymbols() != meta.vocab_size) {
       SHERPA_ONNX_LOGE("number of lines in tokens.txt %d != %d (vocab_size)",

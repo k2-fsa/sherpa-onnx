@@ -52,22 +52,6 @@ bool OfflineCanaryModelConfig::Validate() const {
     return false;
   }
 
-  if (!src_lang.empty()) {
-    if (src_lang != "en" && src_lang != "de" && src_lang != "es" &&
-        src_lang != "fr") {
-      SHERPA_ONNX_LOGE("Please use en, de, es, or fr for --canary-src-lang");
-      return false;
-    }
-  }
-
-  if (!tgt_lang.empty()) {
-    if (tgt_lang != "en" && tgt_lang != "de" && tgt_lang != "es" &&
-        tgt_lang != "fr") {
-      SHERPA_ONNX_LOGE("Please use en, de, es, or fr for --canary-tgt-lang");
-      return false;
-    }
-  }
-
   return true;
 }
 
