@@ -10,6 +10,7 @@
 #include <ios>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -80,6 +81,70 @@ inline int32_t SelectCanaryFirstToken(const float *logits, int32_t vocab_size,
   }
 
   return best;
+}
+
+// A canary language token is <|xx|> with a two-letter (ISO 639-1) code:
+// <|en|>, <|it|>, ... Longer bracketed specials (<|pnc|>, <|noitn|>,
+// <|startoftranscript|>, timestamp tokens) are not languages.
+inline bool ParseCanaryLangToken(const std::string &token, std::string *code) {
+  if (token.size() != 6 || token[0] != '<' || token[1] != '|' ||
+      token[4] != '|' || token[5] != '>') {
+    return false;
+  }
+  if (token[2] < 'a' || token[2] > 'z' || token[3] < 'a' || token[3] > 'z') {
+    return false;
+  }
+  *code = token.substr(2, 2);
+  return true;
+}
+
+// Derive the language -> token-id map from the model's own vocab instead of
+// a hardcoded four-entry list, so multilingual exports (canary-1b-v2: 25
+// languages) work without code changes. For canary-180m-flash, whose vocab
+// carries exactly <|en|>, <|es|>, <|de|>, <|fr|>, the result is identical
+// to the previous hardcoded map.
+inline std::unordered_map<std::string, int32_t> DeriveCanaryLang2Id(
+    const std::unordered_map<std::string, int32_t> &sym2id) {
+  std::unordered_map<std::string, int32_t> ans;
+  std::string code;
+  for (const auto &p : sym2id) {
+    if (ParseCanaryLangToken(p.first, &code)) {
+      ans[code] = p.second;
+    }
+  }
+  return ans;
+}
+
+// Resolve src/tgt_lang against the derived map. A KNOWN code passes through;
+// an unknown code warns and falls back to en (or the first language the
+// vocab has) instead of silently switching; an empty code keeps the
+// historical silent en fallback.
+inline int32_t ResolveCanaryLang(
+    const std::unordered_map<std::string, int32_t> &lang2id,
+    const std::string &lang, const char *which) {
+  if (!lang.empty()) {
+    auto it = lang2id.find(lang);
+    if (it != lang2id.end()) {
+      return it->second;
+    }
+  }
+
+  std::string chosen = "en";
+  if (lang2id.find("en") == lang2id.end()) {
+    if (lang2id.empty()) {
+      SHERPA_ONNX_LOGE(
+          "tokens.txt carries no canary language tokens <|xx|>; cannot "
+          "resolve %s_lang", which);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    chosen = lang2id.begin()->first;
+  }
+  if (!lang.empty()) {
+    SHERPA_ONNX_LOGE("Canary %s_lang '%s' is not offered by this model; "
+                     "falling back to '%s'",
+                     which, lang.c_str(), chosen.c_str());
+  }
+  return lang2id.at(chosen);
 }
 
 class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
@@ -260,19 +325,10 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     decoder_input[1] = symbol_table_["<|startoftranscript|>"];
     decoder_input[2] = symbol_table_["<|emo:undefined|>"];
 
-    if (canary_config.src_lang.empty() ||
-        !meta.lang2id.count(canary_config.src_lang)) {
-      decoder_input[3] = meta.lang2id.at("en");
-    } else {
-      decoder_input[3] = meta.lang2id.at(canary_config.src_lang);
-    }
-
-    if (canary_config.tgt_lang.empty() ||
-        !meta.lang2id.count(canary_config.tgt_lang)) {
-      decoder_input[4] = meta.lang2id.at("en");
-    } else {
-      decoder_input[4] = meta.lang2id.at(canary_config.tgt_lang);
-    }
+    decoder_input[3] =
+        ResolveCanaryLang(meta.lang2id, canary_config.src_lang, "src");
+    decoder_input[4] =
+        ResolveCanaryLang(meta.lang2id, canary_config.tgt_lang, "tgt");
 
     if (canary_config.use_pnc) {
       decoder_input[5] = symbol_table_["<|pnc|>"];
@@ -300,10 +356,9 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     config_.feat_config.window_type = "hann";
     config_.feat_config.is_librosa = true;
 
-    meta.lang2id["en"] = symbol_table_["<|en|>"];
-    meta.lang2id["es"] = symbol_table_["<|es|>"];
-    meta.lang2id["de"] = symbol_table_["<|de|>"];
-    meta.lang2id["fr"] = symbol_table_["<|fr|>"];
+    // Derived from the vocab (canary-1b-v2 and future multilingual exports
+    // carry more than the four languages the 180m-flash port hardcoded).
+    meta.lang2id = DeriveCanaryLang2Id(symbol_table_.sym2id());
 
     if (symbol_table_.NumSymbols() != meta.vocab_size) {
       SHERPA_ONNX_LOGE("number of lines in tokens.txt %d != %d (vocab_size)",
