@@ -241,6 +241,12 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     config_.model_config.canary.tgt_lang = config.model_config.canary.tgt_lang;
     config_.model_config.canary.use_pnc = config.model_config.canary.use_pnc;
 
+    const auto &meta = model_->GetModelMetadata();
+    src_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config.model_config.canary.src_lang, "src");
+    tgt_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config.model_config.canary.tgt_lang, "tgt");
+
     // we don't change the config_ in the base class
   }
 
@@ -323,21 +329,23 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     const auto &meta = model_->GetModelMetadata();
 
     // Per-stream languages take precedence over the recognizer-level config:
-    // one recognizer can decode streams with different languages.
-    std::string src_lang = stream.HasOption("src_lang")
-                               ? stream.GetOption("src_lang")
-                               : canary_config.src_lang;
-    std::string tgt_lang = stream.HasOption("tgt_lang")
-                               ? stream.GetOption("tgt_lang")
-                               : canary_config.tgt_lang;
+    // one recognizer can decode streams with different languages. Only
+    // present options are resolved here (and warned once each); absent ones
+    // reuse the ids cached at PostInit/SetConfig time.
 
     std::vector<int32_t> decoder_input(9);
     decoder_input[0] = symbol_table_["<|startofcontext|>"];
     decoder_input[1] = symbol_table_["<|startoftranscript|>"];
     decoder_input[2] = symbol_table_["<|emo:undefined|>"];
 
-    decoder_input[3] = ResolveCanaryLang(meta.lang2id, src_lang, "src");
-    decoder_input[4] = ResolveCanaryLang(meta.lang2id, tgt_lang, "tgt");
+    decoder_input[3] =
+        stream.HasOption("src_lang")
+            ? ResolveCanaryLang(meta.lang2id, stream.GetOption("src_lang"), "src")
+            : src_lang_id_;
+    decoder_input[4] =
+        stream.HasOption("tgt_lang")
+            ? ResolveCanaryLang(meta.lang2id, stream.GetOption("tgt_lang"), "tgt")
+            : tgt_lang_id_;
 
     if (canary_config.use_pnc) {
       decoder_input[5] = symbol_table_["<|pnc|>"];
@@ -353,6 +361,11 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   }
 
  private:
+  // Recognizer-level language ids resolved once (PostInit/SetConfig), so an
+  // unsupported config language warns once instead of on every stream.
+  int32_t src_lang_id_ = -1;
+  int32_t tgt_lang_id_ = -1;
+
   void PostInit() {
     auto &meta = model_->GetModelMetadata();
     config_.feat_config.feature_dim = meta.feat_dim;
@@ -375,10 +388,12 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Surface unsupported recognizer-level languages at load time instead of
-    // warning on every decode (code-review round 2).
-    ResolveCanaryLang(meta.lang2id, config_.model_config.canary.src_lang, "src");
-    ResolveCanaryLang(meta.lang2id, config_.model_config.canary.tgt_lang, "tgt");
+    // Resolve recognizer-level languages once: warns at load time for
+    // unsupported codes and caches the ids for every later stream.
+    src_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config_.model_config.canary.src_lang, "src");
+    tgt_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config_.model_config.canary.tgt_lang, "tgt");
 
     if (symbol_table_.NumSymbols() != meta.vocab_size) {
       SHERPA_ONNX_LOGE("number of lines in tokens.txt %d != %d (vocab_size)",
