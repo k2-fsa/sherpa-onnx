@@ -389,12 +389,53 @@ jobs:
           flutter pub publish --force
 
 
-  # Builds the arm64 libraries that sherpa_onnx_windows ships next to its
-  # x64 ones (windows/arm64/). Same configuration as the x64 build below;
-  # the MSVC setup and -A ARM64 mirror windows-arm64.yaml.
-  sherpa_onnx_windows_arm64:
+  # ---- Windows: build x64 and arm64 in parallel, then collect and publish ----
+
+  build_windows_libs_x64:
     # if: false
-    name: sherpa_onnx_windows_arm64
+    name: build_windows_libs_x64
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -D SHERPA_ONNX_ENABLE_TTS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_JNI=OFF \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target install --config Release -- -m:2
+
+          ls -lh install/lib/*.dll
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: build/install/lib/*.dll
+
+  build_windows_libs_arm64:
+    # if: false
+    name: build_windows_libs_arm64
     runs-on: windows-11-arm
 
     steps:
@@ -436,12 +477,12 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa_onnx_windows_arm64_libs
+          name: windows-arm64
           path: build/install/lib/*.dll
 
   sherpa_onnx_windows:
     # if: false
-    needs: [sherpa_onnx_windows_arm64]
+    needs: [build_windows_libs_x64, build_windows_libs_arm64]
     permissions:
       id-token: write # Required for authentication using OIDC
     name: sherpa_onnx_windows
@@ -483,42 +524,24 @@ jobs:
 
           git status
 
-      - name: Configure CMake
-        shell: bash
-        run: |
-          mkdir build
-          cd build
-          cmake \
-            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-            -D SHERPA_ONNX_ENABLE_TTS=ON \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_INSTALL_PREFIX=./install \
-            -D SHERPA_ONNX_ENABLE_JNI=OFF \
-            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            ..
-
-      - name: Build sherpa-onnx
-        shell: bash
-        run: |
-          cd build
-          cmake --build . --target install --config Release -- -m:2
-
-          ls -lh install/lib/*.dll
+      - name: Download x64 libs
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64
+          path: flutter/sherpa_onnx_windows/windows/x64
 
       - name: Download arm64 libs
         uses: actions/download-artifact@v4
         with:
-          name: sherpa_onnx_windows_arm64_libs
+          name: windows-arm64
           path: flutter/sherpa_onnx_windows/windows/arm64
 
-      - name: Copy pre-built libs
+      - name: Collect libs
         shell: bash
         run: |
-          cp -v build/install/lib/*.dll flutter/sherpa_onnx_windows/windows/
           mv -v flutter/sherpa_onnx_windows /tmp/to_be_published
 
-          ls -lh /tmp/to_be_published/windows
+          ls -lh /tmp/to_be_published/windows/x64
           ls -lh /tmp/to_be_published/windows/arm64
 
       - name: Setup Flutter SDK
