@@ -1,0 +1,138 @@
+name: android-fdroid-reproducible-aar
+
+# Reference AAR built with the flags documented in
+# android/fdroid-reproducible-builds.md: C API off and JNI on (the
+# build-android-*.sh defaults, so no SHERPA_ONNX_ENABLE_C_API export
+# here) and the NDK revision pinned by the page instead of the
+# floating ANDROID_NDK_LATEST_HOME. The artifact is a reference build
+# for verification, not a byte-reproducible one: the runner toolchain
+# floats, which is the page's subject.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/android-fdroid-reproducible-aar.yaml'
+      - 'android/fdroid-reproducible-builds.md'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+      - 'build-android*.sh'
+
+  workflow_dispatch:
+
+concurrency:
+  group: android-fdroid-reproducible-aar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-fdroid-reproducible-aar:
+    name: F-Droid reproducible AAR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-fdroid-reproducible-aar
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install the pinned NDK
+        shell: bash
+        run: |
+          # The page pins this revision; ANDROID_NDK_LATEST_HOME floats.
+          NDK_VERSION=27.0.12077973
+          ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null
+          echo "ANDROID_NDK=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+          ls -lh "$ANDROID_HOME/ndk/$NDK_VERSION"
+
+      - name: build android arm64-v8a
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+
+          ./build-android-arm64-v8a.sh
+
+          mkdir -p ./jniLibs/arm64-v8a/
+          cp -v ./build-android-arm64-v8a/install/lib/*.so ./jniLibs/arm64-v8a/
+          rm -rf ./build-android-arm64-v8a/
+
+      - name: build android armv7-eabi
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+
+          ./build-android-armv7-eabi.sh
+
+          mkdir -p ./jniLibs/armeabi-v7a/
+          cp -v ./build-android-armv7-eabi/install/lib/*.so ./jniLibs/armeabi-v7a/
+          rm -rf ./build-android-armv7-eabi/
+
+      - name: build android x86_64
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+
+          ./build-android-x86-64.sh
+
+          mkdir -p ./jniLibs/x86_64/
+          cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64/
+          rm -rf ./build-android-x86-64/
+
+      - name: build android x86
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+
+          ./build-android-x86.sh
+
+          mkdir -p ./jniLibs/x86/
+          cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86/
+          rm -rf ./build-android-x86/
+
+      - name: Copy libs into the AAR project
+        shell: bash
+        run: |
+          for arch in arm64-v8a armeabi-v7a x86 x86_64; do
+            mkdir -p android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/$arch/
+            cp -v ./jniLibs/$arch/* android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/$arch/
+          done
+          ls -lh android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/*
+
+      - name: Build aar
+        shell: bash
+        run: |
+          cd android/SherpaOnnxAar
+          ./gradlew :sherpa_onnx:assembleRelease
+
+      - name: Rename aar
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+          mv android/SherpaOnnxAar/sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar \
+            sherpa-onnx-${SHERPA_ONNX_VERSION}-fdroid-reproducible.aar
+          ls -lh ./*.aar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-fdroid-reproducible-aar
+          path: ./*.aar

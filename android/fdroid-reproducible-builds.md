@@ -87,7 +87,7 @@ reference with
 
 ```bash
 # align the rebuilt unsigned APK the way apksigner pads, 16 KiB pages
-zipalign.py -P 16384 --pad-like-apksigner rebuilt-unsigned.apk rebuilt-aligned-unsigned.apk
+zipalign.py --page-size 16 --pad-like-apksigner rebuilt-unsigned.apk rebuilt-aligned-unsigned.apk
 
 # copy the reference APK's signature block onto the rebuilt APK
 apksigcopier copy reference-signed.apk rebuilt-aligned-unsigned.apk rebuilt-signed.apk
@@ -96,8 +96,9 @@ apksigcopier copy reference-signed.apk rebuilt-aligned-unsigned.apk rebuilt-sign
 apksigcopier compare reference-signed.apk rebuilt-signed.apk
 ```
 
-See each tool's README for the full flag set; the combination above is what
-the Anti-Vocale verification uses.
+See each tool's README for the full flag set; the flags above mirror the
+ones Anti-Vocale's F-Droid recipe builds with. Its release verification
+runs through fdroidserver's buildserver rather than these manual commands.
 
 ## Reference recipe
 
