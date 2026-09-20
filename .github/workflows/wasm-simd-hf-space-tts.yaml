@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["7"]
-        index: ["0", "1", "2", "3", "4", "5", "6"]
+        total: ["8"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7"]
 
     steps:
       - uses: actions/checkout@v4
@@ -93,7 +93,7 @@ jobs:
           file: ./*.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.12.19
+          # tag: v1.13.8
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4

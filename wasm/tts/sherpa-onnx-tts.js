@@ -1097,6 +1097,16 @@ function createOfflineTts(Module, myConfig) {
       offlineTtsKittenModelConfig.tokens = './tokens.txt';
       offlineTtsKittenModelConfig.dataDir = './espeak-ng-data';
       break;
+    case 7:
+      // kokoro-multi-lang-v1_0
+      // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/kokoro-multi-lang-v1_0.html
+      offlineTtsKokoroModelConfig.model = './model.onnx';
+      offlineTtsKokoroModelConfig.voices = './voices.bin';
+      offlineTtsKokoroModelConfig.tokens = './tokens.txt';
+      offlineTtsKokoroModelConfig.dataDir = './espeak-ng-data';
+      offlineTtsKokoroModelConfig.lexicon = './lexicon-us-en.txt,./lexicon-zh.txt';
+      ruleFsts = './phone-zh.fst,./date-zh.fst,./number-zh.fst';
+      break;
   }
 
   const offlineTtsModelConfig = {
