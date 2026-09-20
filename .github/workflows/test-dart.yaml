@@ -85,8 +85,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: master
-          flutter-version: 3.24.0
-          architecture: arm64
 
       - name: Set up Flutter
         if: matrix.os != 'windows-11-arm'
