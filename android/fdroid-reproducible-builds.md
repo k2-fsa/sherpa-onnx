@@ -90,7 +90,7 @@ reference with
 
 ```bash
 # align the rebuilt unsigned APK the way apksigner pads, 16 KiB pages
-zipalign.py --page-size 16 --pad-like-apksigner rebuilt-unsigned.apk rebuilt-aligned-unsigned.apk
+zipalign.py --page-size 16 --pad-like-apksigner --replace rebuilt-unsigned.apk rebuilt-aligned-unsigned.apk
 
 # copy the reference APK's signature block onto the rebuilt APK
 apksigcopier copy reference-signed.apk rebuilt-aligned-unsigned.apk rebuilt-signed.apk
