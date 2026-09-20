@@ -80,7 +80,16 @@ jobs:
           key: ${{ matrix.os }}-dart
 
       # see https://github.com/subosito/flutter-action/issues/345
+      - name: Set up Flutter (ARM64)
+        if: matrix.os == 'windows-11-arm'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: master
+          flutter-version: 3.24.0
+          architecture: arm64
+
       - name: Set up Flutter
+        if: matrix.os != 'windows-11-arm'
         uses: subosito/flutter-action@v2
         with:
           channel: master
