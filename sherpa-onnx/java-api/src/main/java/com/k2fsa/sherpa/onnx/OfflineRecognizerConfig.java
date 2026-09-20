@@ -6,6 +6,7 @@ public class OfflineRecognizerConfig {
     private final FeatureConfig featConfig;
     private final OfflineModelConfig modelConfig;
     private final HomophoneReplacerConfig hr;
+    private final OfflineCtcFstDecoderConfig ctcFstDecoderConfig;
     private final String decodingMethod;
     private final int maxActivePaths;
     private final String hotwordsFile;
@@ -18,6 +19,7 @@ public class OfflineRecognizerConfig {
         this.featConfig = builder.featConfig;
         this.modelConfig = builder.modelConfig;
         this.hr = builder.hr;
+        this.ctcFstDecoderConfig = builder.ctcFstDecoderConfig;
         this.decodingMethod = builder.decodingMethod;
         this.maxActivePaths = builder.maxActivePaths;
         this.hotwordsFile = builder.hotwordsFile;
@@ -39,6 +41,7 @@ public class OfflineRecognizerConfig {
         private FeatureConfig featConfig = FeatureConfig.builder().build();
         private OfflineModelConfig modelConfig = OfflineModelConfig.builder().build();
         private HomophoneReplacerConfig hr = HomophoneReplacerConfig.builder().build();
+        private OfflineCtcFstDecoderConfig ctcFstDecoderConfig = OfflineCtcFstDecoderConfig.builder().build();
         private String decodingMethod = "greedy_search";
         private int maxActivePaths = 4;
         private String hotwordsFile = "";
@@ -63,6 +66,11 @@ public class OfflineRecognizerConfig {
 
         public Builder setHr(HomophoneReplacerConfig hr) {
             this.hr = hr;
+            return this;
+        }
+
+        public Builder setCtcFstDecoderConfig(OfflineCtcFstDecoderConfig ctcFstDecoderConfig) {
+            this.ctcFstDecoderConfig = ctcFstDecoderConfig;
             return this;
         }
 
