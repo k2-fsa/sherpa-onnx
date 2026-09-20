@@ -43,11 +43,11 @@ jobs:
           git diff .
 
       # see https://github.com/subosito/flutter-action/issues/345
-      - name: Set up Flutter (ARM64)
+      - name: Set up Dart (ARM64)
         if: matrix.os == 'windows-11-arm'
-        uses: subosito/flutter-action@v2
+        uses: dart-lang/setup-dart@v1
         with:
-          channel: master
+          sdk: stable
 
       - name: Set up Flutter
         if: matrix.os != 'windows-11-arm'
@@ -56,21 +56,26 @@ jobs:
           channel: master
           flutter-version: 3.24.0
 
-      - name: Display flutter info
+      - name: Display info
         shell: bash
         run: |
-          which flutter
           which dart
-
-          flutter --version
           dart --version
-          flutter doctor
+          if command -v flutter &> /dev/null; then
+            which flutter
+            flutter --version
+            flutter doctor
+          fi
 
       - name: Display sherpa-onnx package info
         shell: bash
         run: |
           cd dart-api-examples/vad
-          flutter pub get
+          if command -v flutter &> /dev/null; then
+            flutter pub get
+          else
+            dart pub get
+          fi
 
       - name: Run tests
         shell: bash
