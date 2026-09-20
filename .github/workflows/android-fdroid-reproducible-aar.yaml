@@ -8,18 +8,11 @@ name: android-fdroid-reproducible-aar
 # for verification, not a byte-reproducible one: the runner toolchain
 # floats, which is the page's subject.
 
+# workflow_dispatch only, deliberately: the artifact is a verification
+# reference for the docs page, not something upstream CI needs on every
+# master push; anyone wanting a fresh reference can dispatch it (forks
+# included).
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/android-fdroid-reproducible-aar.yaml'
-      - 'android/fdroid-reproducible-builds.md'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/jni/*'
-      - 'build-android*.sh'
-
   workflow_dispatch:
 
 concurrency:
@@ -50,7 +43,7 @@ jobs:
         shell: bash
         run: |
           # The page pins this revision; ANDROID_NDK_LATEST_HOME floats.
-          NDK_VERSION=27.0.12077973
+          NDK_VERSION=27.2.12479018
           ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null
           echo "ANDROID_NDK=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"

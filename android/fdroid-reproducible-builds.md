@@ -38,9 +38,12 @@ they break the byte comparison.
 The packaged `.so` files are stripped with the NDK's `llvm-strip`, and patch
 releases of the same NDK major ship different LLVM revisions (r27b, r27c and
 r27d all differ), so "the same major" is not enough. Pin the full revision on
-both sides: `ndkVersion = "27.0.12077973"` in the consuming app's
-`build.gradle.kts` (or the equivalent), and the same exact value in the
-recipe's `ndk:` field so fdroidserver installs that revision.
+both sides, and read it from the recipe rather than guessing: fdroiddata
+blocks currently pin `ndk: r27c` (2026-era blocks; newer ones r28c), which
+resolves to `27.2.12479018`, so `ndkVersion = "27.2.12479018"` in the
+consuming app's `build.gradle.kts` (or the equivalent) and the same value
+wherever the app's own CI installs the NDK. The r27/r27c difference is
+exactly the kind of patch-release drift this section exists for.
 
 ## 4. Disable baseline-profile generation in the consuming project
 
