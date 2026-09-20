@@ -215,13 +215,16 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
         continue;
       }
 
+      // See offline-recognizer-whisper-impl.h: ITN must run on the
+      // concatenated text, not on individual byte-level-BPE tokens.
       std::string s = sym_table[i];
-      s = ApplyInverseTextNormalization(s);
-      s = ApplyHomophoneReplacer(std::move(s));
 
       text += s;
       r.tokens.push_back(s);
     }
+
+    text = ApplyInverseTextNormalization(text);
+    text = ApplyHomophoneReplacer(std::move(text));
 
     r.text = text;
 
