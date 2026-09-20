@@ -45,7 +45,9 @@ jobs:
           # The page pins this revision; ANDROID_NDK_LATEST_HOME floats.
           NDK_VERSION=27.2.12479018
           ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null
+          # Subshell WITHOUT pipefail: yes dies of SIGPIPE when sdkmanager
+          # finishes, which under the step's pipefail would fail the step.
+          ( set +o pipefail; yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null )
           echo "ANDROID_NDK=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
           ls -lh "$ANDROID_HOME/ndk/$NDK_VERSION"
 
