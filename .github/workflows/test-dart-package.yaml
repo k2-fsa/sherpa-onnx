@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm, windows-2022]
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm, windows-2022, windows-11-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -43,27 +43,39 @@ jobs:
           git diff .
 
       # see https://github.com/subosito/flutter-action/issues/345
+      - name: Set up Dart (ARM64)
+        if: matrix.os == 'windows-11-arm'
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
       - name: Set up Flutter
+        if: matrix.os != 'windows-11-arm'
         uses: subosito/flutter-action@v2
         with:
           channel: master
           flutter-version: 3.24.0
 
-      - name: Display flutter info
+      - name: Display info
         shell: bash
         run: |
-          which flutter
           which dart
-
-          flutter --version
           dart --version
-          flutter doctor
+          if command -v flutter &> /dev/null; then
+            which flutter
+            flutter --version
+            flutter doctor
+          fi
 
       - name: Display sherpa-onnx package info
         shell: bash
         run: |
           cd dart-api-examples/vad
-          flutter pub get
+          if command -v flutter &> /dev/null; then
+            flutter pub get
+          else
+            dart pub get
+          fi
 
       - name: Run tests
         shell: bash

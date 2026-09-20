@@ -10,7 +10,7 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 
 # The package ships pre-built libraries for two architectures:
 #
-#   windows/*.dll        x64
+#   windows/x64/*.dll    x64
 #   windows/arm64/*.dll  arm64
 #
 # Pick the set matching the architecture being built FOR. Flutter names it
@@ -23,7 +23,7 @@ if(FLUTTER_TARGET_PLATFORM STREQUAL "windows-arm64"
    OR CMAKE_GENERATOR_PLATFORM MATCHES "^ARM64$")
   set(sherpa_onnx_windows_lib_dir "${CMAKE_CURRENT_SOURCE_DIR}/arm64")
 else()
-  set(sherpa_onnx_windows_lib_dir "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(sherpa_onnx_windows_lib_dir "${CMAKE_CURRENT_SOURCE_DIR}/x64")
 endif()
 
 # List of absolute paths to libraries that should be bundled with the plugin.
