@@ -1,0 +1,148 @@
+name: android-fdroid-reproducible-aar
+
+# Reference AAR for android/fdroid-reproducible-builds.md, covering
+# sections 1-3 of the page: build from the pinned checkout with the
+# C API off (exported explicitly below; SHERPA_ONNX_ENABLE_C_API=OFF
+# is the build-android-*.sh default today, but android.yaml exports ON
+# for its own artifact, so do not rely on the default) and the NDK
+# revision pinned instead of the floating ANDROID_NDK_LATEST_HOME.
+# Sections 4-6 of the page (baseline-profile disabling, per-ABI APK
+# splits, verification tooling) are consuming-app and fdroiddata-recipe
+# concerns, so this CI does not check them; it only produces the
+# reference AAR to compare against. The artifact is a reference build
+# for verification, not a byte-reproducible one: the runner toolchain
+# floats, which is the page's subject.
+
+# workflow_dispatch only, deliberately: the artifact is a verification
+# reference for the docs page, not something upstream CI needs on every
+# master push; anyone wanting a fresh reference can dispatch it (forks
+# included).
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: android-fdroid-reproducible-aar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-fdroid-reproducible-aar:
+    name: F-Droid reproducible AAR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-fdroid-reproducible-aar
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install the pinned NDK
+        shell: bash
+        run: |
+          # Revision pinned by section 3 of
+          # android/fdroid-reproducible-builds.md; ANDROID_NDK_LATEST_HOME
+          # floats. To update: read the consuming recipe's ndk: value
+          # (https://f-droid.org/docs/Build_Metadata_Reference/#build_ndk),
+          # resolve the r-string to a revision via the android/ndk release
+          # notes (r27c = 27.2.12479018), and change it here and in the
+          # page together.
+          NDK_VERSION=27.2.12479018
+          ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
+          # Subshell WITHOUT pipefail: yes dies of SIGPIPE when sdkmanager
+          # finishes, which under the step's pipefail would fail the step.
+          ( set +o pipefail; yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null )
+          echo "ANDROID_NDK=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+          ls -lh "$ANDROID_HOME/ndk/$NDK_VERSION"
+
+      - name: build android arm64-v8a
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
+
+          ./build-android-arm64-v8a.sh
+
+          mkdir -p ./jniLibs/arm64-v8a/
+          cp -v ./build-android-arm64-v8a/install/lib/*.so ./jniLibs/arm64-v8a/
+          rm -rf ./build-android-arm64-v8a/
+
+      - name: build android armv7-eabi
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
+
+          ./build-android-armv7-eabi.sh
+
+          mkdir -p ./jniLibs/armeabi-v7a/
+          cp -v ./build-android-armv7-eabi/install/lib/*.so ./jniLibs/armeabi-v7a/
+          rm -rf ./build-android-armv7-eabi/
+
+      - name: build android x86_64
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
+
+          ./build-android-x86-64.sh
+
+          mkdir -p ./jniLibs/x86_64/
+          cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64/
+          rm -rf ./build-android-x86-64/
+
+      - name: build android x86
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
+
+          ./build-android-x86.sh
+
+          mkdir -p ./jniLibs/x86/
+          cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86/
+          rm -rf ./build-android-x86/
+
+      - name: Copy libs into the AAR project
+        shell: bash
+        run: |
+          for arch in arm64-v8a armeabi-v7a x86 x86_64; do
+            mkdir -p android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/$arch/
+            cp -v ./jniLibs/$arch/* android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/$arch/
+          done
+          ls -lh android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/*
+
+      - name: Build aar
+        shell: bash
+        run: |
+          cd android/SherpaOnnxAar
+          ./gradlew :sherpa_onnx:assembleRelease
+
+      - name: Rename aar
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+          mv android/SherpaOnnxAar/sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar \
+            sherpa-onnx-${SHERPA_ONNX_VERSION}-fdroid-reproducible.aar
+          ls -lh ./*.aar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-fdroid-reproducible-aar
+          path: ./*.aar
