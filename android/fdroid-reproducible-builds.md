@@ -35,7 +35,9 @@ they break the byte comparison.
 
 ## 3. Pin the exact NDK revision
 
-The packaged `.so` files are stripped with the NDK's `llvm-strip`, and patch
+Any NDK version is fine; the requirement is only that the SAME revision
+builds the reference AAR and the app. The packaged `.so` files are stripped
+with the NDK's `llvm-strip`, and patch
 releases of the same NDK major ship different LLVM revisions (r27b, r27c and
 r27d all differ), so "the same major" is not enough. Pin the full revision on
 both sides, and read it from the recipe rather than guessing: the recipe's
