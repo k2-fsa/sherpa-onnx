@@ -672,7 +672,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   jmethodID ctor =
       env->GetMethodID(cls, "<init>",
                        "(Ljava/lang/String;[Ljava/lang/String;[FLjava/lang/"
-                       "String;Ljava/lang/String;Ljava/lang/String;[F[I)V");
+                       "String;Ljava/lang/String;Ljava/lang/String;[F[F[I)V");
   jstring jtext = SafeNewStringUTF(env, result.text);
 
   jclass string_cls = env->FindClass("java/lang/String");
@@ -698,14 +698,19 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   env->SetFloatArrayRegion(jdurations, 0, result.durations.size(),
                            result.durations.data());
 
+  jfloatArray jys_probs = env->NewFloatArray(result.ys_log_probs.size());
+  env->SetFloatArrayRegion(jys_probs, 0, result.ys_log_probs.size(),
+                           result.ys_log_probs.data());
+
   jintArray jwords = env->NewIntArray(result.words.size());
   if (!result.words.empty()) {
     env->SetIntArrayRegion(jwords, 0, result.words.size(),
                            result.words.data());
   }
 
-  jobject jresult = env->NewObject(cls, ctor, jtext, jtokens, jtimestamps,
-                                   jlang, jemotion, jevent, jdurations, jwords);
+  jobject jresult =
+      env->NewObject(cls, ctor, jtext, jtokens, jtimestamps, jlang, jemotion,
+                     jevent, jdurations, jys_probs, jwords);
 
   env->DeleteLocalRef(jtext);
   env->DeleteLocalRef(jtokens);
@@ -714,6 +719,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   env->DeleteLocalRef(jemotion);
   env->DeleteLocalRef(jevent);
   env->DeleteLocalRef(jdurations);
+  env->DeleteLocalRef(jys_probs);
   env->DeleteLocalRef(jwords);
   env->DeleteLocalRef(cls);
 
