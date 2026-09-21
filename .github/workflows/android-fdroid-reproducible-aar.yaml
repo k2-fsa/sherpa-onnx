@@ -1,10 +1,15 @@
 name: android-fdroid-reproducible-aar
 
-# Reference AAR built with the flags documented in
-# android/fdroid-reproducible-builds.md: C API off and JNI on (the
-# build-android-*.sh defaults, so no SHERPA_ONNX_ENABLE_C_API export
-# here) and the NDK revision pinned by the page instead of the
-# floating ANDROID_NDK_LATEST_HOME. The artifact is a reference build
+# Reference AAR for android/fdroid-reproducible-builds.md, covering
+# sections 1-3 of the page: build from the pinned checkout with the
+# C API off (exported explicitly below; SHERPA_ONNX_ENABLE_C_API=OFF
+# is the build-android-*.sh default today, but android.yaml exports ON
+# for its own artifact, so do not rely on the default) and the NDK
+# revision pinned instead of the floating ANDROID_NDK_LATEST_HOME.
+# Sections 4-6 of the page (baseline-profile disabling, per-ABI APK
+# splits, verification tooling) are consuming-app and fdroiddata-recipe
+# concerns, so this CI does not check them; it only produces the
+# reference AAR to compare against. The artifact is a reference build
 # for verification, not a byte-reproducible one: the runner toolchain
 # floats, which is the page's subject.
 
@@ -42,7 +47,13 @@ jobs:
       - name: Install the pinned NDK
         shell: bash
         run: |
-          # The page pins this revision; ANDROID_NDK_LATEST_HOME floats.
+          # Revision pinned by section 3 of
+          # android/fdroid-reproducible-builds.md; ANDROID_NDK_LATEST_HOME
+          # floats. To update: read the consuming recipe's ndk: value
+          # (https://f-droid.org/docs/Build_Metadata_Reference/#build_ndk),
+          # resolve the r-string to a revision via the android/ndk release
+          # notes (r27c = 27.2.12479018), and change it here and in the
+          # page together.
           NDK_VERSION=27.2.12479018
           ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}
           # Subshell WITHOUT pipefail: yes dies of SIGPIPE when sdkmanager
@@ -57,6 +68,7 @@ jobs:
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
 
           ./build-android-arm64-v8a.sh
 
@@ -70,6 +82,7 @@ jobs:
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
 
           ./build-android-armv7-eabi.sh
 
@@ -83,6 +96,7 @@ jobs:
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
 
           ./build-android-x86-64.sh
 
@@ -96,6 +110,7 @@ jobs:
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           export ANDROID_NDK=${ANDROID_NDK}
+          export SHERPA_ONNX_ENABLE_C_API=OFF
 
           ./build-android-x86.sh
 
