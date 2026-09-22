@@ -266,6 +266,34 @@ class OfflineTts(
         callback: ((samples: FloatArray) -> Int)?
     ): GeneratedAudio
 
+    // ======== Voice embedding cache (ZipVoice only) ========
+
+    private external fun saveVoiceEmbeddingsNative(path: String): Int
+    private external fun loadVoiceEmbeddingsNative(path: String): Int
+    private external fun clearVoiceEmbeddingsNative(): Unit
+
+    /**
+     * Save current voice embeddings to disk. Returns number saved.
+     * Call after warming up so the embedding is cached before saving.
+     */
+    fun saveVoiceEmbeddings(path: String): Int = try {
+        saveVoiceEmbeddingsNative(path)
+    } catch (e: Throwable) { 0 }
+
+    /**
+     * Load previously saved voice embeddings from disk.
+     * Call right after constructing OfflineTts, before any speak call.
+     * Returns number of embeddings loaded.
+     */
+    fun loadVoiceEmbeddings(path: String): Int = try {
+        loadVoiceEmbeddingsNative(path)
+    } catch (e: Throwable) { 0 }
+
+    /** Clear all cached voice embeddings (in-memory only). */
+    fun clearVoiceEmbeddings() = try {
+        clearVoiceEmbeddingsNative()
+    } catch (e: Throwable) {}
+
     companion object {
         init {
             System.loadLibrary("sherpa-onnx-jni")
