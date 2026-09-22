@@ -27,6 +27,11 @@ void OnlineWebsocketDecoderConfig::Register(ParseOptions *po) {
 
   po->Register("end-tail-padding", &end_tail_padding,
                "It determines the length of tail_padding at the end of audio.");
+
+  po->Register("input-sample-rate", &input_sample_rate,
+               "The sample rate of the input audio from the client. "
+               "If it differs from the model's expected sample rate, "
+               "the server will resample internally.");
 }
 
 void OnlineWebsocketDecoderConfig::Validate() const {
@@ -34,6 +39,7 @@ void OnlineWebsocketDecoderConfig::Validate() const {
   SHERPA_ONNX_CHECK_GT(loop_interval_ms, 0);
   SHERPA_ONNX_CHECK_GT(max_batch_size, 0);
   SHERPA_ONNX_CHECK_GT(end_tail_padding, 0);
+  SHERPA_ONNX_CHECK_GT(input_sample_rate, 0);
 }
 
 void OnlineWebsocketServerConfig::Register(sherpa_onnx::ParseOptions *po) {
@@ -72,7 +78,7 @@ std::shared_ptr<Connection> OnlineWebsocketDecoder::GetOrCreateConnection(
 
 void OnlineWebsocketDecoder::AcceptWaveform(std::shared_ptr<Connection> c) {
   std::lock_guard<std::mutex> lock(c->mutex);
-  float sample_rate = config_.recognizer_config.feat_config.sampling_rate;
+  float sample_rate = config_.input_sample_rate;
   while (!c->samples.empty()) {
     const auto &s = c->samples.front();
     c->s->AcceptWaveform(sample_rate, s.data(), s.size());
@@ -83,7 +89,7 @@ void OnlineWebsocketDecoder::AcceptWaveform(std::shared_ptr<Connection> c) {
 void OnlineWebsocketDecoder::InputFinished(std::shared_ptr<Connection> c) {
   std::lock_guard<std::mutex> lock(c->mutex);
 
-  float sample_rate = config_.recognizer_config.feat_config.sampling_rate;
+  float sample_rate = config_.input_sample_rate;
 
   while (!c->samples.empty()) {
     const auto &s = c->samples.front();
