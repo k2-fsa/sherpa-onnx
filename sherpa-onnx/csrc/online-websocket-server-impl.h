@@ -67,7 +67,7 @@ struct OnlineWebsocketDecoderConfig {
   // The sample rate of input audio from the client.
   // If it differs from the model's expected sample rate (e.g. 16000),
   // the server will resample internally.
-  int32_t input_sample_rate = 8000;
+  int32_t input_sample_rate = 16000;
 
   void Register(ParseOptions *po);
   void Validate() const;
