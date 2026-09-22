@@ -15,6 +15,7 @@ namespace sherpa_onnx {
 void VadModelConfig::Register(ParseOptions *po) {
   silero_vad.Register(po);
   ten_vad.Register(po);
+  smart_turn.Register(po);
 
   po->Register("vad-sample-rate", &sample_rate,
                "Sample rate expected by the VAD model");
@@ -49,6 +50,12 @@ bool VadModelConfig::Validate() const {
     }
   }
 
+  if (!smart_turn.model.empty() && !smart_turn.Validate()) {
+    SHERPA_ONNX_LOGE("smart_turn model validation failed for model '%s'",
+                  smart_turn.model.c_str());
+    return false;
+  }
+
   if (!silero_vad.model.empty()) {
     return silero_vad.Validate();
   }
@@ -68,6 +75,7 @@ std::string VadModelConfig::ToString() const {
   os << "VadModelConfig(";
   os << "silero_vad=" << silero_vad.ToString() << ", ";
   os << "ten_vad=" << ten_vad.ToString() << ", ";
+  os << "smart_turn=" << smart_turn.ToString() << ", ";
   os << "sample_rate=" << sample_rate << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "provider=\"" << provider << "\", ";

@@ -1933,6 +1933,22 @@ typedef struct SherpaOnnxTenVadModelConfig {
   float max_speech_duration;
 } SherpaOnnxTenVadModelConfig;
 
+/** @brief Configuration for an ONNX Smart Turn model. */
+typedef struct SherpaOnnxSmartTurnConfig {
+  /** Path to the Smart Turn ONNX model. An empty path disables Smart Turn. */
+  const char *model;
+  /** End-of-turn probability threshold. */
+  float threshold;
+  /** Sample rate expected by the Smart Turn model. */
+  int32_t sample_rate;
+  /** Audio window passed to the model, in seconds. */
+  float window_size;
+  /** Trailing silence before Smart Turn is evaluated, in seconds. */
+  float min_silence_duration;
+  /** Trailing silence that always finalizes a segment, in seconds. */
+  float max_silence_duration;
+} SherpaOnnxSmartTurnConfig;
+
 /**
  * @brief Configuration shared by voice activity detectors.
  *
@@ -1978,6 +1994,8 @@ typedef struct SherpaOnnxVadModelConfig {
   int32_t debug;
   /** Ten VAD configuration. */
   SherpaOnnxTenVadModelConfig ten_vad;
+  /** Smart Turn configuration. Leave model empty to disable it. */
+  SherpaOnnxSmartTurnConfig smart_turn;
 } SherpaOnnxVadModelConfig;
 
 /** @brief Opaque circular-buffer handle used by helper APIs. */
