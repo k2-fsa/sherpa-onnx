@@ -58,6 +58,11 @@ static void ParseConfigFile(
   // Keys prefixed with "SessionConfig." are forwarded (prefix stripped) to
   // Ort::SessionOptions::AddConfigEntry, e.g.,
   // SessionConfig.mlas.disable_kleidiai=1
+  // Remaining keys are forwarded as provider options for providers that
+  // accept them, e.g., for cuda:
+  //   gpu_mem_limit=2147483648
+  //   arena_extend_strategy=kSameAsRequested
+  //   do_copy_in_default_stream=1
   // # is treated as comment. Empty lines are ignored. The legacy key:value
   // format is still supported for backward compatibility.
   // additionally, DEBUG=1 can be set to print all configs read from the file.
@@ -135,6 +140,71 @@ static void SplitProviderAndConfig(
     }
   }
 }
+
+static const char *CudnnConvAlgoSearchToString(OrtCudnnConvAlgoSearch search) {
+  switch (search) {
+    case OrtCudnnConvAlgoSearchExhaustive:
+      return "EXHAUSTIVE";
+    case OrtCudnnConvAlgoSearchHeuristic:
+      return "HEURISTIC";
+    case OrtCudnnConvAlgoSearchDefault:
+      return "DEFAULT";
+    default:
+      return "HEURISTIC";
+  }
+}
+
+std::unordered_map<std::string, std::string> BuildCudaProviderOptions(
+    std::unordered_map<std::string, std::string> config, int32_t device_id,
+    OrtCudnnConvAlgoSearch cudnn_conv_algo_search) {
+  config.erase("DEBUG");
+  // emplace() does not overwrite existing keys, so entries from the config
+  // file win over the defaults below.
+  config.emplace("device_id", std::to_string(device_id));
+  config.emplace("cudnn_conv_algo_search",
+                 CudnnConvAlgoSearchToString(cudnn_conv_algo_search));
+  return config;
+}
+
+#if ORT_API_VERSION >= 12
+static void AppendCudaProviderV2(
+    Ort::SessionOptions *sess_opts,
+    const std::unordered_map<std::string, std::string> &provider_options,
+    const std::string &available_providers) {
+  std::vector<const char *> option_keys;
+  std::vector<const char *> option_values;
+  option_keys.reserve(provider_options.size());
+  option_values.reserve(provider_options.size());
+  for (const auto &kv : provider_options) {
+    option_keys.push_back(kv.first.c_str());
+    option_values.push_back(kv.second.c_str());
+  }
+
+  const auto &api = Ort::GetApi();
+  OrtCUDAProviderOptionsV2 *cuda_options = nullptr;
+  OrtStatus *status = api.CreateCUDAProviderOptions(&cuda_options);
+  if (status == nullptr) {
+    status =
+        api.UpdateCUDAProviderOptions(cuda_options, option_keys.data(),
+                                      option_values.data(), option_keys.size());
+  }
+  if (status == nullptr) {
+    status = api.SessionOptionsAppendExecutionProvider_CUDA_V2(*sess_opts,
+                                                               cuda_options);
+  }
+
+  if (status != nullptr) {
+    const char *msg = api.GetErrorMessage(status);
+    SHERPA_ONNX_LOGE(
+        "Failed to enable CUDA: %s. Available providers: %s. Fallback to cpu",
+        msg, available_providers.c_str());
+    api.ReleaseStatus(status);
+  }
+  if (cuda_options != nullptr) {
+    api.ReleaseCUDAProviderOptions(cuda_options);
+  }
+}
+#endif
 
 Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
@@ -334,20 +404,36 @@ Ort::SessionOptions GetSessionOptionsImpl(
     case Provider::kCUDA: {
       if (std::find(available_providers.begin(), available_providers.end(),
                     "CUDAExecutionProvider") != available_providers.end()) {
-        // The CUDA provider is available, proceed with setting the options
-        OrtCUDAProviderOptions options;
-
+        int32_t device_id = 0;
+        // Default OrtCudnnConvAlgoSearchExhaustive is extremely slow
+        auto algo_search = OrtCudnnConvAlgoSearchHeuristic;
         if (provider_config != nullptr) {
-          options.device_id = provider_config->device;
-          options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearch(
+          device_id = provider_config->device;
+          algo_search = static_cast<OrtCudnnConvAlgoSearch>(
               provider_config->cuda_config.cudnn_conv_algo_search);
-        } else {
-          options.device_id = 0;
-          // Default OrtCudnnConvAlgoSearchExhaustive is extremely slow
-          options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
-          // set more options on need
         }
+#if ORT_API_VERSION >= 12
+        // Remaining keys from the config file are forwarded verbatim to the
+        // CUDA EP, e.g., gpu_mem_limit, arena_extend_strategy,
+        // do_copy_in_default_stream. See
+        // https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html
+        // On the intentional TensorRT-to-CUDA fallthrough the config keys
+        // are meant for TensorRT; forwarding them would make ORT reject
+        // unknown options and lose the GPU fallback entirely.
+        static const std::unordered_map<std::string, std::string>
+            kNoConfig;
+        AppendCudaProviderV2(
+            &sess_opts,
+            BuildCudaProviderOptions(
+                p == Provider::kCUDA ? config : kNoConfig, device_id,
+                algo_search),
+            os.str());
+#else
+        OrtCUDAProviderOptions options;
+        options.device_id = device_id;
+        options.cudnn_conv_algo_search = algo_search;
         sess_opts.AppendExecutionProvider_CUDA(options);
+#endif
       } else {
         SHERPA_ONNX_LOGE(
             "Please compile with -DSHERPA_ONNX_ENABLE_GPU=ON. Available "
