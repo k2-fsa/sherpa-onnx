@@ -108,6 +108,16 @@ class OfflineRecognizerDolphinImpl : public OfflineRecognizerImpl {
     config_.feat_config.frame_length_ms = 31.25;  // 16000/512 = 31.25
     config_.feat_config.snip_edges = false;
 
+    // a tokens file that covers less than the decoder vocabulary would
+    // silently emit garbage ids during decoding
+    if (symbol_table_.NumSymbols() < model_->VocabSize()) {
+      SHERPA_ONNX_LOGE(
+          "tokens.txt has %d symbols, but the decoder expects vocab_size=%d. "
+          "The tokens file likely does not match this decoder model.",
+          symbol_table_.NumSymbols(), model_->VocabSize());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     sos_ = LookupTokenId("<sos>");
     eos_ = LookupTokenId("<eos>");
     notimestamp_ = LookupTokenId("<notimestamp>");
