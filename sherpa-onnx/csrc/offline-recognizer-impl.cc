@@ -30,6 +30,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-canary-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-cohere-transcribe-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-dolphin-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
@@ -261,8 +262,13 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
       !config.model_config.fire_red_asr_ctc.model.empty() ||
-      !config.model_config.dolphin.model.empty()) {
+      (!config.model_config.dolphin.model.empty() &&
+       config.model_config.dolphin.decoder.empty())) {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
+  }
+
+  if (!config.model_config.dolphin.decoder.empty()) {
+    return std::make_unique<OfflineRecognizerDolphinImpl>(config);
   }
 
   if (!config.model_config.whisper.encoder.empty()) {
@@ -626,8 +632,13 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
       !config.model_config.fire_red_asr_ctc.model.empty() ||
-      !config.model_config.dolphin.model.empty()) {
+      (!config.model_config.dolphin.model.empty() &&
+       config.model_config.dolphin.decoder.empty())) {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
+  }
+
+  if (!config.model_config.dolphin.decoder.empty()) {
+    return std::make_unique<OfflineRecognizerDolphinImpl>(mgr, config);
   }
 
   if (!config.model_config.whisper.encoder.empty()) {
