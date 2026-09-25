@@ -108,14 +108,19 @@ class OfflineRecognizerDolphinImpl : public OfflineRecognizerImpl {
     config_.feat_config.frame_length_ms = 31.25;  // 16000/512 = 31.25
     config_.feat_config.snip_edges = false;
 
-    // a tokens file that covers less than the decoder vocabulary would
-    // silently emit garbage ids during decoding
-    if (symbol_table_.NumSymbols() < model_->VocabSize()) {
-      SHERPA_ONNX_LOGE(
-          "tokens.txt has %d symbols, but the decoder expects vocab_size=%d. "
-          "The tokens file likely does not match this decoder model.",
-          symbol_table_.NumSymbols(), model_->VocabSize());
-      SHERPA_ONNX_EXIT(-1);
+    // every id the decoder can emit must be mapped; a count check alone is
+    // insufficient since a hole in [0, vocab_size) would silently drop
+    // tokens from the output text
+    int32_t vocab_size = model_->VocabSize();
+    for (int32_t i = 0; i < vocab_size; ++i) {
+      if (!symbol_table_.Contains(i)) {
+        SHERPA_ONNX_LOGE(
+            "tokens.txt is missing symbol id %d, but the decoder expects "
+            "vocab_size=%d. The tokens file does not match this decoder "
+            "model.",
+            i, vocab_size);
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
 
     sos_ = LookupTokenId("<sos>");
@@ -157,9 +162,14 @@ class OfflineRecognizerDolphinImpl : public OfflineRecognizerImpl {
   int32_t LookupTokenId(const std::string &sym) const {
     const auto &sym2id = symbol_table_.sym2id();
     auto it = sym2id.find(sym);
-    if (it == sym2id.end()) {
-      SHERPA_ONNX_LOGE("tokens.txt does not contain the symbol '%s'",
-                       sym.c_str());
+    // the id must be reachable by the decoder: eos_ beyond the vocabulary
+    // could never be emitted and every stream would decode to the length cap
+    if (it == sym2id.end() || it->second < 0 ||
+        it->second >= model_->VocabSize()) {
+      SHERPA_ONNX_LOGE(
+          "tokens.txt maps '%s' to an id outside the decoder vocabulary "
+          "(vocab_size=%d), or lacks it entirely",
+          sym.c_str(), model_->VocabSize());
       SHERPA_ONNX_EXIT(-1);
     }
     return it->second;
@@ -181,6 +191,16 @@ class OfflineRecognizerDolphinImpl : public OfflineRecognizerImpl {
     }
     const float *p = logp.GetTensorData<float>();
     int64_t n = logp_info.GetElementCount();
+    // contract: the decoder emits exactly vocab_size logits for the next
+    // token; a full-sequence [1, T, vocab] output would otherwise be
+    // silently argmaxed across all positions
+    if (n != model_->VocabSize()) {
+      SHERPA_ONNX_LOGE(
+          "Dolphin decoder must emit exactly vocab_size=%d logits per step; "
+          "got %d",
+          model_->VocabSize(), static_cast<int32_t>(n));
+      SHERPA_ONNX_EXIT(-1);
+    }
     return static_cast<int32_t>(std::distance(p, std::max_element(p, p + n)));
   }
 
