@@ -372,6 +372,14 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.qwen3_asr.temperature;
   c.model_config.qwen3_asr.top_p = config.model_config.qwen3_asr.top_p;
   c.model_config.qwen3_asr.seed = config.model_config.qwen3_asr.seed;
+  c.model_config.qwen3_asr.forced_aligner_conv_frontend =
+      config.model_config.qwen3_asr.forced_aligner_conv_frontend.c_str();
+  c.model_config.qwen3_asr.forced_aligner_encoder =
+      config.model_config.qwen3_asr.forced_aligner_encoder.c_str();
+  c.model_config.qwen3_asr.forced_aligner_decoder =
+      config.model_config.qwen3_asr.forced_aligner_decoder.c_str();
+  c.model_config.qwen3_asr.forced_aligner_tokenizer =
+      config.model_config.qwen3_asr.forced_aligner_tokenizer.c_str();
 
   c.model_config.medasr.model = config.model_config.medasr.model.c_str();
 

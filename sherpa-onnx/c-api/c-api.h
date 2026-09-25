@@ -1046,6 +1046,19 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   /** Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. @c
    * "foo,bar,baz". */
   const char *hotwords;
+  /** Optional path to the conv-frontend ONNX model of
+   * Qwen3-ForcedAligner. When this and the two fields below are all set,
+   * recognition results carry word-level timestamps. */
+  const char *forced_aligner_conv_frontend;
+  /** Optional path to the encoder ONNX model of Qwen3-ForcedAligner. */
+  const char *forced_aligner_encoder;
+  /** Optional path to the decoder ONNX model of Qwen3-ForcedAligner
+   * (single forward pass, no KV cache). */
+  const char *forced_aligner_decoder;
+  /** Optional path to the tokenizer directory of Qwen3-ForcedAligner.
+   * It differs from the ASR tokenizer: it contains the extra
+   * @c <timestamp> token used to mark timestamp slots. */
+  const char *forced_aligner_tokenizer;
 } SherpaOnnxOfflineQwen3ASRModelConfig;
 
 /** @brief Configuration for a MedASR CTC model. */

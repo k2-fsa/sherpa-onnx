@@ -476,6 +476,10 @@ class OfflineRecognizer(object):
         top_p: float = 0.8,
         seed: int = 42,
         hotwords: str = "",
+        forced_aligner_conv_frontend: str = "",
+        forced_aligner_encoder: str = "",
+        forced_aligner_decoder: str = "",
+        forced_aligner_tokenizer: str = "",
     ):
         """
         Create an offline recognizer for Qwen3-ASR (conv_frontend + encoder +
@@ -515,6 +519,17 @@ class OfflineRecognizer(object):
             Random seed for sampling.
           hotwords:
             Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. ``"foo,bar,baz"``.
+          forced_aligner_conv_frontend:
+            Optional. Path to ``conv_frontend.onnx`` of Qwen3-ForcedAligner.
+            When all three forced_aligner_* paths are given, each result
+            also carries word-level timestamps.
+          forced_aligner_encoder:
+            Optional. Path to ``encoder.onnx`` of Qwen3-ForcedAligner.
+          forced_aligner_decoder:
+            Optional. Path to ``decoder.onnx`` of Qwen3-ForcedAligner.
+          forced_aligner_tokenizer:
+            Optional. Path to the tokenizer directory of Qwen3-ForcedAligner
+            (it contains the extra ``<timestamp>`` token).
         """
         self = cls.__new__(cls)
         qwen3 = OfflineQwen3ASRModelConfig(
@@ -523,6 +538,10 @@ class OfflineRecognizer(object):
             decoder=decoder,
             tokenizer=tokenizer,
             hotwords=hotwords,
+            forced_aligner_conv_frontend=forced_aligner_conv_frontend,
+            forced_aligner_encoder=forced_aligner_encoder,
+            forced_aligner_decoder=forced_aligner_decoder,
+            forced_aligner_tokenizer=forced_aligner_tokenizer,
             max_total_len=max_total_len,
             max_new_tokens=max_new_tokens,
             temperature=temperature,

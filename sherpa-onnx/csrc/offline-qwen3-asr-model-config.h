@@ -27,6 +27,19 @@ struct OfflineQwen3ASRModelConfig {
   // Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. "foo,bar,baz".
   std::string hotwords;
 
+  // Optional paths to a Qwen3-ForcedAligner ONNX model exported from
+  // Qwen/Qwen3-ForcedAligner-0.6B. When all three are non-empty, the
+  // recognizer runs the aligner after decoding and fills in word-level
+  // timestamps/durations in the recognition result.
+  std::string forced_aligner_conv_frontend;
+  std::string forced_aligner_encoder;
+  std::string forced_aligner_decoder;
+
+  // Path to the tokenizer directory of Qwen3-ForcedAligner. It differs from
+  // |tokenizer| above: the aligner vocab contains the extra <timestamp>
+  // token used to mark timestamp slots.
+  std::string forced_aligner_tokenizer;
+
   // Maximum total sequence length (from model metadata or config)
   int32_t max_total_len = 512;
 
@@ -44,18 +57,24 @@ struct OfflineQwen3ASRModelConfig {
 
   OfflineQwen3ASRModelConfig() = default;
 
-  OfflineQwen3ASRModelConfig(const std::string &conv_frontend,
-                             const std::string &encoder,
-                             const std::string &decoder,
-                             const std::string &tokenizer,
-                             int32_t max_total_len, int32_t max_new_tokens,
-                             float temperature, float top_p, int32_t seed,
-                             const std::string &hotwords = "")
+  OfflineQwen3ASRModelConfig(
+      const std::string &conv_frontend, const std::string &encoder,
+      const std::string &decoder, const std::string &tokenizer,
+      int32_t max_total_len, int32_t max_new_tokens, float temperature,
+      float top_p, int32_t seed, const std::string &hotwords = "",
+      const std::string &forced_aligner_conv_frontend = "",
+      const std::string &forced_aligner_encoder = "",
+      const std::string &forced_aligner_decoder = "",
+      const std::string &forced_aligner_tokenizer = "")
       : conv_frontend(conv_frontend),
         encoder(encoder),
         decoder(decoder),
         tokenizer(tokenizer),
         hotwords(hotwords),
+        forced_aligner_conv_frontend(forced_aligner_conv_frontend),
+        forced_aligner_encoder(forced_aligner_encoder),
+        forced_aligner_decoder(forced_aligner_decoder),
+        forced_aligner_tokenizer(forced_aligner_tokenizer),
         max_total_len(max_total_len),
         max_new_tokens(max_new_tokens),
         temperature(temperature),
