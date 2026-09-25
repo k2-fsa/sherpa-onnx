@@ -118,11 +118,16 @@ def main():
     diff = np.abs(logits - ref_logits.numpy())
     print(f"logits max_diff={diff.max():.5f} mean_diff={diff.mean():.6f}")
 
-    ts_token_id = 151705
+    ts_token_id = proc.tokenizer.convert_tokens_to_ids("<|timestamp|>")
     ref_ids = ref_logits.argmax(-1).squeeze(0).numpy()
     onnx_ids = logits.argmax(-1).squeeze(0)
     pos = np.where(input_ids.numpy().squeeze(0) == ts_token_id)[0]
     print("num ts slots:", len(pos))
+    if len(pos) != 2 * len(word_list):
+        sys.exit(
+            f"expected {2 * len(word_list)} timestamp slots, "
+            f"got {len(pos)}"
+        )
 
     ref_ts = ref_ids[pos] * 0.08
     onnx_ts = onnx_ids[pos] * 0.08

@@ -617,7 +617,8 @@ struct OfflineQwen3ASRModelConfig {
   float top_p = 0.8f;
   /** Random seed for reproducible sampling. */
   int32_t seed = 42;
-  /** Optional forced-aligner conv-frontend ONNX model file. */
+  /** Optional forced-aligner conv-frontend ONNX model file. All four
+   * forced_aligner_* fields must be set together (or none of them). */
   std::string forced_aligner_conv_frontend;
   /** Optional forced-aligner encoder ONNX model file. */
   std::string forced_aligner_encoder;

@@ -333,6 +333,10 @@ pub struct OfflineQwen3ASRModelConfig {
     pub top_p: f32,
     pub seed: i32,
     pub hotwords: Option<String>,
+    pub forced_aligner_conv_frontend: Option<String>,
+    pub forced_aligner_encoder: Option<String>,
+    pub forced_aligner_decoder: Option<String>,
+    pub forced_aligner_tokenizer: Option<String>,
 }
 impl Default for OfflineQwen3ASRModelConfig {
     fn default() -> Self {
@@ -347,6 +351,10 @@ impl Default for OfflineQwen3ASRModelConfig {
             top_p: 0.8,
             seed: 42,
             hotwords: None,
+            forced_aligner_conv_frontend: None,
+            forced_aligner_encoder: None,
+            forced_aligner_decoder: None,
+            forced_aligner_tokenizer: None,
         }
     }
 }
@@ -385,6 +393,13 @@ impl OfflineQwen3ASRModelConfig {
             top_p: self.top_p,
             seed: self.seed,
             hotwords: to_c_ptr(&self.hotwords, cstrings),
+            forced_aligner_conv_frontend: to_c_ptr(
+                &self.forced_aligner_conv_frontend,
+                cstrings,
+            ),
+            forced_aligner_encoder: to_c_ptr(&self.forced_aligner_encoder, cstrings),
+            forced_aligner_decoder: to_c_ptr(&self.forced_aligner_decoder, cstrings),
+            forced_aligner_tokenizer: to_c_ptr(&self.forced_aligner_tokenizer, cstrings),
         }
     }
 }

@@ -28,8 +28,9 @@ struct OfflineQwen3ASRModelConfig {
   std::string hotwords;
 
   // Optional paths to a Qwen3-ForcedAligner ONNX model exported from
-  // Qwen/Qwen3-ForcedAligner-0.6B. When all three are non-empty, the
-  // recognizer runs the aligner after decoding and fills in word-level
+  // Qwen/Qwen3-ForcedAligner-0.6B. All four forced_aligner_* fields
+  // must be set together (or none of them); when set, the recognizer
+  // runs the aligner after decoding and fills in word-level
   // timestamps/durations in the recognition result.
   std::string forced_aligner_conv_frontend;
   std::string forced_aligner_encoder;

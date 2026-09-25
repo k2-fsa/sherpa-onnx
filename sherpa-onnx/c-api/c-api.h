@@ -1047,8 +1047,9 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
    * "foo,bar,baz". */
   const char *hotwords;
   /** Optional path to the conv-frontend ONNX model of
-   * Qwen3-ForcedAligner. When this and the two fields below are all set,
-   * recognition results carry word-level timestamps. */
+   * Qwen3-ForcedAligner. All four forced_aligner_* fields must be set
+   * together (or none of them); when set, recognition results carry
+   * word-level timestamps. */
   const char *forced_aligner_conv_frontend;
   /** Optional path to the encoder ONNX model of Qwen3-ForcedAligner. */
   const char *forced_aligner_encoder;

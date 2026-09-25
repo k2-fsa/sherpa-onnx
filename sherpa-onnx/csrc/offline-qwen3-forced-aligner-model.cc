@@ -193,17 +193,10 @@ OfflineQwen3ForcedAlignerModel::OfflineQwen3ForcedAlignerModel(
     const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineQwen3ForcedAlignerModel::OfflineQwen3ForcedAlignerModel(
-    AAssetManager *mgr, const OfflineModelConfig &config)
+    Manager *mgr, const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
-
-#if __OHOS__
-OfflineQwen3ForcedAlignerModel::OfflineQwen3ForcedAlignerModel(
-    NativeResourceManager *mgr, const OfflineModelConfig &config)
-    : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineQwen3ForcedAlignerModel::~OfflineQwen3ForcedAlignerModel() = default;
 
@@ -228,5 +221,15 @@ Ort::Value OfflineQwen3ForcedAlignerModel::ForwardDecoder(
 OrtAllocator *OfflineQwen3ForcedAlignerModel::Allocator() const {
   return impl_->Allocator();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineQwen3ForcedAlignerModel::OfflineQwen3ForcedAlignerModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineQwen3ForcedAlignerModel::OfflineQwen3ForcedAlignerModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

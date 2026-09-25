@@ -1509,16 +1509,31 @@ bool OfflineRecognizerQwen3ASRImpl::RunForcedAlignment(
                                                      std::move(audio_features),
                                                      std::move(attention_mask));
 
-  auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
+  auto logits_info = logits.GetTensorTypeAndShapeInfo();
+  auto logits_shape = logits_info.GetShape();
   if (logits_shape.size() != 3 || logits_shape[2] <= 0) {
     SHERPA_ONNX_LOGE("qwen3-forced-aligner: unexpected logits rank %d",
                      static_cast<int32_t>(logits_shape.size()));
     return false;
   }
 
+  auto logits_elem_type =
+      static_cast<ONNXTensorElementDataType>(logits_info.GetElementType());
+  if (!IsFloatOrHalfBitsTensorType(logits_elem_type)) {
+    SHERPA_ONNX_LOGE("qwen3-forced-aligner: unsupported logits element type %d",
+                     static_cast<int32_t>(logits_elem_type));
+    return false;
+  }
+
   const int32_t seq_len = static_cast<int32_t>(logits_shape[1]);
   const int32_t num_classes = static_cast<int32_t>(logits_shape[2]);
-  const float *logits_data = logits.GetTensorData<float>();
+  const float *logits_f32 = nullptr;
+  const uint16_t *logits_f16_bits = nullptr;
+  if (logits_elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+    logits_f32 = logits.GetTensorData<float>();
+  } else {
+    logits_f16_bits = logits.GetTensorData<uint16_t>();
+  }
 
   std::vector<int64_t> raw_indices;
   std::vector<int32_t> ts_positions;
@@ -1527,10 +1542,15 @@ bool OfflineRecognizerQwen3ASRImpl::RunForcedAlignment(
     if (ids[i] != aligner_timestamp_token_id_) {
       continue;
     }
-    const float *row = logits_data + static_cast<size_t>(i) * num_classes;
+    const int64_t row_offset = static_cast<int64_t>(i) * num_classes;
     int32_t argmax = 0;
+    float best = ReadFloatOrHalfBitsValue(logits_f32, logits_f16_bits,
+                                          logits_elem_type, row_offset);
     for (int32_t c = 1; c < num_classes; ++c) {
-      if (row[c] > row[argmax]) {
+      float v = ReadFloatOrHalfBitsValue(logits_f32, logits_f16_bits,
+                                         logits_elem_type, row_offset + c);
+      if (v > best) {
+        best = v;
         argmax = c;
       }
     }

@@ -521,8 +521,9 @@ class OfflineRecognizer(object):
             Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. ``"foo,bar,baz"``.
           forced_aligner_conv_frontend:
             Optional. Path to ``conv_frontend.onnx`` of Qwen3-ForcedAligner.
-            When all three forced_aligner_* paths are given, each result
-            also carries word-level timestamps.
+            All four ``forced_aligner_*`` arguments must be given together
+            (or none of them); when given, each result also carries
+            word-level timestamps.
           forced_aligner_encoder:
             Optional. Path to ``encoder.onnx`` of Qwen3-ForcedAligner.
           forced_aligner_decoder:

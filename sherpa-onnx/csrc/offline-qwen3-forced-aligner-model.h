@@ -30,15 +30,9 @@ class OfflineQwen3ForcedAlignerModel {
  public:
   explicit OfflineQwen3ForcedAlignerModel(const OfflineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineQwen3ForcedAlignerModel(AAssetManager *mgr,
+  template <typename Manager>
+  OfflineQwen3ForcedAlignerModel(Manager *mgr,
                                  const OfflineModelConfig &config);
-#endif
-
-#if __OHOS__
-  OfflineQwen3ForcedAlignerModel(NativeResourceManager *mgr,
-                                 const OfflineModelConfig &config);
-#endif
 
   ~OfflineQwen3ForcedAlignerModel();
 
