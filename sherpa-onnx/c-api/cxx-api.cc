@@ -305,6 +305,11 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.fire_red_asr.decoder.c_str();
 
   c.model_config.dolphin.model = config.model_config.dolphin.model.c_str();
+  c.model_config.dolphin.encoder = config.model_config.dolphin.encoder.c_str();
+  c.model_config.dolphin.decoder = config.model_config.dolphin.decoder.c_str();
+  c.model_config.dolphin.language =
+      config.model_config.dolphin.language.c_str();
+  c.model_config.dolphin.region = config.model_config.dolphin.region.c_str();
 
   c.model_config.zipformer_ctc.model =
       config.model_config.zipformer_ctc.model.c_str();

@@ -155,7 +155,9 @@ bool OfflineModelConfig::Validate() const {
     return moonshine.Validate();
   }
 
-  if (!dolphin.model.empty()) {
+  if (!dolphin.model.empty() || !dolphin.encoder.empty() ||
+      !dolphin.decoder.empty() || !dolphin.language.empty() ||
+      !dolphin.region.empty()) {
     return dolphin.Validate();
   }
 

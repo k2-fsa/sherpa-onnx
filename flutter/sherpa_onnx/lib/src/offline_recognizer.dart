@@ -179,6 +179,13 @@ class OfflineRecognizer {
         .toNativeUtf8();
 
     c.ref.model.dolphin.model = config.model.dolphin.model.toNativeUtf8();
+    c.ref.model.dolphin.encoder =
+        config.model.dolphin.encoder.toNativeUtf8();
+    c.ref.model.dolphin.decoder =
+        config.model.dolphin.decoder.toNativeUtf8();
+    c.ref.model.dolphin.language =
+        config.model.dolphin.language.toNativeUtf8();
+    c.ref.model.dolphin.region = config.model.dolphin.region.toNativeUtf8();
     c.ref.model.zipformerCtc.model = config.model.zipformerCtc.model
         .toNativeUtf8();
 
@@ -325,6 +332,10 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.canary.decoder);
     calloc.free(c.ref.model.canary.encoder);
     calloc.free(c.ref.model.zipformerCtc.model);
+    calloc.free(c.ref.model.dolphin.region);
+    calloc.free(c.ref.model.dolphin.language);
+    calloc.free(c.ref.model.dolphin.decoder);
+    calloc.free(c.ref.model.dolphin.encoder);
     calloc.free(c.ref.model.dolphin.model);
     calloc.free(c.ref.model.fireRedAsr.decoder);
     calloc.free(c.ref.model.fireRedAsr.encoder);

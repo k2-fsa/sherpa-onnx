@@ -552,6 +552,14 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
 
   recognizer_config.model_config.dolphin.model =
       SHERPA_ONNX_OR(config->model_config.dolphin.model, "");
+  recognizer_config.model_config.dolphin.encoder =
+      SHERPA_ONNX_OR(config->model_config.dolphin.encoder, "");
+  recognizer_config.model_config.dolphin.decoder =
+      SHERPA_ONNX_OR(config->model_config.dolphin.decoder, "");
+  recognizer_config.model_config.dolphin.language =
+      SHERPA_ONNX_OR(config->model_config.dolphin.language, "");
+  recognizer_config.model_config.dolphin.region =
+      SHERPA_ONNX_OR(config->model_config.dolphin.region, "");
 
   recognizer_config.model_config.zipformer_ctc.model =
       SHERPA_ONNX_OR(config->model_config.zipformer_ctc.model, "");

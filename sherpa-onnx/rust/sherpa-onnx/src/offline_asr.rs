@@ -240,12 +240,20 @@ impl OfflineSenseVoiceModelConfig {
 /// Offline Dolphin model configuration.
 pub struct OfflineDolphinModelConfig {
     pub model: Option<String>,
+    pub encoder: Option<String>,
+    pub decoder: Option<String>,
+    pub language: Option<String>,
+    pub region: Option<String>,
 }
 
 impl OfflineDolphinModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineDolphinModelConfig {
         sys::OfflineDolphinModelConfig {
             model: to_c_ptr(&self.model, cstrings),
+            encoder: to_c_ptr(&self.encoder, cstrings),
+            decoder: to_c_ptr(&self.decoder, cstrings),
+            language: to_c_ptr(&self.language, cstrings),
+            region: to_c_ptr(&self.region, cstrings),
         }
     }
 }

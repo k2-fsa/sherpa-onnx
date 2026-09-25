@@ -403,13 +403,33 @@ public func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   )
 }
 
+#if SWIFT_PACKAGE
+// Package.swift pins the released CTC-only XCFramework. Keep its ABI until
+// that binary dependency is updated together with this wrapper.
 public func sherpaOnnxOfflineDolphinModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineDolphinModelConfig {
+  var config = SherpaOnnxOfflineDolphinModelConfig()
+  config.model = toCPointer(model)
+  return config
+}
+#else
+public func sherpaOnnxOfflineDolphinModelConfig(
+  model: String = "",
+  encoder: String = "",
+  decoder: String = "",
+  language: String = "",
+  region: String = ""
+) -> SherpaOnnxOfflineDolphinModelConfig {
   return SherpaOnnxOfflineDolphinModelConfig(
-    model: toCPointer(model)
+    model: toCPointer(model),
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    language: toCPointer(language),
+    region: toCPointer(region)
   )
 }
+#endif
 
 public func sherpaOnnxOfflineWhisperModelConfig(
   encoder: String = "",
