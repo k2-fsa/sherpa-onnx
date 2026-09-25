@@ -646,6 +646,16 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
       SHERPA_ONNX_OR(config->model_config.qwen3_asr.top_p, 0.8f);
   recognizer_config.model_config.qwen3_asr.seed =
       SHERPA_ONNX_OR(config->model_config.qwen3_asr.seed, 42);
+  recognizer_config.model_config.qwen3_asr.forced_aligner_conv_frontend =
+      SHERPA_ONNX_OR(
+          config->model_config.qwen3_asr.forced_aligner_conv_frontend, "");
+  recognizer_config.model_config.qwen3_asr.forced_aligner_encoder =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.forced_aligner_encoder, "");
+  recognizer_config.model_config.qwen3_asr.forced_aligner_decoder =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.forced_aligner_decoder, "");
+  recognizer_config.model_config.qwen3_asr.forced_aligner_tokenizer =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.forced_aligner_tokenizer,
+                     "");
 
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");

@@ -20,6 +20,10 @@ namespace SherpaOnnx
             TopP = 0.8F;
             Seed = 42;
             Hotwords = "";
+            ForcedAlignerConvFrontend = "";
+            ForcedAlignerEncoder = "";
+            ForcedAlignerDecoder = "";
+            ForcedAlignerTokenizer = "";
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
@@ -42,5 +46,17 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Hotwords;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ForcedAlignerConvFrontend;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ForcedAlignerEncoder;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ForcedAlignerDecoder;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ForcedAlignerTokenizer;
     }
 }

@@ -410,6 +410,10 @@ type
     TopP: Single;
     Seed: Integer;
     Hotwords: AnsiString;
+    ForcedAlignerConvFrontend: AnsiString;
+    ForcedAlignerEncoder: AnsiString;
+    ForcedAlignerDecoder: AnsiString;
+    ForcedAlignerTokenizer: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
     function ToString: AnsiString;
   end;
@@ -1007,6 +1011,10 @@ type
     TopP: cfloat;
     Seed: cint32;
     Hotwords: PAnsiChar;
+    ForcedAlignerConvFrontend: PAnsiChar;
+    ForcedAlignerEncoder: PAnsiChar;
+    ForcedAlignerDecoder: PAnsiChar;
+    ForcedAlignerTokenizer: PAnsiChar;
   end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
@@ -2025,10 +2033,16 @@ begin
     ', TopP := %.3f' +
     ', Seed := %d' +
     ', Hotwords := %s' +
+    ', ForcedAlignerConvFrontend := %s' +
+    ', ForcedAlignerEncoder := %s' +
+    ', ForcedAlignerDecoder := %s' +
+    ', ForcedAlignerTokenizer := %s' +
     ')',
     [Self.ConvFrontend, Self.Encoder, Self.Decoder, Self.Tokenizer,
      Self.MaxTotalLen, Self.MaxNewTokens, Self.Temperature,
-     Self.TopP, Self.Seed, Self.Hotwords]);
+     Self.TopP, Self.Seed, Self.Hotwords,
+     Self.ForcedAlignerConvFrontend, Self.ForcedAlignerEncoder,
+     Self.ForcedAlignerDecoder, Self.ForcedAlignerTokenizer]);
 end;
 
 function TSherpaOnnxOfflineFunAsrNanoModelConfig.ToString: AnsiString;
@@ -2291,6 +2305,10 @@ begin
   C.ModelConfig.Qwen3Asr.TopP := Config.ModelConfig.Qwen3Asr.TopP;
   C.ModelConfig.Qwen3Asr.Seed := Config.ModelConfig.Qwen3Asr.Seed;
   C.ModelConfig.Qwen3Asr.Hotwords := PAnsiChar(Config.ModelConfig.Qwen3Asr.Hotwords);
+  C.ModelConfig.Qwen3Asr.ForcedAlignerConvFrontend := PAnsiChar(Config.ModelConfig.Qwen3Asr.ForcedAlignerConvFrontend);
+  C.ModelConfig.Qwen3Asr.ForcedAlignerEncoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.ForcedAlignerEncoder);
+  C.ModelConfig.Qwen3Asr.ForcedAlignerDecoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.ForcedAlignerDecoder);
+  C.ModelConfig.Qwen3Asr.ForcedAlignerTokenizer := PAnsiChar(Config.ModelConfig.Qwen3Asr.ForcedAlignerTokenizer);
 
   C.ModelConfig.CohereTranscribe.Encoder := PAnsiChar(Config.ModelConfig.CohereTranscribe.Encoder);
   C.ModelConfig.CohereTranscribe.Decoder := PAnsiChar(Config.ModelConfig.CohereTranscribe.Decoder);
