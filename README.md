@@ -519,7 +519,7 @@ cross-platform Node.js microphone streaming library with prebuilt native binarie
 
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=analytics-in-motion.wake-word)
 - [Open VSX](https://open-vsx.org/extension/analytics-in-motion/wake-word)
-- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/node/integrations/sherpa-onnx-stt.html)
+- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/integrations/stt/sherpa-onnx)
 
 ### [SmartSub](https://github.com/buxuku/SmartSub)
 
