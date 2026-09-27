@@ -441,6 +441,9 @@ pub struct RecognizerResult {
     pub segment: Option<i32>,
     pub start_time: Option<f32>,
     pub is_final: bool,
+    /// Per-token log probabilities (`ys_probs` in the C API's result JSON).
+    /// `None` when the native library's result JSON lacks the key.
+    pub ys_probs: Option<Vec<f32>>,
 }
 
 impl Drop for OnlineRecognizer {
