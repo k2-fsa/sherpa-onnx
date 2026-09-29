@@ -566,6 +566,18 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the app sleeps on idle but keeps the microphone open,
 > and the wake phrase brings the session back with no cloud calls.
 
+### [Suflyor](https://github.com/olerast67/voice-teleprompter-android)
+
+> An Android teleprompter that scrolls the script as you read it aloud. It runs
+> two streaming Zipformer models on the phone (Russian small-ru-vosk int8 and
+> English en-2023-06-26) and boosts the words of the script as hotwords with
+> modified beam search. A floating window shows the text over the camera app
+> while it records video.
+
+- [Download APK](https://github.com/olerast67/voice-teleprompter-android/releases/latest)
+- [Website](https://olerast67.github.io/voice-teleprompter-android/)
+- Android 10+ · no internet permission · GPL-3.0
+
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
