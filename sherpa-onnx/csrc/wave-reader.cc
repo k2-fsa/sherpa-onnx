@@ -31,7 +31,16 @@ struct WaveHeader {
       // const char *p = reinterpret_cast<const char *>(&subchunk2_id);
       // printf("Skip chunk (%x): %c%c%c%c of size: %d\n", subchunk2_id, p[0],
       //        p[1], p[2], p[3], subchunk2_size);
-      is.seekg(subchunk2_size, std::istream::cur);
+      if (subchunk2_size < 0) {
+        // Seeking backwards would read the same chunk again, forever
+        is.setstate(std::istream::failbit);
+        return;
+      }
+
+      // A chunk with an odd size is followed by a pad byte
+      is.seekg(
+          static_cast<std::streamoff>(subchunk2_size) + (subchunk2_size & 1),
+          std::istream::cur);
       is.read(reinterpret_cast<char *>(&subchunk2_id), sizeof(int32_t));
       is.read(reinterpret_cast<char *>(&subchunk2_size), sizeof(int32_t));
     }
@@ -221,6 +230,12 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     return {};
   }
 
+  if (header.subchunk2_size < 0) {
+    SHERPA_ONNX_LOGE("Invalid data chunk size: %d", header.subchunk2_size);
+    *is_ok = false;
+    return {};
+  }
+
   *sampling_rate = header.sample_rate;
 
   std::vector<std::vector<float>> ans(header.num_channels);
@@ -242,8 +257,9 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
       v.resize(samples.size() / header.num_channels);
     }
 
-    // samples are interleaved
-    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+    // samples are interleaved. A trailing partial frame is ignored
+    for (int32_t i = 0, k = 0;
+         i <= static_cast<int32_t>(samples.size()) - header.num_channels;
          i += header.num_channels, ++k) {
       for (int32_t c = 0; c != header.num_channels; ++c) {
         ans[c][k] = samples[i + c] / 32768.;
@@ -266,8 +282,9 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
       v.resize(samples.size() / header.num_channels);
     }
 
-    // samples are interleaved
-    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+    // samples are interleaved. A trailing partial frame is ignored
+    for (int32_t i = 0, k = 0;
+         i <= static_cast<int32_t>(samples.size()) - header.num_channels;
          i += header.num_channels, ++k) {
       for (int32_t c = 0; c != header.num_channels; ++c) {
         // Note(fangjun): We want to normalize each sample into the range [-1,
@@ -285,7 +302,8 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     // As we assume each sample contains 4 bytes, so it is divided by 4 here
     std::vector<int32_t> samples(header.subchunk2_size / 4);
 
-    is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
+    is.read(reinterpret_cast<char *>(samples.data()),
+            samples.size() * sizeof(int32_t));
     if (!is) {
       SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
       *is_ok = false;
@@ -296,11 +314,12 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
       v.resize(samples.size() / header.num_channels);
     }
 
-    // samples are interleaved
-    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+    // samples are interleaved. A trailing partial frame is ignored
+    for (int32_t i = 0, k = 0;
+         i <= static_cast<int32_t>(samples.size()) - header.num_channels;
          i += header.num_channels, ++k) {
       for (int32_t c = 0; c != header.num_channels; ++c) {
-        ans[c][k] = static_cast<float>(samples[i + c]) / (1 << 31);
+        ans[c][k] = static_cast<float>(samples[i + c]) / 2147483648.0f;  // 2^31
       }
     }
   } else if (header.bits_per_sample == 32 && header.audio_format == 3) {
@@ -310,7 +329,8 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     // As we assume each sample contains 4 bytes, so it is divided by 4 here
     std::vector<float> samples(header.subchunk2_size / 4);
 
-    is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
+    is.read(reinterpret_cast<char *>(samples.data()),
+            samples.size() * sizeof(float));
     if (!is) {
       SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
       *is_ok = false;
@@ -321,8 +341,9 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
       v.resize(samples.size() / header.num_channels);
     }
 
-    // samples are interleaved
-    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+    // samples are interleaved. A trailing partial frame is ignored
+    for (int32_t i = 0, k = 0;
+         i <= static_cast<int32_t>(samples.size()) - header.num_channels;
          i += header.num_channels, ++k) {
       for (int32_t c = 0; c != header.num_channels; ++c) {
         ans[c][k] = samples[i + c];
