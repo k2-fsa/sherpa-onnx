@@ -412,7 +412,7 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
       // this is an ascii
       ans.emplace_back(reinterpret_cast<const char *>(start), 1);
       ++start;
-    } else if (2 <= num_bytes && num_bytes <= 4) {
+    } else if (2 <= num_bytes && num_bytes <= 4 && num_bytes <= end - start) {
       ans.emplace_back(reinterpret_cast<const char *>(start), num_bytes);
       start += num_bytes;
     } else {
