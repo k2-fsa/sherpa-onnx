@@ -30,6 +30,13 @@ namespace sherpa_onnx {
 // Exposed here (rather than kept file-local) so it can be unit tested.
 bool FunASRNanoAudioIsSilent(const float *features, int32_t n);
 
+// Build the prompt with per-stream hotwords, language, itn, and user_prompt
+// options. Missing options use config defaults; empty string options override
+// them. For itn, 0 disables, nonzero integers enable, and invalid/empty values
+// use the config default. Neither the stream nor the config is modified.
+std::string FunASRNanoBuildUserPrompt(
+    const OfflineFunASRNanoModelConfig &config, const OfflineStream &stream);
+
 class OfflineRecognizerFunASRNanoImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerFunASRNanoImpl(
