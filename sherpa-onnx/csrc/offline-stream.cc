@@ -436,19 +436,19 @@ std::string OfflineRecognitionResult::AsJsonString() const {
 
   os << "\"lang\""
      << ": ";
-  os << std::quoted(lang) << ", ";
+  os << QuoteJsonString(lang) << ", ";
 
   os << "\"emotion\""
      << ": ";
-  os << std::quoted(emotion) << ", ";
+  os << QuoteJsonString(emotion) << ", ";
 
   os << "\"event\""
      << ": ";
-  os << std::quoted(event) << ", ";
+  os << QuoteJsonString(event) << ", ";
 
   os << "\"text\""
      << ": ";
-  os << std::quoted(text) << ", ";
+  os << QuoteJsonString(text) << ", ";
 
   os << "\""
      << "timestamps"
@@ -492,7 +492,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
          << "\"";
       os.flags(oldFlags);
     } else {
-      os << sep << std::quoted(t);
+      os << sep << QuoteJsonString(t);
     }
     sep = ", ";
   }
@@ -546,7 +546,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     os << "\"segment_texts\": [";
     sep = "";
     for (const auto &t : segment_texts) {
-      os << sep << std::quoted(t);
+      os << sep << QuoteJsonString(t);
       sep = ", ";
     }
     os << "]";
