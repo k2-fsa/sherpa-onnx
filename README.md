@@ -346,6 +346,10 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 - [NPM package](https://www.npmjs.com/package/@siteed/sherpa-onnx.rn)
 - [Live demo](https://deeeed.github.io/audiolab/sherpa-voice/)
 
+### [SmartVoice](https://github.com/dxhome/SmartVoice)
+
+> A local speech application for speech recognition and text-to-speech. It uses sherpa-onnx for CPU inference and provides a web interface and HTTP API.
+
 ### [Speed of Sound](https://github.com/zugaldia/speedofsound)
 
 > A voice-typing application for the Linux desktop (GTK4/Adwaita).
