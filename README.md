@@ -348,7 +348,7 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ### [SmartVoice](https://github.com/dxhome/SmartVoice)
 
-> A local speech application for speech recognition and text-to-speech. It uses sherpa-onnx for CPU inference and provides a web interface and HTTP API.
+> SmartVoice is a local speech application for speech recognition and text-to-speech. Its `smartvoice-auto` virtual model routes requests by task and language to the first installed model in an editable priority list. sherpa-onnx provides CPU inference; a web interface and HTTP API are included.
 
 ### [Speed of Sound](https://github.com/zugaldia/speedofsound)
 
