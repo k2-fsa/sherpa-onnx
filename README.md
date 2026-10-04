@@ -566,6 +566,15 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the app sleeps on idle but keeps the microphone open,
 > and the wake phrase brings the session back with no cloud calls.
 
+### [Recly](https://github.com/rokrokss/recly)
+
+> An open-source recorder for Galaxy Watch, Android, Apple Watch, iPhone, macOS,
+> and Windows. Recordings go to the user's own Google Drive; there is no Recly
+> server. The Android phone app (which also transcribes Galaxy Watch recordings)
+> and the Windows app use sherpa-onnx for on-device transcription: Silero VAD
+> splits each recording into speech segments, and sherpa-onnx's INT8 export of
+> Qwen3-ASR 0.6B transcribes them. The ~1 GB model is downloaded on demand.
+
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
