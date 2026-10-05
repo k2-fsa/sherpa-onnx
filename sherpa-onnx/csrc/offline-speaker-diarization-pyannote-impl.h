@@ -363,10 +363,15 @@ class OfflineSpeakerDiarizationPyannoteImpl
       std::vector<float> buf(batch_size * window_size);
       auto memory_info =
           Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+      // Set to false if the model rejects a batch, e.g. an export with a
+      // fixed batch size of 1. The rest of the windows then run one by one.
+      bool batched = true;
       for (int32_t i = 0; i < num_chunks; i += batch_size) {
         int32_t count = std::min(batch_size, num_chunks - i);
-        if (count == 1) {
-          ans.push_back(ProcessChunk(audio + i * window_shift));
+        if (count == 1 || !batched) {
+          for (int32_t j = 0; j < count; ++j) {
+            ans.push_back(ProcessChunk(audio + (i + j) * window_shift));
+          }
           continue;
         }
         for (int32_t j = 0; j < count; ++j) {
@@ -379,8 +384,20 @@ class OfflineSpeakerDiarizationPyannoteImpl
         Ort::Value x = Ort::Value::CreateTensor(
             memory_info, buf.data(), count * window_size, shape.data(),
             shape.size());
-        Ort::Value out = segmentation_model_.Forward(std::move(x));
-        auto out_shape = out.GetTensorTypeAndShapeInfo().GetShape();
+        Ort::Value out{nullptr};
+        try {
+          out = segmentation_model_.Forward(std::move(x));
+        } catch (const Ort::Exception &e) {
+          SHERPA_ONNX_LOGE("Batched segmentation failed (%s). Running one "
+                           "window at a time.", e.what());
+        }
+        auto out_shape = out ? out.GetTensorTypeAndShapeInfo().GetShape()
+                             : std::vector<int64_t>{};
+        if (out_shape.size() != 3 || out_shape[0] != count) {
+          batched = false;
+          i -= batch_size;  // redo this batch one window at a time
+          continue;
+        }
         int64_t output_size = out_shape[1] * out_shape[2];
         const float *data = out.GetTensorData<float>();
         for (int32_t j = 0; j < count; ++j) {
