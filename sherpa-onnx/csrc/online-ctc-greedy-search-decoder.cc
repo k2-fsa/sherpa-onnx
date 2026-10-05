@@ -51,6 +51,7 @@ void OnlineCtcGreedySearchDecoder::Decode(
       if (y != blank_id_ && y != prev_id) {
         r.tokens.push_back(y);
         r.timestamps.push_back(t + r.frame_offset);
+        r.ys_probs.push_back(p[y]);
       }
 
       prev_id = y;

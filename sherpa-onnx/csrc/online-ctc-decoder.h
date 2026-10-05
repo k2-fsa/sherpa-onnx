@@ -34,6 +34,12 @@ struct OnlineCtcDecoderResult {
   /// tokens.size() == timestamps.size()
   std::vector<int32_t> timestamps;
 
+  /// ys_probs[i] is the log-prob of tokens[i] at the frame where it is
+  /// decoded. It is filled only by greedy search.
+  ///
+  /// tokens.size() == ys_probs.size() if it is not empty
+  std::vector<float> ys_probs;
+
   int32_t num_trailing_blanks = 0;
 };
 

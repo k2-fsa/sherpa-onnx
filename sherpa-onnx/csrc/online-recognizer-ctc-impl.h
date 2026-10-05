@@ -66,6 +66,8 @@ static OnlineRecognizerResult ConvertCtc(const OnlineCtcDecoderResult &src,
     r.timestamps.push_back(time);
   }
 
+  r.ys_probs = src.ys_probs;
+
   r.num_trailing_blanks = src.num_trailing_blanks;
   r.segment = segment;
   r.words = std::move(src.words);
