@@ -72,6 +72,19 @@ the argument --clustering.cluster-threshold. The following is an example:
 
 A larger threshold leads to few clusters, i.e., few speakers;
 a smaller threshold leads to more clusters, i.e., more speakers
+
+End-to-end speaker diarization with Nemotron-3-Diarization:
+
+It needs neither a speaker embedding model nor clustering. It supports
+up to 8 speakers, numbered in the order of their first arrival.
+
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-nemotron-3-diarization.tar.bz2
+  tar xvf sherpa-onnx-nemotron-3-diarization.tar.bz2
+  rm sherpa-onnx-nemotron-3-diarization.tar.bz2
+
+  ./bin/sherpa-onnx-offline-speaker-diarization \
+    --segmentation.sortformer-model=./sherpa-onnx-nemotron-3-diarization/model.int8.onnx \
+    ./0-four-speakers-zh.wav
   )usage";
   sherpa_onnx::OfflineSpeakerDiarizationConfig config;
   sherpa_onnx::ParseOptions po(kUsageMessage);
