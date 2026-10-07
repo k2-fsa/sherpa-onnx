@@ -1490,6 +1490,10 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
   c.segmentation.num_threads = config.segmentation.num_threads;
   c.segmentation.debug = config.segmentation.debug;
   c.segmentation.provider = config.segmentation.provider.c_str();
+  c.segmentation.sortformer.model =
+      config.segmentation.sortformer.model.c_str();
+  c.segmentation.sortformer.threshold =
+      config.segmentation.sortformer.threshold;
   c.embedding.model = config.embedding.model.c_str();
   c.embedding.num_threads = config.embedding.num_threads;
   c.embedding.debug = config.embedding.debug;

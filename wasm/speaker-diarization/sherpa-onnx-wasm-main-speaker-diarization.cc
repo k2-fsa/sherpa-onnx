@@ -18,8 +18,14 @@ static_assert(sizeof(SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig) ==
               "");
 
 static_assert(
+    sizeof(SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig) == 2 * 4,
+    "");
+
+static_assert(
     sizeof(SherpaOnnxOfflineSpeakerSegmentationModelConfig) ==
-        sizeof(SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig) + 3 * 4,
+        sizeof(SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig) +
+            3 * 4 +
+            sizeof(SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig),
     "");
 
 static_assert(sizeof(SherpaOnnxFastClusteringConfig) == 3 * 4, "");
@@ -44,6 +50,9 @@ void MyPrint(const SherpaOnnxOfflineSpeakerDiarizationConfig *sd_config) {
   fprintf(stdout, "num threads: %d\n", segmentation.num_threads);
   fprintf(stdout, "debug: %d\n", segmentation.debug);
   fprintf(stdout, "provider: %s\n", segmentation.provider);
+  fprintf(stdout, "sortformer model: %s\n", segmentation.sortformer.model);
+  fprintf(stdout, "sortformer threshold: %.3f\n",
+          segmentation.sortformer.threshold);
 
   fprintf(stdout, "----------embedding config----------\n");
   fprintf(stdout, "model: %s\n", embedding.model);

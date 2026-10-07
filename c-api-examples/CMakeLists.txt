@@ -62,6 +62,9 @@ endif()
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   add_executable(offline-speaker-diarization-c-api offline-speaker-diarization-c-api.c)
   target_link_libraries(offline-speaker-diarization-c-api sherpa-onnx-c-api)
+
+  add_executable(offline-speaker-diarization-sortformer-c-api offline-speaker-diarization-sortformer-c-api.c)
+  target_link_libraries(offline-speaker-diarization-sortformer-c-api sherpa-onnx-c-api)
 endif()
 
 add_executable(spoken-language-identification-c-api spoken-language-identification-c-api.c)

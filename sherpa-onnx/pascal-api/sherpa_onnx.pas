@@ -661,11 +661,20 @@ type
     function ToString: AnsiString;
   end;
 
+  { Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
+    If Model is set, pyannote, embedding and clustering are ignored. }
+  TSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig = record
+    Model: AnsiString;
+    Threshold: Single;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineSpeakerSegmentationModelConfig = record
     Pyannote: TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig;
     NumThreads: Integer;
     Debug: Boolean;
     Provider: AnsiString;
+    Sortformer: TSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeakerSegmentationModelConfig);
   end;
@@ -1267,11 +1276,17 @@ type
     WindowShiftRatio: cfloat;
   end;
 
+  SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig = record
+    Model: PAnsiChar;
+    Threshold: cfloat;
+  end;
+
   SherpaOnnxOfflineSpeakerSegmentationModelConfig = record
     Pyannote: SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig;
     NumThreads: cint32;
     Debug: cint32;
     Provider: PAnsiChar;
+    Sortformer: SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig;
   end;
 
   SherpaOnnxFastClusteringConfig = record
@@ -3237,15 +3252,23 @@ begin
     [Self.Model, Self.WindowShiftRatio]);
 end;
 
+function TSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(' +
+    'Model := %s, Threshold := %f)',
+    [Self.Model, Self.Threshold]);
+end;
+
 function TSherpaOnnxOfflineSpeakerSegmentationModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(' +
     'Pyannote := %s, ' +
     'NumThreads := %d, ' +
     'Debug := %s, ' +
-    'Provider := %s)',
+    'Provider := %s, ' +
+    'Sortformer := %s)',
     [Self.Pyannote.ToString, Self.NumThreads,
-     Self.Debug.ToString, Self.Provider]);
+     Self.Debug.ToString, Self.Provider, Self.Sortformer.ToString]);
 end;
 
 class operator TSherpaOnnxOfflineSpeakerSegmentationModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeakerSegmentationModelConfig);
@@ -3254,6 +3277,7 @@ begin
   Dest.NumThreads := 1;
   Dest.Debug := False;
   Dest.Provider := 'cpu';
+  Dest.Sortformer.Threshold := 0.5;
 end;
 
 function TSherpaOnnxFastClusteringConfig.ToString: AnsiString;
@@ -3326,6 +3350,10 @@ begin
   C.Segmentation.NumThreads := Config.Segmentation.NumThreads;
   C.Segmentation.Debug := Ord(Config.Segmentation.Debug);
   C.Segmentation.Provider := PAnsiChar(Config.Segmentation.Provider);
+  C.Segmentation.Sortformer.Model :=
+    PAnsiChar(Config.Segmentation.Sortformer.Model);
+  C.Segmentation.Sortformer.Threshold :=
+    Config.Segmentation.Sortformer.Threshold;
 
   C.Embedding.Model := PAnsiChar(Config.Embedding.Model);
   C.Embedding.NumThreads := Config.Embedding.NumThreads;

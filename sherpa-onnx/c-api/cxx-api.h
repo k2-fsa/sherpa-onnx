@@ -1932,6 +1932,14 @@ struct OfflineSpeakerSegmentationPyannoteModelConfig {
   float window_shift_ratio = 0.1f;
 };
 
+/** @brief Sortformer end-to-end diarization model configuration. */
+struct OfflineSpeakerSegmentationSortformerModelConfig {
+  /** Model filename, e.g., of Nemotron-3-Diarization. */
+  std::string model;
+  /** Speaker activity probability threshold. */
+  float threshold = 0.5f;
+};
+
 /** @brief Segmentation model configuration for offline speaker diarization. */
 struct OfflineSpeakerSegmentationModelConfig {
   /** Pyannote segmentation model configuration. */
@@ -1942,6 +1950,11 @@ struct OfflineSpeakerSegmentationModelConfig {
   bool debug = false;
   /** Execution provider such as `"cpu"`. */
   std::string provider = "cpu";
+  /**
+   * Sortformer model configuration. If its model is set, pyannote,
+   * embedding and clustering are ignored.
+   */
+  OfflineSpeakerSegmentationSortformerModelConfig sortformer;
 };
 
 /** @brief Fast clustering configuration. */
