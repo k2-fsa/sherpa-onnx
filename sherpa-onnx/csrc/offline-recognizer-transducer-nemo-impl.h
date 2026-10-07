@@ -167,22 +167,36 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
     features.reserve(n);
 
-    std::vector<std::vector<float>> features_vec(n);
-    std::vector<int64_t> features_length_vec(n);
+    std::vector<std::vector<float>> features_vec;
+    std::vector<int64_t> features_length_vec;
+    std::vector<OfflineStream *> active_streams;
+    features_vec.reserve(n);
+    features_length_vec.reserve(n);
+    active_streams.reserve(n);
     for (int32_t i = 0; i != n; ++i) {
       auto f = ss[i]->GetFrames();
       int32_t num_frames = f.size() / feat_dim;
 
-      features_length_vec[i] = num_frames;
-      features_vec[i] = std::move(f);
+      if (config_.feat_config.parakeet_reference_frontend && num_frames == 0) {
+        // Sample normalization needs two frames. Do not pass shorter inputs
+        // to the encoder, including when they accompany speech in a batch.
+        ss[i]->SetResult({});
+        continue;
+      }
+      active_streams.push_back(ss[i]);
+      features_length_vec.push_back(num_frames);
+      features_vec.push_back(std::move(f));
 
       std::array<int64_t, 2> shape = {num_frames, feat_dim};
 
       Ort::Value x = Ort::Value::CreateTensor(
-          memory_info, features_vec[i].data(), features_vec[i].size(),
+          memory_info, features_vec.back().data(), features_vec.back().size(),
           shape.data(), shape.size());
       features.push_back(std::move(x));
     }
+    n = active_streams.size();
+    if (n == 0) return;
+    ss = active_streams.data();
 
     std::vector<const Ort::Value *> features_pointer(n);
     for (int32_t i = 0; i != n; ++i) {
@@ -255,6 +269,10 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
       config_.feat_config.remove_dc_offset = false;
       // config_.feat_config.window_type = "hann";
     }
+
+    config_.feat_config.parakeet_reference_frontend =
+        model_->IsParakeetV3() && config_.feat_config.sampling_rate == 16000 &&
+        config_.feat_config.nemo_normalize_type == "per_feature";
 
     int32_t vocab_size = model_->VocabSize();
 
