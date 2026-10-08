@@ -670,7 +670,8 @@ public func sherpaOnnxOfflineRecognizerConfig(
     rule_fsts: toCPointer(ruleFsts),
     rule_fars: toCPointer(ruleFars),
     blank_penalty: blankPenalty,
-    hr: hr
+    hr: hr,
+    ctc_fst_decoder_config: SherpaOnnxOfflineCtcFstDecoderConfig()
   )
 }
 
