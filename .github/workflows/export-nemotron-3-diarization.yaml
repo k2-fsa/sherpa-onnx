@@ -2,6 +2,17 @@ name: export-nemotron-3-diarization
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/export-nemotron-3-diarization.yaml'
+      - 'scripts/nemo/nemotron-3-diarization/**'
+      - 'sherpa-onnx/csrc/*sortformer*'
+      - 'sherpa-onnx/csrc/offline-speaker-diarization*'
+      - 'sherpa-onnx/python/csrc/offline-speaker-diarization*'
+      - 'sherpa-onnx/python/tests/test_offline_speaker_diarization_config.py'
+
+permissions:
+  contents: read
 
 concurrency:
   group: export-nemotron-3-diarization-${{ github.ref }}
@@ -9,8 +20,8 @@ concurrency:
 
 jobs:
   export-nemotron-3-diarization:
-    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export Nemotron-3-Diarization to ONNX
+    name: export and test Nemotron-3-Diarization
+    timeout-minutes: 60
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -36,35 +47,63 @@ jobs:
         shell: bash
         run: |
           d=sherpa-onnx-nemotron-3-diarization
-          src=$PWD/$d
-          mkdir -p $src
+          src="$PWD/$d"
+          mkdir -p "$src"
 
           pushd scripts/nemo/nemotron-3-diarization
           ./run.sh
-          cp ./*.onnx $src/
-          cp ./README.md $src/
-          cp ./*.py $src/
-          cp ./requirements.txt $src/
-          cp ./run.sh $src/
-          mkdir -p $src/test_wavs
-          cp ./0-four-speakers-zh.wav $src/test_wavs/
+          cp ./*.onnx "$src/"
+          cp ./README.md "$src/"
+          cp ./*.py "$src/"
+          cp ./requirements.txt "$src/"
+          cp ./run.sh "$src/"
+          mkdir -p "$src/test_wavs"
+          cp ./0-four-speakers-zh.wav "$src/test_wavs/"
 
           popd
 
-          curl -fSL https://raw.githubusercontent.com/OpenMDW/OpenMDW/b26b32b34ad2edcc29a7707abb68dcfb25a538c1/1.1/LICENSE.OpenMDW-1.1 -o $src/LICENSE
-          curl -fSL https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/f667ed73aee57d40cc39428eb768b4fd87a0a29e/README.md -o $src/MODEL_CARD.md
+          curl -fSL https://raw.githubusercontent.com/OpenMDW/OpenMDW/b26b32b34ad2edcc29a7707abb68dcfb25a538c1/1.1/LICENSE.OpenMDW-1.1 -o "$src/LICENSE"
+          curl -fSL https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/f667ed73aee57d40cc39428eb768b4fd87a0a29e/README.md -o "$src/MODEL_CARD.md"
 
-          cat >$src/NOTICE <<EOT
+          cat >"$src/NOTICE" <<EOT
           The model is from https://huggingface.co/nvidia/Nemotron-3-Diarization
           and is released under the OpenMDW License Agreement v1.1.
           The original model is by NVIDIA; these files are ONNX conversions
           with FP32 and dynamic INT8 weights. See LICENSE and MODEL_CARD.md.
           EOT
 
-          ls -lh $d
-          tar cjfv $d.tar.bz2 $d
+          ls -lh "$d"
+          tar cjfv "$d.tar.bz2" "$d"
+
+      - name: Build native binding and cache tests
+        shell: bash
+        run: |
+          cmake -S . -B build-nemotron \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSHERPA_ONNX_ENABLE_PYTHON=ON \
+            -DPYTHON_EXECUTABLE="$(command -v python3)" \
+            -DPython_EXECUTABLE="$(command -v python3)" \
+            -DSHERPA_ONNX_ENABLE_TESTS=ON \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DSHERPA_ONNX_ENABLE_TTS=OFF \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON
+          cmake --build build-nemotron \
+            --target _sherpa_onnx sortformer-speaker-cache-test --parallel 2
+          ctest --test-dir build-nemotron --output-on-failure \
+            -R '^(sortformer-speaker-cache-test|test_offline_speaker_diarization_config_py)$'
+
+      - name: Test native Nemotron diarization
+        shell: bash
+        run: |
+          PYTHONPATH="$PWD/build-nemotron/lib" python3 \
+            scripts/nemo/nemotron-3-diarization/test_native.py \
+            --model-dir sherpa-onnx-nemotron-3-diarization \
+            --wav sherpa-onnx-nemotron-3-diarization/test_wavs/0-four-speakers-zh.wav
 
       - name: Release
+        if: github.event_name == 'workflow_dispatch' && (github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -75,6 +114,7 @@ jobs:
           tag: speaker-segmentation-models
 
       - name: Publish to huggingface
+        if: github.event_name == 'workflow_dispatch' && (github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj')
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -90,12 +130,12 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
             rm -rf huggingface
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
-            cp -av $d/. ./huggingface
+            git clone "https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d" huggingface
+            cp -av "$d/." ./huggingface
             cd huggingface
             git lfs track "*.onnx"
             git status
             git add .
             git status
             git commit -m "add models"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+            git push "https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d" main

@@ -3,7 +3,7 @@
 import tempfile
 import unittest
 
-import sherpa_onnx
+import _sherpa_onnx as sherpa_onnx
 
 
 @unittest.skipUnless(
