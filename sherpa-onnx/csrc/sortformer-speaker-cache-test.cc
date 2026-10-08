@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/sortformer-speaker-cache.h"
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -115,6 +116,21 @@ TEST(SortformerSpeakerCache, SilenceOnly) {
 
   // There is no speech to keep: all slots hold the silence embedding
   EXPECT_EQ(cache.GetEmbeds(), std::vector<float>(4, kSilence));
+}
+
+TEST(SortformerSpeakerCache, LargeFiniteBoostRates) {
+  auto config = SmallConfig();
+  config.strong_boost_rate = std::numeric_limits<float>::max();
+  config.weak_boost_rate = std::numeric_limits<float>::max();
+  SortformerSpeakerCache cache(config);
+  std::vector<std::vector<float>> probs = {
+      {0.9f, 0.1f}, {0.9f, 0.1f}, {0.1f, 0.9f}, {0.1f, 0.9f}, {0.1f, 0.1f},
+  };
+  for (int32_t i = 0; i != 5; ++i) {
+    Push(&cache, i, probs);
+  }
+  // All scored frames are boosted equally; ties choose the lower indices.
+  EXPECT_EQ(cache.GetEmbeds(), (std::vector<float>{0, 1, kSilence, kSilence}));
 }
 
 TEST(SortformerSpeakerCache, PoolsProbabilitiesAndIgnoresRightContext) {

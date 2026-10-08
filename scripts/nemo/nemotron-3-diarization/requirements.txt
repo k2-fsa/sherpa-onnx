@@ -1,7 +1,10 @@
-# Pin the Transformers implementation used by the export and reference check.
+# The export/reference toolchain; install the CPU torch wheel as in README.md.
+torch==2.14.1
 transformers @ git+https://github.com/huggingface/transformers@e598fbad926d80bc356c0c4d96532030e3dfdb62
-onnx
-onnxruntime
-onnxscript
-librosa
-soundfile
+onnx==1.23.2
+onnxruntime==1.30.0
+onnxscript==0.7.2
+numpy==2.5.3
+scipy==1.18.1
+librosa==1.0.0
+soundfile==0.14.0

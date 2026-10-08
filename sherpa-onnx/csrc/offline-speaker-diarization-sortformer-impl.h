@@ -79,7 +79,7 @@ class OfflineSpeakerDiarizationSortformerImpl
     const int32_t factor = meta.cache.subsampling_factor;
     const int32_t hidden_size = meta.cache.hidden_size;
 
-    if (n <= 0) {
+    if (!audio || n <= 0) {
       return {};
     }
 
@@ -145,6 +145,8 @@ class OfflineSpeakerDiarizationSortformerImpl
       std::copy(src, src + static_cast<int64_t>(count) * num_speakers,
                 ans.begin() + static_cast<int64_t>(offset) * num_speakers);
 
+      // Padding probabilities are not zeroed before pooling. Padding occurs
+      // only in the final chunk, so this cache state is never used again.
       cache.Update(chunk_embeds.GetTensorData<float>(), num_chunk_frames, p,
                    num_input_frames);
 

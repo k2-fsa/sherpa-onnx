@@ -27,7 +27,10 @@ Return the expected sample rate of the input audio.
 )doc";
 
 static constexpr const char *kOfflineSpeakerDiarizationSetConfigDoc = R"doc(
-Update the config for the diarization pipeline.
+Update clustering settings for the diarization pipeline.
+
+Only config.clustering is used. This has no effect for Sortformer models.
+Set their threshold and duration settings before creating the diarizer.
 
 Args:
   config:

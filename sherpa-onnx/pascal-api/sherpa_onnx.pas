@@ -3261,7 +3261,7 @@ end;
 
 function TSherpaOnnxOfflineSpeakerSegmentationModelConfig.ToString: AnsiString;
 begin
-  Result := Format('TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(' +
+  Result := Format('TSherpaOnnxOfflineSpeakerSegmentationModelConfig(' +
     'Pyannote := %s, ' +
     'NumThreads := %d, ' +
     'Debug := %s, ' +

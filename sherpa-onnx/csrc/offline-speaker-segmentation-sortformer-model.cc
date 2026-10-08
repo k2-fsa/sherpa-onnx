@@ -5,8 +5,10 @@
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-sortformer-model.h"
 
 #include <array>
+#include <cerrno>
 #include <cmath>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -29,18 +31,44 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 // Read a float
-#define SHERPA_ONNX_READ_META_DATA_FLOAT(dst, src_key)                     \
-  do {                                                                     \
-    auto value = LookupCustomModelMetaData(meta_data, src_key, allocator); \
-    if (value.empty()) {                                                   \
-      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);    \
-      SHERPA_ONNX_EXIT(-1);                                                \
-    }                                                                      \
-                                                                           \
-    dst = std::strtof(value.c_str(), nullptr);                             \
+#define SHERPA_ONNX_READ_META_DATA_FLOAT(dst, src_key)                         \
+  do {                                                                         \
+    auto value = LookupCustomModelMetaData(meta_data, src_key, allocator);     \
+    if (value.empty()) {                                                       \
+      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);        \
+      SHERPA_ONNX_EXIT(-1);                                                    \
+    }                                                                          \
+                                                                               \
+    char *end = nullptr;                                                       \
+    errno = 0;                                                                 \
+    dst = std::strtof(value.c_str(), &end);                                    \
+    if (end == value.c_str() || *end != '\0' || errno == ERANGE ||             \
+        !std::isfinite(dst)) {                                                 \
+      SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.c_str(), src_key); \
+      SHERPA_ONNX_EXIT(-1);                                                    \
+    }                                                                          \
   } while (0)
 
 namespace sherpa_onnx {
+
+namespace {
+
+int32_t ReadIntMetaData(const Ort::ModelMetadata &meta_data, const char *key,
+                        OrtAllocator *allocator) {
+  auto value = LookupCustomModelMetaData(meta_data, key, allocator);
+  char *end = nullptr;
+  errno = 0;
+  int64_t parsed = std::strtoll(value.c_str(), &end, 10);
+  if (value.empty() || end == value.c_str() || *end != '\0' ||
+      errno == ERANGE || parsed < 0 ||
+      parsed > std::numeric_limits<int32_t>::max()) {
+    SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.c_str(), key);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  return static_cast<int32_t>(parsed);
+}
+
+}  // namespace
 
 class OfflineSpeakerSegmentationSortformerModel::Impl {
  public:
@@ -145,7 +173,7 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
     }
 
     int32_t version;
-    SHERPA_ONNX_READ_META_DATA(version, "version");
+    version = ReadIntMetaData(meta_data, "version", allocator);
     if (version != 2 ||
         input_names_ != std::vector<std::string>{"features", "cached_embeds",
                                                  "num_frames"} ||
@@ -155,26 +183,29 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
     }
 
     auto &m = meta_data_;
-    SHERPA_ONNX_READ_META_DATA(m.sample_rate, "sample_rate");
-    SHERPA_ONNX_READ_META_DATA(m.n_fft, "n_fft");
-    SHERPA_ONNX_READ_META_DATA(m.win_length, "win_length");
-    SHERPA_ONNX_READ_META_DATA(m.hop_length, "hop_length");
-    SHERPA_ONNX_READ_META_DATA(m.num_mel_bins, "num_mel_bins");
+    m.sample_rate = ReadIntMetaData(meta_data, "sample_rate", allocator);
+    m.n_fft = ReadIntMetaData(meta_data, "n_fft", allocator);
+    m.win_length = ReadIntMetaData(meta_data, "win_length", allocator);
+    m.hop_length = ReadIntMetaData(meta_data, "hop_length", allocator);
+    m.num_mel_bins = ReadIntMetaData(meta_data, "num_mel_bins", allocator);
     SHERPA_ONNX_READ_META_DATA_FLOAT(m.preemphasis, "preemphasis");
 
-    SHERPA_ONNX_READ_META_DATA(m.chunk_length, "chunk_length");
-    SHERPA_ONNX_READ_META_DATA(m.chunk_right_context, "chunk_right_context");
+    m.chunk_length = ReadIntMetaData(meta_data, "chunk_length", allocator);
+    m.chunk_right_context =
+        ReadIntMetaData(meta_data, "chunk_right_context", allocator);
 
     auto &c = m.cache;
-    SHERPA_ONNX_READ_META_DATA(c.num_speakers, "num_speakers");
-    SHERPA_ONNX_READ_META_DATA(c.hidden_size, "hidden_size");
-    SHERPA_ONNX_READ_META_DATA(c.subsampling_factor, "subsampling_factor");
-    SHERPA_ONNX_READ_META_DATA(c.fifo_length, "fifo_length");
-    SHERPA_ONNX_READ_META_DATA(c.speaker_cache_update_period,
-                               "speaker_cache_update_period");
-    SHERPA_ONNX_READ_META_DATA(c.speaker_cache_length, "speaker_cache_length");
-    SHERPA_ONNX_READ_META_DATA(c.num_silence_frames,
-                               "speaker_cache_silence_frames_per_speaker");
+    c.num_speakers = ReadIntMetaData(meta_data, "num_speakers", allocator);
+    c.hidden_size = ReadIntMetaData(meta_data, "hidden_size", allocator);
+    c.subsampling_factor =
+        ReadIntMetaData(meta_data, "subsampling_factor", allocator);
+    c.fifo_length = ReadIntMetaData(meta_data, "fifo_length", allocator);
+    c.speaker_cache_update_period =
+        ReadIntMetaData(meta_data, "speaker_cache_update_period", allocator);
+    c.speaker_cache_length =
+        ReadIntMetaData(meta_data, "speaker_cache_length", allocator);
+    c.num_silence_frames = ReadIntMetaData(
+        meta_data, "speaker_cache_silence_frames_per_speaker", allocator);
     SHERPA_ONNX_READ_META_DATA_FLOAT(c.prediction_score_threshold,
                                      "prediction_score_threshold");
     SHERPA_ONNX_READ_META_DATA_FLOAT(c.latest_frames_score_boost,
@@ -190,6 +221,12 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
                        c.hidden_size,
                        static_cast<int32_t>(c.silence_embeds.size()));
       SHERPA_ONNX_EXIT(-1);
+    }
+    for (float value : c.silence_embeds) {
+      if (!std::isfinite(value)) {
+        SHERPA_ONNX_LOGE("Non-finite Sortformer silence embedding");
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
 
     if (m.sample_rate < 1 || m.n_fft < 1 || m.win_length < 2 ||

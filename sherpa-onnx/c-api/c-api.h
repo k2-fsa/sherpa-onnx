@@ -4012,6 +4012,8 @@ SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(
  * @brief Update clustering-related settings of an existing diarizer.
  *
  * Only `config->clustering` is used. Other fields are ignored.
+ * This function has no effect for Sortformer models, which do not use
+ * clustering. Set their threshold and duration settings before creation.
  *
  * @param sd A pointer returned by SherpaOnnxCreateOfflineSpeakerDiarization().
  * @param config Configuration whose `clustering` field will be applied.

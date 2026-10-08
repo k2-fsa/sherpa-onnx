@@ -43,21 +43,18 @@ func main() {
 	wave_filename := "./0-four-speakers-zh.wav"
 	wave := sherpa.ReadWave(wave_filename)
 	if wave == nil {
-		log.Printf("Failed to read %v", wave_filename)
-		return
+		log.Fatalf("Failed to read %v", wave_filename)
 	}
 
 	sd := initSpeakerDiarization()
 	if sd == nil {
-		log.Printf("Please check your config")
-		return
+		log.Fatalf("Please check your config")
 	}
 
 	defer sherpa.DeleteOfflineSpeakerDiarization(sd)
 
 	if wave.SampleRate != sd.SampleRate() {
-		log.Printf("Expected sample rate: %v, given: %d\n", sd.SampleRate(), wave.SampleRate)
-		return
+		log.Fatalf("Expected sample rate: %v, given: %d", sd.SampleRate(), wave.SampleRate)
 	}
 
 	log.Println("Started")

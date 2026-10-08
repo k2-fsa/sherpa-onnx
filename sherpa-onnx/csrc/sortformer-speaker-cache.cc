@@ -20,6 +20,14 @@ namespace {
 
 constexpr float kNegInf = -std::numeric_limits<float>::infinity();
 
+int32_t NumFramesForRate(int32_t budget, float rate) {
+  // A finite rate can still overflow float multiplication or the integer
+  // conversion. TopK() caps the count at the available frames later.
+  double count = std::floor(static_cast<double>(budget) * rate);
+  return static_cast<int32_t>(std::min(
+      count, static_cast<double>(std::numeric_limits<int32_t>::max())));
+}
+
 // Indices of the k largest values of a strided column. Ties go to the lower
 // index. torch.topk leaves the order of exact ties unspecified.
 std::vector<int32_t> TopK(const float *p, int32_t n, int32_t stride,
@@ -58,12 +66,11 @@ SortformerSpeakerCache::SortformerSpeakerCache(
   int32_t budget = config_.speaker_cache_length / config_.num_speakers -
                    config_.num_silence_frames;
 
-  min_positive_scores_ = static_cast<int32_t>(
-      std::floor(budget * config_.min_positive_scores_rate));
+  min_positive_scores_ =
+      NumFramesForRate(budget, config_.min_positive_scores_rate);
   num_strong_boosted_frames_ =
-      static_cast<int32_t>(std::floor(budget * config_.strong_boost_rate));
-  num_weak_boosted_frames_ =
-      static_cast<int32_t>(std::floor(budget * config_.weak_boost_rate));
+      NumFramesForRate(budget, config_.strong_boost_rate);
+  num_weak_boosted_frames_ = NumFramesForRate(budget, config_.weak_boost_rate);
 }
 
 std::vector<float> SortformerSpeakerCache::GetEmbeds() const {

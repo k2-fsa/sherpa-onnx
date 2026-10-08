@@ -7,7 +7,8 @@ import sherpa_onnx
 
 
 @unittest.skipUnless(
-    hasattr(sherpa_onnx, "OfflineSpeakerSegmentationSortformerModelConfig"),
+    getattr(sherpa_onnx, "OfflineSpeakerSegmentationSortformerModelConfig", None)
+    is not None,
     "Speaker diarization is disabled",
 )
 class TestOfflineSpeakerDiarizationConfig(unittest.TestCase):

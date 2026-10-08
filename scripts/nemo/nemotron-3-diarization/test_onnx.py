@@ -40,7 +40,19 @@ def get_args():
         action="store_true",
         help="Use the low-latency streaming geometry (chunk 9, right context 4)",
     )
+    parser.add_argument(
+        "--revision",
+        type=str,
+        default="f667ed73aee57d40cc39428eb768b4fd87a0a29e",
+        help="Hugging Face reference revision (ignored for a local directory)",
+    )
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument(
+        "--max-feature-diff",
+        type=float,
+        default=1e-3,
+        help="Fail if the frontend reference comparison exceeds this tolerance",
+    )
     parser.add_argument(
         "--max-prob-diff",
         type=float,
@@ -314,13 +326,18 @@ def to_segments(probs: np.ndarray, threshold: float, frame_shift: float):
     return segments
 
 
-def run_reference(model_id: str, samples: np.ndarray, streaming: bool):
+def run_reference(
+    model_id: str,
+    samples: np.ndarray,
+    streaming: bool,
+    revision: str = "f667ed73aee57d40cc39428eb768b4fd87a0a29e",
+):
     import torch
     from transformers import AutoModelForAudioFrameClassification, AutoProcessor
 
-    processor = AutoProcessor.from_pretrained(model_id)
+    processor = AutoProcessor.from_pretrained(model_id, revision=revision)
     model = AutoModelForAudioFrameClassification.from_pretrained(
-        model_id, attn_implementation="eager", dtype=torch.float32
+        model_id, revision=revision, attn_implementation="eager", dtype=torch.float32
     )
     model.eval()
 
@@ -378,6 +395,9 @@ def main():
         samples = samples[: args.num_samples]
 
     features = compute_features(samples, m)
+    if len(features) == 0:
+        print("No complete 10 ms frames to process")
+        return
     probs = diarize(m, features)
 
     frame_shift = m.hop_length / m.sample_rate
@@ -385,17 +405,24 @@ def main():
         print(f"{b:8.2f} -- {e:8.2f} speaker_{s:02d}")
 
     if args.reference:
-        ref_probs, ref_features = run_reference(args.reference, samples, args.streaming)
+        ref_probs, ref_features = run_reference(
+            args.reference, samples, args.streaming, args.revision
+        )
         if len(ref_probs) not in (len(probs), len(probs) + 1):
             raise RuntimeError(
                 f"Unexpected frame counts: ONNX {len(probs)}, reference {len(ref_probs)}"
             )
         if ref_features is not None:
             n = features.shape[0]
-            print(
-                "max feature diff:",
-                np.abs(ref_features[:n] - features).max(),
-            )
+            max_feature_diff = np.abs(ref_features[:n] - features).max()
+            print("max feature diff:", max_feature_diff)
+            if (
+                not np.isfinite(max_feature_diff)
+                or max_feature_diff > args.max_feature_diff
+            ):
+                raise RuntimeError(
+                    f"Feature difference {max_feature_diff} exceeds {args.max_feature_diff}"
+                )
         n = min(len(ref_probs), len(probs))
         diff = np.abs(ref_probs[:n] - probs[:n])
         print(f"frames: onnx {len(probs)}, reference {len(ref_probs)}")

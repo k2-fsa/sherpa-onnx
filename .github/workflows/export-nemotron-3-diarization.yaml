@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
           pip install -r scripts/nemo/nemotron-3-diarization/requirements.txt
 
       - name: Run
@@ -51,8 +51,8 @@ jobs:
 
           popd
 
-          curl -fSL https://raw.githubusercontent.com/OpenMDW/OpenMDW/main/1.1/LICENSE.OpenMDW-1.1 -o $src/LICENSE
-          curl -fSL https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/main/README.md -o $src/MODEL_CARD.md
+          curl -fSL https://raw.githubusercontent.com/OpenMDW/OpenMDW/b26b32b34ad2edcc29a7707abb68dcfb25a538c1/1.1/LICENSE.OpenMDW-1.1 -o $src/LICENSE
+          curl -fSL https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/f667ed73aee57d40cc39428eb768b4fd87a0a29e/README.md -o $src/MODEL_CARD.md
 
           cat >$src/NOTICE <<EOT
           The model is from https://huggingface.co/nvidia/Nemotron-3-Diarization
@@ -91,7 +91,7 @@ jobs:
             export GIT_CLONE_PROTECTION_ACTIVE=false
             rm -rf huggingface
             git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
-            cp -v $d/* ./huggingface
+            cp -av $d/. ./huggingface
             cd huggingface
             git lfs track "*.onnx"
             git status
