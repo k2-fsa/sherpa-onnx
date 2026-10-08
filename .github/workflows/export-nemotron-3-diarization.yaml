@@ -30,8 +30,7 @@ jobs:
         shell: bash
         run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install "git+https://github.com/huggingface/transformers"
-          pip install onnx onnxruntime onnxscript librosa soundfile
+          pip install -r scripts/nemo/nemotron-3-diarization/requirements.txt
 
       - name: Run
         shell: bash
@@ -45,13 +44,21 @@ jobs:
           cp ./*.onnx $src/
           cp ./README.md $src/
           cp ./*.py $src/
+          cp ./requirements.txt $src/
+          cp ./run.sh $src/
+          mkdir -p $src/test_wavs
+          cp ./0-four-speakers-zh.wav $src/test_wavs/
 
           popd
 
-          cat >$src/LICENSE <<EOT
+          curl -fSL https://raw.githubusercontent.com/OpenMDW/OpenMDW/main/1.1/LICENSE.OpenMDW-1.1 -o $src/LICENSE
+          curl -fSL https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/main/README.md -o $src/MODEL_CARD.md
+
+          cat >$src/NOTICE <<EOT
           The model is from https://huggingface.co/nvidia/Nemotron-3-Diarization
           and is released under the OpenMDW License Agreement v1.1.
-          Please see the model card for the terms of use.
+          The original model is by NVIDIA; these files are ONNX conversions
+          with FP32 and dynamic INT8 weights. See LICENSE and MODEL_CARD.md.
           EOT
 
           ls -lh $d

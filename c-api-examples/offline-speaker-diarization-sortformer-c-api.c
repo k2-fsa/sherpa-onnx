@@ -58,6 +58,7 @@ int main() {
 
   const SherpaOnnxOfflineSpeakerDiarizationResult *result = NULL;
   const SherpaOnnxOfflineSpeakerDiarizationSegment *segments = NULL;
+  int status = -1;
 
   if (SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(sd) !=
       wave->sample_rate) {
@@ -88,6 +89,7 @@ int main() {
     fprintf(stderr, "%.3f -- %.3f speaker_%02d\n", segments[i].start,
             segments[i].end, segments[i].speaker);
   }
+  status = 0;
 
 failed:
 
@@ -96,5 +98,5 @@ failed:
   SherpaOnnxDestroyOfflineSpeakerDiarization(sd);
   SherpaOnnxFreeWave(wave);
 
-  return 0;
+  return status;
 }

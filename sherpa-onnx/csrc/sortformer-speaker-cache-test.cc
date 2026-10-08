@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/sortformer-speaker-cache.h"
 
+#include <algorithm>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -114,6 +115,40 @@ TEST(SortformerSpeakerCache, SilenceOnly) {
 
   // There is no speech to keep: all slots hold the silence embedding
   EXPECT_EQ(cache.GetEmbeds(), std::vector<float>(4, kSilence));
+}
+
+TEST(SortformerSpeakerCache, PoolsProbabilitiesAndIgnoresRightContext) {
+  auto config = SmallConfig();
+  config.subsampling_factor = 2;
+  SortformerSpeakerCache cache(config);
+
+  // The first four embeddings are retained without compression. The fifth
+  // embedding is right context and must never enter the FIFO or cache.
+  std::vector<float> embeds = {0, 1, 2, 3, 99};
+  std::vector<float> probs = {
+      0.9f,  0.1f, 0.9f,  0.1f,  // speaker 0
+      0.9f,  0.1f, 0.1f,  0.1f,  // pooled probability = 0.5: inactive
+      0.1f,  0.9f, 0.1f,  0.9f,  // speaker 1
+      0.1f,  0.1f, 0.1f,  0.1f,  // silence
+      0.99f, 0.1f, 0.99f, 0.1f,  // right context
+  };
+  cache.Update(embeds.data(), 4, probs.data(), 5);
+  EXPECT_EQ(cache.GetEmbeds(), (std::vector<float>{0, 1, 2, 3}));
+
+  // Trigger compression with a silent chunk. Embedding 1 must not be
+  // selected despite having one high-probability output frame.
+  float silence = 4;
+  probs.resize(5 * 2 * 2);
+  std::fill(probs.begin() + 4 * 2 * 2, probs.end(), 0.1f);
+  cache.Update(&silence, 1, probs.data(), 5);
+  EXPECT_EQ(cache.GetEmbeds(), (std::vector<float>{0, kSilence, 2, kSilence}));
+
+  // A compressed cache keeps its stored probabilities: a later chunk's
+  // predictions on those out-of-order embeddings must not replace them.
+  probs.assign(5 * 2 * 2, 0.1f);
+  silence = 5;
+  cache.Update(&silence, 1, probs.data(), 5);
+  EXPECT_EQ(cache.GetEmbeds(), (std::vector<float>{0, kSilence, 2, kSilence}));
 }
 
 }  // namespace sherpa_onnx

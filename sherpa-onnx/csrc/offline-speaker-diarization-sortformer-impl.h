@@ -90,8 +90,9 @@ class OfflineSpeakerDiarizationSortformerImpl
 
     Timer timer(config_.segmentation.debug);
 
-    // The last encoder frame is zero padded
-    int32_t num_embeds = (num_frames + factor - 1) / factor;
+    // The centered STFT has an extra, masked feature frame. Keep its
+    // zero-padded embedding: it contributes to the output convolution.
+    int32_t num_embeds = num_frames / factor + 1;
     int32_t num_chunks =
         (num_embeds + meta.chunk_length - 1) / meta.chunk_length;
 
@@ -129,7 +130,8 @@ class OfflineSpeakerDiarizationSortformerImpl
       }
 
       auto [probs, chunk_embeds] =
-          model_.Forward(std::move(features_tensor), std::move(cached_tensor));
+          model_.Forward(std::move(features_tensor), std::move(cached_tensor),
+                         std::min(stop * factor, num_frames) - start * factor);
 
       const float *p = probs.GetTensorData<float>();
       int32_t num_input_frames = num_cached + num_step_frames;
@@ -180,6 +182,16 @@ class OfflineSpeakerDiarizationSortformerImpl
     opts.mel_opts.is_librosa = true;
     opts.use_power = true;
     opts.use_log_fbank = false;
+
+    // kaldi-native-fbank derives the FFT size from the window length.
+    // Reject an incompatible frontend rather than silently changing it.
+    if (opts.frame_opts.PaddedWindowSize() != meta.n_fft ||
+        opts.frame_opts.WindowSize() != meta.win_length ||
+        opts.frame_opts.WindowShift() != meta.hop_length ||
+        meta.win_length % 2 != 0) {
+      SHERPA_ONNX_LOGE("Unsupported Sortformer frontend geometry");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     if (config_.segmentation.debug) {
       SHERPA_ONNX_LOGE("%s", opts.ToString().c_str());

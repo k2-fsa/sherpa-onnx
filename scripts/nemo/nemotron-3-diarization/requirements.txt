@@ -1,0 +1,7 @@
+# Pin the Transformers implementation used by the export and reference check.
+transformers @ git+https://github.com/huggingface/transformers@e598fbad926d80bc356c0c4d96532030e3dfdb62
+onnx
+onnxruntime
+onnxscript
+librosa
+soundfile

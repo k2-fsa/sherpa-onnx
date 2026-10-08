@@ -14,13 +14,14 @@ The export uses the PyTorch implementation from Hugging Face transformers.
 
 ```bash
 pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install "git+https://github.com/huggingface/transformers"
-pip install onnx onnxruntime onnxscript librosa soundfile
+pip install -r requirements.txt
 
 ./run.sh
 ```
 
 It writes `model.onnx` (about 400 MB) and `model.int8.onnx` (about 100 MB).
+The weights use the [OpenMDW License Agreement v1.1](https://openmdw.ai/license/1-1/).
+The release archive includes that license and the original NVIDIA model card.
 
 ## How the exported model is used
 
@@ -30,11 +31,17 @@ It writes `model.onnx` (about 400 MB) and `model.int8.onnx` (about 100 MB).
 |-------|-------|-------------|
 | `features` | `(N, T, 128)` | Log-mel frames of the chunk and its right context. `T` must be a multiple of 8 |
 | `cached_embeds` | `(N, C, 512)` | Speaker cache followed by the FIFO queue. `C` can be 0 |
+| `num_frames` | scalar `int64` | Valid log-mel frames in `features`, excluding padding |
 
 | Output | Shape | Description |
 |--------|-------|-------------|
 | `probs` | `(N, (C + T/8) * 8, 8)` | Speaker activity probabilities, one row per 10 ms |
 | `chunk_embeds` | `(N, T/8, 512)` | Embeddings of the chunk, to push to the FIFO queue |
+
+The last chunk includes the extra zeroed frame from the centered STFT,
+then is padded to a multiple of 8. `num_frames` masks invalid embeddings
+in attention while retaining their contribution to the output convolution.
+This matters when the valid feature length is a multiple of 8.
 
 The caller keeps the Arrival-Order Speaker Cache (AOSC) and the FIFO queue
 between the chunks.
@@ -58,6 +65,6 @@ of 300 frames.
 cache with the transformers implementation. On a 227 s recording made of two
 meeting clips, the largest difference of the speaker probabilities is 1.3e-5. The
 low-latency configuration (`--streaming`, 1.04 s chunks) gives the same
-result. The last 80 ms of a recording can differ when the number of 10 ms
-frames is a multiple of 8, as the reference then attends to one more,
-zero-padded, encoder frame.
+result. The comparison fails if the maximum probability difference exceeds
+`--max-prob-diff` (default `1e-4`), including the final frames. The runtime
+returns only valid 10 ms frames, excluding the reference's STFT padding.

@@ -30,11 +30,23 @@ def get_args():
     parser.add_argument("--model", type=str, required=True)
     parser.add_argument("--wav", type=str, required=True)
     parser.add_argument(
+        "--num-samples",
+        type=int,
+        default=0,
+        help="Use this many samples for padding/chunk boundary checks (0: all)",
+    )
+    parser.add_argument(
         "--streaming",
         action="store_true",
         help="Use the low-latency streaming geometry (chunk 9, right context 4)",
     )
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument(
+        "--max-prob-diff",
+        type=float,
+        default=1e-4,
+        help="Fail if the FP32 reference comparison exceeds this tolerance",
+    )
     parser.add_argument(
         "--reference",
         type=str,
@@ -74,6 +86,7 @@ class OnnxModel:
         self.hidden_size = i("hidden_size")
 
         self.chunk_length = i("chunk_length")
+        self.is_streaming = False
         self.chunk_right_context = i("chunk_right_context")
         self.fifo_length = i("fifo_length")
         self.speaker_cache_update_period = i("speaker_cache_update_period")
@@ -92,6 +105,7 @@ class OnnxModel:
         assert self.silence_embeds.shape == (self.hidden_size,)
 
     def use_streaming_geometry(self):
+        self.is_streaming = True
         self.chunk_length = 9
         self.chunk_right_context = 4
         self.fifo_length = int(self.meta["streaming_fifo_length"])
@@ -100,13 +114,14 @@ class OnnxModel:
         )
 
     def run(
-        self, features: np.ndarray, cached_embeds: np.ndarray
+        self, features: np.ndarray, cached_embeds: np.ndarray, num_frames: int
     ) -> Tuple[np.ndarray, np.ndarray]:
         probs, chunk_embeds = self.model.run(
             ["probs", "chunk_embeds"],
             {
                 "features": features[None],
                 "cached_embeds": cached_embeds[None],
+                "num_frames": np.array(num_frames, dtype=np.int64),
             },
         )
         return probs[0], chunk_embeds[0]
@@ -128,9 +143,9 @@ def compute_features(samples: np.ndarray, m: OnnxModel) -> np.ndarray:
     left = (m.n_fft - m.win_length) // 2
     window = np.pad(window, (left, m.n_fft - m.win_length - left))
 
-    frames = np.lib.stride_tricks.sliding_window_view(x, m.n_fft)[
-        :: m.hop_length
-    ][:num_frames]
+    frames = np.lib.stride_tricks.sliding_window_view(x, m.n_fft)[:: m.hop_length][
+        :num_frames
+    ]
     power = np.abs(np.fft.rfft(frames * window, axis=-1)) ** 2
 
     mel = librosa.filters.mel(
@@ -254,7 +269,12 @@ def diarize(m: OnnxModel, features: np.ndarray) -> np.ndarray:
     """Returns speaker probabilities, (num_frames, num_speakers), 10 ms each."""
     sf_ = m.subsampling_factor
     num_frames = features.shape[0]
-    num_embeds = (num_frames + sf_ - 1) // sf_
+    if num_frames == 0:
+        return np.zeros((0, m.num_speakers), dtype=np.float32)
+    # The centered STFT has one more frame than the valid feature length.
+    # The processor zeroes it, but its embedding still reaches the output
+    # convolution when num_frames is a multiple of the subsampling factor.
+    num_embeds = (num_frames + sf_ - int(m.is_streaming)) // sf_
     pad = num_embeds * sf_ - num_frames
     features = np.pad(features, ((0, pad), (0, 0)))
 
@@ -266,7 +286,11 @@ def diarize(m: OnnxModel, features: np.ndarray) -> np.ndarray:
         stop = min(end + m.chunk_right_context, num_embeds)
 
         cached = cache.get_embeds()
-        probs, chunk_embeds = m.run(features[start * sf_ : stop * sf_], cached)
+        probs, chunk_embeds = m.run(
+            features[start * sf_ : stop * sf_],
+            cached,
+            min(stop * sf_, num_frames) - start * sf_,
+        )
         cache.update(chunk_embeds, probs, num_chunk_frames)
 
         c = cached.shape[0]
@@ -283,7 +307,9 @@ def to_segments(probs: np.ndarray, threshold: float, frame_shift: float):
     for s in range(active.shape[1]):
         starts = np.nonzero(changes[:, s] == 1)[0]
         ends = np.nonzero(changes[:, s] == -1)[0]
-        segments += [(b * frame_shift, e * frame_shift, s) for b, e in zip(starts, ends)]
+        segments += [
+            (b * frame_shift, e * frame_shift, s) for b, e in zip(starts, ends)
+        ]
     segments.sort()
     return segments
 
@@ -348,6 +374,9 @@ def main():
             samples, orig_sr=sample_rate, target_sr=m.sample_rate
         )
 
+    if args.num_samples > 0:
+        samples = samples[: args.num_samples]
+
     features = compute_features(samples, m)
     probs = diarize(m, features)
 
@@ -356,9 +385,11 @@ def main():
         print(f"{b:8.2f} -- {e:8.2f} speaker_{s:02d}")
 
     if args.reference:
-        ref_probs, ref_features = run_reference(
-            args.reference, samples, args.streaming
-        )
+        ref_probs, ref_features = run_reference(args.reference, samples, args.streaming)
+        if len(ref_probs) not in (len(probs), len(probs) + 1):
+            raise RuntimeError(
+                f"Unexpected frame counts: ONNX {len(probs)}, reference {len(ref_probs)}"
+            )
         if ref_features is not None:
             n = features.shape[0]
             print(
@@ -368,9 +399,14 @@ def main():
         n = min(len(ref_probs), len(probs))
         diff = np.abs(ref_probs[:n] - probs[:n])
         print(f"frames: onnx {len(probs)}, reference {len(ref_probs)}")
-        print("max prob diff:", diff.max(), "mean:", diff.mean())
+        max_diff = diff.max()
+        print("max prob diff:", max_diff, "mean:", diff.mean())
         agree = (ref_probs[:n] > args.threshold) == (probs[:n] > args.threshold)
         print("decision agreement:", agree.mean())
+        if not np.isfinite(max_diff) or max_diff > args.max_prob_diff:
+            raise RuntimeError(
+                f"Probability difference {max_diff} exceeds {args.max_prob_diff}"
+            )
 
 
 if __name__ == "__main__":

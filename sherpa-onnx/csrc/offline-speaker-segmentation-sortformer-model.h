@@ -35,13 +35,15 @@ class OfflineSpeakerSegmentationSortformerModel {
    * @param cached_embeds A 3-D float tensor of shape (1, C, hidden_size),
    *                      containing the speaker cache and FIFO queue. C can
    *                      be 0.
+   * @param num_frames Number of valid feature frames, excluding padding.
    * @return Return a pair:
    *   - probs: (1, (C + T / subsampling_factor) * subsampling_factor,
    *             num_speakers), speaker activity probabilities
    *   - chunk_embeds: (1, T / subsampling_factor, hidden_size)
    */
   std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features,
-                                            Ort::Value cached_embeds) const;
+                                            Ort::Value cached_embeds,
+                                            int32_t num_frames) const;
 
  private:
   class Impl;

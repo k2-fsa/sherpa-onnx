@@ -42,7 +42,7 @@ Args:
     A 1-D float32 array of audio samples.
   callback:
     An optional callback function ``callback(processed_chunks, num_chunks)``
-    that is called to report progress. Return a non-zero value to abort.
+    that is called to report progress. Its return value is ignored.
 
 Returns:
   A list of segments, each containing speaker, start, and end times.

@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-sortformer-model.h"
 
 #include <array>
+#include <cmath>
 #include <cstdlib>
 #include <memory>
 #include <sstream>
@@ -71,13 +72,36 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
   OrtAllocator *Allocator() { return allocator_; }
 
   std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features,
-                                            Ort::Value cached_embeds) {
-    std::array<Ort::Value, 2> inputs = {std::move(features),
-                                        std::move(cached_embeds)};
+                                            Ort::Value cached_embeds,
+                                            int32_t num_frames) {
+    const auto features_shape = features.GetTensorTypeAndShapeInfo().GetShape();
+    const auto cached_shape =
+        cached_embeds.GetTensorTypeAndShapeInfo().GetShape();
+    int64_t num_embeds =
+        features_shape[1] / meta_data_.cache.subsampling_factor;
+    int64_t num_output_frames =
+        (cached_shape[1] + num_embeds) * meta_data_.cache.subsampling_factor;
+    auto length = Ort::Value::CreateTensor<int64_t>(allocator_, nullptr, 0);
+    *length.GetTensorMutableData<int64_t>() = num_frames;
+    std::array<Ort::Value, 3> inputs = {
+        std::move(features), std::move(cached_embeds), std::move(length)};
 
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
                    output_names_ptr_.data(), output_names_ptr_.size());
+
+    if (out[0].GetTensorTypeAndShapeInfo().GetElementType() !=
+            ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+        out[1].GetTensorTypeAndShapeInfo().GetElementType() !=
+            ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+        out[0].GetTensorTypeAndShapeInfo().GetShape() !=
+            std::vector<int64_t>{1, num_output_frames,
+                                 meta_data_.cache.num_speakers} ||
+        out[1].GetTensorTypeAndShapeInfo().GetShape() !=
+            std::vector<int64_t>{1, num_embeds, meta_data_.cache.hidden_size}) {
+      SHERPA_ONNX_LOGE("Invalid Sortformer output shapes/types");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     return {std::move(out[0]), std::move(out[1])};
   }
@@ -120,6 +144,16 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
+    int32_t version;
+    SHERPA_ONNX_READ_META_DATA(version, "version");
+    if (version != 2 ||
+        input_names_ != std::vector<std::string>{"features", "cached_embeds",
+                                                 "num_frames"} ||
+        output_names_ != std::vector<std::string>{"probs", "chunk_embeds"}) {
+      SHERPA_ONNX_LOGE("Unsupported Sortformer model interface/version");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     auto &m = meta_data_;
     SHERPA_ONNX_READ_META_DATA(m.sample_rate, "sample_rate");
     SHERPA_ONNX_READ_META_DATA(m.n_fft, "n_fft");
@@ -158,10 +192,20 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    if (m.chunk_length < 1 || m.hop_length < 1 || m.win_length > m.n_fft ||
-        c.subsampling_factor < 1 || c.num_speakers < 1 ||
-        c.speaker_cache_update_period < 1 ||
-        c.speaker_cache_length < (1 + c.num_silence_frames) * c.num_speakers) {
+    if (m.sample_rate < 1 || m.n_fft < 1 || m.win_length < 2 ||
+        m.win_length > m.n_fft || m.hop_length < 1 || m.num_mel_bins < 1 ||
+        !std::isfinite(m.preemphasis) || m.chunk_length < 1 ||
+        m.chunk_right_context < 0 || c.hidden_size < 1 ||
+        c.subsampling_factor < 1 || c.num_speakers < 1 || c.fifo_length < 0 ||
+        c.num_silence_frames < 0 || c.speaker_cache_update_period < 1 ||
+        c.speaker_cache_length <
+            (1LL + c.num_silence_frames) * c.num_speakers ||
+        !(c.prediction_score_threshold > 0 &&
+          c.prediction_score_threshold < 1) ||
+        !std::isfinite(c.latest_frames_score_boost) ||
+        !(c.min_positive_scores_rate >= 0 && c.min_positive_scores_rate <= 1) ||
+        !(c.strong_boost_rate >= 0 && std::isfinite(c.strong_boost_rate)) ||
+        !(c.weak_boost_rate >= 0 && std::isfinite(c.weak_boost_rate))) {
       SHERPA_ONNX_LOGE("Invalid Sortformer model meta data");
       SHERPA_ONNX_EXIT(-1);
     }
@@ -208,9 +252,11 @@ OrtAllocator *OfflineSpeakerSegmentationSortformerModel::Allocator() const {
 }
 
 std::pair<Ort::Value, Ort::Value>
-OfflineSpeakerSegmentationSortformerModel::Forward(
-    Ort::Value features, Ort::Value cached_embeds) const {
-  return impl_->Forward(std::move(features), std::move(cached_embeds));
+OfflineSpeakerSegmentationSortformerModel::Forward(Ort::Value features,
+                                                   Ort::Value cached_embeds,
+                                                   int32_t num_frames) const {
+  return impl_->Forward(std::move(features), std::move(cached_embeds),
+                        num_frames);
 }
 
 #if __ANDROID_API__ >= 9
