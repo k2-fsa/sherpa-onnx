@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 #include "sherpa-onnx/jni/common.h"
+#include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
 namespace sherpa_onnx {
 
@@ -608,4 +609,34 @@ JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_GeneratedAudio_saveImpl(
   env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
 
   return ok;
+}
+
+// ======== ZipVoice voice embedding cache JNI ========
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineTts_saveVoiceEmbeddings(
+    JNIEnv *env, jobject thiz, jstring _path) {
+  if (_path == nullptr) return 0;
+  const char *path = env->GetStringUTFChars(_path, nullptr);
+  if (path == nullptr) return 0;
+  int32_t count = sherpa_onnx::OfflineTtsZipvoiceImpl::SaveVoiceEmbeddings(path);
+  env->ReleaseStringUTFChars(_path, path);
+  return static_cast<jint>(count);
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineTts_loadVoiceEmbeddings(
+    JNIEnv *env, jobject thiz, jstring _path) {
+  if (_path == nullptr) return 0;
+  const char *path = env->GetStringUTFChars(_path, nullptr);
+  if (path == nullptr) return 0;
+  int32_t count = sherpa_onnx::OfflineTtsZipvoiceImpl::LoadVoiceEmbeddings(path);
+  env->ReleaseStringUTFChars(_path, path);
+  return static_cast<jint>(count);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineTts_clearVoiceEmbeddings(
+    JNIEnv *env, jobject thiz) {
+  sherpa_onnx::OfflineTtsZipvoiceImpl::ClearVoiceEmbeddings();
 }
