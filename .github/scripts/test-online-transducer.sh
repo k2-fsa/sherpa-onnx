@@ -100,6 +100,39 @@ case "$EXE" in
     ;;
 esac
 
+log "Test NeMo transducer with modified_beam_search and hotwords given as tokens"
+
+# Hotwords already split into the model's tokens: no bpe.vocab involved, so
+# the token sequence is exactly what the model emits for the word.
+cat > $repo/hotwords-tokens.txt << EOF
+▁the
+▁and
+▁that
+EOF
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --num-threads=2 \
+  --decoding-method=modified_beam_search \
+  --modeling-unit=tokens \
+  --hotwords-file=$repo/hotwords-tokens.txt \
+  --hotwords-score=1.5 \
+  $repo/test_wavs/0.wav > $repo/hotwords-tokens.log 2>&1
+
+cat $repo/hotwords-tokens.log
+
+case "$EXE" in
+  *decode-file-c-api*)
+    # prints only the text
+    ;;
+  *)
+    grep -q '"context_scores": \[[^]]*1.500000' $repo/hotwords-tokens.log
+    ;;
+esac
+
 rm -rf $repo
 
 log "------------------------------------------------------------"
