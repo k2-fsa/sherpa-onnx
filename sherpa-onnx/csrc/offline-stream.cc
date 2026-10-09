@@ -138,6 +138,11 @@ class OfflineStream::Impl {
 
   void AcceptWaveformImpl(int32_t sampling_rate, const float *waveform,
                           int32_t n) {
+    if (config_.parakeet_reference_frontend &&
+        sampling_rate == config_.sampling_rate) {
+      samples_.insert(samples_.end(), waveform, waveform + n);
+      return;
+    }
     if (sampling_rate != config_.sampling_rate) {
       SHERPA_ONNX_LOGE(
           "Creating a resampler:\n"
@@ -155,7 +160,8 @@ class OfflineStream::Impl {
       std::vector<float> samples;
       resampler->Resample(waveform, n, true, &samples);
 
-      if (is_moonshine_ || is_omnilingual_asr_) {
+      if (is_moonshine_ || is_omnilingual_asr_ ||
+          config_.parakeet_reference_frontend) {
         samples_.insert(samples_.end(), samples.begin(), samples.end());
       } else if (fbank_) {
         fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
@@ -218,6 +224,9 @@ class OfflineStream::Impl {
   }
 
   std::vector<float> GetFrames() const {
+    if (config_.parakeet_reference_frontend) {
+      return ParakeetReferenceFrames();
+    }
     if (is_moonshine_ || is_omnilingual_asr_) {
       return samples_;
     }
@@ -346,6 +355,71 @@ class OfflineStream::Impl {
   }
 
  private:
+  // NVIDIA Parakeet v3 reference preprocessing. Buffering belongs to an offline
+  // stream only. The optional path preserves the input clock: no public padding
+  // is added and the encoder length is floor(real_samples / 160).
+  std::vector<float> ParakeetReferenceFrames() const {
+    constexpr int32_t kBins = 128;
+    constexpr int32_t kHalfWindow = 200;
+    constexpr int32_t kHop = 160;
+    const int32_t n = static_cast<int32_t>(samples_.size() / kHop);
+    if (n < 2) return {};  // sample variance needs at least two frames
+
+    knf::FbankOptions options;
+    options.frame_opts.samp_freq = 16000;
+    options.frame_opts.frame_shift_ms = 10;
+    options.frame_opts.frame_length_ms = 25;
+    options.frame_opts.dither = 0;
+    options.frame_opts.remove_dc_offset = false;
+    options.frame_opts.preemph_coeff = 0;
+    options.frame_opts.window_type = "hanning";
+    options.frame_opts.snip_edges = true;
+    options.frame_opts.round_to_power_of_two = true;
+    options.mel_opts.num_bins = kBins;
+    options.mel_opts.low_freq = 0;
+    options.mel_opts.high_freq = 0;  // Nyquist, matching NeMo's default
+    options.mel_opts.is_librosa = true;
+    options.use_log_fbank = false;
+
+    // Preemphasize before zero padding, across the whole supplied waveform.
+    // A 400-point Hann centered at i*160 gives the same power spectrum as
+    // torch.stft(n_fft=512, win_length=400, center=True, pad_mode="constant").
+    std::vector<float> padded(samples_.size() + 2 * kHalfWindow, 0.0f);
+    padded[kHalfWindow] = samples_[0];
+    for (size_t i = 1; i < samples_.size(); ++i) {
+      padded[kHalfWindow + i] = samples_[i] - 0.97f * samples_[i - 1];
+    }
+    knf::OnlineFbank fbank(options);
+    fbank.AcceptWaveform(16000, padded.data(), padded.size());
+    fbank.InputFinished();
+    assert(fbank.NumFramesReady() >= n);
+    std::vector<float> features(n * kBins);
+    for (int32_t i = 0; i < n; ++i) {
+      const float *frame = fbank.GetFrame(i);
+      for (int32_t j = 0; j < kBins; ++j) {
+        features[i * kBins + j] = std::log(frame[j] + 5.960464477539063e-8f);
+      }
+    }
+    // Normalize only valid frames, with sample variance and NeMo's epsilon.
+    // Centered accumulation avoids catastrophic cancellation on quiet bins.
+    for (int32_t j = 0; j < kBins; ++j) {
+      double mean = 0;
+      for (int32_t i = 0; i < n; ++i) mean += features[i * kBins + j];
+      mean /= n;
+      double variance = 0;
+      for (int32_t i = 0; i < n; ++i) {
+        const double delta = features[i * kBins + j] - mean;
+        variance += delta * delta;
+      }
+      const double denominator = std::sqrt(variance / (n - 1)) + 1e-5;
+      for (int32_t i = 0; i < n; ++i) {
+        features[i * kBins + j] =
+            static_cast<float>((features[i * kBins + j] - mean) / denominator);
+      }
+    }
+    return features;
+  }
+
   FeatureExtractorConfig config_;
   std::unique_ptr<knf::OnlineFbank> fbank_;
   std::unique_ptr<knf::OnlineMfcc> mfcc_;

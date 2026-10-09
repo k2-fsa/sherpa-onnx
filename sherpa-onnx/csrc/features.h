@@ -55,6 +55,10 @@ struct FeatureExtractorConfig {
   bool snip_edges = false;
   float frame_shift_ms = 10.0f;   // in milliseconds.
   float frame_length_ms = 25.0f;  // in milliseconds.
+  // Model-reference frontend; selected only for the exact Parakeet v3
+  // metadata by the offline NeMo recognizer. Other models retain their
+  // frontend.
+  bool parakeet_reference_frontend = false;
   bool is_librosa = false;
   bool remove_dc_offset = true;       // Subtract mean of wave before FFT.
   float preemph_coeff = 0.97f;        // Preemphasis coefficient.

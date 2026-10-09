@@ -91,6 +91,7 @@ class OfflineTransducerNeMoModel {
   // true if it is a Token-and-Duration Transducer model
   // false otherwise
   bool IsTDT() const;
+  bool IsParakeetV3() const;
 
   int32_t FeatureDim() const;
 
