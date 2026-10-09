@@ -177,6 +177,23 @@ static std::string BuildUserPrompt(const std::vector<std::string> &hotwords,
 
 }  // namespace
 
+std::string FunASRNanoBuildUserPrompt(
+    const OfflineFunASRNanoModelConfig &config, const OfflineStream &stream) {
+  const auto &hotwords = stream.HasOption("hotwords")
+                            ? stream.GetOption("hotwords")
+                            : config.hotwords;
+  const auto &language = stream.HasOption("language")
+                            ? stream.GetOption("language")
+                            : config.language;
+  const auto &user_prompt = stream.HasOption("user_prompt")
+                               ? stream.GetOption("user_prompt")
+                               : config.user_prompt;
+  const bool itn = stream.GetOptionInt("itn", config.itn) != 0;
+
+  return BuildUserPrompt(ParseHotwordsCsv(hotwords), &language, itn,
+                         &user_prompt);
+}
+
 bool FunASRNanoAudioIsSilent(const float *features, int32_t n) {
   if (n <= 0) {
     return false;
@@ -901,25 +918,10 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
 
     Ort::Value encoder_out = model_->ForwardEncoderAdaptor(std::move(features));
 
-    // Parse hotwords parameter
-    std::vector<std::string> hotwords =
-        ParseHotwordsCsv(funasr_config.hotwords);
-
-    // language is empty means None
-    const std::string *lang_ptr =
-        funasr_config.language.empty() ? nullptr : &funasr_config.language;
-
-    // Build user prompt: respect funasr_config.user_prompt; merge with
-    // hotwords/language/itn when provided.
-    std::string user_prompt_dyn = BuildUserPrompt(
-        hotwords, lang_ptr, funasr_config.itn, &funasr_config.user_prompt);
+    std::string user_prompt_dyn =
+        FunASRNanoBuildUserPrompt(funasr_config, *ss[i]);
 
     if (config_.model_config.debug) {
-      SHERPA_ONNX_LOGE(
-          "DecodeStreams: hotwords=%zu, language=%s, itn=%d", hotwords.size(),
-          funasr_config.language.empty() ? "(empty)"
-                                         : funasr_config.language.c_str(),
-          funasr_config.itn ? 1 : 0);
       SHERPA_ONNX_LOGE("DecodeStreams: user_prompt_dyn=%s",
                        user_prompt_dyn.c_str());
     }
