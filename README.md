@@ -575,6 +575,21 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > splits each recording into speech segments, and sherpa-onnx's INT8 export of
 > Qwen3-ASR 0.6B transcribes them. The ~1 GB model is downloaded on demand.
 
+### [inlaut](https://github.com/tobymarks/inlaut)
+
+> A free, open-source (GPL-3.0) push-to-talk dictation app for the macOS menu
+> bar. Hold a key, speak, and the text is pasted at the cursor in any app.
+> Speech recognition runs fully on-device: no account, no cloud.
+
+It calls the sherpa-onnx C API from Swift to run
+[parakeet-primeline](https://huggingface.co/primeline/parakeet-primeline), a
+German fine-tune of NVIDIA Parakeet, as an int8 `nemo_transducer` on the CPU
+(4 threads, greedy search). The model stays loaded, so 10 s of speech becomes
+text in about 0.3 s on an M3. Long recordings are split at pauses before
+decoding.
+
+- [Website](https://inlaut.de) (German)
+
 ### China Unicom 中国联通安卓 App
 
 > The Android App (version `>= 12.14.1 (2026.07.28)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
