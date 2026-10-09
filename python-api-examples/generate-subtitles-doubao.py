@@ -149,16 +149,18 @@ def get_args():
 
     parser.add_argument(
         "--enable-itn",
-        type=bool,
-        default=True,
-        help="True to enable inverse text normalization, e.g., 一九九六年 -> 1996年",
+        type=int,
+        default=1,
+        help="""0 to disable inverse text normalization, e.g., 一九九六年 ->
+        1996年; any non-zero value enables it""",
     )
 
     parser.add_argument(
         "--enable-punc",
-        type=bool,
-        default=True,
-        help="True to let the model add punctuation",
+        type=int,
+        default=1,
+        help="""0 to disable punctuation; any non-zero value lets the model
+        add punctuation""",
     )
 
     parser.add_argument(
@@ -453,8 +455,8 @@ def main():
     client = DoubaoAsrClient(
         api_key=api_key,
         resource_id=args.resource_id,
-        enable_itn=args.enable_itn,
-        enable_punc=args.enable_punc,
+        enable_itn=bool(args.enable_itn),
+        enable_punc=bool(args.enable_punc),
         query_interval=args.query_interval,
         query_timeout=args.query_timeout,
     )
