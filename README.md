@@ -577,9 +577,15 @@ making it easy to match supported sherpa-onnx models to different hardware.
 
 ### China Unicom 中国联通安卓 App
 
-> The Android App (version `>= 13.0`) uses `sherpa-onnx` Kotlin API for keyword spotting.
+> The Android App (version `>= 12.14.1 (2026.07.28)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
 
 <img width="800" alt="APK lib screenshot showing only armeabi-v7a" src="https://github.com/user-attachments/assets/a9ce9731-1ec7-4975-a62e-2dd44b8f3bfe" />
+
+### China Life 中国人寿 App
+
+> The Android App (version `>= 3.5.46 (2026.03.23)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
+
+<img width="800" alt="APK lib screenshot" src="https://github.com/user-attachments/assets/0d9d8021-f908-4659-993f-95b5c789d5c6" />
 
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
