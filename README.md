@@ -575,6 +575,12 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > splits each recording into speech segments, and sherpa-onnx's INT8 export of
 > Qwen3-ASR 0.6B transcribes them. The ~1 GB model is downloaded on demand.
 
+### China Unicom 中国联通安卓 App
+
+> The Android App (version `>= 13.0`) uses `sherpa-onnx` Kotlin API for keyword spotting.
+
+<img width="800" alt="APK lib screenshot showing only armeabi-v7a" src="https://github.com/user-attachments/assets/a9ce9731-1ec7-4975-a62e-2dd44b8f3bfe" />
+
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
