@@ -41,6 +41,11 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
   po->Register("max-active-paths", &max_active_paths,
                "Used only when decoding_method is modified_beam_search");
 
+  po->Register("num-return-paths", &num_return_paths,
+               "Number of hypotheses to return per utterance. Used only for "
+               "transducer models when decoding_method is "
+               "modified_beam_search. It is clamped to max_active_paths.");
+
   po->Register("blank-penalty", &blank_penalty,
                "The penalty applied on blank symbol during decoding. "
                "Note: It is a positive value. "
@@ -70,6 +75,20 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineRecognizerConfig::Validate() const {
+  if (num_return_paths < 1) {
+    SHERPA_ONNX_LOGE("num_return_paths must be >= 1! Given: %d",
+                     num_return_paths);
+    return false;
+  }
+
+  if (num_return_paths > 1 && decoding_method != "modified_beam_search") {
+    SHERPA_ONNX_LOGE(
+        "num_return_paths > 1 requires --decoding-method=modified_beam_search."
+        " Given --decoding-method='%s', --num-return-paths=%d",
+        decoding_method.c_str(), num_return_paths);
+    return false;
+  }
+
   if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
     if (max_active_paths <= 0) {
       SHERPA_ONNX_LOGE("max_active_paths is less than 0! Given: %d",
@@ -141,6 +160,7 @@ std::string OfflineRecognizerConfig::ToString() const {
 
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
+  os << "num_return_paths=" << num_return_paths << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "blank_penalty=" << blank_penalty << ", ";
@@ -176,6 +196,12 @@ void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) const {
   for (int32_t i = 0; i < n; ++i) {
     auto r = ss[i]->GetResult();
     r.text = RemoveLeadingSpaces(r.text);
+
+    // Keep every hypothesis in the n-best list formatted like r.text
+    for (auto &hyp : r.hypotheses) {
+      hyp.text = RemoveLeadingSpaces(hyp.text);
+    }
+
     ss[i]->SetResult(r);
   }
 }

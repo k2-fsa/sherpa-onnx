@@ -31,6 +31,13 @@ struct OfflineRecognizerConfig {
   std::string decoding_method = "greedy_search";
   int32_t max_active_paths = 4;
 
+  // Number of hypotheses to return per utterance.
+  //
+  // Used only by offline transducer models with
+  // decoding_method == "modified_beam_search". When > 1, each result carries
+  // an n-best list; the top-level fields always describe the 1-best.
+  int32_t num_return_paths = 1;
+
   std::string hotwords_file;
   float hotwords_score = 1.5;
 
@@ -54,13 +61,15 @@ struct OfflineRecognizerConfig {
       const std::string &decoding_method, int32_t max_active_paths,
       const std::string &hotwords_file, float hotwords_score,
       float blank_penalty, const std::string &rule_fsts,
-      const std::string &rule_fars, const HomophoneReplacerConfig &hr)
+      const std::string &rule_fars, const HomophoneReplacerConfig &hr,
+      int32_t num_return_paths = 1)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
         ctc_fst_decoder_config(ctc_fst_decoder_config),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
+        num_return_paths(num_return_paths),
         hotwords_file(hotwords_file),
         hotwords_score(hotwords_score),
         blank_penalty(blank_penalty),

@@ -183,14 +183,40 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
 
   std::vector<OfflineTransducerDecoderResult> unsorted_ans(batch_size);
   for (int32_t i = 0; i != batch_size; ++i) {
-    Hypothesis hyp = cur[i].GetMostProbable(true);
-
     auto &r = unsorted_ans[packed_encoder_out.sorted_indexes[i]];
 
-    // strip leading blanks
-    r.tokens = {hyp.ys.begin() + context_size, hyp.ys.end()};
-    r.timestamps = std::move(hyp.timestamps);
-    r.ys_log_probs = std::move(hyp.ys_probs);
+    if (num_return_paths_ <= 1) {
+      Hypothesis hyp = cur[i].GetMostProbable(true);
+
+      // strip leading blanks
+      r.tokens = {hyp.ys.begin() + context_size, hyp.ys.end()};
+      r.timestamps = std::move(hyp.timestamps);
+      r.ys_log_probs = std::move(hyp.ys_probs);
+      continue;
+    }
+
+    // GetTopK() ranks by the same length-normalized score as
+    // GetMostProbable(true), so top_k[0] is the 1-best hypothesis and the
+    // legacy fields below keep their existing meaning. (The two differ only
+    // in how they break an exact score tie, since partial_sort is not
+    // stable.) GetTopK() also clamps k to [1, Size()], so fewer than
+    // num_return_paths hypotheses come back when the beam holds fewer.
+    auto top_k = cur[i].GetTopK(num_return_paths_, true);
+
+    r.hypotheses.reserve(top_k.size());
+    for (auto &hyp : top_k) {
+      OfflineTransducerHypothesis h;
+      // strip leading blanks
+      h.tokens = {hyp.ys.begin() + context_size, hyp.ys.end()};
+      h.timestamps = std::move(hyp.timestamps);
+      h.ys_log_probs = std::move(hyp.ys_probs);
+      h.score = static_cast<float>(hyp.TotalLogProb());
+      r.hypotheses.push_back(std::move(h));
+    }
+
+    r.tokens = r.hypotheses[0].tokens;
+    r.timestamps = r.hypotheses[0].timestamps;
+    r.ys_log_probs = r.hypotheses[0].ys_log_probs;
   }
 
   return unsorted_ans;
