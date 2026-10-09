@@ -36,6 +36,10 @@ data class OfflineNemoEncDecCtcModelConfig(
 
 data class OfflineDolphinModelConfig(
     var model: String = "",
+    var encoder: String = "",
+    var decoder: String = "",
+    var language: String = "",
+    var region: String = "",
 )
 
 data class OfflineZipformerCtcModelConfig(

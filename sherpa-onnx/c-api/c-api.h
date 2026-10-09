@@ -971,8 +971,29 @@ typedef struct SherpaOnnxOfflineSenseVoiceModelConfig {
 
 /** @brief Configuration for a Dolphin model. */
 typedef struct SherpaOnnxOfflineDolphinModelConfig {
-  /** Path to the ONNX model. */
+  /** Path to the ONNX model for the CTC branch. */
   const char *model;
+
+  /** Path to encoder.onnx of the attention decoder branch.
+   * Required when decoder is given.
+   */
+  const char *encoder;
+
+  /** Path to decoder.onnx of the attention decoder branch.
+   * When non-empty, the attention decoder is used for recognition and
+   * language/region take effect.
+   */
+  const char *decoder;
+
+  /** Language code for the attention decoder, e.g., zh, en, fil.
+   * If empty, the decoder predicts the language.
+   */
+  const char *language;
+
+  /** Region code for the attention decoder, e.g., CN, PH, US.
+   * If non-empty, language must also be provided.
+   */
+  const char *region;
 } SherpaOnnxOfflineDolphinModelConfig;
 
 /** @brief Configuration for an offline Zipformer CTC model. */

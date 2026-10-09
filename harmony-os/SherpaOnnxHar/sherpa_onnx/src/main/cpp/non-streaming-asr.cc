@@ -213,6 +213,10 @@ static SherpaOnnxOfflineDolphinModelConfig GetOfflineDolphinModelConfig(
   Napi::Object o = obj.Get("dolphin").As<Napi::Object>();
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(language, language);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(region, region);
 
   return c;
 }
@@ -462,6 +466,10 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr.decoder);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.dolphin.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.dolphin.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.dolphin.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.dolphin.language);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.dolphin.region);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.zipformer_ctc.model);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.encoder);

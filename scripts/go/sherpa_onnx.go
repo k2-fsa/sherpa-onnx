@@ -479,7 +479,11 @@ type OfflineFireRedAsrCtcModelConfig struct {
 }
 
 type OfflineDolphinModelConfig struct {
-	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+	Model    string // Path to the model, e.g., model.onnx or model.int8.onnx
+	Encoder  string // Optional. Path to encoder.onnx of the attention decoder branch. Required when Decoder is given.
+	Decoder  string // Optional. Path to decoder.onnx of the attention decoder branch. When non-empty, the attention decoder is used for recognition.
+	Language string // Optional. Language code for the attention decoder, e.g., zh, en, fil. Empty means auto-detection.
+	Region   string // Optional. Region code for the attention decoder, e.g., CN, PH, US. Requires Language.
 }
 
 type OfflineWhisperModelConfig struct {
@@ -701,6 +705,10 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.funasr_nano.hotwords = C.CString(config.ModelConfig.FunAsrNano.Hotwords)
 
 	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
+	c.model_config.dolphin.encoder = C.CString(config.ModelConfig.Dolphin.Encoder)
+	c.model_config.dolphin.decoder = C.CString(config.ModelConfig.Dolphin.Decoder)
+	c.model_config.dolphin.language = C.CString(config.ModelConfig.Dolphin.Language)
+	c.model_config.dolphin.region = C.CString(config.ModelConfig.Dolphin.Region)
 	c.model_config.zipformer_ctc.model = C.CString(config.ModelConfig.ZipformerCtc.Model)
 
 	c.model_config.canary.encoder = C.CString(config.ModelConfig.Canary.Encoder)
@@ -797,6 +805,10 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.funasr_nano.language,
 		&c.model_config.funasr_nano.hotwords,
 		&c.model_config.dolphin.model,
+		&c.model_config.dolphin.encoder,
+		&c.model_config.dolphin.decoder,
+		&c.model_config.dolphin.language,
+		&c.model_config.dolphin.region,
 		&c.model_config.zipformer_ctc.model,
 		&c.model_config.canary.encoder,
 		&c.model_config.canary.decoder,

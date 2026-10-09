@@ -22,7 +22,7 @@ static_assert(sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) == 13 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineQwen3ASRModelConfig) == 10 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineCohereTranscribeModelConfig) == 5 * 4,
               "");
-static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
+static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 7 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFireRedAsrModelConfig) == 2 * 4, "");
@@ -214,6 +214,10 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
 
   fprintf(stdout, "----------offline Dolphin model config----------\n");
   fprintf(stdout, "model: %s\n", dolphin->model);
+  fprintf(stdout, "encoder: %s\n", dolphin->encoder);
+  fprintf(stdout, "decoder: %s\n", dolphin->decoder);
+  fprintf(stdout, "language: %s\n", dolphin->language);
+  fprintf(stdout, "region: %s\n", dolphin->region);
 
   fprintf(stdout, "----------offline zipformer ctc model config----------\n");
   fprintf(stdout, "model: %s\n", zipformer_ctc->model);

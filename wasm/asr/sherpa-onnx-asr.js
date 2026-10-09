@@ -768,16 +768,49 @@ function initSherpaOnnxOfflineNemoEncDecCtcModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineDolphinModelConfig(config, Module) {
-  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+  const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
+  const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
+  const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
+  const languageLen = Module.lengthBytesUTF8(config.language || '') + 1;
+  const regionLen = Module.lengthBytesUTF8(config.region || '') + 1;
 
+  const n = modelLen + encoderLen + decoderLen + languageLen + regionLen;
   const buffer = Module._malloc(n);
 
-  const len = 1 * 4;  // 1 pointer
+  const len = 5 * 4;  // 5 pointers
   const ptr = Module._malloc(len);
 
-  Module.stringToUTF8(config.model || '', buffer, n);
+  let offset = 0;
+  Module.stringToUTF8(config.model || '', buffer + offset, modelLen);
+  offset += modelLen;
 
-  Module.setValue(ptr, buffer, 'i8*');
+  Module.stringToUTF8(config.encoder || '', buffer + offset, encoderLen);
+  offset += encoderLen;
+
+  Module.stringToUTF8(config.decoder || '', buffer + offset, decoderLen);
+  offset += decoderLen;
+
+  Module.stringToUTF8(config.language || '', buffer + offset, languageLen);
+  offset += languageLen;
+
+  Module.stringToUTF8(config.region || '', buffer + offset, regionLen);
+  offset += regionLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += modelLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += encoderLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += decoderLen;
+
+  Module.setValue(ptr + 12, buffer + offset, 'i8*');
+  offset += languageLen;
+
+  Module.setValue(ptr + 16, buffer + offset, 'i8*');
+  offset += regionLen;
 
   return {
     buffer: buffer,
@@ -1349,6 +1382,10 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   if (!('dolphin' in config)) {
     config.dolphin = {
       model: '',
+      encoder: '',
+      decoder: '',
+      language: '',
+      region: '',
     };
   }
 
