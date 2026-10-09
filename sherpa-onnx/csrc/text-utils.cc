@@ -34,6 +34,49 @@
 
 namespace sherpa_onnx {
 
+std::string QuoteJsonString(const std::string &text) {
+  constexpr char hex[] = "0123456789abcdef";
+  std::string ans;
+  ans.reserve(text.size() + 2);
+  ans.push_back('"');
+  for (unsigned char c : text) {
+    switch (c) {
+      case '"':
+        ans += "\\\"";
+        break;
+      case '\\':
+        ans += "\\\\";
+        break;
+      case '\b':
+        ans += "\\b";
+        break;
+      case '\f':
+        ans += "\\f";
+        break;
+      case '\n':
+        ans += "\\n";
+        break;
+      case '\r':
+        ans += "\\r";
+        break;
+      case '\t':
+        ans += "\\t";
+        break;
+      default:
+        if (c < 0x20) {
+          ans += "\\u00";
+          ans.push_back(hex[c >> 4]);
+          ans.push_back(hex[c & 0xf]);
+        } else {
+          ans.push_back(static_cast<char>(c));
+        }
+        break;
+    }
+  }
+  ans.push_back('"');
+  return ans;
+}
+
 // copied from kaldi/src/util/text-util.cc
 template <class T>
 class NumberIstream {
