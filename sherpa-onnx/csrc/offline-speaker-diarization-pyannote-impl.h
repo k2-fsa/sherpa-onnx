@@ -7,12 +7,14 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/fast-clustering.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
@@ -72,7 +74,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
         segmentation_model_(config_.segmentation),
         embedding_extractor_(config_.embedding),
         clustering_(std::make_unique<FastClustering>(config_.clustering)) {
-    Init();
+    Init(ReadFile(config_.segmentation.pyannote.model));
   }
 
   template <typename Manager>
@@ -82,7 +84,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
         segmentation_model_(mgr, config_.segmentation),
         embedding_extractor_(mgr, config_.embedding),
         clustering_(std::make_unique<FastClustering>(config_.clustering)) {
-    Init();
+    Init(ReadFile(mgr, config_.segmentation.pyannote.model));
   }
 
   int32_t SampleRate() const override {
@@ -255,7 +257,28 @@ class OfflineSpeakerDiarizationPyannoteImpl
 #endif
   }
 
-  void Init() { InitPowersetMapping(); }
+  void Init(const std::vector<char> &model) {
+    InitPowersetMapping();
+    // Batching is bit-identical on CPU. On CUDA it changed the final
+    // segments in testing, so other providers keep one window per call.
+    batch_segmentation_ = config_.segmentation.provider == "cpu" &&
+                          !model.empty() && !IsQuantized(model);
+  }
+
+  // Dynamically quantized models compute one quantization scale over the
+  // whole input tensor, so batching windows changes their outputs (see #3853).
+  // Keep those on the one-window path.
+  static bool IsQuantized(const std::vector<char> &model) {
+    const std::string bytes(model.begin(), model.end());
+    for (const char *op :
+         {"QuantizeLinear", "DequantizeLinear", "MatMulInteger", "ConvInteger",
+          "MatMulNBits", "QLinear", "QGemm"}) {
+      if (bytes.find(op) != std::string::npos) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   // see also
   // https://github.com/pyannote/pyannote-audio/blob/develop/pyannote/audio/utils/powerset.py#L68
@@ -335,21 +358,71 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     ans.reserve(num_chunks + has_last_chunk);
 
-    const float *p = audio;
+    if (batch_segmentation_) {
+      constexpr int32_t batch_size = 16;
+      std::vector<float> buf(batch_size * window_size);
+      auto memory_info =
+          Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+      // Set to false if the model rejects a batch, e.g. an export with a
+      // fixed batch size of 1. The rest of the windows then run one by one.
+      bool batched = true;
+      for (int32_t i = 0; i < num_chunks; i += batch_size) {
+        int32_t count = std::min(batch_size, num_chunks - i);
+        if (count == 1 || !batched) {
+          for (int32_t j = 0; j < count; ++j) {
+            ans.push_back(ProcessChunk(audio + (i + j) * window_shift));
+          }
+          continue;
+        }
+        for (int32_t j = 0; j < count; ++j) {
+          float *dst = buf.data() + j * window_size;
+          const float *src = audio + (i + j) * window_shift;
+          std::copy(src, src + window_size, dst);
+        }
 
-    for (int32_t i = 0; i != num_chunks; ++i, p += window_shift) {
-      Matrix2D m = ProcessChunk(p);
-
-      ans.push_back(std::move(m));
-    }
-
-    if (has_last_chunk) {
-      std::vector<float> buf(window_size);
-      std::copy(p, audio + n, buf.data());
-
-      Matrix2D m = ProcessChunk(buf.data());
-
-      ans.push_back(std::move(m));
+        std::array<int64_t, 3> shape = {count, 1, window_size};
+        Ort::Value x = Ort::Value::CreateTensor(
+            memory_info, buf.data(), count * window_size, shape.data(),
+            shape.size());
+        Ort::Value out{nullptr};
+        try {
+          out = segmentation_model_.Forward(std::move(x));
+        } catch (const Ort::Exception &e) {
+          SHERPA_ONNX_LOGE("Batched segmentation failed (%s). Running one "
+                           "window at a time.", e.what());
+        }
+        auto out_shape = out ? out.GetTensorTypeAndShapeInfo().GetShape()
+                             : std::vector<int64_t>{};
+        if (out_shape.size() != 3 || out_shape[0] != count) {
+          batched = false;
+          i -= batch_size;  // redo this batch one window at a time
+          continue;
+        }
+        int64_t output_size = out_shape[1] * out_shape[2];
+        const float *data = out.GetTensorData<float>();
+        for (int32_t j = 0; j < count; ++j) {
+          Matrix2D m(out_shape[1], out_shape[2]);
+          std::copy(data + j * output_size, data + (j + 1) * output_size,
+                    &m(0, 0));
+          ans.push_back(std::move(m));
+        }
+      }
+      if (has_last_chunk) {
+        std::vector<float> tail(window_size);
+        const float *p = audio + num_chunks * window_shift;
+        std::copy(p, audio + n, tail.data());
+        ans.push_back(ProcessChunk(tail.data()));
+      }
+    } else {
+      const float *p = audio;
+      for (int32_t i = 0; i != num_chunks; ++i, p += window_shift) {
+        ans.push_back(ProcessChunk(p));
+      }
+      if (has_last_chunk) {
+        std::vector<float> buf(window_size);
+        std::copy(p, audio + n, buf.data());
+        ans.push_back(ProcessChunk(buf.data()));
+      }
     }
 
     return ans;
@@ -885,6 +958,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
   SpeakerEmbeddingExtractor embedding_extractor_;
   std::unique_ptr<FastClustering> clustering_;
   Matrix2DInt32 powerset_mapping_;
+  bool batch_segmentation_ = false;
 };
 
 }  // namespace sherpa_onnx
