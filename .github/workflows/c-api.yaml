@@ -1689,6 +1689,34 @@ jobs:
           rm 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
           rm 0-four-speakers-zh.wav
 
+      # Uncomment after sherpa-onnx-nemotron-3-diarization.tar.bz2 is published
+      # - name: Test offline speaker diarization (Sortformer)
+      #   shell: bash
+      #   run: |
+      #     name=offline-speaker-diarization-sortformer-c-api
+      #     gcc -o $name ./c-api-examples/$name.c \
+      #       -I ./build/install/include \
+      #       -L ./build/install/lib/ \
+      #       -l sherpa-onnx-c-api \
+      #       -l onnxruntime
+      #
+      #     ls -lh $name
+      #
+      #     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-nemotron-3-diarization.tar.bz2
+      #     tar xvf sherpa-onnx-nemotron-3-diarization.tar.bz2
+      #     rm sherpa-onnx-nemotron-3-diarization.tar.bz2
+      #
+      #     cp sherpa-onnx-nemotron-3-diarization/test_wavs/0-four-speakers-zh.wav .
+      #
+      #     export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+      #     export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+      #
+      #     ./$name
+      #
+      #     rm $name
+      #     rm -rf sherpa-onnx-nemotron-3-diarization
+      #     rm 0-four-speakers-zh.wav
+
       - name: Test ffmpeg
         # if: matrix.os == 'macos-latest'
         if: false
