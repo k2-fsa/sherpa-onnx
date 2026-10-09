@@ -273,13 +273,25 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
 #endif
   }
 
-  auto recognizer = new sherpa_onnx::OnlineRecognizer(
+  // A corrupt model file raises Ort::Exception (which derives from
+  // std::exception) inside the constructor; letting it cross the JNI
+  // boundary terminates the process (std::terminate). Convert it to a
+  // Java exception so callers can catch it.
+  try {
+    auto recognizer = new sherpa_onnx::OnlineRecognizer(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
 
-  return (jlong)recognizer;
+    return (jlong)recognizer;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlineRecognizer: %s", e.what());
+    jclass exception_class = env->FindClass("java/lang/Exception");
+    env->ThrowNew(exception_class, e.what());
+    env->DeleteLocalRef(exception_class);
+    return 0;
+  }
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -309,9 +321,19 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromFile(
     return 0;
   }
 
-  auto recognizer = new sherpa_onnx::OnlineRecognizer(config);
+  // See newFromAsset above: convert C++ exceptions to a Java exception
+  // instead of terminating the process.
+  try {
+    auto recognizer = new sherpa_onnx::OnlineRecognizer(config);
 
-  return (jlong)recognizer;
+    return (jlong)recognizer;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlineRecognizer: %s", e.what());
+    jclass exception_class = env->FindClass("java/lang/Exception");
+    env->ThrowNew(exception_class, e.what());
+    env->DeleteLocalRef(exception_class);
+    return 0;
+  }
 }
 
 SHERPA_ONNX_EXTERN_C
