@@ -235,6 +235,14 @@ class OfflineRecognizer {
     c.ref.model.qwen3Asr.seed = config.model.qwen3Asr.seed;
     c.ref.model.qwen3Asr.hotwords = config.model.qwen3Asr.hotwords
         .toNativeUtf8();
+    c.ref.model.qwen3Asr.forcedAlignerConvFrontend =
+        config.model.qwen3Asr.forcedAlignerConvFrontend.toNativeUtf8();
+    c.ref.model.qwen3Asr.forcedAlignerEncoder =
+        config.model.qwen3Asr.forcedAlignerEncoder.toNativeUtf8();
+    c.ref.model.qwen3Asr.forcedAlignerDecoder =
+        config.model.qwen3Asr.forcedAlignerDecoder.toNativeUtf8();
+    c.ref.model.qwen3Asr.forcedAlignerTokenizer =
+        config.model.qwen3Asr.forcedAlignerTokenizer.toNativeUtf8();
 
     c.ref.model.cohereTranscribe.encoder = config
         .model
@@ -300,6 +308,10 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.qwen3Asr.forcedAlignerTokenizer);
+    calloc.free(c.ref.model.qwen3Asr.forcedAlignerDecoder);
+    calloc.free(c.ref.model.qwen3Asr.forcedAlignerEncoder);
+    calloc.free(c.ref.model.qwen3Asr.forcedAlignerConvFrontend);
     calloc.free(c.ref.model.qwen3Asr.hotwords);
     calloc.free(c.ref.model.qwen3Asr.tokenizer);
     calloc.free(c.ref.model.qwen3Asr.decoder);

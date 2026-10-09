@@ -502,7 +502,11 @@ public func sherpaOnnxOfflineQwen3ASRModelConfig(
   temperature: Float = 1e-6,
   topP: Float = 0.8,
   seed: Int = 42,
-  hotwords: String = ""
+  hotwords: String = "",
+  forcedAlignerConvFrontend: String = "",
+  forcedAlignerEncoder: String = "",
+  forcedAlignerDecoder: String = "",
+  forcedAlignerTokenizer: String = ""
 ) -> SherpaOnnxOfflineQwen3ASRModelConfig {
   return SherpaOnnxOfflineQwen3ASRModelConfig(
     conv_frontend: toCPointer(convFrontend),
@@ -514,7 +518,11 @@ public func sherpaOnnxOfflineQwen3ASRModelConfig(
     temperature: temperature,
     top_p: topP,
     seed: Int32(seed),
-    hotwords: toCPointer(hotwords)
+    hotwords: toCPointer(hotwords),
+    forced_aligner_conv_frontend: toCPointer(forcedAlignerConvFrontend),
+    forced_aligner_encoder: toCPointer(forcedAlignerEncoder),
+    forced_aligner_decoder: toCPointer(forcedAlignerDecoder),
+    forced_aligner_tokenizer: toCPointer(forcedAlignerTokenizer)
   )
 }
 
