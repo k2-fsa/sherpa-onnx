@@ -833,6 +833,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     math-test.cc
     offline-recognizer-canary-impl-test.cc
     offline-recognizer-cohere-transcribe-impl-test.cc
+    offline-recognizer-ctc-impl-test.cc
     offline-recognizer-funasr-nano-impl-test.cc
     offline-recognizer-moonshine-v2-impl-test.cc
     offline-recognizer-qwen3-asr-impl-test.cc
