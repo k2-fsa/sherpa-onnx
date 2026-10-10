@@ -22,6 +22,10 @@ struct OfflineTtsZipvoiceModelMetaData {
   int32_t window_length = 1024;
   int32_t num_mels = 100;
   int32_t use_espeak = 1;
+  // Zero denotes a dynamic ONNX model. AX650 uses fixed capacities.
+  int32_t max_tokens = 0;
+  int32_t max_frames = 0;
+  int32_t max_generated_frames = 0;
 };
 
 }  // namespace sherpa_onnx

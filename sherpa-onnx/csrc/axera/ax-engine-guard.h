@@ -20,7 +20,7 @@ class AxEngineGuard {
   AxEngineGuard &operator=(AxEngineGuard &&) = delete;
 
  private:
-  static thread_local int32_t count_;
+  static int32_t count_;
 };
 
 }  // namespace sherpa_onnx

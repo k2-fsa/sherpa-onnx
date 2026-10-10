@@ -19,8 +19,9 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
                "Path to the directory containing dict for espeak-ng.");
   po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt for Chinese");
   po->Register("zipvoice-encoder", &encoder, "Path to zipvoice text model");
-  po->Register("zipvoice-decoder", &decoder,
-               "Path to zipvoice flow-matching decoder model");
+  po->Register(
+      "zipvoice-decoder", &decoder,
+      "Path to ZipVoice ONNX decoder, or AXERA four-part JSON manifest");
   po->Register("zipvoice-vocoder", &vocoder, "Path to zipvoice vocoder");
   po->Register("zipvoice-feat-scale", &feat_scale,
                "Feature scale for ZipVoice (default: 0.1)");

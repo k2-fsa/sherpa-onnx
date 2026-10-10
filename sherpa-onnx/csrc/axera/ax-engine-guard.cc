@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/axera/ax-engine-guard.h"
 
 #include <cstring>
+#include <mutex>
 
 #include "ax_engine_api.h"  // NOLINT
 #include "ax_sys_api.h"     // NOLINT
@@ -12,9 +13,14 @@
 
 namespace sherpa_onnx {
 
-thread_local int32_t AxEngineGuard::count_ = 0;
+namespace {
+std::mutex g_ax_engine_mutex;
+}  // namespace
+
+int32_t AxEngineGuard::count_ = 0;
 
 AxEngineGuard::AxEngineGuard() {
+  std::lock_guard<std::mutex> lock(g_ax_engine_mutex);
   if (count_ == 0) {
     auto ret = AX_SYS_Init();
     if (ret != 0) {
@@ -41,6 +47,7 @@ AxEngineGuard::AxEngineGuard() {
 }
 
 AxEngineGuard::~AxEngineGuard() {
+  std::lock_guard<std::mutex> lock(g_ax_engine_mutex);
   --count_;
   if (count_ == 0) {
     AX_ENGINE_Deinit();

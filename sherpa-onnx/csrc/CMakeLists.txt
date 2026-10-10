@@ -226,6 +226,13 @@ if(SHERPA_ONNX_ENABLE_AXERA)
     ./axera/offline-sense-voice-model-axera.cc
     ./axera/utils.cc
   )
+  if(SHERPA_ONNX_ENABLE_TTS)
+    list(APPEND sources
+      ./axera/tts-session.cc
+      ./axera/offline-tts-zipvoice-model-axera.cc
+      ./axera/vocos-vocoder-axera.cc
+    )
+  endif()
 endif()
 
 if(SHERPA_ONNX_ENABLE_AXCL)
@@ -845,6 +852,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     slice-test.cc
     stack-test.cc
     text-utils-test.cc
+    offline-tts-zipvoice-length-test.cc
     text2token-test.cc
     transpose-test.cc
     unbind-test.cc
@@ -868,6 +876,10 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   list(APPEND sherpa_onnx_test_srcs
     speaker-embedding-manager-test.cc
   )
+
+  if(SHERPA_ONNX_ENABLE_AXERA AND SHERPA_ONNX_ENABLE_TTS)
+    list(APPEND sherpa_onnx_test_srcs axera/ax-engine-guard-test.cc)
+  endif()
 
   function(sherpa_onnx_add_test source)
     get_filename_component(name ${source} NAME_WE)
