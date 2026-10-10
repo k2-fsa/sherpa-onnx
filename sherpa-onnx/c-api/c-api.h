@@ -1031,7 +1031,9 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   const char *encoder;
   /** Path to the decoder ONNX model (with KV cache). */
   const char *decoder;
-  /** Path to the tokenizer directory (e.g. containing `vocab.json`). */
+  /** Path to the tokenizer directory (e.g. containing `vocab.json`);
+   *  the vocab.json file path is also accepted.
+   */
   const char *tokenizer;
   /** Maximum total sequence length supported by the model. */
   int32_t max_total_len;

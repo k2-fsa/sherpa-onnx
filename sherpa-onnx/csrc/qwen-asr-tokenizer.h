@@ -16,6 +16,8 @@ namespace sherpa_onnx {
 
 class QwenAsrTokenizer {
  public:
+  /// @param tokenizer_dir  the directory containing vocab.json and
+  /// merges.txt; a vocab.json file path is also accepted.
   explicit QwenAsrTokenizer(const std::string &tokenizer_dir);
 
   template <typename Manager>
