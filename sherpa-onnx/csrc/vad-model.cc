@@ -19,6 +19,7 @@
 #include "sherpa-onnx/csrc/rknn/silero-vad-model-rknn.h"
 #endif
 
+#include "sherpa-onnx/csrc/fire-red-vad-model.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 #include "sherpa-onnx/csrc/ten-vad-model.h"
@@ -51,6 +52,10 @@ std::unique_ptr<VadModel> VadModel::Create(const VadModelConfig &config) {
     return std::make_unique<TenVadModel>(config);
   }
 
+  if (!config.fire_red_vad.model.empty()) {
+    return std::make_unique<FireRedVadModel>(config);
+  }
+
   SHERPA_ONNX_LOGE("Please provide a vad model");
   return nullptr;
 }
@@ -80,6 +85,10 @@ std::unique_ptr<VadModel> VadModel::Create(Manager *mgr,
 
   if (!config.ten_vad.model.empty()) {
     return std::make_unique<TenVadModel>(mgr, config);
+  }
+
+  if (!config.fire_red_vad.model.empty()) {
+    return std::make_unique<FireRedVadModel>(mgr, config);
   }
 
   SHERPA_ONNX_LOGE("Please provide a vad model");
