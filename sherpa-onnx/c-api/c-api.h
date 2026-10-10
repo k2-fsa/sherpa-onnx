@@ -3890,6 +3890,24 @@ typedef struct SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig {
 } SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig;
 
 /**
+ * @brief Sortformer end-to-end diarization model configuration, e.g.,
+ * Nemotron-3-Diarization.
+ *
+ * It needs neither a speaker embedding model nor clustering. Speakers are
+ * numbered in the order of their first arrival.
+ */
+typedef struct SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig {
+  /** Model filename. */
+  const char *model;
+  /**
+   * A frame is assigned to a speaker if the speaker's activity probability
+   * is larger than this value. Set to 0 (or a negative value) to use the
+   * default of 0.5.
+   */
+  float threshold;
+} SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig;
+
+/**
  * @brief Segmentation model configuration for offline speaker diarization.
  *
  * Configure exactly one model family. If multiple model families are provided,
@@ -3904,6 +3922,11 @@ typedef struct SherpaOnnxOfflineSpeakerSegmentationModelConfig {
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
   const char *provider;
+  /**
+   * Sortformer model configuration. If its model is set, pyannote,
+   * embedding and clustering are ignored.
+   */
+  SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig sortformer;
 } SherpaOnnxOfflineSpeakerSegmentationModelConfig;
 
 /**
@@ -3989,6 +4012,8 @@ SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(
  * @brief Update clustering-related settings of an existing diarizer.
  *
  * Only `config->clustering` is used. Other fields are ignored.
+ * This function has no effect for Sortformer models, which do not use
+ * clustering. Set their threshold and duration settings before creation.
  *
  * @param sd A pointer returned by SherpaOnnxCreateOfflineSpeakerDiarization().
  * @param config Configuration whose `clustering` field will be applied.

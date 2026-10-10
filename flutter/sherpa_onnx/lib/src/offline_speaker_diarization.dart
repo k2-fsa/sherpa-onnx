@@ -45,6 +45,10 @@ class OfflineSpeakerDiarization {
     c.ref.segmentation.numThreads = config.segmentation.numThreads;
     c.ref.segmentation.debug = config.segmentation.debug ? 1 : 0;
     c.ref.segmentation.provider = config.segmentation.provider.toNativeUtf8();
+    c.ref.segmentation.sortformer.model =
+        config.segmentation.sortformer.model.toNativeUtf8();
+    c.ref.segmentation.sortformer.threshold =
+        config.segmentation.sortformer.threshold;
 
     c.ref.embedding.model = config.embedding.model.toNativeUtf8();
     c.ref.embedding.numThreads = config.embedding.numThreads;
@@ -67,6 +71,7 @@ class OfflineSpeakerDiarization {
     calloc.free(c.ref.embedding.model);
     calloc.free(c.ref.segmentation.provider);
     calloc.free(c.ref.segmentation.pyannote.model);
+    calloc.free(c.ref.segmentation.sortformer.model);
     calloc.free(c);
 
     if (ptr == nullptr) {

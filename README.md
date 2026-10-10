@@ -100,7 +100,7 @@ This repository supports running the following functions **locally**
 
   - Speech-to-text (i.e., ASR); both streaming and non-streaming are supported
   - Text-to-speech (i.e., TTS)
-  - Speaker diarization
+  - Speaker diarization (including [Nemotron-3-Diarization](scripts/nemo/nemotron-3-diarization/README.md))
   - Speaker identification
   - Speaker verification
   - Spoken language identification

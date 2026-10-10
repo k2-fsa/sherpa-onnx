@@ -12,6 +12,10 @@ function freeConfig(config, Module) {
     freeConfig(config.segmentation, Module)
   }
 
+  if ('sortformer' in config) {
+    freeConfig(config.sortformer, Module)
+  }
+
   if ('embedding' in config) {
     freeConfig(config.embedding, Module)
   }
@@ -50,6 +54,31 @@ function initSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
   };
 }
 
+// Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
+// If model is set, pyannote, embedding and clustering are ignored.
+function initSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
+    config, Module) {
+  const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
+  const buffer = Module._malloc(modelLen);
+
+  const len = 2 * 4;
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, modelLen);
+
+  let offset = 0;
+  Module.setValue(ptr, buffer, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.threshold ?? 0.5, 'float');
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
   if (!('pyannote' in config)) {
     config.pyannote = {
@@ -58,10 +87,21 @@ function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
     };
   }
 
+  if (!('sortformer' in config)) {
+    config.sortformer = {
+      model: '',
+      threshold: 0.5,
+    };
+  }
+
   const pyannote = initSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
       config.pyannote, Module);
 
-  const len = pyannote.len + 3 * 4;
+  const sortformer =
+      initSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
+          config.sortformer, Module);
+
+  const len = pyannote.len + 3 * 4 + sortformer.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -78,12 +118,17 @@ function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
   const buffer = Module._malloc(providerLen);
   Module.stringToUTF8(config.provider || 'cpu', buffer, providerLen);
   Module.setValue(ptr + offset, buffer, 'i8*');
+  offset += 4;
+
+  Module._CopyHeap(sortformer.ptr, sortformer.len, ptr + offset);
+  offset += sortformer.len;
 
   return {
     buffer: buffer,
     ptr: ptr,
     len: len,
     config: pyannote,
+    sortformer: sortformer,
   };
 }
 

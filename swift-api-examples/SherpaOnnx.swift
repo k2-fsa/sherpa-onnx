@@ -670,7 +670,8 @@ public func sherpaOnnxOfflineRecognizerConfig(
     rule_fsts: toCPointer(ruleFsts),
     rule_fars: toCPointer(ruleFars),
     blank_penalty: blankPenalty,
-    hr: hr
+    hr: hr,
+    ctc_fst_decoder_config: SherpaOnnxOfflineCtcFstDecoderConfig()
   )
 }
 
@@ -1766,17 +1767,32 @@ public func sherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
     window_shift_ratio: windowShiftRatio)
 }
 
+/// Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
+/// If model is set, pyannote, embedding and clustering are ignored.
+public func sherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
+  model: String = "",
+  threshold: Float = 0.5
+) -> SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig {
+  return SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
+    model: toCPointer(model),
+    threshold: threshold)
+}
+
 public func sherpaOnnxOfflineSpeakerSegmentationModelConfig(
-  pyannote: SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig,
+  pyannote: SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig =
+    sherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(model: ""),
   numThreads: Int = 1,
   debug: Int = 0,
-  provider: String = "cpu"
+  provider: String = "cpu",
+  sortformer: SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig =
+    sherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig()
 ) -> SherpaOnnxOfflineSpeakerSegmentationModelConfig {
   return SherpaOnnxOfflineSpeakerSegmentationModelConfig(
     pyannote: pyannote,
     num_threads: Int32(numThreads),
     debug: Int32(debug),
-    provider: toCPointer(provider)
+    provider: toCPointer(provider),
+    sortformer: sortformer
   )
 }
 
@@ -1806,8 +1822,9 @@ public func sherpaOnnxSpeakerEmbeddingExtractorConfig(
 
 public func sherpaOnnxOfflineSpeakerDiarizationConfig(
   segmentation: SherpaOnnxOfflineSpeakerSegmentationModelConfig,
-  embedding: SherpaOnnxSpeakerEmbeddingExtractorConfig,
-  clustering: SherpaOnnxFastClusteringConfig,
+  embedding: SherpaOnnxSpeakerEmbeddingExtractorConfig =
+    sherpaOnnxSpeakerEmbeddingExtractorConfig(model: ""),
+  clustering: SherpaOnnxFastClusteringConfig = sherpaOnnxFastClusteringConfig(),
   minDurationOn: Float = 0.3,
   minDurationOff: Float = 0.5
 ) -> SherpaOnnxOfflineSpeakerDiarizationConfig {

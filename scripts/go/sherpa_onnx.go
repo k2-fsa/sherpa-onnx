@@ -2084,11 +2084,19 @@ type OfflineSpeakerSegmentationPyannoteModelConfig struct {
 	WindowShiftRatio float32
 }
 
+// Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
+// If Model is set, Pyannote, Embedding and Clustering are ignored.
+type OfflineSpeakerSegmentationSortformerModelConfig struct {
+	Model     string
+	Threshold float32 // 0 means the default of 0.5
+}
+
 type OfflineSpeakerSegmentationModelConfig struct {
 	Pyannote   OfflineSpeakerSegmentationPyannoteModelConfig
 	NumThreads int
 	Debug      int
 	Provider   string
+	Sortformer OfflineSpeakerSegmentationSortformerModelConfig
 }
 
 type FastClusteringConfig struct {
@@ -2126,6 +2134,10 @@ func NewOfflineSpeakerDiarization(config *OfflineSpeakerDiarizationConfig) *Offl
 
 	c.segmentation.provider = C.CString(config.Segmentation.Provider)
 	defer C.free(unsafe.Pointer(c.segmentation.provider))
+
+	c.segmentation.sortformer.model = C.CString(config.Segmentation.Sortformer.Model)
+	defer C.free(unsafe.Pointer(c.segmentation.sortformer.model))
+	c.segmentation.sortformer.threshold = C.float(config.Segmentation.Sortformer.Threshold)
 
 	c.embedding.model = C.CString(config.Embedding.Model)
 	defer C.free(unsafe.Pointer(c.embedding.model))

@@ -3192,6 +3192,12 @@ GetOfflineSpeakerDiarizationConfig(
   if (sd_config.segmentation.provider.empty()) {
     sd_config.segmentation.provider = "cpu";
   }
+  sd_config.segmentation.sortformer.model =
+      SHERPA_ONNX_OR(config->segmentation.sortformer.model, "");
+  sd_config.segmentation.sortformer.threshold =
+      config->segmentation.sortformer.threshold <= 0
+          ? 0.5f
+          : config->segmentation.sortformer.threshold;
 
   sd_config.embedding.model = SHERPA_ONNX_OR(config->embedding.model, "");
   sd_config.embedding.num_threads =
