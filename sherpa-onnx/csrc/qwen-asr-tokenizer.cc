@@ -1188,9 +1188,36 @@ void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
 // is stripped only when something precedes it, so the bare relative name
 // never underflows and a directory legitimately NAMED vocab.json keeps
 // working (the callers fall back to the literal path).
+#if __ANDROID_API__ >= 9
+// ReadFile(AAssetManager*, ...) terminates the process for a missing
+// asset, so the parent-directory probe in the manager Init below must
+// never go through it.
+static bool HasAssetFile(AAssetManager *mgr, const std::string &path) {
+  AAsset *asset = AAssetManager_open(mgr, path.c_str(), AASSET_MODE_BUFFER);
+  if (!asset) {
+    return false;
+  }
+  AAsset_close(asset);
+  return true;
+}
+#endif
+
+#if __OHOS__
+// The OHOS ReadFile returns empty for a missing file (non-fatal), so no
+// probe is needed there.
+static bool HasAssetFile(NativeResourceManager *mgr, const std::string &path) {
+  (void)mgr;
+  (void)path;
+  return true;
+}
+#endif
+
 static std::string NormalizeTokenizerDir(const std::string &p) {
   if (p.size() > 11 && EndsWith(p, "/vocab.json")) {
     return p.substr(0, p.size() - 11);
+  }
+  if (p == "vocab.json") {
+    return ".";
   }
   return p;
 }
@@ -1215,11 +1242,19 @@ void QwenAsrTokenizer::Init(const std::string &tokenizer_dir) {
 template <typename Manager>
 void QwenAsrTokenizer::Init(Manager *mgr, const std::string &tokenizer_dir) {
   // See the filesystem Init above: the vocab.json file path is accepted.
+  // Both vocab reads go through the non-fatal HasAssetFile probe: a
+  // directory NAMED vocab.json must still reach the literal-path fallback
+  // instead of terminating the process on the missing parent probe.
   const std::string norm = NormalizeTokenizerDir(tokenizer_dir);
-  const std::string vocab_content = ReadTextFile(mgr, norm + "/vocab.json");
-  const std::string fallback_content = norm == tokenizer_dir
-                                             ? ""
-                                             : ReadTextFile(mgr, tokenizer_dir + "/vocab.json");
+  std::string vocab_content;
+  if (HasAssetFile(mgr, norm + "/vocab.json")) {
+    vocab_content = ReadTextFile(mgr, norm + "/vocab.json");
+  }
+  std::string fallback_content;
+  if (norm != tokenizer_dir &&
+      HasAssetFile(mgr, tokenizer_dir + "/vocab.json")) {
+    fallback_content = ReadTextFile(mgr, tokenizer_dir + "/vocab.json");
+  }
   const std::string dir = !vocab_content.empty() || fallback_content.empty()
                               ? norm
                               : tokenizer_dir;
