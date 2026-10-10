@@ -593,6 +593,13 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the JavaScript npm package [sherpa-onnx-node][sherpa-onnx-node] with [SenseVoice](https://k2-fsa.github.io/sherpa/onnx/sense-voice/pretrained.html#sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-chinese-english-japanese-korean-cantonese)
 for local speech recognition.
 
+### [Outmake](https://outmake.app)
+
+> A free Mac app (Apple silicon, macOS 26) for running open models on the Mac itself.
+> Its Kokoro, Kitten, Piper and Supertonic voices run on sherpa-onnx: the app downloads
+> the osx-arm64 shared build and speaks through `sherpa-onnx-offline-tts`, so those
+> voices need no Python.
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
