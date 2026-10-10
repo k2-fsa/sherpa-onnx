@@ -28,6 +28,7 @@
 #include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -1110,8 +1111,11 @@ void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
                                         const std::string &config_content,
                                         const std::string &tokenizer_dir) {
   if (vocab_content.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read vocab.json from: %s",
-                     tokenizer_dir.c_str());
+    SHERPA_ONNX_LOGE(
+        "Failed to read %s/vocab.json. The tokenizer argument must be the "
+        "directory containing vocab.json and merges.txt (the vocab.json "
+        "file path is also accepted)",
+        tokenizer_dir.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
@@ -1179,24 +1183,49 @@ void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
   }
 }
 
-void QwenAsrTokenizer::Init(const std::string &tokenizer_dir) {
-  const std::string vocab_path = tokenizer_dir + "/vocab.json";
-  const std::string merges_path = tokenizer_dir + "/merges.txt";
-  const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
+// Users naturally pass the vocab.json file itself (it is the file the
+// loader reads); map it back to its directory. A trailing "/vocab.json"
+// is stripped only when something precedes it, so the bare relative name
+// never underflows and a directory legitimately NAMED vocab.json keeps
+// working (the callers fall back to the literal path).
+static std::string NormalizeTokenizerDir(const std::string &p) {
+  if (p.size() > 11 && EndsWith(p, "/vocab.json")) {
+    return p.substr(0, p.size() - 11);
+  }
+  return p;
+}
 
-  InitFromContents(ReadTextFile(vocab_path), ReadTextFile(merges_path),
-                   ReadTextFile(config_path), tokenizer_dir);
+void QwenAsrTokenizer::Init(const std::string &tokenizer_dir) {
+  // The tokenizer argument is the directory containing vocab.json and
+  // merges.txt; the vocab.json file path is accepted too (users pass it
+  // naturally, it is the file this loader reads).
+  const std::string vocab_content = ReadTextFile(NormalizeTokenizerDir(tokenizer_dir) + "/vocab.json");
+  const std::string fallback_content =
+      NormalizeTokenizerDir(tokenizer_dir) == tokenizer_dir
+          ? ""
+          : ReadTextFile(tokenizer_dir + "/vocab.json");
+  const std::string dir = !vocab_content.empty() || fallback_content.empty()
+                              ? NormalizeTokenizerDir(tokenizer_dir)
+                              : tokenizer_dir;
+  InitFromContents(vocab_content.empty() ? fallback_content : vocab_content,
+                   ReadTextFile(dir + "/merges.txt"),
+                   ReadTextFile(dir + "/tokenizer_config.json"), dir);
 }
 
 template <typename Manager>
 void QwenAsrTokenizer::Init(Manager *mgr, const std::string &tokenizer_dir) {
-  const std::string vocab_path = tokenizer_dir + "/vocab.json";
-  const std::string merges_path = tokenizer_dir + "/merges.txt";
-  const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
-
-  InitFromContents(ReadTextFile(mgr, vocab_path),
-                   ReadTextFile(mgr, merges_path),
-                   ReadTextFile(mgr, config_path), tokenizer_dir);
+  // See the filesystem Init above: the vocab.json file path is accepted.
+  const std::string norm = NormalizeTokenizerDir(tokenizer_dir);
+  const std::string vocab_content = ReadTextFile(mgr, norm + "/vocab.json");
+  const std::string fallback_content = norm == tokenizer_dir
+                                             ? ""
+                                             : ReadTextFile(mgr, tokenizer_dir + "/vocab.json");
+  const std::string dir = !vocab_content.empty() || fallback_content.empty()
+                              ? norm
+                              : tokenizer_dir;
+  InitFromContents(vocab_content.empty() ? fallback_content : vocab_content,
+                   ReadTextFile(mgr, dir + "/merges.txt"),
+                   ReadTextFile(mgr, dir + "/tokenizer_config.json"), dir);
 }
 
 std::vector<int64_t> QwenAsrTokenizer::Encode(const std::string &text) {
