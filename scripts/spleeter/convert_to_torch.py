@@ -11,6 +11,27 @@ import torch
 
 from unet import UNet
 
+# Spleeter's instrument_list, in the order configs/<model>/base_config.json
+# declares it. That order is what fixes each stem's block of TF op names.
+STEMS = {
+    "2stems": ["vocals", "accompaniment"],
+    "4stems": ["vocals", "drums", "bass", "other"],
+}
+
+# The U-Net activations, also from base_config.json. 2stems ships "params": {},
+# i.e. the unet.unet defaults; 4stems asks for ELU on both. Architecture and
+# weight shapes are identical either way, so getting this wrong loads cleanly
+# and returns garbage rather than raising.
+ACTIVATIONS = {
+    "2stems": ("LeakyReLU", "ReLU"),
+    "4stems": ("ELU", "ELU"),
+}
+
+
+def op(family, index):
+    """TF names the first op of a family with no suffix: conv2d, conv2d_1, ..."""
+    return family if index == 0 else f"{family}_{index}"
+
 
 def load_graph(frozen_graph_filename):
     # This function is modified from
@@ -52,189 +73,93 @@ def get_param(graph, name):
 
 
 @torch.no_grad()
-def main(name):
-    graph = load_graph(f"./2stems/frozen_{name}_model.pb")
-    #  for op in graph.get_operations():
-    #      print(op.name)
+def main(name, model):
+    graph = load_graph(f"./{model}/frozen_{name}_model.pb")
     x = graph.get_tensor_by_name("waveform:0")
-    #  y = graph.get_tensor_by_name("Reshape:0")
     y0 = graph.get_tensor_by_name("strided_slice_3:0")
-    #  y1 = graph.get_tensor_by_name("leaky_re_lu_5/LeakyRelu:0")
-    #  y1 = graph.get_tensor_by_name("conv2d_5/BiasAdd:0")
-    #  y1 = graph.get_tensor_by_name("conv2d_transpose/BiasAdd:0")
-    #  y1 = graph.get_tensor_by_name("re_lu/Relu:0")
-    #  y1 = graph.get_tensor_by_name("batch_normalization_6/cond/FusedBatchNorm_1:0")
-    #  y1 = graph.get_tensor_by_name("concatenate/concat:0")
-    #  y1 = graph.get_tensor_by_name("concatenate_1/concat:0")
-    #  y1 = graph.get_tensor_by_name("concatenate_4/concat:0")
-    #  y1 = graph.get_tensor_by_name("batch_normalization_11/cond/FusedBatchNorm_1:0")
-    #  y1 = graph.get_tensor_by_name("conv2d_6/Sigmoid:0")
     y1 = graph.get_tensor_by_name(f"{name}_spectrogram/mul:0")
 
-    unet = UNet()
+    # Each stem's U-Net owns a contiguous block of TF op names, in
+    # instrument_list order. Per stem: 7 conv2d (conv..conv5 plus the final
+    # up7), 6 conv2d_transpose, and 12 batch_normalization indices -- of which
+    # only 11 exist, because conv5 has no BatchNorm, but the 12th index is
+    # allocated regardless. Hence the 6 rather than 5 below.
+    index = STEMS[model].index(name)
+    conv_offset = 7 * index
+    tconv_offset = 6 * index
+    bn_offset = 12 * index
+
+    unet = UNet(*ACTIVATIONS[model])
     unet.eval()
 
     # For the conv2d in tensorflow, weight shape is (kernel_h, kernel_w, in_channel, out_channel)
     # default input shape is NHWC
-
+    #
     # For the conv2d in torch, weight shape is (out_channel, in_channel, kernel_h, kernel_w)
     # default input shape is NCHW
     state_dict = unet.state_dict()
-    #  print(list(state_dict.keys()))
 
-    if name == "vocals":
-        state_dict["conv.weight"] = get_param(graph, "conv2d/kernel").permute(
-            3, 2, 0, 1
-        )
-        state_dict["conv.bias"] = get_param(graph, "conv2d/bias")
-
-        state_dict["bn.weight"] = get_param(graph, "batch_normalization/gamma")
-        state_dict["bn.bias"] = get_param(graph, "batch_normalization/beta")
-        state_dict["bn.running_mean"] = get_param(
-            graph, "batch_normalization/moving_mean"
-        )
-        state_dict["bn.running_var"] = get_param(
-            graph, "batch_normalization/moving_variance"
-        )
-
-        conv_offset = 0
-        bn_offset = 0
-    else:
-        state_dict["conv.weight"] = get_param(graph, "conv2d_7/kernel").permute(
-            3, 2, 0, 1
-        )
-        state_dict["conv.bias"] = get_param(graph, "conv2d_7/bias")
-
-        state_dict["bn.weight"] = get_param(graph, "batch_normalization_12/gamma")
-        state_dict["bn.bias"] = get_param(graph, "batch_normalization_12/beta")
-        state_dict["bn.running_mean"] = get_param(
-            graph, "batch_normalization_12/moving_mean"
-        )
-        state_dict["bn.running_var"] = get_param(
-            graph, "batch_normalization_12/moving_variance"
-        )
-        conv_offset = 7
-        bn_offset = 12
+    state_dict["conv.weight"] = get_param(
+        graph, f"{op('conv2d', conv_offset)}/kernel"
+    ).permute(3, 2, 0, 1)
+    state_dict["conv.bias"] = get_param(graph, f"{op('conv2d', conv_offset)}/bias")
 
     for i in range(1, 6):
         state_dict[f"conv{i}.weight"] = get_param(
-            graph, f"conv2d_{i+conv_offset}/kernel"
+            graph, f"{op('conv2d', i + conv_offset)}/kernel"
         ).permute(3, 2, 0, 1)
-        state_dict[f"conv{i}.bias"] = get_param(graph, f"conv2d_{i+conv_offset}/bias")
-        if i >= 5:
-            continue
-        state_dict[f"bn{i}.weight"] = get_param(
-            graph, f"batch_normalization_{i+bn_offset}/gamma"
-        )
-        state_dict[f"bn{i}.bias"] = get_param(
-            graph, f"batch_normalization_{i+bn_offset}/beta"
-        )
-        state_dict[f"bn{i}.running_mean"] = get_param(
-            graph, f"batch_normalization_{i+bn_offset}/moving_mean"
-        )
-        state_dict[f"bn{i}.running_var"] = get_param(
-            graph, f"batch_normalization_{i+bn_offset}/moving_variance"
+        state_dict[f"conv{i}.bias"] = get_param(
+            graph, f"{op('conv2d', i + conv_offset)}/bias"
         )
 
-    if name == "vocals":
-        state_dict["up1.weight"] = get_param(graph, "conv2d_transpose/kernel").permute(
-            3, 2, 0, 1
-        )
-        state_dict["up1.bias"] = get_param(graph, "conv2d_transpose/bias")
+    state_dict["up7.weight"] = get_param(
+        graph, f"{op('conv2d', 6 + conv_offset)}/kernel"
+    ).permute(3, 2, 0, 1)
+    state_dict["up7.bias"] = get_param(graph, f"{op('conv2d', 6 + conv_offset)}/bias")
 
-        state_dict["bn5.weight"] = get_param(graph, "batch_normalization_6/gamma")
-        state_dict["bn5.bias"] = get_param(graph, "batch_normalization_6/beta")
-        state_dict["bn5.running_mean"] = get_param(
-            graph, "batch_normalization_6/moving_mean"
-        )
-        state_dict["bn5.running_var"] = get_param(
-            graph, "batch_normalization_6/moving_variance"
-        )
-        conv_offset = 0
-        bn_offset = 0
-    else:
-        state_dict["up1.weight"] = get_param(
-            graph, "conv2d_transpose_6/kernel"
+    for i in range(6):
+        state_dict[f"up{i + 1}.weight"] = get_param(
+            graph, f"{op('conv2d_transpose', i + tconv_offset)}/kernel"
         ).permute(3, 2, 0, 1)
-        state_dict["up1.bias"] = get_param(graph, "conv2d_transpose_6/bias")
-
-        state_dict["bn5.weight"] = get_param(graph, "batch_normalization_18/gamma")
-        state_dict["bn5.bias"] = get_param(graph, "batch_normalization_18/beta")
-        state_dict["bn5.running_mean"] = get_param(
-            graph, "batch_normalization_18/moving_mean"
-        )
-        state_dict["bn5.running_var"] = get_param(
-            graph, "batch_normalization_18/moving_variance"
-        )
-        conv_offset = 6
-        bn_offset = 12
-
-    for i in range(1, 6):
-        state_dict[f"up{i+1}.weight"] = get_param(
-            graph, f"conv2d_transpose_{i+conv_offset}/kernel"
-        ).permute(3, 2, 0, 1)
-
-        state_dict[f"up{i+1}.bias"] = get_param(
-            graph, f"conv2d_transpose_{i+conv_offset}/bias"
+        state_dict[f"up{i + 1}.bias"] = get_param(
+            graph, f"{op('conv2d_transpose', i + tconv_offset)}/bias"
         )
 
-        state_dict[f"bn{5+i}.weight"] = get_param(
-            graph, f"batch_normalization_{6+i+bn_offset}/gamma"
-        )
-        state_dict[f"bn{5+i}.bias"] = get_param(
-            graph, f"batch_normalization_{6+i+bn_offset}/beta"
-        )
-        state_dict[f"bn{5+i}.running_mean"] = get_param(
-            graph, f"batch_normalization_{6+i+bn_offset}/moving_mean"
-        )
-        state_dict[f"bn{5+i}.running_var"] = get_param(
-            graph, f"batch_normalization_{6+i+bn_offset}/moving_variance"
-        )
-
-    if name == "vocals":
-        state_dict["up7.weight"] = get_param(graph, "conv2d_6/kernel").permute(
-            3, 2, 0, 1
-        )
-        state_dict["up7.bias"] = get_param(graph, "conv2d_6/bias")
-    else:
-        state_dict["up7.weight"] = get_param(graph, "conv2d_13/kernel").permute(
-            3, 2, 0, 1
-        )
-        state_dict["up7.bias"] = get_param(graph, "conv2d_13/bias")
+    # for the batchnormalization in tensorflow, default input shape is NHWC
+    # for the batchnormalization in torch, default input shape is NCHW
+    #
+    # bn..bn4 sit after conv..conv4; bn5..bn10 after up1..up6. Index 5 of the
+    # block is the one conv5 would have used and is skipped.
+    bn_indices = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11]
+    bn_keys = ["bn"] + [f"bn{i}" for i in range(1, 11)]
+    for key, i in zip(bn_keys, bn_indices):
+        scope = op("batch_normalization", i + bn_offset)
+        state_dict[f"{key}.weight"] = get_param(graph, f"{scope}/gamma")
+        state_dict[f"{key}.bias"] = get_param(graph, f"{scope}/beta")
+        state_dict[f"{key}.running_mean"] = get_param(graph, f"{scope}/moving_mean")
+        state_dict[f"{key}.running_var"] = get_param(graph, f"{scope}/moving_variance")
 
     unet.load_state_dict(state_dict)
 
     with tf.compat.v1.Session(graph=graph) as sess:
         y0_out, y1_out = sess.run([y0, y1], feed_dict={x: generate_waveform()})
-        #  y0_out = sess.run(y0, feed_dict={x: generate_waveform()})
-        #  y1_out = sess.run(y1, feed_dict={x: generate_waveform()})
-        #  print(y0_out.shape)
-        #  print(y1_out.shape)
-
-    # for the batchnormalization in tensorflow,
-    # default input shape is NHWC
-
-    # for the batchnormalization in torch,
-    # default input shape is NCHW
 
     torch_y1_out = unet(torch.from_numpy(y0_out).permute(3, 0, 1, 2))
     torch_y1_out = torch_y1_out.permute(1, 0, 2, 3)
 
-    #  print(torch_y1_out.shape, torch.from_numpy(y1_out).permute(0, 3, 1, 2).shape)
     assert torch.allclose(
         torch_y1_out, torch.from_numpy(y1_out).permute(0, 3, 1, 2), atol=1e-1
     ), ((torch_y1_out - torch.from_numpy(y1_out).permute(0, 3, 1, 2)).abs().max())
-    torch.save(unet.state_dict(), f"2stems/{name}.pt")
+    torch.save(unet.state_dict(), f"{model}/{name}.pt")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--name",
-        type=str,
-        required=True,
-        choices=["vocals", "accompaniment"],
-    )
+    parser.add_argument("--model", type=str, default="2stems", choices=list(STEMS))
+    parser.add_argument("--name", type=str, required=True)
     args = parser.parse_args()
+    if args.name not in STEMS[args.model]:
+        parser.error(f"{args.model} has no stem {args.name!r}; "
+                     f"choose from {STEMS[args.model]}")
     print(vars(args))
-    main(args.name)
+    main(args.name, args.model)
