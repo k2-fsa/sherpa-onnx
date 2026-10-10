@@ -637,7 +637,7 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.qwen3_asr.hotwords =
       SHERPA_ONNX_OR(config->model_config.qwen3_asr.hotwords, "");
   recognizer_config.model_config.qwen3_asr.max_total_len =
-      SHERPA_ONNX_OR(config->model_config.qwen3_asr.max_total_len, 512);
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.max_total_len, 1024);
   recognizer_config.model_config.qwen3_asr.max_new_tokens =
       SHERPA_ONNX_OR(config->model_config.qwen3_asr.max_new_tokens, 128);
   recognizer_config.model_config.qwen3_asr.temperature =
