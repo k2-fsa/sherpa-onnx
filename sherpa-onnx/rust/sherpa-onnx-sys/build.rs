@@ -5,6 +5,7 @@ use std::fs;
 use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::{collections::HashSet, ffi::OsString};
 
 use bzip2::read::BzDecoder;
@@ -31,6 +32,46 @@ const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
 
 type DynError = Box<dyn Error>;
 
+include!("build_support/trust_store.rs");
+
+/// Build the HTTP agent used to fetch the prebuilt archives.
+///
+/// Trusts the bundled roots *plus* the platform ones, and keeps honouring the
+/// standard proxy environment variables.
+fn build_http_agent() -> ureq::Agent {
+    let builder = ureq::builder().try_proxy_from_env(true);
+
+    let loaded = rustls_native_certs::load_native_certs();
+    let bundled = webpki_roots::TLS_SERVER_ROOTS
+        .iter()
+        .cloned();
+    let Some(roots) = build_root_store(bundled, loaded.certs, &loaded.errors) else {
+        return builder.build();
+    };
+
+    // ureq 2.x links the `ring` provider; naming it explicitly avoids the
+    // "could not automatically determine the process-level CryptoProvider"
+    // panic that `ClientConfig::builder()` raises when several are available.
+    let provider = Arc::new(rustls::crypto::ring::default_provider());
+    match rustls::ClientConfig::builder_with_provider(provider)
+        .with_safe_default_protocol_versions()
+    {
+        Ok(cfg) => builder
+            .tls_config(Arc::new(
+                cfg.with_root_certificates(roots)
+                    .with_no_client_auth(),
+            ))
+            .build(),
+        Err(err) => {
+            eprintln!(
+                "sherpa-onnx-sys: could not build a TLS configuration from the \
+                 root certificates ({err}); falling back to the default ones"
+            );
+            builder.build()
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum LinkMode {
     Static,
@@ -47,6 +88,9 @@ fn try_main() -> Result<(), DynError> {
     println!("cargo:rerun-if-env-changed=SHERPA_ONNX_LIB_DIR");
     println!("cargo:rerun-if-env-changed=SHERPA_ONNX_ARCHIVE_DIR");
     println!("cargo:rerun-if-env-changed=DOCS_RS");
+    // Consulted by rustls-native-certs when collecting the trust anchors.
+    println!("cargo:rerun-if-env-changed=SSL_CERT_FILE");
+    println!("cargo:rerun-if-env-changed=SSL_CERT_DIR");
 
     if env::var_os("DOCS_RS").is_some() {
         // docs.rs sets DOCS_RS=1; skip downloading/linking native libraries
@@ -199,9 +243,7 @@ fn download_prebuilt_libs(
             let url = download_url(&archive_name);
             eprintln!("Downloading sherpa-onnx libs from {url}");
 
-            let response = ureq::builder()
-                .try_proxy_from_env(true)
-                .build()
+            let response = build_http_agent()
                 .get(&url)
                 .call()
                 .map_err(|e| format!("Failed to download sherpa-onnx archive from {url}: {e}"))?;
