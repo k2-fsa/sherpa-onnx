@@ -664,6 +664,15 @@ llama-server.
 - [Website](https://voltip.firlab.app)
 - [Releases](https://github.com/sunerpy/voltip/releases)
 
+### [Outmake](https://outmake.app)
+
+> A free Mac app (Apple silicon, macOS 26) for running open models on the Mac itself.
+> Its Kokoro, Kitten, Piper and Supertonic voices run on sherpa-onnx: the app downloads
+> the osx-arm64 shared build and speaks through `sherpa-onnx-offline-tts`, so those
+> voices need no Python.
+
+- [Credits, where sherpa-onnx is listed](https://outmake.app/credits)
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
