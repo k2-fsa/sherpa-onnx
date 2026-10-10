@@ -273,11 +273,17 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
 #endif
   }
 
-  auto recognizer = new sherpa_onnx::OnlineRecognizer(
+  sherpa_onnx::OnlineRecognizer *recognizer = nullptr;
+  try {
+    recognizer = new sherpa_onnx::OnlineRecognizer(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e, "Failed to create OnlineRecognizer");
+    return 0;
+  }
 
   return (jlong)recognizer;
 }
@@ -309,7 +315,13 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromFile(
     return 0;
   }
 
-  auto recognizer = new sherpa_onnx::OnlineRecognizer(config);
+  sherpa_onnx::OnlineRecognizer *recognizer = nullptr;
+  try {
+    recognizer = new sherpa_onnx::OnlineRecognizer(config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e, "Failed to create OnlineRecognizer");
+    return 0;
+  }
 
   return (jlong)recognizer;
 }
