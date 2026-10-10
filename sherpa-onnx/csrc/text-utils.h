@@ -99,9 +99,9 @@ bool SplitStringToIntegers(const std::string &full, const char *delim,
   for (size_t i = 0; i < split.size(); i++) {
     const char *this_str = split[i].c_str();
     char *end = NULL;
-    int64_t j = 0;
-    j = SHERPA_ONNX_STRTOLL(this_str, &end);
-    if (end == this_str || *end != '\0') {
+    errno = 0;
+    int64_t j = SHERPA_ONNX_STRTOLL(this_str, &end);
+    if (end == this_str || *end != '\0' || errno != 0) {
       out->clear();
       return false;
     } else {
