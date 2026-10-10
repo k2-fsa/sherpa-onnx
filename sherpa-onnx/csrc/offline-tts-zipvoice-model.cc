@@ -29,6 +29,10 @@
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#if SHERPA_ONNX_ENABLE_AXERA
+#include "sherpa-onnx/csrc/axera/offline-tts-zipvoice-model-axera.h"
+#endif
+
 namespace sherpa_onnx {
 
 class OfflineTtsZipvoiceModel::Impl {
@@ -361,27 +365,51 @@ class OfflineTtsZipvoiceModel::Impl {
 
 OfflineTtsZipvoiceModel::OfflineTtsZipvoiceModel(
     const OfflineTtsModelConfig &config)
-    : impl_(std::make_unique<Impl>(config)) {}
+    : impl_(config.provider == "axera" ? nullptr
+                                       : std::make_unique<Impl>(config)) {
+  if (config.provider == "axera") {
+#if SHERPA_ONNX_ENABLE_AXERA
+    axera_impl_ = std::make_unique<OfflineTtsZipvoiceModelAxera>(config);
+#else
+    SHERPA_ONNX_LOGE(
+        "Rebuild with SHERPA_ONNX_ENABLE_AXERA=ON for AXERA ZipVoice.");
+    SHERPA_ONNX_EXIT(-1);
+#endif
+  }
+}
 
 template <typename Manager>
 OfflineTtsZipvoiceModel::OfflineTtsZipvoiceModel(
     Manager *mgr, const OfflineTtsModelConfig &config)
-    : impl_(std::make_unique<Impl>(mgr, config)) {}
+    : impl_(nullptr) {
+  if (config.provider == "axera") {
+    SHERPA_ONNX_LOGE("AXERA ZipVoice requires filesystem model paths.");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  impl_ = std::make_unique<Impl>(mgr, config);
+}
 
 OfflineTtsZipvoiceModel::~OfflineTtsZipvoiceModel() = default;
 
 const OfflineTtsZipvoiceModelMetaData &OfflineTtsZipvoiceModel::GetMetaData()
     const {
+#if SHERPA_ONNX_ENABLE_AXERA
+  if (axera_impl_) return axera_impl_->GetMetaData();
+#endif
   return impl_->GetMetaData();
 }
 
-Ort::Value OfflineTtsZipvoiceModel::Run(Ort::Value tokens,
-                                        Ort::Value prompt_tokens,
-                                        Ort::Value prompt_features,
-                                        float speed /*= 1.0*/,
-                                        int32_t num_steps /*= 16*/,
-                                        float t_shift /*= 0.5f*/,
-                                        float guidance_scale /*= 1.0f*/) const {
+Ort::Value OfflineTtsZipvoiceModel::Run(
+    Ort::Value tokens, Ort::Value prompt_tokens, Ort::Value prompt_features,
+    float speed /*= 1.0*/, int32_t num_steps /*= 16*/, float t_shift /*= 0.5f*/,
+    float guidance_scale /*= 1.0f*/) const {
+#if SHERPA_ONNX_ENABLE_AXERA
+  if (axera_impl_) {
+    return axera_impl_->Run(std::move(tokens), std::move(prompt_tokens),
+                            std::move(prompt_features), speed, num_steps,
+                            t_shift, guidance_scale);
+  }
+#endif
   return impl_->Run(std::move(tokens), std::move(prompt_tokens),
                     std::move(prompt_features), speed, num_steps, t_shift,
                     guidance_scale);
