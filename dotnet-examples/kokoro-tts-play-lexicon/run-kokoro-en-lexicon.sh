@@ -7,4 +7,8 @@ if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
   rm kokoro-en-v0_19.tar.bz2
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 dotnet run

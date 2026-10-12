@@ -8,4 +8,8 @@ if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
 fi
 
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 dotnet run
