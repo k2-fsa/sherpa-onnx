@@ -1,9 +1,9 @@
-// Copyright (c)  2026  Xiaomi Corporation
+﻿// Copyright (c)  2025  Xiaomi Corporation
 //
-// This file shows how to use a non-streaming ZipVoice model
-// for zero-shot text-to-speech with playback.
+// This file shows how to use a non-streaming Kitten TTS model
+// for text-to-speech
 // Please refer to
-// https://k2-fsa.github.io/sherpa/onnx/tts/zipvoice.html
+// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
 // and
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 // to download pre-trained models
@@ -12,39 +12,37 @@ using SherpaOnnx;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-class ZipVoiceTtsDemo
+class KittenTtsPlayDemo
 {
   static void Main(string[] args)
   {
-    TestZhEn();
-  }
-
-  static void TestZhEn()
-  {
     var config = new OfflineTtsConfig();
-    config.Model.ZipVoice.Tokens = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt";
-    config.Model.ZipVoice.Encoder = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx";
-    config.Model.ZipVoice.Decoder = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx";
-    config.Model.ZipVoice.Vocoder = "./vocos_24khz.onnx";
-    config.Model.ZipVoice.DataDir = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data";
-    config.Model.ZipVoice.Lexicon = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt";
+    config.Model.Kitten.Model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
+    config.Model.Kitten.Voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
+    config.Model.Kitten.Tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
+    config.Model.Kitten.Lexicon = "./lexicon-en-us.txt";
 
     config.Model.NumThreads = 2;
     config.Model.Debug = 1;
     config.Model.Provider = "cpu";
 
-    var referenceWaveFilename = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/test_wavs/leijun-1.wav";
-    var reader = new WaveReader(referenceWaveFilename);
-
-    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
-    genConfig.ReferenceAudio = reader.Samples;
-    genConfig.ReferenceSampleRate = reader.SampleRate;
-    genConfig.ReferenceText = "那还是三十六年前, 一九八七年. 我呢考上了武汉大学的计算机系.";
-    genConfig.NumSteps = 4;
-    genConfig.Extra["min_char_in_sentence"] = "10";
-
     var tts = new OfflineTts(config);
-    var text = "小米的价值观是真诚, 热爱. 真诚，就是不欺人也不自欺. 热爱, 就是全心投入并享受其中.";
+    var speed = 1.0f;
+    var text = "Today as always, men fall into two groups: slaves and free men. Whoever " +
+      "does not have two-thirds of his day for himself, is a slave, whatever " +
+      "he may be: a statesman, a businessman, an official, or a scholar. " +
+      "Friends fell out often because life was changing so fast. The easiest " +
+      "thing in the world was to lose touch with someone.";
+
+    // mapping of sid to voice name
+    // 0->expr-voice-2-m, 1->expr-voice-2-f, 2->expr-voice-3-m
+    // 3->expr-voice-3-f, 4->expr-voice-4-m, 5->expr-voice-4-f
+    // 6->expr-voice-5-m, 7->expr-voice-5-f
+    var sid = 0;
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
+
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
     PortAudio.Initialize();
@@ -61,7 +59,7 @@ class ZipVoiceTtsDemo
     int deviceIndex = PortAudio.DefaultOutputDevice;
     if (deviceIndex == PortAudio.NoDevice)
     {
-      Console.WriteLine("No default output device found. Please use ../zipvoice-tts instead");
+      Console.WriteLine("No default output device found. Please use ../offline-tts instead");
       Environment.Exit(1);
     }
 
@@ -76,14 +74,17 @@ class ZipVoiceTtsDemo
     param.suggestedLatency = info.defaultLowOutputLatency;
     param.hostApiSpecificStreamInfo = IntPtr.Zero;
 
+    // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
     var myCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
-      Console.WriteLine($"Progress {progress * 100}%");
+      Console.WriteLine($"Progress {progress*100}%");
 
       float[] data = new float[n];
+
       Marshal.Copy(samples, data, 0, n);
+
       dataItems.Add(data);
 
       // 1 means to keep generating
@@ -94,7 +95,7 @@ class ZipVoiceTtsDemo
     var playFinished = false;
 
     float[]? lastSampleArray = null;
-    int lastIndex = 0;
+    int lastIndex = 0; // not played
 
     PortAudioSharp.Stream.Callback playCallback = (IntPtr input, IntPtr output,
         UInt32 frameCount,
@@ -105,7 +106,7 @@ class ZipVoiceTtsDemo
     {
       if (dataItems.IsCompleted && lastSampleArray == null && lastIndex == 0)
       {
-        Console.WriteLine("Finished playing");
+        Console.WriteLine($"Finished playing");
         playFinished = true;
         return StreamCallbackResult.Complete;
       }
@@ -122,7 +123,7 @@ class ZipVoiceTtsDemo
           int remaining = lastSampleArray.Length - lastIndex;
           if (remaining >= needed)
           {
-            float[] thisBlock = lastSampleArray.Skip(lastIndex).Take(needed).ToArray();
+            float[] this_block = lastSampleArray.Skip(lastIndex).Take(needed).ToArray();
             lastIndex += needed;
             if (lastIndex == lastSampleArray.Length)
             {
@@ -130,15 +131,15 @@ class ZipVoiceTtsDemo
               lastIndex = 0;
             }
 
-            Marshal.Copy(thisBlock, 0, IntPtr.Add(output, i * sizeof(float)), needed);
+            Marshal.Copy(this_block, 0, IntPtr.Add(output, i * sizeof(float)), needed);
             return StreamCallbackResult.Continue;
           }
 
-          float[] thisBlock2 = lastSampleArray.Skip(lastIndex).Take(remaining).ToArray();
+          float[] this_block2 = lastSampleArray.Skip(lastIndex).Take(remaining).ToArray();
           lastIndex = 0;
           lastSampleArray = null;
 
-          Marshal.Copy(thisBlock2, 0, IntPtr.Add(output, i * sizeof(float)), remaining);
+          Marshal.Copy(this_block2, 0, IntPtr.Add(output, i * sizeof(float)), remaining);
           i += remaining;
           continue;
         }
@@ -169,9 +170,9 @@ class ZipVoiceTtsDemo
     stream.Start();
 
     var callback = new OfflineTtsCallbackProgressWithArg(myCallback);
-    var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
-    var outputFilename = "./generated-zipvoice-zh-en-play.wav";
+    var audio = tts.GenerateWithConfig(text, genConfig, callback);
+    var outputFilename = "./generated-kitten-0.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)
@@ -182,12 +183,11 @@ class ZipVoiceTtsDemo
     {
       Console.WriteLine($"Failed to write {outputFilename}");
     }
-
     dataItems.CompleteAdding();
 
     while (!playFinished)
     {
-      Thread.Sleep(100);
+      Thread.Sleep(100); // 100ms
     }
   }
 }

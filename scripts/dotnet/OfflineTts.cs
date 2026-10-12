@@ -34,7 +34,7 @@ namespace SherpaOnnx
             var config = new OfflineTtsGenerationConfig();
             config.Speed = speed;
             config.Sid = speakerId;
-            var nativeConfig = config.ToNative(out GCHandle? audioHandle);
+            var nativeConfig = config.ToNative(out NativeResources nativeResources);
 
             try
             {
@@ -48,8 +48,7 @@ namespace SherpaOnnx
             }
             finally
             {
-                if (audioHandle.HasValue)
-                    audioHandle.Value.Free();
+                nativeResources.Dispose();
             }
         }
 
@@ -78,7 +77,7 @@ namespace SherpaOnnx
                 };
             }
 
-            var nativeConfig = config.ToNative(out GCHandle? audioHandle);
+            var nativeConfig = config.ToNative(out NativeResources nativeResources);
             GCHandle callbackHandle = default(GCHandle);
 
             try
@@ -100,8 +99,7 @@ namespace SherpaOnnx
                 if (callbackHandle.IsAllocated)
                     callbackHandle.Free();
 
-                if (audioHandle.HasValue)
-                    audioHandle.Value.Free();
+                nativeResources.Dispose();
             }
         }
 
@@ -130,7 +128,7 @@ namespace SherpaOnnx
                 };
             }
 
-            var nativeConfig = config.ToNative(out GCHandle? audioHandle);
+            var nativeConfig = config.ToNative(out NativeResources nativeResources);
             GCHandle callbackHandle = default(GCHandle);
 
             try
@@ -152,8 +150,7 @@ namespace SherpaOnnx
                 if (callbackHandle.IsAllocated)
                     callbackHandle.Free();
 
-                if (audioHandle.HasValue)
-                    audioHandle.Value.Free();
+                nativeResources.Dispose();
             }
         }
 
@@ -169,9 +166,7 @@ namespace SherpaOnnx
             utf8BytesWithNull[utf8Bytes.Length] = 0;
 
             GCHandle callbackHandle = default(GCHandle);
-            GCHandle? audioHandle = null;
-
-            var nativeConfig = config.ToNative(out audioHandle);
+            var nativeConfig = config.ToNative(out NativeResources nativeResources);
 
             try
             {
@@ -192,8 +187,7 @@ namespace SherpaOnnx
                 if (callbackHandle.IsAllocated)
                     callbackHandle.Free();
 
-                if (audioHandle.HasValue)
-                    audioHandle.Value.Free();
+                nativeResources.Dispose();
             }
         }
 

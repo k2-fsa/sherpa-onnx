@@ -5,14 +5,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 cd dotnet-examples/
 
-cd ./non-streaming-cohere-transcribe-decode-files
+cd ../kitten-tts-lexicon
+./run-kitten-lexicon.sh
+ls -lh
+rm -rf kitten-nano-en-v0_1-fp16
+rm -f lexicon-en-us.txt
+
+cd ../kitten-tts-phonemize
+./run-kitten-phonemize.sh
+ls -lh
+rm -rf kitten-nano-en-v0_1-fp16
+
+cd ../non-streaming-cohere-transcribe-decode-files
 ./run.sh
 ls -lh
 rm -rf sherpa-onnx-cohere-transcribe-*
 
-cd ..
-
-cd ./vad-non-streaming-qwen3-asr
+cd ../vad-non-streaming-qwen3-asr
 ./run-ten-vad.sh
 rm -fv *.onnx
 
@@ -106,11 +115,11 @@ cd ../pocket-tts-zero-shot
 ls -lh
 rm -rf sherpa-onnx-pocket-*
 
-cd ../zipvoice-tts
-./run.sh
+cd ../zipvoice-tts-lexicon
+./run-lexicon.sh
 ls -lh
 rm -rf sherpa-onnx-zipvoice-*
-rm -f vocos_24khz.onnx
+rm -f vocos_24khz.onnx lexicon-en-us.txt
 
 cd ../vad-non-streaming-funasr-nano
 ./run-ten-vad.sh
@@ -133,10 +142,6 @@ cd ../offline-audio-tagging
 ls -lh
 rm -rf sherpa-onnx-*
 
-cd ../kitten-tts
-./run-kitten.sh
-ls -lh
-rm -rf kitten-nano-en-v0_1-fp16
 
 cd ../vad-non-streaming-asr-paraformer
 ./run-ten-vad.sh
@@ -169,20 +174,33 @@ cd ../streaming-speech-enhancement-dpdfnet
 ./run.sh
 ls -lh
 
-cd ../kokoro-tts
-./run-kokoro.sh
+cd ../kokoro-tts-lexicon
+./run-kokoro-lexicon.sh
+ls -lh
+rm -f lexicon-en-us.txt
+
+cd ../kokoro-tts-phonemize
+./run-kokoro-phonemize.sh
 ls -lh
 
-cd ../offline-tts
-./run-matcha-zh.sh
+cd ../offline-tts-lexicon
+./run-matcha-zh-lexicon.sh
 ls -lh *.wav
-./run-matcha-en.sh
+./run-matcha-en-lexicon.sh
 ls -lh *.wav
-./run-aishell3.sh
+./run-aishell3-lexicon.sh
 ls -lh *.wav
-./run-piper.sh
+./run-piper-lexicon.sh
 ls -lh *.wav
-./run-hf-fanchen.sh
+./run-hf-fanchen-lexicon.sh
+ls -lh *.wav
+ls -lh
+rm -f lexicon-en-us.txt
+
+cd ../offline-tts-phonemize
+./run-piper-phonemize.sh
+ls -lh *.wav
+./run-matcha-en-phonemize.sh
 ls -lh *.wav
 ls -lh
 
@@ -190,10 +208,14 @@ pushd ../..
 
 mkdir tts
 
-cp -v dotnet-examples/kokoro-tts/*.wav ./tts
-cp -v dotnet-examples/offline-tts/*.wav ./tts
+cp -v dotnet-examples/kokoro-tts-lexicon/*.wav ./tts
+cp -v dotnet-examples/kokoro-tts-phonemize/*.wav ./tts
+cp -v dotnet-examples/kitten-tts-lexicon/*.wav ./tts
+cp -v dotnet-examples/kitten-tts-phonemize/*.wav ./tts
+cp -v dotnet-examples/offline-tts-lexicon/*.wav ./tts
+cp -v dotnet-examples/offline-tts-phonemize/*.wav ./tts
 cp -v dotnet-examples/supertonic-tts/*.wav ./tts
-cp -v dotnet-examples/zipvoice-tts/*.wav ./tts
+cp -v dotnet-examples/zipvoice-tts-lexicon/*.wav ./tts
 popd
 
 cd ../offline-speaker-diarization

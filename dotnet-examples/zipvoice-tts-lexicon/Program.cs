@@ -1,4 +1,4 @@
-// Copyright (c)  2026  Xiaomi Corporation
+﻿// Copyright (c)  2026  Xiaomi Corporation
 //
 // This file shows how to use a non-streaming ZipVoice model
 // for zero-shot text-to-speech.
@@ -24,8 +24,7 @@ class ZipVoiceTtsDemo
     config.Model.ZipVoice.Encoder = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx";
     config.Model.ZipVoice.Decoder = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx";
     config.Model.ZipVoice.Vocoder = "./vocos_24khz.onnx";
-    config.Model.ZipVoice.DataDir = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data";
-    config.Model.ZipVoice.Lexicon = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt";
+    config.Model.ZipVoice.Lexicon = "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt,./lexicon-en-us.txt";
 
     config.Model.NumThreads = 2;
     config.Model.Debug = 1;

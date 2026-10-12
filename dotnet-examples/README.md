@@ -17,14 +17,20 @@ for details.
   It shows how to use the online speech denoiser API with GTCRN models.
 - [./streaming-speech-enhancement-dpdfnet](./streaming-speech-enhancement-dpdfnet)
   It shows how to use the online speech denoiser API with DPDFNet models.
-- [./zipvoice-tts](./zipvoice-tts) It shows how to use ZipVoice for
-  Chinese/English zero-shot text-to-speech.
-- [./zipvoice-tts-play](./zipvoice-tts-play) It shows how to use ZipVoice for
-  Chinese/English zero-shot text-to-speech with playback.
+- [./zipvoice-tts-lexicon](./zipvoice-tts-lexicon) It shows how to use ZipVoice for
+  Chinese/English zero-shot text-to-speech with the lexicon text frontend.
+- [./zipvoice-tts-play-lexicon](./zipvoice-tts-play-lexicon) It shows how to use
+  ZipVoice for Chinese/English zero-shot text-to-speech with playback.
+
+The TTS examples come in two text-frontend flavors:
+- `*-lexicon` — a lexicon file, no external phonemizer
+- `*-phonemize` — the text is phonemized outside of sherpa-onnx with
+  [piper-phonemize](https://www.nuget.org/packages/com.github.csukuangfj.piper.phonemize)
+  (see `./offline-tts-phonemize`, `./kitten-tts-phonemize`, `./kokoro-tts-phonemize`)
 
 ```bash
-dotnet new console -n offline-tts-play
-dotnet sln ./sherpa-onnx.sln add ./offline-tts-play
+dotnet new console -n offline-tts-play-lexicon
+dotnet sln ./sherpa-onnx.sln add ./offline-tts-play-lexicon
 ```
 
 ```bash
