@@ -549,6 +549,13 @@ unsafe impl Sync for OfflineTts {}
 impl OfflineTts {
     /// Create a TTS engine from `config`.
     pub fn create(config: &OfflineTtsConfig) -> Option<Self> {
+        eprintln!("[abi] RUST sizeof config={} model={} vits={} kitten={} kitten.lexicon={} zipvoice={}",
+            std::mem::size_of::<sys::OfflineTtsConfig>(),
+            std::mem::size_of::<sys::OfflineTtsModelConfig>(),
+            std::mem::size_of::<sys::OfflineTtsVitsModelConfig>(),
+            std::mem::size_of::<sys::OfflineTtsKittenModelConfig>(),
+            std::mem::offset_of!(sys::OfflineTtsKittenModelConfig, lexicon),
+            std::mem::offset_of!(sys::OfflineTtsModelConfig, zipvoice));
         let mut cstrings = Vec::new();
         let sys_config = config.to_sys(&mut cstrings);
         let ptr = unsafe { sys::SherpaOnnxCreateOfflineTts(&sys_config) };

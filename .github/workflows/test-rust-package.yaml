@@ -156,6 +156,12 @@ jobs:
         run: |
           ./.github/scripts/test-rust-shared.sh
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
   termux:
     name: Termux ${{ matrix.arch }} (${{ matrix.lib_setup }})
     runs-on: ${{ matrix.runner }}
@@ -335,3 +341,9 @@ jobs:
             # Run all tests (Android only supports shared linking)
             bash .github/scripts/test-rust-shared.sh
           '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn

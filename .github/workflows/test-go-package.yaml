@@ -310,7 +310,16 @@ jobs:
           done
 
       - uses: actions/upload-artifact@v4
-        if: contains(matrix.tests, 'non-streaming-tts') || contains(matrix.tests, 'zero-shot-zipvoice-tts')
+        if: contains(matrix.tests, 'non-streaming-tts') || contains(matrix.tests, 'zero-shot-zipvoice-tts') || contains(matrix.tests, 'zero-shot-pocket-tts') || contains(matrix.tests, 'supertonic-tts')
         with:
           name: tts-waves-${{ matrix.os }}-${{ matrix.arch }}
-          path: tts-waves
+          path: |
+            go-api-examples/non-streaming-tts/*.wav
+            go-api-examples/non-streaming-tts-phonemize/*.wav
+            go-api-examples/offline-tts-play/*.wav
+            go-api-examples/zero-shot-zipvoice-tts/*.wav
+            go-api-examples/zero-shot-zipvoice-tts-play/*.wav
+            go-api-examples/zero-shot-pocket-tts/*.wav
+            go-api-examples/zero-shot-pocket-tts-play/*.wav
+            go-api-examples/supertonic-tts/*.wav
+          if-no-files-found: warn

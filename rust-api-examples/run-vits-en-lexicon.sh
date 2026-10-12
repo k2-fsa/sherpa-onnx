@@ -11,4 +11,4 @@ if [ ! -f ./lexicon-en-us.txt ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 fi
 
-cargo run --example vits_tts_lexicon --   --model ./vits-piper-en_US-amy-low/en_US-amy-low.onnx   --tokens ./vits-piper-en_US-amy-low/tokens.txt   --lexicon ./lexicon-en-us.txt   --output ./generated-vits-en-lexicon-rust.wav   --text "Liliana, the most beautiful and lovely assistant of our team!"
+cargo run --example vits_tts_lexicon --   --model ./vits-piper-en_US-amy-low/en_US-amy-low.onnx   --tokens ./vits-piper-en_US-amy-low/tokens.txt   --lexicon ./lexicon-en-us.txt   --debug --output ./generated-vits-en-lexicon-rust.wav   --text "Liliana, the most beautiful and lovely assistant of our team!"

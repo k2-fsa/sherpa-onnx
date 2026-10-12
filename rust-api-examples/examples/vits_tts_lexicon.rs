@@ -70,7 +70,16 @@ fn main() {
         ..Default::default()
     };
 
+    if let Ok(maps) = std::fs::read_to_string("/proc/self/maps") {
+        for line in maps.lines() {
+            if line.contains("sherpa") || line.contains("onnxruntime") {
+                eprintln!("[dbg] loaded: {}", line);
+            }
+        }
+    }
+    eprintln!("[dbg] before create");
     let tts = OfflineTts::create(&config).expect("Failed to create OfflineTts");
+    eprintln!("[dbg] after create");
 
     println!("Sample rate: {}", tts.sample_rate());
     println!("Num speakers: {}", tts.num_speakers());
@@ -83,6 +92,7 @@ fn main() {
 
     let start = Instant::now();
 
+    eprintln!("[dbg] before generate");
     let audio = tts
         .generate_with_config(
             &args.text,
@@ -93,6 +103,7 @@ fn main() {
             }),
         )
         .expect("Generation failed");
+    eprintln!("[dbg] after generate");
 
     let elapsed_seconds = start.elapsed().as_secs_f32();
     let duration = audio.samples().len() as f32 / audio.sample_rate() as f32;
@@ -105,9 +116,14 @@ fn main() {
         "Real-time factor (RTF): {:.3}/{:.3} = {:.3}",
         elapsed_seconds, duration, rtf
     );
+    eprintln!("[dbg] before save");
     if audio.save(&args.output) {
         println!("Saved to: {}", args.output);
     } else {
         eprintln!("Failed to save {}", args.output);
     }
+    eprintln!("[dbg] after save; dropping");
+    drop(audio);
+    drop(tts);
+    eprintln!("[dbg] done");
 }
