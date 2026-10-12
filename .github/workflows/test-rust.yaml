@@ -402,13 +402,22 @@ jobs:
         env:
           LIB_SETUP: ${{ matrix.lib_setup }}
         run: |
+          # Pass the library location into the container via -e on the docker
+          # command line (computed here on the host): exporting it from inside
+          # the container script proved unreliable.
+          if [[ "$LIB_SETUP" == "lib_dir" ]]; then
+            lib_env=(-e SHERPA_ONNX_LIB_DIR=/k2-fsa/sherpa-onnx/build/install/lib)
+          else
+            lib_env=(-e SHERPA_ONNX_ARCHIVE_DIR=/tmp/sherpa-onnx-archive)
+          fi
+
           docker run --rm \
             --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
             --volume /tmp/sherpa-onnx-archive:/tmp/sherpa-onnx-archive \
-            -e LIB_SETUP \
+            "${lib_env[@]}" \
             termux/termux-docker:${{ matrix.arch }} \
           bash -c '
-            set -e
+            set -ex
 
             apt update -y
             apt install -y libc++ clang git
@@ -418,17 +427,13 @@ jobs:
             rustc --version
             cargo --version
 
+            echo "SHERPA_ONNX_LIB_DIR=${SHERPA_ONNX_LIB_DIR:-unset}"
+            echo "SHERPA_ONNX_ARCHIVE_DIR=${SHERPA_ONNX_ARCHIVE_DIR:-unset}"
+
             # Set library path for the built libraries
             export LD_LIBRARY_PATH=/k2-fsa/sherpa-onnx/build/install/lib:/data/data/com.termux/files/usr/lib:$LD_LIBRARY_PATH
 
             cd /k2-fsa/sherpa-onnx
-
-            # Set environment variables based on lib_setup mode
-            if [ "$LIB_SETUP" = "lib_dir" ]; then
-              export SHERPA_ONNX_LIB_DIR=/k2-fsa/sherpa-onnx/build/install/lib
-            elif [ "$LIB_SETUP" = "archive_dir" ]; then
-              export SHERPA_ONNX_ARCHIVE_DIR=/tmp/sherpa-onnx-archive
-            fi
 
             # Run all tests (Android only supports shared linking)
             bash .github/scripts/test-rust-shared.sh

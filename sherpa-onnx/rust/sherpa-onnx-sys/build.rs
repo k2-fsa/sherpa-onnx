@@ -204,7 +204,7 @@ fn download_prebuilt_libs(
             copy_file_atomically(&local_archive_path, &archive_path)?;
         } else {
             let url = download_url(&archive_name);
-            eprintln!("Downloading sherpa-onnx libs from {url}");
+            println!("cargo:warning=[build.rs] Downloading sherpa-onnx libs from {url}");
 
             let response = ureq::builder()
                 .try_proxy_from_env(true)
@@ -270,7 +270,7 @@ fn download_prebuilt_libs(
             None
         };
         if let Some(android_lib_dir) = android_lib_dir {
-            eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
+            println!("cargo:warning=[build.rs] Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
             return Ok((android_lib_dir, archive_stem.to_string()));
         }
 
@@ -279,7 +279,7 @@ fn download_prebuilt_libs(
         // expected name (libsherpa-onnx-c-api.a / .dylib).
         if target_os == "ios" {
             if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir)? {
-                eprintln!("Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
+                println!("cargo:warning=[build.rs] Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
                 return Ok((ios_lib, archive_stem.to_string()));
             }
         }
@@ -291,7 +291,7 @@ fn download_prebuilt_libs(
         .into());
     }
 
-    eprintln!("Downloaded sherpa-onnx libs to {}", extracted_dir.display());
+    println!("cargo:warning=[build.rs] Downloaded sherpa-onnx libs to {}", extracted_dir.display());
 
     Ok((lib_dir, archive_stem.to_string()))
 }

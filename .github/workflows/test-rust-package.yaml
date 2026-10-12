@@ -257,11 +257,28 @@ jobs:
             export SHERPA_ONNX_ARCHIVE_DIR=/archive
           fi
 
+          # Compute the library env on the host and pass it with -e:
+          # exporting from inside the container script proved unreliable.
+          case "${{ matrix.arch }}" in
+            aarch64) abi=arm64-v8a ;;
+            arm) abi=armeabi-v7a ;;
+            x86_64) abi=x86_64 ;;
+            i686) abi=x86 ;;
+            *) abi=arm64-v8a ;;
+          esac
+          if [[ "$LIB_SETUP" == "explicit_lib" ]]; then
+            lib_env=(-e SHERPA_ONNX_LIB_DIR=/lib/jniLibs/$abi)
+          elif [[ "$LIB_SETUP" == "explicit_archive" ]]; then
+            lib_env=(-e SHERPA_ONNX_ARCHIVE_DIR=/archive)
+          else
+            lib_env=()
+          fi
+
           docker run --rm \
             --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
             --volume /tmp/sherpa-onnx-android-archive:/archive \
             --volume /tmp/sherpa-onnx-android-lib:/lib \
-            -e LIB_SETUP \
+            "${lib_env[@]}" \
             -e SHERPA_ONNX_LIB_DIR \
             -e SHERPA_ONNX_ARCHIVE_DIR \
             termux/termux-docker:${{ matrix.arch }} \
@@ -282,40 +299,9 @@ jobs:
 
             cd /k2-fsa/sherpa-onnx
 
-            # Detect and set library paths based on available directories
-            echo "=== Detecting library setup ==="
-
-            # Detect Android ABI based on architecture
-            ARCH=$(uname -m)
-            case "$ARCH" in
-              aarch64|arm64)
-                ABI="arm64-v8a"
-                ;;
-              armv7*|armv8l)
-                ABI="armeabi-v7a"
-                ;;
-              x86_64)
-                ABI="x86_64"
-                ;;
-              i*86)
-                ABI="x86"
-                ;;
-              *)
-                ABI="arm64-v8a"  # default
-                ;;
-            esac
-            echo "Detected architecture: $ARCH -> ABI: $ABI"
-
-            if [ -d "/lib/jniLibs/$ABI" ]; then
-              echo "Found pre-extracted libs at /lib/jniLibs/$ABI"
-              export SHERPA_ONNX_LIB_DIR=/lib/jniLibs/$ABI
-            fi
-            if ls /archive/*.tar.bz2 &>/dev/null; then
-              echo "Found archive at /archive"
-              export SHERPA_ONNX_ARCHIVE_DIR=/archive
-            fi
-
-            # Add sherpa-onnx library path if available
+            # Library location is provided by the host via -e.
+            echo "SHERPA_ONNX_LIB_DIR=${SHERPA_ONNX_LIB_DIR:-unset}"
+            echo "SHERPA_ONNX_ARCHIVE_DIR=${SHERPA_ONNX_ARCHIVE_DIR:-unset}"
             if [ -n "$SHERPA_ONNX_LIB_DIR" ]; then
               export LD_LIBRARY_PATH=$SHERPA_ONNX_LIB_DIR:$LD_LIBRARY_PATH
             fi
