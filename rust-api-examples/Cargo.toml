@@ -17,7 +17,7 @@ ctrlc = "3.4"
 # lexicon-based examples never build it. It is always linked statically (its
 # own default feature) so the examples run without extra library-path setup,
 # no matter how sherpa-onnx itself is linked.
-piper-phonemize = { version = "1.5.2", optional = true }
+piper-phonemize = { version = "1.5.3", optional = true }
 
 [features]
 # Default to static linking so users can run examples without setting library paths
