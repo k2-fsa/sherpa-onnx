@@ -1,4 +1,4 @@
-// Copyright (c)  2026  Xiaomi Corporation
+﻿// Copyright (c)  2026  Xiaomi Corporation
 //
 // This file shows how to use Kokoro TTS (English) with the piper-phonemize
 // text frontend. The text is phonemized outside of sherpa-onnx with the
@@ -19,12 +19,23 @@ class KokoroTtsPhonemizeDemo
   {
     Console.WriteLine($"piper-phonemize version: {PiperPhonemizeApi.GetVersionStr()}");
 
-    // "" uses the espeak-ng-data embedded in the piper-phonemize library.
-    if (PiperPhonemizeApi.Initialize("") < 0)
+    string dataDir = FindEspeakNgData();
+    if (dataDir == null)
+    {
+      Console.Error.WriteLine("ERROR: espeak-ng-data not found.");
+      Environment.Exit(1);
+    }
+    Console.WriteLine($"espeak-ng-data: {dataDir}");
+
+    // Note: espeak-ng-data is only used by the piper-phonemize phonemizer.
+    // sherpa-onnx itself does not use espeak-ng anymore.
+    int sampleRate = PiperPhonemizeApi.Initialize(dataDir);
+    if (sampleRate < 0)
     {
       Console.Error.WriteLine("Failed to initialize piper-phonemize");
       Environment.Exit(1);
     }
+    Console.WriteLine($"Sample rate: {sampleRate}");
 
     var config = new OfflineTtsConfig();
     config.Model.Kokoro.Model = "./kokoro-en-v0_19/model.onnx";
@@ -93,4 +104,29 @@ class KokoroTtsPhonemizeDemo
       Console.WriteLine($"Failed to save {outputFilename}");
     }
   }
+
+    // The piper-phonemize NuGet package copies espeak-ng-data next to the
+    // executable (see its .targets file). espeak_Initialize requires a real
+    // directory: an empty path falls back to the system default
+    // (/usr/share/espeak-ng-data), which may not exist.
+    static string FindEspeakNgData()
+    {
+        string exeDir = AppDomain.CurrentDomain.BaseDirectory;
+
+        string[] candidates = new[]
+        {
+            Path.Combine(exeDir, "espeak-ng-data"),
+            Path.Combine(exeDir, "..", "espeak-ng-data"),
+            Path.Combine(exeDir, "..", "..", "..", "espeak-ng-data"),
+            "espeak-ng-data",
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (Directory.Exists(candidate) && File.Exists(Path.Combine(candidate, "phontab")))
+                return Path.GetFullPath(candidate);
+        }
+
+        return null;
+    }
 }
