@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 cd dotnet-examples/
 
-cd ../version-test
+cd ./version-test
 ./run.sh
 ls -lh
 
