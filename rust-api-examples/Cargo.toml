@@ -14,10 +14,11 @@ cpal = { version = "0.16", optional = true } # cross-platform audio I/O
 ctrlc = "3.4"
 
 # External phonemizer used only by the *-phonemize examples. Optional so the
-# lexicon-based examples never build it. It is always linked statically (its
-# own default feature) so the examples run without extra library-path setup,
-# no matter how sherpa-onnx itself is linked.
-piper-phonemize = { version = "1.5.3", optional = true }
+# lexicon-based examples never build it. Linked statically by default (its
+# own default feature) so the examples run without extra library-path setup;
+# on Android it links shared instead (piper-phonemize-sys forces this, same
+# as sherpa-onnx-sys).
+piper-phonemize = { version = "1.5.4", optional = true }
 
 [features]
 # Default to static linking so users can run examples without setting library paths
