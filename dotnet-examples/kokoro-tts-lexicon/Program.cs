@@ -59,7 +59,7 @@ class KokoroTtsDemo
 
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
-    var outputFilename = "./generated-kokoro-zh-en.wav";
+    var outputFilename = "./generated-kokoro-zh-en-lexicon.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)
@@ -119,7 +119,7 @@ class KokoroTtsDemo
 
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
-    var outputFilename = "./generated-kokoro-en.wav";
+    var outputFilename = "./generated-kokoro-en-lexicon.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)

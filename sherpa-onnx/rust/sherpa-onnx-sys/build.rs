@@ -55,8 +55,6 @@ fn try_main() -> Result<(), DynError> {
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
     let link_mode = resolve_link_mode(&target_os)?;
     let (lib_dir, archive_stem) = resolve_lib_dir(link_mode, &target_os, &target_arch)?;
-    println!("cargo:warning=[build.rs] link_mode={:?} os={} arch={} lib_dir={} archive_stem={:?}",
-        link_mode, target_os, target_arch, lib_dir.display(), archive_stem);
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
@@ -115,7 +113,6 @@ fn resolve_lib_dir(
 ) -> Result<(PathBuf, Option<String>), DynError> {
     if let Some(path) = env::var_os("SHERPA_ONNX_LIB_DIR") {
         let path = PathBuf::from(path);
-        println!("cargo:warning=[build.rs] resolve_lib_dir: SHERPA_ONNX_LIB_DIR={}", path.display());
         if !path.is_dir() {
             return Err(format!(
                 "SHERPA_ONNX_LIB_DIR does not exist or is not a directory: {}",
@@ -125,12 +122,7 @@ fn resolve_lib_dir(
         }
         return Ok((path, None));
     }
-
-    println!("cargo:warning=[build.rs] resolve_lib_dir: SHERPA_ONNX_LIB_DIR unset -> download_prebuilt_libs");
-    download_prebuilt_libs(link_mode, target_os, target_arch).map(|(p, s)| {
-        println!("cargo:warning=[build.rs] download_prebuilt_libs -> {} (stem {:?})", p.display(), s);
-        (p, Some(s))
-    })
+    download_prebuilt_libs(link_mode, target_os, target_arch).map(|(p, s)| (p, Some(s)))
 }
 
 /// Return the download URL for a given archive.
@@ -169,7 +161,6 @@ fn download_prebuilt_libs(
     let lib_dir = extracted_dir.join(lib_dir_name);
 
     if lib_dir.is_dir() {
-        println!("cargo:warning=[build.rs] using CACHED prebuilt lib_dir={}", lib_dir.display());
         return Ok((lib_dir, archive_stem.to_string()));
     }
 
@@ -179,11 +170,9 @@ fn download_prebuilt_libs(
     let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
     let android_lib_dir_alt = cache_root.join("jniLibs").join(android_abi(target_arch));
     if android_lib_dir.is_dir() {
-        println!("cargo:warning=[build.rs] using CACHED android jniLibs={}", android_lib_dir.display());
         return Ok((android_lib_dir, archive_stem.to_string()));
     }
     if android_lib_dir_alt.is_dir() {
-        println!("cargo:warning=[build.rs] using CACHED android jniLibs(alt)={}", android_lib_dir_alt.display());
         return Ok((android_lib_dir_alt, archive_stem.to_string()));
     }
 
@@ -204,7 +193,7 @@ fn download_prebuilt_libs(
             copy_file_atomically(&local_archive_path, &archive_path)?;
         } else {
             let url = download_url(&archive_name);
-            println!("cargo:warning=[build.rs] Downloading sherpa-onnx libs from {url}");
+            eprintln!("Downloading sherpa-onnx libs from {url}");
 
             let response = ureq::builder()
                 .try_proxy_from_env(true)
@@ -270,7 +259,7 @@ fn download_prebuilt_libs(
             None
         };
         if let Some(android_lib_dir) = android_lib_dir {
-            println!("cargo:warning=[build.rs] Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
+            eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
             return Ok((android_lib_dir, archive_stem.to_string()));
         }
 
@@ -279,7 +268,7 @@ fn download_prebuilt_libs(
         // expected name (libsherpa-onnx-c-api.a / .dylib).
         if target_os == "ios" {
             if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir)? {
-                println!("cargo:warning=[build.rs] Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
+                eprintln!("Downloaded sherpa-onnx iOS libs to {}", ios_lib.display());
                 return Ok((ios_lib, archive_stem.to_string()));
             }
         }
@@ -291,7 +280,7 @@ fn download_prebuilt_libs(
         .into());
     }
 
-    println!("cargo:warning=[build.rs] Downloaded sherpa-onnx libs to {}", extracted_dir.display());
+    eprintln!("Downloaded sherpa-onnx libs to {}", extracted_dir.display());
 
     Ok((lib_dir, archive_stem.to_string()))
 }
@@ -805,8 +794,6 @@ fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynErro
         fs::create_dir_all(&dest_dir)?;
         for (source, dest_name) in &copy_plan {
             let dest = dest_dir.join(dest_name);
-            println!("cargo:warning=[build.rs] copy runtime lib {} -> {}",
-                source.display(), dest.display());
             fs::copy(source, &dest)?;
         }
     }

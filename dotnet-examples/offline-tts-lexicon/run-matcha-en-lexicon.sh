@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -ex
 
 
@@ -26,5 +26,5 @@ dotnet run \
   --tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
   --lexicon=./lexicon-en-us.txt \
   --debug=1 \
-  --output-filename=./matcha-en.wav \
+  --output-filename=./matcha-en-lexicon.wav \
   --text='Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.'

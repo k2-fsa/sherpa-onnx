@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -ex
 
 # please visit
@@ -22,5 +22,5 @@ dotnet run \
   --tokens=./matcha-icefall-zh-baker/tokens.txt \
   --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
   --debug=1 \
-  --output-filename=./matcha-zh.wav \
+  --output-filename=./matcha-zh-lexicon.wav \
   --text="某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"

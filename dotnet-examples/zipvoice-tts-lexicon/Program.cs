@@ -58,7 +58,7 @@ class ZipVoiceTtsDemo
 
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
-    var outputFilename = "./generated-zipvoice-zh-en.wav";
+    var outputFilename = "./generated-zipvoice-zh-en-lexicon.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)

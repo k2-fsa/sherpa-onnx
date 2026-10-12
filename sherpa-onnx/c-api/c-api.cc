@@ -1620,13 +1620,6 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
 
 const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
     const SherpaOnnxOfflineTtsConfig *config) {
-  SHERPA_ONNX_LOGE("[abi] C sizeof config=%zu model=%zu vits=%zu kitten=%zu kitten.lexicon=%zu zipvoice=%zu\n",
-    sizeof(SherpaOnnxOfflineTtsConfig),
-    sizeof(SherpaOnnxOfflineTtsModelConfig),
-    sizeof(SherpaOnnxOfflineTtsVitsModelConfig),
-    sizeof(SherpaOnnxOfflineTtsKittenModelConfig),
-    offsetof(SherpaOnnxOfflineTtsKittenModelConfig, lexicon),
-    offsetof(SherpaOnnxOfflineTtsModelConfig, zipvoice));
   auto tts_config = GetOfflineTtsConfig(config);
 
   if (!tts_config.Validate()) {

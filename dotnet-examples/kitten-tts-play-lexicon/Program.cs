@@ -172,7 +172,7 @@ class KittenTtsPlayDemo
     var callback = new OfflineTtsCallbackProgressWithArg(myCallback);
 
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
-    var outputFilename = "./generated-kitten-0.wav";
+    var outputFilename = "./generated-kitten-0-lexicon.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 
 set -ex
 if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
@@ -16,6 +16,6 @@ dotnet run \
   --tokens=./vits-piper-en_US-amy-low/tokens.txt \
   --lexicon=./lexicon-en-us.txt \
   --debug=1 \
-  --output-filename=./amy.wav \
+  --output-filename=./amy-lexicon.wav \
   --text="This is a text to speech application in dotnet with Next Generation Kaldi"
 

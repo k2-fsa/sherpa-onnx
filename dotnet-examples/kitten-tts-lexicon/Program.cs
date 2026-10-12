@@ -65,7 +65,7 @@ class KittenTtsDemo
 
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
-    var outputFilename = "./generated-kitten-en.wav";
+    var outputFilename = "./generated-kitten-en-lexicon.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)

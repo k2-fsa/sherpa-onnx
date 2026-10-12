@@ -63,8 +63,8 @@ class OfflineTtsPlayDemo
     [Option("text", Required = true, HelpText = "Text to synthesize")]
     public string Text { get; set; } = string.Empty;
 
-    [Option("output-filename", Required = true, Default = "./generated.wav", HelpText = "Path to save the generated audio")]
-    public string OutputFilename { get; set; } = "./generated.wav";
+    [Option("output-filename", Required = true, Default = "./generated-lexicon.wav", HelpText = "Path to save the generated audio")]
+    public string OutputFilename { get; set; } = "./generated-lexicon.wav";
   }
 
   static void Main(string[] args)
@@ -95,7 +95,7 @@ dotnet run \
   --tokens=./matcha-icefall-zh-baker/tokens.txt \
   --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
   --debug=1 \
-  --output-filename=./matcha-zh.wav \
+  --output-filename=./matcha-zh-lexicon.wav \
   --text='某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。'
 
 # matcha-icefall-en_US-ljspeech
@@ -111,7 +111,7 @@ dotnet run \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --tokens=./matcha-icefall-zh-baker/tokens.txt \
   --debug=1 \
-  --output-filename=./matcha-zh.wav \
+  --output-filename=./matcha-zh-lexicon.wav \
   --text='Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.'
 
 # vits-aishell3
@@ -126,7 +126,7 @@ dotnet run \
   --tts-rule-fsts=./vits-zh-aishell3/rule.fst \
   --sid=66 \
   --debug=1 \
-  --output-filename=./aishell3-66.wav \
+  --output-filename=./aishell3-66-lexicon.wav \
   --text=这是一个语音合成测试
 
 # Piper models
@@ -138,7 +138,7 @@ dotnet run \
   --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
   ---tokens=./vits-piper-en_US-amy-low/tokens.txt \
   --debug=1 \
-  --output-filename=./amy.wav \
+  --output-filename=./amy-lexicon.wav \
   --text='This is a text to speech application in dotnet with Next Generation Kaldi'
 
 Please refer to

@@ -170,7 +170,7 @@ class ZipVoiceTtsDemo
     var callback = new OfflineTtsCallbackProgressWithArg(myCallback);
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
-    var outputFilename = "./generated-zipvoice-zh-en-play.wav";
+    var outputFilename = "./generated-zipvoice-zh-en-play-lexicon.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)

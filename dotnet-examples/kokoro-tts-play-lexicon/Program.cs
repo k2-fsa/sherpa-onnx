@@ -172,7 +172,7 @@ class KokoroTtsPlayDemo
     var callback = new OfflineTtsCallbackProgressWithArg(MyCallback);
 
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
-    var outputFilename = "./generated-kokoro-0.wav";
+    var outputFilename = "./generated-kokoro-0-lexicon.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)
