@@ -12,8 +12,7 @@ func runZipVoiceTtsDemo() {
     encoder: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx",
     decoder: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx",
     vocoder: "./vocos_24khz.onnx",
-    dataDir: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data",
-    lexicon: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt"
+    lexicon: "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt,./lexicon-en-us.txt"
   )
 
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(numThreads: 2, zipvoice: zipvoice)
@@ -67,9 +66,9 @@ func runZipVoiceTtsDemo() {
       return 1
     }
 
-    generateAndSave(outputFile: "generated-zipvoice-callback.wav", callback: callback, arg: arg)
+    generateAndSave(outputFile: "generated-zipvoice-lexicon-callback.wav", callback: callback, arg: arg)
   } else {
-    generateAndSave(outputFile: "generated-zipvoice-direct.wav")
+    generateAndSave(outputFile: "generated-zipvoice-lexicon-direct.wav")
   }
 }
 

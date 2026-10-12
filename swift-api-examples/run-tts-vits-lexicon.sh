@@ -15,22 +15,26 @@ if [ ! -d ./vits-piper-en_US-amy-low ]; then
   rm vits-piper-en_US-amy-low.tar.bz2
 fi
 
-if [ ! -e ./tts-vits ]; then
+if [ ! -e ./lexicon-en-us.txt ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
+if [ ! -e ./tts-vits-lexicon ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
     -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./tts-vits.swift  ./SherpaOnnx.swift \
+    ./tts-vits-lexicon.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
     -l sherpa-onnx-c-api \
     -l onnxruntime \
-    -o tts-vits
+    -o tts-vits-lexicon
 
-  strip tts-vits
+  strip tts-vits-lexicon
 else
-  echo "./tts-vits exists - skip building"
+  echo "./tts-vits-lexicon exists - skip building"
 fi
 
 export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
-./tts-vits
+./tts-vits-lexicon

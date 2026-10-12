@@ -20,22 +20,22 @@ if [ ! -f ./vocos-22khz-univ.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
-if [ ! -e ./tts-matcha-zh ]; then
+if [ ! -e ./tts-matcha-zh-lexicon ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
     -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./tts-matcha-zh.swift  ./SherpaOnnx.swift \
+    ./tts-matcha-zh-lexicon.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
     -l sherpa-onnx-c-api \
     -l onnxruntime \
-    -o tts-matcha-zh
+    -o tts-matcha-zh-lexicon
 
-  strip tts-matcha-zh
+  strip tts-matcha-zh-lexicon
 else
-  echo "./tts-matcha-zh exists - skip building"
+  echo "./tts-matcha-zh-lexicon exists - skip building"
 fi
 
 export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
-./tts-matcha-zh
+./tts-matcha-zh-lexicon

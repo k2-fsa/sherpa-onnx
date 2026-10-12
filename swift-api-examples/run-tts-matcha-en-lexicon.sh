@@ -21,22 +21,26 @@ if [ ! -f ./vocos-22khz-univ.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
-if [ ! -e ./tts-matcha-en ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-matcha-en ]; then
+if [ ! -e ./lexicon-en-us.txt ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
+if [ ! -e ./tts-matcha-en-lexicon ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-matcha-en-lexicon ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
     -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./tts-matcha-en.swift  ./SherpaOnnx.swift \
+    ./tts-matcha-en-lexicon.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
     -l sherpa-onnx-c-api \
     -l onnxruntime \
-    -o tts-matcha-en
+    -o tts-matcha-en-lexicon
 
-  strip tts-matcha-en
+  strip tts-matcha-en-lexicon
 else
-  echo "./tts-matcha-en exists - skip building"
+  echo "./tts-matcha-en-lexicon exists - skip building"
 fi
 
 export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
-./tts-matcha-en
+./tts-matcha-en-lexicon

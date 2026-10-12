@@ -10,28 +10,28 @@ fi
 # please visit
 # https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
 # to download more models
-if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
-  tar xf kokoro-en-v0_19.tar.bz2
-  rm kokoro-en-v0_19.tar.bz2
+if [ ! -f ./kokoro-multi-lang-v1_0/model.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+  tar xf kokoro-multi-lang-v1_0.tar.bz2
+  rm kokoro-multi-lang-v1_0.tar.bz2
 fi
 
-if [ ! -e ./tts-kokoro-en ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-kokoro-en ]; then
+if [ ! -e ./tts-kokoro-zh-en-lexicon ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-kokoro-zh-en-lexicon ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
     -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./tts-kokoro-en.swift  ./SherpaOnnx.swift \
+    ./tts-kokoro-zh-en-lexicon.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
     -l sherpa-onnx-c-api \
     -l onnxruntime \
-    -o tts-kokoro-en
+    -o tts-kokoro-zh-en-lexicon
 
-  strip tts-kokoro-en
+  strip tts-kokoro-zh-en-lexicon
 else
-  echo "./tts-kokoro-en exists - skip building"
+  echo "./tts-kokoro-zh-en-lexicon exists - skip building"
 fi
 
 export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
-./tts-kokoro-en
+./tts-kokoro-zh-en-lexicon

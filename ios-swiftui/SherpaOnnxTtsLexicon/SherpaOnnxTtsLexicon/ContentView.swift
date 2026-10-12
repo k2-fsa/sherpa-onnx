@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  SherpaOnnxTts
+//  SherpaOnnxTtsLexicon
 //
 //  Created by fangjun on 2023/11/23.
 //

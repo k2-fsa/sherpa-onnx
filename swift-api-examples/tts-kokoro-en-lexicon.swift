@@ -5,17 +5,17 @@ class MyClass {
 }
 
 func run() {
-  let acousticModel = "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx"
-  let vocoder = "./vocos-22khz-univ.onnx"
-  let tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt"
-  let dataDir = "./matcha-icefall-en_US-ljspeech/espeak-ng-data"
-  let matcha = sherpaOnnxOfflineTtsMatchaModelConfig(
-    acousticModel: acousticModel,
-    vocoder: vocoder,
+  let model = "./kokoro-en-v0_19/model.onnx"
+  let voices = "./kokoro-en-v0_19/voices.bin"
+  let tokens = "./kokoro-en-v0_19/tokens.txt"
+  let lexicon = "./lexicon-en-us.txt"
+  let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(
+    model: model,
+    voices: voices,
     tokens: tokens,
-    dataDir: dataDir
+    lexicon: lexicon
   )
-  let modelConfig = sherpaOnnxOfflineTtsModelConfig(matcha: matcha, debug: 0)
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro, debug: 0)
   var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 
   let myClass = MyClass()
@@ -50,7 +50,7 @@ func run() {
 
   let audio = tts.generateWithConfig(
     text: text, config: genConfig, callback: callback, arg: arg)
-  let filename = "test-matcha-en.wav"
+  let filename = "test-kokoro-en-lexicon.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {
     print("\nSaved to:\(filename)")

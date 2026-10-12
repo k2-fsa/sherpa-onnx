@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C917B4E52B0EEF3B005245AC /* SherpaOnnxTtsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsApp.swift */; };
+		C917B4E52B0EEF3B005245AC /* SherpaOnnxTtsLexiconApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsLexiconApp.swift */; };
 		C917B4E72B0EEF3B005245AC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917B4E62B0EEF3B005245AC /* ContentView.swift */; };
 		C917B4E92B0EEF3C005245AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4E82B0EEF3C005245AC /* Assets.xcassets */; };
 		C917B4EC2B0EEF3C005245AC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */; };
@@ -16,8 +16,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C917B4E12B0EEF3B005245AC /* SherpaOnnxTts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxTts.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxTtsApp.swift; sourceTree = "<group>"; };
+		C917B4E12B0EEF3B005245AC /* SherpaOnnxTtsLexicon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxTtsLexicon.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsLexiconApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxTtsLexiconApp.swift; sourceTree = "<group>"; };
 		C917B4E62B0EEF3B005245AC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C917B4E82B0EEF3C005245AC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -39,7 +39,7 @@
 		C917B4D82B0EEF3B005245AC = {
 			isa = PBXGroup;
 			children = (
-				C917B4E32B0EEF3B005245AC /* SherpaOnnxTts */,
+				C917B4E32B0EEF3B005245AC /* SherpaOnnxTtsLexicon */,
 				C917B4E22B0EEF3B005245AC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -47,21 +47,21 @@
 		C917B4E22B0EEF3B005245AC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C917B4E12B0EEF3B005245AC /* SherpaOnnxTts.app */,
+				C917B4E12B0EEF3B005245AC /* SherpaOnnxTtsLexicon.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		C917B4E32B0EEF3B005245AC /* SherpaOnnxTts */ = {
+		C917B4E32B0EEF3B005245AC /* SherpaOnnxTtsLexicon */ = {
 			isa = PBXGroup;
 			children = (
 				C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */,
-				C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsApp.swift */,
+				C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsLexiconApp.swift */,
 				C917B4E62B0EEF3B005245AC /* ContentView.swift */,
 				C917B4E82B0EEF3C005245AC /* Assets.xcassets */,
 				C917B4EA2B0EEF3C005245AC /* Preview Content */,
 			);
-			path = SherpaOnnxTts;
+			path = SherpaOnnxTtsLexicon;
 			sourceTree = "<group>";
 		};
 		C917B4EA2B0EEF3C005245AC /* Preview Content */ = {
@@ -75,9 +75,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C917B4E02B0EEF3B005245AC /* SherpaOnnxTts */ = {
+		C917B4E02B0EEF3B005245AC /* SherpaOnnxTtsLexicon */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C917B4EF2B0EEF3C005245AC /* Build configuration list for PBXNativeTarget "SherpaOnnxTts" */;
+			buildConfigurationList = C917B4EF2B0EEF3C005245AC /* Build configuration list for PBXNativeTarget "SherpaOnnxTtsLexicon" */;
 			buildPhases = (
 				C917B4DD2B0EEF3B005245AC /* Sources */,
 				C917B4DE2B0EEF3B005245AC /* Frameworks */,
@@ -87,12 +87,12 @@
 			);
 			dependencies = (
 			);
-			name = SherpaOnnxTts;
+			name = SherpaOnnxTtsLexicon;
 			packageProductDependencies = (
 				C9A4C698302B3BD60004DECB /* sherpa-onnx */,
 			);
-			productName = SherpaOnnxTts;
-			productReference = C917B4E12B0EEF3B005245AC /* SherpaOnnxTts.app */;
+			productName = SherpaOnnxTtsLexicon;
+			productReference = C917B4E12B0EEF3B005245AC /* SherpaOnnxTtsLexicon.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -110,7 +110,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C917B4DC2B0EEF3B005245AC /* Build configuration list for PBXProject "SherpaOnnxTts" */;
+			buildConfigurationList = C917B4DC2B0EEF3B005245AC /* Build configuration list for PBXProject "SherpaOnnxTtsLexicon" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -126,7 +126,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C917B4E02B0EEF3B005245AC /* SherpaOnnxTts */,
+				C917B4E02B0EEF3B005245AC /* SherpaOnnxTtsLexicon */,
 			);
 		};
 /* End PBXProject section */
@@ -150,7 +150,7 @@
 			files = (
 				C917B4E72B0EEF3B005245AC /* ContentView.swift in Sources */,
 				C9FE9FE52B0F33CD009F1003 /* ViewModel.swift in Sources */,
-				C917B4E52B0EEF3B005245AC /* SherpaOnnxTtsApp.swift in Sources */,
+				C917B4E52B0EEF3B005245AC /* SherpaOnnxTtsLexiconApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,7 +278,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxTts/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxTtsLexicon/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -291,7 +291,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTts";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTtsLexicon";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -306,7 +306,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxTts/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxTtsLexicon/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -319,7 +319,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTts";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTtsLexicon";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -330,7 +330,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C917B4DC2B0EEF3B005245AC /* Build configuration list for PBXProject "SherpaOnnxTts" */ = {
+		C917B4DC2B0EEF3B005245AC /* Build configuration list for PBXProject "SherpaOnnxTtsLexicon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C917B4ED2B0EEF3C005245AC /* Debug */,
@@ -339,7 +339,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C917B4EF2B0EEF3C005245AC /* Build configuration list for PBXNativeTarget "SherpaOnnxTts" */ = {
+		C917B4EF2B0EEF3C005245AC /* Build configuration list for PBXNativeTarget "SherpaOnnxTtsLexicon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C917B4F02B0EEF3C005245AC /* Debug */,

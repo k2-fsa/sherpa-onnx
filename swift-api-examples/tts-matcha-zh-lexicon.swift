@@ -5,18 +5,20 @@ class MyClass {
 }
 
 func run() {
-  let model = "./kokoro-en-v0_19/model.onnx"
-  let voices = "./kokoro-en-v0_19/voices.bin"
-  let tokens = "./kokoro-en-v0_19/tokens.txt"
-  let dataDir = "./kokoro-en-v0_19/espeak-ng-data"
-  let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(
-    model: model,
-    voices: voices,
-    tokens: tokens,
-    dataDir: dataDir
+  let acousticModel = "./matcha-icefall-zh-baker/model-steps-3.onnx"
+  let vocoder = "./vocos-22khz-univ.onnx"
+  let lexicon = "./matcha-icefall-zh-baker/lexicon.txt"
+  let tokens = "./matcha-icefall-zh-baker/tokens.txt"
+  let ruleFsts =
+    "./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst"
+  let matcha = sherpaOnnxOfflineTtsMatchaModelConfig(
+    acousticModel: acousticModel,
+    vocoder: vocoder,
+    lexicon: lexicon,
+    tokens: tokens
   )
-  let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro, debug: 0)
-  var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig)
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(matcha: matcha, debug: 0)
+  var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig, ruleFsts: ruleFsts)
 
   let myClass = MyClass()
 
@@ -41,8 +43,7 @@ func run() {
 
   let tts = SherpaOnnxOfflineTtsWrapper(config: &ttsConfig)
 
-  let text =
-    "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."
+  let text = "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
   var genConfig = SherpaOnnxGenerationConfigSwift()
   genConfig.sid = 0
   genConfig.speed = 1.0
@@ -50,7 +51,7 @@ func run() {
 
   let audio = tts.generateWithConfig(
     text: text, config: genConfig, callback: callback, arg: arg)
-  let filename = "test-kokoro-en.wav"
+  let filename = "test-matcha-zh-lexicon.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {
     print("\nSaved to:\(filename)")

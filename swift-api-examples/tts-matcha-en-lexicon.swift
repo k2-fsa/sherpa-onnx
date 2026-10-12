@@ -5,12 +5,10 @@ class MyClass {
 }
 
 func run() {
-  let acousticModel = "./matcha-icefall-zh-baker/model-steps-3.onnx"
+  let acousticModel = "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx"
   let vocoder = "./vocos-22khz-univ.onnx"
-  let lexicon = "./matcha-icefall-zh-baker/lexicon.txt"
-  let tokens = "./matcha-icefall-zh-baker/tokens.txt"
-  let ruleFsts =
-    "./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst"
+  let tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt"
+  let lexicon = "./lexicon-en-us.txt"
   let matcha = sherpaOnnxOfflineTtsMatchaModelConfig(
     acousticModel: acousticModel,
     vocoder: vocoder,
@@ -18,7 +16,7 @@ func run() {
     tokens: tokens
   )
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(matcha: matcha, debug: 0)
-  var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig, ruleFsts: ruleFsts)
+  var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 
   let myClass = MyClass()
 
@@ -43,7 +41,8 @@ func run() {
 
   let tts = SherpaOnnxOfflineTtsWrapper(config: &ttsConfig)
 
-  let text = "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
+  let text =
+    "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."
   var genConfig = SherpaOnnxGenerationConfigSwift()
   genConfig.sid = 0
   genConfig.speed = 1.0
@@ -51,7 +50,7 @@ func run() {
 
   let audio = tts.generateWithConfig(
     text: text, config: genConfig, callback: callback, arg: arg)
-  let filename = "test-matcha-zh.wav"
+  let filename = "test-matcha-en-lexicon.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {
     print("\nSaved to:\(filename)")

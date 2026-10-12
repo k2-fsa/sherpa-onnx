@@ -1,6 +1,6 @@
 //
-//  SherpaOnnxTtsApp.swift
-//  SherpaOnnxTts
+//  SherpaOnnxTtsLexiconApp.swift
+//  SherpaOnnxTtsLexicon
 //
 //  Created by fangjun on 2023/11/23.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct SherpaOnnxTtsApp: App {
+struct SherpaOnnxTtsLexiconApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

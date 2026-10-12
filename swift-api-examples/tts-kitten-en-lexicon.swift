@@ -5,16 +5,17 @@ class MyClass {
 }
 
 func run() {
-  let model = "./vits-piper-en_US-amy-low/en_US-amy-low.onnx"
-  let tokens = "./vits-piper-en_US-amy-low/tokens.txt"
-  let dataDir = "./vits-piper-en_US-amy-low/espeak-ng-data"
-  let vits = sherpaOnnxOfflineTtsVitsModelConfig(
+  let model = "./kitten-mini-en-v0_8/model.onnx"
+  let voices = "./kitten-mini-en-v0_8/voices.bin"
+  let tokens = "./kitten-mini-en-v0_8/tokens.txt"
+  let lexicon = "./lexicon-en-us.txt"
+  let kitten = sherpaOnnxOfflineTtsKittenModelConfig(
     model: model,
-    lexicon: "",
+    voices: voices,
     tokens: tokens,
-    dataDir: dataDir
+    lexicon: lexicon
   )
-  let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(debug: 0, kitten: kitten)
   var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 
   let myClass = MyClass()
@@ -41,15 +42,15 @@ func run() {
   let tts = SherpaOnnxOfflineTtsWrapper(config: &ttsConfig)
 
   let text =
-    "“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.”"
+    "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."
   var genConfig = SherpaOnnxGenerationConfigSwift()
-  genConfig.sid = 99
+  genConfig.sid = 0
   genConfig.speed = 1.0
   genConfig.silenceScale = 0.2
 
   let audio = tts.generateWithConfig(
     text: text, config: genConfig, callback: callback, arg: arg)
-  let filename = "test-vits-en.wav"
+  let filename = "test-kitten-en-lexicon.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {
     print("\nSaved to:\(filename)")

@@ -513,15 +513,13 @@ jobs:
           # Restore root Package.swift for static test (already patched with local paths)
           # Patch ios-swiftui/ios-swift xcodeproj files to use local package
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
-            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
-            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
-            -e '/requirement = {/,/};/d' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
             {} +
 
           # Ensure we're using the static product in spm-examples
           # (Root Package.swift already has static binary targets patched to local paths)
 
-          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTts; do
+          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTtsLexicon SherpaOnnxTtsPhonemize; do
             echo "=== Building ios-swiftui/$app (static, local SPM) ==="
             cd ios-swiftui/$app
             xcodebuild -project $app.xcodeproj \
@@ -560,7 +558,7 @@ jobs:
           open('Package.swift', 'w').write(text)
           "
 
-          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTts; do
+          for app in SherpaOnnxAsr SherpaOnnx2Pass SherpaOnnxTtsLexicon SherpaOnnxTtsPhonemize; do
             echo "=== Building ios-swiftui/$app (shared, local SPM) ==="
             cd ios-swiftui/$app
             xcodebuild -project $app.xcodeproj \

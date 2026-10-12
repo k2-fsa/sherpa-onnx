@@ -1,6 +1,6 @@
 //
 //  ViewModel.swift
-//  SherpaOnnxTts
+//  SherpaOnnxTtsLexicon
 //
 //  Created by fangjun on 2023/11/23.
 //
@@ -13,11 +13,6 @@ import SherpaOnnxShared
 #error("SherpaOnnx module not found. Please check your SPM dependency configuration.")
 #endif
 import Foundation
-
-// used to get the path to espeak-ng-data
-func resourceURL(to path: String) -> String {
-  return URL(string: path, relativeTo: Bundle.main.resourceURL)!.path
-}
 
 func getResource(_ forResource: String, _ ofType: String) -> String {
   let path = Bundle.main.path(forResource: forResource, ofType: ofType)
@@ -89,11 +84,13 @@ func getTtsFor_en_US_amy_low() -> SherpaOnnxOfflineTtsWrapper {
   // tokens.txt
   let tokens = getResource("tokens", "txt")
 
-  // in this case, we don't need lexicon.txt
-  let dataDir = resourceURL(to: "espeak-ng-data")
+  // lexicon-en-us.txt; the model package has no lexicon, please download
+  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+  // and add it to Build Phases -> Copy Bundle Resources
+  let lexicon = getResource("lexicon-en-us", "txt")
 
   let vits = sherpaOnnxOfflineTtsVitsModelConfig(
-    model: model, lexicon: "", tokens: tokens, dataDir: dataDir)
+    model: model, lexicon: lexicon, tokens: tokens)
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
   var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 
@@ -116,7 +113,6 @@ func getTtsFor_zh_en_melo_tts() -> SherpaOnnxOfflineTtsWrapper {
 
   let vits = sherpaOnnxOfflineTtsVitsModelConfig(
     model: model, lexicon: lexicon, tokens: tokens,
-    dataDir: "",
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0
@@ -170,11 +166,13 @@ func getTtsFor_kokoro_en_v0_19() -> SherpaOnnxOfflineTtsWrapper {
   // tokens.txt
   let tokens = getResource("tokens", "txt")
 
-  // in this case, we don't need lexicon.txt
-  let dataDir = resourceURL(to: "espeak-ng-data")
+  // lexicon-en-us.txt; the model package has no lexicon, please download
+  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+  // and add it to Build Phases -> Copy Bundle Resources
+  let lexicon = getResource("lexicon-en-us", "txt")
 
   let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(
-    model: model, voices: voices, tokens: tokens, dataDir: dataDir)
+    model: model, voices: voices, tokens: tokens, lexicon: lexicon)
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro)
   var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 
@@ -194,8 +192,6 @@ func getTtsFor_kokoro_multi_lang_v1_0() -> SherpaOnnxOfflineTtsWrapper {
   let lexicon_zh = getResource("lexicon-zh", "txt")
   let lexicon = "\(lexicon_en),\(lexicon_zh)"
 
-  // in this case, we don't need lexicon.txt
-  let dataDir = resourceURL(to: "espeak-ng-data")
 
   let numFst = getResource("number-zh", "fst")
   let dateFst = getResource("date-zh", "fst")
@@ -203,8 +199,7 @@ func getTtsFor_kokoro_multi_lang_v1_0() -> SherpaOnnxOfflineTtsWrapper {
   let ruleFsts = "\(dateFst),\(phoneFst),\(numFst)"
 
   let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(
-    model: model, voices: voices, tokens: tokens, dataDir: dataDir,
-    lexicon: lexicon)
+    model: model, voices: voices, tokens: tokens, lexicon: lexicon)
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro)
   var config = sherpaOnnxOfflineTtsConfig(model: modelConfig, ruleFsts: ruleFsts)
 

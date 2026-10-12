@@ -1019,6 +1019,7 @@ public func sherpaOnnxOfflineTtsVitsModelConfig(
   model: String = "",
   lexicon: String = "",
   tokens: String = "",
+  /// Deprecated. Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.
   dataDir: String = "",
   noiseScale: Float = 0.667,
   noiseScaleW: Float = 0.8,
@@ -1042,6 +1043,7 @@ public func sherpaOnnxOfflineTtsMatchaModelConfig(
   vocoder: String = "",
   lexicon: String = "",
   tokens: String = "",
+  /// Deprecated. Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.
   dataDir: String = "",
   noiseScale: Float = 0.667,
   lengthScale: Float = 1.0,
@@ -1063,6 +1065,7 @@ public func sherpaOnnxOfflineTtsKokoroModelConfig(
   model: String = "",
   voices: String = "",
   tokens: String = "",
+  /// Deprecated. Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.
   dataDir: String = "",
   lengthScale: Float = 1.0,
   dictDir: String = "",
@@ -1085,15 +1088,18 @@ public func sherpaOnnxOfflineTtsKittenModelConfig(
   model: String = "",
   voices: String = "",
   tokens: String = "",
+  /// Deprecated. Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.
   dataDir: String = "",
-  lengthScale: Float = 1.0
+  lengthScale: Float = 1.0,
+  lexicon: String = ""
 ) -> SherpaOnnxOfflineTtsKittenModelConfig {
   return SherpaOnnxOfflineTtsKittenModelConfig(
     model: toCPointer(model),
     voices: toCPointer(voices),
     tokens: toCPointer(tokens),
     data_dir: toCPointer(dataDir),
-    length_scale: lengthScale
+    length_scale: lengthScale,
+    lexicon: toCPointer(lexicon)
   )
 }
 
@@ -1102,6 +1108,7 @@ public func sherpaOnnxOfflineTtsZipvoiceModelConfig(
   encoder: String = "",
   decoder: String = "",
   vocoder: String = "",
+  /// Deprecated. Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.
   dataDir: String = "",
   lexicon: String = "",
   featScale: Float = 0.1,
@@ -1301,7 +1308,7 @@ public typealias TtsProgressCallbackWithArg =
   ) -> Int32
 
 public struct SherpaOnnxGenerationConfigSwift {
-  public init(silenceScale: Float = 0.2, speed: Float = 1.0, sid: Int = 0, referenceAudio: [Float] = [], referenceSampleRate: Int = 16000, referenceText: String = "", numSteps: Int = 1, extra: [String: Any] = [:]) {
+  public init(silenceScale: Float = 0.2, speed: Float = 1.0, sid: Int = 0, referenceAudio: [Float] = [], referenceSampleRate: Int = 16000, referenceText: String = "", numSteps: Int = 1, extra: [String: Any] = [:], phonemeCodepoints: [[Int32]] = [], tokens: [[String]] = []) {
     self.silenceScale = silenceScale
     self.speed = speed
     self.sid = sid
@@ -1310,6 +1317,8 @@ public struct SherpaOnnxGenerationConfigSwift {
     self.referenceText = referenceText
     self.numSteps = numSteps
     self.extra = extra
+    self.phonemeCodepoints = phonemeCodepoints
+    self.tokens = tokens
   }
 
   public var silenceScale: Float = 0.2
@@ -1320,6 +1329,15 @@ public struct SherpaOnnxGenerationConfigSwift {
   public var referenceText: String = ""
   public var numSteps: Int = 1
   public var extra: [String: Any] = [:]  // Any can be String, Int, Float, Double
+
+  /// Pre-phonemized input as Unicode codepoints. Each inner array is one
+  /// sentence. When set, it is used in place of the text argument; leave
+  /// empty to use text with a lexicon. Mutually exclusive with `tokens`.
+  public var phonemeCodepoints: [[Int32]] = []
+
+  /// Pre-tokenized input, e.g. Chinese pinyin like "zhong1". Each inner array
+  /// is one sentence. Mutually exclusive with `phonemeCodepoints`.
+  public var tokens: [[String]] = []
 
   /// Convert the extra dictionary into a JSON string
   public func extraJsonString() -> String {
@@ -1360,6 +1378,17 @@ final class SherpaOnnxGenerationConfigC {
   /// Extra JSON string for C API
   let extraJson: String
 
+  /// Flattened phoneme codepoints and per-sentence lengths; the pointers in
+  /// cConfig point into these buffers for the duration of the C call.
+  private let codepointsStorage: [Int32]
+  private let codepointsLensStorage: [Int32]
+
+  /// C strings for the flattened token array and the char** array pointing at
+  /// them; freed in deinit.
+  private let tokenStrings: [UnsafeMutablePointer<Int8>?]
+  private let tokenPtrsStorage: UnsafeMutablePointer<UnsafePointer<Int8>?>?
+  private let tokenLensStorage: [Int32]
+
   init(_ swiftConfig: SherpaOnnxGenerationConfigSwift) {
     let referenceAudio = swiftConfig.referenceAudio
 
@@ -1368,19 +1397,76 @@ final class SherpaOnnxGenerationConfigC {
 
     self.referenceAudioStorage = referenceAudio
 
-    self.cConfig = self.referenceAudioStorage.withUnsafeBufferPointer { buffer in
-      SherpaOnnxGenerationConfig(
-        silence_scale: swiftConfig.silenceScale,
-        speed: swiftConfig.speed,
-        sid: Int32(swiftConfig.sid),
-        reference_audio: buffer.count > 0 ? buffer.baseAddress : nil,
-        reference_audio_len: Int32(buffer.count),
-        reference_sample_rate: Int32(swiftConfig.referenceSampleRate),
-        reference_text: toCPointer(swiftConfig.referenceText),
-        num_steps: Int32(swiftConfig.numSteps),
-        extra: toCPointer(extraJson)
-      )
+    // Flatten phoneme codepoints; the C API takes a flat array plus the
+    // length of each sentence.
+    var flatCodepoints: [Int32] = []
+    var codepointLens: [Int32] = []
+    for sentence in swiftConfig.phonemeCodepoints {
+      codepointLens.append(Int32(sentence.count))
+      flatCodepoints.append(contentsOf: sentence)
     }
+    self.codepointsStorage = flatCodepoints
+    self.codepointsLensStorage = codepointLens
+
+    // Flatten tokens the same way; each token becomes a C string and the
+    // char** array points at them.
+    var tokenStrings: [UnsafeMutablePointer<Int8>?] = []
+    var tokenLens: [Int32] = []
+    for sentence in swiftConfig.tokens {
+      tokenLens.append(Int32(sentence.count))
+      for token in sentence {
+        tokenStrings.append(strdup(token))
+      }
+    }
+    self.tokenStrings = tokenStrings
+    self.tokenLensStorage = tokenLens
+
+    var tokenPtrs: UnsafeMutablePointer<UnsafePointer<Int8>?>? = nil
+    if !tokenStrings.isEmpty {
+      tokenPtrs = .allocate(capacity: tokenStrings.count)
+      for (i, p) in tokenStrings.enumerated() {
+        tokenPtrs!.advanced(by: i).initialize(to: UnsafePointer(p))
+      }
+    }
+    self.tokenPtrsStorage = tokenPtrs
+
+    let hasCodepoints = !codepointLens.isEmpty && !flatCodepoints.isEmpty
+    let hasTokens = !tokenLens.isEmpty && !tokenStrings.isEmpty
+
+    self.cConfig = self.referenceAudioStorage.withUnsafeBufferPointer { buffer in
+      flatCodepoints.withUnsafeBufferPointer { codepointsBuf in
+        codepointLens.withUnsafeBufferPointer { codepointsLensBuf in
+          tokenLens.withUnsafeBufferPointer { tokenLensBuf in
+            SherpaOnnxGenerationConfig(
+              silence_scale: swiftConfig.silenceScale,
+              speed: swiftConfig.speed,
+              sid: Int32(swiftConfig.sid),
+              reference_audio: buffer.count > 0 ? buffer.baseAddress : nil,
+              reference_audio_len: Int32(buffer.count),
+              reference_sample_rate: Int32(swiftConfig.referenceSampleRate),
+              reference_text: toCPointer(swiftConfig.referenceText),
+              num_steps: Int32(swiftConfig.numSteps),
+              extra: toCPointer(extraJson),
+              phoneme_codepoints: hasCodepoints ? codepointsBuf.baseAddress : nil,
+              phoneme_codepoints_lens: hasCodepoints ? codepointsLensBuf.baseAddress : nil,
+              phoneme_codepoints_num_sentences: Int32(codepointLens.count),
+              tokens: hasTokens ? UnsafePointer(tokenPtrs!) : nil,
+              tokens_lens: hasTokens ? tokenLensBuf.baseAddress : nil,
+              tokens_num_sentences: Int32(tokenLens.count)
+            )
+          }
+        }
+      }
+    }
+  }
+
+  deinit {
+    for p in tokenStrings {
+      if let p {
+        free(p)
+      }
+    }
+    tokenPtrsStorage?.deallocate()
   }
 }
 

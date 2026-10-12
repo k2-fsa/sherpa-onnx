@@ -37,29 +37,26 @@ PY
   cp -R "${src_dir}/kitten-mini-en-v0_8" "${model_dir}"
 fi
 
-if [ ! -d "${model_dir}/espeak-ng-data" ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
-  tar xf espeak-ng-data.tar.bz2
-  rm espeak-ng-data.tar.bz2
-  mv espeak-ng-data "${model_dir}/"
+if [ ! -e ./lexicon-en-us.txt ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 fi
 
-if [ ! -e ./tts-kitten-en ] || [ ./tts-kitten-en.swift -nt ./tts-kitten-en ] || [ ./SherpaOnnx.swift -nt ./tts-kitten-en ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-kitten-en ]; then
+if [ ! -e ./tts-kitten-en-lexicon ] || [ ./tts-kitten-en-lexicon.swift -nt ./tts-kitten-en-lexicon ] || [ ./SherpaOnnx.swift -nt ./tts-kitten-en-lexicon ] || [ ../build-macos/install/lib/libsherpa-onnx-c-api.a -nt ./tts-kitten-en-lexicon ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
     -I ../build-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./tts-kitten-en.swift  ./SherpaOnnx.swift \
+    ./tts-kitten-en-lexicon.swift  ./SherpaOnnx.swift \
     -L ../build-macos/install/lib/ \
     -l sherpa-onnx-c-api \
     -l onnxruntime \
-    -o tts-kitten-en
+    -o tts-kitten-en-lexicon
 
-  strip tts-kitten-en
+  strip tts-kitten-en-lexicon
 else
-  echo "./tts-kitten-en exists - skip building"
+  echo "./tts-kitten-en-lexicon exists - skip building"
 fi
 
 export DYLD_LIBRARY_PATH=$PWD/../build-macos/install/lib:$DYLD_LIBRARY_PATH
-./tts-kitten-en
+./tts-kitten-en-lexicon
