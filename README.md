@@ -593,6 +593,22 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the JavaScript npm package [sherpa-onnx-node][sherpa-onnx-node] with [SenseVoice](https://k2-fsa.github.io/sherpa/onnx/sense-voice/pretrained.html#sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-chinese-english-japanese-korean-cantonese)
 for local speech recognition.
 
+### [akou](https://github.com/GeiserX/akou)
+
+> An open-source (GPL-3.0) call and meeting recorder for macOS that transcribes
+> on the machine. It records the microphone and the call audio on two channels,
+> shows a live transcript, and lets a terminal agent such as Claude Code or Codex
+> follow and question the call over MCP. The same core runs as a self-hosted
+> transcription server in Docker.
+
+It runs [sherpa-onnx-node][sherpa-onnx-node] in a Bun Worker: [silero-vad][silero-vad]
+splits each channel into speech segments, Parakeet TDT 0.6B v3 (`OfflineRecognizer`)
+or streaming Nemotron (`OnlineRecognizer`) writes the live transcript, and TitaNet
+embeddings (`SpeakerEmbeddingExtractor`) help tell the speakers on the call apart.
+After the call, Parakeet is the fast engine of the final pass and one of the
+engines of the fused pass. The larger Qwen3-ASR model runs outside sherpa-onnx, on
+llama-server.
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
