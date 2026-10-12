@@ -595,7 +595,7 @@ for local speech recognition.
 
 ### [akou](https://github.com/GeiserX/akou)
 
-> An open-source (GPL-3.0) call and meeting recorder for macOS that transcribes
+> An open-source (GPL-3.0-or-later) call and meeting recorder for macOS that transcribes
 > on the machine. It records the microphone and the call audio on two channels,
 > shows a live transcript, and lets a terminal agent such as Claude Code or Codex
 > follow and question the call over MCP. The same core runs as a self-hosted
