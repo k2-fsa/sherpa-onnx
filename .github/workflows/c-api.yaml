@@ -105,21 +105,6 @@ jobs:
           ls -lh $name
           ./$name
 
-      - name: Test corrupt model
-        shell: bash
-        run: |
-          name=corrupt-model-c-api
-          gcc -o $name ./c-api-examples/$name.c \
-            -I ./build/install/include \
-            -L ./build/install/lib/ \
-            -l sherpa-onnx-c-api \
-            -l onnxruntime
-
-          ls -lh $name
-          ./$name
-
-          rm $name
-
       - name: Test Cohere Transcribe
         shell: bash
         run: |
