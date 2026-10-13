@@ -678,7 +678,45 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         }
 
         if (!found) {
-          SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+          // The word is not in the lexicon. If it contains '-', split it and
+          // look up each part separately, e.g. "two-thirds" -> "two" + "thirds".
+          std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
+          if (words[i].find('-') != std::string::npos && !parts.empty()) {
+            bool first = true;
+            for (const auto &part : parts) {
+              auto it = lexicon_.find(ToLowerCase(part));
+              if (it == lexicon_.end()) {
+                SHERPA_ONNX_LOGE("OOV word skipped: '%s'", part.c_str());
+                continue;
+              }
+              if (debug) {
+                std::string phonemes_str;
+                for (int32_t cp : it->second) {
+                  phonemes_str += Utf32ToUtf8(static_cast<char32_t>(cp));
+                }
+                SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'", part.c_str(),
+                                 phonemes_str.c_str());
+              }
+              if (first) {
+                // add space between words (like espeak does)
+                if (!sentence_codepoints.empty()) {
+                  int32_t last = sentence_codepoints.back();
+                  if (last != ',' && last != '.' && last != '!' &&
+                      last != '?' && last != ';' && last != ':' &&
+                      last != ' ') {
+                    sentence_codepoints.push_back(static_cast<int32_t>(' '));
+                  }
+                }
+                first = false;
+              }
+              // The parts of a hyphenated word form a single spoken word, so
+              // no extra space is inserted between them.
+              sentence_codepoints.insert(sentence_codepoints.end(),
+                                         it->second.begin(), it->second.end());
+            }
+          } else {
+            SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+          }
           ++i;
         }
       }

@@ -1,29 +1,32 @@
 // Copyright 2025 Xiaomi Corporation
 
-// This file shows how to use a matcha English model
+// This file shows how to use a matcha Chinese TTS model
 // to convert text to speech
 import com.k2fsa.sherpa.onnx.*;
 
-public class NonStreamingTtsMatchaEn {
+public class NonStreamingTtsMatchaZhLexicon {
   public static void main(String[] args) {
     // please visit
-    // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker
+    // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
     // to download model files
-    String acousticModel = "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx";
+    String acousticModel = "./matcha-icefall-zh-baker/model-steps-3.onnx";
     String vocoder = "./vocos-22khz-univ.onnx";
-    String tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt";
-    String dataDir = "./matcha-icefall-en_US-ljspeech/espeak-ng-data";
+    String tokens = "./matcha-icefall-zh-baker/tokens.txt";
+    String lexicon = "./matcha-icefall-zh-baker/lexicon.txt";
+    String ruleFsts =
+        "./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst";
     String text =
-        "Today as always, men fall into two groups: slaves and free men. Whoever does not have"
-            + " two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a"
-            + " businessman, an official, or a scholar.";
+        "某某银行的副行长和一些行政领导表示，他们去过长江"
+            + "和长白山; 经济不断增长。"
+            + "2024年12月31号，拨打110或者18920240511。"
+            + "123456块钱。";
 
     OfflineTtsMatchaModelConfig matchaModelConfig =
         OfflineTtsMatchaModelConfig.builder()
             .setAcousticModel(acousticModel)
             .setVocoder(vocoder)
             .setTokens(tokens)
-            .setDataDir(dataDir)
+            .setLexicon(lexicon)
             .build();
 
     OfflineTtsModelConfig modelConfig =
@@ -33,7 +36,8 @@ public class NonStreamingTtsMatchaEn {
             .setDebug(true)
             .build();
 
-    OfflineTtsConfig config = OfflineTtsConfig.builder().setModel(modelConfig).build();
+    OfflineTtsConfig config =
+        OfflineTtsConfig.builder().setModel(modelConfig).setRuleFsts(ruleFsts).build();
     OfflineTts tts = new OfflineTts(config);
 
     GenerationConfig genConfig = new GenerationConfig();
@@ -50,7 +54,7 @@ public class NonStreamingTtsMatchaEn {
     float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
     float realTimeFactor = timeElapsedSeconds / audioDuration;
 
-    String waveFilename = "tts-matcha-en.wav";
+    String waveFilename = "tts-matcha-zh-lexicon.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);

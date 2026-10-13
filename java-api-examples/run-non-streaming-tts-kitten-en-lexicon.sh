@@ -14,7 +14,11 @@ if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
   rm kitten-nano-en-v0_1-fp16.tar.bz2
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 java \
   -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
-  NonStreamingTtsKittenEn.java
+  NonStreamingTtsKittenEnLexicon.java

@@ -1,23 +1,21 @@
 // Copyright 2024 Xiaomi Corporation
 
-// This file shows how to use a VITS Chinese TTS model
-// to convert text to speech.
-//
-// You can use https://github.com/Plachtaa/VITS-fast-fine-tuning
-// to train your model
+// This file shows how to use a piper VITS English TTS model
+// to convert text to speech
 import com.k2fsa.sherpa.onnx.*;
 
-public class NonStreamingTtsPiperEn {
+public class NonStreamingTtsPiperEnLexicon {
   public static void main(String[] args) {
     // please visit
     // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
     // to download model files
-    String model = "./vits-zh-hf-fanchen-C/vits-zh-hf-fanchen-C.onnx";
-    String tokens = "./vits-zh-hf-fanchen-C/tokens.txt";
-    String lexicon = "./vits-zh-hf-fanchen-C/lexicon.txt";
-    String ruleFsts =
-        "./vits-zh-hf-fanchen-C/phone.fst,./vits-zh-hf-fanchen-C/date.fst,./vits-zh-hf-fanchen-C/number.fst";
-    String text = "有问题，请拨打110或者手机18601239876。我们的价值观是真诚热爱！";
+    String model = "./vits-piper-en_GB-cori-medium/en_GB-cori-medium.onnx";
+    String tokens = "./vits-piper-en_GB-cori-medium/tokens.txt";
+    String lexicon = "./lexicon-en-us.txt";
+    String text =
+        "Today as always, men fall into two groups: slaves and free men. Whoever does not have"
+            + " two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a"
+            + " businessman, an official, or a scholar.";
 
     OfflineTtsVitsModelConfig vitsModelConfig =
         OfflineTtsVitsModelConfig.builder()
@@ -33,12 +31,10 @@ public class NonStreamingTtsPiperEn {
             .setDebug(true)
             .build();
 
-    OfflineTtsConfig config =
-        OfflineTtsConfig.builder().setModel(modelConfig).setRuleFsts(ruleFsts).build();
-
+    OfflineTtsConfig config = OfflineTtsConfig.builder().setModel(modelConfig).build();
     OfflineTts tts = new OfflineTts(config);
 
-    int sid = 100;
+    int sid = 0;
     float speed = 1.0f;
     GenerationConfig genConfig = new GenerationConfig();
     genConfig.setSid(sid);
@@ -54,7 +50,7 @@ public class NonStreamingTtsPiperEn {
     float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
     float realTimeFactor = timeElapsedSeconds / audioDuration;
 
-    String waveFilename = "tts-vits-zh.wav";
+    String waveFilename = "tts-piper-en-lexicon.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);

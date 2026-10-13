@@ -16,7 +16,6 @@ fun testZipVoiceTts() {
         encoder = "$modelDir/encoder.int8.onnx",
         decoder = "$modelDir/decoder.int8.onnx",
         vocoder = "./vocos_24khz.onnx",
-        dataDir = "$modelDir/espeak-ng-data",
         lexicon = "$modelDir/lexicon.txt",
       ),
       numThreads = 2,
@@ -36,9 +35,9 @@ fun testZipVoiceTts() {
   )
 
   val audio = tts.generateWithConfigAndCallback(text = text, config = genConfig, callback = ::callback)
-  audio.save(filename = "test-zipvoice-zh-en.wav")
+  audio.save(filename = "test-zipvoice-zh-en-lexicon.wav")
   tts.release()
-  println("Saved to test-zipvoice-zh-en.wav")
+  println("Saved to test-zipvoice-zh-en-lexicon.wav")
 }
 
 fun callback(samples: FloatArray): Int {

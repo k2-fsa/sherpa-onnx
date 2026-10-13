@@ -93,16 +93,13 @@ sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
   sed -i.bak s%"ruleFsts = null"%"ruleFars = \"$rule_fars\""% ./MainActivity.kt
 {% endif %}
 
-{% if tts_model.data_dir %}
-  data_dir={{ tts_model.data_dir }}
-  sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./MainActivity.kt
-{% elif not tts_model.is_char %}
-  sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./MainActivity.kt
-{% endif %}
-
-{% if tts_model.lexicon %}
+{% if tts_model.phonemize %}
+  sed -i.bak s/"usePhonemize = false"/"usePhonemize = true"/ ./MainActivity.kt
+{% elif tts_model.lexicon %}
   lexicon={{ tts_model.lexicon }}
   sed -i.bak s%"lexicon = null"%"lexicon = \"$lexicon\""% ./MainActivity.kt
+{% elif not tts_model.is_char %}
+  sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./MainActivity.kt
 {% endif %}
 
 {% if tts_model.is_kitten %}

@@ -86,6 +86,18 @@ public class OfflineTts {
     }
 
     /**
+     * Generate audio using a GenerationConfig.
+     *
+     * @param text The text to synthesize. Pass "" if the input is
+     *             pre-phonemized via GenerationConfig.phonemeCodepoints.
+     * @param config The generation configuration.
+     * @return GeneratedAudio with samples and sample rate.
+     */
+    public GeneratedAudio generateWithConfig(String text, GenerationConfig config) {
+        return generateWithConfigImpl(ptr, text, config, null);
+    }
+
+    /**
      * Generate audio using a GenerationConfig and a callback.
      *
      * @param text The text to synthesize.

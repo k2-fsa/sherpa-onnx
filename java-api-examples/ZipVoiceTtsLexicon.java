@@ -6,7 +6,7 @@ import com.k2fsa.sherpa.onnx.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ZipVoiceTts {
+public class ZipVoiceTtsLexicon {
   public static void main(String[] args) {
     LibraryUtils.enableDebug();
     // please visit
@@ -23,7 +23,6 @@ public class ZipVoiceTts {
             .setEncoder(modelDir + "/encoder.int8.onnx")
             .setDecoder(modelDir + "/decoder.int8.onnx")
             .setVocoder("./vocos_24khz.onnx")
-            .setDataDir(modelDir + "/espeak-ng-data")
             .setLexicon(modelDir + "/lexicon.txt")
             .build();
 
@@ -64,7 +63,7 @@ public class ZipVoiceTts {
     float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
     float realTimeFactor = timeElapsedSeconds / audioDuration;
 
-    String waveFilename = "generated-zipvoice-zh-en-java.wav";
+    String waveFilename = "generated-zipvoice-zh-en-lexicon-java.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);

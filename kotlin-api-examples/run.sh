@@ -57,7 +57,7 @@ function testPocketTts() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function testZipVoiceTts() {
+function testZipVoiceTtsLexicon() {
   if [ ! -f ./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
     tar xvf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
@@ -68,9 +68,9 @@ function testZipVoiceTts() {
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
   fi
 
-  out_filename=test_zipvoice_tts.jar
+  out_filename=test_zipvoice_tts_lexicon.jar
   kotlinc-jvm -include-runtime -d $out_filename \
-    test_zipvoice_tts.kt \
+    test_zipvoice_tts_lexicon.kt \
     Tts.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
@@ -181,7 +181,42 @@ function testOnlineAsr() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function testTts() {
+function setupPhonemize() {
+  # Download the piper-phonemize JVM jar and the native jar for this platform.
+  # The espeak-ng-data used by the phonemizer is embedded in those jars; it
+  # only feeds piper-phonemize, not sherpa-onnx.
+  PIPER_PHONEMIZE_VERSION=v1.5.4
+  PIPER_BASE_URL=https://jitpack.io/com/github/csukuangfj/piper-phonemize
+
+  os=$(uname -s)
+  arch=$(uname -m)
+  case "$os-$arch" in
+    Darwin-arm64) piper_plat=osx-aarch64 ;;
+    Darwin-x86_64) piper_plat=osx-x64 ;;
+    Linux-x86_64) piper_plat=linux-x64 ;;
+    Linux-aarch64) piper_plat=linux-aarch64 ;;
+    *)
+      echo "Unsupported platform: $os-$arch" >&2
+      exit 1
+      ;;
+  esac
+
+  PIPER_JVM_JAR=piper-phonemize-jvm-$PIPER_PHONEMIZE_VERSION.jar
+  piper_native_jar=piper-phonemize-native-lib-$piper_plat-$PIPER_PHONEMIZE_VERSION.jar
+
+  if [ ! -f ./$PIPER_JVM_JAR ]; then
+    curl -SL -O $PIPER_BASE_URL/piper-phonemize-jvm/$PIPER_PHONEMIZE_VERSION/$PIPER_JVM_JAR
+  fi
+
+  if [ ! -f ./$piper_native_jar ]; then
+    curl -SL -O \
+      $PIPER_BASE_URL/piper-phonemize-native-lib-$piper_plat/$PIPER_PHONEMIZE_VERSION/$piper_native_jar
+  fi
+
+  export PIPER_CLASSPATH="$PIPER_JVM_JAR:$piper_native_jar"
+}
+
+function testTtsLexicon() {
   if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
     tar xf vits-piper-en_US-amy-low.tar.bz2
@@ -216,9 +251,13 @@ function testTts() {
     rm kitten-nano-en-v0_1-fp16.tar.bz2
   fi
 
-  out_filename=test_tts.jar
+  if [ ! -f ./lexicon-en-us.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+  fi
+
+  out_filename=test_tts_lexicon.jar
   kotlinc-jvm -include-runtime -d $out_filename \
-    test_tts.kt \
+    test_tts_lexicon.kt \
     Tts.kt \
     faked-asset-manager.kt \
     faked-log.kt
@@ -228,6 +267,46 @@ function testTts() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testTtsPhonemize() {
+  if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+    tar xf vits-piper-en_US-amy-low.tar.bz2
+    rm vits-piper-en_US-amy-low.tar.bz2
+  fi
+
+  if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+    tar xf kokoro-en-v0_19.tar.bz2
+    rm kokoro-en-v0_19.tar.bz2
+  fi
+
+  if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+    tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+    rm kitten-nano-en-v0_1-fp16.tar.bz2
+  fi
+
+  if [ ! -f ./vits-piper-de_DE-glados-low/de_DE-glados-low.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-glados-low.tar.bz2
+    tar xf vits-piper-de_DE-glados-low.tar.bz2
+    rm vits-piper-de_DE-glados-low.tar.bz2
+  fi
+
+  setupPhonemize
+
+  out_filename=test_tts_phonemize.jar
+  kotlinc-jvm -include-runtime -cp "$PIPER_JVM_JAR" -d $out_filename \
+    test_tts_phonemize.kt \
+    Tts.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib \
+    -cp "$out_filename:$PIPER_CLASSPATH" \
+    com.k2fsa.sherpa.onnx.Test_tts_phonemizeKt
+}
 
 function testAudioTagging() {
   if [ ! -d sherpa-onnx-zipformer-audio-tagging-2024-04-09 ]; then
@@ -784,14 +863,16 @@ function testOfflineWenetCtc() {
 }
 
 testVersion
+testPocketTts
+testZipVoiceTtsLexicon
+testSupertonicTts
+testTtsLexicon
+testTtsPhonemize
 testOfflineSpeakerDiarization
 testOfflineCohereTranscribe
 testOfflineQwen3Asr
 testOfflineMoonshineAsrV2
 testOfflineFireRedAsrCtc
-testPocketTts
-testZipVoiceTts
-testSupertonicTts
 testOfflineFunAsrNano
 testOfflineMedAsrCtc
 testOfflineOmnilingualAsrCtc
@@ -802,7 +883,6 @@ testOfflineSpeechDenoiser
 testOnlineSpeechDenoiser
 testSpeakerEmbeddingExtractor
 testOnlineAsr
-testTts
 testAudioTagging
 testSpokenLanguageIdentification
 testOfflineAsr

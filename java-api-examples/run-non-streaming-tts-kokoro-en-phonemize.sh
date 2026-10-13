@@ -13,7 +13,10 @@ if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
   rm kokoro-en-v0_19.tar.bz2
 fi
 
+
+source ./setup-phonemize.sh
+
 java \
   -Dsherpa_onnx.native.path=$PWD/../build/lib \
-  -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
-  NonStreamingTtsKokoroEn.java
+  -cp "$PHONEMIZE_CLASSPATH" \
+  NonStreamingTtsKokoroEnPhonemize.java

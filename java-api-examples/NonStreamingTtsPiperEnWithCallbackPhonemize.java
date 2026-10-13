@@ -6,27 +6,34 @@
 // https://stackoverflow.com/questions/74077394/java-audio-how-to-continuously-write-bytes-to-an-audio-file-as-they-are-being-g
 
 // This file shows how to use a piper VITS English TTS model
-// to convert text to speech. You can pass a callback to the generation call,
+// to convert text to speech. The text is phonemized outside of sherpa-onnx
+// with piper-phonemize (https://github.com/csukuangfj/piper-phonemize) and
+// the resulting phoneme codepoints are passed via
+// GenerationConfig.phonemeCodepoints. No lexicon file and no espeak-ng-data
+// are needed. If you want to use a lexicon instead, please see
+// NonStreamingTtsPiperEnWithCallbackLexicon.java.
+//
+// You can pass a callback to the generation call,
 // which is invoked whenever max_num_sentences sentences have been
 // finished generation.
 //
 // The callback saves the generated samples into a queue, which are played
 // by a separate thread.
 
+import com.github.csukuangfj.piper.phonemize.PiperPhonemize;
 import com.k2fsa.sherpa.onnx.*;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.sound.sampled.*;
 
-public class NonStreamingTtsPiperEn {
+public class NonStreamingTtsPiperEnWithCallbackPhonemize {
   public static void main(String[] args) {
     // please visit
     // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
     // to download model files
     String model = "./vits-piper-en_GB-cori-medium/en_GB-cori-medium.onnx";
     String tokens = "./vits-piper-en_GB-cori-medium/tokens.txt";
-    String dataDir = "./vits-piper-en_GB-cori-medium/espeak-ng-data";
     String text =
         "Today as always, men fall into two groups: slaves and free men. Whoever does not have"
             + " two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a"
@@ -36,7 +43,6 @@ public class NonStreamingTtsPiperEn {
         OfflineTtsVitsModelConfig.builder()
             .setModel(model)
             .setTokens(tokens)
-            .setDataDir(dataDir)
             .build();
 
     OfflineTtsModelConfig modelConfig =
@@ -48,6 +54,33 @@ public class NonStreamingTtsPiperEn {
 
     OfflineTtsConfig config = OfflineTtsConfig.builder().setModel(modelConfig).build();
     OfflineTts tts = new OfflineTts(config);
+
+    System.out.printf("piper-phonemize version: %s\n", PiperPhonemize.getVersionStr());
+    // initialize() extracts the espeak-ng-data embedded in piper-phonemize.
+    // That data only feeds the piper phonemizer; sherpa-onnx itself does not
+    // use espeak-ng anymore.
+    PiperPhonemize.initialize();
+
+    // The espeak-ng voice for the phonemizer is taken from the model metadata.
+    // Fall back to en-us if the model has no language information.
+    String voice = tts.getLang();
+    if (voice == null || voice.isEmpty()) {
+      System.out.println("Warning: the model has no language information. Falling back to en-us.");
+      voice = "en-us";
+    }
+    System.out.printf("Phonemizer language: %s\n", voice);
+
+    int[][] phonemeCodepoints;
+    try (PiperPhonemize.Result result = PiperPhonemize.text(text, voice)) {
+      if (result == null) {
+        throw new RuntimeException("Failed to phonemize the text");
+      }
+      phonemeCodepoints = new int[result.getNumSentences()][];
+      for (int i = 0; i < result.getNumSentences(); i++) {
+        phonemeCodepoints[i] = result.getPhonemes(i);
+      }
+    }
+    System.out.printf("Number of phonemized sentences: %d\n", phonemeCodepoints.length);
 
     Queue<byte[]> samplesQueue = new ConcurrentLinkedQueue<>();
 
@@ -119,10 +152,12 @@ public class NonStreamingTtsPiperEn {
     genConfig.setSid(sid);
     genConfig.setSpeed(speed);
     genConfig.setSilenceScale(config.getSilenceScale());
+    genConfig.setPhonemeCodepoints(phonemeCodepoints);
     long start = System.currentTimeMillis();
+    // The text has already been phonemized; pass an empty string here.
     GeneratedAudio audio =
         tts.generateWithConfigAndCallback(
-            text,
+            "",
             genConfig,
             (float[] samples) -> {
 
@@ -176,7 +211,7 @@ public class NonStreamingTtsPiperEn {
       return;
     }
 
-    String waveFilename = "tts-piper-en.wav";
+    String waveFilename = "tts-piper-en-with-callback-phonemize.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);

@@ -18,7 +18,11 @@ if [ ! -f ./vocos-22khz-univ.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 java \
   -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
-  NonStreamingTtsMatchaEn.java
+  NonStreamingTtsMatchaEnLexicon.java

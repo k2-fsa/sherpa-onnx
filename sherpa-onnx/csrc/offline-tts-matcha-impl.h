@@ -1032,7 +1032,31 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
               }
             }
           } else {
-            SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+            // The word is not in the lexicon. If it contains '-', split it
+            // and look up each part separately, e.g. "two-thirds" -> "two" +
+            // "thirds".
+            std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
+            if (words[i].find('-') != std::string::npos && !parts.empty()) {
+              for (const auto &part : parts) {
+                std::string part_lower = ToLowerCase(part);
+                auto it2 = lexicon_str_.find(part_lower);
+                if (it2 != lexicon_str_.end()) {
+                  if (debug) {
+                    std::string phones_str;
+                    for (const auto &p : it2->second) phones_str += p + " ";
+                    SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'",
+                                     part_lower.c_str(), phones_str.c_str());
+                  }
+                  auto ids = ConvertPhonemeStringsToIds(it2->second);
+                  sentence_ids.insert(sentence_ids.end(), ids.begin(),
+                                      ids.end());
+                } else {
+                  SHERPA_ONNX_LOGE("OOV word skipped: '%s'", part.c_str());
+                }
+              }
+            } else {
+              SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+            }
           }
           ++i;
         }
@@ -1269,7 +1293,34 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
               }
             }
           } else {
-            SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+            // The word is not in the lexicon. If it contains '-', split it
+            // and look up each part separately, e.g. "two-thirds" -> "two" +
+            // "thirds".
+            std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
+            if (words[i].find('-') != std::string::npos && !parts.empty()) {
+              for (const auto &part : parts) {
+                std::string part_lower = ToLowerCase(part);
+                auto it2 = lexicon_str_.find(part_lower);
+                if (it2 != lexicon_str_.end()) {
+                  if (debug) {
+                    std::string phones_str;
+                    for (const auto &p : it2->second) phones_str += p + " ";
+                    SHERPA_ONNX_LOGE("Lexicon (str) matched: '%s' -> '%s'",
+                                     part_lower.c_str(), phones_str.c_str());
+                  }
+                  for (const auto &tok : it2->second) {
+                    auto it_id = token_str2id_.find(tok);
+                    if (it_id != token_str2id_.end()) {
+                      sentence_codepoints.push_back(it_id->second);
+                    }
+                  }
+                } else {
+                  SHERPA_ONNX_LOGE("OOV word skipped: '%s'", part.c_str());
+                }
+              }
+            } else {
+              SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+            }
           }
           ++i;
         }

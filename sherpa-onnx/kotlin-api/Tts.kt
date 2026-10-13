@@ -7,7 +7,7 @@ data class OfflineTtsVitsModelConfig(
     var model: String = "",
     var lexicon: String = "",
     var tokens: String = "",
-    var dataDir: String = "",
+    var dataDir: String = "",  // deprecated, ignored; use lexicon or phonemeCodepoints
     var dictDir: String = "", // unused
     var noiseScale: Float = 0.667f,
     var noiseScaleW: Float = 0.8f,
@@ -19,7 +19,7 @@ data class OfflineTtsMatchaModelConfig(
     var vocoder: String = "",
     var lexicon: String = "",
     var tokens: String = "",
-    var dataDir: String = "",
+    var dataDir: String = "",  // deprecated, ignored; use lexicon or phonemeCodepoints
     var dictDir: String = "", // unused
     var noiseScale: Float = 1.0f,
     var lengthScale: Float = 1.0f,
@@ -29,7 +29,7 @@ data class OfflineTtsKokoroModelConfig(
     var model: String = "",
     var voices: String = "",
     var tokens: String = "",
-    var dataDir: String = "",
+    var dataDir: String = "",  // deprecated, ignored; use lexicon or phonemeCodepoints
     var lexicon: String = "",
     var lang: String = "",
     var dictDir: String = "", // unused
@@ -41,7 +41,7 @@ data class OfflineTtsZipVoiceModelConfig(
     var encoder: String = "",
     var decoder: String = "",
     var vocoder: String = "",
-    var dataDir: String = "",
+    var dataDir: String = "",  // deprecated, ignored; use lexicon or phonemeCodepoints
     var lexicon: String = "",
     var featScale: Float = 0.1f,
     var tShift: Float = 0.5f,
@@ -53,8 +53,9 @@ data class OfflineTtsKittenModelConfig(
     var model: String = "",
     var voices: String = "",
     var tokens: String = "",
-    var dataDir: String = "",
+    var dataDir: String = "",  // deprecated, ignored; use lexicon or phonemeCodepoints
     var lengthScale: Float = 1.0f,
+    var lexicon: String = "",
 )
 
 /**
@@ -135,7 +136,14 @@ data class GenerationConfig(
     var referenceSampleRate: Int = 0,
     var referenceText: String? = null,
     var numSteps: Int = 5,
-    var extra: Map<String, String>? = null
+    var extra: Map<String, String>? = null,
+    // Pre-phonemized input as Unicode codepoints. One inner array per
+    // sentence. When set, it is used in place of the text argument.
+    // Mutually exclusive with tokens.
+    var phonemeCodepoints: Array<IntArray>? = null,
+    // Pre-tokenized input, e.g. Chinese pinyin like "zhong1". One inner array
+    // per sentence. Mutually exclusive with phonemeCodepoints.
+    var tokens: Array<Array<String>>? = null
 )
 
 class OfflineTts(
@@ -287,7 +295,7 @@ fun getOfflineTtsConfig(
     vocoder: String, // for Matcha
     voices: String, // for Kokoro or kitten
     lexicon: String,
-    dataDir: String,
+    dataDir: String, // deprecated, ignored; use lexicon or phonemeCodepoints
     dictDir: String, // unused
     ruleFsts: String,
     ruleFars: String,
@@ -384,6 +392,11 @@ fun getOfflineTtsConfig(
             voices = "$modelDir/$voices",
             tokens = "$modelDir/tokens.txt",
             dataDir = dataDir,
+            lexicon = when {
+                lexicon == "" -> lexicon
+                "," in lexicon -> lexicon
+                else -> "$modelDir/$lexicon"
+            },
         )
     } else {
         OfflineTtsKittenModelConfig()

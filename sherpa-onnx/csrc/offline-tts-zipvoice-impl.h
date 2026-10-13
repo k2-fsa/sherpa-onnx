@@ -797,8 +797,31 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
               SHERPA_ONNX_LOGE("OOV character skipped: '%s'", ch.c_str());
             }
           }
-        } else if (debug) {
-          SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+        } else {
+          // The word is not in the lexicon. If it contains '-', split it and
+          // look up each part separately, e.g. "two-thirds" -> "two" +
+          // "thirds".
+          std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
+          if (words[i].find('-') != std::string::npos && !parts.empty()) {
+            for (const auto &part : parts) {
+              std::string part_lower = ToLowerCase(part);
+              auto it2 = lexicon_str_.find(part_lower);
+              if (it2 != lexicon_str_.end()) {
+                if (debug) {
+                  std::string phones_str;
+                  for (const auto &p : it2->second) phones_str += p + " ";
+                  SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'",
+                                   part_lower.c_str(), phones_str.c_str());
+                }
+                auto tok_ids = ConvertPhonemeStringsToIds(it2->second);
+                ids.insert(ids.end(), tok_ids.begin(), tok_ids.end());
+              } else if (debug) {
+                SHERPA_ONNX_LOGE("OOV word skipped: '%s'", part.c_str());
+              }
+            }
+          } else if (debug) {
+            SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+          }
         }
         ++i;
       }

@@ -13,7 +13,11 @@ if [ ! -f ./vits-piper-en_GB-cori-medium/tokens.txt ]; then
   rm vits-piper-en_GB-cori-medium.tar.bz2
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 java \
   -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
-  NonStreamingTtsPiperEnWithCallback.java
+  NonStreamingTtsPiperEnLexicon.java

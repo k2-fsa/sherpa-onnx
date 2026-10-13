@@ -20,4 +20,4 @@ fi
 java \
   -Dsherpa_onnx.native.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
-  ZipVoiceTts.java
+  ZipVoiceTtsLexicon.java

@@ -16,6 +16,8 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import com.github.csukuangfj.piper.phonemize.piperPhonemizeInitialize
+import com.github.csukuangfj.piper.phonemize.piperPhonemizeText
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -36,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private var mediaPlayer: MediaPlayer? = null
     private var isSupertonic: Boolean = false
     private var supertonicLang: String = "en"
+    private var usePhonemize: Boolean = false
 
     private val saveLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("audio/wav")) { uri ->
         if (uri != null) {
@@ -166,8 +169,17 @@ class MainActivity : AppCompatActivity() {
             if (isSupertonic) {
                 genConfig.extra = mapOf("lang" to supertonicLang)
             }
+            var genText = textStr
+            if (usePhonemize) {
+                // Phonemize outside of sherpa-onnx with piper-phonemize and
+                // pass the phoneme codepoints. The espeak-ng voice is taken
+                // from the model metadata.
+                genConfig.phonemeCodepoints = phonemize(textStr)
+                // The text has already been phonemized; pass an empty string.
+                genText = ""
+            }
             val audio = tts.generateWithConfigAndCallback(
-                text = textStr,
+                text = genText,
                 config = genConfig,
                 callback = this::callback
             )
@@ -255,7 +267,7 @@ class MainActivity : AppCompatActivity() {
         var ruleFsts: String?
         var ruleFars: String?
         var lexicon: String?
-        var dataDir: String?
+        var usePhonemize = false
         var assets: AssetManager? = application.assets
         var isKitten = false
         var isSupertonic = false
@@ -290,7 +302,6 @@ class MainActivity : AppCompatActivity() {
         ruleFsts = null
         ruleFars = null
         lexicon = null
-        dataDir = null
 
         // Example 1:
         // modelDir = "vits-vctk"
@@ -302,7 +313,7 @@ class MainActivity : AppCompatActivity() {
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
         // modelDir = "vits-piper-en_US-amy-low"
         // modelName = "en_US-amy-low.onnx"
-        // dataDir = "vits-piper-en_US-amy-low/espeak-ng-data"
+        // usePhonemize = true
 
         // Example 3:
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
@@ -343,21 +354,20 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "matcha-icefall-en_US-ljspeech"
         // acousticModelName = "model-steps-3.onnx"
         // vocoder = "vocos-22khz-univ.onnx"
-        // dataDir = "matcha-icefall-en_US-ljspeech/espeak-ng-data"
+        // usePhonemize = true
 
         // Example 9
         // kokoro-en-v0_19
         // modelDir = "kokoro-en-v0_19"
         // modelName = "model.onnx"
         // voices = "voices.bin"
-        // dataDir = "kokoro-en-v0_19/espeak-ng-data"
+        // usePhonemize = true
 
         // Example 10
         // kokoro-multi-lang-v1_0
         // modelDir = "kokoro-multi-lang-v1_0"
         // modelName = "model.onnx"
         // voices = "voices.bin"
-        // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
         // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
         // ruleFsts = "$modelDir/phone-zh.fst,$modelDir/date-zh.fst,$modelDir/number-zh.fst"
 
@@ -366,8 +376,8 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "kitten-nano-en-v0_1-fp16"
         // modelName = "model.fp16.onnx"
         // voices = "voices.bin"
-        // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
         // isKitten = true
+        // usePhonemize = true
 
         // Example 12
         // matcha-icefall-zh-en
@@ -375,7 +385,6 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "matcha-icefall-zh-en"
         // acousticModelName = "model-steps-3.onnx"
         // vocoder = "vocos-16khz-univ.onnx"    // Vocoder should be downloaded separately; place in the **root directory of your resources folder**, not under modelDir.
-        // dataDir = "matcha-icefall-zh-en/espeak-ng-data"
         // lexicon = "lexicon.txt"
 
         // Example 13
@@ -394,10 +403,12 @@ class MainActivity : AppCompatActivity() {
 
         this.isSupertonic = isSupertonic
         this.supertonicLang = supertonicLang
+        this.usePhonemize = usePhonemize
 
-        if (dataDir != null) {
-            val newDir = copyDataDir(dataDir!!)
-            dataDir = "$newDir/$dataDir"
+        if (usePhonemize) {
+            // The espeak-ng-data embedded in piper-phonemize only feeds the
+            // phonemizer; sherpa-onnx itself does not use espeak-ng anymore.
+            piperPhonemizeInitialize(applicationContext)
         }
 
         val config = getOfflineTtsConfig(
@@ -407,7 +418,7 @@ class MainActivity : AppCompatActivity() {
             vocoder = vocoder ?: "",
             voices = voices ?: "",
             lexicon = lexicon ?: "",
-            dataDir = dataDir ?: "",
+            dataDir = "",
             dictDir = "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
@@ -425,53 +436,19 @@ class MainActivity : AppCompatActivity() {
         tts = OfflineTts(assetManager = assets, config = config)
     }
 
-
-    private fun copyDataDir(dataDir: String): String {
-        Log.i(TAG, "data dir is $dataDir")
-        copyAssets(dataDir)
-
-        val newDataDir = application.getExternalFilesDir(null)!!.absolutePath
-        Log.i(TAG, "newDataDir: $newDataDir")
-        return newDataDir
-    }
-
-    private fun copyAssets(path: String) {
-        val assets: Array<String>?
-        try {
-            assets = application.assets.list(path)
-            if (assets!!.isEmpty()) {
-                copyFile(path)
-            } else {
-                val fullPath = "${application.getExternalFilesDir(null)}/$path"
-                val dir = File(fullPath)
-                dir.mkdirs()
-                for (asset in assets.iterator()) {
-                    val p: String = if (path == "") "" else path + "/"
-                    copyAssets(p + asset)
-                }
-            }
-        } catch (ex: IOException) {
-            Log.e(TAG, "Failed to copy $path. $ex")
+    private fun phonemize(text: String): Array<IntArray> {
+        var voice = tts.lang()
+        if (voice.isEmpty()) {
+            Log.w(TAG, "The model has no language information. Falling back to en-us.")
+            voice = "en-us"
         }
-    }
-
-    private fun copyFile(filename: String) {
+        Log.i(TAG, "Phonemizer language: $voice")
+        val result = piperPhonemizeText(text, voice)
+            ?: throw RuntimeException("Failed to phonemize the text")
         try {
-            val istream = application.assets.open(filename)
-            val newFilename = application.getExternalFilesDir(null).toString() + "/" + filename
-            val ostream = FileOutputStream(newFilename)
-            // Log.i(TAG, "Copying $filename to $newFilename")
-            val buffer = ByteArray(1024)
-            var read = 0
-            while (read != -1) {
-                ostream.write(buffer, 0, read)
-                read = istream.read(buffer)
-            }
-            istream.close()
-            ostream.flush()
-            ostream.close()
-        } catch (ex: Exception) {
-            Log.e(TAG, "Failed to copy $filename, $ex")
+            return Array(result.numSentences) { i -> result.getPhonemes(i) }
+        } finally {
+            result.close()
         }
     }
 }

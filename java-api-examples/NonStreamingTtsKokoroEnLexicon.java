@@ -1,35 +1,34 @@
 // Copyright 2025 Xiaomi Corporation
 
-// This file shows how to use a KittenTTS English model
+// This file shows how to use a Kokoro English model
 // to convert text to speech
 import com.k2fsa.sherpa.onnx.*;
 
-public class NonStreamingTtsKittenEn {
+public class NonStreamingTtsKokoroEnLexicon {
   public static void main(String[] args) {
-    LibraryUtils.enableDebug();
     // please visit
-    // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
+    // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
     // to download model files
-    String model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
-    String voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
-    String tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
-    String dataDir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
+    String model = "./kokoro-en-v0_19/model.onnx";
+    String voices = "./kokoro-en-v0_19/voices.bin";
+    String tokens = "./kokoro-en-v0_19/tokens.txt";
+    String lexicon = "./lexicon-en-us.txt";
     String text =
         "Today as always, men fall into two groups: slaves and free men. Whoever does not have"
             + " two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a"
             + " businessman, an official, or a scholar.";
 
-    OfflineTtsKittenModelConfig kittenModelConfig =
-        OfflineTtsKittenModelConfig.builder()
+    OfflineTtsKokoroModelConfig kokoroModelConfig =
+        OfflineTtsKokoroModelConfig.builder()
             .setModel(model)
             .setVoices(voices)
             .setTokens(tokens)
-            .setDataDir(dataDir)
+            .setLexicon(lexicon)
             .build();
 
     OfflineTtsModelConfig modelConfig =
         OfflineTtsModelConfig.builder()
-            .setKitten(kittenModelConfig)
+            .setKokoro(kokoroModelConfig)
             .setNumThreads(2)
             .setDebug(true)
             .build();
@@ -37,7 +36,7 @@ public class NonStreamingTtsKittenEn {
     OfflineTtsConfig config = OfflineTtsConfig.builder().setModel(modelConfig).build();
     OfflineTts tts = new OfflineTts(config);
 
-    int sid = 7;
+    int sid = 0;
     float speed = 1.0f;
     GenerationConfig genConfig = new GenerationConfig();
     genConfig.setSid(sid);
@@ -52,7 +51,7 @@ public class NonStreamingTtsKittenEn {
     float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
     float realTimeFactor = timeElapsedSeconds / audioDuration;
 
-    String waveFilename = "tts-kitten-en.wav";
+    String waveFilename = "tts-kokoro-en-lexicon.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
