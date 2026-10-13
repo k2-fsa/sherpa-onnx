@@ -9,38 +9,57 @@
 # used by the phonemizer is embedded in those jars; it only feeds piper
 # phonemize, not sherpa-onnx.
 
-PIPER_PHONEMIZE_VERSION=v1.5.4
+PIPER_PHONEMIZE_VERSION=v1.5.5
 PIPER_BASE_URL=https://jitpack.io/com/github/csukuangfj/piper-phonemize
 
-os=$(uname -s)
-arch=$(uname -m)
-case "$os-$arch" in
-  Darwin-arm64) piper_plat=osx-aarch64 ;;
-  Darwin-x86_64) piper_plat=osx-x64 ;;
-  Linux-x86_64) piper_plat=linux-x64 ;;
-  Linux-aarch64) piper_plat=linux-aarch64 ;;
-  MINGW*-x86_64 | MSYS*-x86_64 | CYGWIN*-x86_64) piper_plat=win-x64 ;;
-  MINGW*-aarch64 | MSYS*-aarch64 | CYGWIN*-aarch64) piper_plat=win-arm64 ;;
+# The native jar must match the JVM's architecture, not the shell's: Git
+# Bash on Windows ARM reports x86_64 while the JVM is aarch64. This mirrors
+# LibraryUtils.getOsArch() so the jar's internal resource path is found.
+jvm_props=$(java -XshowSettings:properties -version 2>&1)
+jvm_os=$(printf '%s\n' "$jvm_props" | sed -n 's/.*os\.name = //p' | head -1 |
+  tr '[:upper:]' '[:lower:]')
+jvm_arch=$(printf '%s\n' "$jvm_props" | sed -n 's/.*os\.arch = //p' | head -1 |
+  tr '[:upper:]' '[:lower:]')
+
+case "$jvm_os" in
+  *mac* | *darwin*) piper_os=osx ;;
+  *win*) piper_os=win ;;
+  *nux*) piper_os=linux ;;
   *)
-    echo "Unsupported platform: $os-$arch" >&2
+    echo "Unsupported OS: $jvm_os" >&2
     exit 1
     ;;
 esac
+
+case "$jvm_arch" in
+  amd64* | x86_64*) piper_arch=x64 ;;
+  aarch64* | arm64*)
+    if [ "$piper_os" = "win" ]; then piper_arch=arm64; else piper_arch=aarch64; fi
+    ;;
+  x86*) piper_arch=x86 ;;
+  arm*) piper_arch=arm ;;
+  *)
+    echo "Unsupported architecture: $jvm_arch" >&2
+    exit 1
+    ;;
+esac
+
+piper_plat="$piper_os-$piper_arch"
 
 piper_jvm_jar=piper-phonemize-jvm-$PIPER_PHONEMIZE_VERSION.jar
 piper_native_jar=piper-phonemize-native-lib-$piper_plat-$PIPER_PHONEMIZE_VERSION.jar
 
 if [ ! -f ./$piper_jvm_jar ]; then
-  curl -SL -O $PIPER_BASE_URL/piper-phonemize-jvm/$PIPER_PHONEMIZE_VERSION/$piper_jvm_jar
+  curl -fSL -O $PIPER_BASE_URL/piper-phonemize-jvm/$PIPER_PHONEMIZE_VERSION/$piper_jvm_jar
 fi
 
 if [ ! -f ./$piper_native_jar ]; then
-  curl -SL -O \
+  curl -fSL -O \
     $PIPER_BASE_URL/piper-phonemize-native-lib-$piper_plat/$PIPER_PHONEMIZE_VERSION/$piper_native_jar
 fi
 
-case "$os" in
-  MINGW* | MSYS* | CYGWIN*) piper_sep=';' ;;
+case "$jvm_os" in
+  *win*) piper_sep=';' ;;
   *) piper_sep=':' ;;
 esac
 
