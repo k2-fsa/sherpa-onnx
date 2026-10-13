@@ -48,22 +48,6 @@ class VoiceActivityDetector::Impl {
   }
 
   void AcceptWaveform(const float *samples, int32_t n) {
-    if (buffer_.Size() > max_utterance_length_) {
-      model_->SetMinSilenceDuration(new_min_silence_duration_s_);
-      model_->SetThreshold(new_threshold_);
-    } else {
-      if (!config_.silero_vad.model.empty()) {
-        model_->SetMinSilenceDuration(config_.silero_vad.min_silence_duration);
-        model_->SetThreshold(config_.silero_vad.threshold);
-      } else if (!config_.ten_vad.model.empty()) {
-        model_->SetMinSilenceDuration(config_.ten_vad.min_silence_duration);
-        model_->SetThreshold(config_.ten_vad.threshold);
-      } else {
-        SHERPA_ONNX_LOGE("Unknown vad model");
-        SHERPA_ONNX_EXIT(-1);
-      }
-    }
-
     int32_t window_size = model_->WindowSize();
     int32_t window_shift = model_->WindowShift();
 
@@ -79,18 +63,44 @@ class VoiceActivityDetector::Impl {
     int32_t k =
         (static_cast<int32_t>(last_.size()) - window_size) / window_shift + 1;
     const float *p = last_.data();
-    bool is_speech = false;
 
+    // Run the speech/non-speech state machine once per window, so a large n
+    // gives the same segments as feeding the samples window by window.
     for (int32_t i = 0; i < k; ++i, p += window_shift) {
+      UpdateModelParameters();
       buffer_.Push(p, window_shift);
-      // NOTE(fangjun): Please don't use a very large n.
-      bool this_window_is_speech = model_->IsSpeech(p, window_size);
-      is_speech = is_speech || this_window_is_speech;
+      AcceptWindow(model_->IsSpeech(p, window_size));
+    }
+
+    if (start_ != -1) {
+      int32_t num_samples = buffer_.Tail() - start_ - 1;
+      cur_segment_.samples = buffer_.Get(start_, num_samples);
     }
 
     last_ = std::vector<float>(
         p, static_cast<const float *>(last_.data()) + last_.size());
+  }
 
+ private:
+  void UpdateModelParameters() {
+    if (buffer_.Size() > max_utterance_length_) {
+      model_->SetMinSilenceDuration(new_min_silence_duration_s_);
+      model_->SetThreshold(new_threshold_);
+    } else {
+      if (!config_.silero_vad.model.empty()) {
+        model_->SetMinSilenceDuration(config_.silero_vad.min_silence_duration);
+        model_->SetThreshold(config_.silero_vad.threshold);
+      } else if (!config_.ten_vad.model.empty()) {
+        model_->SetMinSilenceDuration(config_.ten_vad.min_silence_duration);
+        model_->SetThreshold(config_.ten_vad.threshold);
+      } else {
+        SHERPA_ONNX_LOGE("Unknown vad model");
+        SHERPA_ONNX_EXIT(-1);
+      }
+    }
+  }
+
+  void AcceptWindow(bool is_speech) {
     if (is_speech) {
       if (start_ == -1) {
         // beginning of speech
@@ -99,8 +109,6 @@ class VoiceActivityDetector::Impl {
                           buffer_.Head());
         cur_segment_.start = start_;
       }
-      int32_t num_samples = buffer_.Tail() - start_ - 1;
-      cur_segment_.samples = buffer_.Get(start_, num_samples);
     } else {
       // non-speech
 
@@ -135,6 +143,7 @@ class VoiceActivityDetector::Impl {
     }
   }
 
+ public:
   bool Empty() const { return segments_.empty(); }
 
   void Pop() { segments_.pop(); }
