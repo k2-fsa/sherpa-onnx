@@ -271,7 +271,8 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     }
 
     config_.feat_config.parakeet_reference_frontend =
-        model_->IsParakeetV3() && config_.feat_config.sampling_rate == 16000 &&
+        model_->IsParakeetV3OrUltra() &&
+        config_.feat_config.sampling_rate == 16000 &&
         config_.feat_config.nemo_normalize_type == "per_feature";
 
     int32_t vocab_size = model_->VocabSize();

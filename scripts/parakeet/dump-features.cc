@@ -26,12 +26,12 @@ int main(int argc, char **argv) {
     }
     if (argc < 4 || argc > 5) {
       throw std::runtime_error(
-          "usage: parakeet-feature-dump legacy|reference|auto|resample "
+          "usage: parakeet-feature-dump legacy|reference|auto|select|resample "
           "input.f32 output.f32 [model-dir|input-sample-rate]");
     }
     const std::string mode = argv[1];
     if (mode != "legacy" && mode != "reference" && mode != "auto" &&
-        mode != "resample") {
+        mode != "select" && mode != "resample") {
       throw std::runtime_error("unknown frontend mode");
     }
     std::ifstream input(argv[2], std::ios::binary | std::ios::ate);
@@ -68,8 +68,8 @@ int main(int argc, char **argv) {
     config.parakeet_reference_frontend = mode == "reference";
     std::unique_ptr<sherpa_onnx::OfflineRecognizer> recognizer;
     std::unique_ptr<sherpa_onnx::OfflineStream> stream;
-    if (mode == "auto") {
-      if (argc != 5) throw std::runtime_error("auto requires model-dir");
+    if (mode == "auto" || mode == "select") {
+      if (argc != 5) throw std::runtime_error("auto/select requires model-dir");
       const std::string dir = argv[4];
       sherpa_onnx::OfflineRecognizerConfig rc;
       rc.model_config.transducer.encoder_filename = dir + "/encoder.onnx";

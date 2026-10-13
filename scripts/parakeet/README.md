@@ -1,4 +1,4 @@
-# Parakeet v3 frontend validation
+# Parakeet v3 and Ultra frontend validation
 
 The native frontend targets **current NVIDIA inference preprocessing**, rather
 than every historical NeMo release. The checkpoint records `2.3.0rc5`; NeMo
@@ -140,4 +140,76 @@ English sample; the corrected and reference frontends both produce:
 Three original public WAVs retain the legacy transcript. Spanish changes `King`
 to `quién`, matching the reference, but the sentence still contains an error.
 These are a small parity/reproduction set, not an accuracy benchmark. No GPU,
-ARM64, alternate exports, or long-form segmentation validation is claimed.
+ARM64 or long-form segmentation validation is claimed. The separately tested
+Ultra export is described below.
+
+
+## Automatic Ultra selection
+
+The same frontend is selected for NVIDIA Parakeet TDT 0.6B v3 and Moondream
+Parakeet Ultra when the encoder declares 128 features, normalization is
+`per_feature`, and the configured sample rate is 16 kHz. Selection uses the
+existing encoder `url` metadata. No new metadata, re-export, or model download
+is required for an already installed supported export after updating the runtime.
+
+For Ultra the recognized URL values are:
+
+- `https://huggingface.co/moondream/parakeet-ultra`
+- `https://huggingface.co/moondream/parakeet-ultra (parakeet-tdt architecture)`
+- `https://huggingface.co/moondream/parakeet-ultra (parakeet-tdt-0.6b-v3 architecture)`
+- `https://huggingface.co/moondream/parakeet-ultra (retrained nvidia/parakeet-tdt-0.6b-v3)`
+
+These cover the plain identity and the architecture annotations used by the
+mldecode, tpmaerk and TypeWhisper exporters. The plain identity also selects
+the TDT decoder without requiring `tdt` inside the URL. Other metadata identities,
+including v2 and similarly named models, retain the previous frontend behavior.
+This is not a blanket rule for every Parakeet model or arbitrary custom export.
+
+## Ultra reproduction
+
+`compare-ultra.py` pins the public
+[tpmaerk/parakeet-ultra-sherpa-onnx-int8](https://huggingface.co/tpmaerk/parakeet-ultra-sherpa-onnx-int8/tree/b86784a3a5356cbd126f710b61cd90c5fe5898f1)
+export and verifies all four file hashes. It separately retrieves the config
+from the converted
+[Ultra NeMo checkpoint](https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/tree/a1fe742758beb8ddc918bff00e1e319fe7e4d3e3).
+That config is byte-identical to the v3 config used above. This establishes
+which configuration was tested, not independent evidence of Ultra's training
+preprocessing or Moondream's Photon implementation.
+
+```sh
+build/parakeet-reference-env/bin/pip install onnx==1.20.1
+build/parakeet-reference-env/bin/python scripts/parakeet/compare-ultra.py \
+  --probe build/bin/parakeet-feature-dump \
+  --native-offline build/bin/sherpa-onnx-offline \
+  --model-dir build/ultra-public-model \
+  --output-dir build/ultra-comparison
+```
+
+This downloads about 670 MB of model files. Speech decoding and automatic
+selection use the original export unchanged. Separate temporary copies vary
+only metadata to check the recognized URL spellings and unrelated-model
+fallback. Use a fresh output directory for each run; verified downloads can
+be reused. `results.json` records original metadata, revisions, hashes,
+transcripts, token IDs, native CLI output and selection checks. The nested
+`features/results.json` records the ten feature comparisons and environment.
+
+On Linux x86_64 CPU, the legacy frontend with these int8 Ultra weights produces
+an empty transcript for the public English sample multiplied by `0.001`.
+The corrected native frontend and pinned NVIDIA extractor produce:
+
+> Ask not what your country can do for you. Ask what you can do for your country.
+
+All five speech cases have identical corrected/NVIDIA token IDs. Native CLI
+text matches the reference decode with the untouched export. Ten feature
+checks, short-only and mixed short/speech batches, and eight model-selection
+cases pass, including TDT decoding with the plain Ultra URL.
+
+This is a reproduction and parity test, not an overall WER benchmark. On the
+normal-volume Spanish sample, the corrected frontend omits `tú`, which the
+legacy frontend includes; both corrected and NVIDIA-reference decoding make
+that omission. French punctuation also changes. Matching the reference does
+not imply every utterance improves. Full decoding validation covers the pinned
+tpmaerk int8 export; the other recognized URL spellings are exercised with
+metadata-only copies of that model, not independent accuracy evaluations of
+every publisher's weights. No GPU, ARM64, Photon or long-form validation is
+claimed for Ultra.

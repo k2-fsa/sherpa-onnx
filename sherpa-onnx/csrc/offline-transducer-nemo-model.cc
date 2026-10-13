@@ -166,7 +166,7 @@ class OfflineTransducerNeMoModel::Impl {
 
   bool IsGigaAM() const { return is_giga_am_; }
   bool IsTDT() const { return is_tdt_; }
-  bool IsParakeetV3() const { return is_parakeet_v3_; }
+  bool IsParakeetV3OrUltra() const { return is_parakeet_v3_or_ultra_; }
 
   int32_t FeatureDim() const { return feat_dim_; }
 
@@ -222,10 +222,25 @@ class OfflineTransducerNeMoModel::Impl {
 
     std::string url;
     SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(url, "url");
-    is_parakeet_v3_ =
-        url == "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3" &&
+    // Public Ultra exporters append architecture notes to the model URL so
+    // older runtimes detect TDT. Accept those known identities as well as the
+    // plain model URL; do not match arbitrary Parakeet models by substring.
+    const bool is_ultra =
+        url == "https://huggingface.co/moondream/parakeet-ultra" ||
+        url ==
+            "https://huggingface.co/moondream/parakeet-ultra "
+            "(parakeet-tdt architecture)" ||
+        url ==
+            "https://huggingface.co/moondream/parakeet-ultra "
+            "(parakeet-tdt-0.6b-v3 architecture)" ||
+        url ==
+            "https://huggingface.co/moondream/parakeet-ultra "
+            "(retrained nvidia/parakeet-tdt-0.6b-v3)";
+    is_parakeet_v3_or_ultra_ =
+        (url == "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3" ||
+         is_ultra) &&
         feat_dim_ == 128;
-    if (url.find("tdt") != std::string::npos) {
+    if (is_ultra || url.find("tdt") != std::string::npos) {
       is_tdt_ = 1;
     }
   }
@@ -325,7 +340,7 @@ class OfflineTransducerNeMoModel::Impl {
   // giga am uses 64
   // parakeet-tdt-0.6b-v2 uses 128
   // others use 80
-  bool is_parakeet_v3_ = false;
+  bool is_parakeet_v3_or_ultra_ = false;
   int32_t feat_dim_ = -1;  // -1 means to use default values.
 };
 
@@ -383,8 +398,8 @@ bool OfflineTransducerNeMoModel::IsGigaAM() const { return impl_->IsGigaAM(); }
 
 bool OfflineTransducerNeMoModel::IsTDT() const { return impl_->IsTDT(); }
 
-bool OfflineTransducerNeMoModel::IsParakeetV3() const {
-  return impl_->IsParakeetV3();
+bool OfflineTransducerNeMoModel::IsParakeetV3OrUltra() const {
+  return impl_->IsParakeetV3OrUltra();
 }
 
 int32_t OfflineTransducerNeMoModel::FeatureDim() const {

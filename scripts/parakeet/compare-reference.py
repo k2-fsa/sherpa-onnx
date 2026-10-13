@@ -121,7 +121,6 @@ def decoder(model_dir, threads):
                 sess_options=options, providers=["CPUExecutionProvider"])
                 for name in ("encoder", "decoder", "joiner")}
     meta = sessions["encoder"].get_modelmeta().custom_metadata_map
-    assert meta["url"] == "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3"
     assert meta["feat_dim"] == "128" and meta["normalize_type"] == "per_feature"
     blank = int(meta["vocab_size"])
     tokens = {int(line.rsplit(" ", 1)[1]): line.rsplit(" ", 1)[0]
