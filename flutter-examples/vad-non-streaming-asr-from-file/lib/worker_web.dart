@@ -221,7 +221,7 @@ class VadAsrWorker {
         qwen3Asr['convFrontend'] = '$modelDir/conv_frontend.onnx'.toJS;
         qwen3Asr['encoder'] = '$modelDir/encoder.int8.onnx'.toJS;
         qwen3Asr['decoder'] = '$modelDir/decoder.int8.onnx'.toJS;
-        qwen3Asr['tokenizer'] = '$modelDir/tokenizer/tokenizer.json'.toJS;
+        qwen3Asr['tokenizer'] = '$modelDir/tokenizer'.toJS;
         modelConfig['qwen3Asr'] = qwen3Asr;
         break;
       case 7: // FunASR Nano
@@ -229,7 +229,7 @@ class VadAsrWorker {
         funasrNano['encoderAdaptor'] = '$modelDir/encoder_adaptor.int8.onnx'.toJS;
         funasrNano['llm'] = '$modelDir/llm.int8.onnx'.toJS;
         funasrNano['embedding'] = '$modelDir/embedding.int8.onnx'.toJS;
-        funasrNano['tokenizer'] = '$modelDir/Qwen3-0.6B/tokenizer.json'.toJS;
+        funasrNano['tokenizer'] = '$modelDir/Qwen3-0.6B'.toJS;
         modelConfig['funasrNano'] = funasrNano;
         break;
       case 8: // FireRed ASR CTC
