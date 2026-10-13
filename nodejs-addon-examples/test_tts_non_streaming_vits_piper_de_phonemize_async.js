@@ -1,25 +1,28 @@
 // Copyright (c)  2026  Xiaomi Corporation
 //
-// Asynchronous text-to-speech with the VITS Chinese (AiShell3) model.
+// The text is phonemized outside of sherpa-onnx with piper-phonemize
+// (https://www.npmjs.com/package/piper-phonemize-node) and the resulting
+// phoneme codepoints are passed via GenerationConfig.phonemeCodepoints. No
+// lexicon file and no espeak-ng-data are needed. If you want to use a lexicon
+// instead, please see test_tts_non_streaming_vits_piper_en_lexicon_async.js.
+//
+// Asynchronous text-to-speech with the VITS Piper German model.
 //
 const sherpa_onnx = require('sherpa-onnx-node');
+const piperPhonemize = require('piper-phonemize-node');
 
 async function createOfflineTts() {
   const config = {
     model: {
       vits: {
-        model: './vits-icefall-zh-aishell3/model.onnx',
-        tokens: './vits-icefall-zh-aishell3/tokens.txt',
-        lexicon: './vits-icefall-zh-aishell3/lexicon.txt',
+        model: './vits-piper-de_DE-glados-low/de_DE-glados-low.onnx',
+        tokens: './vits-piper-de_DE-glados-low/tokens.txt',
       },
       debug: false,
       numThreads: 1,
       provider: 'cpu',
     },
     maxNumSentences: 1,
-    ruleFsts:
-        './vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/number.fst,./vits-icefall-zh-aishell3/new_heteronym.fst',
-    ruleFars: './vits-icefall-zh-aishell3/rule.far',
   };
   return await sherpa_onnx.OfflineTts.createAsync(config);
 }
@@ -27,18 +30,24 @@ async function createOfflineTts() {
 async function main() {
   const tts = await createOfflineTts();
 
-  const text =
-      '他在长沙出生，长白山长大，去过长江，现在他是一个银行的行长，主管行政工作。有困难，请拨110，或者13020240513。今天是2024年5月13号, 他上个月的工资是12345块钱。';
+  const text = 'Alles hat ein Ende, nur die Wurst hat zwei.';
+
+  // The espeak-ng voice is taken from the model metadata. Fall back to
+  // de if the model has no language information.
+  const voice = tts.lang || 'de';
+  const phonemeCodepoints = piperPhonemize.phonemize(text, voice);
 
   const generationConfig = new sherpa_onnx.GenerationConfig({
-    sid: 88,
+    phonemeCodepoints,
+    sid: 0,
     speed: 1.0,
     silenceScale: 0.2,
   });
 
   const start = Date.now();
+  // The text has already been phonemized; pass an empty string here.
   const audio = await tts.generateAsync({
-    text,
+    text: '',
     enableExternalBuffer: true,
     generationConfig,
     onProgress: ({samples, progress}) => {
@@ -60,7 +69,7 @@ async function main() {
       `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
       real_time_factor.toFixed(3));
 
-  const filename = 'test-vits-zh-aishell3-async.wav';
+  const filename = 'test-vits-de-phonemize-async.wav';
   sherpa_onnx.writeWave(
       filename, {samples: audio.samples, sampleRate: audio.sampleRate});
   console.log(`Saved to ${filename}`);

@@ -1,12 +1,14 @@
 // Copyright (c)  2026  Kevin Castillo
 //
 // Stress test for the async TTS progress-callback path (generateAsync + onProgress).
+// Text frontend: lexicon (lexicon-en-us.txt); see
+// test_tts_async_callback_stress_phonemize.js for the piper-phonemize variant.
 // Covers: repeated generation, cancellation via callback return value, a throwing
 // callback (cancels the generation and rejects the promise with the thrown
 // error), concurrent generations, and RSS.
 //
 // Usage:
-//   node test_tts_async_callback_stress.js [model-dir] [iterations]
+//   node test_tts_async_callback_stress_lexicon.js [model-dir] [iterations]
 //
 // please download model files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -28,7 +30,7 @@ const makeTts = () => new sherpa_onnx.OfflineTts({
     vits: {
       model: `${modelDir}/${base}.onnx`,
       tokens: `${modelDir}/tokens.txt`,
-      dataDir: `${modelDir}/espeak-ng-data`,
+      lexicon: 'lexicon-en-us.txt',
     },
     numThreads: 2,
     provider: 'cpu',

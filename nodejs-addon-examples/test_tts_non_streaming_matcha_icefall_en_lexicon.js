@@ -2,16 +2,16 @@
 const sherpa_onnx = require('sherpa-onnx-node');
 
 // please refer to
-// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
+// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker
 // to download model files
 function createOfflineTts() {
   const config = {
     model: {
-      kokoro: {
-        model: './kokoro-en-v0_19/model.onnx',
-        voices: './kokoro-en-v0_19/voices.bin',
-        tokens: './kokoro-en-v0_19/tokens.txt',
-        dataDir: './kokoro-en-v0_19/espeak-ng-data',
+      matcha: {
+        acousticModel: './matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
+        vocoder: './vocos-22khz-univ.onnx',
+        lexicon: './lexicon-en-us.txt',
+        tokens: './matcha-icefall-en_US-ljspeech/tokens.txt',
       },
       debug: true,
       numThreads: 1,
@@ -28,7 +28,7 @@ const text =
     'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
 const generationConfig = new sherpa_onnx.GenerationConfig({
-  sid: 6,
+  sid: 0,
   speed: 1.0,
   silenceScale: 0.2,
 });
@@ -46,7 +46,7 @@ console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
     real_time_factor.toFixed(3));
 
-const filename = 'test-kokoro-en-6.wav';
+const filename = 'test-matcha-en-lexicon.wav';
 sherpa_onnx.writeWave(
     filename, {samples: audio.samples, sampleRate: audio.sampleRate});
 

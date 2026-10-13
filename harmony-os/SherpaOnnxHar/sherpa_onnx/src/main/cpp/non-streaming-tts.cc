@@ -38,6 +38,7 @@
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.lexicon);           \
                                                                  \
     SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.tokens);          \
     SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.encoder);         \
@@ -75,13 +76,28 @@
     SHERPA_ONNX_DELETE_C_STR(c.rule_fars);                      \
   } while (0)
 
-#define SHERPA_ONNX_DELETE_GENERATION_C_STR(c)  \
-  do {                                          \
-    SHERPA_ONNX_DELETE_C_STR(c.reference_text); \
-    SHERPA_ONNX_DELETE_C_STR(c.extra);          \
-    if (c.reference_audio) {                    \
-      delete[] c.reference_audio;               \
-    }                                           \
+#define SHERPA_ONNX_DELETE_GENERATION_C_STR(c)                  \
+  do {                                                          \
+    SHERPA_ONNX_DELETE_C_STR(c.reference_text);                 \
+    SHERPA_ONNX_DELETE_C_STR(c.extra);                          \
+    if (c.reference_audio) {                                    \
+      delete[] c.reference_audio;                               \
+    }                                                           \
+    if (c.phoneme_codepoints) {                                 \
+      delete[] c.phoneme_codepoints;                            \
+    }                                                           \
+    if (c.phoneme_codepoints_lens) {                            \
+      delete[] c.phoneme_codepoints_lens;                       \
+    }                                                           \
+    if (c.tokens) {                                             \
+      for (int32_t i = 0; i != c.tokens_num_sentences; ++i) {   \
+        SHERPA_ONNX_DELETE_C_STR(c.tokens[i]);                  \
+      }                                                         \
+      delete[] c.tokens;                                        \
+    }                                                           \
+    if (c.tokens_lens) {                                        \
+      delete[] c.tokens_lens;                                   \
+    }                                                           \
   } while (0)
 
 static std::string JsObjectToJson(Napi::Env env, const Napi::Object &obj) {
@@ -93,6 +109,64 @@ static std::string JsObjectToJson(Napi::Env env, const Napi::Object &obj) {
 static SherpaOnnxGenerationConfig GetGenerationConfig(Napi::Object o) {
   SherpaOnnxGenerationConfig c;
   memset(&c, 0, sizeof(c));
+
+  Napi::Env env = o.Env();
+
+  // Validate before marshalling anything: phonemeCodepoints must be an array
+  // of arrays of numbers and tokens an array of arrays of strings. Anything
+  // else is a caller bug, so throw a JS exception and bail out.
+  struct {
+    const char *name;
+    const char *element_type;
+    bool numeric;
+  } nested_arrays[] = {
+      {"phonemeCodepoints", "number", true},
+      {"tokens", "string", false},
+  };
+  for (const auto &f : nested_arrays) {
+    if (!o.Has(f.name)) {
+      continue;
+    }
+    Napi::Value v = o.Get(f.name);
+    if (!v.IsArray()) {
+      Napi::TypeError::New(env, std::string(f.name) + " must be an array of arrays")
+          .ThrowAsJavaScriptException();
+      return c;
+    }
+    Napi::Array outer = v.As<Napi::Array>();
+    for (uint32_t i = 0; i < outer.Length(); ++i) {
+      Napi::Value e = outer.Get(i);
+      if (!e.IsArray()) {
+        Napi::TypeError::New(
+            env,
+            std::string(f.name) + "[" + std::to_string(i) + "] must be an array")
+            .ThrowAsJavaScriptException();
+        return c;
+      }
+      Napi::Array inner = e.As<Napi::Array>();
+      if (inner.Length() == 0) {
+        // The C API requires every sentence to have at least one entry.
+        Napi::TypeError::New(
+            env,
+            std::string(f.name) + "[" + std::to_string(i) +
+                "] must be a non-empty array")
+            .ThrowAsJavaScriptException();
+        return c;
+      }
+      for (uint32_t j = 0; j < inner.Length(); ++j) {
+        Napi::Value item = inner.Get(j);
+        bool ok = f.numeric ? item.IsNumber() : item.IsString();
+        if (!ok) {
+          Napi::TypeError::New(
+              env,
+              std::string(f.name) + "[" + std::to_string(i) + "][" +
+                  std::to_string(j) + "] must be a " + f.element_type)
+              .ThrowAsJavaScriptException();
+          return c;
+        }
+      }
+    }
+  }
 
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(silence_scale, silenceScale);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(speed, speed);
@@ -122,6 +196,66 @@ static SherpaOnnxGenerationConfig GetGenerationConfig(Napi::Object o) {
     p[s.size()] = '\0';
 
     c.extra = p;
+  }
+
+  // phonemeCodepoints: JS number[][] -> one flat int32 array plus the
+  // per-sentence lengths, as expected by the C API.
+  if (o.Has("phonemeCodepoints") && o.Get("phonemeCodepoints").IsArray()) {
+    Napi::Array outer = o.Get("phonemeCodepoints").As<Napi::Array>();
+    uint32_t n = outer.Length();
+
+    if (n > 0) {
+      std::vector<int32_t> flat;
+      int32_t *lens = new int32_t[n];
+
+      for (uint32_t i = 0; i < n; ++i) {
+        Napi::Array inner = outer.Get(i).As<Napi::Array>();
+        uint32_t m = inner.Length();
+        lens[i] = static_cast<int32_t>(m);
+        for (uint32_t j = 0; j < m; ++j) {
+          flat.push_back(inner.Get(j).ToNumber().Int32Value());
+        }
+      }
+
+      int32_t *buf = new int32_t[flat.empty() ? 1 : flat.size()];
+      std::copy(flat.begin(), flat.end(), buf);
+
+      c.phoneme_codepoints = buf;
+      c.phoneme_codepoints_lens = lens;
+      c.phoneme_codepoints_num_sentences = static_cast<int32_t>(n);
+    }
+  }
+
+  // tokens: JS string[][] -> one flat char** array plus the per-sentence
+  // lengths, as expected by the C API.
+  if (o.Has("tokens") && o.Get("tokens").IsArray()) {
+    Napi::Array outer = o.Get("tokens").As<Napi::Array>();
+    uint32_t n = outer.Length();
+
+    if (n > 0) {
+      std::vector<const char *> flat;
+      int32_t *lens = new int32_t[n];
+
+      for (uint32_t i = 0; i < n; ++i) {
+        Napi::Array inner = outer.Get(i).As<Napi::Array>();
+        uint32_t m = inner.Length();
+        lens[i] = static_cast<int32_t>(m);
+        for (uint32_t j = 0; j < m; ++j) {
+          std::string s = inner.Get(j).ToString().Utf8Value();
+          char *q = new char[s.size() + 1];
+          std::copy(s.begin(), s.end(), q);
+          q[s.size()] = 0;
+          flat.push_back(q);
+        }
+      }
+
+      const char **buf = new const char *[flat.empty() ? 1 : flat.size()];
+      std::copy(flat.begin(), flat.end(), buf);
+
+      c.tokens = buf;
+      c.tokens_lens = lens;
+      c.tokens_num_sentences = static_cast<int32_t>(n);
+    }
   }
 
   return c;
@@ -205,6 +339,7 @@ static SherpaOnnxOfflineTtsKittenModelConfig GetOfflineTtsKittenModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
 
   return c;
 }
@@ -604,6 +739,11 @@ static Napi::Object OfflineTtsGenerateWithConfigWrapper(
           : Napi::Object::New(env);
 
   SherpaOnnxGenerationConfig gen_config = GetGenerationConfig(genObj);
+  if (env.IsExceptionPending()) {
+    // GetGenerationConfig throws before allocating anything, so there is
+    // nothing to free here.
+    return {};
+  }
 
   const SherpaOnnxGeneratedAudio *audio =
       SherpaOnnxOfflineTtsGenerateWithConfig(tts, text.c_str(), &gen_config,
@@ -1333,17 +1473,21 @@ static Napi::Object OfflineTtsGenerateAsyncWithConfigWrapper(
     cb = obj.Get("callback").As<Napi::Function>();
   }
 
-  auto context = new TtsTsfnContext(env, info.This());
-  TSFN tsfn = TSFN::New(
-      env, cb, "TtsGenerateWithConfig", kMaxPendingTtsChunks, 1, context,
-      [](Napi::Env, void *, TtsTsfnContext *ctx) { delete ctx; });
-
+  // Parse and validate the generation config before creating any resources.
   SherpaOnnxGenerationConfig gen_config;
   memset(&gen_config, 0, sizeof(gen_config));
   if (obj.Has("generationConfig") && obj.Get("generationConfig").IsObject()) {
     gen_config =
         GetGenerationConfig(obj.Get("generationConfig").As<Napi::Object>());
+    if (env.IsExceptionPending()) {
+      return {};
+    }
   }
+
+  auto context = new TtsTsfnContext(env, info.This());
+  TSFN tsfn = TSFN::New(
+      env, cb, "TtsGenerateWithConfig", kMaxPendingTtsChunks, 1, context,
+      [](Napi::Env, void *, TtsTsfnContext *ctx) { delete ctx; });
 
   TtsGenerateWithConfigWorker *worker = new TtsGenerateWithConfigWorker(
       env, tsfn, context->state, tts, text, gen_config,

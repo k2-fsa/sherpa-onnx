@@ -14,8 +14,8 @@ async function createOfflineTtsAsync() {
       kitten: {
         model: './kitten-nano-en-v0_1-fp16/model.fp16.onnx',
         voices: './kitten-nano-en-v0_1-fp16/voices.bin',
+        lexicon: './lexicon-en-us.txt',
         tokens: './kitten-nano-en-v0_1-fp16/tokens.txt',
-        dataDir: './kitten-nano-en-v0_1-fp16/espeak-ng-data',
       },
       debug: true,
       numThreads: 1,
@@ -76,7 +76,7 @@ async function main() {
       `RTF = ${elapsedSeconds.toFixed(3)} / ${durationSeconds.toFixed(3)} =`,
       realTimeFactor.toFixed(3));
 
-  const filename = 'test-kitten-en-6.wav';
+  const filename = 'test-kitten-en-6-lexicon.wav';
   sherpa_onnx.writeWave(filename, {
     samples: audio.samples,
     sampleRate: audio.sampleRate,

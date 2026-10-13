@@ -7,18 +7,15 @@ function createOfflineTts() {
   const config = {
     model: {
       vits: {
-        model: './vits-icefall-zh-aishell3/model.onnx',
-        tokens: './vits-icefall-zh-aishell3/tokens.txt',
-        lexicon: './vits-icefall-zh-aishell3/lexicon.txt',
+        model: './vits-piper-en_GB-cori-medium/en_GB-cori-medium.onnx',
+        lexicon: './lexicon-en-us.txt',
+        tokens: './vits-piper-en_GB-cori-medium/tokens.txt',
       },
       debug: true,
       numThreads: 1,
       provider: 'cpu',
     },
     maxNumSentences: 1,
-    ruleFsts:
-        './vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/number.fst,./vits-icefall-zh-aishell3/new_heteronym.fst',
-    ruleFars: './vits-icefall-zh-aishell3/rule.far',
   };
   return new sherpa_onnx.OfflineTts(config);
 }
@@ -26,13 +23,14 @@ function createOfflineTts() {
 const tts = createOfflineTts();
 
 const text =
-    '他在长沙出生，长白山长大，去过长江，现在他是一个银行的行长，主管行政工作。有困难，请拨110，或者13020240513。今天是2024年5月13号, 他上个月的工资是12345块钱。';
+    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
 const generationConfig = new sherpa_onnx.GenerationConfig({
-  sid: 88,
+  sid: 0,
   speed: 1.0,
   silenceScale: 0.2,
 });
+
 
 let start = Date.now();
 const audio = tts.generate({text: text, generationConfig});
@@ -46,7 +44,7 @@ console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
     real_time_factor.toFixed(3));
 
-const filename = 'test-zh-aishell3.wav';
+const filename = 'test-piper-en-lexicon.wav';
 sherpa_onnx.writeWave(
     filename, {samples: audio.samples, sampleRate: audio.sampleRate});
 

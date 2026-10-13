@@ -14,8 +14,6 @@ function createOfflineTts() {
         decoder:
             './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx',
         vocoder: './vocos_24khz.onnx',
-        dataDir:
-            './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data',
         lexicon: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt',
       },
       debug: true,
@@ -58,7 +56,7 @@ console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
     real_time_factor.toFixed(3));
 
-const filename = 'test-zipvoice-zh-en.wav';
+const filename = 'test-zipvoice-zh-en-lexicon.wav';
 sherpa_onnx.writeWave(
     filename, {samples: audio.samples, sampleRate: audio.sampleRate});
 

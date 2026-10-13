@@ -1,17 +1,16 @@
 // Copyright (c)  2026  Xiaomi Corporation
 //
-// Asynchronous text-to-speech with the Kokoro English model.
+// Asynchronous text-to-speech with the VITS Piper English model.
 //
 const sherpa_onnx = require('sherpa-onnx-node');
 
 async function createOfflineTts() {
   const config = {
     model: {
-      kokoro: {
-        model: './kokoro-en-v0_19/model.onnx',
-        voices: './kokoro-en-v0_19/voices.bin',
-        tokens: './kokoro-en-v0_19/tokens.txt',
-        dataDir: './kokoro-en-v0_19/espeak-ng-data',
+      vits: {
+        model: './vits-piper-en_GB-cori-medium/en_GB-cori-medium.onnx',
+        lexicon: './lexicon-en-us.txt',
+        tokens: './vits-piper-en_GB-cori-medium/tokens.txt',
       },
       debug: false,
       numThreads: 1,
@@ -29,7 +28,7 @@ async function main() {
       'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
   const generationConfig = new sherpa_onnx.GenerationConfig({
-    sid: 6,
+    sid: 0,
     speed: 1.0,
     silenceScale: 0.2,
   });
@@ -58,7 +57,7 @@ async function main() {
       `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
       real_time_factor.toFixed(3));
 
-  const filename = 'test-kokoro-en-async.wav';
+  const filename = 'test-vits-piper-en-lexicon-async.wav';
   sherpa_onnx.writeWave(
       filename, {samples: audio.samples, sampleRate: audio.sampleRate});
   console.log(`Saved to ${filename}`);

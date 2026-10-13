@@ -75,3 +75,10 @@ jobs:
           cd ../
 
           .github/scripts/test-nodejs-addon-npm.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
+          path: |
+            nodejs-addon-examples/test-*-lexicon.wav
+            nodejs-addon-examples/test-*-phonemize.wav
+          if-no-files-found: warn
