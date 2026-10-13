@@ -217,6 +217,25 @@ class TestSpeakerRecognition(unittest.TestCase):
             print(filename)
             test_en_and_zh_models(filename)
 
+    def test_manager_rejects_wrong_embedding_dim(self):
+        manager = sherpa_onnx.SpeakerEmbeddingManager(4)
+        good = [0.1, 0.2, 0.3, 0.4]
+        bad = [0.1, 0.2, 0.3]
+        self.assertTrue(manager.add("a", good))
+
+        with self.assertRaises(ValueError):
+            manager.add("b", bad)
+        with self.assertRaises(ValueError):
+            manager.search(bad, threshold=0.5)
+        with self.assertRaises(ValueError):
+            manager.verify("a", bad, threshold=0.5)
+        with self.assertRaises(ValueError):
+            manager.score("a", bad)
+        with self.assertRaises(ValueError):
+            manager.add("c", good + [0.5])
+
+        self.assertEqual(manager.search(good, threshold=0.5), "a")
+
 
 if __name__ == "__main__":
     unittest.main()

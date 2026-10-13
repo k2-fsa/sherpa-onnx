@@ -4,12 +4,24 @@
 
 #include "sherpa-onnx/python/csrc/speaker-embedding-manager.h"
 
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 
 namespace sherpa_onnx {
+
+// The C++ methods read exactly Dim() floats from the pointer they are given.
+static void CheckDim(const SpeakerEmbeddingManager &self,
+                     const std::vector<float> &v) {
+  if (static_cast<int32_t>(v.size()) != self.Dim()) {
+    std::ostringstream os;
+    os << "Expected an embedding of dimension " << self.Dim()
+       << ". Given: " << v.size();
+    throw py::value_error(os.str());
+  }
+}
 
 static constexpr const char *kSpeakerEmbeddingManagerInitDoc = R"doc(
 Constructor for SpeakerEmbeddingManager.
@@ -129,6 +141,7 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           "add",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v) -> bool {
+            CheckDim(self, v);
             return self.Add(name, v.data());
           },
           py::arg("name"), py::arg("v"),
@@ -152,8 +165,11 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           kSpeakerEmbeddingManagerRemoveDoc)
       .def(
           "search",
-          [](const PyClass &self, const std::vector<float> &v, float threshold)
-              -> std::string { return self.Search(v.data(), threshold); },
+          [](const PyClass &self, const std::vector<float> &v,
+             float threshold) -> std::string {
+            CheckDim(self, v);
+            return self.Search(v.data(), threshold);
+          },
           py::arg("v"), py::arg("threshold"),
           py::call_guard<py::gil_scoped_release>(),
           kSpeakerEmbeddingManagerSearchDoc)
@@ -161,6 +177,7 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           "verify",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v, float threshold) -> bool {
+            CheckDim(self, v);
             return self.Verify(name, v.data(), threshold);
           },
           py::arg("name"), py::arg("v"), py::arg("threshold"),
@@ -170,6 +187,7 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           "score",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v) -> float {
+            CheckDim(self, v);
             return self.Score(name, v.data());
           },
           py::arg("name"), py::arg("v"),
