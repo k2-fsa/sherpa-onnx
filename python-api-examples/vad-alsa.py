@@ -7,6 +7,7 @@ This script works only on Linux. It uses ALSA for recording.
 import argparse
 from pathlib import Path
 
+import numpy as np
 import sherpa_onnx
 
 
@@ -69,6 +70,9 @@ def main():
     config.silero_vad.model = args.silero_vad_model
     config.sample_rate = sample_rate
 
+    window_size = config.silero_vad.window_size
+
+    buffer = []
     vad = sherpa_onnx.VoiceActivityDetector(config, buffer_size_in_seconds=30)
 
     print("Started! Please speak. Press Ctrl C to exit")
@@ -79,7 +83,10 @@ def main():
         while True:
             samples = alsa.read(samples_per_read)  # a blocking read
 
-            vad.accept_waveform(samples)
+            buffer = np.concatenate([buffer, samples])
+            while len(buffer) > window_size:
+                vad.accept_waveform(buffer[:window_size])
+                buffer = buffer[window_size:]
 
             if vad.is_speech_detected() and not printed:
                 print("Detected speech")
