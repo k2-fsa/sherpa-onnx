@@ -38,7 +38,7 @@ jobs:
           COUNT=$(python3 ./generate-tts-apk-script.py --count)
           echo "Model count: $COUNT"
 
-          MODELS_PER_JOB=2
+          MODELS_PER_JOB=5
           TOTAL=$(( (COUNT + MODELS_PER_JOB - 1) / MODELS_PER_JOB ))
           echo "Total jobs: $TOTAL"
 
@@ -173,13 +173,13 @@ jobs:
           du -h -d1 .
 
       - uses: actions/upload-artifact@v4
-        if: true
+        if: false
         with:
           name: tts-engine-apk-${{ matrix.index }}
           path: ./apks/*.apk
 
       - name: Publish to huggingface
-        if: false
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

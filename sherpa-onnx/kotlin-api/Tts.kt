@@ -347,10 +347,20 @@ fun getOfflineTtsConfig(
         throw IllegalArgumentException("Please provide vocoder for Matcha TTS")
     }
 
+    // Resolve the lexicon path once: "" stays "" (e.g. when the text is
+    // pre-phonemized via GenerationConfig.phonemeCodepoints and no lexicon is
+    // used), multi-lexicon strings ("a.txt,b.txt") are used as-is, and a bare
+    // filename is looked up inside modelDir.
+    val lexiconPath = when {
+        lexicon == "" -> lexicon
+        "," in lexicon -> lexicon
+        else -> "$modelDir/$lexicon"
+    }
+
     val vits = if (modelName.isNotEmpty() && voices.isEmpty() && !isSupertonic) {
         OfflineTtsVitsModelConfig(
             model = "$modelDir/$modelName",
-            lexicon = "$modelDir/$lexicon",
+            lexicon = lexiconPath,
             tokens = "$modelDir/tokens.txt",
             dataDir = dataDir,
         )
@@ -362,7 +372,7 @@ fun getOfflineTtsConfig(
         OfflineTtsMatchaModelConfig(
             acousticModel = "$modelDir/$acousticModelName",
             vocoder = vocoder,
-            lexicon = "$modelDir/$lexicon",
+            lexicon = lexiconPath,
             tokens = "$modelDir/tokens.txt",
             dataDir = dataDir,
         )
@@ -376,11 +386,7 @@ fun getOfflineTtsConfig(
             voices = "$modelDir/$voices",
             tokens = "$modelDir/tokens.txt",
             dataDir = dataDir,
-            lexicon = when {
-                lexicon == "" -> lexicon
-                "," in lexicon -> lexicon
-                else -> "$modelDir/$lexicon"
-            },
+            lexicon = lexiconPath,
         )
     } else {
         OfflineTtsKokoroModelConfig()
@@ -392,11 +398,7 @@ fun getOfflineTtsConfig(
             voices = "$modelDir/$voices",
             tokens = "$modelDir/tokens.txt",
             dataDir = dataDir,
-            lexicon = when {
-                lexicon == "" -> lexicon
-                "," in lexicon -> lexicon
-                else -> "$modelDir/$lexicon"
-            },
+            lexicon = lexiconPath,
         )
     } else {
         OfflineTtsKittenModelConfig()

@@ -7,13 +7,10 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import com.k2fsa.sherpa.onnx.OfflineTts
 import com.github.csukuangfj.piper.phonemize.piperPhonemizeInitialize
 import com.github.csukuangfj.piper.phonemize.piperPhonemizeText
+import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.getOfflineTtsConfig
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 const val MIN_TTS_SPEED = 0.1f
 const val MAX_TTS_SPEED = 5.0f
@@ -109,7 +106,16 @@ object TtsEngine {
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
         // modelDir = "vits-piper-en_US-amy-low"
         // modelName = "en_US-amy-low.onnx"
-        // usePhonemize = true
+        //
+        // Choose exactly one of the two text frontends below (not both):
+        //
+        // usePhonemize = true // option 1: phonemize the text with piper-phonemize; no extra files needed
+        // lexicon = "lexicon-en-us.txt" // option 2: lexicon file inside the model directory.
+        //   Download it from https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+        //
+        // Neither option uses the espeak-ng-data directory shipped in the model
+        // package; delete it to make the APK smaller.
+        //
         // lang = "eng"
 
         // Example 3:
@@ -158,7 +164,7 @@ object TtsEngine {
         // modelDir = "matcha-icefall-en_US-ljspeech"
         // acousticModelName = "model-steps-3.onnx"
         // vocoder = "vocos-22khz-univ.onnx"
-        // usePhonemize = true
+        // usePhonemize = true // or lexicon = "lexicon-en-us.txt", see Example 2
         // lang = "eng"
 
         // Example 9
@@ -166,7 +172,7 @@ object TtsEngine {
         // modelDir = "kokoro-en-v0_19"
         // modelName = "model.onnx"
         // voices = "voices.bin"
-        // usePhonemize = true
+        // usePhonemize = true // or lexicon = "lexicon-en-us.txt", see Example 2
         // lang = "eng"
 
         // Example 10
@@ -187,7 +193,7 @@ object TtsEngine {
         // modelDir = "kitten-nano-en-v0_1-fp16"
         // modelName = "model.fp16.onnx"
         // voices = "voices.bin"
-        // usePhonemize = true
+        // usePhonemize = true // or lexicon = "lexicon-en-us.txt", see Example 2
         // lang = "eng"
         // isKitten = true
 

@@ -407,6 +407,17 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     return IsNewFormatLexiconStream(is);
   }
 
+  // Android/OHOS assets cannot be opened with ifstream, so read the file
+  // with the asset-aware reader before checking its format. Without this,
+  // a new-format lexicon shipped as an asset is misdetected as old-format
+  // and every entry is dropped.
+  template <typename Manager>
+  static bool IsNewFormatLexicon(Manager *mgr, const std::string &path) {
+    auto buf = ReadFile(mgr, path);
+    std::istringstream is(std::string(buf.data(), buf.size()));
+    return IsNewFormatLexiconStream(is);
+  }
+
   static bool IsNewFormatLexiconStream(std::istream &is) {
     std::string line;
     while (std::getline(is, line)) {
@@ -477,7 +488,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else if (meta_data.is_piper || meta_data.is_coqui ||
                meta_data.is_icefall || meta_data.is_inflect) {
       if (!config_.model.vits.lexicon.empty() &&
-          !IsNewFormatLexicon(config_.model.vits.lexicon)) {
+          !IsNewFormatLexicon(mgr, config_.model.vits.lexicon)) {
         frontend_ = std::make_unique<Lexicon>(
             mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
             meta_data.punctuations, meta_data.language, config_.model.debug);

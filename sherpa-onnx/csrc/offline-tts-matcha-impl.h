@@ -1125,20 +1125,6 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     return ans;
   }
 
-  static bool IsNewFormatLexicon(const std::string &path) {
-    auto is = OpenInputFile(path);
-    return IsNewFormatLexiconStream(is);
-  }
-
-  static bool IsNewFormatLexiconStream(std::istream &is) {
-    std::string line;
-    while (std::getline(is, line)) {
-      if (line.empty() || line[0] == '#') continue;
-      return line.find("||") != std::string::npos;
-    }
-    return false;
-  }
-
   void LoadLexicon(std::istream &is, bool debug) {
     auto entries = ParseLexiconFile(is, &max_lexicon_phrase_len_);
     for (auto &e : entries) {

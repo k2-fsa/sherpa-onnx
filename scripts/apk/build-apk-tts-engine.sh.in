@@ -56,6 +56,10 @@ wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$mod
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
 
+# espeak-ng-data is unused: sherpa-onnx ignores data_dir since v2.0.0 and the
+# phonemizer (piper-phonemize) bundles its own copy. Drop it to shrink the APK.
+rm -rf $model_dir/espeak-ng-data
+
 {% if tts_model.vocoder %}
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$vocoder
 {% endif %}

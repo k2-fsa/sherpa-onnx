@@ -19,8 +19,6 @@ import androidx.core.content.FileProvider
 import com.github.csukuangfj.piper.phonemize.piperPhonemizeInitialize
 import com.github.csukuangfj.piper.phonemize.piperPhonemizeText
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 const val TAG = "sherpa-onnx"
 
@@ -313,7 +311,17 @@ class MainActivity : AppCompatActivity() {
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
         // modelDir = "vits-piper-en_US-amy-low"
         // modelName = "en_US-amy-low.onnx"
-        // usePhonemize = true
+        //
+        // Choose exactly one of the two text frontends below (not both):
+        //
+        // usePhonemize = true // option 1: phonemize the text with piper-phonemize; no extra files needed
+        // lexicon = "lexicon-en-us.txt" // option 2: lexicon file inside the model directory.
+        //   Download it from https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+        //
+        // Neither option uses the espeak-ng-data directory shipped in the model
+        // package; delete it to make the APK smaller.
+        //
+        // lang = "eng"
 
         // Example 3:
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
@@ -354,14 +362,14 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "matcha-icefall-en_US-ljspeech"
         // acousticModelName = "model-steps-3.onnx"
         // vocoder = "vocos-22khz-univ.onnx"
-        // usePhonemize = true
+        // usePhonemize = true // or lexicon = "lexicon-en-us.txt", see Example 2
 
         // Example 9
         // kokoro-en-v0_19
         // modelDir = "kokoro-en-v0_19"
         // modelName = "model.onnx"
         // voices = "voices.bin"
-        // usePhonemize = true
+        // usePhonemize = true // or lexicon = "lexicon-en-us.txt", see Example 2
 
         // Example 10
         // kokoro-multi-lang-v1_0
@@ -377,7 +385,7 @@ class MainActivity : AppCompatActivity() {
         // modelName = "model.fp16.onnx"
         // voices = "voices.bin"
         // isKitten = true
-        // usePhonemize = true
+        // usePhonemize = true // or lexicon = "lexicon-en-us.txt", see Example 2
 
         // Example 12
         // matcha-icefall-zh-en
