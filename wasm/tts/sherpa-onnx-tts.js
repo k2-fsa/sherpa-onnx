@@ -1178,6 +1178,16 @@ function createOfflineTts(Module, myConfig) {
     voiceEmbeddingCacheCapacity: 50,
   };
 
+  const offlineTtsSupertonicModelConfig = {
+    durationPredictor: '',
+    textEncoder: '',
+    vectorEstimator: '',
+    vocoder: '',
+    ttsJson: '',
+    unicodeIndexer: '',
+    voiceStyle: '',
+  };
+
   let ruleFsts = '';
 
   switch (modelType) {
@@ -1251,6 +1261,22 @@ function createOfflineTts(Module, myConfig) {
         offlineTtsKittenModelConfig.lexicon = './lexicon-en-us.txt';
       }
       break;
+    case 7:
+      // SupertonicTTS (multilingual)
+      // https://k2-fsa.github.io/sherpa/onnx/tts/supertonic.html
+      offlineTtsSupertonicModelConfig.durationPredictor =
+          './duration_predictor.int8.onnx';
+      offlineTtsSupertonicModelConfig.textEncoder = './text_encoder.int8.onnx';
+      offlineTtsSupertonicModelConfig.vectorEstimator =
+          './vector_estimator.int8.onnx';
+      offlineTtsSupertonicModelConfig.vocoder = './vocoder.int8.onnx';
+      offlineTtsSupertonicModelConfig.ttsJson = './tts.json';
+      offlineTtsSupertonicModelConfig.unicodeIndexer =
+          './unicode_indexer.bin';
+      offlineTtsSupertonicModelConfig.voiceStyle = './voice.bin';
+      // Own text frontend (unicode indexer); not the phonemize/lexicon picker.
+      modelUsesPhonemize = false;
+      break;
   }
 
   const offlineTtsModelConfig = {
@@ -1260,6 +1286,7 @@ function createOfflineTts(Module, myConfig) {
     offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
     offlineTtsZipVoiceModelConfig: offlineTtsZipVoiceModelConfig,
     offlineTtsPocketModelConfig: offlineTtsPocketModelConfig,
+    offlineTtsSupertonicModelConfig: offlineTtsSupertonicModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',

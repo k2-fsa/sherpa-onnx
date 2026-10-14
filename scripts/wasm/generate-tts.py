@@ -202,6 +202,28 @@ def get_models():
             git diff
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-supertonic-3-tts-int8-2026-05-11",
+            hf="k2-fsa/web-assembly-multilingual-tts-supertonic",
+            ms="csukuangfj/web-assembly-multilingual-tts-supertonic",
+            cmd="""
+            pushd $model_name
+
+            mv -v duration_predictor.int8.onnx ../
+            mv -v text_encoder.int8.onnx ../
+            mv -v vector_estimator.int8.onnx ../
+            mv -v vocoder.int8.onnx ../
+            mv -v tts.json ../
+            mv -v unicode_indexer.bin ../
+            mv -v voice.bin ../
+            popd
+
+            git checkout .
+            sed -i.bak 's/let modelType = 0/let modelType = 7/g' ../sherpa-onnx-tts.js
+            rm -rf $model_name
+            git diff
+            """,
+        ),
     ]
     return models
 

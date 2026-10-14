@@ -2,6 +2,8 @@ const generateBtn = document.getElementById('generateBtn');
 const speakerIdLabel = document.getElementById('speakerIdLabel');
 const speakerIdInput = document.getElementById('speakerId');
 const speakerIdSection = document.getElementById('speakerIdSection');
+const langSection = document.getElementById('langSection');
+const langSelect = document.getElementById('lang');
 const frontendSection = document.getElementById('frontendSection');
 const frontendPhonemizeInput = document.getElementById('frontendPhonemize');
 const frontendLexiconInput = document.getElementById('frontendLexicon');
@@ -193,10 +195,14 @@ speedInput.oninput = function() {
 function updateUiForModelType() {
   const isZipVoice = ttsInstanceInfo.modelType === 4;
   const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const isSupertonic = ttsInstanceInfo.modelType === 7;
   const useGenerationConfig = isZipVoice || isPocketTts;
   speakerIdSection.classList.toggle('hidden', useGenerationConfig);
   referenceAudioSection.classList.toggle('hidden', !useGenerationConfig);
   referenceTextSection.classList.toggle('hidden', !isZipVoice);
+  // SupertonicTTS supports 31 languages; no other model here needs a
+  // language picker.
+  langSection.classList.toggle('hidden', !isSupertonic);
 
   // The picker is only meaningful for the English piper-family models, which
   // can use either frontend. The Chinese/multi-lingual/zipvoice models have a
@@ -285,6 +291,7 @@ function downloadBlob(blob, filename) {
 generateBtn.onclick = async function() {
   const isZipVoice = ttsInstanceInfo.modelType === 4;
   const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const isSupertonic = ttsInstanceInfo.modelType === 7;
   const useGenerationConfig = isZipVoice || isPocketTts;
 
   let speakerId = speakerIdInput.value;
@@ -316,6 +323,26 @@ generateBtn.onclick = async function() {
   console.log('speakerId', speakerId);
   console.log('speed', speedInput.value);
   console.log('text', text);
+
+  if (isSupertonic) {
+    // SupertonicTTS has its own text frontend (unicode indexer): pass the
+    // raw text plus the language; no reference audio and no phonemize.
+    // numSteps is 8, like python-api-examples/supertonic-tts.py and
+    // nodejs-examples/test-offline-tts-supertonic.js.
+    generateBtn.disabled = true;
+    setGenerationStatus('Generating audio...');
+    worker.postMessage({
+      text,
+      type: 'generateWithConfig',
+      genConfig: {
+        sid: speakerId,
+        speed: parseFloat(speedInput.value),
+        numSteps: 8,
+        extra: {lang: langSelect.value},
+      },
+    });
+    return;
+  }
 
   if (useGenerationConfig) {
     if (!referenceAudioInput.files || referenceAudioInput.files.length === 0) {

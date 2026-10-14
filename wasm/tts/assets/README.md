@@ -31,6 +31,14 @@ Choose exactly one of the two text frontends below (not both):
 Neither option uses the espeak-ng-data directory shipped in the model
 package; you can leave it out to keep the download small.
 
+Some models bring their own text frontend and need neither option above:
+PocketTTS (`modelType` 5) and SupertonicTTS (`modelType` 7). For those, skip
+this whole section.
+
+Please set `let modelType = 0` to the number matching your model in
+`../sherpa-onnx-tts.js` (0 vits, 1/2/3 matcha, 4 zipvoice, 5 pocket,
+6 kitten, 7 supertonic). The demo UI adapts itself to the model type.
+
 ## Model files
 
 The following is an example:
@@ -80,6 +88,28 @@ mv sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx ./
 mv sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json ./
 mv sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json ./
 rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
+```
+
+SupertonicTTS example (31 languages; own text frontend, so no lexicon and no
+piper-phonemize are needed):
+
+```bash
+cd sherpa-onnx/wasm/tts/assets
+
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+
+mv sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx ./
+mv sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx ./
+mv sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx ./
+mv sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx ./
+mv sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json ./
+mv sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin ./
+mv sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin ./
+rm -rf sherpa-onnx-supertonic-3-tts-int8-2026-05-11
+
+# in ../sherpa-onnx-tts.js, set: let modelType = 7
 ```
 
 You should have the following files in `assets` before you can run
