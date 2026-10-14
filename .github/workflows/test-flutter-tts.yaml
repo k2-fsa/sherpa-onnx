@@ -180,7 +180,9 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+          # libgstreamer*: required by audioplayers_linux (the tts demo plays
+          # the generated audio).
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
