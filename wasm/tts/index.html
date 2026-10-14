@@ -30,6 +30,15 @@
     <div id="status">Loading...</div>
 
     <div id="singleAudioContent" class="tab-content loading">
+      <div id="frontendSection" class="hidden">
+        <label for="frontendPhonemize">Text frontend:</label>
+        <input type="radio" id="frontendPhonemize" name="textFrontend" value="phonemize" checked />
+        <label for="frontendPhonemize">phonemize (piper-phonemize)</label>
+        <input type="radio" id="frontendLexicon" name="textFrontend" value="lexicon" />
+        <label for="frontendLexicon">lexicon (lexicon-en-us.txt)</label>
+        <br/>
+        <br/>
+      </div>
       <div id="speakerIdSection">
         <label for="speakerId" id="speakerIdLabel">Speaker ID: </label>
         <input type="text" id="speakerId" name="speakerId" value="0" />
@@ -96,5 +105,13 @@
   </div>
 
 
+  <!-- piper-phonemize wasm bundle (option 1: the default text frontend).
+       See assets/README.md for how to download it into ./piper-phonemize/.
+       Load order mirrors piper-phonemize/index.html (the bundle's own demo,
+       which works standalone): wrapper first, then the app (which defines
+       `Module`), then the Emscripten glue last. -->
+  <script src="piper-phonemize/piper-phonemize.js"></script>
   <script src="app-tts.js"></script>
+  <!-- Emscripten module loaded last, after Module object is defined -->
+  <script src="piper-phonemize/piper-phonemize-wasm-main.js"></script>
 </body>

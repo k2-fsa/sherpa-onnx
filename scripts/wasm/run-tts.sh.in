@@ -21,6 +21,7 @@ ms_name={{ model.ms }}
 pushd wasm/tts
 git checkout .
 rm -rf assets
+rm -rf piper-phonemize
 mkdir assets
 cd assets
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/${model_name}.tar.bz2

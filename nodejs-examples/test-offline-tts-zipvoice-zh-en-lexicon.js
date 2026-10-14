@@ -8,7 +8,6 @@ function createOfflineTts() {
     decoder: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx',
     tokens: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt',
     lexicon: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt',
-    dataDir: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data',
     vocoder: './vocos_24khz.onnx',
   };
 
@@ -47,6 +46,6 @@ const generationConfig = {
 
 const tts = createOfflineTts();
 const audio = tts.generateWithConfig(text, generationConfig);
-tts.save('./test-zipvoice-zh-en.wav', audio);
-console.log('Saved to test-zipvoice-zh-en.wav successfully.');
+tts.save('./test-zipvoice-zh-en-lexicon.wav', audio);
+console.log('Saved to test-zipvoice-zh-en-lexicon.wav successfully.');
 tts.free();

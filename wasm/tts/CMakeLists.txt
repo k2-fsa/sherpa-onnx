@@ -7,6 +7,24 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/tokens.txt" AND
   message(FATAL_ERROR "Please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md before you continue")
 endif()
 
+# Text frontend: check which option of assets/README.md is set up. Neither the
+# model package's espeak-ng-data nor anything in sherpa-onnx provides one, so
+# without these files the demo cannot convert text at all.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/piper-phonemize/piper-phonemize.js")
+  message(STATUS "Text frontend: piper-phonemize (option 1)")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/lexicon-en-us.txt")
+  message(STATUS "Text frontend: lexicon (option 2: assets/lexicon-en-us.txt)")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/lexicon.txt")
+  message(STATUS "Text frontend: lexicon (option 2: assets/lexicon.txt)")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/lm_flow.int8.onnx")
+  message(STATUS "Text frontend: built into the pocket model")
+else()
+  message(FATAL_ERROR
+    "No text frontend found: please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md "
+    "before you continue. Either the piper-phonemize wasm bundle (option 1) or a "
+    "lexicon file (option 2) is required; the pocket model brings its own.")
+endif()
+
 set(exported_functions
   MyPrint
   SherpaOnnxCreateOfflineTts
@@ -50,6 +68,9 @@ endif()
 add_executable(sherpa-onnx-wasm-main-tts sherpa-onnx-wasm-main-tts.cc)
 target_link_libraries(sherpa-onnx-wasm-main-tts sherpa-onnx-c-api)
 install(TARGETS sherpa-onnx-wasm-main-tts DESTINATION bin/wasm/tts)
+# The piper-phonemize wasm bundle (option 1: the default text frontend);
+# see assets/README.md. Absent for the lexicon-only models.
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/piper-phonemize DESTINATION bin/wasm/tts OPTIONAL)
 
 install(
   FILES

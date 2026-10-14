@@ -42,7 +42,14 @@ def get_models():
 
             mv -v *.onnx ../
             mv -v tokens.txt ../
-            mv -v espeak-ng-data ../
+            popd
+
+            pushd ..
+            rm -rf piper-phonemize
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.5-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.5-wasm-browser.zip
+            mv browser piper-phonemize
+            rm piper-phonemize-v1.5.5-wasm-browser.zip
             popd
 
 
@@ -61,7 +68,14 @@ def get_models():
 
             mv -v *.onnx ../
             mv -v tokens.txt ../
-            mv -v espeak-ng-data ../
+            popd
+
+            pushd ..
+            rm -rf piper-phonemize
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.5-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.5-wasm-browser.zip
+            mv browser piper-phonemize
+            rm piper-phonemize-v1.5.5-wasm-browser.zip
             popd
 
 
@@ -82,7 +96,6 @@ def get_models():
             mv -v *.onnx ../
             mv -v tokens.txt ../
             mv -v lexicon.txt ../
-            mv -v espeak-ng-data ../
             popd
 
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-16khz-univ.onnx
@@ -126,7 +139,14 @@ def get_models():
 
             mv -v *.onnx ../
             mv -v tokens.txt ../
-            mv -v espeak-ng-data ../
+            popd
+
+            pushd ..
+            rm -rf piper-phonemize
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.5-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.5-wasm-browser.zip
+            mv browser piper-phonemize
+            rm piper-phonemize-v1.5.5-wasm-browser.zip
             popd
 
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
@@ -150,7 +170,6 @@ def get_models():
             mv -v decoder.int8.onnx ../
             mv -v tokens.txt ../
             mv -v lexicon.txt ../
-            mv -v espeak-ng-data ../
             popd
 
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx

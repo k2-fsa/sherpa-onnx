@@ -5,8 +5,8 @@ const sherpa_onnx = require('sherpa-onnx');
 function createOfflineTts() {
   let offlineTtsVitsModelConfig = {
     model: './vits-piper-en_US-amy-low/en_US-amy-low.onnx',
+    lexicon: './lexicon-en-us.txt',
     tokens: './vits-piper-en_US-amy-low/tokens.txt',
-    dataDir: './vits-piper-en_US-amy-low/espeak-ng-data',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
@@ -39,7 +39,7 @@ const audio = tts.generateWithConfig(
     '“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.”',
     generationConfig);
 
-tts.save('./test-vits-en.wav', audio);
-console.log('Saved to test-vits-en.wav successfully.');
+tts.save('./test-vits-en-lexicon.wav', audio);
+console.log('Saved to test-vits-en-lexicon.wav successfully.');
 
 tts.free();

@@ -54,3 +54,10 @@ jobs:
 
           export d=nodejs-examples
           ./.github/scripts/test-nodejs-npm.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
+          path: |
+            nodejs-examples/test-*-lexicon.wav
+            nodejs-examples/test-*-phonemize.wav
+          if-no-files-found: warn

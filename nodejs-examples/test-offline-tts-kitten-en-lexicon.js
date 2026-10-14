@@ -3,15 +3,15 @@
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOfflineTts() {
-  let offlineTtsKokoroModelConfig = {
-    model: './kokoro-en-v0_19/model.onnx',
-    voices: './kokoro-en-v0_19/voices.bin',
-    tokens: './kokoro-en-v0_19/tokens.txt',
-    dataDir: './kokoro-en-v0_19/espeak-ng-data',
+  let offlineTtsKittenModelConfig = {
+    model: './kitten-nano-en-v0_1-fp16/model.fp16.onnx',
+    voices: './kitten-nano-en-v0_1-fp16/voices.bin',
+    lexicon: './lexicon-en-us.txt',
+    tokens: './kitten-nano-en-v0_1-fp16/tokens.txt',
     lengthScale: 1.0,
   };
   let offlineTtsModelConfig = {
-    offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
+    offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',
@@ -37,6 +37,6 @@ const text =
     'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
 const audio = tts.generateWithConfig(text, generationConfig);
-tts.save('./test-kokoro-en.wav', audio);
-console.log('Saved to test-kokoro-en.wav successfully.');
+tts.save('./test-kitten-en-lexicon.wav', audio);
+console.log('Saved to test-kitten-en-lexicon.wav successfully.');
 tts.free();

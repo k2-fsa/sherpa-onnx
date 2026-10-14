@@ -4,6 +4,35 @@ Please refer to
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 to download a model.
 
+## Text frontend
+
+Choose exactly one of the two text frontends below (not both):
+
+- **option 1 (default): phonemize** — the text is phonemized with
+  piper-phonemize; no extra files are needed. Download the wasm bundle and
+  unzip it so the files end up in `wasm/tts/piper-phonemize/`:
+
+  ```bash
+  cd sherpa-onnx/wasm/tts
+  wget -q https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.5-wasm-browser.zip
+  unzip -q piper-phonemize-v1.5.5-wasm-browser.zip
+  mv browser piper-phonemize
+  rm piper-phonemize-v1.5.5-wasm-browser.zip
+  ```
+
+- **option 2: lexicon** — set `usePhonemize = false` in
+  `../sherpa-onnx-tts.js` and put a lexicon next to the model files:
+
+  ```bash
+  cd sherpa-onnx/wasm/tts/assets
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+  ```
+
+Neither option uses the espeak-ng-data directory shipped in the model
+package; you can leave it out to keep the download small.
+
+## Model files
+
 The following is an example:
 ```bash
 cd sherpa-onnx/wasm/tts/assets
@@ -13,7 +42,6 @@ tar xf vits-piper-en_US-libritts_r-medium.tar.bz2
 rm vits-piper-en_US-libritts_r-medium.tar.bz2
 mv vits-piper-en_US-libritts_r-medium/en_US-libritts_r-medium.onnx ./model.onnx
 mv vits-piper-en_US-libritts_r-medium/tokens.txt ./
-mv vits-piper-en_US-libritts_r-medium/espeak-ng-data ./
 rm -rf vits-piper-en_US-libritts_r-medium
 ```
 
@@ -30,7 +58,6 @@ mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx ./
 mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx ./
 mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt ./
 mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt ./
-mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data ./
 rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
 
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
@@ -62,11 +89,10 @@ You should have the following files in `assets` before you can run
 assets fangjun$ tree -L 1
 .
 ├── README.md
-├── espeak-ng-data
-├── mode.onnx
+├── model.onnx
 └── tokens.txt
 
-1 directory, 3 files
+1 directory, 2 files
 ```
 
 You can find example build scripts at:

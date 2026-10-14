@@ -38,6 +38,6 @@ const generationConfig = {
   silenceScale: 0.2,
 };
 const audio = tts.generateWithConfig('3年前中国总人口是1411778724人', generationConfig);
-tts.save('./test-vits-zh.wav', audio);
-console.log('Saved to test-vits-zh.wav successfully.');
+tts.save('./test-vits-zh-lexicon.wav', audio);
+console.log('Saved to test-vits-zh-lexicon.wav successfully.');
 tts.free();

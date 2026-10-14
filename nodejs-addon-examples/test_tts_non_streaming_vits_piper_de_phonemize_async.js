@@ -35,7 +35,10 @@ async function main() {
   // The espeak-ng voice is taken from the model metadata. Fall back to
   // de if the model has no language information.
   const voice = tts.lang || 'de';
-  const phonemeCodepoints = piperPhonemize.phonemize(text, voice);
+  const phonemeCodepoints = piperPhonemize.phonemize(text, voice)
+    // piper may emit empty sentences (e.g. a trailing segment after
+    // punctuation); the C API requires every sentence to be non-empty.
+    .filter((sentence) => sentence.length > 0);
 
   const generationConfig = new sherpa_onnx.GenerationConfig({
     phonemeCodepoints,

@@ -45,7 +45,10 @@ const TEXT =
 // The stress asserts callback counts and isolation, not audio quality, so a
 // fixed voice is fine; any piper voice works.
 const voice = 'en-us';
-const phonemeCodepoints = piperPhonemize.phonemize(TEXT, voice);
+const phonemeCodepoints = piperPhonemize.phonemize(TEXT, voice)
+    // piper may emit empty sentences (e.g. a trailing segment after
+    // punctuation); the C API requires every sentence to be non-empty.
+    .filter((sentence) => sentence.length > 0);
 const rssMb = () => Math.round(process.memoryUsage().rss / (1024 * 1024));
 
 // (A child_process.fork() harness for the throwing case was removed: in a
@@ -171,7 +174,10 @@ async function concurrent(tts) {
   // information only.
   const multi = 'First sentence to speak aloud. Second sentence follows here. ' +
       'And a third sentence closes it out.';
-  const multiCodepoints = piperPhonemize.phonemize(multi, voice);
+  const multiCodepoints = piperPhonemize.phonemize(multi, voice)
+    // piper may emit empty sentences (e.g. a trailing segment after
+    // punctuation); the C API requires every sentence to be non-empty.
+    .filter((sentence) => sentence.length > 0);
   const fullChunkCounts = Array.from({length: 7}, () => 0);
   let cancelledCalls = 0;
   const jobs = fullChunkCounts.map(

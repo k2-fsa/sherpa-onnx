@@ -6,11 +6,10 @@ const silenceScale = 0.2;
 
 function createOfflineTts() {
   let offlineTtsMatchaModelConfig = {
-    acousticModel: './matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
+    acousticModel: './matcha-icefall-zh-baker/model-steps-3.onnx',
     vocoder: './vocos-22khz-univ.onnx',
-    tokens: './matcha-icefall-en_US-ljspeech/tokens.txt',
-    dataDir: './matcha-icefall-en_US-ljspeech/espeak-ng-data',
-
+    lexicon: './matcha-icefall-zh-baker/lexicon.txt',
+    tokens: './matcha-icefall-zh-baker/tokens.txt',
     noiseScale: 0.667,
     lengthScale: 1.0,
   };
@@ -25,6 +24,8 @@ function createOfflineTts() {
     offlineTtsModelConfig: offlineTtsModelConfig,
     maxNumSentences: 1,
     silenceScale: silenceScale,
+    ruleFsts:
+        './matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst',
   };
 
   return sherpa_onnx.createOfflineTts(offlineTtsConfig);
@@ -32,7 +33,7 @@ function createOfflineTts() {
 
 const tts = createOfflineTts();
 const text =
-    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
+    '当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔. 某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。';
 
 const generationConfig = {
   sid: 0,
@@ -41,6 +42,6 @@ const generationConfig = {
 };
 
 const audio = tts.generateWithConfig(text, generationConfig);
-tts.save('./test-matcha-en.wav', audio);
-console.log('Saved to test-matcha-en.wav successfully.');
+tts.save('./test-matcha-zh-lexicon.wav', audio);
+console.log('Saved to test-matcha-zh-lexicon.wav successfully.');
 tts.free();

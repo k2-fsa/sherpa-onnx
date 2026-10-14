@@ -2,16 +2,20 @@
 
 const sherpa_onnx = require('sherpa-onnx');
 
+const silenceScale = 0.2;
+
 function createOfflineTts() {
-  let offlineTtsKittenModelConfig = {
-    model: './kitten-nano-en-v0_1-fp16/model.fp16.onnx',
-    voices: './kitten-nano-en-v0_1-fp16/voices.bin',
-    tokens: './kitten-nano-en-v0_1-fp16/tokens.txt',
-    dataDir: './kitten-nano-en-v0_1-fp16/espeak-ng-data',
+  let offlineTtsMatchaModelConfig = {
+    acousticModel: './matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
+    vocoder: './vocos-22khz-univ.onnx',
+    lexicon: './lexicon-en-us.txt',
+    tokens: './matcha-icefall-en_US-ljspeech/tokens.txt',
+
+    noiseScale: 0.667,
     lengthScale: 1.0,
   };
   let offlineTtsModelConfig = {
-    offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
+    offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',
@@ -20,23 +24,23 @@ function createOfflineTts() {
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
     maxNumSentences: 1,
+    silenceScale: silenceScale,
   };
 
   return sherpa_onnx.createOfflineTts(offlineTtsConfig);
 }
 
 const tts = createOfflineTts();
-const speakerId = 0;
-const speed = 1.0;
-const generationConfig = {
-  sid: speakerId,
-  speed: speed,
-  silenceScale: 0.2,
-};
 const text =
     'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
+const generationConfig = {
+  sid: 0,
+  speed: 1.0,
+  silenceScale: silenceScale,
+};
+
 const audio = tts.generateWithConfig(text, generationConfig);
-tts.save('./test-kitten-en.wav', audio);
-console.log('Saved to test-kitten-en.wav successfully.');
+tts.save('./test-matcha-en-lexicon.wav', audio);
+console.log('Saved to test-matcha-en-lexicon.wav successfully.');
 tts.free();
