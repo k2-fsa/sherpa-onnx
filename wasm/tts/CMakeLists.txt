@@ -3,7 +3,8 @@ if(NOT $ENV{SHERPA_ONNX_IS_USING_BUILD_WASM_SH})
 endif()
 
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/tokens.txt" AND
-   NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/lm_flow.int8.onnx")
+   NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/lm_flow.int8.onnx" AND
+   NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/unicode_indexer.bin")
   message(FATAL_ERROR "Please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md before you continue")
 endif()
 
@@ -18,11 +19,14 @@ elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/lexicon.txt")
   message(STATUS "Text frontend: lexicon (option 2: assets/lexicon.txt)")
 elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/lm_flow.int8.onnx")
   message(STATUS "Text frontend: built into the pocket model")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/unicode_indexer.bin")
+  message(STATUS "Text frontend: built into the supertonic model")
 else()
   message(FATAL_ERROR
     "No text frontend found: please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md "
     "before you continue. Either the piper-phonemize wasm bundle (option 1) or a "
-    "lexicon file (option 2) is required; the pocket model brings its own.")
+    "lexicon file (option 2) is required; the pocket and supertonic models bring "
+    "their own.")
 endif()
 
 set(exported_functions
