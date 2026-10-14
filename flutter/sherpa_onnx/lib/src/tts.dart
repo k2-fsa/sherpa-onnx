@@ -67,6 +67,32 @@ extension OfflineTtsGenerationConfigFfi on OfflineTtsGenerationConfig {
   }
 
   Pointer<SherpaOnnxGenerationConfig> toNative() {
+    // Validate before anything is allocated. Same contract as the node-addon,
+    // Pascal and wasm bindings: sub-arrays must be non-empty and the two
+    // frontends are mutually exclusive.
+    final codepoints = phonemeCodepoints;
+    final tokenSentences = tokens;
+    if (codepoints != null && codepoints.isNotEmpty &&
+        tokenSentences != null && tokenSentences.isNotEmpty) {
+      throw ArgumentError(
+        'phonemeCodepoints and tokens are mutually exclusive; set only one',
+      );
+    }
+    if (codepoints != null) {
+      for (var i = 0; i < codepoints.length; i++) {
+        if (codepoints[i].isEmpty) {
+          throw ArgumentError('phonemeCodepoints[$i] must be a non-empty array');
+        }
+      }
+    }
+    if (tokenSentences != null) {
+      for (var i = 0; i < tokenSentences.length; i++) {
+        if (tokenSentences[i].isEmpty) {
+          throw ArgumentError('tokens[$i] must be a non-empty array');
+        }
+      }
+    }
+
     final p = calloc<SherpaOnnxGenerationConfig>();
 
     p.ref.silenceScale = silenceScale;
@@ -92,6 +118,50 @@ extension OfflineTtsGenerationConfigFfi on OfflineTtsGenerationConfig {
 
     p.ref.extra = extraToNativeUtf8();
 
+    // Pre-phonemized input: all codepoints of all sentences in one flat
+    // Int32 array, with per-sentence lengths next to it.
+    if (codepoints != null && codepoints.isNotEmpty) {
+      var total = 0;
+      for (final sentence in codepoints) {
+        total += sentence.length;
+      }
+      final flat = calloc<Int32>(total);
+      final lens = calloc<Int32>(codepoints.length);
+      final flatList = flat.asTypedList(total);
+      var offset = 0;
+      for (var i = 0; i < codepoints.length; i++) {
+        final sentence = codepoints[i];
+        flatList.setRange(offset, offset + sentence.length, sentence);
+        lens[i] = sentence.length;
+        offset += sentence.length;
+      }
+      p.ref.phonemeCodepoints = flat;
+      p.ref.phonemeCodepointsLens = lens;
+      p.ref.phonemeCodepointsNumSentences = codepoints.length;
+    }
+
+    // Pre-tokenized input: all token strings of all sentences in one flat
+    // char* array, with per-sentence lengths next to it.
+    if (tokenSentences != null && tokenSentences.isNotEmpty) {
+      var total = 0;
+      for (final sentence in tokenSentences) {
+        total += sentence.length;
+      }
+      final ptrs = calloc<Pointer<Utf8>>(total);
+      final lens = calloc<Int32>(tokenSentences.length);
+      var offset = 0;
+      for (var i = 0; i < tokenSentences.length; i++) {
+        final sentence = tokenSentences[i];
+        for (final token in sentence) {
+          ptrs[offset++] = token.toNativeUtf8();
+        }
+        lens[i] = sentence.length;
+      }
+      p.ref.tokens = ptrs;
+      p.ref.tokensLens = lens;
+      p.ref.tokensNumSentences = tokenSentences.length;
+    }
+
     return p;
   }
 
@@ -104,6 +174,25 @@ extension OfflineTtsGenerationConfigFfi on OfflineTtsGenerationConfig {
     }
     if (p.ref.extra != nullptr) {
       calloc.free(p.ref.extra);
+    }
+    if (p.ref.phonemeCodepoints != nullptr) {
+      calloc.free(p.ref.phonemeCodepoints);
+    }
+    if (p.ref.phonemeCodepointsLens != nullptr) {
+      calloc.free(p.ref.phonemeCodepointsLens);
+    }
+    if (p.ref.tokens != nullptr) {
+      var total = 0;
+      for (var i = 0; i < p.ref.tokensNumSentences; i++) {
+        total += p.ref.tokensLens[i];
+      }
+      for (var i = 0; i < total; i++) {
+        calloc.free(p.ref.tokens[i]);
+      }
+      calloc.free(p.ref.tokens);
+    }
+    if (p.ref.tokensLens != nullptr) {
+      calloc.free(p.ref.tokensLens);
     }
     calloc.free(p);
   }
@@ -157,6 +246,7 @@ class OfflineTts {
     c.ref.model.kitten.tokens = config.model.kitten.tokens.toNativeUtf8();
     c.ref.model.kitten.dataDir = config.model.kitten.dataDir.toNativeUtf8();
     c.ref.model.kitten.lengthScale = config.model.kitten.lengthScale;
+    c.ref.model.kitten.lexicon = config.model.kitten.lexicon.toNativeUtf8();
 
     c.ref.model.zipvoice.tokens = config.model.zipvoice.tokens.toNativeUtf8();
     c.ref.model.zipvoice.encoder = config.model.zipvoice.encoder.toNativeUtf8();
@@ -201,7 +291,7 @@ class OfflineTts {
     c.ref.model.provider = config.model.provider.toNativeUtf8();
 
     c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
-    c.ref.maxNumSenetences = config.maxNumSenetences;
+    c.ref.maxNumSentences = config.maxNumSentences;
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
     c.ref.silenceScale = config.silenceScale;
 
@@ -234,6 +324,7 @@ class OfflineTts {
     calloc.free(c.ref.model.zipvoice.encoder);
     calloc.free(c.ref.model.zipvoice.tokens);
 
+    calloc.free(c.ref.model.kitten.lexicon);
     calloc.free(c.ref.model.kitten.dataDir);
     calloc.free(c.ref.model.kitten.tokens);
     calloc.free(c.ref.model.kitten.voices);

@@ -39,6 +39,14 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
 
+# espeak-ng-data feeds only external phonemizers; keep the demo small.
+rm -rf $model_dir/espeak-ng-data
+{% if tts_model.lang == 'en' %}
+# lexicon-en-us.txt: text frontend option 2 (not needed when the demo
+# phonemizes with piper_phonemize).
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+{% endif %}
+
 ls -lh
 ls -lh *
 
@@ -62,10 +70,7 @@ sed -i.bak s/"modelName = ''"/"modelName = \"$model_name\""/ ./model.dart
   sed -i.bak "s|ruleFars = ''|ruleFars = \"$rule_fars\"|" ./model.dart
 {% endif %}
 
-{% if tts_model.data_dir %}
-  data_dir={{ tts_model.data_dir }}
-  sed -i.bak "s|dataDir = ''|dataDir = \"$data_dir\"|" ./model.dart
-{% elif not tts_model.is_char %}
+{% if not tts_model.is_char %}
   sed -i.bak "s|lexicon = ''|lexicon = \"lexicon.txt\"|" ./model.dart
 {% endif %}
 

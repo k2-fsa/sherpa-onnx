@@ -61,6 +61,12 @@ jobs:
         run: |
           .github/scripts/test-dart.sh
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ github.job }}
+          path: dart-api-examples/tts/*.wav
+          if-no-files-found: warn
+
   # Test using xcframework built from source (SPM approach)
   test_dart_package_xcframework:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
@@ -143,3 +149,9 @@ jobs:
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
           .github/scripts/test-dart.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ github.job }}
+          path: dart-api-examples/tts/*.wav
+          if-no-files-found: warn

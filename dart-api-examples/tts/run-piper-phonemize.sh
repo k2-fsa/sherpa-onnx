@@ -16,13 +16,12 @@ if [[ ! -f ./vits-piper-en_US-libritts_r-medium/tokens.txt ]]; then
 fi
 
 dart run \
-  ./bin/piper.dart \
+  ./bin/piper-phonemize.dart \
   --model ./vits-piper-en_US-libritts_r-medium/en_US-libritts_r-medium.onnx \
   --tokens ./vits-piper-en_US-libritts_r-medium/tokens.txt \
-  --data-dir ./vits-piper-en_US-libritts_r-medium/espeak-ng-data \
   --sid 351 \
   --speed 1.0 \
   --text 'How are you doing? This is a speech to text example, using next generation kaldi with piper.' \
-  --output-wav piper-351.wav
+  --output-wav piper-351-phonemize.wav
 
 ls -lh *.wav

@@ -696,10 +696,6 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
   if ('model' in config && !('offlineTtsModelConfig' in config)) {
     config.offlineTtsModelConfig = config.model;
   }
-  // Support typo in Dart config class.
-  if ('maxNumSenetences' in config && !('maxNumSentences' in config)) {
-    config.maxNumSentences = config.maxNumSenetences;
-  }
 
   const modelConfig =
       initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig, Module);

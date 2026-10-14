@@ -1,17 +1,14 @@
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
-
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 void main(List<String> arguments) async {
   await sherpa_onnx.initBindingsAsync();
 
   final parser = ArgParser()
-    ..addOption('acoustic-model', help: 'Path to the acoustic model')
-    ..addOption('vocoder', help: 'Path to the vocoder model')
+    ..addOption('model', help: 'Path to the ONNX model')
     ..addOption('tokens', help: 'Path to tokens.txt')
     ..addOption('lexicon', help: 'Path to lexicon.txt')
     ..addOption('rule-fsts', help: 'Path to rule fsts', defaultsTo: '')
@@ -25,8 +22,7 @@ void main(List<String> arguments) async {
       defaultsTo: '0',
     );
   final res = parser.parse(arguments);
-  if (res['acoustic-model'] == null ||
-      res['vocoder'] == null ||
+  if (res['model'] == null ||
       res['lexicon'] == null ||
       res['tokens'] == null ||
       res['output-wav'] == null ||
@@ -34,8 +30,7 @@ void main(List<String> arguments) async {
     print(parser.usage);
     exit(1);
   }
-  final acousticModel = res['acoustic-model'] as String;
-  final vocoder = res['vocoder'] as String;
+  final model = res['model'] as String;
   final lexicon = res['lexicon'] as String;
   final tokens = res['tokens'] as String;
   final ruleFsts = res['rule-fsts'] as String;
@@ -49,21 +44,20 @@ void main(List<String> arguments) async {
     speed = 1.0;
   }
 
-  final matcha = sherpa_onnx.OfflineTtsMatchaModelConfig(
-    acousticModel: acousticModel,
-    vocoder: vocoder,
+  final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
+    model: model,
     lexicon: lexicon,
     tokens: tokens,
   );
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
-    matcha: matcha,
+    vits: vits,
     numThreads: 1,
     debug: true,
   );
   final config = sherpa_onnx.OfflineTtsConfig(
     model: modelConfig,
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
     ruleFsts: ruleFsts,
     ruleFars: ruleFars,
   );
@@ -72,7 +66,7 @@ void main(List<String> arguments) async {
   final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
     sid: sid,
     speed: speed,
-    silenceScale: config.silenceScale,
+    silenceScale: 0.2,
   );
   final audio = tts.generateWithConfig(text: text, config: genConfig);
   tts.free();

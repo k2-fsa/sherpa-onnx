@@ -14,14 +14,13 @@ if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
 fi
 
 dart run \
-  ./bin/kitten-en.dart \
+  ./bin/kitten-en-phonemize.dart \
   --model ./kitten-nano-en-v0_1-fp16/model.fp16.onnx \
   --voices ./kitten-nano-en-v0_1-fp16/voices.bin \
   --tokens ./kitten-nano-en-v0_1-fp16/tokens.txt \
-  --data-dir ./kitten-nano-en-v0_1-fp16/espeak-ng-data \
   --sid 0 \
   --speed 1.0 \
-  --output-wav kitten-en-0.wav \
+  --output-wav kitten-en-0-phonemize.wav \
   --text "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."
 
 ls -lh *.wav

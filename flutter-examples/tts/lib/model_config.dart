@@ -4,6 +4,29 @@
 //
 import 'package:sherpa_onnx/sherpa_onnx.dart';
 
+// Choose exactly one of the two text frontends below (not both):
+//
+// usePhonemize = true // option 1 (default): the text is phonemized with the
+//   piper_phonemize package and passed to sherpa-onnx; no extra files needed.
+// usePhonemize = false // option 2: lexicon — download lexicon-en-us.txt and
+//   put it next to the model files:
+//   https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+//
+// Neither option uses the espeak-ng-data directory shipped in the model
+// package; you can leave it out to keep the download small.
+//
+// Only the English piper-family models (indices 0, 2, 3, 4, 6, 8) can use
+// either frontend. The Chinese/multi-lingual models always use their own
+// lexicon; pocket (9) and supertonic (10) bring their own frontend.
+const bool usePhonemize = true;
+
+/// Models that accept either text frontend (English piper-family).
+const Set<int> phonemizeCapableModels = {0, 2, 3, 4, 6, 8};
+
+/// Whether the selected model phonemizes its input with piper_phonemize.
+final bool selectedModelUsesPhonemize =
+    usePhonemize && phonemizeCapableModels.contains(selectedModelIndex);
+
 // Change the index below to select a different model.
 /// Select which TTS model to use (0-10).
 const int selectedModelIndex = 0;
@@ -41,12 +64,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
       vits: OfflineTtsVitsModelConfig(
         model: 'vits-piper-en_US-amy-low/en_US-amy-low.onnx',
         tokens: 'vits-piper-en_US-amy-low/tokens.txt',
-        dataDir: 'vits-piper-en_US-amy-low/espeak-ng-data',
+        lexicon: usePhonemize ? '' : 'lexicon-en-us.txt',
       ),
       numThreads: 2,
       debug: true,
     ),
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── VITS Piper (Chinese) ─────────────────────────────────────────────
@@ -61,7 +84,7 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
       debug: true,
     ),
     ruleFsts: 'vits-piper-zh_CN-xiao_ya-medium/phone.fst,vits-piper-zh_CN-xiao_ya-medium/date.fst,vits-piper-zh_CN-xiao_ya-medium/number.fst',
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── VITS Piper (English, libritts) ────────────────────────────────────
@@ -70,12 +93,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
       vits: OfflineTtsVitsModelConfig(
         model: 'vits-piper-en_US-libritts_r-medium/en_US-libritts_r-medium.onnx',
         tokens: 'vits-piper-en_US-libritts_r-medium/tokens.txt',
-        dataDir: 'vits-piper-en_US-libritts_r-medium/espeak-ng-data',
+        lexicon: usePhonemize ? '' : 'lexicon-en-us.txt',
       ),
       numThreads: 2,
       debug: true,
     ),
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── VITS (English, inflect-nano-v2) ──────────────────────────────────
@@ -85,12 +108,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
       vits: OfflineTtsVitsModelConfig(
         model: 'vits-inflect-en-nano-v2/model.onnx',
         tokens: 'vits-inflect-en-nano-v2/tokens.txt',
-        dataDir: 'vits-inflect-en-nano-v2/espeak-ng-data',
+        lexicon: usePhonemize ? '' : 'lexicon-en-us.txt',
       ),
       numThreads: 2,
       debug: true,
     ),
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── Kokoro (English) ──────────────────────────────────────────────────
@@ -101,12 +124,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
         model: 'kokoro-int8-en-v0_19/model.int8.onnx',
         voices: 'kokoro-int8-en-v0_19/voices.bin',
         tokens: 'kokoro-int8-en-v0_19/tokens.txt',
-        dataDir: 'kokoro-int8-en-v0_19/espeak-ng-data',
+        lexicon: usePhonemize ? '' : 'lexicon-en-us.txt',
       ),
       numThreads: 2,
       debug: true,
     ),
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── Kokoro (Chinese + English) ────────────────────────────────────────
@@ -117,13 +140,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
         model: 'kokoro-multi-lang-v1_0/model.onnx',
         voices: 'kokoro-multi-lang-v1_0/voices.bin',
         tokens: 'kokoro-multi-lang-v1_0/tokens.txt',
-        dataDir: 'kokoro-multi-lang-v1_0/espeak-ng-data',
         lexicon: 'kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt',
       ),
       numThreads: 2,
       debug: true,
     ),
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── MatchaTTS (English) ───────────────────────────────────────────────
@@ -133,12 +155,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
         acousticModel: 'matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
         vocoder: 'vocos-22khz-univ.onnx',
         tokens: 'matcha-icefall-en_US-ljspeech/tokens.txt',
-        dataDir: 'matcha-icefall-en_US-ljspeech/espeak-ng-data',
+        lexicon: usePhonemize ? '' : 'lexicon-en-us.txt',
       ),
       numThreads: 2,
       debug: true,
     ),
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── MatchaTTS (Chinese + English) ────────────────────────────────────
@@ -150,13 +172,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
         vocoder: 'vocos-16khz-univ.onnx',
         lexicon: 'matcha-icefall-zh-en/lexicon.txt',
         tokens: 'matcha-icefall-zh-en/tokens.txt',
-        dataDir: 'matcha-icefall-zh-en/espeak-ng-data',
       ),
       numThreads: 2,
       debug: true,
     ),
     ruleFsts: 'matcha-icefall-zh-en/phone-zh.fst,matcha-icefall-zh-en/date-zh.fst,matcha-icefall-zh-en/number-zh.fst',
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── KittenTTS (English) ───────────────────────────────────────────────
@@ -166,12 +187,12 @@ final OfflineTtsConfig selectedTtsConfig = switch (selectedModelIndex) {
         model: 'kitten-nano-en-v0_1-fp16/model.fp16.onnx',
         voices: 'kitten-nano-en-v0_1-fp16/voices.bin',
         tokens: 'kitten-nano-en-v0_1-fp16/tokens.txt',
-        dataDir: 'kitten-nano-en-v0_1-fp16/espeak-ng-data',
+        lexicon: usePhonemize ? '' : 'lexicon-en-us.txt',
       ),
       numThreads: 2,
       debug: true,
     ),
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   ),
 
   // ── Pocket TTS (English) ──────────────────────────────────────────────

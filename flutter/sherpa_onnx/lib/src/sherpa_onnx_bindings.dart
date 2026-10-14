@@ -234,6 +234,8 @@ final class SherpaOnnxOfflineTtsKittenModelConfig extends Struct {
 
   @Float()
   external double lengthScale;
+
+  external Pointer<Utf8> lexicon;
 }
 
 final class SherpaOnnxOfflineTtsZipVoiceModelConfig extends Struct {
@@ -302,7 +304,7 @@ final class SherpaOnnxOfflineTtsConfig extends Struct {
   external Pointer<Utf8> ruleFsts;
 
   @Int32()
-  external int maxNumSenetences;
+  external int maxNumSentences;
 
   external Pointer<Utf8> ruleFars;
 
@@ -334,6 +336,26 @@ final class SherpaOnnxGenerationConfig extends Struct {
   external int numSteps;
 
   external Pointer<Utf8> extra;
+
+  // Pre-phonemized input as Unicode codepoints (flattened; see
+  // phonemeCodepointsLens for the per-sentence boundaries). When set, it is
+  // used in place of the text argument. Mutually exclusive with tokens.
+  external Pointer<Int32> phonemeCodepoints;
+
+  external Pointer<Int32> phonemeCodepointsLens;
+
+  @Int32()
+  external int phonemeCodepointsNumSentences;
+
+  // Pre-tokenized input, e.g. Chinese pinyin like "zhong1" (flattened; see
+  // tokensLens for the per-sentence boundaries). Mutually exclusive with
+  // phonemeCodepoints.
+  external Pointer<Pointer<Utf8>> tokens;
+
+  external Pointer<Int32> tokensLens;
+
+  @Int32()
+  external int tokensNumSentences;
 }
 
 final class SherpaOnnxGeneratedAudio extends Struct {

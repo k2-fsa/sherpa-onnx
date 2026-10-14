@@ -18,15 +18,19 @@ if [ ! -f ./vocos-22khz-univ.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 dart run \
-  ./bin/matcha-en.dart \
+  ./bin/matcha-en-lexicon.dart \
   --acoustic-model ./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
   --vocoder ./vocos-22khz-univ.onnx \
   --tokens ./matcha-icefall-en_US-ljspeech/tokens.txt \
-  --data-dir ./matcha-icefall-en_US-ljspeech/espeak-ng-data \
+  --lexicon ./lexicon-en-us.txt \
   --sid 0 \
   --speed 1.0 \
-  --output-wav matcha-en-1.wav \
+  --output-wav matcha-en-1-lexicon.wav \
   --text "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone." \
 
 ls -lh *.wav

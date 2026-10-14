@@ -96,7 +96,7 @@ Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
     ),
     ruleFsts: _absMulti(d, cfg.ruleFsts),
     ruleFars: _absMulti(d, cfg.ruleFars),
-    maxNumSenetences: cfg.maxNumSenetences,
+    maxNumSentences: cfg.maxNumSentences,
   );
 }
 

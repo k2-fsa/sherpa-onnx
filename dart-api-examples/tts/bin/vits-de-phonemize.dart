@@ -1,25 +1,21 @@
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
+//
+// Phonemize approach for a German VITS (piper) model. The text is converted
+// to phoneme code points with the piper_phonemize package and passed to
+// sherpa-onnx. There is no German lexicon, so this model is phonemize-only.
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:args/args.dart';
-import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
-
+import 'package:piper_phonemize/piper_phonemize.dart' as piper;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 void main(List<String> arguments) async {
   await sherpa_onnx.initBindingsAsync();
 
   final parser = ArgParser()
-    ..addOption('model', help: 'Path to the onnx model')
-    ..addOption('voices', help: 'Path to the voices.bin')
+    ..addOption('model', help: 'Path to the ONNX model')
     ..addOption('tokens', help: 'Path to tokens.txt')
-    ..addOption(
-      'data-dir',
-      help: 'Path to espeak-ng-data directory',
-      defaultsTo: '',
-    )
-    ..addOption('rule-fsts', help: 'Path to rule fsts', defaultsTo: '')
-    ..addOption('rule-fars', help: 'Path to rule fars', defaultsTo: '')
     ..addOption('text', help: 'Text to generate TTS for')
     ..addOption('output-wav', help: 'Filename to save the generated audio')
     ..addOption('speed', help: 'Speech speed', defaultsTo: '1.0')
@@ -30,20 +26,14 @@ void main(List<String> arguments) async {
     );
   final res = parser.parse(arguments);
   if (res['model'] == null ||
-      res['voices'] == null ||
       res['tokens'] == null ||
-      res['data-dir'] == null ||
       res['output-wav'] == null ||
       res['text'] == null) {
     print(parser.usage);
     exit(1);
   }
   final model = res['model'] as String;
-  final voices = res['voices'] as String;
   final tokens = res['tokens'] as String;
-  final dataDir = res['data-dir'] as String;
-  final ruleFsts = res['rule-fsts'] as String;
-  final ruleFars = res['rule-fars'] as String;
   final text = res['text'] as String;
   final outputWav = res['output-wav'] as String;
   var speed = double.tryParse(res['speed'] as String) ?? 1.0;
@@ -53,32 +43,52 @@ void main(List<String> arguments) async {
     speed = 1.0;
   }
 
-  final kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig(
+  await piper.initBindingsAsync();
+
+  // The espeak-ng-data below feeds only the piper phonemizer; sherpa-onnx
+  // ignores it. Use the copy shipped inside the model package.
+  final phonemizerData = '${File(model).parent.path}/espeak-ng-data';
+  final ret = piper.PiperPhonemize.initialize(phonemizerData);
+  if (ret < 0) {
+    print('Failed to initialize the piper phonemizer at $phonemizerData');
+    exit(1);
+  }
+
+  // piper may emit empty sentences (e.g. a trailing segment after
+  // punctuation); the C API requires every sentence to be non-empty.
+  final sentences = piper.PiperPhonemize.phonemize(text, voice: 'de')
+      .where((sentence) => sentence.isNotEmpty)
+      .toList();
+
+  final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
     model: model,
-    voices: voices,
     tokens: tokens,
-    dataDir: dataDir,
   );
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
-    kokoro: kokoro,
+    vits: vits,
     numThreads: 1,
     debug: true,
   );
   final config = sherpa_onnx.OfflineTtsConfig(
     model: modelConfig,
-    maxNumSenetences: 1,
-    ruleFsts: ruleFsts,
-    ruleFars: ruleFars,
+    maxNumSentences: 1,
   );
 
   final tts = sherpa_onnx.OfflineTts(config);
   final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
     sid: sid,
     speed: speed,
-    silenceScale: config.silenceScale,
+    silenceScale: 0.2,
+    phonemeCodepoints: sentences,
   );
-  final audio = tts.generateWithConfig(text: text, config: genConfig);
+  final audio = tts.generateWithConfig(
+      text: '',
+      config: genConfig,
+      onProgress: (Float32List samples, double progress) {
+        print('${samples.length} samples received');
+        return 1;
+      });
   tts.free();
 
   sherpa_onnx.writeWave(

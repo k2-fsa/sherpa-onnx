@@ -181,3 +181,9 @@ jobs:
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
           .github/scripts/test-dart.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}
+          path: dart-api-examples/tts/*.wav
+          if-no-files-found: warn

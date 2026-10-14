@@ -31,7 +31,6 @@ class TtsModel:
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     rule_fars: Optional[List[str]] = None
-    data_dir: Optional[str] = None
     dict_dir: Optional[str] = None
     is_char: bool = False
     is_kitten: bool = False
@@ -47,7 +46,6 @@ def get_coqui_models() -> List[TtsModel]:
     ]
 
     for m in models:
-        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
         m.model_name = "model.onnx"
         m.lang = "en"
 
@@ -213,7 +211,6 @@ def get_piper_models() -> List[TtsModel]:
     ]
 
     for m in models:
-        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
 
@@ -236,7 +233,6 @@ def get_mimic3_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-mimic3-vi_VN-vais1000_low"),
     ]
     for m in models:
-        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
         m.model_name = m.model_dir[len("vits-mimic3-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
 
@@ -390,7 +386,6 @@ def get_kitten_models() -> List[TtsModel]:
     ]
 
     for m in models:
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
         m.is_kitten = True
 
     return models
