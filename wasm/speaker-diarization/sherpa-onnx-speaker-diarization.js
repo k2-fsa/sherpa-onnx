@@ -87,7 +87,7 @@ function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
     };
   }
 
-  if (!('sortformer' in config)) {
+  if (config.sortformer == null) {
     config.sortformer = {
       model: '',
       threshold: 0.5,

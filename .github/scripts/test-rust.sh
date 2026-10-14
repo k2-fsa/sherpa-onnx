@@ -34,6 +34,8 @@ rm -rf sherpa-onnx-pyannote-segmentation-3-0
 rm -f 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx 0-four-speakers-zh.wav
 
 # Uncomment after sherpa-onnx-nemotron-3-diarization.tar.bz2 is published
+# and a release with Sortformer support is out: test-rust-package.yaml runs
+# this script against the published crates and native release libraries
 # bash ./run-offline-speaker-diarization-sortformer.sh
 # rm -rf sherpa-onnx-nemotron-3-diarization
 # rm -f 0-four-speakers-zh.wav
