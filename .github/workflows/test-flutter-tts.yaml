@@ -13,13 +13,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      desktop: ${{ steps.set-matrix.outputs.desktop }}
+      android: ${{ steps.set-matrix.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generating build matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          JSON=$(python3 .github/scripts/flutter/generate_tts_matrix.py)
+          DESKTOP=$(echo "$JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d['desktop']))")
+          ANDROID=$(echo "$JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d['android']))")
+          echo "desktop=$DESKTOP" >> $GITHUB_OUTPUT
+          echo "android=$ANDROID" >> $GITHUB_OUTPUT
+
   macos:
-    name: macOS (${{ matrix.demo }})
+    name: macOS ${{ matrix.demo }} ${{ matrix.tts_model_name }}
+    needs: [generate_matrix]
     runs-on: macos-latest
     strategy:
       fail-fast: false
-      matrix:
-        demo: [tts]
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,11 +112,21 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           rm -fv .gitkeep
-          curl -sSL -o vits-piper-en_US-amy-low.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-          tar xf vits-piper-en_US-amy-low.tar.bz2
-          rm vits-piper-en_US-amy-low.tar.bz2
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/${{ matrix.tts_tarball }}
+          tar xf ${{ matrix.tts_tarball }}
+          rm ${{ matrix.tts_tarball }}
+          ${{ matrix.tts_extra_cmd }}
+          ${{ matrix.tts_cleanup_cmd }}
           cd ..
           ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.tts_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
 
       - name: Copy LICENSE for sherpa_onnx_macos podspec
         shell: bash
@@ -133,8 +160,8 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          zip -r -y flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
-          ls -lh flutter-${{ matrix.demo }}-macos.zip
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos.zip ${app_name}.app/
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos.zip
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -142,7 +169,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-macos.zip
+          file: ./flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter
@@ -150,16 +177,16 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-${{ matrix.demo }}-macos
-          path: flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-macos.zip
+          name: flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos
+          path: flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos.zip
 
   linux:
-    name: Linux (${{ matrix.demo }})
+    name: Linux ${{ matrix.demo }} ${{ matrix.tts_model_name }}
+    needs: [generate_matrix]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        demo: [tts]
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -247,11 +274,21 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           rm -fv .gitkeep
-          curl -sSL -o vits-piper-en_US-amy-low.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-          tar xf vits-piper-en_US-amy-low.tar.bz2
-          rm vits-piper-en_US-amy-low.tar.bz2
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/${{ matrix.tts_tarball }}
+          tar xf ${{ matrix.tts_tarball }}
+          rm ${{ matrix.tts_tarball }}
+          ${{ matrix.tts_extra_cmd }}
+          ${{ matrix.tts_cleanup_cmd }}
           cd ..
           ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.tts_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
 
       - name: Build Flutter app
         shell: bash
@@ -270,8 +307,8 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
-          zip -r -y flutter-${{ matrix.demo }}-linux-x64.zip bundle/
-          ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64.zip bundle/
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64.zip
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -279,7 +316,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-linux-x64.zip
+          file: ./flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter
@@ -287,16 +324,16 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-${{ matrix.demo }}-linux-x64
-          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-linux-x64.zip
+          name: flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64
+          path: flutter-examples/${{ matrix.demo }}/build/linux/*/release/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64.zip
 
   windows:
-    name: Windows (${{ matrix.demo }})
+    name: Windows ${{ matrix.demo }} ${{ matrix.tts_model_name }}
+    needs: [generate_matrix]
     runs-on: windows-2022
     strategy:
       fail-fast: false
-      matrix:
-        demo: [tts]
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -363,11 +400,21 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           rm -fv .gitkeep
-          curl -sSL -o vits-piper-en_US-amy-low.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-          tar xf vits-piper-en_US-amy-low.tar.bz2
-          rm vits-piper-en_US-amy-low.tar.bz2
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/${{ matrix.tts_tarball }}
+          tar xf ${{ matrix.tts_tarball }}
+          rm ${{ matrix.tts_tarball }}
+          ${{ matrix.tts_extra_cmd }}
+          ${{ matrix.tts_cleanup_cmd }}
           cd ..
           ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.tts_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
 
       - name: Build Flutter app
         shell: bash
@@ -386,8 +433,8 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip"
-          ls -lh flutter-${{ matrix.demo }}-win-x64.zip
+          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64.zip"
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64.zip
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -395,7 +442,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-win-x64.zip
+          file: ./flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter
@@ -403,36 +450,16 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-${{ matrix.demo }}-win-x64
-          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-win-x64.zip
+          name: flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64
+          path: flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64.zip
 
   android:
-    name: Android (${{ matrix.demo }}, ${{ matrix.abi }})
+    name: Android (${{ matrix.demo }}, ${{ matrix.tts_model_name }}, ${{ matrix.abi }})
+    needs: [generate_matrix]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        demo: [tts]
-        abi: [arm64-v8a, armeabi-v7a, x86_64]
-        include:
-          - abi: arm64-v8a
-            target_platform: android-arm64
-            build_script: build-android-arm64-v8a.sh
-            build_dir: build-android-arm64-v8a
-            plugin: sherpa_onnx_android_arm64
-            plugin_key: sherpa_onnx_android_arm64
-          - abi: armeabi-v7a
-            target_platform: android-arm
-            build_script: build-android-armv7-eabi.sh
-            build_dir: build-android-armv7-eabi
-            plugin: sherpa_onnx_android_armeabi
-            plugin_key: sherpa_onnx_android_armeabi
-          - abi: x86_64
-            target_platform: android-x64
-            build_script: build-android-x86-64.sh
-            build_dir: build-android-x86-64
-            plugin: sherpa_onnx_android_x86_64
-            plugin_key: sherpa_onnx_android_x86_64
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.android) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -500,11 +527,21 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           rm -fv .gitkeep
-          curl -sSL -o vits-piper-en_US-amy-low.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-          tar xf vits-piper-en_US-amy-low.tar.bz2
-          rm vits-piper-en_US-amy-low.tar.bz2
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/${{ matrix.tts_tarball }}
+          tar xf ${{ matrix.tts_tarball }}
+          rm ${{ matrix.tts_tarball }}
+          ${{ matrix.tts_extra_cmd }}
+          ${{ matrix.tts_cleanup_cmd }}
           cd ..
           ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.tts_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
 
       - name: Build Flutter APK
         shell: bash
@@ -523,7 +560,7 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/
-          mv app-*-release.apk flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
+          mv app-*-release.apk flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-${{ matrix.abi }}.apk
           ls -lh *.apk
 
       - name: Release
@@ -532,7 +569,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
+          file: ./flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-${{ matrix.abi }}.apk
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter
@@ -540,16 +577,16 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-${{ matrix.demo }}-android-${{ matrix.abi }}
-          path: flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.abi }}.apk
+          name: flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-android-${{ matrix.abi }}
+          path: flutter-examples/${{ matrix.demo }}/build/app/outputs/flutter-apk/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-${{ matrix.abi }}.apk
 
   web:
-    name: Web (${{ matrix.demo }})
+    name: Web ${{ matrix.demo }} ${{ matrix.tts_model_name }}
+    needs: [generate_matrix]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        demo: [tts]
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.desktop) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -596,11 +633,21 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/assets
           rm -fv .gitkeep
-          curl -sSL -o vits-piper-en_US-amy-low.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-          tar xf vits-piper-en_US-amy-low.tar.bz2
-          rm vits-piper-en_US-amy-low.tar.bz2
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/${{ matrix.tts_tarball }}
+          tar xf ${{ matrix.tts_tarball }}
+          rm ${{ matrix.tts_tarball }}
+          ${{ matrix.tts_extra_cmd }}
+          ${{ matrix.tts_cleanup_cmd }}
           cd ..
           ./generate-asset-list.py
+
+      - name: Set selectedModelIndex
+        shell: bash
+        run: |
+          cd flutter-examples/${{ matrix.demo }}
+          sed -i.bak "s|const int selectedModelIndex = [0-9]*;|const int selectedModelIndex = ${{ matrix.tts_model_index }};|" lib/model_config.dart
+          rm -f lib/model_config.dart.bak
+          grep 'selectedModelIndex' lib/model_config.dart
 
 
       - name: Use local sherpa_onnx_web
@@ -627,9 +674,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/
-          mv web flutter-${{ matrix.demo }}-web
-          zip -r -y flutter-${{ matrix.demo }}-web.zip flutter-${{ matrix.demo }}-web/
-          ls -lh flutter-${{ matrix.demo }}-web.zip
+          mv web flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web.zip flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web/
+          ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web.zip
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -637,7 +684,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-web.zip
+          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter
@@ -645,5 +692,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flutter-${{ matrix.demo }}-web
+          name: flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web
           path: flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip
