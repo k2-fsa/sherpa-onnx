@@ -57,7 +57,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
-          path: |
-            nodejs-examples/test-*-lexicon.wav
-            nodejs-examples/test-*-phonemize.wav
+          # all TTS outputs: *-lexicon.wav, *-phonemize.wav, plus the
+          # own-frontend models (test-pocket-en.wav, test-supertonic-*.wav)
+          path: nodejs-examples/test-*.wav
           if-no-files-found: warn

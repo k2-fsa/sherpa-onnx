@@ -120,9 +120,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
-          path: |
-            nodejs-examples/test-*-lexicon.wav
-            nodejs-examples/test-*-phonemize.wav
+          # The examples are copied into scripts/nodejs and run from there
+          # (export d=scripts/nodejs), so their wavs land in scripts/nodejs,
+          # not in nodejs-examples.
+          path: scripts/nodejs/test-*.wav
           if-no-files-found: warn
 
       - name: Setup tmate session
