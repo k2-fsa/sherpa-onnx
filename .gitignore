@@ -202,3 +202,5 @@ assets-2
 swiftpm
 .sherpa-onnx-xcframework-version
 lexicon*.txt
+tts.json
+*.bin
