@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #if __ANDROID_API__ >= 9
@@ -109,12 +110,24 @@ std::string SpokenLanguageIdentificationConfig::ToString() const {
 
 SpokenLanguageIdentification::SpokenLanguageIdentification(
     const SpokenLanguageIdentificationConfig &config)
-    : impl_(SpokenLanguageIdentificationImpl::Create(config)) {}
+    : impl_(SpokenLanguageIdentificationImpl::Create(config)) {
+  if (!impl_) {
+    throw std::runtime_error(
+        "Failed to create spoken language identification. Please check your "
+        "config");
+  }
+}
 
 #if __ANDROID_API__ >= 9
 SpokenLanguageIdentification::SpokenLanguageIdentification(
     AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
-    : impl_(SpokenLanguageIdentificationImpl::Create(mgr, config)) {}
+    : impl_(SpokenLanguageIdentificationImpl::Create(mgr, config)) {
+  if (!impl_) {
+    throw std::runtime_error(
+        "Failed to create spoken language identification. Please check your "
+        "config");
+  }
+}
 #endif
 
 SpokenLanguageIdentification::~SpokenLanguageIdentification() = default;

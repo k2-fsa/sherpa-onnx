@@ -1776,7 +1776,8 @@ SHERPA_ONNX_API const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
  *
  * @param spotter A pointer returned by SherpaOnnxCreateKeywordSpotter().
  * @param keywords Inline keyword definition string.
- * @return A newly allocated stream. Free it with
+ * @return A newly allocated stream, or NULL if spotter or keywords is NULL
+ * or the keywords cannot be encoded. Free it with
  * SherpaOnnxDestroyOnlineStream().
  */
 SHERPA_ONNX_API const SherpaOnnxOnlineStream *
