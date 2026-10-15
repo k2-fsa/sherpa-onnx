@@ -84,6 +84,62 @@ STREAMING_ASR_MODELS = [
         popd
         """,
     ),
+    (
+        4,
+        "sherpa-onnx-x-asr-960ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05",
+        "sherpa-onnx-x-asr-960ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05.tar.bz2",
+        "",
+        """
+        pushd sherpa-onnx-x-asr-960ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05
+        rm -fv encoder.onnx joiner.onnx decoder.int8.onnx
+        rm -fv bpe.model test_onnx.py README.md .gitattributes *state*
+        rm -rfv test_wavs
+        ls -lh
+        popd
+        """,
+    ),
+    (
+        5,
+        "sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11",
+        "sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11.tar.bz2",
+        "",
+        """
+        pushd sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11
+        rm -fv encoder.onnx decoder.onnx joiner.onnx
+        rm -fv *.py README.md .gitattributes *state*
+        rm -rfv test_wavs
+        ls -lh
+        popd
+        """,
+    ),
+    (
+        6,
+        "sherpa-onnx-x-asr-480ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05",
+        "sherpa-onnx-x-asr-480ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05.tar.bz2",
+        "",
+        """
+        pushd sherpa-onnx-x-asr-480ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05
+        rm -fv encoder.onnx joiner.onnx decoder.int8.onnx
+        rm -fv bpe.model test_onnx.py README.md .gitattributes *state*
+        rm -rfv test_wavs
+        ls -lh
+        popd
+        """,
+    ),
+    (
+        7,
+        "sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11",
+        "sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11.tar.bz2",
+        "",
+        """
+        pushd sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
+        rm -fv encoder.onnx decoder.onnx joiner.onnx
+        rm -fv *.py README.md .gitattributes *state*
+        rm -rfv test_wavs
+        ls -lh
+        popd
+        """,
+    ),
 ]
 
 ANDROID_ABIS = [
