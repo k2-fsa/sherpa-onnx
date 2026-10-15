@@ -343,6 +343,9 @@ if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
     offline-speaker-segmentation-model-config.cc
     offline-speaker-segmentation-pyannote-model-config.cc
     offline-speaker-segmentation-pyannote-model.cc
+    offline-speaker-segmentation-sortformer-model-config.cc
+    offline-speaker-segmentation-sortformer-model.cc
+    sortformer-speaker-cache.cc
   )
 endif()
 
@@ -862,6 +865,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
     list(APPEND sherpa_onnx_test_srcs
       fast-clustering-test.cc
+      sortformer-speaker-cache-test.cc
     )
   endif()
 

@@ -161,6 +161,10 @@ jobs:
           ./run-offline-speaker-diarization.sh
           rm -rfv *.onnx *.wav sherpa-onnx-pyannote-*
 
+          # Uncomment after sherpa-onnx-nemotron-3-diarization.tar.bz2 is published
+          # ./run-offline-speaker-diarization-sortformer.sh
+          # rm -rfv *.wav sherpa-onnx-nemotron-3-diarization*
+
       - name:  Run java test (Cohere Transcribe)
         if: runner.os != 'Windows'
         shell: bash

@@ -209,6 +209,21 @@ fi
 
 rm -rf *.wav *.onnx ./sherpa-onnx-pyannote-segmentation-3-0
 
+# Uncomment after sherpa-onnx-nemotron-3-diarization.tar.bz2 is published
+# log "test offline speaker diarization with Sortformer (Nemotron-3-Diarization)"
+#
+# download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-nemotron-3-diarization.tar.bz2
+#
+# download https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
+#
+# if python3 -c "import librosa" 2>/dev/null; then
+#   python3 ./python-api-examples/offline-speaker-diarization-sortformer.py
+# else
+#   log "Skipping offline-speaker-diarization-sortformer.py (librosa not installed)"
+# fi
+#
+# rm -rf *.wav ./sherpa-onnx-nemotron-3-diarization
+
 
 log "test_clustering"
 pushd /tmp/

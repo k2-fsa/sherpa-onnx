@@ -10,6 +10,7 @@
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-model-config.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model-config.h"
+#include "sherpa-onnx/csrc/offline-speaker-segmentation-sortformer-model-config.h"
 
 namespace sherpa_onnx {
 
@@ -26,7 +27,10 @@ Return the expected sample rate of the input audio.
 )doc";
 
 static constexpr const char *kOfflineSpeakerDiarizationSetConfigDoc = R"doc(
-Update the config for the diarization pipeline.
+Update clustering settings for the diarization pipeline.
+
+Only config.clustering is used. This has no effect for Sortformer models.
+Set their threshold and duration settings before creating the diarizer.
 
 Args:
   config:
@@ -41,7 +45,7 @@ Args:
     A 1-D float32 array of audio samples.
   callback:
     An optional callback function ``callback(processed_chunks, num_chunks)``
-    that is called to report progress. Return a non-zero value to abort.
+    that is called to report progress. Its return value is ignored.
 
 Returns:
   A list of segments, each containing speaker, start, and end times.
@@ -59,8 +63,22 @@ static void PybindOfflineSpeakerSegmentationPyannoteModelConfig(py::module *m) {
       .def("validate", &PyClass::Validate);
 }
 
+static void PybindOfflineSpeakerSegmentationSortformerModelConfig(
+    py::module *m) {
+  using PyClass = OfflineSpeakerSegmentationSortformerModelConfig;
+  py::class_<PyClass>(*m, "OfflineSpeakerSegmentationSortformerModelConfig")
+      .def(py::init<>())
+      .def(py::init<const std::string &, float>(), py::arg("model"),
+           py::arg("threshold") = 0.5f)
+      .def_readwrite("model", &PyClass::model)
+      .def_readwrite("threshold", &PyClass::threshold)
+      .def("__str__", &PyClass::ToString)
+      .def("validate", &PyClass::Validate);
+}
+
 static void PybindOfflineSpeakerSegmentationModelConfig(py::module *m) {
   PybindOfflineSpeakerSegmentationPyannoteModelConfig(m);
+  PybindOfflineSpeakerSegmentationSortformerModelConfig(m);
 
   using PyClass = OfflineSpeakerSegmentationModelConfig;
   py::class_<PyClass>(*m, "OfflineSpeakerSegmentationModelConfig")
@@ -69,7 +87,17 @@ static void PybindOfflineSpeakerSegmentationModelConfig(py::module *m) {
                     int32_t, bool, const std::string &>(),
            py::arg("pyannote"), py::arg("num_threads") = 1,
            py::arg("debug") = false, py::arg("provider") = "cpu")
+      .def(
+          py::init<const OfflineSpeakerSegmentationPyannoteModelConfig &,
+                   const OfflineSpeakerSegmentationSortformerModelConfig &,
+                   int32_t, bool, const std::string &>(),
+          py::arg("pyannote") = OfflineSpeakerSegmentationPyannoteModelConfig{},
+          py::arg("sortformer") =
+              OfflineSpeakerSegmentationSortformerModelConfig{},
+          py::arg("num_threads") = 1, py::arg("debug") = false,
+          py::arg("provider") = "cpu")
       .def_readwrite("pyannote", &PyClass::pyannote)
+      .def_readwrite("sortformer", &PyClass::sortformer)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)
@@ -85,7 +113,10 @@ static void PybindOfflineSpeakerDiarizationConfig(py::module *m) {
       .def(py::init<const OfflineSpeakerSegmentationModelConfig &,
                     const SpeakerEmbeddingExtractorConfig &,
                     const FastClusteringConfig &, float, float>(),
-           py::arg("segmentation"), py::arg("embedding"), py::arg("clustering"),
+           py::arg("segmentation"),
+           // Sortformer models need neither embedding nor clustering
+           py::arg("embedding") = SpeakerEmbeddingExtractorConfig{},
+           py::arg("clustering") = FastClusteringConfig{},
            py::arg("min_duration_on") = 0.3, py::arg("min_duration_off") = 0.5)
       .def_readwrite("segmentation", &PyClass::segmentation)
       .def_readwrite("embedding", &PyClass::embedding)

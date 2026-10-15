@@ -652,12 +652,22 @@
  */
 
 /**
+ * Sortformer end-to-end diarization model config, e.g.,
+ * Nemotron-3-Diarization. If model is set, pyannote, embedding and
+ * clustering are ignored.
+ * @typedef {Object} OfflineSpeakerSegmentationSortformerModelConfig
+ * @property {string} [model]
+ * @property {number} [threshold=0.5]
+ */
+
+/**
  * Offline speaker segmentation model config
  * @typedef {Object} OfflineSpeakerSegmentationModelConfig
  * @property {OfflineSpeakerSegmentationPyannoteModelConfig} [pyannote]
  * @property {number} [numThreads]
  * @property {boolean|number} [debug]
  * @property {string} [provider]
+ * @property {OfflineSpeakerSegmentationSortformerModelConfig} [sortformer]
  */
 
 /**

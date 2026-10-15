@@ -198,3 +198,7 @@ vits-inflect-*-v2
 assets-2
 swiftpm
 .sherpa-onnx-xcframework-version
+
+# run.sh is ignored above; keep the ones that are part of the tree
+!scripts/nemo/nemotron-3-diarization/run.sh
+!go-api-examples/non-streaming-speaker-diarization-sortformer/run.sh
