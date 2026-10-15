@@ -1124,6 +1124,14 @@ std::string RemoveLeadingSpaces(const std::string &text) {
   return text.substr(start);
 }
 
+std::string RemoveLeadingPunct(const std::string &text) {
+  std::u32string utf32 = Utf8ToUtf32(text);
+  if (utf32.empty() || !IsPunct(utf32[0])) {
+    return text;
+  }
+  return Utf32ToUtf8(utf32.substr(1));
+}
+
 std::string GetWord(const std::vector<std::string> &words, int32_t start,
                     int32_t end) {
   std::string ans;

@@ -255,6 +255,7 @@ void OnlineRecognizer::DecodeStreams(OnlineStream **ss, int32_t n) const {
 OnlineRecognizerResult OnlineRecognizer::GetResult(OnlineStream *s) const {
   auto r = impl_->GetResult(s);
   r.text = RemoveLeadingSpaces(r.text);
+  r.text = RemoveLeadingPunct(r.text);
   return r;
 }
 

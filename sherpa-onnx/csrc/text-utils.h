@@ -192,6 +192,9 @@ std::string RemoveSpaceBetweenCjk(const std::string &text);
 
 std::string RemoveLeadingSpaces(const std::string &text);
 
+// If the first character is a punctuation, drop it.
+std::string RemoveLeadingPunct(const std::string &text);
+
 bool StringToBool(const std::string &s);
 
 // end is inclusive
