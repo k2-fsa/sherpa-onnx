@@ -12,7 +12,7 @@ dependencies:
   sherpa_onnx:
     path: ../../flutter/sherpa_onnx
 
-  piper_phonemize: ^1.5.6
+  piper_phonemize: ^1.5.7
 
   path: ^1.9.0
   args: ^2.5.0
