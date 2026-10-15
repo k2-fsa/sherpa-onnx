@@ -160,7 +160,9 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos.zip ${app_name}.app/
+          # Rename the bundle so the extracted app carries the model name.
+          mv ${app_name}.app tts-${{ matrix.tts_model_name }}.app
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos.zip tts-${{ matrix.tts_model_name }}.app/
           ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-macos.zip
 
       - name: Release
@@ -307,7 +309,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
-          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64.zip bundle/
+          # Rename the bundle dir so the extracted folder carries the model name.
+          mv bundle tts-${{ matrix.tts_model_name }}
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64.zip tts-${{ matrix.tts_model_name }}/
           ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-linux-x64.zip
 
       - name: Release
@@ -433,7 +437,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64.zip"
+          # Rename the folder so the extracted app carries the model name.
+          mv Release tts-${{ matrix.tts_model_name }}
+          powershell -Command "Compress-Archive -Path tts-${{ matrix.tts_model_name }} -DestinationPath flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64.zip"
           ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-win-x64.zip
 
       - name: Release
@@ -674,8 +680,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/
-          mv web flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web
-          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web.zip flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web/
+          # Rename the folder so the extracted app carries the model name.
+          mv web tts-${{ matrix.tts_model_name }}
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web.zip tts-${{ matrix.tts_model_name }}/
           ls -lh flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web.zip
 
       - name: Release
