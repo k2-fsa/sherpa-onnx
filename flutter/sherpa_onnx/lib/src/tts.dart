@@ -14,16 +14,24 @@ export './tts_config.dart';
 ///
 /// This module supports VITS, Matcha, Kokoro, Kitten, ZipVoice, Pocket TTS,
 /// and Supertonic model families. See `dart-api-examples/tts/bin/` for working
-/// examples such as `pocket-en.dart`, `kokoro-en.dart`, `kokoro-zh-en.dart`,
-/// `matcha-en.dart`, and `zipvoice-zh-en.dart`.
+/// examples such as `pocket-en.dart`, `piper-lexicon.dart`,
+/// `piper-phonemize.dart`, `kokoro-en-lexicon.dart`, `matcha-en-lexicon.dart`,
+/// and `zipvoice-zh-en-lexicon.dart`.
 ///
 /// Example:
 ///
 /// ```dart
 /// final model = OfflineTtsModelConfig(
-///   pocketTts: const OfflineTtsPocketSphinxModelConfig(
-///     model: './sherpa-onnx-pocket-tts/model.int8.onnx',
-///     tokens: './sherpa-onnx-pocket-tts/tokens.txt',
+///   pocket: const OfflineTtsPocketModelConfig(
+///     lmFlow: './sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx',
+///     lmMain: './sherpa-onnx-pocket-tts-int8-2026-01-26/lm_main.int8.onnx',
+///     encoder: './sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx',
+///     decoder: './sherpa-onnx-pocket-tts-int8-2026-01-26/decoder.int8.onnx',
+///     textConditioner:
+///         './sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx',
+///     vocabJson: './sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json',
+///     tokenScoresJson:
+///         './sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json',
 ///   ),
 ///   numThreads: 1,
 /// );
@@ -66,17 +74,13 @@ extension OfflineTtsGenerationConfigFfi on OfflineTtsGenerationConfig {
   }
 
   Pointer<SherpaOnnxGenerationConfig> toNative() {
-    // Validate before anything is allocated. Same contract as the node-addon,
-    // Pascal and wasm bindings: sub-arrays must be non-empty and the two
-    // frontends are mutually exclusive.
+    // Validate before anything is allocated: sub-arrays must be non-empty.
+    // The mutual exclusion of phonemeCodepoints and tokens is NOT checked here;
+    // it is enforced by the C API, which logs a warning and returns no audio.
+    // generateWithConfig then returns an empty GeneratedAudio, so all bindings
+    // report that failure the same way.
     final codepoints = phonemeCodepoints;
     final tokenSentences = tokens;
-    if (codepoints != null && codepoints.isNotEmpty &&
-        tokenSentences != null && tokenSentences.isNotEmpty) {
-      throw ArgumentError(
-        'phonemeCodepoints and tokens are mutually exclusive; set only one',
-      );
-    }
     if (codepoints != null) {
       for (var i = 0; i < codepoints.length; i++) {
         if (codepoints[i].isEmpty) {

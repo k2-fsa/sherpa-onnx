@@ -1047,7 +1047,10 @@ class OfflineTts {
     }
 
     if (!audioPtr) {
-      throw new Error('Failed to generate audio');
+      // Generation failed. The C API already logged the reason (for instance
+      // phonemeCodepoints and tokens are mutually exclusive). Return empty
+      // audio instead of throwing, matching C++/C/Python/Rust/Go/Java.
+      return {samples: new Float32Array(0), sampleRate: 0};
     }
 
     const base = audioPtr / 4;

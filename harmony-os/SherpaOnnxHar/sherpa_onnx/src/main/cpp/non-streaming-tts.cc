@@ -761,8 +761,13 @@ static Napi::Object OfflineTtsGenerateWithConfigWrapper(
   SHERPA_ONNX_DELETE_GENERATION_C_STR(gen_config);
 
   if (!audio) {
-    Napi::Error::New(env, "TTS generation failed").ThrowAsJavaScriptException();
-    return {};
+    // Generation failed. The C API already logged the reason (for instance
+    // phonemeCodepoints and tokens are mutually exclusive). Return empty
+    // audio instead of throwing, matching C++/C/Python/Rust/Go/Java.
+    Napi::Object result = Napi::Object::New(env);
+    result.Set("samples", Napi::Float32Array::New(env, 0));
+    result.Set("sampleRate", 0);
+    return result;
   }
 
   Napi::Object result = Napi::Object::New(env);

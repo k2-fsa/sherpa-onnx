@@ -1251,10 +1251,14 @@ public class SherpaOnnxWaveWrapper {
 }
 
 public class SherpaOnnxGeneratedAudioWrapper {
-  /// A pointer to the underlying counterpart in C
-  public let audio: UnsafePointer<SherpaOnnxGeneratedAudio>!
+  /// A pointer to the underlying counterpart in C.
+  ///
+  /// nil when generation failed — for instance when both `phonemeCodepoints`
+  /// and `tokens` were set, which the C API rejects with a warning. The
+  /// accessors below then report empty audio instead of crashing.
+  public let audio: UnsafePointer<SherpaOnnxGeneratedAudio>?
 
-  public init(audio: UnsafePointer<SherpaOnnxGeneratedAudio>!) {
+  public init(audio: UnsafePointer<SherpaOnnxGeneratedAudio>?) {
     self.audio = audio
   }
 
@@ -1265,22 +1269,22 @@ public class SherpaOnnxGeneratedAudioWrapper {
   }
 
   public var n: Int32 {
-    return audio.pointee.n
+    return audio?.pointee.n ?? 0
   }
 
   public var sampleRate: Int32 {
-    return audio.pointee.sample_rate
+    return audio?.pointee.sample_rate ?? 0
   }
 
   public var samples: [Float] {
-    if let p = audio.pointee.samples {
-      return [Float](UnsafeBufferPointer(start: p, count: Int(n)))
-    } else {
+    guard let audio, let p = audio.pointee.samples else {
       return []
     }
+    return [Float](UnsafeBufferPointer(start: p, count: Int(n)))
   }
 
   public func save(filename: String) -> Int32 {
+    guard let audio else { return -1 }
     return SherpaOnnxWriteWave(audio.pointee.samples, n, sampleRate, toCPointer(filename))
   }
 }

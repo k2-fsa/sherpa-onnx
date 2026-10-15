@@ -13,6 +13,9 @@ export class OfflineTtsVitsModelConfig {
   public model: string = '';
   public lexicon: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public dictDir: String = '';  // unused
   public noiseScale: number = 0.667;
@@ -25,6 +28,9 @@ export class OfflineTtsMatchaModelConfig {
   public vocoder: string = '';
   public lexicon: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public dictDir: String = '';  // unused
   public noiseScale: number = 0.667;
@@ -35,6 +41,9 @@ export class OfflineTtsKokoroModelConfig {
   public model: string = '';
   public voices: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public lengthScale: number = 1.0;
   public dictDir: string = '';  // unused
@@ -46,6 +55,9 @@ export class OfflineTtsKittenModelConfig {
   public model: string = '';
   public voices: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public lengthScale: number = 1.0;
 }
@@ -55,6 +67,9 @@ export class OfflineTtsZipvoiceModelConfig {
   public encoder: string = '';
   public decoder: string = '';
   public vocoder: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public lexicon: string = '';
   public featScale: number = 0.1;
