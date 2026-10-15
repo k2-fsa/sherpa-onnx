@@ -124,6 +124,20 @@ export class TtsGenerationConfig {
   public referenceText: string = '';
   public numSteps: number = 5;
   public extra: object = new Object();
+
+  /**
+   * Pre-phonemized input as Unicode codepoints. Each inner array is one
+   * sentence. When set, it is used in place of the text argument; leave
+   * unset to use text with a lexicon. Mutually exclusive with `tokens`:
+   * if both are set, a warning is printed and generation fails.
+   */
+  public phonemeCodepoints?: Array<Array<number>>;
+
+  /**
+   * Pre-tokenized input, e.g. Chinese pinyin like "zhong1". Each inner
+   * array is one sentence. Mutually exclusive with `phonemeCodepoints`.
+   */
+  public tokens?: Array<Array<string>>;
 }
 
 export class TtsInput {

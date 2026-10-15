@@ -10,6 +10,7 @@ pub struct OfflineTtsVitsModelConfig {
     pub model: *const c_char,
     pub lexicon: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub noise_scale: c_float,
     pub noise_scale_w: c_float,
@@ -24,6 +25,7 @@ pub struct OfflineTtsMatchaModelConfig {
     pub vocoder: *const c_char,
     pub lexicon: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub noise_scale: c_float,
     pub length_scale: c_float,
@@ -36,6 +38,7 @@ pub struct OfflineTtsKokoroModelConfig {
     pub model: *const c_char,
     pub voices: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub length_scale: c_float,
     pub dict_dir: *const c_char,
@@ -49,6 +52,7 @@ pub struct OfflineTtsKittenModelConfig {
     pub model: *const c_char,
     pub voices: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub length_scale: c_float,
     pub lexicon: *const c_char,
@@ -61,6 +65,7 @@ pub struct OfflineTtsZipvoiceModelConfig {
     pub encoder: *const c_char,
     pub decoder: *const c_char,
     pub vocoder: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub lexicon: *const c_char,
     pub feat_scale: c_float,

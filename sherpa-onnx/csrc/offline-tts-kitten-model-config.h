@@ -16,6 +16,9 @@ struct OfflineTtsKittenModelConfig {
   std::string voices;
   std::string tokens;
 
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon for text input, or GenerationConfig.phoneme_codepoints /
+  // GenerationConfig.tokens with an external phonemizer instead.
   std::string data_dir;
   // speed = 1 / length_scale
   float length_scale = 1.0;

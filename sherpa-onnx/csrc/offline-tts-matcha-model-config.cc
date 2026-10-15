@@ -24,8 +24,8 @@ void OfflineTtsMatchaModelConfig::Register(ParseOptions *po) {
   po->Register("matcha-tokens", &tokens,
                "Path to tokens.txt for Matcha models");
   po->Register("matcha-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng. Optional. "
-               "If not provided, use --matcha-lexicon or "
+               "Path to the directory containing dict for espeak-ng. "
+               "Ignored. Use --matcha-lexicon or "
                "GenerationConfig.phoneme_codepoints instead.");
   po->Register("matcha-dict-dir", &dict_dir,
                "Not used. You don't need to provide a value for it");

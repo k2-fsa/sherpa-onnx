@@ -128,6 +128,12 @@ static SherpaOnnxGenerationConfig GetGenerationConfig(Napi::Object o) {
       continue;
     }
     Napi::Value v = o.Get(f.name);
+    // An optional field that was declared but left unset arrives here as
+    // undefined/null. Treat that as "not provided" instead of a type error,
+    // matching how referenceAudio is handled below.
+    if (v.IsUndefined() || v.IsNull()) {
+      continue;
+    }
     if (!v.IsArray()) {
       Napi::TypeError::New(env, std::string(f.name) + " must be an array of arrays")
           .ThrowAsJavaScriptException();
@@ -274,6 +280,9 @@ static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
   SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  // data_dir is deprecated and ignored since v2.0.0 (espeak-ng is gone). Kept
+  // only so the C struct slot stays valid; the same applies to the matcha,
+  // kokoro, kitten and zipvoice model configs below.
   SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale, noiseScale);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale_w, noiseScaleW);

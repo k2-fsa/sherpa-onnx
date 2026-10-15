@@ -14,10 +14,10 @@ Choose exactly one of the two text frontends below (not both):
 
   ```bash
   cd sherpa-onnx/wasm/tts
-  wget -q https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.5-wasm-browser.zip
-  unzip -q piper-phonemize-v1.5.5-wasm-browser.zip
+  wget -q https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.7-wasm-browser.zip
+  unzip -q piper-phonemize-v1.5.7-wasm-browser.zip
   mv browser piper-phonemize
-  rm piper-phonemize-v1.5.5-wasm-browser.zip
+  rm piper-phonemize-v1.5.7-wasm-browser.zip
   ```
 
 - **option 2: lexicon** — set `usePhonemize = false` in
@@ -37,7 +37,8 @@ this whole section.
 
 Please set `let modelType = 0` to the number matching your model in
 `../sherpa-onnx-tts.js` (0 vits, 1/2/3 matcha, 4 zipvoice, 5 pocket,
-6 kitten, 7 supertonic). The demo UI adapts itself to the model type.
+6 kitten, 7 supertonic, 8 kokoro-multi-lang). The demo UI adapts itself
+to the model type.
 
 ## Model files
 

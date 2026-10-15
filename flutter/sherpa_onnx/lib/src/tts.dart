@@ -24,7 +24,6 @@ export './tts_config.dart';
 ///   pocketTts: const OfflineTtsPocketSphinxModelConfig(
 ///     model: './sherpa-onnx-pocket-tts/model.int8.onnx',
 ///     tokens: './sherpa-onnx-pocket-tts/tokens.txt',
-///     dataDir: './sherpa-onnx-pocket-tts/espeak-ng-data',
 ///   ),
 ///   numThreads: 1,
 /// );

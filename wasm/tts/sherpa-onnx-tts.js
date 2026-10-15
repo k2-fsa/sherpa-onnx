@@ -38,6 +38,12 @@ function freeConfig(config, Module) {
 }
 
 // The user should free the returned pointers
+//
+// Note on `dataDir` (all model configs below, vits/matcha/kokoro/kitten/
+// zipvoice): deprecated and ignored since v2.0.0. espeak-ng is no longer used
+// by sherpa-onnx. The slot is still marshalled for ABI stability, but the C
+// side discards it. Use `lexicon` for plain text, or pass pre-phonemized
+// input via `phonemeCodepoints` / `tokens` in the generation config.
 function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
@@ -1273,13 +1279,14 @@ function createOfflineTts(Module, myConfig) {
       // Own text frontend (unicode indexer); not the phonemize/lexicon picker.
       modelUsesPhonemize = false;
       break;
-    case 7:
+    case 8:
       // kokoro-multi-lang-v1_0
       // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/kokoro-multi-lang-v1_0.html
+      // Note: case 8, not 7. 7 is Supertonic's id and must stay unique.
       offlineTtsKokoroModelConfig.model = './model.onnx';
       offlineTtsKokoroModelConfig.voices = './voices.bin';
       offlineTtsKokoroModelConfig.tokens = './tokens.txt';
-      offlineTtsKokoroModelConfig.dataDir = './espeak-ng-data';
+      // data_dir is ignored since v2.0.0; the lexicon below is the frontend.
       offlineTtsKokoroModelConfig.lexicon = './lexicon-us-en.txt,./lexicon-zh.txt';
       ruleFsts = './phone-zh.fst,./date-zh.fst,./number-zh.fst';
       break;

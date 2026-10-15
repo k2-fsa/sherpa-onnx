@@ -18,7 +18,7 @@ ctrlc = "3.4"
 # own default feature) so the examples run without extra library-path setup;
 # on Android it links shared instead (piper-phonemize-sys forces this, same
 # as sherpa-onnx-sys).
-piper-phonemize = { version = "1.5.4", optional = true }
+piper-phonemize = { version = "1.5.7", optional = true }
 
 [features]
 # Default to static linking so users can run examples without setting library paths

@@ -84,7 +84,9 @@ struct GenerationConfig {
 
   // For models that use string-based tokens (e.g., Chinese pinyin like
   // "zhong1", "ang2"). Each inner vector is a sentence of token strings.
-  // Takes precedence over phoneme_codepoints when both are provided.
+  //
+  // Mutually exclusive with phoneme_codepoints: if both are set, a warning is
+  // printed and generation fails with an empty result.
   std::vector<std::vector<std::string>> tokens;
 
   std::string GetExtraString(const std::string &key,
