@@ -442,6 +442,19 @@ function initSherpaOnnxOnlineCtcFstDecoderConfig(config, Module) {
   return {ptr: ptr, len: len, buffer: buffer};
 }
 
+function initSherpaOnnxOfflineCtcFstDecoderConfig(config, Module) {
+  const len = 2 * 4;
+  const ptr = Module._malloc(len);
+
+  const graphLen = Module.lengthBytesUTF8(config.graph || '') + 1;
+  const buffer = Module._malloc(graphLen);
+  Module.stringToUTF8(config.graph || '', buffer, graphLen);
+
+  Module.setValue(ptr, buffer, 'i8*');
+  Module.setValue(ptr + 4, config.maxActive || 3000, 'i32');
+  return {ptr: ptr, len: len, buffer: buffer};
+}
+
 function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   if (!('featConfig' in config)) {
     config.featConfig = {
@@ -1697,12 +1710,21 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
     };
   }
 
+  if (!('ctcFstDecoderConfig' in config)) {
+    config.ctcFstDecoderConfig = {
+      graph: '',
+      maxActive: 3000,
+    };
+  }
+
   const feat = initSherpaOnnxFeatureConfig(config.featConfig, Module);
   const model = initSherpaOnnxOfflineModelConfig(config.modelConfig, Module);
   const lm = initSherpaOnnxOfflineLMConfig(config.lmConfig, Module);
   const hr = initSherpaOnnxHomophoneReplacerConfig(config.hr, Module);
+  const ctcFstDecoder = initSherpaOnnxOfflineCtcFstDecoderConfig(
+      config.ctcFstDecoderConfig, Module);
 
-  const len = feat.len + model.len + lm.len + 7 * 4 + hr.len;
+  const len = feat.len + model.len + lm.len + 7 * 4 + hr.len + ctcFstDecoder.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -1768,6 +1790,9 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
   Module._CopyHeap(hr.ptr, hr.len, ptr + offset);
   offset += hr.len;
 
+  Module._CopyHeap(ctcFstDecoder.ptr, ctcFstDecoder.len, ptr + offset);
+  offset += ctcFstDecoder.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
@@ -1776,6 +1801,7 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
     model: model,
     lm: lm,
     hr: hr,
+    ctcFstDecoder: ctcFstDecoder,
   };
 }
 

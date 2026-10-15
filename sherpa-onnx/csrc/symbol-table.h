@@ -60,6 +60,12 @@ class SymbolTable {
 
   bool IsByteBpe() const { return is_bbpe_; }
 
+  /// Read-only access to the symbol-to-id map (e.g. to derive model
+  /// metadata such as canary language tokens from the loaded vocab).
+  const std::unordered_map<std::string, int32_t> &sym2id() const {
+    return sym2id_;
+  }
+
  private:
   void Init(std::istream &is);
 

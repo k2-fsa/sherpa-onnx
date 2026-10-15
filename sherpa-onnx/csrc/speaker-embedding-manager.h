@@ -110,6 +110,10 @@ class SpeakerEmbeddingManager {
   // Return a list of speaker names
   std::vector<std::string> GetAllSpeakers() const;
 
+  // Return the embedding of a speaker.
+  // Return an empty vector if the speaker does not exist.
+  std::vector<float> GetEmbedding(const std::string &name) const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

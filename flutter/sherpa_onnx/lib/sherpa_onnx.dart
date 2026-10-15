@@ -136,6 +136,12 @@ String? _resolvePath(String platform, Uri uri) {
     return '$parentDir${sep}$platform$sep$arch';
   }
 
+  if (Platform.isWindows) {
+    final arch =
+        Platform.version.toLowerCase().contains('arm64') ? 'arm64' : 'x64';
+    return '$parentDir${sep}$platform$sep$arch';
+  }
+
   return '$parentDir$sep$platform';
 }
 

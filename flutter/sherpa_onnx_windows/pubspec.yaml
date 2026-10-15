@@ -22,11 +22,6 @@ topics:
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=2.8.1"
-
-dependencies:
-  flutter:
-    sdk: flutter
 
 flutter:
   plugin:

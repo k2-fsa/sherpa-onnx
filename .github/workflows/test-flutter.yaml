@@ -515,8 +515,8 @@ jobs:
       - name: Copy libs
         shell: bash
         run: |
-          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/
-          ls -lh ./flutter/sherpa_onnx_windows/windows/
+          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/x64/
+          ls -lh ./flutter/sherpa_onnx_windows/windows/x64/
 
       - name: Use local sherpa_onnx_windows
         shell: bash

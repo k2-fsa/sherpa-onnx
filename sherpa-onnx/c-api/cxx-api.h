@@ -689,6 +689,14 @@ struct OfflineLMConfig {
   float scale = 1.0;
 };
 
+/** @brief Decoder graph configuration for offline CTC + FST decoding. */
+struct OfflineCtcFstDecoderConfig {
+  /** FST graph file. */
+  std::string graph;
+  /** Maximum number of active states during search. */
+  int32_t max_active = 3000;
+};
+
 /**
  * @brief Configuration for offline ASR.
  *
@@ -747,6 +755,8 @@ struct OfflineRecognizerConfig {
   float blank_penalty = 0;
   /** Optional homophone replacement configuration. */
   HomophoneReplacerConfig hr;
+  /** Optional CTC+FST decoder configuration. */
+  OfflineCtcFstDecoderConfig ctc_fst_decoder_config;
 };
 
 /** @brief Offline ASR result copied into C++ containers. */
@@ -1951,8 +1961,14 @@ class SHERPA_ONNX_API SpeakerEmbeddingManager
   /** @brief Return the number of enrolled speakers. */
   int32_t NumSpeakers() const;
 
+  /** @brief Return the embedding dimension. */
+  int32_t Dim() const;
+
   /** @brief Return all enrolled speaker names. */
   std::vector<std::string> GetAllSpeakers() const;
+
+  /** @brief Return a copy of the embedding of a speaker. Empty if missing. */
+  std::vector<float> GetEmbedding(const std::string &name) const;
 
  private:
   explicit SpeakerEmbeddingManager(const SherpaOnnxSpeakerEmbeddingManager *p);

@@ -217,8 +217,14 @@ const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
 
   SherpaOnnxOnlineRecognizer *recognizer = new SherpaOnnxOnlineRecognizer;
 
-  recognizer->impl =
-      std::make_unique<sherpa_onnx::OnlineRecognizer>(recognizer_config);
+  try {
+    recognizer->impl =
+        std::make_unique<sherpa_onnx::OnlineRecognizer>(recognizer_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlineRecognizer: %s", e.what());
+    delete recognizer;
+    return nullptr;
+  }
 
   return recognizer;
 }
@@ -674,6 +680,11 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.hr.lexicon = SHERPA_ONNX_OR(config->hr.lexicon, "");
   recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
+  recognizer_config.ctc_fst_decoder_config.graph =
+      SHERPA_ONNX_OR(config->ctc_fst_decoder_config.graph, "");
+  recognizer_config.ctc_fst_decoder_config.max_active =
+      SHERPA_ONNX_OR(config->ctc_fst_decoder_config.max_active, 3000);
+
   if (config->model_config.debug) {
 #if __OHOS__
     auto str_vec = sherpa_onnx::SplitString(recognizer_config.ToString(), 128);
@@ -701,8 +712,14 @@ const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizer(
 
   SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
 
-  recognizer->impl =
-      std::make_unique<sherpa_onnx::OfflineRecognizer>(recognizer_config);
+  try {
+    recognizer->impl =
+        std::make_unique<sherpa_onnx::OfflineRecognizer>(recognizer_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineRecognizer: %s", e.what());
+    delete recognizer;
+    return nullptr;
+  }
 
   return recognizer;
 }
@@ -1059,7 +1076,14 @@ const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
 
   SherpaOnnxKeywordSpotter *spotter = new SherpaOnnxKeywordSpotter;
 
-  spotter->impl = std::make_unique<sherpa_onnx::KeywordSpotter>(spotter_config);
+  try {
+    spotter->impl =
+        std::make_unique<sherpa_onnx::KeywordSpotter>(spotter_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create KeywordSpotter: %s", e.what());
+    delete spotter;
+    return nullptr;
+  }
 
   return spotter;
 }
@@ -1351,8 +1375,14 @@ const SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
   }
 
   SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
-  p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
-      vad_config, buffer_size_in_seconds);
+  try {
+    p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
+        vad_config, buffer_size_in_seconds);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create VoiceActivityDetector: %s", e.what());
+    delete p;
+    return nullptr;
+  }
 
   return p;
 }
@@ -1629,7 +1659,13 @@ const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
 
   SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;
 
-  tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(tts_config);
+  try {
+    tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(tts_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineTts: %s", e.what());
+    delete tts;
+    return nullptr;
+  }
 
   return tts;
 }
@@ -2271,8 +2307,15 @@ SherpaOnnxCreateSpokenLanguageIdentification(
 
   SherpaOnnxSpokenLanguageIdentification *slid =
       new SherpaOnnxSpokenLanguageIdentification;
-  slid->impl =
-      std::make_unique<sherpa_onnx::SpokenLanguageIdentification>(slid_config);
+  try {
+    slid->impl = std::make_unique<sherpa_onnx::SpokenLanguageIdentification>(
+        slid_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create SpokenLanguageIdentification: %s",
+                     e.what());
+    delete slid;
+    return nullptr;
+  }
 
   return slid;
 }
@@ -2353,7 +2396,14 @@ SherpaOnnxCreateSpeakerEmbeddingExtractor(
 
   auto p = new SherpaOnnxSpeakerEmbeddingExtractor;
 
-  p->impl = std::make_unique<sherpa_onnx::SpeakerEmbeddingExtractor>(c);
+  try {
+    p->impl = std::make_unique<sherpa_onnx::SpeakerEmbeddingExtractor>(c);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create SpeakerEmbeddingExtractor: %s",
+                     e.what());
+    delete p;
+    return nullptr;
+  }
 
   return p;
 }
@@ -2541,6 +2591,11 @@ int32_t SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(
   return p->impl->NumSpeakers();
 }
 
+int32_t SherpaOnnxSpeakerEmbeddingManagerDim(
+    const SherpaOnnxSpeakerEmbeddingManager *p) {
+  return p->impl->Dim();
+}
+
 const char *const *SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
     const SherpaOnnxSpeakerEmbeddingManager *manager) {
   std::vector<std::string> all_speakers = manager->impl->GetAllSpeakers();
@@ -2569,6 +2624,27 @@ void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
   }
 
   delete[] names;
+}
+
+const float *SherpaOnnxSpeakerEmbeddingManagerGetEmbedding(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name) {
+  if (!p || !name) {
+    return nullptr;
+  }
+
+  std::vector<float> embedding = p->impl->GetEmbedding(name);
+  if (embedding.empty()) {
+    return nullptr;
+  }
+
+  float *ans = new float[embedding.size()];
+  std::copy(embedding.begin(), embedding.end(), ans);
+  return ans;
+}
+
+void SherpaOnnxSpeakerEmbeddingManagerDestroyEmbedding(const float *v) {
+  if (!v) return;
+  delete[] v;
 }
 
 struct SherpaOnnxAudioTagging {
@@ -2604,7 +2680,13 @@ const SherpaOnnxAudioTagging *SherpaOnnxCreateAudioTagging(
   }
 
   SherpaOnnxAudioTagging *tagger = new SherpaOnnxAudioTagging;
-  tagger->impl = std::make_unique<sherpa_onnx::AudioTagging>(ac);
+  try {
+    tagger->impl = std::make_unique<sherpa_onnx::AudioTagging>(ac);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create AudioTagging: %s", e.what());
+    delete tagger;
+    return nullptr;
+  }
 
   return tagger;
 }
@@ -2707,7 +2789,13 @@ const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuation(
   }
 
   SherpaOnnxOfflinePunctuation *punct = new SherpaOnnxOfflinePunctuation;
-  punct->impl = std::make_unique<sherpa_onnx::OfflinePunctuation>(c);
+  try {
+    punct->impl = std::make_unique<sherpa_onnx::OfflinePunctuation>(c);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflinePunctuation: %s", e.what());
+    delete punct;
+    return nullptr;
+  }
 
   return punct;
 }
@@ -2780,8 +2868,14 @@ const SherpaOnnxOnlinePunctuation *SherpaOnnxCreateOnlinePunctuation(
   }
 
   auto *p = new SherpaOnnxOnlinePunctuation;
-  p->impl =
-      std::make_unique<sherpa_onnx::OnlinePunctuation>(punctuation_config);
+  try {
+    p->impl =
+        std::make_unique<sherpa_onnx::OnlinePunctuation>(punctuation_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlinePunctuation: %s", e.what());
+    delete p;
+    return nullptr;
+  }
   return p;
 }
 
@@ -2950,7 +3044,13 @@ const SherpaOnnxOfflineSpeechDenoiser *SherpaOnnxCreateOfflineSpeechDenoiser(
 
   SherpaOnnxOfflineSpeechDenoiser *sd = new SherpaOnnxOfflineSpeechDenoiser;
 
-  sd->impl = std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(sd_config);
+  try {
+    sd->impl = std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(sd_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineSpeechDenoiser: %s", e.what());
+    delete sd;
+    return nullptr;
+  }
 
   return sd;
 }
@@ -3037,7 +3137,14 @@ SherpaOnnxCreateOfflineSourceSeparation(
   }
 
   auto *ss = new SherpaOnnxOfflineSourceSeparation;
-  ss->impl = std::make_unique<sherpa_onnx::OfflineSourceSeparation>(ss_config);
+  try {
+    ss->impl =
+        std::make_unique<sherpa_onnx::OfflineSourceSeparation>(ss_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineSourceSeparation: %s", e.what());
+    delete ss;
+    return nullptr;
+  }
 
   return ss;
 }
@@ -3153,7 +3260,13 @@ const SherpaOnnxOnlineSpeechDenoiser *SherpaOnnxCreateOnlineSpeechDenoiser(
   }
 
   auto *sd = new SherpaOnnxOnlineSpeechDenoiser;
-  sd->impl = std::make_unique<sherpa_onnx::OnlineSpeechDenoiser>(sd_config);
+  try {
+    sd->impl = std::make_unique<sherpa_onnx::OnlineSpeechDenoiser>(sd_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlineSpeechDenoiser: %s", e.what());
+    delete sd;
+    return nullptr;
+  }
   return sd;
 }
 
@@ -3302,8 +3415,15 @@ SherpaOnnxCreateOfflineSpeakerDiarization(
   SherpaOnnxOfflineSpeakerDiarization *sd =
       new SherpaOnnxOfflineSpeakerDiarization;
 
-  sd->impl =
-      std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(sd_config);
+  try {
+    sd->impl =
+        std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(sd_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineSpeakerDiarization: %s",
+                     e.what());
+    delete sd;
+    return nullptr;
+  }
 
   return sd;
 }
@@ -3532,8 +3652,15 @@ SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
 
   SherpaOnnxOfflineSpeechDenoiser *sd = new SherpaOnnxOfflineSpeechDenoiser;
 
-  sd->impl =
-      std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(mgr, sd_config);
+  try {
+    sd->impl =
+        std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(mgr, sd_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineSpeechDenoiser: %{public}s",
+                     e.what());
+    delete sd;
+    return nullptr;
+  }
 
   return sd;
 }
@@ -3552,8 +3679,15 @@ const SherpaOnnxOnlineSpeechDenoiser *SherpaOnnxCreateOnlineSpeechDenoiserOHOS(
   auto sd_config = GetOnlineSpeechDenoiserConfig(config);
 
   auto *sd = new SherpaOnnxOnlineSpeechDenoiser;
-  sd->impl =
-      std::make_unique<sherpa_onnx::OnlineSpeechDenoiser>(mgr, sd_config);
+  try {
+    sd->impl =
+        std::make_unique<sherpa_onnx::OnlineSpeechDenoiser>(mgr, sd_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlineSpeechDenoiser: %{public}s",
+                     e.what());
+    delete sd;
+    return nullptr;
+  }
 
   return sd;
 }
@@ -3570,8 +3704,14 @@ const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizerOHOS(
 
   SherpaOnnxOnlineRecognizer *recognizer = new SherpaOnnxOnlineRecognizer;
 
-  recognizer->impl =
-      std::make_unique<sherpa_onnx::OnlineRecognizer>(mgr, recognizer_config);
+  try {
+    recognizer->impl =
+        std::make_unique<sherpa_onnx::OnlineRecognizer>(mgr, recognizer_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlineRecognizer: %{public}s", e.what());
+    delete recognizer;
+    return nullptr;
+  }
 
   return recognizer;
 }
@@ -3589,8 +3729,15 @@ const SherpaOnnxOnlinePunctuation *SherpaOnnxCreateOnlinePunctuationOHOS(
 
   auto punctuation_config = GetOnlinePunctuationConfig(config);
   auto *p = new SherpaOnnxOnlinePunctuation;
-  p->impl =
-      std::make_unique<sherpa_onnx::OnlinePunctuation>(mgr, punctuation_config);
+  try {
+    p->impl = std::make_unique<sherpa_onnx::OnlinePunctuation>(
+        mgr, punctuation_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OnlinePunctuation: %{public}s",
+                     e.what());
+    delete p;
+    return nullptr;
+  }
   return p;
 }
 
@@ -3606,8 +3753,15 @@ const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizerOHOS(
 
   SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
 
-  recognizer->impl =
-      std::make_unique<sherpa_onnx::OfflineRecognizer>(mgr, recognizer_config);
+  try {
+    recognizer->impl = std::make_unique<sherpa_onnx::OfflineRecognizer>(
+        mgr, recognizer_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineRecognizer: %{public}s",
+                     e.what());
+    delete recognizer;
+    return nullptr;
+  }
 
   return recognizer;
 }
@@ -3624,8 +3778,15 @@ SherpaOnnxCreateVoiceActivityDetectorOHOS(
   auto vad_config = GetVadModelConfig(config);
 
   SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
-  p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
-      mgr, vad_config, buffer_size_in_seconds);
+  try {
+    p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
+        mgr, vad_config, buffer_size_in_seconds);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create VoiceActivityDetector: %{public}s",
+                     e.what());
+    delete p;
+    return nullptr;
+  }
 
   return p;
 }
@@ -3642,7 +3803,14 @@ SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(
 
   auto p = new SherpaOnnxSpeakerEmbeddingExtractor;
 
-  p->impl = std::make_unique<sherpa_onnx::SpeakerEmbeddingExtractor>(mgr, c);
+  try {
+    p->impl = std::make_unique<sherpa_onnx::SpeakerEmbeddingExtractor>(mgr, c);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create SpeakerEmbeddingExtractor: %{public}s",
+                     e.what());
+    delete p;
+    return nullptr;
+  }
 
   return p;
 }
@@ -3657,8 +3825,14 @@ const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotterOHOS(
 
   SherpaOnnxKeywordSpotter *spotter = new SherpaOnnxKeywordSpotter;
 
-  spotter->impl =
-      std::make_unique<sherpa_onnx::KeywordSpotter>(mgr, spotter_config);
+  try {
+    spotter->impl =
+        std::make_unique<sherpa_onnx::KeywordSpotter>(mgr, spotter_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create KeywordSpotter: %{public}s", e.what());
+    delete spotter;
+    return nullptr;
+  }
 
   return spotter;
 }
@@ -3674,7 +3848,13 @@ const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
 
   SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;
 
-  tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(mgr, tts_config);
+  try {
+    tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(mgr, tts_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineTts: %{public}s", e.what());
+    delete tts;
+    return nullptr;
+  }
 
   return tts;
 }
@@ -3705,7 +3885,14 @@ const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuationOHOS(
   }
 
   auto *punct = new SherpaOnnxOfflinePunctuation;
-  punct->impl = std::make_unique<sherpa_onnx::OfflinePunctuation>(mgr, c);
+  try {
+    punct->impl = std::make_unique<sherpa_onnx::OfflinePunctuation>(mgr, c);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflinePunctuation: %{public}s",
+                     e.what());
+    delete punct;
+    return nullptr;
+  }
 
   return punct;
 }
@@ -3724,8 +3911,15 @@ SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
   SherpaOnnxOfflineSpeakerDiarization *sd =
       new SherpaOnnxOfflineSpeakerDiarization;
 
-  sd->impl =
-      std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(mgr, sd_config);
+  try {
+    sd->impl = std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(
+        mgr, sd_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineSpeakerDiarization: %{public}s",
+                     e.what());
+    delete sd;
+    return nullptr;
+  }
 
   return sd;
 }
@@ -3757,8 +3951,15 @@ SherpaOnnxCreateOfflineSourceSeparationOHOS(
   auto ss_config = GetOfflineSourceSeparationConfig(config);
 
   auto *ss = new SherpaOnnxOfflineSourceSeparation;
-  ss->impl =
-      std::make_unique<sherpa_onnx::OfflineSourceSeparation>(mgr, ss_config);
+  try {
+    ss->impl =
+        std::make_unique<sherpa_onnx::OfflineSourceSeparation>(mgr, ss_config);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineSourceSeparation: %{public}s",
+                     e.what());
+    delete ss;
+    return nullptr;
+  }
 
   return ss;
 }
@@ -3806,7 +4007,13 @@ const SherpaOnnxOfflineDiacritization *SherpaOnnxCreateOfflineDiacritization(
   }
 
   SherpaOnnxOfflineDiacritization *diacrt = new SherpaOnnxOfflineDiacritization;
-  diacrt->impl = std::make_unique<sherpa_onnx::OfflineDiacritization>(cfg);
+  try {
+    diacrt->impl = std::make_unique<sherpa_onnx::OfflineDiacritization>(cfg);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create OfflineDiacritization: %s", e.what());
+    delete diacrt;
+    return nullptr;
+  }
 
   return diacrt;
 }

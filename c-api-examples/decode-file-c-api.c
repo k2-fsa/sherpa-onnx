@@ -25,19 +25,19 @@ rm sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-  const char *wav_filename =
+  const char* wav_filename =
       "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
       "test_wavs/0.wav";
-  const char *tokens =
+  const char* tokens =
       "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
       "tokens.txt";
-  const char *encoder =
+  const char* encoder =
       "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
       "encoder.onnx";
-  const char *decoder =
+  const char* decoder =
       "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
       "decoder.onnx";
-  const char *joiner =
+  const char* joiner =
       "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
       "joiner.onnx";
 
@@ -64,15 +64,15 @@ int32_t main() {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
-  const SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer* recognizer =
       SherpaOnnxCreateOnlineRecognizer(&config);
-  const SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream* stream =
       SherpaOnnxCreateOnlineStream(recognizer);
 
-  const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
+  const SherpaOnnxDisplay* display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 
-  const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
+  const SherpaOnnxWave* wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
@@ -97,7 +97,7 @@ int32_t main() {
       SherpaOnnxDecodeOnlineStream(recognizer, stream);
     }
 
-    const SherpaOnnxOnlineRecognizerResult *r =
+    const SherpaOnnxOnlineRecognizerResult* r =
         SherpaOnnxGetOnlineStreamResult(recognizer, stream);
 
     if (strlen(r->text)) {
@@ -126,7 +126,7 @@ int32_t main() {
     SherpaOnnxDecodeOnlineStream(recognizer, stream);
   }
 
-  const SherpaOnnxOnlineRecognizerResult *r =
+  const SherpaOnnxOnlineRecognizerResult* r =
       SherpaOnnxGetOnlineStreamResult(recognizer, stream);
 
   if (strlen(r->text)) {

@@ -10,6 +10,7 @@
 #include <ios>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -82,6 +83,71 @@ inline int32_t SelectCanaryFirstToken(const float *logits, int32_t vocab_size,
   return best;
 }
 
+// A canary language token is <|xx|> with a two-letter (ISO 639-1) code:
+// <|en|>, <|it|>, ... Longer bracketed specials (<|pnc|>, <|noitn|>,
+// <|startoftranscript|>, timestamp tokens) are not languages.
+inline bool ParseCanaryLangToken(const std::string &token, std::string *code) {
+  if (token.size() != 6 || token[0] != '<' || token[1] != '|' ||
+      token[4] != '|' || token[5] != '>') {
+    return false;
+  }
+  if (token[2] < 'a' || token[2] > 'z' || token[3] < 'a' || token[3] > 'z') {
+    return false;
+  }
+  *code = token.substr(2, 2);
+  return true;
+}
+
+// Derive the language -> token-id map from the model's own vocab instead of
+// a hardcoded four-entry list, so multilingual exports (canary-1b-v2: 25
+// languages) work without code changes. For canary-180m-flash, whose vocab
+// carries exactly <|en|>, <|es|>, <|de|>, <|fr|>, the result is identical
+// to the previous hardcoded map.
+inline std::unordered_map<std::string, int32_t> DeriveCanaryLang2Id(
+    const std::unordered_map<std::string, int32_t> &sym2id) {
+  std::unordered_map<std::string, int32_t> ans;
+  std::string code;
+  for (const auto &p : sym2id) {
+    if (ParseCanaryLangToken(p.first, &code)) {
+      ans[code] = p.second;
+    }
+  }
+  return ans;
+}
+
+// Resolve src/tgt_lang against the derived map. A KNOWN code passes through;
+// an unknown code warns and falls back to en (or the first language the
+// vocab has) instead of silently switching; an empty code keeps the
+// historical silent en fallback.
+inline int32_t ResolveCanaryLang(
+    const std::unordered_map<std::string, int32_t> &lang2id,
+    const std::string &lang, const char *which) {
+  if (!lang.empty()) {
+    auto it = lang2id.find(lang);
+    if (it != lang2id.end()) {
+      return it->second;
+    }
+  }
+
+  std::string chosen = "en";
+  if (lang2id.find("en") == lang2id.end()) {
+    // Deterministic across implementations: the language with the lowest
+    // token id (unordered_map order would be unspecified). lang2id is never
+    // empty here: PostInit exits at load time when the vocab carries no
+    // language tokens.
+    auto min_id = std::min_element(
+        lang2id.begin(), lang2id.end(),
+        [](const auto &a, const auto &b) { return a.second < b.second; });
+    chosen = min_id->first;
+  }
+  if (!lang.empty()) {
+    SHERPA_ONNX_LOGE("Canary %s_lang '%s' is not offered by this model; "
+                     "falling back to '%s'",
+                     which, lang.c_str(), chosen.c_str());
+  }
+  return lang2id.at(chosen);
+}
+
 class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerCanaryImpl(const OfflineRecognizerConfig &config)
@@ -120,7 +186,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     Ort::Value enc_states = std::move(enc_out[0]);
     Ort::Value enc_mask = std::move(enc_out[2]);
     // enc_out[1] is discarded
-    std::vector<int32_t> decoder_input = GetInitialDecoderInput();
+    std::vector<int32_t> decoder_input = GetInitialDecoderInput(*s);
     auto decoder_states = model_->GetInitialDecoderStates();
     Ort::Value logits{nullptr};
 
@@ -174,6 +240,12 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     config_.model_config.canary.src_lang = config.model_config.canary.src_lang;
     config_.model_config.canary.tgt_lang = config.model_config.canary.tgt_lang;
     config_.model_config.canary.use_pnc = config.model_config.canary.use_pnc;
+
+    const auto &meta = model_->GetModelMetadata();
+    src_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config.model_config.canary.src_lang, "src");
+    tgt_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config.model_config.canary.tgt_lang, "tgt");
 
     // we don't change the config_ in the base class
   }
@@ -251,28 +323,29 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
   // see
   // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/nemo/canary/test_180m_flash.py#L242
-  std::vector<int32_t> GetInitialDecoderInput() const {
+  std::vector<int32_t> GetInitialDecoderInput(
+      const OfflineStream &stream) const {
     auto canary_config = config_.model_config.canary;
     const auto &meta = model_->GetModelMetadata();
+
+    // Per-stream languages take precedence over the recognizer-level config:
+    // one recognizer can decode streams with different languages. Only
+    // present options are resolved here (and warned once each); absent ones
+    // reuse the ids cached at PostInit/SetConfig time.
 
     std::vector<int32_t> decoder_input(9);
     decoder_input[0] = symbol_table_["<|startofcontext|>"];
     decoder_input[1] = symbol_table_["<|startoftranscript|>"];
     decoder_input[2] = symbol_table_["<|emo:undefined|>"];
 
-    if (canary_config.src_lang.empty() ||
-        !meta.lang2id.count(canary_config.src_lang)) {
-      decoder_input[3] = meta.lang2id.at("en");
-    } else {
-      decoder_input[3] = meta.lang2id.at(canary_config.src_lang);
-    }
-
-    if (canary_config.tgt_lang.empty() ||
-        !meta.lang2id.count(canary_config.tgt_lang)) {
-      decoder_input[4] = meta.lang2id.at("en");
-    } else {
-      decoder_input[4] = meta.lang2id.at(canary_config.tgt_lang);
-    }
+    decoder_input[3] =
+        stream.HasOption("src_lang")
+            ? ResolveCanaryLang(meta.lang2id, stream.GetOption("src_lang"), "src")
+            : src_lang_id_;
+    decoder_input[4] =
+        stream.HasOption("tgt_lang")
+            ? ResolveCanaryLang(meta.lang2id, stream.GetOption("tgt_lang"), "tgt")
+            : tgt_lang_id_;
 
     if (canary_config.use_pnc) {
       decoder_input[5] = symbol_table_["<|pnc|>"];
@@ -288,6 +361,11 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   }
 
  private:
+  // Recognizer-level language ids resolved once (PostInit/SetConfig), so an
+  // unsupported config language warns once instead of on every stream.
+  int32_t src_lang_id_ = -1;
+  int32_t tgt_lang_id_ = -1;
+
   void PostInit() {
     auto &meta = model_->GetModelMetadata();
     config_.feat_config.feature_dim = meta.feat_dim;
@@ -300,10 +378,22 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     config_.feat_config.window_type = "hann";
     config_.feat_config.is_librosa = true;
 
-    meta.lang2id["en"] = symbol_table_["<|en|>"];
-    meta.lang2id["es"] = symbol_table_["<|es|>"];
-    meta.lang2id["de"] = symbol_table_["<|de|>"];
-    meta.lang2id["fr"] = symbol_table_["<|fr|>"];
+    // Derived from the vocab (canary-1b-v2 and future multilingual exports
+    // carry more than the four languages the 180m-flash port hardcoded).
+    meta.lang2id = DeriveCanaryLang2Id(symbol_table_.sym2id());
+    if (meta.lang2id.empty()) {
+      SHERPA_ONNX_LOGE(
+          "tokens.txt carries no canary language tokens <|xx|>; this does "
+          "not look like a canary model. Language resolution is disabled.");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    // Resolve recognizer-level languages once: warns at load time for
+    // unsupported codes and caches the ids for every later stream.
+    src_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config_.model_config.canary.src_lang, "src");
+    tgt_lang_id_ =
+        ResolveCanaryLang(meta.lang2id, config_.model_config.canary.tgt_lang, "tgt");
 
     if (symbol_table_.NumSymbols() != meta.vocab_size) {
       SHERPA_ONNX_LOGE("number of lines in tokens.txt %d != %d (vocab_size)",

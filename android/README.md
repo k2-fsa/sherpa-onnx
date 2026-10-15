@@ -20,3 +20,11 @@ for usage.
 |[SherpaOnnxAudioTaggingWearOS](./SherpaOnnxAudioTagging)|[URL](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos.html)| It shows how to use audio tagging on WearOS.|
 |[SherpaOnnxSimulateStreamingAsr](./SherpaOnnxSimulateStreamingAsr)|| It shows how to use a non-streaming ASR model for streaming speech recognition.|
 |[SherpaOnnxSimulateStreamingAsrWearOs](./SherpaOnnxSimulateStreamingAsrWearOs)|| It shows how to use a non-streaming ASR model for streaming speech recognition with WearOS.|
+
+## Reproducible F-Droid builds
+
+Packaging sherpa-onnx as a source-built library for an
+[F-Droid](https://f-droid.org) recipe? See
+[fdroid-reproducible-builds.md](./fdroid-reproducible-builds.md) for the
+commit pinning, build flags, NDK stripping and verification steps that make
+the resulting APKs byte-identical to a reference build.
