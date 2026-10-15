@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - remove-espeak
 
   workflow_dispatch:
 
@@ -700,4 +699,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web
-          path: flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip
+          path: flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-${{ matrix.tts_model_name }}-web.zip
