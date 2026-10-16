@@ -68,6 +68,33 @@ Return:
   does not exist.
 )doc";
 
+static constexpr const char *kOfflineRecognitionHypothesisDoc = R"doc(
+One entry of an n-best list.
+
+Produced only by transducer models decoded with ``modified_beam_search``
+and ``num_return_paths`` greater than 1.
+)doc";
+
+static void PybindOfflineRecognitionHypothesis(py::module *m) {  // NOLINT
+  using PyClass = OfflineRecognitionHypothesis;
+  py::class_<PyClass>(*m, "OfflineRecognitionHypothesis",
+                      kOfflineRecognitionHypothesisDoc)
+      .def_property_readonly(
+          "text",
+          [](const PyClass &self) -> py::str {
+            return py::str(PyUnicode_DecodeUTF8(self.text.c_str(),
+                                                self.text.size(), "ignore"));
+          })
+      .def_property_readonly("tokens",
+        [](const PyClass &self) { return self.tokens; })
+      .def_property_readonly("timestamps",
+        [](const PyClass &self) { return self.timestamps; })
+      .def_property_readonly("ys_log_probs",
+        [](const PyClass &self) { return self.ys_log_probs; })
+      .def_property_readonly("score",
+        [](const PyClass &self) { return self.score; });
+}
+
 static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
   using PyClass = OfflineRecognitionResult;
   py::class_<PyClass>(*m, "OfflineRecognitionResult",
@@ -100,10 +127,13 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
       .def_property_readonly("segment_durations",
         [](const PyClass &self) { return self.segment_durations; })
       .def_property_readonly("segment_texts",
-        [](const PyClass &self) { return self.segment_texts; });
+        [](const PyClass &self) { return self.segment_texts; })
+      .def_property_readonly("hypotheses",
+        [](const PyClass &self) { return self.hypotheses; });
 }
 
 void PybindOfflineStream(py::module *m) {
+  PybindOfflineRecognitionHypothesis(m);
   PybindOfflineRecognitionResult(m);
 
   using PyClass = OfflineStream;
