@@ -24,6 +24,10 @@
 
 namespace sherpa_onnx {
 
+// Return a JSON string literal, including the surrounding quotes. Escape
+// control characters, quotes, and backslashes; preserve UTF-8 bytes unchanged.
+std::string QuoteJsonString(const std::string &text);
+
 /// Converts a string into an integer via strtoll and returns false if there was
 /// any kind of problem (i.e. the string was not an integer or contained extra
 /// non-whitespace junk, or the integer was too large to fit into the type it is

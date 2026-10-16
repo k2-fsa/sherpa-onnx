@@ -16,6 +16,30 @@
 
 namespace sherpa_onnx {
 
+TEST(QuoteJsonString, EmptyAndOrdinaryText) {
+  EXPECT_EQ(QuoteJsonString(""), "\"\"");
+  EXPECT_EQ(QuoteJsonString("plain / text"), "\"plain / text\"");
+  EXPECT_EQ(QuoteJsonString("你好世界 🌍"), "\"你好世界 🌍\"");
+  EXPECT_EQ(QuoteJsonString("\x7f"), "\"\x7f\"");
+}
+
+TEST(QuoteJsonString, QuotesAndBackslashes) {
+  EXPECT_EQ(QuoteJsonString("\"quoted\" \\ path"),
+            "\"\\\"quoted\\\" \\\\ path\"");
+}
+
+TEST(QuoteJsonString, AllControlCharacters) {
+  std::string text;
+  for (int32_t c = 0; c < 0x20; ++c) {
+    text.push_back(static_cast<char>(c));
+  }
+  EXPECT_EQ(QuoteJsonString(text),
+            "\"\\u0000\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007"
+            "\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f"
+            "\\u0010\\u0011\\u0012\\u0013\\u0014\\u0015\\u0016\\u0017"
+            "\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f\"");
+}
+
 TEST(ToLowerCase, WideString) {
   std::string text =
       "Hallo! Übeltäter übergibt Ärzten öfters äußerst ätzende Öle 3€";
