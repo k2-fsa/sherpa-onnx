@@ -68,7 +68,7 @@ public class OfflineTtsModelConfig {
         private OfflineTtsPocketModelConfig pocket = OfflineTtsPocketModelConfig.builder().build();
         private OfflineTtsSupertonicModelConfig supertonic = OfflineTtsSupertonicModelConfig.builder().build();
         private int numThreads = 1;
-        private boolean debug = true;
+        private boolean debug = false;
         private String provider = "cpu";
 
         public OfflineTtsModelConfig build() {

@@ -1312,7 +1312,7 @@ public typealias TtsProgressCallbackWithArg =
   ) -> Int32
 
 public struct SherpaOnnxGenerationConfigSwift {
-  public init(silenceScale: Float = 0.2, speed: Float = 1.0, sid: Int = 0, referenceAudio: [Float] = [], referenceSampleRate: Int = 16000, referenceText: String = "", numSteps: Int = 1, extra: [String: Any] = [:], phonemeCodepoints: [[Int32]] = [], tokens: [[String]] = []) {
+  public init(silenceScale: Float = 0.2, speed: Float = 1.0, sid: Int = 0, referenceAudio: [Float] = [], referenceSampleRate: Int = 0, referenceText: String = "", numSteps: Int = 5, extra: [String: Any] = [:], phonemeCodepoints: [[Int32]] = [], tokens: [[String]] = []) {
     self.silenceScale = silenceScale
     self.speed = speed
     self.sid = sid
@@ -1329,9 +1329,9 @@ public struct SherpaOnnxGenerationConfigSwift {
   public var speed: Float = 1.0
   public var sid: Int = 0
   public var referenceAudio: [Float] = []
-  public var referenceSampleRate: Int = 16000
+  public var referenceSampleRate: Int = 0
   public var referenceText: String = ""
-  public var numSteps: Int = 1
+  public var numSteps: Int = 5
   public var extra: [String: Any] = [:]  // Any can be String, Int, Float, Double
 
   /// Pre-phonemized input as Unicode codepoints. Each inner array is one

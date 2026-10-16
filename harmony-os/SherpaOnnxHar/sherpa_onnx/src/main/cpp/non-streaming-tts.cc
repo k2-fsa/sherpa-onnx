@@ -90,7 +90,15 @@
       delete[] c.phoneme_codepoints_lens;                       \
     }                                                           \
     if (c.tokens) {                                             \
-      for (int32_t i = 0; i != c.tokens_num_sentences; ++i) {   \
+      /* c.tokens is a FLAT array of sum(tokens_lens) strings,   \
+         not one per sentence, so free every token. */           \
+      int32_t num_tokens = 0;                                   \
+      if (c.tokens_lens) {                                      \
+        for (int32_t i = 0; i != c.tokens_num_sentences; ++i) { \
+          num_tokens += c.tokens_lens[i];                       \
+        }                                                       \
+      }                                                         \
+      for (int32_t i = 0; i != num_tokens; ++i) {               \
         SHERPA_ONNX_DELETE_C_STR(c.tokens[i]);                  \
       }                                                         \
       delete[] c.tokens;                                        \

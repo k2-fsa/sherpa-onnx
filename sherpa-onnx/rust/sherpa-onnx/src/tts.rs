@@ -135,7 +135,7 @@ impl Default for OfflineTtsMatchaModelConfig {
             lexicon: None,
             tokens: None,
             data_dir: None,
-            noise_scale: 0.667,
+            noise_scale: 1.0,
             length_scale: 1.0,
             dict_dir: None,
         }
@@ -249,7 +249,8 @@ pub struct OfflineTtsZipvoiceModelConfig {
     pub decoder: Option<String>,
     pub vocoder: Option<String>,
     /// Deprecated. Ignored since v2.0.0. Use `lexicon` or
-    /// [`GenerationConfig::phoneme_codepoints`] instead.
+    /// [`GenerationConfig::tokens`] instead. (ZipVoice does not support
+    /// `phoneme_codepoints`.)
     pub data_dir: Option<String>,
     pub lexicon: Option<String>,
     pub feat_scale: f32,

@@ -533,8 +533,8 @@
  * @property {string} [model]
  * @property {string} [lexicon]
  * @property {string} [tokens]
- * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon or
- *           phonemeCodepoints instead.
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [noiseScale]
  * @property {number} [noiseScaleW]
  * @property {number} [lengthScale]
@@ -546,8 +546,8 @@
  * @property {string} [vocoder]
  * @property {string} [lexicon]
  * @property {string} [tokens]
- * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon or
- *           phonemeCodepoints instead.
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [noiseScale]
  * @property {number} [lengthScale]
  */
@@ -557,8 +557,8 @@
  * @property {string} [model]
  * @property {string} [voices]
  * @property {string} [tokens]
- * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon or
- *           phonemeCodepoints instead.
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [lengthScale]
  * @property {string} [lexicon]
  * @property {string} [lang]
@@ -570,8 +570,8 @@
  * @property {string} [voices]
  * @property {string} [tokens]
  * @property {string} [lexicon]
- * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon or
- *           phonemeCodepoints instead.
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [lengthScale]
  */
 
@@ -581,8 +581,8 @@
  * @property {string} [encoder]
  * @property {string} [decoder]
  * @property {string} [vocoder]
- * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon or
- *           phonemeCodepoints instead.
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {string} [lexicon]
  * @property {number} [featScale]
  * @property {number} [tShift]

@@ -290,15 +290,15 @@ class OfflineTts(
 // to download models
 fun getOfflineTtsConfig(
     modelDir: String,
-    modelName: String, // for VITS
-    acousticModelName: String, // for Matcha
-    vocoder: String, // for Matcha
-    voices: String, // for Kokoro or kitten
-    lexicon: String,
-    dataDir: String, // deprecated, ignored; use lexicon or phonemeCodepoints
-    dictDir: String, // unused
-    ruleFsts: String,
-    ruleFars: String,
+    modelName: String = "", // for VITS
+    acousticModelName: String = "", // for Matcha
+    vocoder: String = "", // for Matcha
+    voices: String = "", // for Kokoro or kitten
+    lexicon: String = "",
+    dataDir: String = "", // deprecated, ignored; use lexicon or phonemeCodepoints
+    dictDir: String = "", // unused
+    ruleFsts: String = "",
+    ruleFars: String = "",
     numThreads: Int? = null,
     isKitten: Boolean = false,
     isSupertonic: Boolean = false,
@@ -309,6 +309,23 @@ fun getOfflineTtsConfig(
     ttsJson: String = "", // for Supertonic
     unicodeIndexer: String = "", // for Supertonic
     voiceStyle: String = "", // for Supertonic
+    isZipvoice: Boolean = false,
+    zipvoiceEncoder: String = "", // for ZipVoice
+    zipvoiceDecoder: String = "", // for ZipVoice
+    zipvoiceVocoder: String = "", // for ZipVoice
+    featScale: Float = 0.1f, // for ZipVoice
+    tShift: Float = 0.5f, // for ZipVoice
+    targetRms: Float = 0.1f, // for ZipVoice
+    guidanceScale: Float = 1.0f, // for ZipVoice
+    isPocket: Boolean = false,
+    lmFlow: String = "", // for Pocket
+    lmMain: String = "", // for Pocket
+    pocketEncoder: String = "", // for Pocket
+    pocketDecoder: String = "", // for Pocket
+    textConditioner: String = "", // for Pocket
+    vocabJson: String = "", // for Pocket
+    tokenScoresJson: String = "", // for Pocket
+    voiceEmbeddingCacheCapacity: Int = 50, // for Pocket
 ): OfflineTtsConfig {
     // For Matcha TTS, please set
     // acousticModelName, vocoder
@@ -335,7 +352,9 @@ fun getOfflineTtsConfig(
         2
     }
 
-    if (!isSupertonic && modelName.isEmpty() && acousticModelName.isEmpty()) {
+    if (!isSupertonic && !isZipvoice && !isPocket && modelName.isEmpty() &&
+        acousticModelName.isEmpty()
+    ) {
         throw IllegalArgumentException("Please specify a TTS model")
     }
 
@@ -345,6 +364,14 @@ fun getOfflineTtsConfig(
 
     if (acousticModelName.isNotEmpty() && vocoder.isEmpty()) {
         throw IllegalArgumentException("Please provide vocoder for Matcha TTS")
+    }
+
+    if (isZipvoice && zipvoiceEncoder.isEmpty()) {
+        throw IllegalArgumentException("Please provide encoder for ZipVoice")
+    }
+
+    if (isPocket && lmFlow.isEmpty()) {
+        throw IllegalArgumentException("Please provide lmFlow for Pocket TTS")
     }
 
     // Resolve the lexicon path once: "" stays "" (e.g. when the text is
@@ -418,15 +445,50 @@ fun getOfflineTtsConfig(
         OfflineTtsSupertonicModelConfig()
     }
 
+    val zipvoice = if (isZipvoice) {
+        OfflineTtsZipVoiceModelConfig(
+            tokens = "$modelDir/tokens.txt",
+            encoder = "$modelDir/$zipvoiceEncoder",
+            decoder = "$modelDir/$zipvoiceDecoder",
+            // The vocoder ships separately from the model package (e.g.
+            // vocos_24khz.onnx), so it is used as given, like Matcha's.
+            vocoder = zipvoiceVocoder,
+            lexicon = lexiconPath,
+            featScale = featScale,
+            tShift = tShift,
+            targetRms = targetRms,
+            guidanceScale = guidanceScale,
+        )
+    } else {
+        OfflineTtsZipVoiceModelConfig()
+    }
+
+    val pocket = if (isPocket) {
+        OfflineTtsPocketModelConfig(
+            lmFlow = "$modelDir/$lmFlow",
+            lmMain = "$modelDir/$lmMain",
+            encoder = "$modelDir/$pocketEncoder",
+            decoder = "$modelDir/$pocketDecoder",
+            textConditioner = "$modelDir/$textConditioner",
+            vocabJson = "$modelDir/$vocabJson",
+            tokenScoresJson = "$modelDir/$tokenScoresJson",
+            voiceEmbeddingCacheCapacity = voiceEmbeddingCacheCapacity,
+        )
+    } else {
+        OfflineTtsPocketModelConfig()
+    }
+
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = vits,
             matcha = matcha,
             kokoro = kokoro,
+            zipvoice = zipvoice,
             kitten = kitten,
+            pocket = pocket,
             supertonic = supertonic,
             numThreads = numberOfThreads,
-            debug = true,
+            debug = false,
             provider = "cpu",
         ),
         ruleFsts = ruleFsts,

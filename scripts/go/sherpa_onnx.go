@@ -998,7 +998,7 @@ type OfflineTtsMatchaModelConfig struct {
 	Lexicon       string  // Path to lexicon.txt
 	Tokens        string  // Path to tokens.txt
 	DataDir       string  // Deprecated. Ignored. Use Lexicon or PhonemeCodepoints instead.
-	NoiseScale    float32 // noise scale for vits models. Please use 0.667 in general
+	NoiseScale    float32 // noise scale for matcha models. Please use 1.0 in general
 	LengthScale   float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 	DictDir       string  // unused
 }
@@ -1038,7 +1038,7 @@ type OfflineTtsZipvoiceModelConfig struct {
 	Tokens  string // Path to tokens.txt for ZipVoice
 	Encoder string // Path to text encoder (e.g. encoder.onnx)
 	Decoder string // Path to flow-matching decoder (e.g. fm_decoder.onnx)
-	DataDir string // Deprecated. Ignored. Use Lexicon or PhonemeCodepoints instead.
+	DataDir string // Deprecated. Ignored. Use Lexicon or Tokens instead. (ZipVoice does not support PhonemeCodepoints.)
 	Lexicon string // Path to lexicon.txt (needed for zh)
 	Vocoder string // Path to vocoder (e.g. vocos_24khz.onnx)
 

@@ -1820,7 +1820,9 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
       std::vector<std::string> sentence;
       sentence.reserve(n);
       for (int32_t k = 0; k != n; ++k) {
-        sentence.emplace_back(p[k]);
+        // A C caller may legitimately pass a NULL entry here; constructing
+        // std::string from nullptr is undefined behaviour.
+        sentence.emplace_back(p[k] != nullptr ? p[k] : "");
       }
       cfg.tokens.push_back(std::move(sentence));
       p += n;

@@ -1606,14 +1606,20 @@ std::vector<std::string> SplitLongSentenceByWords(const std::string &sentence,
       }
     }
 
-    if (!found) {
-      // Force split at end
+    if (!found || split_pos <= start) {
+      // Force split at end. The `split_pos <= start` case happens when the
+      // only boundary found is the separator we started on; splitting there
+      // would not advance `start` and the loop below would never terminate.
       split_pos = end;
     }
 
     std::string piece = Trim(Utf32ToUtf8(u32.substr(start, split_pos - start)));
     if (!piece.empty()) chunks.emplace_back(std::move(piece));
+
     start = split_pos;
+    while (start < len && IsSpace(u32[start])) {
+      ++start;
+    }
   }
 
   return chunks;

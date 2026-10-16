@@ -85,7 +85,7 @@ Args:
   callback:
     If not None, it is called during speech generation with
     ``(samples: np.ndarray, progress: float) -> int``.
-    Return a non-zero value to stop generation early.
+    Return 1 to keep generating, or 0 to stop generation early.
 
 Returns:
   A ``GeneratedAudio`` object containing the audio samples and sample rate.

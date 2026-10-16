@@ -84,12 +84,26 @@ std::unordered_map<char32_t, int32_t> ReadPiperTokens(std::istream &is) {
 std::vector<int64_t> PiperPhonemesToIdsVits(
     const std::unordered_map<char32_t, int32_t> &token2id,
     const std::vector<char32_t> &phonemes, bool is_inflect) {
-  int32_t pad = token2id.at(U'_');
+  // These markers must exist in tokens.txt; look them up defensively so a
+  // vocab without them fails cleanly instead of throwing std::out_of_range
+  // across the C ABI (which would call std::terminate).
+  auto pad_it = token2id.find(U'_');
+  if (pad_it == token2id.end()) {
+    SHERPA_ONNX_LOGE("tokens.txt is missing the required '_' symbol.");
+    return {};
+  }
+  int32_t pad = pad_it->second;
   int32_t bos = -1;
   int32_t eos = -1;
   if (!is_inflect) {
-    bos = token2id.at(U'^');
-    eos = token2id.at(U'$');
+    auto bos_it = token2id.find(U'^');
+    auto eos_it = token2id.find(U'$');
+    if (bos_it == token2id.end() || eos_it == token2id.end()) {
+      SHERPA_ONNX_LOGE("tokens.txt is missing the required '^' or '$' symbol.");
+      return {};
+    }
+    bos = bos_it->second;
+    eos = eos_it->second;
   }
 
   std::vector<int64_t> ans;
@@ -190,7 +204,10 @@ std::vector<std::vector<int64_t>> PiperPhonemesToIdsKitten(
       }
       current.push_back(token2id.at(p));
       if (p == '.') {
-        current.push_back(token2id.at(' '));
+        auto sp = token2id.find(' ');
+        if (sp != token2id.end()) {
+          current.push_back(sp->second);
+        }
       }
     } else {
       SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
@@ -215,7 +232,12 @@ std::vector<int64_t> CoquiPhonemesToIds(
   int32_t eos_id = vits_meta_data.eos_id;
   int32_t blank_id = vits_meta_data.blank_id;
   int32_t add_blank = vits_meta_data.add_blank;
-  int32_t comma_id = token2id.at(',');
+  auto comma_it = token2id.find(',');
+  if (comma_it == token2id.end()) {
+    SHERPA_ONNX_LOGE("tokens.txt is missing the required ',' symbol.");
+    return {};
+  }
+  int32_t comma_id = comma_it->second;
 
   std::vector<int64_t> ans;
   if (add_blank) {

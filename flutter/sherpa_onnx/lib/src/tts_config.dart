@@ -456,7 +456,7 @@ class OfflineTtsModelConfig {
     this.pocket = const OfflineTtsPocketModelConfig(),
     this.supertonic = const OfflineTtsSupertonicModelConfig(),
     this.numThreads = 1,
-    this.debug = true,
+    this.debug = false,
     this.provider = 'cpu',
   });
 

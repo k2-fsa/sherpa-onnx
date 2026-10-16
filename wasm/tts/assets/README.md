@@ -9,8 +9,8 @@ to download a model.
 Choose exactly one of the two text frontends below (not both):
 
 - **option 1 (default): phonemize** — the text is phonemized with
-  piper-phonemize; no extra files are needed. Download the wasm bundle and
-  unzip it so the files end up in `wasm/tts/piper-phonemize/`:
+  piper-phonemize; no extra *model* files are needed. Download the wasm bundle
+  and unzip it so the files end up in `wasm/tts/piper-phonemize/`:
 
   ```bash
   cd sherpa-onnx/wasm/tts

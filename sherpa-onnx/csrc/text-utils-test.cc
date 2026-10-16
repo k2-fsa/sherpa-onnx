@@ -241,6 +241,29 @@ TEST(SplitLongSentenceByWords, Empty) {
   EXPECT_EQ(result.size(), 0u);
 }
 
+TEST(SplitLongSentenceByWords, NoHangOnLeadingSpaceAfterSplit) {
+  // Regression: the first chunk ends on a space, so the second chunk starts
+  // with that space. If it then needs another split and has no internal
+  // boundary, the backward search finds the leading space and would set
+  // split_pos == start, never advancing. Must terminate and make progress.
+  auto result = SplitLongSentenceByWords("ab 你好世界你好世界你好世界你好世界你好世界你好", 20);
+  EXPECT_GT(result.size(), 1u);
+
+  // The pieces must still cover the input without dropping content.
+  std::string joined;
+  for (const auto &p : result) joined += p;
+  EXPECT_EQ(joined, "ab你好世界你好世界你好世界你好世界你好世界你好");
+}
+
+TEST(SplitLongSentenceByWords, AdvancesOnSpaceOnlySeparator) {
+  // Two words separated by a single space, with max_words=1: each split lands
+  // on the space, so without skipping leading spaces the loop would spin.
+  auto result = SplitLongSentenceByWords("aa bb", 1);
+  EXPECT_EQ(result.size(), 2u);
+  EXPECT_EQ(result[0], "aa");
+  EXPECT_EQ(result[1], "bb");
+}
+
 TEST(ParseLexiconFile, NewFormat) {
   std::istringstream is(
       "# comment\n"

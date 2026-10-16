@@ -378,7 +378,13 @@ struct ContentView: View {
 
                 var codepoints: [[Int32]] = []
                 for i in 0..<phonemes.numSentences {
-                    codepoints.append(phonemes.getPhonemes(sentenceId: i).map { Int32($0) })
+                    let ph = phonemes.getPhonemes(sentenceId: i)
+                    // piper may emit empty sentences (e.g. a trailing segment
+                    // after punctuation). The C API requires every sentence to
+                    // be non-empty and rejects the whole request otherwise.
+                    if !ph.isEmpty {
+                        codepoints.append(ph.map { Int32($0) })
+                    }
                 }
 
                 var genConfig = SherpaOnnxGenerationConfigSwift()

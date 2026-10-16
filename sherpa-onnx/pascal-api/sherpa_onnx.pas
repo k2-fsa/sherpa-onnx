@@ -84,7 +84,8 @@ type
       Mutually exclusive with Tokens. }
     PhonemeCodepoints: TSherpaOnnxInt32ArrayArray;
     { Pre-tokenized input, e.g. Chinese pinyin like "zhong1". Each inner
-      array is one sentence.
+      array is one sentence. When set, it is used in place of the Text
+      argument; leave empty to use Text with a lexicon.
       Mutually exclusive with PhonemeCodepoints. }
     Tokens: TSherpaOnnxStringArrayArray;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxGenerationConfig);
@@ -3131,13 +3132,15 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
-  Config: TSherpaOnnxGenerationConfig;
+  // Must be the C-layout record, not TSherpaOnnxGenerationConfig: the C API
+  // reads the raw SherpaOnnxGenerationConfig (15 fields) from this address.
+  C: SherpaOnnxGenerationConfig;
 begin
-  Config := Default(TSherpaOnnxGenerationConfig);
-  Config.Sid := SpeakerId;
-  Config.Speed := Speed;
+  C := Default(SherpaOnnxGenerationConfig);
+  C.Sid := SpeakerId;
+  C.Speed := Speed;
   Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-    @Config, nil, nil);
+    @C, nil, nil);
   Result := ExtractGeneratedAudio(Audio);
 end;
 
@@ -3148,21 +3151,23 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
-  Config: TSherpaOnnxGenerationConfig;
+  // Must be the C-layout record, not TSherpaOnnxGenerationConfig: the C API
+  // reads the raw SherpaOnnxGenerationConfig (15 fields) from this address.
+  C: SherpaOnnxGenerationConfig;
 begin
-  Config := Default(TSherpaOnnxGenerationConfig);
-  Config.Sid := SpeakerId;
-  Config.Speed := Speed;
+  C := Default(SherpaOnnxGenerationConfig);
+  C.Sid := SpeakerId;
+  C.Speed := Speed;
 
   _OfflineTtsCallbackWithArg := Callback;
   _OfflineTtsCallbackWithArgUserArg := Arg;
 
   if Assigned(Callback) then
     Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-      @Config, @_OfflineTtsCallbackWithArgWrapper, nil)
+      @C, @_OfflineTtsCallbackWithArgWrapper, nil)
   else
     Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-      @Config, nil, nil);
+      @C, nil, nil);
 
   Result := ExtractGeneratedAudio(Audio);
 end;
