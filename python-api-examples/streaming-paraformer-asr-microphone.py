@@ -9,6 +9,8 @@
 # to download pre-trained models
 
 import sys
+
+import numpy as np
 from pathlib import Path
 
 try:
@@ -92,6 +94,20 @@ def main():
             display.display()
 
             if is_endpoint:
+                # For streaming paraformer models, which have a large right
+                # chunk size, we need to pad ~1 second of silence on
+                # endpointing so that the last character can be recognized.
+                # (Mirrors the C++ example sherpa-onnx-microphone.cc; see
+                # https://github.com/k2-fsa/sherpa-onnx/issues/1373)
+                tail_paddings = np.zeros(int(1.0 * sample_rate), dtype=np.float32)
+                stream.accept_waveform(sample_rate, tail_paddings)
+                while recognizer.is_ready(stream):
+                    recognizer.decode_stream(stream)
+
+                result = recognizer.get_result(stream)
+                display.update_text(result)
+                display.display()
+
                 if result:
                     display.finalize_current_sentence()
                     display.display()

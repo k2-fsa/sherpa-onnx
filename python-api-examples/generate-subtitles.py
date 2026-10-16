@@ -430,6 +430,14 @@ def get_args():
     )
 
     parser.add_argument(
+        "--max-duration-seconds",
+        type=float,
+        default=0,
+        help="""Only process the first N seconds of the input file. Use 0 to
+        process the whole file.""",
+    )
+
+    parser.add_argument(
         "sound_file",
         type=str,
         help="The input sound file to generate subtitles ",
@@ -716,16 +724,38 @@ def main():
     if not Path(args.sound_file).is_file():
         raise ValueError(f"{args.sound_file} does not exist")
 
+    srt_filename = Path(args.sound_file).with_suffix(".srt")
+    txt_filename = Path(args.sound_file).with_suffix(".txt")
+
+    existing = [p for p in (srt_filename, txt_filename) if p.exists()]
+    if existing:
+        for p in existing:
+            print(f"warning: {p} exists!", file=sys.stderr)
+        sys.exit("Please delete or rename the file(s) above first!")
+
     assert (
         args.sample_rate == 16000
     ), f"Only sample rate 16000 is supported.Given: {args.sample_rate}"
 
     recognizer = create_recognizer(args)
 
+    max_duration = args.max_duration_seconds
+    if max_duration and max_duration > 0:
+        print(
+            f"Only the first {max_duration} seconds are processed! "
+            "Use --max-duration-seconds=0 for the whole file."
+        )
+    else:
+        max_duration = 0
+
     ffmpeg_cmd = [
         "ffmpeg",
         "-i",
         args.sound_file,
+    ]
+    if max_duration > 0:
+        ffmpeg_cmd += ["-t", f"{max_duration}"]
+    ffmpeg_cmd += [
         "-f",
         "s16le",
         "-acodec",
@@ -843,14 +873,12 @@ def main():
     duration = num_processed_samples / 16000
     rtf = elapsed_seconds / duration
 
-    srt_filename = Path(args.sound_file).with_suffix(".srt")
     with open(srt_filename, "w", encoding="utf-8") as f:
         for i, seg in enumerate(segment_list):
             print(i + 1, file=f)
             print(seg, file=f)
             print("", file=f)
 
-    txt_filename = Path(args.sound_file).with_suffix(".txt")
     with open(txt_filename, "w", encoding="utf-8") as f:
         for seg in segment_list:
             s = f"{timedelta(seconds=seg.start)}"[:-3]
