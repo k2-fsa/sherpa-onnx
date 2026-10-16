@@ -22,8 +22,8 @@ void OfflineTtsKittenModelConfig::Register(ParseOptions *po) {
   po->Register("kitten-lexicon", &lexicon,
                "Path to lexicon.txt for kitten models");
   po->Register("kitten-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng. "
-               "Ignored. Use --kitten-lexicon or "
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --kitten-lexicon or "
                "GenerationConfig.phoneme_codepoints instead.");
   po->Register("kitten-length-scale", &length_scale,
                "Inverse of speech speed. Larger->Slower; Smaller->faster.");

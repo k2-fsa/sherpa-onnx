@@ -224,6 +224,12 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     // Tokenize reference text
     std::vector<int64_t> prompt_tokens;
+    if (!config.phoneme_codepoints.empty()) {
+      SHERPA_ONNX_LOGE(
+          "GenerationConfig.phoneme_codepoints is not supported by ZipVoice "
+          "models and is ignored. Use lexicon or GenerationConfig.tokens "
+          "instead.");
+    }
     if (!config.tokens.empty()) {
       // tokens path: use first sentence as prompt tokens
       for (const auto &tok : config.tokens[0]) {

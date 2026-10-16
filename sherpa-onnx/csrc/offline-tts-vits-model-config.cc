@@ -17,8 +17,8 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
   po->Register("vits-lexicon", &lexicon, "Path to lexicon.txt for VITS models");
   po->Register("vits-tokens", &tokens, "Path to tokens.txt for VITS models");
   po->Register("vits-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng. "
-               "Ignored. Use --vits-lexicon or "
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --vits-lexicon or "
                "GenerationConfig.phoneme_codepoints instead.");
   po->Register("vits-dict-dir", &dict_dir,
                "Not used. You don't need to provide a value for it");
@@ -60,7 +60,7 @@ bool OfflineTtsVitsModelConfig::Validate() const {
         "WARNING: --vits-data-dir is deprecated and ignored in "
         "sherpa-onnx >= v2.0.0. Please use GenerationConfig.phoneme_codepoints "
         "with an external phonemizer (e.g. piper_phonemize) instead. "
-        "See python-api-examples/offline-tts-piper-phonemize.py");
+        "See python-api-examples/test-offline-tts-piper-phonemize.py");
   }
 
   if (!dict_dir.empty()) {

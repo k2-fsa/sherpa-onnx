@@ -17,8 +17,8 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
   po->Register("zipvoice-tokens", &tokens,
                "Path to tokens.txt for ZipVoice models");
   po->Register("zipvoice-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng. "
-               "Ignored. Use --zipvoice-lexicon or "
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --zipvoice-lexicon or "
                "GenerationConfig.phoneme_codepoints instead.");
   po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt");
   po->Register("zipvoice-encoder", &encoder, "Path to zipvoice text model");

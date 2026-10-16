@@ -7,7 +7,10 @@
 #
 #   * *-lexicon.py     -- pass a lexicon file, no external phonemizer needed
 #   * *-phonemize.py   -- phonemize outside sherpa-onnx (piper_phonemize,
-#                         pypinyin, misaki) and pass phoneme_codepoints/tokens
+#                         pypinyin, misaki) and pass phoneme_codepoints
+#   * *-tokens.py      -- same as *-phonemize.py but pass token strings via
+#                         GenerationConfig.tokens (sherpa-onnx adds the
+#                         bos/pad/eos markers itself)
 #
 # Requires: piper_phonemize, pypinyin, misaki[zh], kaldifst, soundfile
 #
@@ -139,6 +142,7 @@ download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts
 download $LEXICON
 run test-offline-tts-piper-lexicon.py test-piper-lexicon.wav
 run test-offline-tts-piper-phonemize.py test-piper-phonemize.wav
+run test-offline-tts-piper-tokens.py test-piper-tokens.wav
 rm -rf vits-piper-en_US-amy-low lexicon-en-us.txt
 
 log "------------------------------------------------------------"

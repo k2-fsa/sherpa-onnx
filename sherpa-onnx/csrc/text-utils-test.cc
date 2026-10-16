@@ -353,7 +353,9 @@ TEST(ParseLexiconFile, MultiCodepointPhonemes) {
   EXPECT_EQ(entries[0].phonemes[3], "ˈ");
   EXPECT_EQ(entries[0].phonemes[4], "ao3");  // ends with digit, kept whole
   EXPECT_EQ(entries[0].phonemes[5], "ɪ");
-  TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
+}
+
+TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
     // Whisper byte-level-BPE tokens can split a multi-byte UTF-8 character
     // across two tokens. Each fragment alone is invalid UTF-8 and is
     // stripped; the character only survives when the fragments are joined

@@ -28,7 +28,8 @@ class OfflineTtsCharacterFrontend : public OfflineTtsFrontend {
    * @param text The input text.
    *             Example 1: "This is the first sample sentence; this is the
    *             second one." Example 2: "这是第一句。这是第二句。"
-   * @param voice Optional. It is for espeak-ng.
+   * @param voice Optional. Unused by this frontend. (It used to select an
+   *              espeak-ng voice; espeak-ng is no longer used.)
    *
    * @return Return a vector-of-vector of token IDs. Each subvector contains
    *         a sentence that can be processed independently.

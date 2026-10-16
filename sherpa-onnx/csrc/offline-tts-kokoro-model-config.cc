@@ -32,8 +32,8 @@ void OfflineTtsKokoroModelConfig::Register(ParseOptions *po) {
       "You can pass multiple files, separated by ','. Example: "
       "./lexicon-us-en.txt,./lexicon-zh.txt");
   po->Register("kokoro-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng. "
-               "Ignored. Use --kokoro-lexicon or "
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --kokoro-lexicon or "
                "GenerationConfig.phoneme_codepoints instead.");
   po->Register("kokoro-dict-dir", &dict_dir,
                "Not used. You don't need to provide a value for it");

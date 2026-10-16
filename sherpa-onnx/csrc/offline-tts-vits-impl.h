@@ -270,6 +270,38 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
                                  const std::string &text,
                                  const OfflineTtsVitsModelMetaData &meta_data,
                                  bool debug) const {
+    if (!gen_config.tokens.empty()) {
+      // Pre-tokenized input given as token strings. Each inner vector is one
+      // sentence. VITS vocabularies key one symbol per Unicode codepoint (see
+      // ReadPiperTokens), so convert to codepoints and reuse the codepoint
+      // path: that way the bos/pad/eos markers are added here, exactly as for
+      // phoneme_codepoints, and callers pass bare tokens.
+      std::vector<std::vector<int32_t>> codepoints;
+      codepoints.reserve(gen_config.tokens.size());
+      for (const auto &sentence : gen_config.tokens) {
+        std::vector<int32_t> cps;
+        cps.reserve(sentence.size());
+        for (const auto &tok : sentence) {
+          const std::u32string u32 = Utf8ToUtf32(tok);
+          if (u32.empty()) {
+            continue;
+          }
+          if (u32.size() != 1) {
+            SHERPA_ONNX_LOGE(
+                "Token '%s' in GenerationConfig.tokens is not a single "
+                "codepoint and cannot be used with this model. It is ignored.",
+                tok.c_str());
+            continue;
+          }
+          cps.push_back(static_cast<int32_t>(u32[0]));
+        }
+        if (!cps.empty()) {
+          codepoints.emplace_back(std::move(cps));
+        }
+      }
+      return TokenizeFromCodepoints(codepoints);
+    }
+
     if (!gen_config.phoneme_codepoints.empty()) {
       return TokenizeFromCodepoints(gen_config.phoneme_codepoints);
     }

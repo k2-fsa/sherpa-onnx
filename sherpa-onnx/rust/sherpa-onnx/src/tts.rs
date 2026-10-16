@@ -4,11 +4,11 @@
 //! Pocket TTS, and Supertonic. See the repository examples:
 //!
 //! - `rust-api-examples/examples/pocket_tts.rs`
-//! - `rust-api-examples/examples/kokoro_tts_en.rs`
-//! - `rust-api-examples/examples/kokoro_tts_zh_en.rs`
-//! - `rust-api-examples/examples/matcha_tts_en.rs`
-//! - `rust-api-examples/examples/matcha_tts_zh.rs`
-//! - `rust-api-examples/examples/zipvoice_tts.rs`
+//! - `rust-api-examples/examples/kokoro_tts_en_lexicon.rs`
+//! - `rust-api-examples/examples/kokoro_tts_zh_en_lexicon.rs`
+//! - `rust-api-examples/examples/matcha_tts_en_lexicon.rs`
+//! - `rust-api-examples/examples/matcha_tts_zh_lexicon.rs`
+//! - `rust-api-examples/examples/zipvoice_tts_lexicon.rs`
 //! - `rust-api-examples/examples/supertonic_tts.rs`
 //!
 //! # Example

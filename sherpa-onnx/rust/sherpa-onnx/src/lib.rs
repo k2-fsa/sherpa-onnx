@@ -139,15 +139,15 @@
 //!
 //! ## TTS
 //!
-//! - [`kitten_tts_en.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kitten_tts_en.rs)
-//! - [`kokoro_tts_en.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kokoro_tts_en.rs)
-//! - [`kokoro_tts_zh_en.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kokoro_tts_zh_en.rs)
-//! - [`matcha_tts_en.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/matcha_tts_en.rs)
-//! - [`matcha_tts_zh.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/matcha_tts_zh.rs)
+//! - [`kitten_tts_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kitten_tts_en_lexicon.rs)
+//! - [`kokoro_tts_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kokoro_tts_en_lexicon.rs)
+//! - [`kokoro_tts_zh_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kokoro_tts_zh_en_lexicon.rs)
+//! - [`matcha_tts_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/matcha_tts_en_lexicon.rs)
+//! - [`matcha_tts_zh_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/matcha_tts_zh_lexicon.rs)
 //! - [`pocket_tts.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/pocket_tts.rs)
 //! - [`supertonic_tts.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/supertonic_tts.rs)
-//! - [`vits_tts.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/vits_tts.rs)
-//! - [`zipvoice_tts.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/zipvoice_tts.rs)
+//! - [`vits_tts_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/vits_tts_lexicon.rs)
+//! - [`zipvoice_tts_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/zipvoice_tts_lexicon.rs)
 //!
 //! ## Audio tagging
 //!
