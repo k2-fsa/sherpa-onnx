@@ -26,6 +26,17 @@ struct OfflineCtcDecoderResult {
   ///
   /// tokens.size() == timestamps.size()
   std::vector<int32_t> timestamps;
+
+  /// Greedy log-probability of tokens[i] (i.e. log p(tokens[i] | frame)).
+  /// Empty when the decoder did not record it.
+  /// If populated, token_log_probs.size() == tokens.size().
+  std::vector<float> token_log_probs;
+
+  /// Full vocabulary log-probability distribution at the emission frame of
+  /// tokens[i]. vocab_log_probs[i].size() == vocab_size.
+  /// Empty when the decoder did not record it.
+  /// If populated, vocab_log_probs.size() == tokens.size().
+  std::vector<std::vector<float>> vocab_log_probs;
 };
 
 class OfflineCtcDecoder {
