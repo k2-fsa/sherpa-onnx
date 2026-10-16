@@ -13,6 +13,9 @@ data class OfflineRecognizerResult(
     // valid only for TDT models
     val durations: FloatArray,
 
+    // ysProbs[i] is the log probability for tokens[i]
+    val ysProbs: FloatArray,
+
     // The decoded word IDs. Empty for greedy search decoding, non-empty when
     // an HLG graph is used, i.e. when ctcFstDecoderConfig.graph is set.
     val words: IntArray = IntArray(0),
