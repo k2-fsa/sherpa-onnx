@@ -608,7 +608,7 @@ struct OfflineQwen3ASRModelConfig {
    * "foo,bar,baz". */
   std::string hotwords;
   /** Maximum total sequence length supported by the model. */
-  int32_t max_total_len = 512;
+  int32_t max_total_len = 1024;
   /** Maximum number of new tokens to generate. */
   int32_t max_new_tokens = 128;
   /** Sampling temperature. */

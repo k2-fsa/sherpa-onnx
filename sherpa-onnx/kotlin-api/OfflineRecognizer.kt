@@ -80,7 +80,7 @@ data class OfflineQwen3AsrModelConfig(
     var encoder: String = "",
     var decoder: String = "",
     var tokenizer: String = "",
-    var maxTotalLen: Int = 512,
+    var maxTotalLen: Int = 1024,
     var maxNewTokens: Int = 128,
     var temperature: Float = 1e-6f,
     var topP: Float = 0.8f,
