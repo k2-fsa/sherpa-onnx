@@ -825,6 +825,10 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
 endif()
 
 if(SHERPA_ONNX_ENABLE_TESTS)
+  add_executable(parakeet-feature-dump
+    ../../scripts/parakeet/dump-features.cc)
+  target_link_libraries(parakeet-feature-dump PRIVATE sherpa-onnx-core)
+
   set(sherpa_onnx_test_srcs
     cat-test.cc
     circular-buffer-test.cc
@@ -837,6 +841,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     offline-recognizer-moonshine-v2-impl-test.cc
     offline-recognizer-qwen3-asr-impl-test.cc
     offline-recognizer-shared-rng-test.cc
+    offline-stream-parakeet-test.cc
     offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
