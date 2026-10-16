@@ -92,46 +92,49 @@ class VoiceActivityDetector::Impl {
         p, static_cast<const float *>(last_.data()) + last_.size());
 
     if (is_speech) {
-      if (start_ == -1) {
+      if (start_offset_ == -1) {
         // beginning of speech
-        start_ = std::max(buffer_.Tail() - 2 * model_->WindowSize() -
-                              model_->MinSpeechDurationSamples(),
-                          buffer_.Head());
-        cur_segment_.start = start_;
+        int32_t look_back =
+            2 * model_->WindowSize() + model_->MinSpeechDurationSamples();
+        start_offset_ = std::max(buffer_.Size() - look_back, 0);
+        cur_segment_.start = buffer_.GetIndex(start_offset_);
       }
-      int32_t num_samples = buffer_.Tail() - start_ - 1;
-      cur_segment_.samples = buffer_.Get(start_, num_samples);
+      int32_t num_samples = buffer_.Size() - start_offset_ - 1;
+      cur_segment_.samples = buffer_.Get(cur_segment_.start, num_samples);
     } else {
       // non-speech
 
       cur_segment_.start = -1;
       cur_segment_.samples.clear();
 
-      if (start_ != -1 && buffer_.Size()) {
+      if (start_offset_ != -1 && buffer_.Size()) {
         // end of speech, save the speech segment
-        int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
+        int32_t end_offset =
+            buffer_.Size() - model_->MinSilenceDurationSamples();
+        int32_t start_index = buffer_.GetIndex(start_offset_);
 
-        std::vector<float> s = buffer_.Get(start_, end - start_);
+        std::vector<float> s =
+            buffer_.Get(start_index, end_offset - start_offset_);
         SpeechSegment segment;
 
-        segment.start = start_;
+        segment.start = start_index;
         segment.samples = std::move(s);
 
         segments_.push(std::move(segment));
 
-        buffer_.Pop(end - buffer_.Head());
+        buffer_.Pop(end_offset);
       }
 
-      if (start_ == -1) {
-        int32_t end = buffer_.Tail() - 2 * model_->WindowSize() -
-                      model_->MinSpeechDurationSamples();
-        int32_t n = std::max(0, end - buffer_.Head());
+      if (start_offset_ == -1) {
+        int32_t keep =
+            2 * model_->WindowSize() + model_->MinSpeechDurationSamples();
+        int32_t n = std::max(0, buffer_.Size() - keep);
         if (n > 0) {
           buffer_.Pop(n);
         }
       }
 
-      start_ = -1;
+      start_offset_ = -1;
     }
   }
 
@@ -161,39 +164,40 @@ class VoiceActivityDetector::Impl {
     buffer_.Reset();
     last_.clear();
 
-    start_ = -1;
+    start_offset_ = -1;
 
     cur_segment_.start = -1;
     cur_segment_.samples.clear();
   }
 
   void Flush() {
-    if (start_ == -1 || buffer_.Size() == 0) {
+    if (start_offset_ == -1 || buffer_.Size() == 0) {
       return;
     }
 
-    int32_t end = buffer_.Tail();
-    if (end <= start_) {
+    int32_t end_offset = buffer_.Size();
+    if (end_offset <= start_offset_) {
       return;
     }
 
-    std::vector<float> s = buffer_.Get(start_, end - start_);
+    int32_t start_index = buffer_.GetIndex(start_offset_);
+    std::vector<float> s = buffer_.Get(start_index, end_offset - start_offset_);
 
     SpeechSegment segment;
 
-    segment.start = start_;
+    segment.start = start_index;
     segment.samples = std::move(s);
 
     segments_.push(std::move(segment));
 
-    buffer_.Pop(end - buffer_.Head());
-    start_ = -1;
+    buffer_.Pop(end_offset);
+    start_offset_ = -1;
 
     cur_segment_.start = -1;
     cur_segment_.samples.clear();
   }
 
-  bool IsSpeechDetected() const { return start_ != -1; }
+  bool IsSpeechDetected() const { return start_offset_ != -1; }
 
   SpeechSegment CurrentSpeechSegment() const { return cur_segment_; }
 
@@ -228,7 +232,8 @@ class VoiceActivityDetector::Impl {
   float new_min_silence_duration_s_ = 0.1;
   float new_threshold_ = 0.90;
 
-  int32_t start_ = -1;
+  // Offset from buffer_.Head() to the start of the current speech segment.
+  int32_t start_offset_ = -1;
 };
 
 VoiceActivityDetector::VoiceActivityDetector(
