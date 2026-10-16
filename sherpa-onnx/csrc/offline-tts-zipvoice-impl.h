@@ -6,9 +6,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <fstream>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -27,6 +32,11 @@
 #include "sherpa-onnx/csrc/vocoder.h"
 
 namespace sherpa_onnx {
+
+struct ZipVoicePromptCache {
+  std::vector<int64_t> prompt_tokens;
+  std::vector<float> prompt_features;
+};
 
 class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
  public:
@@ -47,6 +57,97 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     InitFrontend(mgr);
 
     PostInit();
+  }
+
+  // ======== Voice embedding cache + persistence ========
+
+  static int32_t SaveVoiceEmbeddings(const std::string &path) {
+    std::lock_guard<std::mutex> lock(cache_mutex_);
+    std::ofstream ofs(path, std::ios::binary);
+    if (!ofs) {
+      SHERPA_ONNX_LOGE("ZipVoice SaveVoiceEmbeddings: cannot open %s", path.c_str());
+      return 0;
+    }
+    int32_t count = static_cast<int32_t>(voice_cache_.size());
+    ofs.write(reinterpret_cast<const char *>(&count), sizeof(count));
+    for (const auto &kv : voice_cache_) {
+      const std::string &hash = kv.first;
+      const ZipVoicePromptCache &entry = kv.second;
+      int32_t hash_len = static_cast<int32_t>(hash.size());
+      ofs.write(reinterpret_cast<const char *>(&hash_len), sizeof(hash_len));
+      ofs.write(hash.data(), hash_len);
+      int32_t pt_len = static_cast<int32_t>(entry.prompt_tokens.size());
+      ofs.write(reinterpret_cast<const char *>(&pt_len), sizeof(pt_len));
+      if (pt_len > 0) {
+        ofs.write(reinterpret_cast<const char *>(entry.prompt_tokens.data()),
+                  pt_len * sizeof(int64_t));
+      }
+      int32_t pf_len = static_cast<int32_t>(entry.prompt_features.size());
+      ofs.write(reinterpret_cast<const char *>(&pf_len), sizeof(pf_len));
+      if (pf_len > 0) {
+        ofs.write(reinterpret_cast<const char *>(entry.prompt_features.data()),
+                  pf_len * sizeof(float));
+      }
+    }
+    SHERPA_ONNX_LOGE("ZipVoice: saved %d voice embeddings to %s", count, path.c_str());
+    return count;
+  }
+
+  static int32_t LoadVoiceEmbeddings(const std::string &path) {
+    std::lock_guard<std::mutex> lock(cache_mutex_);
+    std::ifstream ifs(path, std::ios::binary);
+    if (!ifs) {
+      SHERPA_ONNX_LOGE("ZipVoice LoadVoiceEmbeddings: cannot open %s", path.c_str());
+      return 0;
+    }
+    voice_cache_.clear();
+    int32_t count = 0;
+    ifs.read(reinterpret_cast<char *>(&count), sizeof(count));
+    for (int32_t i = 0; i < count; i++) {
+      ZipVoicePromptCache entry;
+      int32_t hash_len = 0;
+      ifs.read(reinterpret_cast<char *>(&hash_len), sizeof(hash_len));
+      std::string hash(hash_len, '\0');
+      ifs.read(hash.data(), hash_len);
+      int32_t pt_len = 0;
+      ifs.read(reinterpret_cast<char *>(&pt_len), sizeof(pt_len));
+      if (pt_len > 0) {
+        entry.prompt_tokens.resize(pt_len);
+        ifs.read(reinterpret_cast<char *>(entry.prompt_tokens.data()),
+                 pt_len * sizeof(int64_t));
+      }
+      int32_t pf_len = 0;
+      ifs.read(reinterpret_cast<char *>(&pf_len), sizeof(pf_len));
+      if (pf_len > 0) {
+        entry.prompt_features.resize(pf_len);
+        ifs.read(reinterpret_cast<char *>(entry.prompt_features.data()),
+                 pf_len * sizeof(float));
+      }
+      voice_cache_[std::move(hash)] = std::move(entry);
+    }
+    SHERPA_ONNX_LOGE("ZipVoice: loaded %d voice embeddings from %s", count, path.c_str());
+    return count;
+  }
+
+  static void ClearVoiceEmbeddings() {
+    std::lock_guard<std::mutex> lock(cache_mutex_);
+    voice_cache_.clear();
+    SHERPA_ONNX_LOGE("ZipVoice: voice embedding cache cleared");
+  }
+
+  // Internal: compute cache key from ref audio/text/params
+  static std::string ComputeCacheKey(
+      const std::vector<float> &audio, const std::string &text,
+      int32_t sample_rate, float feat_scale, float target_rms) {
+    std::ostringstream oss;
+    oss << sample_rate << "|" << feat_scale << "|" << target_rms << "|" << text << "|";
+    size_t n = audio.size();
+    if (n == 0) return oss.str();
+    size_t step = std::max<size_t>(1, n / 300);
+    for (size_t i = 0; i < n; i += step) {
+      oss << audio[i] << ",";
+    }
+    return oss.str();
   }
 
   int32_t SampleRate() const override {
@@ -132,33 +233,55 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       return {};
     }
 
-    std::vector<TokenIDs> prompt_token_ids =
-        frontend_->ConvertTextToTokenIds(config.reference_text);
-    if (prompt_token_ids.empty() ||
-        (prompt_token_ids.size() == 1 && prompt_token_ids[0].tokens.empty())) {
-#if __OHOS__
-      SHERPA_ONNX_LOGE(
-          "Failed to convert prompt text '%{public}s' to token IDs",
-          config.reference_text.c_str());
-#else
-      SHERPA_ONNX_LOGE("Failed to convert prompt text '%s' to token IDs",
-                       config.reference_text.c_str());
-#endif
-      return {};
+    // ===== Cache voice embedding (prompt_tokens + prompt_features) =====
+    std::string cache_key = ComputeCacheKey(
+        config.reference_audio, config.reference_text,
+        config.reference_sample_rate, feat_scale, target_rms);
+
+    ZipVoicePromptCache cached;
+    bool cache_hit = false;
+    {
+      std::lock_guard<std::mutex> lock(cache_mutex_);
+      auto it = voice_cache_.find(cache_key);
+      if (it != voice_cache_.end()) {
+        cached = it->second;
+        cache_hit = true;
+        SHERPA_ONNX_LOGE("ZIPVOICE CACHE HIT: voice embedding");
+      }
     }
 
-    std::vector<int64_t> prompt_tokens;
-    for (const auto &t : prompt_token_ids) {
-      prompt_tokens.insert(prompt_tokens.end(), t.tokens.begin(),
-                           t.tokens.end());
-    }
+    if (!cache_hit) {
+      SHERPA_ONNX_LOGE("ZIPVOICE CACHE MISS: computing voice embedding...");
 
-    std::vector<float> prompt_features = ComputePromptFeatures(
-        config.reference_audio, config.reference_sample_rate, feat_scale,
-        target_rms);
-    if (prompt_features.empty()) {
-      SHERPA_ONNX_LOGE("No frames extracted from the prompt audio");
-      return {};
+      std::vector<TokenIDs> prompt_token_ids =
+          frontend_->ConvertTextToTokenIds(config.reference_text);
+      if (prompt_token_ids.empty() ||
+          (prompt_token_ids.size() == 1 &&
+           prompt_token_ids[0].tokens.empty())) {
+        SHERPA_ONNX_LOGE("Failed to convert prompt text '%s' to token IDs",
+                         config.reference_text.c_str());
+        return {};
+      }
+
+      for (const auto &t : prompt_token_ids) {
+        cached.prompt_tokens.insert(cached.prompt_tokens.end(),
+                                    t.tokens.begin(), t.tokens.end());
+      }
+
+      cached.prompt_features = ComputePromptFeatures(
+          config.reference_audio, config.reference_sample_rate, feat_scale,
+          target_rms);
+      if (cached.prompt_features.empty()) {
+        SHERPA_ONNX_LOGE("No frames extracted from the prompt audio");
+        return {};
+      }
+
+      {
+        std::lock_guard<std::mutex> lock(cache_mutex_);
+        voice_cache_[cache_key] = cached;
+      }
+      SHERPA_ONNX_LOGE("ZIPVOICE: voice embedding cached (tokens=%zu, features=%zu)",
+                       cached.prompt_tokens.size(), cached.prompt_features.size());
     }
 
     auto sentences = SplitByPunctuation(text);
@@ -213,7 +336,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       }
 
       GeneratedAudio cur = GenerateChunk(
-          sentences[i], prompt_tokens, prompt_features, speed, num_steps,
+          sentences[i], cached.prompt_tokens, cached.prompt_features, speed, num_steps,
           feat_scale, t_shift, guidance_scale);
 
       if (cur.samples.empty()) {
@@ -484,7 +607,16 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   std::unique_ptr<OfflineTtsFrontend> frontend_;
 
   std::unique_ptr<knf::MelBanks> mel_banks_;
+
+  // Voice embedding cache (shared across all instances)
+  static std::mutex cache_mutex_;
+  static std::unordered_map<std::string, ZipVoicePromptCache> voice_cache_;
 };
+
+// Static member definitions (inline in header, C++17)
+inline std::mutex OfflineTtsZipvoiceImpl::cache_mutex_;
+inline std::unordered_map<std::string, ZipVoicePromptCache>
+    OfflineTtsZipvoiceImpl::voice_cache_;
 
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_IMPL_H_
