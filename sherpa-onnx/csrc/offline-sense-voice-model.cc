@@ -5,10 +5,19 @@
 #include "sherpa-onnx/csrc/offline-sense-voice-model.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -34,9 +43,7 @@ class OfflineSenseVoiceModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    sess_ = std::make_unique<Ort::Session>(
-        env_, SHERPA_ONNX_TO_ORT_PATH(config_.sense_voice.model), sess_opts_);
-    Init(nullptr, 0);
+    InitFromFile(config_.sense_voice.model);
   }
 
   template <typename Manager>
@@ -47,6 +54,11 @@ class OfflineSenseVoiceModel::Impl {
         allocator_{} {
     auto buf = ReadFile(mgr, config_.sense_voice.model);
     Init(buf.data(), buf.size());
+  }
+
+  ~Impl() {
+    sess_.reset();
+    UnmapModel();
   }
 
   Ort::Value Forward(Ort::Value features, Ort::Value features_length,
@@ -77,10 +89,70 @@ class OfflineSenseVoiceModel::Impl {
   OrtAllocator *Allocator() { return allocator_; }
 
  private:
+  void InitFromFile(const std::string &filename) {
+#if defined(_WIN32)
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(filename), sess_opts_);
+    Init(nullptr, 0);
+#else
+    MapModel(filename);
+    Init(mapped_model_data_, mapped_model_size_);
+#endif
+  }
+
+#if !defined(_WIN32)
+  void MapModel(const std::string &filename) {
+    int fd = open(filename.c_str(), O_RDONLY);
+    if (fd == -1) {
+      SHERPA_ONNX_LOGE("Failed to open SenseVoice model '%s': %s",
+                       filename.c_str(), std::strerror(errno));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    struct stat st;
+    if (fstat(fd, &st) == -1) {
+      SHERPA_ONNX_LOGE("Failed to stat SenseVoice model '%s': %s",
+                       filename.c_str(), std::strerror(errno));
+      close(fd);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (st.st_size <= 0) {
+      SHERPA_ONNX_LOGE("SenseVoice model '%s' has invalid size: %lld",
+                       filename.c_str(), static_cast<long long>(st.st_size));
+      close(fd);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    void *data = mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    int32_t saved_errno = errno;
+    close(fd);
+
+    if (data == MAP_FAILED) {
+      SHERPA_ONNX_LOGE("Failed to mmap SenseVoice model '%s': %s",
+                       filename.c_str(), std::strerror(saved_errno));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    mapped_model_data_ = data;
+    mapped_model_size_ = static_cast<size_t>(st.st_size);
+  }
+
+  void UnmapModel() {
+    if (mapped_model_data_) {
+      munmap(mapped_model_data_, mapped_model_size_);
+      mapped_model_data_ = nullptr;
+      mapped_model_size_ = 0;
+    }
+  }
+#else
+  void UnmapModel() {}
+#endif
+
   void Init(void *model_data, size_t model_data_length) {
     if (model_data) {
-      sess_ = std::make_unique<Ort::Session>(
-          env_, model_data, model_data_length, sess_opts_);
+      sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                             model_data_length, sess_opts_);
     } else if (!sess_) {
       SHERPA_ONNX_LOGE(
           "Please pass model data or initialize the session outside of "
@@ -155,6 +227,8 @@ class OfflineSenseVoiceModel::Impl {
   Ort::AllocatorWithDefaultOptions allocator_;
 
   std::unique_ptr<Ort::Session> sess_;
+  void *mapped_model_data_ = nullptr;
+  size_t mapped_model_size_ = 0;
 
   std::vector<std::string> input_names_;
   std::vector<const char *> input_names_ptr_;
