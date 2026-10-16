@@ -593,6 +593,18 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the JavaScript npm package [sherpa-onnx-node][sherpa-onnx-node] with [SenseVoice](https://k2-fsa.github.io/sherpa/onnx/sense-voice/pretrained.html#sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-chinese-english-japanese-korean-cantonese)
 for local speech recognition.
 
+### [bot-reborn](https://github.com/beasaltfish/bot-reborn)
+
+> A $4 toy robot driven by an old Android phone, all from one web page in Chrome.
+> sherpa-onnx runs in the page as WebAssembly: Silero VAD decides when someone is
+> actually talking, so only real speech is sent to STT, and an optional keyword
+> spotter (`sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20`) handles the wake word.
+> Both run from one combined build, with the VAD symbols exported from the KWS
+> WebAssembly target.
+
+- [Build write-up](https://agentlenshq.com/maker/four-dollar-robot)
+- [Live page](https://bot-reborn.agentlenshq.com) (Chrome on Android)
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
