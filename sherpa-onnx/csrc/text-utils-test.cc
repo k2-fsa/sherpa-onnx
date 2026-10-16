@@ -4,9 +4,12 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#include <cerrno>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -146,6 +149,42 @@ TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
   EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1), "");
   EXPECT_EQ(RemoveInvalidUtf8Sequences(frag2), "");
   EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
+}
+
+TEST(SplitStringToIntegers, Int64OverflowIsRejected) {
+  std::vector<int64_t> out;
+  EXPECT_FALSE(
+      SplitStringToIntegers("9223372036854775808", ",", false, &out));
+  EXPECT_TRUE(out.empty());
+
+  EXPECT_FALSE(
+      SplitStringToIntegers("-9223372036854775809", ",", false, &out));
+  EXPECT_TRUE(out.empty());
+
+  EXPECT_TRUE(
+      SplitStringToIntegers("9223372036854775807", ",", false, &out));
+  ASSERT_EQ(out.size(), 1u);
+  EXPECT_EQ(out[0], std::numeric_limits<int64_t>::max());
+
+  EXPECT_TRUE(
+      SplitStringToIntegers("-9223372036854775808", ",", false, &out));
+  ASSERT_EQ(out.size(), 1u);
+  EXPECT_EQ(out[0], std::numeric_limits<int64_t>::min());
+
+  EXPECT_TRUE(SplitStringToIntegers("1,2,3", ",", false, &out));
+  ASSERT_EQ(out.size(), 3u);
+  EXPECT_EQ(out[0], 1);
+  EXPECT_EQ(out[1], 2);
+  EXPECT_EQ(out[2], 3);
+
+  std::vector<int32_t> narrow;
+  EXPECT_FALSE(SplitStringToIntegers("2147483648", ",", false, &narrow));
+  EXPECT_TRUE(narrow.empty());
+
+  errno = ERANGE;
+  EXPECT_TRUE(SplitStringToIntegers("4", ",", false, &out));
+  ASSERT_EQ(out.size(), 1u);
+  EXPECT_EQ(out[0], 4);
 }
 
 }  // namespace sherpa_onnx
