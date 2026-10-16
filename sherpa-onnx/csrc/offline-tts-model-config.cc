@@ -25,8 +25,9 @@ void OfflineTtsModelConfig::Register(ParseOptions *po) {
   po->Register("debug", &debug,
                "true to print model information while loading it.");
 
-  po->Register("provider", &provider,
-               "Specify a provider to use: cpu, cuda, coreml");
+  po->Register(
+      "provider", &provider,
+      "Specify a provider to use: cpu, cuda, coreml, axera (ZipVoice)");
 }
 
 bool OfflineTtsModelConfig::Validate() const {

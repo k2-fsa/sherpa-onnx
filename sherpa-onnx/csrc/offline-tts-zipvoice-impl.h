@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -19,6 +20,7 @@
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
+#include "sherpa-onnx/csrc/offline-tts-zipvoice-length.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -56,6 +58,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   GeneratedAudio Generate(
       const std::string &text, const GenerationConfig &config,
       GeneratedAudioCallback callback = nullptr) const override {
+    std::unique_lock<std::mutex> lock(generation_mutex_, std::defer_lock);
+    if (model_->GetMetaData().max_tokens > 0) lock.lock();
+
     // Supported extra options in config.extra:
     //   - "speed" (float): Speech speed factor (default: 1.0)
     //   - "num_steps" (int): Number of flow-matching steps (default: 4)
@@ -196,6 +201,22 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       return {};
     }
 
+    if (model_->GetMetaData().max_tokens > 0) {
+      std::vector<std::string> chunks;
+      for (const auto &sentence : sentences) {
+        if (!AppendStaticChunks(
+                sentence, prompt_tokens.size(),
+                prompt_features.size() / model_->GetMetaData().num_mels, speed,
+                &chunks)) {
+          SHERPA_ONNX_LOGE(
+              "Reference audio/text or chunk cannot fit AXERA ZipVoice "
+              "capacities.");
+          return {};
+        }
+      }
+      sentences = std::move(chunks);
+    }
+
     GeneratedAudio result;
     result.sample_rate = SampleRate();
 
@@ -212,11 +233,12 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 #endif
       }
 
-      GeneratedAudio cur = GenerateChunk(
-          sentences[i], prompt_tokens, prompt_features, speed, num_steps,
-          feat_scale, t_shift, guidance_scale);
+      GeneratedAudio cur =
+          GenerateChunk(sentences[i], prompt_tokens, prompt_features, speed,
+                        num_steps, feat_scale, t_shift, guidance_scale);
 
       if (cur.samples.empty()) {
+        if (model_->GetMetaData().max_tokens > 0) return {};
         continue;
       }
 
@@ -254,6 +276,44 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   }
 
  private:
+  bool AppendStaticChunks(std::string text, int32_t prompt_tokens,
+                          int32_t prompt_frames, float speed,
+                          std::vector<std::string> *out) const {
+    const auto &meta = model_->GetMetaData();
+    auto fits = [&](const std::string &candidate) {
+      int32_t count = 0;
+      for (const auto &ids : frontend_->ConvertTextToTokenIds(candidate)) {
+        count += ids.tokens.size();
+      }
+      return ZipvoiceStaticFeatureLength(
+                 prompt_tokens, count, prompt_frames, speed, meta.max_tokens,
+                 meta.max_frames, meta.max_generated_frames) > 0;
+    };
+    while (!text.empty()) {
+      if (fits(text)) {
+        out->push_back(text);
+        return true;
+      }
+      size_t best = 0;
+      size_t word_boundary = 0;
+      for (size_t end = 1; end <= text.size(); ++end) {
+        // Only split at UTF-8 code point boundaries.
+        if (end < text.size() &&
+            (static_cast<unsigned char>(text[end]) & 0xc0) == 0x80)
+          continue;
+        if (fits(text.substr(0, end))) {
+          best = end;
+          if (text[end - 1] == ' ') word_boundary = end;
+        }
+      }
+      if (!best) return false;
+      if (word_boundary) best = word_boundary;
+      out->push_back(text.substr(0, best));
+      text.erase(0, best);
+    }
+    return true;
+  }
+
   void PostInit() { InitMelBanks(); }
 
   void InitMelBanks() {
@@ -400,6 +460,12 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       sum_sq += s * s;
     }
     prompt_rms = std::sqrt(sum_sq / prompt_samples_scaled.size());
+    if (model_->GetMetaData().max_tokens > 0 &&
+        (!std::isfinite(prompt_rms) || prompt_rms <= 0)) {
+      SHERPA_ONNX_LOGE(
+          "AXERA ZipVoice reference audio must have nonzero finite RMS.");
+      return {};
+    }
     if (prompt_rms < target_rms && prompt_rms > 0.0f) {
       float scale = target_rms / prompt_rms;
       for (auto &s : prompt_samples_scaled) {
@@ -451,6 +517,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
                     std::move(prompt_features_tensor), speed, num_steps,
                     t_shift, guidance_scale);
 
+    if (!mel) return {};
+
     // Assume mel_shape = {1, T, C}
     std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
     int64_t T = mel_shape[1];
@@ -478,6 +546,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   }
 
  private:
+  mutable std::mutex generation_mutex_;
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsZipvoiceModel> model_;
   std::unique_ptr<Vocoder> vocoder_;

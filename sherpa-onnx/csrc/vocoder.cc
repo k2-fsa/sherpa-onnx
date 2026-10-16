@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/vocoder.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -23,6 +24,10 @@
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/vocos-vocoder.h"
+
+#if SHERPA_ONNX_ENABLE_AXERA
+#include "sherpa-onnx/csrc/axera/vocos-vocoder-axera.h"
+#endif
 
 namespace sherpa_onnx {
 
@@ -44,7 +49,6 @@ static ModelType GetModelType(const std::string &model_path, bool debug) {
 
   auto sess = std::make_unique<Ort::Session>(
       env, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts);
-
 
   Ort::ModelMetadata meta_data = sess->GetModelMetadata();
   if (debug) {
@@ -121,6 +125,15 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 }
 
 std::unique_ptr<Vocoder> Vocoder::Create(const OfflineTtsModelConfig &config) {
+  if (config.provider == "axera" && !config.zipvoice.vocoder.empty()) {
+#if SHERPA_ONNX_ENABLE_AXERA
+    return std::make_unique<VocosVocoderAxera>(config);
+#else
+    SHERPA_ONNX_LOGE(
+        "Rebuild with SHERPA_ONNX_ENABLE_AXERA=ON for AXERA Vocos.");
+    SHERPA_ONNX_EXIT(-1);
+#endif
+  }
   auto model_type = ModelType::kUnknown;
   if (!config.matcha.vocoder.empty()) {
     model_type = GetModelType(config.matcha.vocoder, config.debug);
@@ -148,6 +161,10 @@ std::unique_ptr<Vocoder> Vocoder::Create(const OfflineTtsModelConfig &config) {
 template <typename Manager>
 std::unique_ptr<Vocoder> Vocoder::Create(Manager *mgr,
                                          const OfflineTtsModelConfig &config) {
+  if (config.provider == "axera") {
+    SHERPA_ONNX_LOGE("AXERA Vocos requires filesystem model paths.");
+    return nullptr;
+  }
   std::vector<char> buffer;
   if (!config.matcha.vocoder.empty()) {
     SHERPA_ONNX_LOGE("Using matcha vocoder: %s", config.matcha.vocoder.c_str());

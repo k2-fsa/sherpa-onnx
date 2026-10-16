@@ -14,6 +14,10 @@
 
 namespace sherpa_onnx {
 
+#if SHERPA_ONNX_ENABLE_AXERA
+class OfflineTtsZipvoiceModelAxera;
+#endif
+
 class OfflineTtsZipvoiceModel {
  public:
   ~OfflineTtsZipvoiceModel();
@@ -27,14 +31,16 @@ class OfflineTtsZipvoiceModel {
   // of shape (batch_size, mel_dim, num_frames)
   Ort::Value Run(Ort::Value tokens, Ort::Value prompt_tokens,
                  Ort::Value prompt_features, float speed, int32_t num_steps,
-                 float t_shift = 0.5f,
-                 float guidance_scale = 1.0f) const;
+                 float t_shift = 0.5f, float guidance_scale = 1.0f) const;
 
   const OfflineTtsZipvoiceModelMetaData &GetMetaData() const;
 
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
+#if SHERPA_ONNX_ENABLE_AXERA
+  std::unique_ptr<OfflineTtsZipvoiceModelAxera> axera_impl_;
+#endif
 };
 
 }  // namespace sherpa_onnx
