@@ -203,9 +203,15 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       float trailing_silence = num_trailing_blanks * 4 * 0.01;
 
       // it resets automatically after detecting 1.5 seconds of silence
+      //
+      // Note: We reset only the decoder result here and keep the encoder
+      // states, so that audio of a keyword that has already been processed
+      // but not decoded into tokens yet is not discarded. A full Reset() at
+      // this point made the spotter miss keywords starting right before this
+      // check; see https://github.com/k2-fsa/sherpa-onnx/issues/3990
       float threshold = 1.5;
       if (trailing_silence > threshold) {
-        Reset(s);
+        ResetKeywordResult(s);
       }
     }
 
@@ -343,6 +349,13 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   }
 
   void InitOnlineStream(OnlineStream *stream) const {
+    ResetKeywordResult(stream);
+    stream->SetStates(model_->GetEncoderInitStates());
+  }
+
+  // Reset only the hypothesis/context graph state of a stream, keeping its
+  // encoder states.
+  void ResetKeywordResult(OnlineStream *stream) const {
     auto r = decoder_->GetEmptyResult();
     SHERPA_ONNX_CHECK_EQ(r.hyps.Size(), 1);
 
@@ -350,7 +363,6 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     r.hyps.begin()->second.context_state = stream->GetContextGraph()->Root();
 
     stream->SetKeywordResult(r);
-    stream->SetStates(model_->GetEncoderInitStates());
   }
 
  private:
