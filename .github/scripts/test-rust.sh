@@ -105,6 +105,8 @@ bash ./run-sense-voice.sh
 
 bash ./run-streaming-zipformer-en.sh
 bash ./run-streaming-zipformer-zh-en.sh
+bash ./run-streaming-zipformer-ctc-hlg.sh
+rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
 
 bash ./run-offline-speech-enhancement-gtcrn.sh
 bash ./run-offline-speech-enhancement-dpdfnet.sh
