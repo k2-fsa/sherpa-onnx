@@ -173,11 +173,20 @@ fn download_prebuilt_libs(
     // have a top-level directory while others extract directly into cache_root.
     let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
     let android_lib_dir_alt = cache_root.join("jniLibs").join(android_abi(target_arch));
-    if android_lib_dir.is_dir() {
+    // Only Android uses jniLibs/<abi>: iOS aarch64 maps to the same `arm64-v8a` name and would
+    // otherwise pick up a cached Android build's libraries.
+    if target_os == "android" && android_lib_dir.is_dir() {
         return Ok((android_lib_dir, archive_stem.to_string()));
     }
-    if android_lib_dir_alt.is_dir() {
+    if target_os == "android" && android_lib_dir_alt.is_dir() {
         return Ok((android_lib_dir_alt, archive_stem.to_string()));
+    }
+    // Reuse an already extracted xcframework: re-extracting to add this target's lib dir would
+    // delete the other target's (device `lib/` vs simulator `lib-sim/`), breaking its build.
+    if target_os == "ios" {
+        if let Some(ios_lib) = setup_ios_lib_dir(&extracted_dir)? {
+            return Ok((ios_lib, archive_stem.to_string()));
+        }
     }
 
     fs::create_dir_all(&cache_root)?;
@@ -255,7 +264,9 @@ fn download_prebuilt_libs(
         let android_lib_dir_alt = cache_root
             .join("jniLibs")
             .join(android_abi(target_arch));
-        let android_lib_dir = if android_lib_dir.is_dir() {
+        let android_lib_dir = if target_os != "android" {
+            None // jniLibs is Android-only, see above
+        } else if android_lib_dir.is_dir() {
             Some(android_lib_dir)
         } else if android_lib_dir_alt.is_dir() {
             Some(android_lib_dir_alt)
@@ -499,9 +510,13 @@ fn emit_relative_rpath(target_os: &str) {
 fn profile_output_dirs() -> Result<[PathBuf; 2], DynError> {
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let profile = env::var("PROFILE")?;
+    // Custom profiles (e.g. `[profile.android-dev] inherits = "dev"`) build into a directory named
+    // after the profile while Cargo sets PROFILE=debug/release, so the name match fails. Fall back
+    // to Cargo's fixed layout: <profile-dir>/build/<pkg>-<hash>/out.
     let profile_dir = out_dir
         .ancestors()
         .find(|path| path.file_name() == Some(OsStr::new(&profile)))
+        .or_else(|| out_dir.ancestors().nth(3))
         .ok_or_else(|| {
             format!(
                 "Could not locate Cargo profile directory from {}",
