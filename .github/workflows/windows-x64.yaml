@@ -219,6 +219,15 @@ jobs:
 
           ls -lh *.tar.bz2
 
+          # The PDB debug symbols (~200 MB each) are already inside the release
+          # tarballs above. The loose copies in build/ and build/install are only
+          # needed for debugging a crash locally, not for running CI tests, so
+          # drop them here to free several GB for the publish/test steps below.
+          rm -f build/bin/${{ matrix.build_type }}/*.pdb
+          rm -f build/install/bin/*.pdb
+          echo "Freed PDB files. Disk now:"
+          df -h .
+
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
