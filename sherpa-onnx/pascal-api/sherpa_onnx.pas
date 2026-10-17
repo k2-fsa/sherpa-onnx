@@ -371,6 +371,10 @@ type
 
   TSherpaOnnxOfflineDolphinModelConfig = record
     Model: AnsiString;
+    Encoder: AnsiString;
+    Decoder: AnsiString;
+    Language: AnsiString;
+    Region: AnsiString;
     function ToString: AnsiString;
   end;
 
@@ -965,6 +969,10 @@ type
   end;
   SherpaOnnxOfflineDolphinModelConfig = record
     Model: PAnsiChar;
+    Encoder: PAnsiChar;
+    Decoder: PAnsiChar;
+    Language: PAnsiChar;
+    Region: PAnsiChar;
   end;
   SherpaOnnxOfflineZipformerCtcModelConfig = record
     Model: PAnsiChar;
@@ -1978,8 +1986,8 @@ end;
 
 function TSherpaOnnxOfflineDolphinModelConfig.ToString: AnsiString;
 begin
-  Result := Format('TSherpaOnnxOfflineDolphinModelConfig(Model := %s)',
-    [Self.Model]);
+  Result := Format('TSherpaOnnxOfflineDolphinModelConfig(Model := %s, Encoder := %s, Decoder := %s, Language := %s, Region := %s)',
+    [Self.Model, Self.Encoder, Self.Decoder, Self.Language, Self.Region]);
 end;
 
 function TSherpaOnnxOfflineZipformerCtcModelConfig.ToString: AnsiString;
@@ -2253,6 +2261,10 @@ begin
   C.ModelConfig.FireRedAsr.Decoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Decoder);
 
   C.ModelConfig.Dolphin.Model := PAnsiChar(Config.ModelConfig.Dolphin.Model);
+  C.ModelConfig.Dolphin.Encoder := PAnsiChar(Config.ModelConfig.Dolphin.Encoder);
+  C.ModelConfig.Dolphin.Decoder := PAnsiChar(Config.ModelConfig.Dolphin.Decoder);
+  C.ModelConfig.Dolphin.Language := PAnsiChar(Config.ModelConfig.Dolphin.Language);
+  C.ModelConfig.Dolphin.Region := PAnsiChar(Config.ModelConfig.Dolphin.Region);
   C.ModelConfig.ZipformerCtc.Model := PAnsiChar(Config.ModelConfig.ZipformerCtc.Model);
 
   C.ModelConfig.Canary.Encoder := PAnsiChar(Config.ModelConfig.Canary.Encoder);

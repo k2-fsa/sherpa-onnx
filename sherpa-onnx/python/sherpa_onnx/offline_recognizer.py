@@ -49,7 +49,8 @@ class OfflineRecognizer(object):
     - :meth:`from_sense_voice` -- SenseVoice multilingual model
     - :meth:`from_whisper` -- OpenAI Whisper
     - :meth:`from_moonshine` -- Moonshine
-    - :meth:`from_dolphin` -- Dolphin CTC
+    - :meth:`from_dolphin` -- Dolphin attention decoder
+    - :meth:`from_dolphin_ctc` -- Dolphin CTC
     - :meth:`from_nemo_ctc` -- NeMo CTC
     - :meth:`from_zipformer2_ctc` -- Zipformer CTC
 
@@ -765,6 +766,107 @@ class OfflineRecognizer(object):
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
             dolphin=OfflineDolphinModelConfig(model=model),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_dolphin(
+        cls,
+        encoder: str,
+        decoder: str,
+        tokens: str,
+        language: str = "",
+        region: str = "",
+        num_threads: int = 1,
+        sample_rate: int = 16000,
+        feature_dim: int = 80,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/dolphin/index.html>`_
+        to download pre-trained models.
+
+        This method uses the Dolphin attention decoder branch
+        (encoder.onnx + decoder.onnx), which supports controlling the
+        output language/region, unlike the CTC branch.
+
+        Args:
+          encoder:
+            Path to ``encoder.onnx`` of the Dolphin attention decoder branch.
+          decoder:
+            Path to ``decoder.onnx`` of the Dolphin attention decoder branch.
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          language:
+            Optional language code, e.g., "zh", "en", "fil". If empty, the
+            decoder predicts the language from the audio.
+          region:
+            Optional region code, e.g., "CN", "PH", "US". If non-empty,
+            ``language`` must also be given.
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model.
+          feature_dim:
+            Dimension of the feature used to train the model.
+          decoding_method:
+            Valid values are greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            dolphin=OfflineDolphinModelConfig(
+                model="",
+                encoder=encoder,
+                decoder=decoder,
+                language=language,
+                region=region,
+            ),
             tokens=tokens,
             num_threads=num_threads,
             debug=debug,

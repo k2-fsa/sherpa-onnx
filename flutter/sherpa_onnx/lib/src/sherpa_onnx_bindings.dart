@@ -370,6 +370,14 @@ final class SherpaOnnxOfflineNemoEncDecCtcModelConfig extends Struct {
 
 final class SherpaOnnxOfflineDolphinModelConfig extends Struct {
   external Pointer<Utf8> model;
+
+  external Pointer<Utf8> encoder;
+
+  external Pointer<Utf8> decoder;
+
+  external Pointer<Utf8> language;
+
+  external Pointer<Utf8> region;
 }
 
 final class SherpaOnnxOfflineZipformerCtcModelConfig extends Struct {

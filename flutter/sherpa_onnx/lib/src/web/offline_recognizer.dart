@@ -156,6 +156,10 @@ JSObject _buildModelConfig(OfflineModelConfig model) {
   // Dolphin.
   final dolphin = JSObject();
   dolphin['model'] = model.dolphin.model.toJS;
+  dolphin['encoder'] = model.dolphin.encoder.toJS;
+  dolphin['decoder'] = model.dolphin.decoder.toJS;
+  dolphin['language'] = model.dolphin.language.toJS;
+  dolphin['region'] = model.dolphin.region.toJS;
   jsModel['dolphin'] = dolphin;
 
   // Zipformer CTC.

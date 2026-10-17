@@ -88,6 +88,10 @@ pub struct OfflineSenseVoiceModelConfig {
 #[derive(Debug, Copy, Clone)]
 pub struct OfflineDolphinModelConfig {
     pub model: *const c_char,
+    pub encoder: *const c_char,
+    pub decoder: *const c_char,
+    pub language: *const c_char,
+    pub region: *const c_char,
 }
 
 #[repr(C)]
