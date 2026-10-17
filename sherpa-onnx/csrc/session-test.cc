@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -122,6 +123,55 @@ TEST(SessionConfigPassthrough, ForwardsPrefixedKeysAndIgnoresOthers) {
   // registered under the empty key or under the raw spelling.
   EXPECT_FALSE(HasConfigEntry(sess_opts, ""));
   EXPECT_FALSE(HasConfigEntry(sess_opts, "SessionConfig."));
+}
+
+TEST(CudaProviderOptions, DefaultsWhenConfigIsEmpty) {
+  auto opts = BuildCudaProviderOptions({}, 2, OrtCudnnConvAlgoSearchHeuristic);
+  EXPECT_EQ(opts.at("device_id"), "2");
+  EXPECT_EQ(opts.at("cudnn_conv_algo_search"), "HEURISTIC");
+  EXPECT_EQ(opts.size(), 2);
+}
+
+TEST(CudaProviderOptions, ConfigKeysWinAndPassThrough) {
+  std::unordered_map<std::string, std::string> config = {
+      {"device_id", "5"},
+      {"gpu_mem_limit", "2147483648"},
+      {"arena_extend_strategy", "kSameAsRequested"},
+      {"DEBUG", "1"},
+  };
+  auto opts =
+      BuildCudaProviderOptions(config, 0, OrtCudnnConvAlgoSearchExhaustive);
+  EXPECT_EQ(opts.at("device_id"), "5");
+  EXPECT_EQ(opts.at("cudnn_conv_algo_search"), "EXHAUSTIVE");
+  EXPECT_EQ(opts.at("gpu_mem_limit"), "2147483648");
+  EXPECT_EQ(opts.at("arena_extend_strategy"), "kSameAsRequested");
+  EXPECT_EQ(opts.count("DEBUG"), 0);
+}
+
+TEST(CudaProviderOptions, MapsEveryAlgoSearchValue) {
+  EXPECT_EQ(BuildCudaProviderOptions({}, 0, OrtCudnnConvAlgoSearchExhaustive)
+                .at("cudnn_conv_algo_search"),
+            "EXHAUSTIVE");
+  EXPECT_EQ(BuildCudaProviderOptions({}, 0, OrtCudnnConvAlgoSearchHeuristic)
+                .at("cudnn_conv_algo_search"),
+            "HEURISTIC");
+  EXPECT_EQ(BuildCudaProviderOptions({}, 0, OrtCudnnConvAlgoSearchDefault)
+                .at("cudnn_conv_algo_search"),
+            "DEFAULT");
+}
+
+TEST(Provider, CudaConfigFileDoesNotThrowWithoutCudaEp) {
+  // Without a CUDA-enabled onnxruntime this falls back to the CPU provider;
+  // it must still parse the config file without crashing.
+  TempConfigFile config(
+      "gpu_mem_limit=2147483648\n"
+      "arena_extend_strategy=kSameAsRequested\n");
+  ASSERT_TRUE(config.Ok());
+  EXPECT_NO_THROW({
+    Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "cuda-session-test");
+    auto sess_opts = GetSessionOptionsImpl(1, "cuda:" + config.Path());
+    (void)sess_opts;
+  });
 }
 
 TEST(Provider, ConvertsOpenVINOCaseInsensitively) {
