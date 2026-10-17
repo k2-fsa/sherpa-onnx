@@ -151,9 +151,13 @@ void TransducerKeywordDecoder::Decode(
       const ContextState *matched_state = std::get<1>(status);
 
       if (matched) {
+        // The matched tokens are the last `level` entries of ys_probs: a
+        // fail-link transition does not clear ys_probs, so the head of the
+        // vector may hold probabilities of tokens before the current match.
         float ys_prob = 0.0;
         for (int32_t i = 0; i < matched_state->level; ++i) {
-          ys_prob += best_hyp.ys_probs[i];
+          ys_prob += best_hyp.ys_probs[best_hyp.ys_probs.size() -
+                                       matched_state->level + i];
         }
         ys_prob /= matched_state->level;
         if (best_hyp.num_trailing_blanks > num_trailing_blanks_ &&
