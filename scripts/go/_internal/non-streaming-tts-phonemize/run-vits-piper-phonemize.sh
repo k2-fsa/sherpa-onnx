@@ -1,0 +1,1 @@
+../../../../go-api-examples/non-streaming-tts-phonemize/run-vits-piper-phonemize.sh

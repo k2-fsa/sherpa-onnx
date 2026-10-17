@@ -10,6 +10,7 @@ pub struct OfflineTtsVitsModelConfig {
     pub model: *const c_char,
     pub lexicon: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub noise_scale: c_float,
     pub noise_scale_w: c_float,
@@ -24,6 +25,7 @@ pub struct OfflineTtsMatchaModelConfig {
     pub vocoder: *const c_char,
     pub lexicon: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub noise_scale: c_float,
     pub length_scale: c_float,
@@ -36,6 +38,7 @@ pub struct OfflineTtsKokoroModelConfig {
     pub model: *const c_char,
     pub voices: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub length_scale: c_float,
     pub dict_dir: *const c_char,
@@ -49,8 +52,10 @@ pub struct OfflineTtsKittenModelConfig {
     pub model: *const c_char,
     pub voices: *const c_char,
     pub tokens: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub length_scale: c_float,
+    pub lexicon: *const c_char,
 }
 
 #[repr(C)]
@@ -60,6 +65,7 @@ pub struct OfflineTtsZipvoiceModelConfig {
     pub encoder: *const c_char,
     pub decoder: *const c_char,
     pub vocoder: *const c_char,
+    /// Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
     pub data_dir: *const c_char,
     pub lexicon: *const c_char,
     pub feat_scale: c_float,
@@ -138,6 +144,12 @@ pub struct SherpaOnnxGenerationConfig {
     pub reference_text: *const c_char,
     pub num_steps: i32,
     pub extra: *const c_char,
+    pub phoneme_codepoints: *const i32,
+    pub phoneme_codepoints_lens: *const i32,
+    pub phoneme_codepoints_num_sentences: i32,
+    pub tokens: *const *const c_char,
+    pub tokens_lens: *const i32,
+    pub tokens_num_sentences: i32,
 }
 
 pub type SherpaOnnxGeneratedAudioProgressCallbackWithArg =
@@ -158,6 +170,10 @@ extern "C" {
     pub fn SherpaOnnxOfflineTtsSampleRate(tts: *const SherpaOnnxOfflineTts) -> i32;
 
     pub fn SherpaOnnxOfflineTtsNumSpeakers(tts: *const SherpaOnnxOfflineTts) -> i32;
+
+    pub fn SherpaOnnxOfflineTtsLang(tts: *const SherpaOnnxOfflineTts) -> *const c_char;
+
+    pub fn SherpaOnnxDestroyOfflineTtsLang(s: *const c_char);
 
     pub fn SherpaOnnxOfflineTtsGenerateWithConfig(
         tts: *const SherpaOnnxOfflineTts,

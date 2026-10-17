@@ -57,6 +57,9 @@ class OfflineTtsImpl {
   // If it supports only a single speaker, then it return 0 or 1.
   virtual int32_t NumSpeakers() const { return 1; }
 
+  // Language/voice of the model, e.g., "en-us". Empty if not available.
+  virtual std::string Lang() const { return ""; }
+
   std::vector<int64_t> AddBlank(const std::vector<int64_t> &x,
                                 int32_t blank_id = 0) const;
 };

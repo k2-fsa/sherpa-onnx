@@ -24,6 +24,11 @@ public class OfflineTts {
         return getNumSpeakers(ptr);
     }
 
+    /** Returns the language/voice of the model, e.g., "en-us". Empty if not available. */
+    public String getLang() {
+        return getLang(ptr);
+    }
+
     /** Generates audio for the given text using the default speaker (sid=0) and speed=1.0. */
     public GeneratedAudio generate(String text) {
         return generate(text, 0, 1.0f);
@@ -81,6 +86,18 @@ public class OfflineTts {
     }
 
     /**
+     * Generate audio using a GenerationConfig.
+     *
+     * @param text The text to synthesize. Pass "" if the input is
+     *             pre-phonemized via GenerationConfig.phonemeCodepoints.
+     * @param config The generation configuration.
+     * @return GeneratedAudio with samples and sample rate.
+     */
+    public GeneratedAudio generateWithConfig(String text, GenerationConfig config) {
+        return generateWithConfigImpl(ptr, text, config, null);
+    }
+
+    /**
      * Generate audio using a GenerationConfig and a callback.
      *
      * @param text The text to synthesize.
@@ -127,6 +144,8 @@ public class OfflineTts {
     private native int getSampleRate(long ptr);
 
     private native int getNumSpeakers(long ptr);
+
+    private native String getLang(long ptr);
 
     private native GeneratedAudio generateImpl(long ptr, String text, int sid, float speed);
 

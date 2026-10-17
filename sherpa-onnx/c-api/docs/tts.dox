@@ -9,6 +9,22 @@ family by filling in the corresponding sub-struct of
 @see SherpaOnnxCreateOfflineTts, SherpaOnnxOfflineTtsConfig,
      SherpaOnnxOfflineTtsModelConfig
 
+@note Most families below need a lexicon file as their text frontend. For the
+English models, download the shared lexicon once:
+
+@code
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+@endcode
+
+and pass it to the family you use, e.g.
+`config.model.vits.lexicon = "./lexicon-en-us.txt";`. Models with their own
+lexicon (e.g. Chinese or multi-language packages) ship `lexicon.txt` inside the
+model tarball — use that path instead. PocketTTS and Supertonic have their own
+built-in text frontend and need no lexicon at all. As an alternative to a
+lexicon you can pass pre-phonemized input via
+@ref SherpaOnnxGenerationConfig::phoneme_codepoints (or `::tokens`) and leave
+the lexicon empty.
+
 @tableofcontents
 
 @section tts_kokoro Kokoro
@@ -22,7 +38,7 @@ memset(&config, 0, sizeof(config));
 config.model.kokoro.model = "./kokoro-en-v0_19/model.onnx";
 config.model.kokoro.voices = "./kokoro-en-v0_19/voices.bin";
 config.model.kokoro.tokens = "./kokoro-en-v0_19/tokens.txt";
-config.model.kokoro.data_dir = "./kokoro-en-v0_19/espeak-ng-data";
+config.model.kokoro.lexicon = "./lexicon-en-us.txt";
 config.model.num_threads = 2;
 
 const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
@@ -34,7 +50,10 @@ Example source: [kokoro-tts-en-c-api.c](https://github.com/k2-fsa/sherpa-onnx/bl
 
 @section tts_vits VITS (Piper)
 
-VITS models from the Piper project use espeak-ng for phonemization.
+VITS models from the Piper project. Note: `data_dir` is deprecated and
+ignored since v2.0.0 (espeak-ng is no longer used). Pass a `lexicon`, or
+pre-phonemized input via `SherpaOnnxGenerationConfig.phoneme_codepoints`
+(or `.tokens`).
 
 @code
 SherpaOnnxOfflineTtsConfig config;
@@ -43,8 +62,7 @@ config.model.vits.model =
     "./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx";
 config.model.vits.tokens =
     "./vits-piper-en_US-lessac-medium/tokens.txt";
-config.model.vits.data_dir =
-    "./vits-piper-en_US-lessac-medium/espeak-ng-data";
+config.model.vits.lexicon = "./lexicon-en-us.txt";
 config.model.vits.noise_scale = 0.667f;
 config.model.vits.noise_scale_w = 0.8f;
 config.model.vits.length_scale = 1.0f;
@@ -70,8 +88,7 @@ config.model.matcha.acoustic_model =
 config.model.matcha.vocoder = "./vocos-22khz-univ.onnx";
 config.model.matcha.tokens =
     "./matcha-icefall-en_US-ljspeech/tokens.txt";
-config.model.matcha.data_dir =
-    "./matcha-icefall-en_US-ljspeech/espeak-ng-data";
+config.model.matcha.lexicon = "./lexicon-en-us.txt";
 config.model.num_threads = 2;
 
 const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
@@ -92,8 +109,7 @@ memset(&config, 0, sizeof(config));
 config.model.kitten.model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
 config.model.kitten.voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
 config.model.kitten.tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
-config.model.kitten.data_dir =
-    "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
+config.model.kitten.lexicon = "./lexicon-en-us.txt";
 config.model.num_threads = 2;
 
 const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
@@ -120,8 +136,6 @@ config.model.zipvoice.tokens =
     "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt";
 config.model.zipvoice.lexicon =
     "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt";
-config.model.zipvoice.data_dir =
-    "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data";
 config.model.num_threads = 2;
 
 const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);

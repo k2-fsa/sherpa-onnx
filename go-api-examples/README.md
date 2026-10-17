@@ -31,7 +31,12 @@ for details.
   the online speech denoiser API with DPDFNet models.
 
 - [./non-streaming-tts](./non-streaming-tts) It shows how to use a non-streaming TTS
-  model to convert text to speech
+  model to convert text to speech. It uses a lexicon file for text normalization.
+
+- [./non-streaming-tts-phonemize](./non-streaming-tts-phonemize) It shows how to use a
+  non-streaming TTS model to convert text to speech. It phonemizes the text outside of
+  sherpa-onnx with [piper-phonemize-go](https://github.com/csukuangfj/piper-phonemize-go)
+  and passes the phoneme codepoints to sherpa-onnx.
 
 - [./offline-tts-play](./offline-tts-play) It shows how to use a non-streaming TTS
   model to convert text to speech. It plays the audio back as it is being generated.

@@ -33,12 +33,10 @@ jobs:
         with:
           key: ${{ matrix.os }}-rust-${{ matrix.link_mode }}
 
-      - name: Cache installed libs
-        id: cache-libs
-        uses: actions/cache@v4
-        with:
-          path: build/install
-          key: rust-libs-${{ matrix.os }}-${{ matrix.link_mode }}-${{ hashFiles('CMakeLists.txt') }}
+      # NOTE: caching build/install is disabled on purpose. The old cache key
+      # only hashed CMakeLists.txt, so a struct/ABI change in c-api.h could
+      # restore prebuilt libs that disagree with the Rust FFI structs and
+      # crash at runtime. The libs are rebuilt from source every run.
 
       - name: Update version
         shell: bash
@@ -53,7 +51,6 @@ jobs:
           arch: ${{ matrix.os == 'windows-11-arm' && 'amd64_arm64' || 'x64' }}
 
       - name: Configure sherpa-onnx
-        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -96,7 +93,6 @@ jobs:
           fi
 
       - name: Build sherpa-onnx
-        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -262,6 +258,12 @@ jobs:
             ./.github/scripts/test-rust-static.sh
           fi
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.link_mode }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
   termux:
     name: Termux ${{ matrix.arch }} (${{ matrix.lib_setup }})
     runs-on: ${{ matrix.runner }}
@@ -345,10 +347,6 @@ jobs:
               -DSHERPA_ONNX_ENABLE_TTS=ON \
               -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
               -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-              -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-              -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-              -DBUILD_ESPEAK_NG_EXE=OFF \
-              -DBUILD_ESPEAK_NG_TESTS=OFF \
               -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
               -DSHERPA_ONNX_ENABLE_TESTS=OFF \
               -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -375,17 +373,62 @@ jobs:
           echo 'sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }' >> rust-api-examples/.cargo/config.toml
           echo 'sherpa-onnx-sys = { path = "../sherpa-onnx/rust/sherpa-onnx-sys" }' >> rust-api-examples/.cargo/config.toml
 
+      - name: Prepare directories and stage libs (host)
+        shell: bash
+        env:
+          LIB_SETUP: ${{ matrix.lib_setup }}
+        run: |
+          # Do all directory creation and file staging on the HOST:
+          #  * the Termux container cannot always create directories (read-only
+          #    bits of the filesystem / different uid than the build container);
+          #  * files created by the build container may not be writable by the
+          #    test container, hence chmod -R 777.
+          # The container then only *detects* what the host prepared (see the
+          # "Detecting library setup" comment in the Run Rust tests step).
+          #
+          # sudo is required: build/ was written by the build container under a
+          # different uid, so the runner user cannot chmod it or create
+          # directories inside it ("Operation not permitted"/"Permission denied").
+          sudo chmod -R 777 "${{ github.workspace }}" || true
+          mkdir -p "${{ github.workspace }}/rust-api-examples/target"
+          chmod -R 777 "${{ github.workspace }}/rust-api-examples/target" || true
+
+          if [[ "$LIB_SETUP" == "archive_dir" ]]; then
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
+            # build.rs expects the archive to contain jniLibs/{abi}/ at its root
+            sudo mkdir -p build/install/jniLibs/arm64-v8a
+            sudo cp -v build/install/lib/*.so build/install/jniLibs/arm64-v8a/
+            sudo chmod -R 777 build/install/jniLibs
+            mkdir -p /tmp/sherpa-onnx-archive
+            rm -f /tmp/sherpa-onnx-archive/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+            tar cjf /tmp/sherpa-onnx-archive/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2 -C build/install jniLibs
+            chmod -R 777 /tmp/sherpa-onnx-archive
+            ls -lh /tmp/sherpa-onnx-archive/
+          fi
+
       - name: Run Rust tests in Termux
         shell: bash
         env:
           LIB_SETUP: ${{ matrix.lib_setup }}
         run: |
+          # NOTE: the termux/termux-docker image does NOT pass -e environment
+          # variables into the container (verified: both -e LIB_SETUP and
+          # -e SHERPA_ONNX_LIB_DIR arrived unset). So the library location is
+          # detected by path *inside* the container instead.
+          #
+          # This matters because sherpa-onnx-sys's build.rs silently falls
+          # back to downloading the *released* prebuilt libraries from GitHub
+          # when SHERPA_ONNX_LIB_DIR/SHERPA_ONNX_ARCHIVE_DIR are unset. Those
+          # prebuilt libs have older C struct layouts than this checkout, so
+          # the examples crash with a wild-pointer SIGSEGV. See the
+          # "[build.rs]" cargo:warning lines in the log to confirm which
+          # library directory was picked up.
           docker run --rm \
             --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
-            -e LIB_SETUP \
+            --volume /tmp/sherpa-onnx-archive:/tmp/sherpa-onnx-archive \
             termux/termux-docker:${{ matrix.arch }} \
           bash -c '
-            set -e
+            set -ex
 
             apt update -y
             apt install -y libc++ clang git
@@ -400,23 +443,21 @@ jobs:
 
             cd /k2-fsa/sherpa-onnx
 
-            # Set environment variables based on lib_setup mode
-            if [ "$LIB_SETUP" = "lib_dir" ]; then
+            # Set the library location by detecting which one the host prepared
+            if [ -d /k2-fsa/sherpa-onnx/build/install/lib ]; then
               export SHERPA_ONNX_LIB_DIR=/k2-fsa/sherpa-onnx/build/install/lib
-            elif [ "$LIB_SETUP" = "archive_dir" ]; then
-              # Create an archive with the exact name build.rs expects for Android
-              SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
-              mkdir -p /tmp/sherpa-onnx-archive
-              cd build/install
-              # Android archive name: sherpa-onnx-v{version}-android.tar.bz2
-              # But we need jniLibs/{abi}/ structure, so create that
-              mkdir -p jniLibs/arm64-v8a
-              cp lib/*.so jniLibs/arm64-v8a/
-              tar cjf /tmp/sherpa-onnx-archive/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2 jniLibs/
-              cd /k2-fsa/sherpa-onnx
+            elif ls /tmp/sherpa-onnx-archive/*.tar.bz2 >/dev/null 2>&1; then
               export SHERPA_ONNX_ARCHIVE_DIR=/tmp/sherpa-onnx-archive
             fi
+            echo "SHERPA_ONNX_LIB_DIR=${SHERPA_ONNX_LIB_DIR:-unset}"
+            echo "SHERPA_ONNX_ARCHIVE_DIR=${SHERPA_ONNX_ARCHIVE_DIR:-unset}"
 
             # Run all tests (Android only supports shared linking)
             bash .github/scripts/test-rust-shared.sh
           '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn

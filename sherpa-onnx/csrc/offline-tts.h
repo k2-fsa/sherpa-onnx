@@ -80,6 +80,15 @@ struct GenerationConfig {
   // e.g., in ./offline-tts-pocket-impl.h
   std::unordered_map<std::string, std::string> extra;
 
+  std::vector<std::vector<int32_t>> phoneme_codepoints;
+
+  // For models that use string-based tokens (e.g., Chinese pinyin like
+  // "zhong1", "ang2"). Each inner vector is a sentence of token strings.
+  //
+  // Mutually exclusive with phoneme_codepoints: if both are set, a warning is
+  // printed and generation fails with an empty result.
+  std::vector<std::vector<std::string>> tokens;
+
   std::string GetExtraString(const std::string &key,
                              const std::string &def = "") const;
 
@@ -154,6 +163,9 @@ class OfflineTts {
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
   int32_t NumSpeakers() const;
+
+  // Language/voice of the model, e.g., "en-us". Empty if not available.
+  std::string Lang() const;
 
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;

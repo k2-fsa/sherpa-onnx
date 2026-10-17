@@ -22,9 +22,6 @@ const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
     "sherpa-onnx-fst",
     "kaldi-native-fbank-core",
     "kissfft-float",
-    "piper_phonemize",
-    "espeak-ng",
-    "ucd",
     "onnxruntime",
     "ssentencepiece_core",
 ];
@@ -125,7 +122,6 @@ fn resolve_lib_dir(
         }
         return Ok((path, None));
     }
-
     download_prebuilt_libs(link_mode, target_os, target_arch).map(|(p, s)| (p, Some(s)))
 }
 

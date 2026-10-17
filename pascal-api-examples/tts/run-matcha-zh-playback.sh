@@ -41,6 +41,7 @@ fpc \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   -Fl/usr/local/Cellar/portaudio/19.7.0/lib \
+  -Fl/opt/homebrew/Cellar/portaudio/19.7.0/lib \
   ./matcha-zh-playback.pas
 
 # Please see ../portaudio-test/README.md

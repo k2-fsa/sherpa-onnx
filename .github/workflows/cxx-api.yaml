@@ -818,12 +818,15 @@ jobs:
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           echo "---"
 
           ./$name
 
           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
           rm -f vocos_24khz.onnx
+          rm -f lexicon-en-us.txt
           rm -v ./$name
 
           ls -lh ./generated-zipvoice-zh-en-cxx.wav
@@ -850,11 +853,14 @@ jobs:
           tar xf kitten-nano-en-v0_1-fp16.tar.bz2
           rm kitten-nano-en-v0_1-fp16.tar.bz2
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           echo "---"
 
           ./$name
 
           rm -rf kitten-nano-en-v0_1-fp16
+          rm -f lexicon-en-us.txt
           rm -v ./$name
 
       - uses: actions/upload-artifact@v4
@@ -895,10 +901,13 @@ jobs:
           tar xf kokoro-en-v0_19.tar.bz2
           rm kokoro-en-v0_19.tar.bz2
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           ./kokoro-tts-en-cxx-api
 
           rm kokoro-tts-en-cxx-api
           rm -rf kokoro-en-*
+          rm -f lexicon-en-us.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -943,11 +952,14 @@ jobs:
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           ./matcha-tts-en-cxx-api
 
           rm matcha-tts-en-cxx-api
           rm -rf matcha-icefall-*
           rm vocos-22khz-univ.onnx
+          rm -f lexicon-en-us.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -971,9 +983,12 @@ jobs:
           tar xf vits-piper-en_US-lessac-medium.tar.bz2
           rm vits-piper-en_US-lessac-medium.tar.bz2
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           ./$name
 
           rm -rf vits-piper-en_US-lessac-medium
+          rm -f lexicon-en-us.txt
           rm -v ./$name
 
           ls -lh ./generated-piper-en-cxx.wav

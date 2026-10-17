@@ -190,6 +190,7 @@ jobs:
 
           ./run-piper.sh
           rm -rf vits-piper-*
+          rm -f lexicon-en-us.txt
           rm piper
           ls -lh
           echo "---"
@@ -202,6 +203,7 @@ jobs:
 
           ./run-kokoro-en.sh
           rm -rf kokoro-en-*
+          rm -f lexicon-en-us.txt
           rm kokoro-en
           ls -lh
           echo "---"
@@ -214,6 +216,7 @@ jobs:
 
           ./run-matcha-en.sh
           rm -rf matcha-icefall-*
+          rm -f lexicon-en-us.txt
           rm matcha-en
           ls -lh
           echo "---"
@@ -227,6 +230,7 @@ jobs:
           ./run-zipvoice-zh-en.sh
           rm -rf sherpa-onnx-zipvoice-*
           rm -f vocos_24khz.onnx
+          rm -f lexicon-en-us.txt
           rm zipvoice-zh-en
           ls -lh
           echo "---"

@@ -192,9 +192,15 @@ sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 sherpa-onnx-spleeter-2stems-fp16
 sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
 espeak-ng-data
+# downloaded piper-phonemize wasm bundle for the TTS web demo; see
+# wasm/tts/assets/README.md
+wasm/tts/piper-phonemize/
 sherpa-onnx-nemo*
 kokoro-int8-en-v0_19
 vits-inflect-*-v2
 assets-2
 swiftpm
 .sherpa-onnx-xcframework-version
+lexicon*.txt
+tts.json
+*.bin

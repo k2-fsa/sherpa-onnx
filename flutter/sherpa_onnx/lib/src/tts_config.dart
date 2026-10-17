@@ -17,6 +17,8 @@ class OfflineTtsGenerationConfig {
     this.referenceText = '',
     this.numSteps = 5,
     this.extra = const {},
+    this.phonemeCodepoints,
+    this.tokens,
   });
 
   final double silenceScale;
@@ -33,6 +35,22 @@ class OfflineTtsGenerationConfig {
   /// key: string
   /// value: string | int | double
   final Map<String, Object> extra;
+
+  /// Pre-phonemized input as Unicode codepoints, e.g. produced by the
+  /// `piper_phonemize` package. One sub-array per sentence.
+  ///
+  /// When set, it is used in place of the `text` argument of
+  /// `generateWithConfig` (pass `''` as the text). Every sub-array must be
+  /// non-empty. Mutually exclusive with [tokens].
+  final List<List<int>>? phonemeCodepoints;
+
+  /// Pre-tokenized input, e.g. Chinese pinyin like `zhong1`. One sub-array
+  /// per sentence.
+  ///
+  /// When set, it is used in place of the `text` argument of
+  /// `generateWithConfig` (pass `''` as the text). Every sub-array must be
+  /// non-empty. Mutually exclusive with [phonemeCodepoints].
+  final List<List<String>>? tokens;
 }
 
 /// VITS model configuration.
@@ -78,6 +96,12 @@ class OfflineTtsVitsModelConfig {
   final String model;
   final String lexicon;
   final String tokens;
+  /// Path to espeak-ng-data.
+  ///
+  /// Deprecated. Ignored since v2.0.0. Use a lexicon file or pass
+  /// pre-phonemized input via [OfflineTtsGenerationConfig.phonemeCodepoints]
+  /// (or [OfflineTtsGenerationConfig.tokens]) instead.
+  @Deprecated('Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.')
   final String dataDir;
   final double noiseScale;
   final double noiseScaleW;
@@ -129,6 +153,12 @@ class OfflineTtsMatchaModelConfig {
   final String vocoder;
   final String lexicon;
   final String tokens;
+  /// Path to espeak-ng-data.
+  ///
+  /// Deprecated. Ignored since v2.0.0. Use a lexicon file or pass
+  /// pre-phonemized input via [OfflineTtsGenerationConfig.phonemeCodepoints]
+  /// (or [OfflineTtsGenerationConfig.tokens]) instead.
+  @Deprecated('Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.')
   final String dataDir;
   final double noiseScale;
   final double lengthScale;
@@ -178,6 +208,12 @@ class OfflineTtsKokoroModelConfig {
   final String model;
   final String voices;
   final String tokens;
+  /// Path to espeak-ng-data.
+  ///
+  /// Deprecated. Ignored since v2.0.0. Use a lexicon file or pass
+  /// pre-phonemized input via [OfflineTtsGenerationConfig.phonemeCodepoints]
+  /// (or [OfflineTtsGenerationConfig.tokens]) instead.
+  @Deprecated('Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.')
   final String dataDir;
   final double lengthScale;
   final String dictDir; // unused
@@ -193,6 +229,7 @@ class OfflineTtsKittenModelConfig {
     this.tokens = '',
     this.dataDir = '',
     this.lengthScale = 1.0,
+    this.lexicon = '',
   });
 
   factory OfflineTtsKittenModelConfig.fromJson(Map<String, dynamic> json) {
@@ -202,12 +239,13 @@ class OfflineTtsKittenModelConfig {
       tokens: json['tokens'] as String? ?? '',
       dataDir: json['dataDir'] as String? ?? '',
       lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
+      lexicon: json['lexicon'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineTtsKittenModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale)';
+    return 'OfflineTtsKittenModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, lexicon: $lexicon)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -216,13 +254,23 @@ class OfflineTtsKittenModelConfig {
     'tokens': tokens,
     'dataDir': dataDir,
     'lengthScale': lengthScale,
+    'lexicon': lexicon,
   };
 
   final String model;
   final String voices;
   final String tokens;
+  /// Path to espeak-ng-data.
+  ///
+  /// Deprecated. Ignored since v2.0.0. Use a lexicon file or pass
+  /// pre-phonemized input via [OfflineTtsGenerationConfig.phonemeCodepoints]
+  /// (or [OfflineTtsGenerationConfig.tokens]) instead.
+  @Deprecated('Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.')
   final String dataDir;
   final double lengthScale;
+
+  /// Path to the lexicon file.
+  final String lexicon;
 }
 
 /// ZipVoice model configuration.
@@ -277,6 +325,12 @@ class OfflineTtsZipVoiceModelConfig {
   final String encoder;
   final String decoder;
   final String vocoder;
+  /// Path to espeak-ng-data.
+  ///
+  /// Deprecated. Ignored since v2.0.0. Use a lexicon file or pass
+  /// pre-phonemized input via [OfflineTtsGenerationConfig.phonemeCodepoints]
+  /// (or [OfflineTtsGenerationConfig.tokens]) instead.
+  @Deprecated('Ignored since v2.0.0. Use lexicon or phonemeCodepoints instead.')
   final String dataDir;
   final String lexicon;
   final double featScale;
@@ -402,7 +456,7 @@ class OfflineTtsModelConfig {
     this.pocket = const OfflineTtsPocketModelConfig(),
     this.supertonic = const OfflineTtsSupertonicModelConfig(),
     this.numThreads = 1,
-    this.debug = true,
+    this.debug = false,
     this.provider = 'cpu',
   });
 
@@ -470,7 +524,7 @@ class OfflineTtsConfig {
   const OfflineTtsConfig({
     required this.model,
     this.ruleFsts = '',
-    this.maxNumSenetences = 1,
+    this.maxNumSentences = 1,
     this.ruleFars = '',
     this.silenceScale = 0.2,
   });
@@ -481,7 +535,7 @@ class OfflineTtsConfig {
         json['model'] as Map<String, dynamic>,
       ),
       ruleFsts: json['ruleFsts'] as String? ?? '',
-      maxNumSenetences: json['maxNumSenetences'] as int? ?? 1,
+      maxNumSentences: json['maxNumSentences'] as int? ?? 1,
       ruleFars: json['ruleFars'] as String? ?? '',
       silenceScale: (json['silenceScale'] as num?)?.toDouble() ?? 0.2,
     );
@@ -489,20 +543,20 @@ class OfflineTtsConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsConfig(model: $model, ruleFsts: $ruleFsts, maxNumSenetences: $maxNumSenetences, ruleFars: $ruleFars, silenceScale: $silenceScale)';
+    return 'OfflineTtsConfig(model: $model, ruleFsts: $ruleFsts, maxNumSentences: $maxNumSentences, ruleFars: $ruleFars, silenceScale: $silenceScale)';
   }
 
   Map<String, dynamic> toJson() => {
     'model': model.toJson(),
     'ruleFsts': ruleFsts,
-    'maxNumSenetences': maxNumSenetences,
+    'maxNumSentences': maxNumSentences,
     'ruleFars': ruleFars,
     'silenceScale': silenceScale,
   };
 
   final OfflineTtsModelConfig model;
   final String ruleFsts;
-  final int maxNumSenetences;
+  final int maxNumSentences;
   final String ruleFars;
   final double silenceScale;
 }

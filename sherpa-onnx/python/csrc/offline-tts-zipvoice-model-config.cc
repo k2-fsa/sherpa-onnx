@@ -28,7 +28,8 @@ void PybindOfflineTtsZipvoiceModelConfig(py::module *m) {
       .def_readwrite("encoder", &PyClass::encoder)
       .def_readwrite("decoder", &PyClass::decoder)
       .def_readwrite("vocoder", &PyClass::vocoder)
-      .def_readwrite("data_dir", &PyClass::data_dir)
+      .def_readwrite("data_dir", &PyClass::data_dir,
+                     "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. Use lexicon or GenerationConfig.tokens instead. (ZipVoice does not support phoneme_codepoints.)")
       .def_readwrite("lexicon", &PyClass::lexicon)
       .def_readwrite("feat_scale", &PyClass::feat_scale)
       .def_readwrite("t_shift", &PyClass::t_shift)
