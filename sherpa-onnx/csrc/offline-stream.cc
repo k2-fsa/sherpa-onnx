@@ -65,6 +65,14 @@ class OfflineStream::Impl {
 
       opts_.mel_opts.is_librosa = config.is_librosa;
 
+      // NeMo mel preprocessing uses an additive log-zero guard
+      // (log(x + 2**-24)). knf's hard floor (log(max(x, FLT_EPSILON)))
+      // flattens the mel bins of quiet audio to a constant, so take the
+      // raw mel energies and apply the log in GetFrames() instead.
+      if (!config_.nemo_normalize_type.empty()) {
+        opts_.use_log_fbank = false;
+      }
+
       fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
     }
   }
@@ -252,6 +260,14 @@ class OfflineStream::Impl {
                                : whisper_fbank_->GetFrame(i);
       std::copy(f, f + feature_dim, p);
       p += feature_dim;
+    }
+
+    if (!config_.nemo_normalize_type.empty()) {
+      // use_log_fbank is false for NeMo models; apply NeMo's additive
+      // log-zero guard, log(x + 2**-24), to the raw mel energies
+      for (float &v : features) {
+        v = std::log(v + 5.9604644775390625e-08f);
+      }
     }
 
     NemoNormalizeFeatures(features.data(), n, feature_dim);
