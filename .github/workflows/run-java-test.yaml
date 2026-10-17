@@ -243,6 +243,9 @@ jobs:
           ./run-non-streaming-decode-file-zipformer-ctc.sh
           rm -rf sherpa-onnx-zipformer-ctc-*
 
+          ./run-non-streaming-zipformer-ctc-hlg.sh
+          rm -rf sherpa-onnx-zipformer-ctc-*
+
           ./run-non-streaming-decode-file-dolphin-ctc.sh
           rm -rf sherpa-onnx-dolphin-*
 

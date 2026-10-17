@@ -90,6 +90,9 @@ rm -rf sherpa-onnx-*
 ./run-zipformer-ctc-asr.sh
 rm -rf sherpa-onnx-zipformer-*
 
+./run-zipformer-ctc-hlg.sh
+rm -rf sherpa-onnx-zipformer-*
+
 ./run-decode-file-sense-voice-with-hr.sh
 rm -rf sherpa-onnx-sense-voice-*
 rm -rf dict lexicon.txt replace.fst test-hr.wav

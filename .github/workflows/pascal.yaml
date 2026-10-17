@@ -152,6 +152,9 @@ jobs:
           ./run-cohere-transcribe.sh
           rm -rf sherpa-onnx-cohere-transcribe-*
           echo "---"
+          ./run-zipformer-ctc-hlg.sh
+          rm -rf sherpa-onnx-zipformer-ctc-*
+          echo "---"
           popd
 
       - name:  Run Speech Enhancement test

@@ -593,6 +593,14 @@ final class SherpaOnnxOfflineRecognizerConfig extends Struct {
   @Float()
   external double blankPenalty;
   external SherpaOnnxHomophoneReplacerConfig hr;
+  external SherpaOnnxOfflineCtcFstDecoderConfig ctcFstDecoderConfig;
+}
+
+final class SherpaOnnxOfflineCtcFstDecoderConfig extends Struct {
+  external Pointer<Utf8> graph;
+
+  @Int32()
+  external int maxActive;
 }
 
 final class SherpaOnnxOnlineTransducerModelConfig extends Struct {

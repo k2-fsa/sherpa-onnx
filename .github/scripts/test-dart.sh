@@ -66,6 +66,10 @@ echo '----------Zipformer CTC----------'
 ./run-zipformer-ctc.sh
 rm -rf sherpa-onnx-*
 
+echo '----------Zipformer CTC HLG----------'
+./run-zipformer-ctc-hlg.sh
+rm -rf sherpa-onnx-*
+
 echo '----------Cohere Transcribe----------'
 ./run-cohere-transcribe.sh
 rm -rf sherpa-onnx-*

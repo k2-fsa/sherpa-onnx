@@ -350,6 +350,19 @@ python3 ./python-api-examples/online-zipformer-ctc-hlg-decode-file.py \
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
 
 
+log "test offline zipformer ctc HLG decoding"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+
+python3 ./python-api-examples/offline-zipformer-ctc-hlg-decode-files.py \
+  --tokens ./sherpa-onnx-zipformer-ctc-en-2023-10-02/tokens.txt \
+  --model ./sherpa-onnx-zipformer-ctc-en-2023-10-02/model.int8.onnx \
+  --graph ./sherpa-onnx-zipformer-ctc-en-2023-10-02/HLG.fst \
+  ./sherpa-onnx-zipformer-ctc-en-2023-10-02/test_wavs/0.wav
+
+rm -rf sherpa-onnx-zipformer-ctc-en-2023-10-02
+
+
 mkdir -p /tmp/icefall-models
 dir=/tmp/icefall-models
 

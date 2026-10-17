@@ -397,10 +397,18 @@
  */
 
 /**
+ * CTC FST decoder options for offline CTC models.
+ * @typedef {Object} OfflineCtcFstDecoderConfig
+ * @property {string} [graph] - Path to the decoding graph.
+ * @property {number} [maxActive] - Decoder max-active setting. 0 means 3000.
+ */
+
+/**
  * Offline recognizer config passed to createOfflineRecognizer.
  * @typedef {Object} OfflineRecognizerConfig
  * @property {FeatureConfig} [featConfig]
  * @property {OfflineModelConfig} [modelConfig]
+ * @property {OfflineCtcFstDecoderConfig} [ctcFstDecoderConfig]
  */
 
 /**

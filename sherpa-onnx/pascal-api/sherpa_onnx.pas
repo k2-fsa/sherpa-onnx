@@ -548,6 +548,13 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineCtcFstDecoderConfig = record
+    Graph: AnsiString;
+    MaxActive: Integer;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCtcFstDecoderConfig);
+  end;
+
   TSherpaOnnxOfflineRecognizerConfig = record
     FeatConfig: TSherpaOnnxFeatureConfig;
     ModelConfig: TSherpaOnnxOfflineModelConfig;
@@ -560,6 +567,7 @@ type
     RuleFars: AnsiString;
     BlankPenalty: Single;
     Hr: TSherpaOnnxHomophoneReplacerConfig;
+    CtcFstDecoderConfig: TSherpaOnnxOfflineCtcFstDecoderConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineRecognizerConfig);
     function ToString: AnsiString;
   end;
@@ -1098,6 +1106,11 @@ type
     CohereTranscribe: SherpaOnnxOfflineCohereTranscribeModelConfig;
   end;
 
+  SherpaOnnxOfflineCtcFstDecoderConfig = record
+    Graph: PAnsiChar;
+    MaxActive: cint32;
+  end;
+
   SherpaOnnxOfflineRecognizerConfig = record
     FeatConfig: SherpaOnnxFeatureConfig;
     ModelConfig: SherpaOnnxOfflineModelConfig;
@@ -1110,6 +1123,7 @@ type
     RuleFars: PAnsiChar;
     BlankPenalty: cfloat;
     Hr: SherpaOnnxHomophoneReplacerConfig;
+    CtcFstDecoderConfig: SherpaOnnxOfflineCtcFstDecoderConfig;
   end;
 
   PSherpaOnnxOfflineRecognizerConfig = ^SherpaOnnxOfflineRecognizerConfig;
@@ -1760,6 +1774,12 @@ begin
   [Self.Graph, Self.MaxActive]);
 end;
 
+function TSherpaOnnxOfflineCtcFstDecoderConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineCtcFstDecoderConfig(Graph := %s, MaxActive := %d)',
+  [Self.Graph, Self.MaxActive]);
+end;
+
 function TSherpaOnnxHomophoneReplacerConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxHomophoneReplacerConfig(Lexicon := %s, RuleFsts := %s)',
@@ -2224,12 +2244,13 @@ begin
     'RuleFsts := %s, ' +
     'RuleFars := %s, ' +
     'BlankPenalty := %1.f, ' +
-    'Hr := %s' +
+    'Hr := %s, ' +
+    'CtcFstDecoderConfig := %s' +
     ')',
     [Self.FeatConfig.ToString, Self.ModelConfig.ToString,
      Self.LMConfig.ToString, Self.DecodingMethod, Self.MaxActivePaths,
      Self.HotwordsFile, Self.HotwordsScore, Self.RuleFsts, Self.RuleFars,
-     Self.BlankPenalty, Self.Hr.ToString
+     Self.BlankPenalty, Self.Hr.ToString, Self.CtcFstDecoderConfig.ToString
      ]);
 end;
 
@@ -2339,6 +2360,9 @@ begin
 
   C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
   C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
+
+  C.CtcFstDecoderConfig.Graph := PAnsiChar(Config.CtcFstDecoderConfig.Graph);
+  C.CtcFstDecoderConfig.MaxActive := Config.CtcFstDecoderConfig.MaxActive;
 
   Result := C;
 end;
@@ -2569,6 +2593,11 @@ begin
 end;
 
 class operator TSherpaOnnxOnlineCtcFstDecoderConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineCtcFstDecoderConfig);
+begin
+  Dest.MaxActive := 3000;
+end;
+
+class operator TSherpaOnnxOfflineCtcFstDecoderConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCtcFstDecoderConfig);
 begin
   Dest.MaxActive := 3000;
 end;

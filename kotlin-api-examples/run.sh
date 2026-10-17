@@ -908,6 +908,28 @@ function testOfflineWenetCtc() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineZipformerCtcHlg() {
+  if [ ! -f sherpa-onnx-zipformer-ctc-en-2023-10-02/model.int8.onnx ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+    tar xvf sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+    rm sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+  fi
+
+  out_filename=test_offline_zipformer_ctc_hlg.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_zipformer_ctc_hlg.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 testVersion
 testPocketTts
 testZipVoiceTtsLexicon
@@ -923,6 +945,7 @@ testOfflineFunAsrNano
 testOfflineMedAsrCtc
 testOfflineOmnilingualAsrCtc
 testOfflineWenetCtc
+testOfflineZipformerCtcHlg
 testOfflineNeMoCanary
 testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser

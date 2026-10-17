@@ -98,6 +98,8 @@ bash ./run-nemo-parakeet-en.sh
 bash ./run-zipformer-vi.sh
 bash ./run-zipformer-zh-en.sh
 bash ./run-zipformer-en.sh
+bash ./run-zipformer-ctc-hlg.sh
+rm -rf sherpa-onnx-zipformer-ctc-en-2023-10-02
 
 bash ./run-sense-voice.sh
 

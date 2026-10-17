@@ -217,6 +217,12 @@ download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr
 node ./test-offline-zipformer-ctc.js
 rm -rf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
 
+# asr with offline zipformer ctc + HLG graph via ctcFstDecoderConfig
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+
+node ./test-offline-zipformer-ctc-hlg.js
+rm -rf sherpa-onnx-zipformer-ctc-en-2023-10-02
+
 # asr with offline dolphin ctc
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
 node ./test-offline-dolphin-ctc.js

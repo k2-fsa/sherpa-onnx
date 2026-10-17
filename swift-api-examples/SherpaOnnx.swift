@@ -151,6 +151,15 @@ public func sherpaOnnxOnlineCtcFstDecoderConfig(
     max_active: Int32(maxActive))
 }
 
+public func sherpaOnnxOfflineCtcFstDecoderConfig(
+  graph: String = "",
+  maxActive: Int = 3000
+) -> SherpaOnnxOfflineCtcFstDecoderConfig {
+  return SherpaOnnxOfflineCtcFstDecoderConfig(
+    graph: toCPointer(graph),
+    max_active: Int32(maxActive))
+}
+
 public func sherpaOnnxHomophoneReplacerConfig(
   dictDir: String = "",
   lexicon: String = "",
@@ -657,7 +666,8 @@ public func sherpaOnnxOfflineRecognizerConfig(
   ruleFsts: String = "",
   ruleFars: String = "",
   blankPenalty: Float = 0.0,
-  hr: SherpaOnnxHomophoneReplacerConfig = sherpaOnnxHomophoneReplacerConfig()
+  hr: SherpaOnnxHomophoneReplacerConfig = sherpaOnnxHomophoneReplacerConfig(),
+  ctcFstDecoderConfig: SherpaOnnxOfflineCtcFstDecoderConfig = sherpaOnnxOfflineCtcFstDecoderConfig()
 ) -> SherpaOnnxOfflineRecognizerConfig {
   return SherpaOnnxOfflineRecognizerConfig(
     feat_config: featConfig,
@@ -670,7 +680,8 @@ public func sherpaOnnxOfflineRecognizerConfig(
     rule_fsts: toCPointer(ruleFsts),
     rule_fars: toCPointer(ruleFars),
     blank_penalty: blankPenalty,
-    hr: hr
+    hr: hr,
+    ctc_fst_decoder_config: ctcFstDecoderConfig
   )
 }
 

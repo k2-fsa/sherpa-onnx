@@ -219,6 +219,12 @@ download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr
 node ./test_asr_non_streaming_zipformer_ctc.js
 rm -rf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
 
+echo "----------non-streaming ASR Zipformer CTC HLG----------"
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+
+node ./test_asr_non_streaming_zipformer_ctc_hlg.js
+rm -rf sherpa-onnx-zipformer-ctc-en-2023-10-02
+
 echo "----------non-streaming ASR NeMo parakeet tdt----------"
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 

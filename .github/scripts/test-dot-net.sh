@@ -257,6 +257,10 @@ cd ../streaming-hlg-decoding/
 ./run.sh
 rm -rf sherpa-onnx-*
 
+cd ../offline-zipformer-ctc-hlg/
+./run.sh
+rm -rf sherpa-onnx-*
+
 cd ../spoken-language-identification
 ./run.sh
 rm -rf sherpa-onnx-*

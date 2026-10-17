@@ -45,6 +45,7 @@ jobs:
 
           cmake \
             -DSHERPA_ONNX_ENABLE_PYTHON=ON \
+            -DPYTHON_EXECUTABLE="$(command -v python3)" \
             -DSHERPA_ONNX_ENABLE_TESTS=ON \
             -DSHERPA_ONNX_ENABLE_JNI=ON \
             -DSHERPA_ONNX_ENABLE_SANITIZER=ON \
@@ -66,6 +67,12 @@ jobs:
           ls -lh bin
 
           file ./bin/sherpa-onnx
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          cd build
+          ctest --output-on-failure
 
       - name: Display dependencies of sherpa-onnx for macos
         shell: bash

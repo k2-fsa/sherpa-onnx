@@ -124,6 +124,11 @@ type OnlineCtcFstDecoderConfig struct {
 	MaxActive int
 }
 
+type OfflineCtcFstDecoderConfig struct {
+	Graph     string
+	MaxActive int
+}
+
 type HomophoneReplacerConfig struct {
 	DictDir  string // unused
 	Lexicon  string
@@ -501,10 +506,10 @@ type OfflineCanaryModelConfig struct {
 }
 
 type OfflineCohereTranscribeModelConfig struct {
-	Encoder string
-	Decoder string
-	Language string
-	UsePunct int
+	Encoder                     string
+	Decoder                     string
+	Language                    string
+	UsePunct                    int
 	UseInverseTextNormalization int
 }
 
@@ -572,25 +577,25 @@ type OfflineLMConfig struct {
 }
 
 type OfflineModelConfig struct {
-	Transducer    OfflineTransducerModelConfig
-	Paraformer    OfflineParaformerModelConfig
-	NemoCTC       OfflineNemoEncDecCtcModelConfig
-	Whisper       OfflineWhisperModelConfig
-	Tdnn          OfflineTdnnModelConfig
-	SenseVoice    OfflineSenseVoiceModelConfig
-	Moonshine     OfflineMoonshineModelConfig
-	FireRedAsr    OfflineFireRedAsrModelConfig
-	FunAsrNano    OfflineFunASRNanoModelConfig
-	Dolphin       OfflineDolphinModelConfig
-	ZipformerCtc  OfflineZipformerCtcModelConfig
-	Canary        OfflineCanaryModelConfig
-	WenetCtc      OfflineWenetCtcModelConfig
-	Omnilingual   OfflineOmnilingualAsrCtcModelConfig
-	MedAsr        OfflineMedAsrCtcModelConfig
-	FireRedAsrCtc OfflineFireRedAsrCtcModelConfig
-	Qwen3ASR      OfflineQwen3ASRModelConfig
+	Transducer       OfflineTransducerModelConfig
+	Paraformer       OfflineParaformerModelConfig
+	NemoCTC          OfflineNemoEncDecCtcModelConfig
+	Whisper          OfflineWhisperModelConfig
+	Tdnn             OfflineTdnnModelConfig
+	SenseVoice       OfflineSenseVoiceModelConfig
+	Moonshine        OfflineMoonshineModelConfig
+	FireRedAsr       OfflineFireRedAsrModelConfig
+	FunAsrNano       OfflineFunASRNanoModelConfig
+	Dolphin          OfflineDolphinModelConfig
+	ZipformerCtc     OfflineZipformerCtcModelConfig
+	Canary           OfflineCanaryModelConfig
+	WenetCtc         OfflineWenetCtcModelConfig
+	Omnilingual      OfflineOmnilingualAsrCtcModelConfig
+	MedAsr           OfflineMedAsrCtcModelConfig
+	FireRedAsrCtc    OfflineFireRedAsrCtcModelConfig
+	Qwen3ASR         OfflineQwen3ASRModelConfig
 	CohereTranscribe OfflineCohereTranscribeModelConfig
-	Tokens        string // Path to tokens.txt
+	Tokens           string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -619,13 +624,14 @@ type OfflineRecognizerConfig struct {
 	DecodingMethod string
 
 	// Used only when DecodingMethod is modified_beam_search.
-	MaxActivePaths int
-	HotwordsFile   string
-	HotwordsScore  float32
-	BlankPenalty   float32
-	RuleFsts       string
-	RuleFars       string
-	Hr             HomophoneReplacerConfig
+	MaxActivePaths      int
+	HotwordsFile        string
+	HotwordsScore       float32
+	BlankPenalty        float32
+	RuleFsts            string
+	RuleFars            string
+	Hr                  HomophoneReplacerConfig
+	CtcFstDecoderConfig OfflineCtcFstDecoderConfig
 }
 
 // It wraps a pointer from C
@@ -765,6 +771,9 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 
 	c.hr.lexicon = C.CString(config.Hr.Lexicon)
 	c.hr.rule_fsts = C.CString(config.Hr.RuleFsts)
+
+	c.ctc_fst_decoder_config.graph = C.CString(config.CtcFstDecoderConfig.Graph)
+	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
 	return &c
 }
 func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig) {
@@ -827,6 +836,7 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.rule_fars,
 		&c.hr.lexicon,
 		&c.hr.rule_fsts,
+		&c.ctc_fst_decoder_config.graph,
 	}
 
 	for _, field := range stringFields {
