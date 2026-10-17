@@ -543,16 +543,20 @@ type OfflineMoonshineModelConfig struct {
 }
 
 type OfflineQwen3ASRModelConfig struct {
-	ConvFrontend string
-	Encoder      string
-	Decoder      string
-	Tokenizer    string
-	MaxTotalLen  int
-	MaxNewTokens int
-	Temperature  float32
-	TopP         float32
-	Seed         int
-	Hotwords     string
+	ConvFrontend              string
+	Encoder                   string
+	Decoder                   string
+	Tokenizer                 string
+	MaxTotalLen               int
+	MaxNewTokens              int
+	Temperature               float32
+	TopP                      float32
+	Seed                      int
+	Hotwords                  string
+	ForcedAlignerConvFrontend string
+	ForcedAlignerEncoder      string
+	ForcedAlignerDecoder      string
+	ForcedAlignerTokenizer    string
 }
 
 type OfflineTdnnModelConfig struct {
@@ -731,6 +735,10 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.qwen3_asr.top_p = C.float(config.ModelConfig.Qwen3ASR.TopP)
 	c.model_config.qwen3_asr.seed = C.int(config.ModelConfig.Qwen3ASR.Seed)
 	c.model_config.qwen3_asr.hotwords = C.CString(config.ModelConfig.Qwen3ASR.Hotwords)
+	c.model_config.qwen3_asr.forced_aligner_conv_frontend = C.CString(config.ModelConfig.Qwen3ASR.ForcedAlignerConvFrontend)
+	c.model_config.qwen3_asr.forced_aligner_encoder = C.CString(config.ModelConfig.Qwen3ASR.ForcedAlignerEncoder)
+	c.model_config.qwen3_asr.forced_aligner_decoder = C.CString(config.ModelConfig.Qwen3ASR.ForcedAlignerDecoder)
+	c.model_config.qwen3_asr.forced_aligner_tokenizer = C.CString(config.ModelConfig.Qwen3ASR.ForcedAlignerTokenizer)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -813,6 +821,10 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.qwen3_asr.decoder,
 		&c.model_config.qwen3_asr.tokenizer,
 		&c.model_config.qwen3_asr.hotwords,
+		&c.model_config.qwen3_asr.forced_aligner_conv_frontend,
+		&c.model_config.qwen3_asr.forced_aligner_encoder,
+		&c.model_config.qwen3_asr.forced_aligner_decoder,
+		&c.model_config.qwen3_asr.forced_aligner_tokenizer,
 		&c.model_config.omnilingual.model,
 		&c.model_config.tokens,
 		&c.model_config.provider,

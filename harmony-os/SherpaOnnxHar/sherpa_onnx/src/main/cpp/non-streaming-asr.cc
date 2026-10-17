@@ -175,6 +175,11 @@ static SherpaOnnxOfflineQwen3ASRModelConfig GetOfflineQwen3AsrModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(top_p, topP);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(seed, seed);
   SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords, hotwords);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(forced_aligner_conv_frontend,
+                              forcedAlignerConvFrontend);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(forced_aligner_encoder, forcedAlignerEncoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(forced_aligner_decoder, forcedAlignerDecoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(forced_aligner_tokenizer, forcedAlignerTokenizer);
 
   return c;
 }
@@ -487,6 +492,11 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.decoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.tokenizer);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.hotwords);
+  SHERPA_ONNX_DELETE_C_STR(
+      c.model_config.qwen3_asr.forced_aligner_conv_frontend);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.forced_aligner_encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.forced_aligner_decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.forced_aligner_tokenizer);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.cohere_transcribe.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.cohere_transcribe.decoder);
