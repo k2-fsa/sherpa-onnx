@@ -302,6 +302,17 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
 
+    // The convolutional feature extractor of omnilingual ASR models needs
+    // at least 400 samples (25 ms at 16 kHz); onnxruntime throws for shorter
+    // input. Empty input would also make feat_dim 0 below.
+    constexpr size_t kOmnilingualMinNumSamples = 400;
+    if (!config_.model_config.omnilingual.model.empty() &&
+        f.size() < kOmnilingualMinNumSamples) {
+      OfflineRecognitionResult r;
+      s->SetResult(r);
+      return;
+    }
+
     int32_t num_frames = f.size() / feat_dim;
 
     model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
