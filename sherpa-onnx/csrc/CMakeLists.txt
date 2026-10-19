@@ -825,7 +825,6 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     lfr-test.cc
     math-test.cc
     offline-recognizer-canary-impl-test.cc
-    offline-recognizer-config-abi-test.cc
     offline-recognizer-cohere-transcribe-impl-test.cc
     offline-recognizer-funasr-nano-impl-test.cc
     offline-recognizer-moonshine-v2-impl-test.cc

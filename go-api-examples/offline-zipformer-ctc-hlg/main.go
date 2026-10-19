@@ -41,8 +41,9 @@ func main() {
 	wave := sherpa.ReadWave(waveFilename)
 
 	recognizer := sherpa.NewOfflineRecognizer(&config)
-	defer recognizer.Free()
-	stream := recognizer.CreateStream()
+	defer sherpa.DeleteOfflineRecognizer(recognizer)
+	stream := sherpa.NewOfflineStream(recognizer)
+	defer sherpa.DeleteOfflineStream(stream)
 	stream.AcceptWaveform(wave.SampleRate, wave.Samples)
 	recognizer.Decode(stream)
 

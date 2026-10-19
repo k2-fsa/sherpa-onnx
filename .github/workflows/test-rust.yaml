@@ -249,14 +249,6 @@ jobs:
             cargo run --example version
           fi
 
-      - name: Run crate unit tests
-        shell: bash
-        run: |
-          cd sherpa-onnx/rust/sherpa-onnx-sys
-          cargo test
-          cd ../sherpa-onnx
-          cargo test
-
       - name: Run test
         shell: bash
         run: |

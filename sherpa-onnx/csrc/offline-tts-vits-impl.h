@@ -77,7 +77,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     return model_->GetMetaData().num_speakers;
   }
 
-  std::string Lang() const override { return model_->GetMetaData().voice; }
+  std::string Lang() const override { return LastLang(model_->GetMetaData().voice); }
 
   GeneratedAudio Generate(
       const std::string &_text, const GenerationConfig &gen_config,

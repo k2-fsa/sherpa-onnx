@@ -24,8 +24,17 @@ download_and_extract $repo_url
 
 log "Start testing ${repo_url}"
 
-# The model paths are hard-coded inside decode-file-c-api, so there is nothing
-# to pass on the command line.
-time $EXE
+repo=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms
 
-rm -rf sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms
+# decode-file-c-api hard-codes these model paths and ignores any command-line
+# arguments (its main() takes none). The generic sherpa-onnx CLI needs them.
+# Passing the paths works for both: the CLI uses them, the C example ignores
+# them.
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  $repo/test_wavs/0.wav
+
+rm -rf $repo

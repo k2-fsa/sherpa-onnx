@@ -555,7 +555,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
       lex += "./lexicon-zh.txt";
     }
     if (!lex.empty()) {
-      config.model.kokoro.lexicon = lex;
+      config.model.kokoro.lexicon = lex.c_str();
     }
     if (Exists("./dict/jieba.dict.utf8")) {
       config.model.kokoro.dict_dir = "./dict";
