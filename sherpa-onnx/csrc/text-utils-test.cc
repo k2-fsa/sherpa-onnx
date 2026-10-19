@@ -148,4 +148,32 @@ TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
   EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
 }
 
+TEST(Utf8ToUtf16, Bmp) {
+  // a, U+00E9, U+20AC
+  std::u16string expected = {u'a', 0x00E9, 0x20AC};
+  EXPECT_EQ(Utf8ToUtf16("a\xc3\xa9\xe2\x82\xac"), expected);
+}
+
+TEST(Utf8ToUtf16, SurrogatePairs) {
+  // U+1F600 and U+20000 become surrogate pairs; the text after them is kept
+  std::u16string expected = {u'a', 0xD83D, 0xDE00, u'b', 0xD840, 0xDC00, u'c'};
+  EXPECT_EQ(Utf8ToUtf16("a\xf0\x9f\x98\x80"
+                        "b\xf0\xa0\x80\x80"
+                        "c"),
+            expected);
+
+  std::u16string max = {0xDBFF, 0xDFFF};
+  EXPECT_EQ(Utf8ToUtf16("\xf4\x8f\xbf\xbf"), max);  // U+10FFFF
+}
+
+TEST(Utf8ToUtf16, InvalidBytes) {
+  // an encoded surrogate (modified UTF-8, ed a0 bd) is not valid UTF-8
+  std::u16string expected = {0xFFFD, 0xFFFD, 0xFFFD, u'a'};
+  EXPECT_EQ(Utf8ToUtf16("\xed\xa0\xbd"
+                        "a"),
+            expected);
+}
+
+TEST(Utf8ToUtf16, Empty) { EXPECT_EQ(Utf8ToUtf16(""), u""); }
+
 }  // namespace sherpa_onnx

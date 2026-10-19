@@ -979,6 +979,24 @@ std::u32string Utf8ToUtf32(const std::string &str) {
   return out;
 }
 
+std::u16string Utf8ToUtf16(const std::string &str) {
+  std::u16string out;
+  out.reserve(str.size());
+
+  // Utf8ToUtf32 never returns surrogates or code points above U+10FFFF
+  for (char32_t cp : Utf8ToUtf32(str)) {
+    if (cp >= 0x10000) {
+      cp -= 0x10000;
+      out.push_back(static_cast<char16_t>(0xD800 + (cp >> 10)));
+      out.push_back(static_cast<char16_t>(0xDC00 + (cp & 0x3FF)));
+    } else {
+      out.push_back(static_cast<char16_t>(cp));
+    }
+  }
+
+  return out;
+}
+
 std::string Utf32ToUtf8(const std::u32string &str) {
   std::string out;
   out.reserve(str.size() * 2);  // rough estimate

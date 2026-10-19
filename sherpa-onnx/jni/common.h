@@ -146,11 +146,20 @@
 jobject NewInteger(JNIEnv *env, int32_t value);
 jobject NewFloat(JNIEnv *env, float value);
 
-// Wrapper for NewStringUTF that strips invalid UTF-8 byte sequences first.
-// This prevents JNI crashes when the ASR model outputs invalid UTF-8
-// (e.g., orphaned UTF-16 surrogate halves from the Arabic moonshine model).
+// Create a Java string from UTF-8 text. Invalid UTF-8 byte sequences are
+// stripped first. This prevents JNI crashes when the ASR model outputs
+// invalid UTF-8 (e.g., orphaned UTF-16 surrogate halves from the Arabic
+// moonshine model).
+//
+// NewStringUTF is not used since it expects modified UTF-8. Given a 4-byte
+// sequence (a code point above U+FFFF, e.g., an emoji), it returns garbage
+// and drops characters at the end of the string.
 inline jstring SafeNewStringUTF(JNIEnv *env, const std::string &s) {
-  return env->NewStringUTF(sherpa_onnx::RemoveInvalidUtf8Sequences(s).c_str());
+  std::u16string u16 =
+      sherpa_onnx::Utf8ToUtf16(sherpa_onnx::RemoveInvalidUtf8Sequences(s));
+  static_assert(sizeof(jchar) == sizeof(char16_t), "jchar must be 16-bit");
+  return env->NewString(reinterpret_cast<const jchar *>(u16.data()),
+                        static_cast<jsize>(u16.size()));
 }
 
 inline jstring SafeNewStringUTF(JNIEnv *env, const char *s) {
