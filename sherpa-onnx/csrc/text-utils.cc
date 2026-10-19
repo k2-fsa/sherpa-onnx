@@ -785,6 +785,33 @@ std::string ToString(const std::wstring &s) {
   return Utf32ToUtf8(u32);
 }
 
+std::string Utf16ToUtf8(const std::u16string &str) {
+  std::u32string u32;
+  u32.reserve(str.size());
+
+  for (size_t i = 0; i < str.size(); ++i) {
+    char32_t cp = str[i];
+    if (cp >= 0xD800 && cp <= 0xDBFF) {
+      if (i + 1 < str.size()) {
+        char32_t low = str[i + 1];
+        if (low >= 0xDC00 && low <= 0xDFFF) {
+          cp = 0x10000 + ((cp - 0xD800) << 10) + (low - 0xDC00);
+          ++i;
+          u32.push_back(cp);
+          continue;
+        }
+      }
+      u32.push_back(0xFFFD);
+    } else if (cp >= 0xDC00 && cp <= 0xDFFF) {
+      u32.push_back(0xFFFD);
+    } else {
+      u32.push_back(cp);
+    }
+  }
+
+  return Utf32ToUtf8(u32);
+}
+
 bool EndsWith(const std::string &haystack, const std::string &needle) {
   if (needle.size() > haystack.size()) {
     return false;

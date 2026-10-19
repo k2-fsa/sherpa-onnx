@@ -153,6 +153,10 @@ std::wstring ToWideString(const std::string &s);
 
 std::string ToString(const std::wstring &s);
 
+// Converts a UTF-16 std::u16string to a UTF-8 std::string. Unpaired
+// surrogates are replaced with U+FFFD.
+std::string Utf16ToUtf8(const std::u16string &str);
+
 bool EndsWith(const std::string &haystack, const std::string &needle);
 
 bool Contains(const std::string &haystack, const std::string &needle);

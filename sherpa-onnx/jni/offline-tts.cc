@@ -513,16 +513,14 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed) {
-  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  std::string utf8_text = JStringToUtf8(env, text);
 
   sherpa_onnx::GenerationConfig config;
   config.sid = sid;
   config.speed = speed;
 
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      p_text, config);
-
-  env->ReleaseStringUTFChars(text, p_text);
+      utf8_text, config);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
@@ -532,7 +530,7 @@ JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed, jobject callback) {
-  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  std::string utf8_text = JStringToUtf8(env, text);
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
@@ -552,12 +550,10 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, config, callback_wrapper);
+    audio = tts->Generate(utf8_text, config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, config, nullptr);
+    audio = tts->Generate(utf8_text, config, nullptr);
   }
-
-  env->ReleaseStringUTFChars(text, p_text);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
@@ -567,7 +563,7 @@ JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jobject _gen_config,
     jobject callback) {
-  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  std::string utf8_text = JStringToUtf8(env, text);
   auto gen_config = sherpa_onnx::GetGenerationConfig(env, _gen_config);
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
@@ -583,12 +579,10 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, gen_config, callback_wrapper);
+    audio = tts->Generate(utf8_text, gen_config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, gen_config, nullptr);
+    audio = tts->Generate(utf8_text, gen_config, nullptr);
   }
-
-  env->ReleaseStringUTFChars(text, p_text);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }

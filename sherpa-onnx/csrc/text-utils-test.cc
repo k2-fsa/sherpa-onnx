@@ -148,4 +148,29 @@ TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
   EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
 }
 
+TEST(Utf16ToUtf8, BasicMultilingualPlane) {
+  EXPECT_EQ(Utf16ToUtf8(u"hello \u4e16\u754c"),
+            "hello \xe4\xb8\x96\xe7\x95\x8c");
+}
+
+TEST(Utf16ToUtf8, SupplementaryPlane) {
+  EXPECT_EQ(Utf16ToUtf8(u"\U0001f600\U00020000"),
+            "\xf0\x9f\x98\x80\xf0\xa0\x80\x80");
+}
+
+TEST(Utf16ToUtf8, EmbeddedNull) {
+  std::u16string input{u'A', u'\0', u'B'};
+  std::string expected{'A', '\0', 'B'};
+  EXPECT_EQ(Utf16ToUtf8(input), expected);
+}
+
+TEST(Utf16ToUtf8, UnpairedSurrogates) {
+  std::u16string input{static_cast<char16_t>(0xD800), u'A',
+                       static_cast<char16_t>(0xDC00)};
+  EXPECT_EQ(Utf16ToUtf8(input),
+            "\xef\xbf\xbd"
+            "A"
+            "\xef\xbf\xbd");
+}
+
 }  // namespace sherpa_onnx
