@@ -593,6 +593,16 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the JavaScript npm package [sherpa-onnx-node][sherpa-onnx-node] with [SenseVoice](https://k2-fsa.github.io/sherpa/onnx/sense-voice/pretrained.html#sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-chinese-english-japanese-korean-cantonese)
 for local speech recognition.
 
+### [Yap](https://yapapp.cc)
+
+> A private voice dictation app for Windows (x64 and Arm64), with Android, Mac and
+> iPhone versions: hold a key, speak, and the text is typed into any app. On Windows
+> and Android, speech is recognized on the device in 25 European languages with the
+> int8 ONNX export of NVIDIA Parakeet TDT 0.6B v3 through sherpa-onnx (the C API on
+> Windows, the Android library on Android). [Yap MCP](https://github.com/founden-bot/yap-mcp)
+> (MIT) is an MCP server and command-line tool that runs the same model with the
+> `sherpa-onnx-node` package (`OfflineRecognizer`) to transcribe local audio files.
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
