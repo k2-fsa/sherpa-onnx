@@ -7,7 +7,6 @@
 
 #include <exception>  // NOLINT
 #include <string>
-#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -169,23 +168,11 @@ inline std::string JStringToUtf8(JNIEnv *env, jstring s) {
   if (!s) return {};
 
   jsize n = env->GetStringLength(s);
-  std::vector<jchar> buf(n);
-  env->GetStringRegion(s, 0, n, buf.data());
+  std::u16string u16(n, u'\0');
+  static_assert(sizeof(jchar) == sizeof(char16_t), "jchar must be 16-bit");
+  env->GetStringRegion(s, 0, n, reinterpret_cast<jchar *>(&u16[0]));
 
-  std::u32string u32;
-  u32.reserve(n);
-  for (jsize i = 0; i < n; ++i) {
-    char32_t c = buf[i];
-    if (c >= 0xD800 && c <= 0xDBFF && i + 1 < n && buf[i + 1] >= 0xDC00 &&
-        buf[i + 1] <= 0xDFFF) {
-      c = 0x10000 + ((c - 0xD800) << 10) + (buf[i + 1] - 0xDC00);
-      ++i;
-    }
-    // Utf32ToUtf8 turns an unpaired surrogate into U+FFFD
-    u32.push_back(c);
-  }
-
-  return sherpa_onnx::Utf32ToUtf8(u32);
+  return sherpa_onnx::Utf16ToUtf8(u16);
 }
 
 // Template function for non-void return types
