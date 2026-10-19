@@ -174,6 +174,12 @@ TEST(Utf8ToUtf16, InvalidBytes) {
             expected);
 }
 
+TEST(Utf8ToUtf16, EmbeddedNull) {
+  // the text after U+0000 is kept (modified UTF-8 would use c0 80)
+  std::u16string expected = {u'a', 0, u'b'};
+  EXPECT_EQ(Utf8ToUtf16(std::string("a\0b", 3)), expected);
+}
+
 TEST(Utf8ToUtf16, Empty) { EXPECT_EQ(Utf8ToUtf16(""), u""); }
 
 }  // namespace sherpa_onnx
