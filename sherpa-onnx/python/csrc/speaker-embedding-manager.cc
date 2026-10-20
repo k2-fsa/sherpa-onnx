@@ -142,11 +142,10 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v) -> bool {
             CheckDim(self, v);
+            py::gil_scoped_release release;
             return self.Add(name, v.data());
           },
-          py::arg("name"), py::arg("v"),
-          py::call_guard<py::gil_scoped_release>(),
-          kSpeakerEmbeddingManagerAddDoc)
+          py::arg("name"), py::arg("v"), kSpeakerEmbeddingManagerAddDoc)
       .def(
           "add",
           [](const PyClass &self, const std::string &name,
@@ -168,31 +167,30 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           [](const PyClass &self, const std::vector<float> &v,
              float threshold) -> std::string {
             CheckDim(self, v);
+            py::gil_scoped_release release;
             return self.Search(v.data(), threshold);
           },
           py::arg("v"), py::arg("threshold"),
-          py::call_guard<py::gil_scoped_release>(),
           kSpeakerEmbeddingManagerSearchDoc)
       .def(
           "verify",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v, float threshold) -> bool {
             CheckDim(self, v);
+            py::gil_scoped_release release;
             return self.Verify(name, v.data(), threshold);
           },
           py::arg("name"), py::arg("v"), py::arg("threshold"),
-          py::call_guard<py::gil_scoped_release>(),
           kSpeakerEmbeddingManagerVerifyDoc)
       .def(
           "score",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v) -> float {
             CheckDim(self, v);
+            py::gil_scoped_release release;
             return self.Score(name, v.data());
           },
-          py::arg("name"), py::arg("v"),
-          py::call_guard<py::gil_scoped_release>(),
-          kSpeakerEmbeddingManagerScoreDoc);
+          py::arg("name"), py::arg("v"), kSpeakerEmbeddingManagerScoreDoc);
 }
 
 }  // namespace sherpa_onnx
