@@ -84,9 +84,6 @@ ASR_MODELS = [
         """
         rm -rf test_wavs
         rm -fv README.md
-        rm -fv tokenizer/merges.txt
-        rm -fv tokenizer/vocab.json
-        rm -fv tokenizer/tokenizer_config.json
         ls -lh
         """,
     ),
@@ -97,8 +94,6 @@ ASR_MODELS = [
         """
         rm -rf test_wavs
         rm -fv README.md
-        rm -fv Qwen3-0.6B/merges.txt
-        rm -fv Qwen3-0.6B/vocab.json
         ls -lh
         """,
     ),

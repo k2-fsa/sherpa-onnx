@@ -1003,6 +1003,8 @@ jobs:
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
@@ -1011,6 +1013,7 @@ jobs:
           rm $name
           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
           rm -f vocos_24khz.onnx
+          rm -f lexicon-en-us.txt
 
           ls -lh ./generated-zipvoice-zh-en-c.wav
 
@@ -1035,6 +1038,8 @@ jobs:
           tar xf kitten-nano-en-v0_1-fp16.tar.bz2
           rm kitten-nano-en-v0_1-fp16.tar.bz2
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
@@ -1042,6 +1047,7 @@ jobs:
 
           rm $name
           rm -rf kitten-nano-en-v0_1-fp16
+          rm -f lexicon-en-us.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -1082,6 +1088,8 @@ jobs:
           tar xf kokoro-en-v0_19.tar.bz2
           rm kokoro-en-v0_19.tar.bz2
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
@@ -1089,6 +1097,7 @@ jobs:
 
           rm ./kokoro-tts-en-c-api
           rm -rf kokoro-en-*
+          rm -f lexicon-en-us.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -1134,6 +1143,8 @@ jobs:
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
@@ -1142,6 +1153,7 @@ jobs:
           rm ./matcha-tts-en-c-api
           rm -rf matcha-icefall-*
           rm vocos-22khz-univ.onnx
+          rm -f lexicon-en-us.txt
 
       - uses: actions/upload-artifact@v4
         with:

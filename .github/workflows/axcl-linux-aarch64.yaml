@@ -112,8 +112,6 @@ jobs:
               make -j4 install
 
               rm -rf install/lib/pkgconfig
-              rm -fv install/lib/cargs.h
-              rm -fv install/lib/libcargs.so
             '
 
       - name: Display system info
@@ -234,4 +232,4 @@ jobs:
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.19
+          tag: v1.13.8

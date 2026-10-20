@@ -519,7 +519,7 @@ cross-platform Node.js microphone streaming library with prebuilt native binarie
 
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=analytics-in-motion.wake-word)
 - [Open VSX](https://open-vsx.org/extension/analytics-in-motion/wake-word)
-- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/node/integrations/sherpa-onnx-stt.html)
+- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/integrations/stt/sherpa-onnx)
 
 ### [SmartSub](https://github.com/buxuku/SmartSub)
 
@@ -578,6 +578,46 @@ making it easy to match supported sherpa-onnx models to different hardware.
 - [Website](https://olerast67.github.io/voice-teleprompter-android/)
 - Android 10+ · no internet permission · GPL-3.0
 
+### [Recly](https://github.com/rokrokss/recly)
+
+> An open-source recorder for Galaxy Watch, Android, Apple Watch, iPhone, macOS,
+> and Windows. Recordings go to the user's own Google Drive; there is no Recly
+> server. The Android phone app (which also transcribes Galaxy Watch recordings)
+> and the Windows app use sherpa-onnx for on-device transcription: Silero VAD
+> splits each recording into speech segments, and sherpa-onnx's INT8 export of
+> Qwen3-ASR 0.6B transcribes them. The ~1 GB model is downloaded on demand.
+
+### China Unicom 中国联通安卓 App
+
+> The Android App (version `>= 12.14.1 (2026.07.28)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
+
+<img width="800" alt="APK lib screenshot showing only armeabi-v7a" src="https://github.com/user-attachments/assets/a9ce9731-1ec7-4975-a62e-2dd44b8f3bfe" />
+
+### China Life 中国人寿 App
+
+> The Android App (version `>= 3.5.46 (2026.03.23)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
+
+<img width="800" alt="APK lib screenshot" src="https://github.com/user-attachments/assets/0d9d8021-f908-4659-993f-95b5c789d5c6" />
+
+### [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
+
+> It [uses](https://github.com/deepseek-ai/deepseek-harness/commit/47ae64ee68b416cc0aa78891892ae9e9be6590c5)
+> the JavaScript npm package [sherpa-onnx-node][sherpa-onnx-node] with [SenseVoice](https://k2-fsa.github.io/sherpa/onnx/sense-voice/pretrained.html#sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-chinese-english-japanese-korean-cantonese)
+for local speech recognition.
+
+### [bot-reborn](https://github.com/beasaltfish/bot-reborn)
+
+> A $4 toy robot driven by an old Android phone, all from one web page in Chrome.
+> sherpa-onnx runs in the page as WebAssembly: Silero VAD decides when someone is
+> actually talking, so only real speech is sent to STT, and an optional keyword
+> spotter (`sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20`) handles the wake word.
+> Both run from one combined build, with the VAD symbols exported from the KWS
+> WebAssembly target.
+
+- [Build write-up](https://agentlenshq.com/maker/four-dollar-robot)
+- [Live page](https://bot-reborn.agentlenshq.com) (Chrome on Android)
+
+[sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf

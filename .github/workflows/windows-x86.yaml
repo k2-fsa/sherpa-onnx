@@ -68,7 +68,6 @@ jobs:
             -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
             -D CMAKE_INSTALL_PREFIX=./install \
-            -D BUILD_ESPEAK_NG_EXE=OFF \
             ..
 
       - name: Check 1
@@ -190,8 +189,6 @@ jobs:
           fi
 
           rm -rf $dst/lib/pkgconfig
-          rm -f $dst/lib/cargs.dll $dst/lib/cargs.lib $dst/lib/cargs.h
-          rm -f $dst/include/cargs.h
 
           ls -lh $dst/bin/
           echo "---"
@@ -204,10 +201,8 @@ jobs:
           if [[ $shared_lib == "ON" ]]; then
             cp -av build/install/lib/*.dll ${lib_dst}/lib/
             cp -av build/install/lib/*.lib ${lib_dst}/lib/
-            rm -f ${lib_dst}/lib/cargs.dll ${lib_dst}/lib/cargs.lib
           else
             cp -av build/install/lib/*.lib ${lib_dst}/lib/
-            rm -f ${lib_dst}/lib/cargs.lib
           fi
           ls -lh ${lib_dst}/lib/
           tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
@@ -215,6 +210,15 @@ jobs:
           ls -lh $dst/
 
           ls -lh *.tar.bz2
+
+          # The PDB debug symbols (~200 MB each) are already inside the release
+          # tarballs above. The loose copies in build/ and build/install are only
+          # needed for debugging a crash locally, not for running CI tests, so
+          # drop them here to free several GB for the publish/test steps below.
+          rm -f build/bin/${{ matrix.build_type }}/*.pdb
+          rm -f build/install/bin/*.pdb
+          echo "Freed PDB files. Disk now:"
+          df -h .
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -259,7 +263,7 @@ jobs:
           file: sherpa-onnx-*-win-x86*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.28
+          tag: v1.13.8
 
       - name: Release pre-compiled binaries and libs for Windows x86
         if: github.repository_owner == 'k2-fsa'&& github.event_name == 'push' && contains(github.ref, 'refs/tags/')

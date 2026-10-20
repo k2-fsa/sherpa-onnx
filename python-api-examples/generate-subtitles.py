@@ -160,7 +160,6 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import timedelta
 from pathlib import Path
 
 import numpy as np
@@ -430,6 +429,14 @@ def get_args():
     )
 
     parser.add_argument(
+        "--max-duration-seconds",
+        type=float,
+        default=0,
+        help="""Only process the first N seconds of the input file. Use 0 to
+        process the whole file.""",
+    )
+
+    parser.add_argument(
         "sound_file",
         type=str,
         help="The input sound file to generate subtitles ",
@@ -680,6 +687,15 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     return recognizer
 
 
+def format_timestamp(seconds: float) -> str:
+    """Format seconds as an SRT timestamp, i.e., HH:MM:SS,mmm"""
+    ms = round(seconds * 1000)
+    hours, ms = divmod(ms, 3600 * 1000)
+    minutes, ms = divmod(ms, 60 * 1000)
+    seconds, ms = divmod(ms, 1000)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{ms:03d}"
+
+
 @dataclass
 class Segment:
     start: float
@@ -691,10 +707,9 @@ class Segment:
         return self.start + self.duration
 
     def __str__(self):
-        s = f"{timedelta(seconds=self.start)}"[:-3]
+        s = format_timestamp(self.start)
         s += " --> "
-        s += f"{timedelta(seconds=self.end)}"[:-3]
-        s = s.replace(".", ",")
+        s += format_timestamp(self.end)
         s += "\n"
         s += self.text
         return s
@@ -716,16 +731,38 @@ def main():
     if not Path(args.sound_file).is_file():
         raise ValueError(f"{args.sound_file} does not exist")
 
+    srt_filename = Path(args.sound_file).with_suffix(".srt")
+    txt_filename = Path(args.sound_file).with_suffix(".txt")
+
+    existing = [p for p in (srt_filename, txt_filename) if p.exists()]
+    if existing:
+        for p in existing:
+            print(f"warning: {p} exists!", file=sys.stderr)
+        sys.exit("Please delete or rename the file(s) above first!")
+
     assert (
         args.sample_rate == 16000
     ), f"Only sample rate 16000 is supported.Given: {args.sample_rate}"
 
     recognizer = create_recognizer(args)
 
+    max_duration = args.max_duration_seconds
+    if max_duration and max_duration > 0:
+        print(
+            f"Only the first {max_duration} seconds are processed! "
+            "Use --max-duration-seconds=0 for the whole file."
+        )
+    else:
+        max_duration = 0
+
     ffmpeg_cmd = [
         "ffmpeg",
         "-i",
         args.sound_file,
+    ]
+    if max_duration > 0:
+        ffmpeg_cmd += ["-t", f"{max_duration}"]
+    ffmpeg_cmd += [
         "-f",
         "s16le",
         "-acodec",
@@ -843,20 +880,17 @@ def main():
     duration = num_processed_samples / 16000
     rtf = elapsed_seconds / duration
 
-    srt_filename = Path(args.sound_file).with_suffix(".srt")
     with open(srt_filename, "w", encoding="utf-8") as f:
         for i, seg in enumerate(segment_list):
             print(i + 1, file=f)
             print(seg, file=f)
             print("", file=f)
 
-    txt_filename = Path(args.sound_file).with_suffix(".txt")
     with open(txt_filename, "w", encoding="utf-8") as f:
         for seg in segment_list:
-            s = f"{timedelta(seconds=seg.start)}"[:-3]
+            s = format_timestamp(seg.start)
             s += " --> "
-            s += f"{timedelta(seconds=seg.end)}"[:-3]
-            s = s.replace(".", ",")
+            s += format_timestamp(seg.end)
             s += "  "
             s += seg.text
             print(s, file=f)

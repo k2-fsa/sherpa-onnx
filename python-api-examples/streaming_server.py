@@ -757,6 +757,26 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
                     "segment": segment,
                 }
                 if self.recognizer.is_endpoint(stream):
+                    if self.recognizer.config.model_config.paraformer.encoder:
+                        # For streaming paraformer models, which have a large
+                        # right chunk size, we need to pad ~1 second of silence
+                        # on endpointing so that the last character can be
+                        # recognized. (Mirrors sherpa-onnx-microphone.cc; see
+                        # https://github.com/k2-fsa/sherpa-onnx/issues/1373)
+                        tail_padding = np.zeros(self.sample_rate).astype(np.float32)
+                        stream.accept_waveform(
+                            sample_rate=self.sample_rate, waveform=tail_padding
+                        )
+                        while self.recognizer.is_ready(stream):
+                            await self.compute_and_decode(stream)
+
+                        result = self.recognizer.get_result(stream)
+                        message = {
+                            "text": result,
+                            "segment": segment,
+                        }
+                        await socket.send(json.dumps(message))
+
                     self.recognizer.reset(stream)
                     segment += 1
 

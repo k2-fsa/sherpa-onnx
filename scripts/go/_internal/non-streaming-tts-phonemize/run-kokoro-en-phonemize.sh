@@ -1,0 +1,1 @@
+../../../../go-api-examples/non-streaming-tts-phonemize/run-kokoro-en-phonemize.sh

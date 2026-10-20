@@ -234,6 +234,8 @@ final class SherpaOnnxOfflineTtsKittenModelConfig extends Struct {
 
   @Float()
   external double lengthScale;
+
+  external Pointer<Utf8> lexicon;
 }
 
 final class SherpaOnnxOfflineTtsZipVoiceModelConfig extends Struct {
@@ -302,7 +304,7 @@ final class SherpaOnnxOfflineTtsConfig extends Struct {
   external Pointer<Utf8> ruleFsts;
 
   @Int32()
-  external int maxNumSenetences;
+  external int maxNumSentences;
 
   external Pointer<Utf8> ruleFars;
 
@@ -334,6 +336,26 @@ final class SherpaOnnxGenerationConfig extends Struct {
   external int numSteps;
 
   external Pointer<Utf8> extra;
+
+  // Pre-phonemized input as Unicode codepoints (flattened; see
+  // phonemeCodepointsLens for the per-sentence boundaries). When set, it is
+  // used in place of the text argument. Mutually exclusive with tokens.
+  external Pointer<Int32> phonemeCodepoints;
+
+  external Pointer<Int32> phonemeCodepointsLens;
+
+  @Int32()
+  external int phonemeCodepointsNumSentences;
+
+  // Pre-tokenized input, e.g. Chinese pinyin like "zhong1" (flattened; see
+  // tokensLens for the per-sentence boundaries). Mutually exclusive with
+  // phonemeCodepoints.
+  external Pointer<Pointer<Utf8>> tokens;
+
+  external Pointer<Int32> tokensLens;
+
+  @Int32()
+  external int tokensNumSentences;
 }
 
 final class SherpaOnnxGeneratedAudio extends Struct {
@@ -571,6 +593,14 @@ final class SherpaOnnxOfflineRecognizerConfig extends Struct {
   @Float()
   external double blankPenalty;
   external SherpaOnnxHomophoneReplacerConfig hr;
+  external SherpaOnnxOfflineCtcFstDecoderConfig ctcFstDecoderConfig;
+}
+
+final class SherpaOnnxOfflineCtcFstDecoderConfig extends Struct {
+  external Pointer<Utf8> graph;
+
+  @Int32()
+  external int maxActive;
 }
 
 final class SherpaOnnxOnlineTransducerModelConfig extends Struct {
@@ -1270,6 +1300,16 @@ typedef SherpaOnnxOfflineTtsNumSpeakersNative =
 typedef SherpaOnnxOfflineTtsNumSpeakers =
     int Function(Pointer<SherpaOnnxOfflineTts>);
 
+typedef SherpaOnnxOfflineTtsLangNative =
+    Pointer<Utf8> Function(Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxOfflineTtsLang =
+    Pointer<Utf8> Function(Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxDestroyOfflineTtsLangNative = Void Function(Pointer<Utf8>);
+
+typedef SherpaOnnxDestroyOfflineTtsLang = void Function(Pointer<Utf8>);
+
 typedef SherpaOnnxOfflineTtsGenerateNative =
     Pointer<SherpaOnnxGeneratedAudio> Function(
       Pointer<SherpaOnnxOfflineTts>,
@@ -1968,6 +2008,8 @@ class SherpaOnnxBindings {
   static SherpaOnnxDestroyOfflineTts? destroyOfflineTts;
   static SherpaOnnxOfflineTtsSampleRate? offlineTtsSampleRate;
   static SherpaOnnxOfflineTtsNumSpeakers? offlineTtsNumSpeakers;
+  static SherpaOnnxOfflineTtsLang? offlineTtsLang;
+  static SherpaOnnxDestroyOfflineTtsLang? destroyOfflineTtsLang;
   static SherpaOnnxOfflineTtsGenerate? offlineTtsGenerate;
   static SherpaOnnxDestroyOfflineTtsGeneratedAudio?
   destroyOfflineTtsGeneratedAudio;
@@ -2458,6 +2500,18 @@ class SherpaOnnxBindings {
     offlineTtsNumSpeakers ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOfflineTtsNumSpeakersNative>>(
           'SherpaOnnxOfflineTtsNumSpeakers',
+        )
+        .asFunction();
+
+    offlineTtsLang ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineTtsLangNative>>(
+          'SherpaOnnxOfflineTtsLang',
+        )
+        .asFunction();
+
+    destroyOfflineTtsLang ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOfflineTtsLangNative>>(
+          'SherpaOnnxDestroyOfflineTtsLang',
         )
         .asFunction();
 

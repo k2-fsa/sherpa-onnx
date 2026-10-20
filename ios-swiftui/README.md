@@ -160,7 +160,8 @@ This is a known Xcode issue with SPM dynamic (shared) frameworks — Xcode somet
 1. Close Xcode
 2. Delete DerivedData:
    ```bash
-   rm -rf ~/Library/Developer/Xcode/DerivedData/SherpaOnnxTts-*
+   rm -rf ~/Library/Developer/Xcode/DerivedData/SherpaOnnxTtsLexicon-*
+   rm -rf ~/Library/Developer/Xcode/DerivedData/SherpaOnnxTtsPhonemize-*
    ```
 3. Open Xcode
 4. `File → Packages → Reset Package Caches`

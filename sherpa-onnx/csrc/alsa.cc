@@ -175,7 +175,10 @@ const std::vector<float> &Alsa::Read(int32_t num_samples) {
     return samples1_;
   }
 
-  resampler_->Resample(samples1_.data(), samples_.size(), false, &samples2_);
+  // samples_ is interleaved and has actual_channel_count_ samples per frame,
+  // while samples1_ contains only the first channel of each frame, i.e.,
+  // samples1_.size() == samples_.size() / actual_channel_count_.
+  resampler_->Resample(samples1_.data(), samples1_.size(), false, &samples2_);
   return samples2_;
 }
 

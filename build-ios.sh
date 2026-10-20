@@ -35,10 +35,6 @@ echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 #
 
 cmake \
-  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-  -DBUILD_ESPEAK_NG_EXE=OFF \
-  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=SIMULATOR64 \
@@ -63,10 +59,6 @@ cmake --build build/simulator_x86_64 -j 4
 echo "Building for simulator (arm64)"
 
 cmake \
-  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-  -DBUILD_ESPEAK_NG_EXE=OFF \
-  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=SIMULATORARM64 \
@@ -95,10 +87,6 @@ export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/i
 export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers
 
 cmake \
-  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-  -DBUILD_ESPEAK_NG_EXE=OFF \
-  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=OS64 \
@@ -128,8 +116,7 @@ echo "Generate xcframework"
 mkdir -p "build/simulator/lib"
 for f in libkaldi-native-fbank-core.a libkissfft-float.a libsherpa-onnx-c-api.a libsherpa-onnx-core.a \
          libsherpa-onnx-fstfar.a libssentencepiece_core.a \
-         libsherpa-onnx-fst.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a \
-         libucd.a libpiper_phonemize.a libespeak-ng.a; do
+         libsherpa-onnx-fst.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a; do
   lipo -create build/simulator_arm64/lib/${f} \
                build/simulator_x86_64/lib/${f} \
        -output build/simulator/lib/${f}
@@ -146,9 +133,6 @@ libtool -static -o build/simulator/libsherpa-onnx.a \
   build/simulator/lib/libsherpa-onnx-fst.a   \
   build/simulator/lib/libsherpa-onnx-kaldifst-core.a \
   build/simulator/lib/libkaldi-decoder-core.a \
-  build/simulator/lib/libucd.a \
-  build/simulator/lib/libpiper_phonemize.a \
-  build/simulator/lib/libespeak-ng.a \
   build/simulator/lib/libssentencepiece_core.a
 
 libtool -static -o build/os64/libsherpa-onnx.a \
@@ -160,9 +144,6 @@ libtool -static -o build/os64/libsherpa-onnx.a \
   build/os64/lib/libsherpa-onnx-fst.a   \
   build/os64/lib/libsherpa-onnx-kaldifst-core.a \
   build/os64/lib/libkaldi-decoder-core.a \
-  build/os64/lib/libucd.a \
-  build/os64/lib/libpiper_phonemize.a \
-  build/os64/lib/libespeak-ng.a \
   build/os64/lib/libssentencepiece_core.a
 
 # Rename to match the shared library naming convention

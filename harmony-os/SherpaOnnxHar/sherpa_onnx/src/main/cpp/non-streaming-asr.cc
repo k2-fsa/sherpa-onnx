@@ -414,6 +414,24 @@ static SherpaOnnxOfflineLMConfig GetOfflineLMConfig(Napi::Object obj) {
   return c;
 }
 
+static SherpaOnnxOfflineCtcFstDecoderConfig GetOfflineCtcFstDecoderConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineCtcFstDecoderConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("ctcFstDecoderConfig") ||
+      !obj.Get("ctcFstDecoderConfig").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("ctcFstDecoderConfig").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(graph, graph);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active, maxActive);
+
+  return c;
+}
+
 static SherpaOnnxOfflineRecognizerConfig ParseConfig(Napi::Object o) {
   SherpaOnnxOfflineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
@@ -421,6 +439,7 @@ static SherpaOnnxOfflineRecognizerConfig ParseConfig(Napi::Object o) {
   c.model_config = GetOfflineModelConfig(o);
   c.lm_config = GetOfflineLMConfig(o);
   c.hr = GetHomophoneReplacerConfig(o);
+  c.ctc_fst_decoder_config = GetOfflineCtcFstDecoderConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(decoding_method, decodingMethod);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
@@ -509,6 +528,7 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
   SHERPA_ONNX_DELETE_C_STR(c.hr.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.hr.rule_fsts);
+  SHERPA_ONNX_DELETE_C_STR(c.ctc_fst_decoder_config.graph);
 }
 
 static Napi::External<SherpaOnnxOfflineRecognizer>

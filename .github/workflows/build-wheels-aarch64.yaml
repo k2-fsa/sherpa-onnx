@@ -104,8 +104,6 @@ jobs:
               echo "----"
               ls -lh install/lib
 
-              rm -fv install/lib/libcargs.so
-
               echo "----"
               ls -lh install/bin
 

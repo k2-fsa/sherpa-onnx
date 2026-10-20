@@ -22,7 +22,7 @@ var
 begin
   Config.Model.Vits.Model := './vits-piper-en_US-libritts_r-medium/en_US-libritts_r-medium.onnx';
   Config.Model.Vits.Tokens := './vits-piper-en_US-libritts_r-medium/tokens.txt';
-  Config.Model.Vits.DataDir := './vits-piper-en_US-libritts_r-medium/espeak-ng-data';
+  Config.Model.Vits.Lexicon := './lexicon-en-us.txt';
   Config.Model.NumThreads := 1;
   Config.Model.Debug := False;
   Config.MaxNumSentences := 1;

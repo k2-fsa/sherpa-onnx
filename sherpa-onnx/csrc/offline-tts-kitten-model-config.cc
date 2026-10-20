@@ -19,8 +19,12 @@ void OfflineTtsKittenModelConfig::Register(ParseOptions *po) {
                "Path to voices.bin for kitten models");
   po->Register("kitten-tokens", &tokens,
                "Path to tokens.txt for kitten models");
+  po->Register("kitten-lexicon", &lexicon,
+               "Path to lexicon.txt for kitten models");
   po->Register("kitten-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng.");
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --kitten-lexicon or "
+               "GenerationConfig.phoneme_codepoints instead.");
   po->Register("kitten-length-scale", &length_scale,
                "Inverse of speech speed. Larger->Slower; Smaller->faster.");
 }
@@ -56,37 +60,25 @@ bool OfflineTtsKittenModelConfig::Validate() const {
     return false;
   }
 
-  if (data_dir.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --kitten-data-dir");
-    return false;
+  if (!data_dir.empty()) {
+    SHERPA_ONNX_LOGE(
+        "WARNING: --kitten-data-dir is deprecated and ignored in "
+        "sherpa-onnx >= v2.0.0. Please use GenerationConfig.phoneme_codepoints "
+        "with an external phonemizer (e.g. piper_phonemize) instead. "
+        "See python-api-examples/test-offline-tts-kitten-phonemize.py");
   }
 
-  if (!FileExists(data_dir + "/phontab")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/phontab' does not exist. Please check --kitten-data-dir",
-        data_dir.c_str());
-    return false;
-  }
-
-  if (!FileExists(data_dir + "/phonindex")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/phonindex' does not exist. Please check --kitten-data-dir",
-        data_dir.c_str());
-    return false;
-  }
-
-  if (!FileExists(data_dir + "/phondata")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/phondata' does not exist. Please check --kitten-data-dir",
-        data_dir.c_str());
-    return false;
-  }
-
-  if (!FileExists(data_dir + "/intonations")) {
-    SHERPA_ONNX_LOGE(
-        "'%s/intonations' does not exist. Please check --kitten-data-dir",
-        data_dir.c_str());
-    return false;
+  if (!lexicon.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE(
+            "lexicon '%s' does not exist. Please re-check --kitten-lexicon",
+            f.c_str());
+        return false;
+      }
+    }
   }
 
   if (length_scale <= 0) {
@@ -107,6 +99,7 @@ std::string OfflineTtsKittenModelConfig::ToString() const {
   os << "model=\"" << model << "\", ";
   os << "voices=\"" << voices << "\", ";
   os << "tokens=\"" << tokens << "\", ";
+  os << "lexicon=\"" << lexicon << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
   os << "length_scale=" << length_scale << ")";
 

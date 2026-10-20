@@ -76,3 +76,11 @@ jobs:
         shell: bash
         run: |
           .github/scripts/test-swift.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}
+          path: |
+            swift-api-examples/test-*-lexicon.wav
+            swift-api-examples/generated-*.wav
+          if-no-files-found: warn

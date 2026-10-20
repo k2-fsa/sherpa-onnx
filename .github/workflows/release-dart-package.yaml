@@ -464,7 +464,6 @@ jobs:
             -D CMAKE_INSTALL_PREFIX=./install \
             -D SHERPA_ONNX_ENABLE_JNI=OFF \
             -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            -D BUILD_ESPEAK_NG_EXE=OFF \
             ..
 
       - name: Build sherpa-onnx
