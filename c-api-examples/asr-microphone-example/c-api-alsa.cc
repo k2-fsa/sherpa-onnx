@@ -1,6 +1,24 @@
 // c-api-examples/asr-microphone-example/c-api-alsa.cc
 // Copyright (c)  2022-2024  Xiaomi Corporation
 
+// This file shows how to use sherpa-onnx C API
+// for real-time speech recognition from a microphone.
+//
+// It runs only on Linux.
+//
+// clang-format off
+/*
+Usage
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+tar xf sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+rm sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+
+./c-api-alsa
+
+ */
+// clang-format on
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,99 +31,7 @@
 #include <vector>
 
 #include "c-api-examples/asr-microphone-example/alsa.h"
-
-// NOTE: You don't need to use cargs.h in your own project.
-// We use it in this file to parse commandline arguments
-#include "cargs.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
-
-static struct cag_option options[] = {
-    {/*.identifier =*/'h',
-     /*.access_letters =*/"h",
-     /*.access_name =*/"help",
-     /*.value_name =*/"help",
-     /*.description =*/"Show help"},
-    {/*.identifier =*/'t',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"tokens",
-     /*.value_name =*/"tokens",
-     /*.description =*/"Tokens file"},
-    {/*.identifier =*/'e',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"encoder",
-     /*.value_name =*/"encoder",
-     /*.description =*/"Encoder ONNX file"},
-    {/*.identifier =*/'d',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"decoder",
-     /*.value_name =*/"decoder",
-     /*.description =*/"Decoder ONNX file"},
-    {/*.identifier =*/'j',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"joiner",
-     /*.value_name =*/"joiner",
-     /*.description =*/"Joiner ONNX file"},
-    {/*.identifier =*/'n',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"num-threads",
-     /*.value_name =*/"num-threads",
-     /*.description =*/"Number of threads"},
-    {/*.identifier =*/'p',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"provider",
-     /*.value_name =*/"provider",
-     /*.description =*/"Provider: cpu (default), cuda, coreml"},
-    {/*.identifier =*/'m',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"decoding-method",
-     /*.value_name =*/"decoding-method",
-     /*.description =*/
-     "Decoding method: greedy_search (default), modified_beam_search"},
-    {/*.identifier =*/'f',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"hotwords-file",
-     /*.value_name =*/"hotwords-file",
-     /*.description =*/
-     "The file containing hotwords, one words/phrases per line, and for each "
-     "phrase the bpe/cjkchar are separated by a space. For example: ▁HE LL O "
-     "▁WORLD, 你 好 世 界"},
-    {/*.identifier =*/'s',
-     /*.access_letters =*/NULL,
-     /*.access_name =*/"hotwords-score",
-     /*.value_name =*/"hotwords-score",
-     /*.description =*/
-     "The bonus score for each token in hotwords. Used only when "
-     "decoding_method is modified_beam_search"},
-};
-
-const char *kUsage =
-    R"(
-Usage:
-  ./bin/c-api-alsa \
-    --tokens=/path/to/tokens.txt \
-    --encoder=/path/to/encoder.onnx \
-    --decoder=/path/to/decoder.onnx \
-    --joiner=/path/to/decoder.onnx \
-    device_name
-
-The device name specifies which microphone to use in case there are several
-on your system. You can use
-
-  arecord -l
-
-to find all available microphones on your computer. For instance, if it outputs
-
-**** List of CAPTURE Hardware Devices ****
-card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-
-and if you want to select card 3 and device 0 on that card, please use:
-
-  plughw:3,0
-
-as the device_name.
-)";
 
 bool stop = false;
 
@@ -114,11 +40,31 @@ static void Handler(int sig) {
   fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
 }
 
-int32_t main(int32_t argc, char *argv[]) {
-  if (argc < 6) {
-    fprintf(stderr, "%s\n", kUsage);
-    exit(0);
-  }
+int32_t main() {
+  // Recording device to use. Run
+  //
+  //   arecord -l
+  //
+  // to list all available microphones. For instance, if it prints
+  //
+  // **** List of CAPTURE Hardware Devices ****
+  // card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
+  //
+  // and you want card 3, device 0, then use "plughw:3,0" below.
+  const char *device_name = "default";
+
+  const char *tokens =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "tokens.txt";
+  const char *encoder =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "encoder.onnx";
+  const char *decoder =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "decoder.onnx";
+  const char *joiner =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "joiner.onnx";
 
   signal(SIGINT, Handler);
 
@@ -128,6 +74,10 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model_config.debug = 0;
   config.model_config.num_threads = 1;
   config.model_config.provider = "cpu";
+  config.model_config.tokens = tokens;
+  config.model_config.transducer.encoder = encoder;
+  config.model_config.transducer.decoder = decoder;
+  config.model_config.transducer.joiner = joiner;
 
   config.decoding_method = "greedy_search";
 
@@ -141,54 +91,6 @@ int32_t main(int32_t argc, char *argv[]) {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
-  cag_option_context context;
-  char identifier;
-  const char *value;
-
-  cag_option_prepare(&context, options, CAG_ARRAY_SIZE(options), argc, argv);
-
-  while (cag_option_fetch(&context)) {
-    identifier = cag_option_get(&context);
-    value = cag_option_get_value(&context);
-    switch (identifier) {
-      case 't':
-        config.model_config.tokens = value;
-        break;
-      case 'e':
-        config.model_config.transducer.encoder = value;
-        break;
-      case 'd':
-        config.model_config.transducer.decoder = value;
-        break;
-      case 'j':
-        config.model_config.transducer.joiner = value;
-        break;
-      case 'n':
-        config.model_config.num_threads = atoi(value);
-        break;
-      case 'p':
-        config.model_config.provider = value;
-        break;
-      case 'm':
-        config.decoding_method = value;
-        break;
-      case 'f':
-        config.hotwords_file = value;
-        break;
-      case 's':
-        config.hotwords_score = atof(value);
-        break;
-      case 'h': {
-        fprintf(stderr, "%s\n", kUsage);
-        exit(0);
-        break;
-      }
-      default:
-        // do nothing as config already has valid default values
-        break;
-    }
-  }
-
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&config);
   const SherpaOnnxOnlineStream *stream =
@@ -197,7 +99,6 @@ int32_t main(int32_t argc, char *argv[]) {
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 
-  const char *device_name = argv[context.index];
   sherpa_onnx::Alsa alsa(device_name);
   fprintf(stderr, "Use recording device: %s\n", device_name);
   fprintf(stderr,

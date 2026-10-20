@@ -4,14 +4,6 @@ on:
   push:
     branches:
       - fix-go-2
-  schedule:
-    # minute (0-59)
-    # hour (0-23)
-    # day of the month (1-31)
-    # month (1-12)
-    # day of the week (0-6)
-    # nightly build at 15:50 UTC time every day
-    - cron: "50 15 * * *"
 
   workflow_dispatch:
 
@@ -44,7 +36,7 @@ jobs:
           - os: macos-latest
             arch: arm64
             index: 3
-            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts non-streaming-tts-phonemize streaming-decode-files"
           - os: macos-latest
             arch: arm64
             index: 4
@@ -73,7 +65,7 @@ jobs:
           - os: macos-15-intel
             arch: amd64
             index: 3
-            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts non-streaming-tts-phonemize streaming-decode-files"
           - os: macos-15-intel
             arch: amd64
             index: 4
@@ -102,7 +94,7 @@ jobs:
           - os: ubuntu-latest
             arch: amd64
             index: 3
-            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts non-streaming-tts-phonemize streaming-decode-files"
           - os: ubuntu-latest
             arch: amd64
             index: 4
@@ -131,7 +123,7 @@ jobs:
           - os: ubuntu-22.04-arm
             arch: arm64
             index: 3
-            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts non-streaming-tts-phonemize streaming-decode-files"
           - os: ubuntu-22.04-arm
             arch: arm64
             index: 4
@@ -160,7 +152,7 @@ jobs:
           - os: windows-2022
             arch: x64
             index: 3
-            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts non-streaming-tts-phonemize streaming-decode-files"
           - os: windows-2022
             arch: x64
             index: 4
@@ -189,7 +181,7 @@ jobs:
           - os: windows-2022
             arch: x86
             index: 3
-            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts non-streaming-tts-phonemize streaming-decode-files"
           - os: windows-2022
             arch: x86
             index: 4
@@ -218,7 +210,7 @@ jobs:
           - os: windows-11-arm
             arch: arm64
             index: 3
-            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts streaming-decode-files"
+            tests: "non-streaming-medasr-ctc-decode-files non-streaming-omnilingual-asr-ctc-decode-files non-streaming-tts non-streaming-tts-phonemize streaming-decode-files"
           - os: windows-11-arm
             arch: arm64
             index: 4
@@ -239,7 +231,12 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '>=1.17'
+          # windows/arm64 needs Go >= 1.27: Go 1.26 cgo passes the MinGW-only
+          # -mthreads flag, which clang rejects when it targets
+          # aarch64-pc-windows-msvc (the ABI used to link the MSVC-built
+          # sherpa-onnx-c-api.dll). Go 1.27 passes -pthread instead.
+          # Other platforms keep the flexible spec.
+          go-version: ${{ matrix.os == 'windows-11-arm' && '1.27.x' || '>=1.17' }}
 
       - name: Set up MinGW for x64
         if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
@@ -313,7 +310,16 @@ jobs:
           done
 
       - uses: actions/upload-artifact@v4
-        if: contains(matrix.tests, 'non-streaming-tts') || contains(matrix.tests, 'zero-shot-zipvoice-tts')
+        if: contains(matrix.tests, 'non-streaming-tts') || contains(matrix.tests, 'zero-shot-zipvoice-tts') || contains(matrix.tests, 'zero-shot-pocket-tts') || contains(matrix.tests, 'supertonic-tts')
         with:
           name: tts-waves-${{ matrix.os }}-${{ matrix.arch }}
-          path: tts-waves
+          path: |
+            go-api-examples/non-streaming-tts/*.wav
+            go-api-examples/non-streaming-tts-phonemize/*.wav
+            go-api-examples/offline-tts-play/*.wav
+            go-api-examples/zero-shot-zipvoice-tts/*.wav
+            go-api-examples/zero-shot-zipvoice-tts-play/*.wav
+            go-api-examples/zero-shot-pocket-tts/*.wav
+            go-api-examples/zero-shot-pocket-tts-play/*.wav
+            go-api-examples/supertonic-tts/*.wav
+          if-no-files-found: warn

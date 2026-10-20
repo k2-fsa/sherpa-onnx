@@ -42,7 +42,6 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.matcha.vocoder = "./vocos-22khz-univ.onnx";
   config.model.matcha.lexicon = "./matcha-icefall-zh-baker/lexicon.txt";
   config.model.matcha.tokens = "./matcha-icefall-zh-baker/tokens.txt";
-  config.model.matcha.dict_dir = "./matcha-icefall-zh-baker/dict";
   config.model.num_threads = 1;
 
   // If you don't want to see debug messages, please set it to 0

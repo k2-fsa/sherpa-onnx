@@ -13,12 +13,12 @@ model_dir="$script_dir/$model"
 archive_path="$script_dir/$archive"
 
 if [ ! -d "$model_dir" ]; then
-  if command -v wget >/dev/null 2>&1; then
-    wget -O "$archive_path" "$repo_url/$archive"
-  elif command -v curl >/dev/null 2>&1; then
+  if command -v curl >/dev/null 2>&1; then
     curl -L -o "$archive_path" "$repo_url/$archive"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -O "$archive_path" "$repo_url/$archive"
   else
-    echo "Error: Neither wget nor curl found. Please install one of them."
+    echo "Error: Neither curl nor wget found. Please install one of them."
     exit 1
   fi
 

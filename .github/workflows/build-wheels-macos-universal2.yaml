@@ -85,11 +85,6 @@ jobs:
           ls -lh bin
 
           file ./bin/sherpa-onnx
-
-          rm -fv ./install/include/cargs.h
-          rm -fv ./install/lib/cargs.h
-          rm -fv ./install/lib/libcargs.dylib
-          rm -fv ./install/lib/libcargs.a
           rm -rfv ./install/lib/pkgconfig
 
       - name: Copy files

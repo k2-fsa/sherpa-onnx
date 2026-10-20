@@ -249,9 +249,19 @@ class MainActivity : ComponentActivity() {
                                                     if (TtsEngine.isSupertonic) {
                                                         genConfig.extra = mapOf("lang" to TtsEngine.supertonicLang)
                                                     }
+                                                    var genText = testText
+                                                    if (TtsEngine.usePhonemize) {
+                                                        // Phonemize outside of sherpa-onnx with
+                                                        // piper-phonemize and pass the phoneme
+                                                        // codepoints.
+                                                        genConfig.phonemeCodepoints =
+                                                            TtsEngine.phonemize(testText)
+                                                        // The text has already been phonemized.
+                                                        genText = ""
+                                                    }
                                                     val audio =
                                                         TtsEngine.tts!!.generateWithConfigAndCallback(
-                                                            text = testText,
+                                                            text = genText,
                                                             config = genConfig,
                                                             callback = ::callback,
                                                         )

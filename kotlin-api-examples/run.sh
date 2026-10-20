@@ -39,7 +39,7 @@ function testVersion() {
 
 function testPocketTts() {
   if [ ! -f ./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
     tar xvf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
     rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
   fi
@@ -57,20 +57,20 @@ function testPocketTts() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function testZipVoiceTts() {
+function testZipVoiceTtsLexicon() {
   if [ ! -f ./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
     tar xvf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
     rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
   fi
 
   if [ ! -f ./vocos_24khz.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
   fi
 
-  out_filename=test_zipvoice_tts.jar
+  out_filename=test_zipvoice_tts_lexicon.jar
   kotlinc-jvm -include-runtime -d $out_filename \
-    test_zipvoice_tts.kt \
+    test_zipvoice_tts_lexicon.kt \
     Tts.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
@@ -83,7 +83,7 @@ function testZipVoiceTts() {
 
 function testSupertonicTts() {
   if [ ! -f ./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
     tar xvf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
     rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
   fi
@@ -103,19 +103,19 @@ function testSupertonicTts() {
 
 function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
   fi
 
   if [ ! -f ./speaker1_a_cn_16k.wav ]; then
-    curl -SL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_a_cn_16k.wav
+    curl -fSL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_a_cn_16k.wav
   fi
 
   if [ ! -f ./speaker1_b_cn_16k.wav ]; then
-    curl -SL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_b_cn_16k.wav
+    curl -fSL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_b_cn_16k.wav
   fi
 
   if [ ! -f ./speaker2_a_cn_16k.wav ]; then
-    curl -SL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker2_a_cn_16k.wav
+    curl -fSL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker2_a_cn_16k.wav
   fi
 
   out_filename=test_speaker_id.jar
@@ -136,7 +136,7 @@ function testSpeakerEmbeddingExtractor() {
 
 function testOnlineAsr() {
   if [ ! -f ./sherpa-onnx-streaming-t-one-russian-2025-09-08/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
     tar xvf sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
     rm sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
   fi
@@ -147,19 +147,19 @@ function testOnlineAsr() {
   fi
 
   if [ ! -f ./sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2
     tar xvf sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2
     rm sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2
   fi
 
   if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13 ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
     tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
     rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
   fi
 
   if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18 ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
     tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
     rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
   fi
@@ -181,44 +181,109 @@ function testOnlineAsr() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function testTts() {
+function setupPhonemize() {
+  # Download the piper-phonemize JVM jar and the native jar for this platform.
+  # The espeak-ng-data used by the phonemizer is embedded in those jars; it
+  # only feeds piper-phonemize, not sherpa-onnx.
+  PIPER_PHONEMIZE_VERSION=v1.5.9
+  PIPER_BASE_URL=https://jitpack.io/com/github/csukuangfj/piper-phonemize
+
+  # The native jar must match the JVM's architecture, not the shell's: Git
+  # Bash on Windows ARM reports x86_64 while the JVM is aarch64. This mirrors
+  # LibraryUtils.getOsArch() so the jar's internal resource path is found.
+  jvm_props=$(java -XshowSettings:properties -version 2>&1)
+  jvm_os=$(printf '%s\n' "$jvm_props" | sed -n 's/.*os\.name = //p' | head -1 |
+    tr '[:upper:]' '[:lower:]')
+  jvm_arch=$(printf '%s\n' "$jvm_props" | sed -n 's/.*os\.arch = //p' | head -1 |
+    tr '[:upper:]' '[:lower:]')
+
+  case "$jvm_os" in
+    *mac* | *darwin*) piper_os=osx ;;
+    *win*) piper_os=win ;;
+    *nux*) piper_os=linux ;;
+    *)
+      echo "Unsupported OS: $jvm_os" >&2
+      exit 1
+      ;;
+  esac
+
+  case "$jvm_arch" in
+    amd64* | x86_64*) piper_arch=x64 ;;
+    aarch64* | arm64*)
+      if [ "$piper_os" = "win" ]; then piper_arch=arm64; else piper_arch=aarch64; fi
+      ;;
+    x86*) piper_arch=x86 ;;
+    arm*) piper_arch=arm ;;
+    *)
+      echo "Unsupported architecture: $jvm_arch" >&2
+      exit 1
+      ;;
+  esac
+
+  piper_plat="$piper_os-$piper_arch"
+
+  PIPER_JVM_JAR=piper-phonemize-jvm-$PIPER_PHONEMIZE_VERSION.jar
+  piper_native_jar=piper-phonemize-native-lib-$piper_plat-$PIPER_PHONEMIZE_VERSION.jar
+
+  if [ ! -f ./$PIPER_JVM_JAR ]; then
+    curl -fSL -O $PIPER_BASE_URL/piper-phonemize-jvm/$PIPER_PHONEMIZE_VERSION/$PIPER_JVM_JAR
+  fi
+
+  if [ ! -f ./$piper_native_jar ]; then
+    curl -fSL -O \
+      $PIPER_BASE_URL/piper-phonemize-native-lib-$piper_plat/$PIPER_PHONEMIZE_VERSION/$piper_native_jar
+  fi
+
+  case "$jvm_os" in
+    *win*) piper_sep=';' ;;
+    *) piper_sep=':' ;;
+  esac
+
+  export PIPER_CLASSPATH="$PIPER_JVM_JAR$piper_sep$piper_native_jar"
+}
+
+function testTtsLexicon() {
   if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
     tar xf vits-piper-en_US-amy-low.tar.bz2
     rm vits-piper-en_US-amy-low.tar.bz2
   fi
 
   if [ ! -f ./matcha-icefall-zh-baker/model-steps-3.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
     tar xvf matcha-icefall-zh-baker.tar.bz2
     rm matcha-icefall-zh-baker.tar.bz2
   fi
 
   if [ ! -f ./vocos-22khz-univ.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
   fi
 
   if [ ! -f ./kokoro-multi-lang-v1_0/model.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
     tar xf kokoro-multi-lang-v1_0.tar.bz2
     rm kokoro-multi-lang-v1_0.tar.bz2
   fi
 
   if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
     tar xf kokoro-en-v0_19.tar.bz2
     rm kokoro-en-v0_19.tar.bz2
   fi
 
   if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
     tar xf kitten-nano-en-v0_1-fp16.tar.bz2
     rm kitten-nano-en-v0_1-fp16.tar.bz2
   fi
 
-  out_filename=test_tts.jar
+  if [ ! -f ./lexicon-en-us.txt ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+  fi
+
+  out_filename=test_tts_lexicon.jar
   kotlinc-jvm -include-runtime -d $out_filename \
-    test_tts.kt \
+    test_tts_lexicon.kt \
     Tts.kt \
     faked-asset-manager.kt \
     faked-log.kt
@@ -228,10 +293,50 @@ function testTts() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testTtsPhonemize() {
+  if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+    tar xf vits-piper-en_US-amy-low.tar.bz2
+    rm vits-piper-en_US-amy-low.tar.bz2
+  fi
+
+  if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+    tar xf kokoro-en-v0_19.tar.bz2
+    rm kokoro-en-v0_19.tar.bz2
+  fi
+
+  if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+    tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+    rm kitten-nano-en-v0_1-fp16.tar.bz2
+  fi
+
+  if [ ! -f ./vits-piper-de_DE-glados-low/de_DE-glados-low.onnx ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-glados-low.tar.bz2
+    tar xf vits-piper-de_DE-glados-low.tar.bz2
+    rm vits-piper-de_DE-glados-low.tar.bz2
+  fi
+
+  setupPhonemize
+
+  out_filename=test_tts_phonemize.jar
+  kotlinc-jvm -include-runtime -cp "$PIPER_JVM_JAR" -d $out_filename \
+    test_tts_phonemize.kt \
+    Tts.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib \
+    -cp "$out_filename:$PIPER_CLASSPATH" \
+    com.k2fsa.sherpa.onnx.Test_tts_phonemizeKt
+}
 
 function testAudioTagging() {
   if [ ! -d sherpa-onnx-zipformer-audio-tagging-2024-04-09 ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
     tar xvf sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
     rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
   fi
@@ -253,13 +358,13 @@ function testAudioTagging() {
 
 function testSpokenLanguageIdentification() {
   if [ ! -f ./sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
     tar xvf sherpa-onnx-whisper-tiny.tar.bz2
     rm sherpa-onnx-whisper-tiny.tar.bz2
   fi
 
   if [ ! -f ./spoken-language-identification-test-wavs/ar-arabic.wav ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
     tar xvf spoken-language-identification-test-wavs.tar.bz2
     rm spoken-language-identification-test-wavs.tar.bz2
   fi
@@ -280,57 +385,57 @@ function testSpokenLanguageIdentification() {
 
 function testOfflineAsr() {
   if [ ! -f ./sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/model.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
     tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
     rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
     ls -lh sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
   fi
 
   if [ ! -f ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
     tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
     rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
     ls -lh sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
   fi
 
   if [ ! -f ./sherpa-onnx-moonshine-tiny-en-int8/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
     tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
     rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
     tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
     rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
     tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
     rm sherpa-onnx-whisper-tiny.en.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-nemo-ctc-en-citrinet-512/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
     tar xvf sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
     rm sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
     tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
     rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-zipformer-multi-zh-hans-2023-9-2/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
     tar xvf sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
     rm sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
 
     tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
     rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
@@ -353,17 +458,17 @@ function testOfflineAsr() {
 
 function testInverseTextNormalizationOfflineAsr() {
   if [ ! -f ./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
     tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
     rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   fi
 
   if [ ! -f ./itn-zh-number.wav ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
   fi
 
   if [ ! -f ./itn_zh_number.fst ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
   fi
 
   out_filename=test_itn_offline_asr.jar
@@ -383,17 +488,17 @@ function testInverseTextNormalizationOfflineAsr() {
 
 function testInverseTextNormalizationOnlineAsr() {
   if [ ! -f ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
     tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
     rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
   fi
 
   if [ ! -f ./itn-zh-number.wav ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
   fi
 
   if [ ! -f ./itn_zh_number.fst ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
   fi
 
   out_filename=test_itn_online_asr.jar
@@ -413,7 +518,7 @@ function testInverseTextNormalizationOnlineAsr() {
 
 function testOfflinePunctuation() {
   if [ ! -f ./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
     tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
     rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
   fi
@@ -452,7 +557,7 @@ function testOfflineDiacritization() {
 
 function testOnlinePunctuation() {
   if [ ! -f ./sherpa-onnx-online-punct-en-2024-08-06/model.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
     tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
     rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
   fi
@@ -471,17 +576,17 @@ function testOnlinePunctuation() {
 
 function testOfflineSpeakerDiarization() {
   if [ ! -f ./sherpa-onnx-pyannote-segmentation-3-0/model.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
     tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
     rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
   fi
 
   if [ ! -f ./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
   fi
 
   if [ ! -f ./0-four-speakers-zh.wav ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
   fi
 
   out_filename=test_offline_speaker_diarization.jar
@@ -502,15 +607,15 @@ function testOfflineSpeakerDiarization() {
 
 function testOfflineSpeechDenoiser() {
   if [ ! -f ./gtcrn_simple.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
   fi
 
   if [ ! -f ./dpdfnet_baseline.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
   fi
 
   if [ ! -f ./inp_16k.wav ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
   fi
 
   out_filename=test_offline_speech_denoiser_gtcrn.jar
@@ -544,15 +649,15 @@ function testOfflineSpeechDenoiser() {
 
 function testOnlineSpeechDenoiser() {
   if [ ! -f ./gtcrn_simple.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
   fi
 
   if [ ! -f ./dpdfnet_baseline.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
   fi
 
   if [ ! -f ./inp_16k.wav ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
   fi
 
   out_filename=test_online_speech_denoiser.jar
@@ -574,19 +679,19 @@ function testOnlineSpeechDenoiser() {
 
 function testOfflineSenseVoiceWithHr() {
   if [ ! -f ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
     tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
     rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
   fi
 
   if [ ! -d dict ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
     tar xf dict.tar.bz2
     rm dict.tar.bz2
 
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
   fi
 
   out_filename=test_offline_sense_voice_with_hr.jar
@@ -606,7 +711,7 @@ function testOfflineSenseVoiceWithHr() {
 
 function testOfflineNeMoCanary() {
   if [ ! -f sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/encoder.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
     tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
     rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
   fi
@@ -629,7 +734,7 @@ function testOfflineNeMoCanary() {
 
 function testOfflineOmnilingualAsrCtc() {
   if [ ! -f sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
     tar xvf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
     rm sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
   fi
@@ -651,7 +756,7 @@ function testOfflineOmnilingualAsrCtc() {
 
 function testOfflineMedAsrCtc() {
   if [ ! -f ./sherpa-onnx-medasr-ctc-en-int8-2025-12-25/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
     tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
     rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
   fi
@@ -673,7 +778,7 @@ function testOfflineMedAsrCtc() {
 
 function testOfflineMoonshineAsrV2() {
   if [ ! -f ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
     tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
     rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
   fi
@@ -695,7 +800,7 @@ function testOfflineMoonshineAsrV2() {
 
 function testOfflineFireRedAsrCtc() {
   if [ ! -f ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
     tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
     rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
   fi
@@ -717,7 +822,7 @@ function testOfflineFireRedAsrCtc() {
 
 function testOfflineFunAsrNano() {
   if [ ! -f ./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
     tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
     rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
   fi
@@ -739,7 +844,7 @@ function testOfflineFunAsrNano() {
 
 function testOfflineQwen3Asr() {
   if [ ! -f ./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
     tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
     rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
   fi
@@ -761,7 +866,7 @@ function testOfflineQwen3Asr() {
 
 function testOfflineCohereTranscribe() {
   if [ ! -f ./sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/encoder.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
     tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
     rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
   fi
@@ -783,7 +888,7 @@ function testOfflineCohereTranscribe() {
 
 function testOfflineWenetCtc() {
   if [ ! -f sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/model.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
     tar xvf sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
     rm sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
   fi
@@ -803,26 +908,50 @@ function testOfflineWenetCtc() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineZipformerCtcHlg() {
+  if [ ! -f sherpa-onnx-zipformer-ctc-en-2023-10-02/model.int8.onnx ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+    tar xvf sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+    rm sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+  fi
+
+  out_filename=test_offline_zipformer_ctc_hlg.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_zipformer_ctc_hlg.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 testVersion
+testPocketTts
+testZipVoiceTtsLexicon
+testSupertonicTts
+testTtsLexicon
+testTtsPhonemize
 testOfflineSpeakerDiarization
 testOfflineCohereTranscribe
 testOfflineQwen3Asr
 testOfflineMoonshineAsrV2
 testOfflineFireRedAsrCtc
-testPocketTts
-testZipVoiceTts
-testSupertonicTts
 testOfflineFunAsrNano
 testOfflineMedAsrCtc
 testOfflineOmnilingualAsrCtc
 testOfflineWenetCtc
+testOfflineZipformerCtcHlg
 testOfflineNeMoCanary
 testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser
 testOnlineSpeechDenoiser
 testSpeakerEmbeddingExtractor
 testOnlineAsr
-testTts
 testAudioTagging
 testSpokenLanguageIdentification
 testOfflineAsr

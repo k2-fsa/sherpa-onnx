@@ -176,7 +176,12 @@ class OfflineTtsKittenModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
+    // has_espeak is legacy metadata stamped by older exports. It is not
+    // required any more: espeak-ng is no longer used, a lexicon (or phonemes
+    // from an external phonemizer) is enough. Kept optional so old models
+    // still load.
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.has_espeak, "has_espeak",
+                                            1);
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
                                                 "en-us");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.max_token_len,
@@ -186,10 +191,6 @@ class OfflineTtsKittenModel::Impl {
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.pad_id, "pad_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.add_pad_after_end,
                                             "add_pad_after_end", 0);
-    if (meta_data_.has_espeak != 1) {
-      SHERPA_ONNX_LOGE("It should require espeak-ng");
-      SHERPA_ONNX_EXIT(-1);
-    }
 
     if (config_.debug) {
       std::vector<std::string> speaker_names;

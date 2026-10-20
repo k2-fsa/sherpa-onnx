@@ -18,7 +18,10 @@ try {
       addon = require('../sherpa-onnx-linux-x64/sherpa-onnx.node')
     }
   } else if (arch === 'arm64') {
-    if (platform === 'darwin') {
+    if (platform === 'win') {
+      // @ts-expect-error
+      addon = require('../sherpa-onnx-win-arm64/sherpa-onnx.node')
+    } else if (platform === 'darwin') {
       // @ts-expect-error
       addon = require('../sherpa-onnx-darwin-arm64/sherpa-onnx.node')
     } else if (platform === 'linux') {
@@ -49,7 +52,10 @@ if (!addon) {
         addon = require('./node_modules/sherpa-onnx-linux-x64/sherpa-onnx.node')
       }
     } else if (arch === 'arm64') {
-      if (platform === 'darwin') {
+      if (platform === 'win') {
+        // @ts-expect-error
+        addon = require('./node_modules/sherpa-onnx-win-arm64/sherpa-onnx.node')
+      } else if (platform === 'darwin') {
         // @ts-expect-error
         addon = require('./node_modules/sherpa-onnx-darwin-arm64/sherpa-onnx.node')
       } else if (platform === 'linux') {

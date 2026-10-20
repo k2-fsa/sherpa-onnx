@@ -51,7 +51,6 @@ cmake \
 
 make -j4
 make install
-rm -fv ./install/include/cargs.h
 
 echo "Verifying onnxruntime is NOT a dynamic dependency:"
 otool -L ./install/lib/libsherpa-onnx-c-api.dylib

@@ -10,6 +10,48 @@ pushd version
 ./run.sh
 popd
 
+pushd tts
+
+echo '----------tts----------'
+./run-pocket-en.sh
+./run-kitten-en-lexicon.sh
+./run-kitten-en-phonemize.sh
+./run-supertonic-en.sh
+./run-kokoro-zh-en-lexicon.sh
+./run-kokoro-en-lexicon.sh
+./run-kokoro-en-phonemize.sh
+./run-matcha-zh-lexicon.sh
+./run-matcha-en-lexicon.sh
+./run-matcha-en-phonemize.sh
+./run-zipvoice-zh-en-lexicon.sh
+ls -lh *.wav
+rm -rf matcha-icefall-*
+rm -rf sherpa-onnx-zipvoice-*
+rm -f lexicon-en-us.txt
+rm *.onnx
+
+echo '----------piper tts----------'
+./run-piper-lexicon.sh
+./run-piper-phonemize.sh
+rm -f lexicon-en-us.txt
+rm -rf vits-piper-*
+
+echo '----------german tts----------'
+./run-vits-de-phonemize.sh
+rm -rf vits-piper-*
+
+echo '----------coqui tts----------'
+./run-coqui.sh
+rm -rf vits-coqui-*
+
+echo '----------zh tts----------'
+./run-vits-zh-lexicon.sh
+rm -rf sherpa-onnx-*
+
+ls -lh *.wav
+
+popd # tts
+
 pushd non-streaming-asr
 
 echo '----------Moonshine v2----------'
@@ -22,6 +64,10 @@ rm -rf sherpa-onnx-*
 
 echo '----------Zipformer CTC----------'
 ./run-zipformer-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------Zipformer CTC HLG----------'
+./run-zipformer-ctc-hlg.sh
 rm -rf sherpa-onnx-*
 
 echo '----------Cohere Transcribe----------'
@@ -121,38 +167,6 @@ echo "streaming speech enhancement with dpdfnet models"
 ./run.sh
 ls -lh
 popd
-
-pushd tts
-
-echo '----------tts----------'
-./run-pocket-en.sh
-./run-kitten-en.sh
-./run-supertonic-en.sh
-./run-kokoro-zh-en.sh
-./run-kokoro-en.sh
-./run-matcha-zh.sh
-./run-matcha-en.sh
-./run-zipvoice-zh-en.sh
-ls -lh *.wav
-rm -rf matcha-icefall-*
-rm -rf sherpa-onnx-zipvoice-*
-rm *.onnx
-
-echo '----------piper tts----------'
-./run-piper.sh
-rm -rf vits-piper-*
-
-echo '----------coqui tts----------'
-./run-coqui.sh
-rm -rf vits-coqui-*
-
-echo '----------zh tts----------'
-./run-vits-zh.sh
-rm -rf sherpa-onnx-*
-
-ls -lh *.wav
-
-popd # tts
 
 pushd spoken-language-identification
 ./run-whisper.sh

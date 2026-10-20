@@ -103,9 +103,6 @@ jobs:
               ls -lh lib
               rm -rf ./install/lib/pkgconfig
               rm -rf ./install/lib/share
-              rm -rf ./install/lib/cargs.h
-              rm -rf ./install/include/cargs.h
-              rm -rf ./install/lib/libcargs.so
               rm -rf ./install/lib/libsherpa-onnx-c-api.so
 
               echo "----"

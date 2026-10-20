@@ -31,6 +31,10 @@ if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
   rm kokoro-en-v0_19.tar.bz2
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 fpc \
   -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \

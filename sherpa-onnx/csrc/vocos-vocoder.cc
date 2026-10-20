@@ -33,6 +33,7 @@ struct VocosModelMetaData {
   int32_t win_length;
   int32_t center;
   int32_t normalized;
+  int32_t sample_rate;
   std::string window_type;
   std::string pad_mode;
 };
@@ -124,6 +125,8 @@ class VocosVocoder::Impl {
     return istft.Compute(stft_result);
   }
 
+  int32_t SampleRate() const { return meta_.sample_rate; }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     if (model_data) {
@@ -179,6 +182,8 @@ class VocosVocoder::Impl {
                                                 "window_type", "hann");
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_.pad_mode, "pad_mode",
                                                 "reflect");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.sample_rate, "sample_rate",
+                                            22050);
   }
 
  private:
@@ -210,6 +215,8 @@ VocosVocoder::~VocosVocoder() = default;
 std::vector<float> VocosVocoder::Run(Ort::Value mel) const {
   return impl_->Run(std::move(mel));
 }
+
+int32_t VocosVocoder::SampleRate() const { return impl_->SampleRate(); }
 
 #if __ANDROID_API__ >= 9
 template VocosVocoder::VocosVocoder(AAssetManager *mgr,

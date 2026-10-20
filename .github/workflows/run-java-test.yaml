@@ -129,7 +129,6 @@ jobs:
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-            -DBUILD_ESPEAK_NG_EXE=OFF \
             -DSHERPA_ONNX_ENABLE_JNI=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
@@ -153,6 +152,63 @@ jobs:
         run: |
           cd ./java-api-examples
           ./run-version-test.sh
+
+      - name:  Run java test (Non-Streaming TTS)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+
+           ./run-pocket-tts.sh
+           ./run-zipvoice-tts-lexicon.sh
+           ./run-supertonic-tts.sh
+           ./run-non-streaming-tts-kitten-en-lexicon.sh
+           ./run-non-streaming-tts-kokoro-zh-en-lexicon.sh
+           ./run-non-streaming-tts-kokoro-en-lexicon.sh
+           ./run-non-streaming-tts-matcha-zh-lexicon.sh
+          ./run-non-streaming-tts-matcha-en-lexicon.sh
+          ls -lh
+
+           rm -rf sherpa-onnx-pocket-tts-*
+           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+           rm -rf sherpa-onnx-supertonic-*
+           rm -rf kitten-nano-en-*
+           rm -rf kokoro-multi-*
+           rm -rf kokoro-en-*
+
+           rm -rf matcha-icefall-*
+           rm vocos-22khz-univ.onnx
+           rm vocos_24khz.onnx
+           rm -f lexicon-en-us.txt
+
+          ./run-non-streaming-tts-piper-en-lexicon.sh
+          ./run-non-streaming-tts-piper-en-with-callback-lexicon.sh
+          rm -rf vits-piper-*
+          rm -f lexicon-en-us.txt
+
+          ./run-non-streaming-tts-coqui-de.sh
+          rm -rf vits-coqui-*
+
+          ./run-non-streaming-tts-vits-zh-lexicon.sh
+          rm -rf vits-zh-*
+
+          ./run-non-streaming-tts-piper-en-phonemize.sh
+          ./run-non-streaming-tts-piper-en-with-callback-phonemize.sh
+          ./run-non-streaming-tts-kitten-en-phonemize.sh
+          ./run-non-streaming-tts-kokoro-en-phonemize.sh
+          ./run-non-streaming-tts-matcha-en-phonemize.sh
+          ./run-non-streaming-tts-vits-de-phonemize.sh
+          ls -lh
+
+          rm -rf vits-piper-* kitten-nano-en-* kokoro-en-* matcha-icefall-*
+          rm -f vocos-22khz-univ.onnx
+          rm -f piper-phonemize-*.jar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-wav-files-${{ matrix.os }}
+          path: |
+            java-api-examples/tts-*.wav
+            java-api-examples/generated-*.wav
 
       - name:  Run java test (speaker diarization)
         shell: bash
@@ -185,6 +241,9 @@ jobs:
           ./run-non-streaming-decode-file-fire-red-asr-ctc.sh
 
           ./run-non-streaming-decode-file-zipformer-ctc.sh
+          rm -rf sherpa-onnx-zipformer-ctc-*
+
+          ./run-non-streaming-zipformer-ctc-hlg.sh
           rm -rf sherpa-onnx-zipformer-ctc-*
 
           ./run-non-streaming-decode-file-dolphin-ctc.sh
@@ -405,46 +464,6 @@ jobs:
 
           ./run-streaming-decode-file-transducer.sh
           rm -rf sherpa-onnx-streaming-*
-
-      - name:  Run java test (Non-Streaming TTS)
-        shell: bash
-        run: |
-          cd ./java-api-examples
-
-           ./run-pocket-tts.sh
-           ./run-zipvoice-tts.sh
-           ./run-supertonic-tts.sh
-           ./run-non-streaming-tts-kitten-en.sh
-           ./run-non-streaming-tts-kokoro-zh-en.sh
-           ./run-non-streaming-tts-kokoro-en.sh
-           ./run-non-streaming-tts-matcha-zh.sh
-          ./run-non-streaming-tts-matcha-en.sh
-          ls -lh
-
-           rm -rf sherpa-onnx-pocket-tts-*
-           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
-           rm -rf sherpa-onnx-supertonic-*
-           rm -rf kitten-nano-en-*
-           rm -rf kokoro-multi-*
-           rm -rf kokoro-en-*
-
-           rm -rf matcha-icefall-*
-           rm vocos-22khz-univ.onnx
-           rm vocos_24khz.onnx
-
-          ./run-non-streaming-tts-piper-en.sh
-          rm -rf vits-piper-*
-
-          ./run-non-streaming-tts-coqui-de.sh
-          rm -rf vits-coqui-*
-
-          ./run-non-streaming-tts-vits-zh.sh
-          rm -rf vits-zh-*
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tts-wav-files-${{ matrix.os }}
-          path: java-api-examples/*.wav
 
   run_maven_test:
     runs-on: ${{ matrix.os }}

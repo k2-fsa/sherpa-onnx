@@ -74,21 +74,21 @@ class OfflineRecognizer {
 
   /// Create a recognizer from [config].
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
-    final c = convertConfig(config);
-
     if (SherpaOnnxBindings.createOfflineRecognizer == null) {
       throw Exception("Please initialize sherpa-onnx first");
     }
 
+    final c = convertConfig(config);
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
+    // Free before any throw so a failed create does not leak the marshalled
+    // strings. The online factory does the same.
+    freeConfig(c);
 
     if (ptr == nullptr) {
       throw Exception(
         "Failed to create offline recognizer. Please check your config",
       );
     }
-
-    freeConfig(c);
 
     return OfflineRecognizer._(ptr: ptr, config: config);
   }
@@ -283,10 +283,15 @@ class OfflineRecognizer {
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
+    c.ref.ctcFstDecoderConfig.graph =
+        config.ctcFstDecoderConfig.graph.toNativeUtf8();
+    c.ref.ctcFstDecoderConfig.maxActive = config.ctcFstDecoderConfig.maxActive;
+
     return c;
   }
 
   static void freeConfig(Pointer<SherpaOnnxOfflineRecognizerConfig> c) {
+    calloc.free(c.ref.ctcFstDecoderConfig.graph);
     calloc.free(c.ref.hr.lexicon);
     calloc.free(c.ref.hr.ruleFsts);
     calloc.free(c.ref.ruleFars);

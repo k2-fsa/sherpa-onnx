@@ -24,7 +24,6 @@ cmake \
 
 make -j4
 make install
-rm -fv ./install/include/cargs.h
 
 # Create a framework bundle (like onnxruntime does) so SPM can resolve the module
 FRAMEWORK_DIR=SherpaOnnxC.framework

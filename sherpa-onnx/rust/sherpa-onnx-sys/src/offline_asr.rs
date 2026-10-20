@@ -211,6 +211,14 @@ pub struct OfflineRecognizerConfig {
     pub rule_fars: *const c_char,
     pub blank_penalty: c_float,
     pub hr: super::online_asr::HomophoneReplacerConfig,
+    pub ctc_fst_decoder_config: OfflineCtcFstDecoderConfig,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct OfflineCtcFstDecoderConfig {
+    pub graph: *const c_char,
+    pub max_active: i32,
 }
 
 #[repr(C)]
