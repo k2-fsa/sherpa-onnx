@@ -590,21 +590,15 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed) {
   // `text` may be null when the caller supplies phonemeCodepoints or
-  // tokens instead. Treat it as empty rather than crashing in
-  // GetStringUTFChars(nullptr).
-  const char *p_text =
-      text != nullptr ? env->GetStringUTFChars(text, nullptr) : "";
+  // tokens instead. JStringToUtf8 returns an empty string for null.
+  std::string s_text = JStringToUtf8(env, text);
 
   sherpa_onnx::GenerationConfig config;
   config.sid = sid;
   config.speed = speed;
 
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      p_text, config);
-
-  if (text != nullptr) {
-    env->ReleaseStringUTFChars(text, p_text);
-  }
+      s_text, config);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
@@ -615,10 +609,8 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed, jobject callback) {
   // `text` may be null when the caller supplies phonemeCodepoints or
-  // tokens instead. Treat it as empty rather than crashing in
-  // GetStringUTFChars(nullptr).
-  const char *p_text =
-      text != nullptr ? env->GetStringUTFChars(text, nullptr) : "";
+  // tokens instead. JStringToUtf8 returns an empty string for null.
+  std::string s_text = JStringToUtf8(env, text);
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
@@ -638,13 +630,9 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, config, callback_wrapper);
+    audio = tts->Generate(s_text, config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, config, nullptr);
-  }
-
-  if (text != nullptr) {
-    env->ReleaseStringUTFChars(text, p_text);
+    audio = tts->Generate(s_text, config, nullptr);
   }
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
@@ -656,10 +644,8 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jobject _gen_config,
     jobject callback) {
   // `text` may be null when the caller supplies phonemeCodepoints or
-  // tokens instead. Treat it as empty rather than crashing in
-  // GetStringUTFChars(nullptr).
-  const char *p_text =
-      text != nullptr ? env->GetStringUTFChars(text, nullptr) : "";
+  // tokens instead. JStringToUtf8 returns an empty string for null.
+  std::string s_text = JStringToUtf8(env, text);
   auto gen_config = sherpa_onnx::GetGenerationConfig(env, _gen_config);
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
@@ -675,13 +661,9 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, gen_config, callback_wrapper);
+    audio = tts->Generate(s_text, gen_config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, gen_config, nullptr);
-  }
-
-  if (text != nullptr) {
-    env->ReleaseStringUTFChars(text, p_text);
+    audio = tts->Generate(s_text, gen_config, nullptr);
   }
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);

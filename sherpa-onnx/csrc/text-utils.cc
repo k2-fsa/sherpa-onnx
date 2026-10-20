@@ -1049,6 +1049,24 @@ std::string Utf32ToUtf8(const std::u32string &str) {
   return out;
 }
 
+std::string Utf16ToUtf8(const std::u16string &str) {
+  std::u32string u32;
+  u32.reserve(str.size());
+
+  for (size_t i = 0; i < str.size(); ++i) {
+    char32_t c = str[i];
+    if (c >= 0xD800 && c <= 0xDBFF && i + 1 < str.size() &&
+        str[i + 1] >= 0xDC00 && str[i + 1] <= 0xDFFF) {
+      c = 0x10000 + ((c - 0xD800) << 10) + (str[i + 1] - 0xDC00);
+      ++i;
+    }
+    // Utf32ToUtf8 turns an unpaired surrogate into U+FFFD
+    u32.push_back(c);
+  }
+
+  return Utf32ToUtf8(u32);
+}
+
 // Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
 // unchanged)
 std::string ToUpperAscii(const std::string &str) {

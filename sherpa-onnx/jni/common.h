@@ -158,6 +158,25 @@ inline jstring SafeNewStringUTF(JNIEnv *env, const char *s) {
   return SafeNewStringUTF(env, std::string(s));
 }
 
+// Convert a Java string to standard UTF-8.
+//
+// Unlike GetStringUTFChars, which returns modified UTF-8 and encodes a code
+// point above U+FFFF (e.g., an emoji) as two 3-byte surrogates instead of
+// one 4-byte sequence, this returns valid UTF-8. An unpaired surrogate is
+// replaced with U+FFFD.
+inline std::string JStringToUtf8(JNIEnv *env, jstring s) {
+  if (!s) return {};
+
+  jsize n = env->GetStringLength(s);
+  if (n == 0) return {};
+
+  std::u16string u16(n, u'\0');
+  static_assert(sizeof(jchar) == sizeof(char16_t), "jchar must be 16-bit");
+  env->GetStringRegion(s, 0, n, reinterpret_cast<jchar *>(&u16[0]));
+
+  return sherpa_onnx::Utf16ToUtf8(u16);
+}
+
 // Template function for non-void return types
 template <typename Func, typename ReturnType>
 ReturnType SafeJNI(JNIEnv *env, const char *functionName, Func func,

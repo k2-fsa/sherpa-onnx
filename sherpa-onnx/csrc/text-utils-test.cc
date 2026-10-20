@@ -442,4 +442,48 @@ TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
     EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
   }
 
+TEST(Utf16ToUtf8, Bmp) {
+  // A, é, €, →
+  EXPECT_EQ(Utf16ToUtf8(u"A\u00e9\u20ac\u2192"),
+            "A\xc3\xa9\xe2\x82\xac\xe2\x86\x92");
+}
+
+TEST(Utf16ToUtf8, SurrogatePairs) {
+  // U+1F600 and U+20000 must be 4-byte sequences, not modified UTF-8
+  // (ed a0 bd ed b8 80 for U+1F600)
+  EXPECT_EQ(Utf16ToUtf8(u"\U0001F600"), "\xf0\x9f\x98\x80");
+  EXPECT_EQ(Utf16ToUtf8(u"a\U00020000b"),
+            "a\xf0\xa0\x80\x80"
+            "b");
+  EXPECT_EQ(Utf16ToUtf8(u"\U0010FFFF"), "\xf4\x8f\xbf\xbf");
+}
+
+TEST(Utf16ToUtf8, UnpairedSurrogates) {
+  std::u16string high_at_end = {u'a', static_cast<char16_t>(0xD83D)};
+  EXPECT_EQ(Utf16ToUtf8(high_at_end), "a\xef\xbf\xbd");
+
+  std::u16string high_then_bmp = {static_cast<char16_t>(0xD83D), u'a'};
+  EXPECT_EQ(Utf16ToUtf8(high_then_bmp),
+            "\xef\xbf\xbd"
+            "a");
+
+  std::u16string lone_low = {static_cast<char16_t>(0xDE00), u'a'};
+  EXPECT_EQ(Utf16ToUtf8(lone_low),
+            "\xef\xbf\xbd"
+            "a");
+
+  // low before high is not a pair
+  std::u16string reversed = {static_cast<char16_t>(0xDE00),
+                             static_cast<char16_t>(0xD83D)};
+  EXPECT_EQ(Utf16ToUtf8(reversed), "\xef\xbf\xbd\xef\xbf\xbd");
+}
+
+TEST(Utf16ToUtf8, EmbeddedNull) {
+  // standard UTF-8 uses a 0 byte, not c0 80 as in modified UTF-8
+  std::u16string s = {u'a', u'\0', u'b'};
+  EXPECT_EQ(Utf16ToUtf8(s), std::string("a\0b", 3));
+}
+
+TEST(Utf16ToUtf8, Empty) { EXPECT_EQ(Utf16ToUtf8(u""), ""); }
+
 }  // namespace sherpa_onnx
