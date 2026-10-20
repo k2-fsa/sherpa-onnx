@@ -168,6 +168,8 @@ inline std::string JStringToUtf8(JNIEnv *env, jstring s) {
   if (!s) return {};
 
   jsize n = env->GetStringLength(s);
+  if (n == 0) return {};
+
   std::u16string u16(n, u'\0');
   static_assert(sizeof(jchar) == sizeof(char16_t), "jchar must be 16-bit");
   env->GetStringRegion(s, 0, n, reinterpret_cast<jchar *>(&u16[0]));
