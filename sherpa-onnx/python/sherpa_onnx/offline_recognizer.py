@@ -958,6 +958,8 @@ class OfflineRecognizer(object):
         hr_dict_dir: str = "",
         hr_rule_fsts: str = "",
         hr_lexicon: str = "",
+        ctc_graph: str = "",
+        ctc_max_active: int = 3000,
     ):
         """
         Please refer to
@@ -992,6 +994,13 @@ class OfflineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
+          ctc_graph:
+            If not empty, it specifies the decoding graph (H.fst, HL.fst or
+            HLG.fst) for CTC+FST decoding. It is used together with the CTC
+            model.
+          ctc_max_active:
+            Used only when ctc_graph is not empty. It specifies the maximum
+            number of active tokens during CTC+FST decoding. 0 means 3000.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -1017,6 +1026,10 @@ class OfflineRecognizer(object):
                 dict_dir=hr_dict_dir,
                 lexicon=hr_lexicon,
                 rule_fsts=hr_rule_fsts,
+            ),
+            ctc_fst_decoder_config=OfflineCtcFstDecoderConfig(
+                graph=ctc_graph,
+                max_active=ctc_max_active,
             ),
         )
         self.recognizer = _Recognizer(recognizer_config)

@@ -118,7 +118,7 @@ begin
   Config.Model.Kitten.Model := './kitten-nano-en-v0_1-fp16/model.fp16.onnx';
   Config.Model.Kitten.Voices := './kitten-nano-en-v0_1-fp16/voices.bin';
   Config.Model.Kitten.Tokens := './kitten-nano-en-v0_1-fp16/tokens.txt';
-  Config.Model.Kitten.DataDir := './kitten-nano-en-v0_1-fp16/espeak-ng-data';
+  Config.Model.Kitten.Lexicon := './lexicon-en-us.txt';
   Config.Model.NumThreads := 2;
   Config.Model.Debug := False;
   Config.MaxNumSentences := 1;

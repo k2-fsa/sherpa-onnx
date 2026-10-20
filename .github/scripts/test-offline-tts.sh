@@ -45,6 +45,7 @@ log "------------------------------------------------------------"
 log "kokoro-en-v0_19"
 log "------------------------------------------------------------"
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 
 # mapping of sid to voice name
 # 0->af, 1->af_bella, 2->af_nicole, 3->af_sarah, 4->af_sky, 5->am_adam
@@ -56,33 +57,40 @@ for sid in $(seq 0 10); do
     --kokoro-model=./kokoro-en-v0_19/model.onnx \
     --kokoro-voices=./kokoro-en-v0_19/voices.bin \
     --kokoro-tokens=./kokoro-en-v0_19/tokens.txt \
-    --kokoro-data-dir=./kokoro-en-v0_19/espeak-ng-data \
+    --kokoro-lexicon=./lexicon-en-us.txt \
     --num-threads=2 \
     --sid=$sid \
     --output-filename="./tts/kokoro-$sid.wav" \
     "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be  a statesman, a businessman, an official, or a scholar."
 done
 rm -rf kokoro-en-v0_19
+rm -f lexicon-en-us.txt
 
-log "------------------------------------------------------------"
-log "matcha-tts-fa_en-musa"
-log "------------------------------------------------------------"
-download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-musa.tar.bz2
+# Disabled: matcha-tts-fa_en-musa ships only espeak-ng-data, no lexicon.txt.
+# espeak-ng support was removed in v2.0.0, so --matcha-data-dir is now ignored
+# and this model has no usable text frontend. Re-enable it once a Persian
+# lexicon is published, or once the CLI can accept phoneme_codepoints.
+#
+# log "------------------------------------------------------------"
+# log "matcha-tts-fa_en-musa"
+# log "------------------------------------------------------------"
+# download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-musa.tar.bz2
+#
+# download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+#
+#
+# $EXE \
+#   --matcha-acoustic-model=./matcha-tts-fa_en-musa/model.onnx \
+#   --matcha-vocoder=./vocos-22khz-univ.onnx \
+#   --matcha-tokens=./matcha-tts-fa_en-musa/tokens.txt \
+#   --matcha-data-dir=./matcha-tts-fa_en-musa/espeak-ng-data \
+#   --output-filename=./tts/test-matcha-fa-en-musa.wav \
+#   --num-threads=2 \
+#   "How are you doing today?  این یک نمونه ی تست فارسی است. This is a test."
+#
+# rm -rf matcha-tts-fa_en-musa
+# rm vocos-22khz-univ.onnx
 
-download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
-
-
-$EXE \
-  --matcha-acoustic-model=./matcha-tts-fa_en-musa/model.onnx \
-  --matcha-vocoder=./vocos-22khz-univ.onnx \
-  --matcha-tokens=./matcha-tts-fa_en-musa/tokens.txt \
-  --matcha-data-dir=./matcha-tts-fa_en-musa/espeak-ng-data \
-  --output-filename=./tts/test-matcha-fa-en-musa.wav \
-  --num-threads=2 \
-  "How are you doing today?  این یک نمونه ی تست فارسی است. This is a test."
-
-rm -rf matcha-tts-fa_en-musa
-rm vocos-22khz-univ.onnx
 ls -lh tts/*.wav
 
 log "------------------------------------------------------------"
@@ -91,13 +99,14 @@ log "------------------------------------------------------------"
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
 
 download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 
 
 $EXE \
   --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
-  --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
+  --matcha-lexicon=./lexicon-en-us.txt \
   --num-threads=2 \
   --output-filename=./tts/matcha-ljspeech-1.wav \
   --debug=1 \
@@ -105,6 +114,7 @@ $EXE \
 
 rm vocos-22khz-univ.onnx
 rm -rf matcha-icefall-en_US-ljspeech
+rm -f lexicon-en-us.txt
 ls -lh tts/*.wav
 
 log "------------------------------------------------------------"
@@ -141,17 +151,19 @@ log "------------------------------------------------------------"
 log "vits-piper-en_US-amy-low"
 log "------------------------------------------------------------"
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 
 $EXE \
   --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
   --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
-  --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
+  --vits-lexicon=./lexicon-en-us.txt \
   --debug=1 \
   --output-filename=./tts/amy.wav \
   "“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.” The sun shone bleakly in the sky, its meager light struggling to penetrate the thick foliage of the forest. Birds sang their songs up in the crowns of the trees, fluttering from one branch to the other. A blanket of total tranquility lied over the forest. The peace was only broken by the steady gallop of the horses of the soldiers who were traveling to their upcoming knighting the morrow at Camelot, and rowdy conversation. “Finally we will get what we deserve,” “It’s been about time,” Perceval agreed. “We’ve been risking our arses for the past two years. It’s the least they could give us.” Merlin remained ostensibly silent, refusing to join the verbal parade of self-aggrandizing his fellow soldiers have engaged in. He found it difficult to happy about anything, when even if they had won the war, he had lost everything else in the process."
 
 file ./tts/amy.wav
 rm -rf vits-piper-en_US-amy-low
+rm -f lexicon-en-us.txt
 
 log "------------------------------------------------------------"
 log "vits-ljs test"

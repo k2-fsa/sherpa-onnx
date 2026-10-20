@@ -20,6 +20,10 @@ uses
 
 type
   TSherpaOnnxSamplesArray = array of Single;
+  TSherpaOnnxInt32Array = array of Integer;
+  TSherpaOnnxInt32ArrayArray = array of TSherpaOnnxInt32Array;
+  TSherpaOnnxStringArray = array of AnsiString;
+  TSherpaOnnxStringArrayArray = array of TSherpaOnnxStringArray;
 
   TSherpaOnnxLinearResampler = class
   private
@@ -54,11 +58,11 @@ type
     Model: AnsiString;
     Lexicon: AnsiString;
     Tokens: AnsiString;
-    DataDir: AnsiString;
+    DataDir: AnsiString; { Deprecated. Ignored since v2.0.0. }
     NoiseScale: Single;
     NoiseScaleW: Single;
     LengthScale: Single;
-    DictDir: AnsiString;
+    DictDir: AnsiString; { Unused legacy field kept for ABI compatibility. }
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsVitsModelConfig);
@@ -74,6 +78,16 @@ type
     ReferenceText: AnsiString;
     NumSteps: Integer;
     Extra: AnsiString;
+    { Pre-phonemized input as Unicode codepoints. Each inner array is one
+      sentence. When set, it is used in place of the Text argument; leave
+      empty to use Text with a lexicon.
+      Mutually exclusive with Tokens. }
+    PhonemeCodepoints: TSherpaOnnxInt32ArrayArray;
+    { Pre-tokenized input, e.g. Chinese pinyin like "zhong1". Each inner
+      array is one sentence. When set, it is used in place of the Text
+      argument; leave empty to use Text with a lexicon.
+      Mutually exclusive with PhonemeCodepoints. }
+    Tokens: TSherpaOnnxStringArrayArray;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxGenerationConfig);
   end;
 
@@ -82,10 +96,10 @@ type
     Vocoder: AnsiString;
     Lexicon: AnsiString;
     Tokens: AnsiString;
-    DataDir: AnsiString;
+    DataDir: AnsiString; { Deprecated. Ignored since v2.0.0. }
     NoiseScale: Single;
     LengthScale: Single;
-    DictDir: AnsiString;
+    DictDir: AnsiString; { Unused legacy field kept for ABI compatibility. }
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsMatchaModelConfig);
@@ -95,9 +109,9 @@ type
     Model: AnsiString;
     Voices: AnsiString;
     Tokens: AnsiString;
-    DataDir: AnsiString;
+    DataDir: AnsiString; { Deprecated. Ignored since v2.0.0. }
     LengthScale: Single;
-    DictDir: AnsiString;
+    DictDir: AnsiString; { Unused legacy field kept for ABI compatibility. }
     Lexicon: AnsiString;
     Lang: AnsiString;
 
@@ -109,8 +123,9 @@ type
     Model: AnsiString;
     Voices: AnsiString;
     Tokens: AnsiString;
-    DataDir: AnsiString;
+    DataDir: AnsiString; { Deprecated. Ignored since v2.0.0. }
     LengthScale: Single;
+    Lexicon: AnsiString;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKittenModelConfig);
@@ -121,7 +136,7 @@ type
     Encoder: AnsiString;
     Decoder: AnsiString;
     Vocoder: AnsiString;
-    DataDir: AnsiString;
+    DataDir: AnsiString; { Deprecated. Ignored since v2.0.0. }
     Lexicon: AnsiString;
     FeatScale: Single;
     Tshift: Single;
@@ -195,6 +210,7 @@ type
    Handle: Pointer;
    SampleRate: Integer;
    NumSpeakers: Integer;
+   Lang: AnsiString;
    _Config: TSherpaOnnxOfflineTtsConfig;
   public
     constructor Create(Config: TSherpaOnnxOfflineTtsConfig);
@@ -218,6 +234,8 @@ type
     property GetHandle: Pointer Read Handle;
     property GetSampleRate: Integer Read SampleRate;
     property GetNumSpeakers: Integer Read NumSpeakers;
+    { Language/voice of the model, e.g., 'en-us'. Empty if not available. }
+    property GetLang: AnsiString Read Lang;
   end;
 
   TSherpaOnnxWave = record
@@ -287,7 +305,7 @@ type
   end;
 
   TSherpaOnnxHomophoneReplacerConfig = record
-    DictDir: AnsiString;
+    DictDir: AnsiString; { Unused legacy field kept for ABI compatibility. }
     Lexicon: AnsiString;
     RuleFsts: AnsiString;
     function ToString: AnsiString;
@@ -530,6 +548,13 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineCtcFstDecoderConfig = record
+    Graph: AnsiString;
+    MaxActive: Integer;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCtcFstDecoderConfig);
+  end;
+
   TSherpaOnnxOfflineRecognizerConfig = record
     FeatConfig: TSherpaOnnxFeatureConfig;
     ModelConfig: TSherpaOnnxOfflineModelConfig;
@@ -542,6 +567,7 @@ type
     RuleFars: AnsiString;
     BlankPenalty: Single;
     Hr: TSherpaOnnxHomophoneReplacerConfig;
+    CtcFstDecoderConfig: TSherpaOnnxOfflineCtcFstDecoderConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineRecognizerConfig);
     function ToString: AnsiString;
   end;
@@ -847,9 +873,6 @@ const
      {$linklib sherpa-onnx-fst}
      {$linklib kissfft-float}
      {$linklib kaldi-native-fbank-core}
-     {$linklib piper_phonemize}
-     {$linklib espeak-ng}
-     {$linklib ucd}
      {$linklib onnxruntime}
      {$linklib ssentencepiece_core}
 
@@ -1083,6 +1106,11 @@ type
     CohereTranscribe: SherpaOnnxOfflineCohereTranscribeModelConfig;
   end;
 
+  SherpaOnnxOfflineCtcFstDecoderConfig = record
+    Graph: PAnsiChar;
+    MaxActive: cint32;
+  end;
+
   SherpaOnnxOfflineRecognizerConfig = record
     FeatConfig: SherpaOnnxFeatureConfig;
     ModelConfig: SherpaOnnxOfflineModelConfig;
@@ -1095,6 +1123,7 @@ type
     RuleFars: PAnsiChar;
     BlankPenalty: cfloat;
     Hr: SherpaOnnxHomophoneReplacerConfig;
+    CtcFstDecoderConfig: SherpaOnnxOfflineCtcFstDecoderConfig;
   end;
 
   PSherpaOnnxOfflineRecognizerConfig = ^SherpaOnnxOfflineRecognizerConfig;
@@ -1158,6 +1187,12 @@ type
     ReferenceText: PAnsiChar;
     NumSteps: cint32;
     Extra: PAnsiChar;
+    PhonemeCodepoints: pcint32;
+    PhonemeCodepointsLens: pcint32;
+    PhonemeCodepointsNumSentences: cint32;
+    Tokens: PPAnsiChar;
+    TokensLens: pcint32;
+    TokensNumSentences: cint32;
   end;
 
   SherpaOnnxOfflineTtsMatchaModelConfig = record
@@ -1188,6 +1223,7 @@ type
     Tokens: PAnsiChar;
     DataDir: PAnsiChar;
     LengthScale: cfloat;
+    Lexicon: PAnsiChar;
   end;
 
   SherpaOnnxOfflineTtsZipVoiceModelConfig = record
@@ -1477,6 +1513,12 @@ function SherpaOnnxOfflineTtsSampleRate(Tts: Pointer): cint32; cdecl;
 function SherpaOnnxOfflineTtsNumSpeakers(Tts: Pointer): cint32; cdecl;
   external SherpaOnnxLibName;
 
+function SherpaOnnxOfflineTtsLang(Tts: Pointer): PAnsiChar; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOfflineTtsLang(S: PAnsiChar); cdecl;
+  external SherpaOnnxLibName;
+
 function SherpaOnnxOfflineTtsGenerate(Tts: Pointer;
   Text: PAnsiChar; Sid: cint32; Speed: cfloat): PSherpaOnnxGeneratedAudio; cdecl;
   external SherpaOnnxLibName;
@@ -1729,6 +1771,12 @@ end;
 function TSherpaOnnxOnlineCtcFstDecoderConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOnlineCtcFstDecoderConfig(Graph := %s, MaxActive := %d)',
+  [Self.Graph, Self.MaxActive]);
+end;
+
+function TSherpaOnnxOfflineCtcFstDecoderConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineCtcFstDecoderConfig(Graph := %s, MaxActive := %d)',
   [Self.Graph, Self.MaxActive]);
 end;
 
@@ -2196,12 +2244,13 @@ begin
     'RuleFsts := %s, ' +
     'RuleFars := %s, ' +
     'BlankPenalty := %1.f, ' +
-    'Hr := %s' +
+    'Hr := %s, ' +
+    'CtcFstDecoderConfig := %s' +
     ')',
     [Self.FeatConfig.ToString, Self.ModelConfig.ToString,
      Self.LMConfig.ToString, Self.DecodingMethod, Self.MaxActivePaths,
      Self.HotwordsFile, Self.HotwordsScore, Self.RuleFsts, Self.RuleFars,
-     Self.BlankPenalty, Self.Hr.ToString
+     Self.BlankPenalty, Self.Hr.ToString, Self.CtcFstDecoderConfig.ToString
      ]);
 end;
 
@@ -2311,6 +2360,9 @@ begin
 
   C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
   C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
+
+  C.CtcFstDecoderConfig.Graph := PAnsiChar(Config.CtcFstDecoderConfig.Graph);
+  C.CtcFstDecoderConfig.MaxActive := Config.CtcFstDecoderConfig.MaxActive;
 
   Result := C;
 end;
@@ -2541,6 +2593,11 @@ begin
 end;
 
 class operator TSherpaOnnxOnlineCtcFstDecoderConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineCtcFstDecoderConfig);
+begin
+  Dest.MaxActive := 3000;
+end;
+
+class operator TSherpaOnnxOfflineCtcFstDecoderConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCtcFstDecoderConfig);
 begin
   Dest.MaxActive := 3000;
 end;
@@ -2857,9 +2914,11 @@ begin
     'Voices := %s, ' +
     'Tokens := %s, ' +
     'DataDir := %s, ' +
-    'LengthScale := %.2f' +
+    'LengthScale := %.2f, ' +
+    'Lexicon := %s' +
     ')',
-    [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale]);
+    [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale,
+     Self.Lexicon]);
 end;
 
 class operator TSherpaOnnxOfflineTtsKittenModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKittenModelConfig);
@@ -2979,6 +3038,7 @@ end;
 constructor TSherpaOnnxOfflineTts.Create(Config: TSherpaOnnxOfflineTtsConfig);
 var
   C: SherpaOnnxOfflineTtsConfig;
+  P: PAnsiChar;
 begin
   C := Default(SherpaOnnxOfflineTtsConfig);
   Self._Config := Config;
@@ -3012,6 +3072,7 @@ begin
   C.Model.Kitten.Tokens := PAnsiChar(Config.Model.Kitten.Tokens);
   C.Model.Kitten.DataDir := PAnsiChar(Config.Model.Kitten.DataDir);
   C.Model.Kitten.LengthScale := Config.Model.Kitten.LengthScale;
+  C.Model.Kitten.Lexicon := PAnsiChar(Config.Model.Kitten.Lexicon);
 
   C.Model.ZipVoice.Tokens := PAnsiChar(Config.Model.ZipVoice.Tokens);
   C.Model.ZipVoice.Encoder := PAnsiChar(Config.Model.ZipVoice.Encoder);
@@ -3051,9 +3112,14 @@ begin
   C.SilenceScale := Config.SilenceScale;
 
   Self.Handle := SherpaOnnxCreateOfflineTts(@C);
+  if Self.Handle = nil then
+    raise Exception.Create('SherpaOnnxCreateOfflineTts failed. Please check your config');
 
   Self.SampleRate := SherpaOnnxOfflineTtsSampleRate(Self.Handle);
   Self.NumSpeakers := SherpaOnnxOfflineTtsNumSpeakers(Self.Handle);
+  P := SherpaOnnxOfflineTtsLang(Self.Handle);
+  Self.Lang := P;
+  SherpaOnnxDestroyOfflineTtsLang(P);
 end;
 
 destructor TSherpaOnnxOfflineTts.Destroy;
@@ -3095,13 +3161,15 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
-  Config: TSherpaOnnxGenerationConfig;
+  // Must be the C-layout record, not TSherpaOnnxGenerationConfig: the C API
+  // reads the raw SherpaOnnxGenerationConfig (15 fields) from this address.
+  C: SherpaOnnxGenerationConfig;
 begin
-  Config := Default(TSherpaOnnxGenerationConfig);
-  Config.Sid := SpeakerId;
-  Config.Speed := Speed;
+  C := Default(SherpaOnnxGenerationConfig);
+  C.Sid := SpeakerId;
+  C.Speed := Speed;
   Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-    @Config, nil, nil);
+    @C, nil, nil);
   Result := ExtractGeneratedAudio(Audio);
 end;
 
@@ -3112,21 +3180,23 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
-  Config: TSherpaOnnxGenerationConfig;
+  // Must be the C-layout record, not TSherpaOnnxGenerationConfig: the C API
+  // reads the raw SherpaOnnxGenerationConfig (15 fields) from this address.
+  C: SherpaOnnxGenerationConfig;
 begin
-  Config := Default(TSherpaOnnxGenerationConfig);
-  Config.Sid := SpeakerId;
-  Config.Speed := Speed;
+  C := Default(SherpaOnnxGenerationConfig);
+  C.Sid := SpeakerId;
+  C.Speed := Speed;
 
   _OfflineTtsCallbackWithArg := Callback;
   _OfflineTtsCallbackWithArgUserArg := Arg;
 
   if Assigned(Callback) then
     Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-      @Config, @_OfflineTtsCallbackWithArgWrapper, nil)
+      @C, @_OfflineTtsCallbackWithArgWrapper, nil)
   else
     Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-      @Config, nil, nil);
+      @C, nil, nil);
 
   Result := ExtractGeneratedAudio(Audio);
 end;
@@ -3143,6 +3213,17 @@ var
   CReferenceAudio: pcfloat;
   ReferenceText: AnsiString;
   Extra: AnsiString;
+  PhonemeCodepoints: TSherpaOnnxInt32ArrayArray;
+  FlatCodepoints: TSherpaOnnxInt32Array;
+  CodepointLens: TSherpaOnnxInt32Array;
+  Tokens: TSherpaOnnxStringArrayArray;
+  FlatTokens: array of PAnsiChar;
+  TokenLens: TSherpaOnnxInt32Array;
+  NumCodepoints: Integer;
+  NumTokens: Integer;
+  I: Integer;
+  J: Integer;
+  K: Integer;
 begin
   C := Default(SherpaOnnxGenerationConfig);
   C.SilenceScale := GenerationConfig.SilenceScale;
@@ -3164,6 +3245,56 @@ begin
   C.NumSteps := GenerationConfig.NumSteps;
   Extra := GenerationConfig.Extra;
   C.Extra := PAnsiChar(Extra);
+
+  { Flatten PhonemeCodepoints; the C API takes a flat array plus the
+    length of each sentence. The local copies keep the arrays alive
+    during the call. }
+  PhonemeCodepoints := GenerationConfig.PhonemeCodepoints;
+  NumCodepoints := 0;
+  for I := 0 to High(PhonemeCodepoints) do
+    Inc(NumCodepoints, Length(PhonemeCodepoints[I]));
+  if (Length(PhonemeCodepoints) > 0) and (NumCodepoints > 0) then
+    begin
+      SetLength(FlatCodepoints, NumCodepoints);
+      SetLength(CodepointLens, Length(PhonemeCodepoints));
+      K := 0;
+      for I := 0 to High(PhonemeCodepoints) do
+        begin
+          CodepointLens[I] := Length(PhonemeCodepoints[I]);
+          for J := 0 to High(PhonemeCodepoints[I]) do
+            begin
+              FlatCodepoints[K] := PhonemeCodepoints[I][J];
+              Inc(K);
+            end;
+        end;
+      C.PhonemeCodepoints := pcint32(@FlatCodepoints[0]);
+      C.PhonemeCodepointsLens := pcint32(@CodepointLens[0]);
+      C.PhonemeCodepointsNumSentences := Length(CodepointLens);
+    end;
+
+  { Flatten Tokens the same way. }
+  Tokens := GenerationConfig.Tokens;
+  NumTokens := 0;
+  for I := 0 to High(Tokens) do
+    Inc(NumTokens, Length(Tokens[I]));
+  if (Length(Tokens) > 0) and (NumTokens > 0) then
+    begin
+      SetLength(FlatTokens, NumTokens);
+      SetLength(TokenLens, Length(Tokens));
+      K := 0;
+      for I := 0 to High(Tokens) do
+        begin
+          TokenLens[I] := Length(Tokens[I]);
+          for J := 0 to High(Tokens[I]) do
+            begin
+              FlatTokens[K] := PAnsiChar(Tokens[I][J]);
+              Inc(K);
+            end;
+        end;
+      C.Tokens := PPAnsiChar(@FlatTokens[0]);
+      C.TokensLens := pcint32(@TokenLens[0]);
+      C.TokensNumSentences := Length(TokenLens);
+    end;
 
   Audio := nil;
   try

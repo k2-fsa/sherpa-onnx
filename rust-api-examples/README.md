@@ -46,52 +46,56 @@ in your own Cargo project, see
 | 1 | [version](#example-1-show-sherpa-onnx-version) | Show the sherpa-onnx version |
 | 2 | [pocket_tts](#example-2-tts-with-pocket-tts-zero-shot-voice-cloning) | Text-to-speech with zero-shot voice cloning using a reference audio |
 | 3 | [supertonic_tts](#example-3-tts-with-supertonic-tts) | Text-to-speech with Supertonic TTS (multi-speaker, multi-language) |
-| 4 | [zipvoice_tts](#example-4-tts-with-zipvoice-zero-shot-voice-cloning) | Text-to-speech with ZipVoice zero-shot voice cloning |
-| 5 | [vits_tts](#example-5-tts-with-vits-english-piper) | Text-to-speech with a standalone VITS Piper model (English) |
-| 6 | [vits_tts](#example-6-tts-with-vits-german-piper) | Text-to-speech with a standalone VITS Piper model (German) |
-| 7 | [matcha_tts_en](#example-7-tts-with-matcha-english) | Text-to-speech with Matcha TTS (English) |
-| 8 | [matcha_tts_zh](#example-8-tts-with-matcha-chinese) | Text-to-speech with Matcha TTS (Chinese) |
-| 9 | [kokoro_tts_en](#example-9-tts-with-kokoro-english) | Text-to-speech with Kokoro TTS (English) |
-| 10 | [kokoro_tts_zh_en](#example-10-tts-with-kokoro-chinese--english) | Text-to-speech with Kokoro TTS (Chinese + English) |
-| 11 | [kitten_tts_en](#example-11-tts-with-kitten-english) | Text-to-speech with Kitten TTS (English) |
-| 12 | [streaming_zipformer_en](#example-12-asr-with-streaming-zipformer-english) | Streaming ASR with zipformer transducer (English) |
-| 13 | [streaming_zipformer_zh_en](#example-13-asr-with-streaming-zipformer-chinese--english) | Streaming ASR with zipformer transducer (Chinese + English) |
-| 14 | [streaming_zipformer_microphone](#example-14-asr-with-streaming-zipformer-with-a-microphone-real-time-asr) | Real-time streaming ASR from microphone input |
-| 15 | [zipformer_en](#example-15-asr-with-non-streaming-zipformer-english) | Non-streaming ASR with zipformer transducer (English) |
-| 16 | [zipformer_zh_en](#example-16-asr-with-non-streaming-zipformer-chinese--english) | Non-streaming ASR with zipformer transducer (Chinese + English) |
-| 17 | [zipformer_vi](#example-17-asr-with-non-streaming-zipformer-vietnamese) | Non-streaming ASR with zipformer transducer (Vietnamese) |
-| 18 | [nemo_parakeet](#example-18-asr-with-non-streaming-nemo-parakeet-english) | Non-streaming ASR with Nemo Parakeet TDT transducer (English) |
-| 19 | [fire_red_asr_ctc](#example-19-asr-with-non-streaming-fireredasr-ctc-chinese--english) | Non-streaming ASR with FireRedASR CTC model (Chinese + English) |
-| 20 | [moonshine_v2](#example-20-asr-with-non-streaming-moonshine-v2-english) | Non-streaming ASR with Moonshine v2 (English) |
-| 21 | [sense_voice](#example-21-asr-with-non-streaming-sensevoice) | Non-streaming ASR with SenseVoice (Chinese, English, Japanese, Korean, Cantonese) |
-| 22 | [qwen3_asr](#example-22-asr-with-non-streaming-qwen3-asr) | Non-streaming ASR with Qwen3 ASR (multilingual) |
-| 23 | [cohere_transcribe](#example-23-asr-with-non-streaming-cohere-transcribe) | Non-streaming ASR with Cohere Transcribe (multilingual) |
-| 24 | [silero_vad_remove_silence](#example-24-remove-silences-from-a-file-using-silerovad) | Remove silences from an audio file using Silero VAD |
-| 25 | [offline_speech_enhancement_gtcrn](#example-25-offline-speech-enhancement-with-gtcrn) | Offline speech enhancement with GTCRN |
-| 26 | [offline_speech_enhancement_dpdfnet](#example-26-offline-speech-enhancement-with-dpdfnet) | Offline speech enhancement with DPDFNet |
-| 27 | [streaming_speech_enhancement_gtcrn](#example-27-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
-| 28 | [streaming_speech_enhancement_dpdfnet](#example-28-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
-| 29 | [online_punctuation](#example-29-online-punctuation) | Add punctuation to text using online punctuation model |
-| 30 | [keyword_spotter](#example-30-keyword-spotter) | Detect keywords from audio using a Zipformer KWS model |
-| 31 | [spoken_language_identification](#example-31-spoken-language-identification) | Detect the spoken language in a wave file using Whisper |
-| 32 | [offline_punctuation](#example-32-offline-punctuation) | Add punctuation to text using an offline punctuation model |
-| 33 | [audio_tagging_zipformer](#example-33-audio-tagging-with-a-zipformer-model) | Audio tagging with a Zipformer model |
-| 34 | [audio_tagging_ced](#example-34-audio-tagging-with-a-ced-model) | Audio tagging with a CED model |
-| 35 | [speaker_embedding_extractor](#example-35-speaker-embedding-extractor) | Compute a speaker embedding from a wave file |
-| 36 | [speaker_embedding_manager](#example-36-speaker-embedding-manager) | Register, search, verify, and remove speakers using embeddings |
-| 37 | [speaker_embedding_cosine_similarity](#example-37-speaker-embedding-cosine-similarity) | Compute cosine similarity from three speaker embeddings |
-| 38 | [offline_speaker_diarization](#example-38-offline-speaker-diarization) | Offline speaker diarization with pyannote segmentation and 3D-Speaker embeddings |
-| 39 | [sense_voice_simulate_streaming_microphone](#example-39-simulated-streaming-asr-with-sensevoice-and-vad-from-microphone) | Simulated streaming ASR with SenseVoice and VAD from microphone |
-| 40 | [fire_red_asr_ctc_simulate_streaming_microphone](#example-40-simulated-streaming-asr-with-fireredasr-ctc-and-vad-from-microphone) | Simulated streaming ASR with FireRedASR CTC and VAD from microphone |
-| 41 | [parakeet_tdt_ctc_simulate_streaming_microphone](#example-41-simulated-streaming-asr-with-parakeet-tdt-ctc-and-vad-from-microphone) | Simulated streaming ASR with Parakeet TDT CTC and VAD from microphone |
-| 42 | [parakeet_tdt_simulate_streaming_microphone](#example-42-simulated-streaming-asr-with-parakeet-tdt-transducer-and-vad-from-microphone) | Simulated streaming ASR with Parakeet TDT transducer and VAD from microphone |
-| 43 | [wenet_ctc_simulate_streaming_microphone](#example-43-simulated-streaming-asr-with-wenet-ctc-and-vad-from-microphone) | Simulated streaming ASR with WeNet CTC and VAD from microphone |
-| 44 | [zipformer_ctc_simulate_streaming_microphone](#example-44-simulated-streaming-asr-with-zipformer-ctc-and-vad-from-microphone) | Simulated streaming ASR with Zipformer CTC and VAD from microphone |
-| 45 | [zipformer_transducer_simulate_streaming_microphone](#example-45-simulated-streaming-asr-with-zipformer-transducer-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer and VAD from microphone |
-| 46 | [zipformer_transducer_simulate_streaming_microphone](#example-46-simulated-streaming-asr-with-zipformer-transducer-japanese-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone |
-| 47 | [qwen3_asr_simulate_streaming_microphone](#example-47-simulated-streaming-asr-with-qwen3-asr-and-vad-from-microphone) | Simulated streaming ASR with Qwen3 ASR and VAD from microphone |
-| 48 | [whisper](#example-48-asr-with-non-streaming-whisper) | Non-streaming ASR with Whisper (multilingual) |
-| 51 | [paraformer](#example-51-asr-with-non-streaming-paraformer) | Non-streaming ASR with Paraformer |
+| 4 | [zipvoice_tts_lexicon](#example-4-tts-with-zipvoice-zero-shot-voice-cloning) | Text-to-speech with ZipVoice zero-shot voice cloning (lexicon) |
+| 5 | [vits_tts_lexicon](#example-5-tts-with-vits-english-piper-lexicon) | Text-to-speech with a standalone VITS Piper model (English, lexicon) |
+| 6 | [vits_tts_phonemize](#example-6-tts-with-vits-english-piper-piper-phonemize) | Text-to-speech with a standalone VITS Piper model (English, piper-phonemize) |
+| 7 | [vits_tts_de_phonemize](#example-7-tts-with-vits-german-piper-piper-phonemize) | Text-to-speech with a standalone VITS Piper model (German, piper-phonemize — no German lexicon is published yet) |
+| 8 | [matcha_tts_en_lexicon](#example-8-tts-with-matcha-english-lexicon) | Text-to-speech with Matcha TTS (English, lexicon) |
+| 9 | [matcha_tts_en_phonemize](#example-9-tts-with-matcha-english-piper-phonemize) | Text-to-speech with Matcha TTS (English, piper-phonemize) |
+| 10 | [matcha_tts_zh_lexicon](#example-10-tts-with-matcha-chinese) | Text-to-speech with Matcha TTS (Chinese, lexicon) |
+| 11 | [kokoro_tts_en_lexicon](#example-11-tts-with-kokoro-english-lexicon) | Text-to-speech with Kokoro TTS (English, lexicon) |
+| 12 | [kokoro_tts_en_phonemize](#example-12-tts-with-kokoro-english-piper-phonemize) | Text-to-speech with Kokoro TTS (English, piper-phonemize) |
+| 13 | [kokoro_tts_zh_en_lexicon](#example-13-tts-with-kokoro-chinese--english) | Text-to-speech with Kokoro TTS (Chinese + English, lexicon) |
+| 14 | [kitten_tts_en_lexicon](#example-14-tts-with-kitten-english-lexicon) | Text-to-speech with Kitten TTS (English, lexicon) |
+| 15 | [kitten_tts_en_phonemize](#example-15-tts-with-kitten-english-piper-phonemize) | Text-to-speech with Kitten TTS (English, piper-phonemize) |
+| 16 | [streaming_zipformer_en](#example-16-asr-with-streaming-zipformer-english) | Streaming ASR with zipformer transducer (English) |
+| 17 | [streaming_zipformer_zh_en](#example-17-asr-with-streaming-zipformer-chinese--english) | Streaming ASR with zipformer transducer (Chinese + English) |
+| 18 | [streaming_zipformer_microphone](#example-18-asr-with-streaming-zipformer-with-a-microphone-real-time-asr) | Real-time streaming ASR from microphone input |
+| 19 | [zipformer_en](#example-19-asr-with-non-streaming-zipformer-english) | Non-streaming ASR with zipformer transducer (English) |
+| 20 | [zipformer_zh_en](#example-20-asr-with-non-streaming-zipformer-chinese--english) | Non-streaming ASR with zipformer transducer (Chinese + English) |
+| 21 | [zipformer_vi](#example-21-asr-with-non-streaming-zipformer-vietnamese) | Non-streaming ASR with zipformer transducer (Vietnamese) |
+| 22 | [nemo_parakeet](#example-22-asr-with-non-streaming-nemo-parakeet-english) | Non-streaming ASR with Nemo Parakeet TDT transducer (English) |
+| 23 | [fire_red_asr_ctc](#example-23-asr-with-non-streaming-fireredasr-ctc-chinese--english) | Non-streaming ASR with FireRedASR CTC model (Chinese + English) |
+| 24 | [moonshine_v2](#example-24-asr-with-non-streaming-moonshine-v2-english) | Non-streaming ASR with Moonshine v2 (English) |
+| 25 | [sense_voice](#example-25-asr-with-non-streaming-sensevoice) | Non-streaming ASR with SenseVoice (Chinese, English, Japanese, Korean, Cantonese) |
+| 26 | [qwen3_asr](#example-26-asr-with-non-streaming-qwen3-asr) | Non-streaming ASR with Qwen3 ASR (multilingual) |
+| 27 | [cohere_transcribe](#example-27-asr-with-non-streaming-cohere-transcribe) | Non-streaming ASR with Cohere Transcribe (multilingual) |
+| 28 | [silero_vad_remove_silence](#example-28-remove-silences-from-a-file-using-silerovad) | Remove silences from an audio file using Silero VAD |
+| 29 | [offline_speech_enhancement_gtcrn](#example-29-offline-speech-enhancement-with-gtcrn) | Offline speech enhancement with GTCRN |
+| 30 | [offline_speech_enhancement_dpdfnet](#example-30-offline-speech-enhancement-with-dpdfnet) | Offline speech enhancement with DPDFNet |
+| 31 | [streaming_speech_enhancement_gtcrn](#example-31-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
+| 32 | [streaming_speech_enhancement_dpdfnet](#example-32-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
+| 33 | [online_punctuation](#example-33-online-punctuation) | Add punctuation to text using online punctuation model |
+| 34 | [keyword_spotter](#example-34-keyword-spotter) | Detect keywords from audio using a Zipformer KWS model |
+| 35 | [spoken_language_identification](#example-35-spoken-language-identification) | Detect the spoken language in a wave file using Whisper |
+| 36 | [offline_punctuation](#example-36-offline-punctuation) | Add punctuation to text using an offline punctuation model |
+| 37 | [audio_tagging_zipformer](#example-37-audio-tagging-with-a-zipformer-model) | Audio tagging with a Zipformer model |
+| 38 | [audio_tagging_ced](#example-38-audio-tagging-with-a-ced-model) | Audio tagging with a CED model |
+| 39 | [speaker_embedding_extractor](#example-39-speaker-embedding-extractor) | Compute a speaker embedding from a wave file |
+| 40 | [speaker_embedding_manager](#example-40-speaker-embedding-manager) | Register, search, verify, and remove speakers using embeddings |
+| 41 | [speaker_embedding_cosine_similarity](#example-41-speaker-embedding-cosine-similarity) | Compute cosine similarity from three speaker embeddings |
+| 42 | [offline_speaker_diarization](#example-42-offline-speaker-diarization) | Offline speaker diarization with pyannote segmentation and 3D-Speaker embeddings |
+| 43 | [sense_voice_simulate_streaming_microphone](#example-43-simulated-streaming-asr-with-sensevoice-and-vad-from-microphone) | Simulated streaming ASR with SenseVoice and VAD from microphone |
+| 44 | [fire_red_asr_ctc_simulate_streaming_microphone](#example-44-simulated-streaming-asr-with-fireredasr-ctc-and-vad-from-microphone) | Simulated streaming ASR with FireRedASR CTC and VAD from microphone |
+| 45 | [parakeet_tdt_ctc_simulate_streaming_microphone](#example-45-simulated-streaming-asr-with-parakeet-tdt-ctc-and-vad-from-microphone) | Simulated streaming ASR with Parakeet TDT CTC and VAD from microphone |
+| 46 | [parakeet_tdt_simulate_streaming_microphone](#example-46-simulated-streaming-asr-with-parakeet-tdt-transducer-and-vad-from-microphone) | Simulated streaming ASR with Parakeet TDT transducer and VAD from microphone |
+| 47 | [wenet_ctc_simulate_streaming_microphone](#example-47-simulated-streaming-asr-with-wenet-ctc-and-vad-from-microphone) | Simulated streaming ASR with WeNet CTC and VAD from microphone |
+| 48 | [zipformer_ctc_simulate_streaming_microphone](#example-48-simulated-streaming-asr-with-zipformer-ctc-and-vad-from-microphone) | Simulated streaming ASR with Zipformer CTC and VAD from microphone |
+| 49 | [zipformer_transducer_simulate_streaming_microphone](#example-49-simulated-streaming-asr-with-zipformer-transducer-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer and VAD from microphone |
+| 50 | [zipformer_transducer_simulate_streaming_microphone](#example-50-simulated-streaming-asr-with-zipformer-transducer-japanese-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone |
+| 51 | [qwen3_asr_simulate_streaming_microphone](#example-51-simulated-streaming-asr-with-qwen3-asr-and-vad-from-microphone) | Simulated streaming ASR with Qwen3 ASR and VAD from microphone |
+| 52 | [whisper](#example-52-asr-with-non-streaming-whisper) | Non-streaming ASR with Whisper (multilingual) |
+| 55 | [paraformer](#example-55-asr-with-non-streaming-paraformer) | Non-streaming ASR with Paraformer |
 
 ## Run it
 
@@ -124,218 +128,247 @@ to check the RPATH for shared builds.
 ### Example 4: TTS with ZipVoice zero-shot voice cloning
 
 ```bash
-./run-zipvoice-tts.sh
+./run-zipvoice-tts-lexicon.sh
 ```
 
 
-### Example 5: TTS with VITS (English Piper)
+### Example 5: TTS with VITS (English Piper, lexicon)
 
 ```bash
-./run-vits-en.sh
+./run-vits-en-lexicon.sh
 ```
 
-### Example 6: TTS with VITS (German Piper)
+### Example 6: TTS with VITS (English Piper, piper-phonemize)
+
+The text is phonemized outside of sherpa-onnx with the piper-phonemize crate.
 
 ```bash
-./run-vits-de.sh
+./run-vits-en-phonemize.sh
 ```
 
-### Example 7: TTS with Matcha (English)
+### Example 7: TTS with VITS (German Piper, piper-phonemize)
+
+There is no published German lexicon yet, so this example uses the
+piper-phonemize frontend.
 
 ```bash
-./run-matcha-tts-en.sh
+./run-vits-de-phonemize.sh
 ```
 
-### Example 8: TTS with Matcha (Chinese)
+### Example 8: TTS with Matcha (English, lexicon)
 
 ```bash
-./run-matcha-tts-zh.sh
+./run-matcha-tts-en-lexicon.sh
 ```
 
-### Example 9: TTS with Kokoro (English)
+### Example 9: TTS with Matcha (English, piper-phonemize)
 
 ```bash
-./run-kokoro-tts-en.sh
+./run-matcha-tts-en-phonemize.sh
 ```
 
-### Example 10: TTS with Kokoro (Chinese + English)
+### Example 10: TTS with Matcha (Chinese)
 
 ```bash
-./run-kokoro-tts-zh-en.sh
+./run-matcha-tts-zh-lexicon.sh
 ```
 
-### Example 11: TTS with Kitten (English)
+### Example 11: TTS with Kokoro (English, lexicon)
 
 ```bash
-./run-kitten-tts-en.sh
+./run-kokoro-tts-en-lexicon.sh
 ```
 
-### Example 12: ASR with streaming zipformer (English)
+### Example 12: TTS with Kokoro (English, piper-phonemize)
+
+```bash
+./run-kokoro-tts-en-phonemize.sh
+```
+
+### Example 13: TTS with Kokoro (Chinese + English)
+
+```bash
+./run-kokoro-tts-zh-en-lexicon.sh
+```
+
+### Example 14: TTS with Kitten (English, lexicon)
+
+```bash
+./run-kitten-tts-en-lexicon.sh
+```
+
+### Example 15: TTS with Kitten (English, piper-phonemize)
+
+```bash
+./run-kitten-tts-en-phonemize.sh
+```
+
+### Example 16: ASR with streaming zipformer (English)
 
 ```bash
 ./run-streaming-zipformer-en.sh
 ```
 
-### Example 13: ASR with streaming zipformer (Chinese + English)
+### Example 17: ASR with streaming zipformer (Chinese + English)
 
 ```bash
 ./run-streaming-zipformer-zh-en.sh
 ```
 
-### Example 14: ASR with streaming zipformer (with a microphone, real-time ASR)
+### Example 18: ASR with streaming zipformer (with a microphone, real-time ASR)
 
 ```bash
 ./run-streaming-zipformer-microphone-zh-en.sh
 ```
 
-### Example 15: ASR with non-streaming zipformer (English)
+### Example 19: ASR with non-streaming zipformer (English)
 
 ```bash
 ./run-zipformer-en.sh
 ```
 
-### Example 16: ASR with non-streaming zipformer (Chinese + English)
+### Example 20: ASR with non-streaming zipformer (Chinese + English)
 
 ```bash
 ./run-zipformer-zh-en.sh
 ```
 
-### Example 17: ASR with non-streaming zipformer (Vietnamese)
+### Example 21: ASR with non-streaming zipformer (Vietnamese)
 
 ```bash
 ./run-zipformer-vi.sh
 ```
 
-### Example 18: ASR with non-streaming Nemo Parakeet (English)
+### Example 22: ASR with non-streaming Nemo Parakeet (English)
 
 ```bash
 ./run-nemo-parakeet-en.sh
 ```
 
-### Example 19: ASR with non-streaming FireRedASR CTC (Chinese + English)
+### Example 23: ASR with non-streaming FireRedASR CTC (Chinese + English)
 
 ```bash
 ./run-fire-red-asr-ctc.sh
 ```
 
-### Example 20: ASR with non-streaming Moonshine v2 (English)
+### Example 24: ASR with non-streaming Moonshine v2 (English)
 
 ```bash
 ./run-moonshine-v2.sh
 ```
 
-### Example 21: ASR with non-streaming SenseVoice
+### Example 25: ASR with non-streaming SenseVoice
 
 ```bash
 ./run-sense-voice.sh
 ```
 
-### Example 22: ASR with non-streaming Qwen3 ASR
+### Example 26: ASR with non-streaming Qwen3 ASR
 
 ```bash
 ./run-qwen3-asr.sh
 ```
 
-### Example 23: ASR with non-streaming Cohere Transcribe
+### Example 27: ASR with non-streaming Cohere Transcribe
 
 ```bash
 ./run-cohere-transcribe.sh
 ```
 
-### Example 24: Remove silences from a file using SileroVAD
+### Example 28: Remove silences from a file using SileroVAD
 
 ```bash
 ./run-silero-vad-remove-silence.sh
 ```
 
-### Example 25: Offline speech enhancement with GTCRN
+### Example 29: Offline speech enhancement with GTCRN
 
 ```bash
 ./run-offline-speech-enhancement-gtcrn.sh
 ```
 
-### Example 26: Offline speech enhancement with DPDFNet
+### Example 30: Offline speech enhancement with DPDFNet
 
 ```bash
 ./run-offline-speech-enhancement-dpdfnet.sh
 ```
 
-### Example 27: Streaming speech enhancement with GTCRN
+### Example 31: Streaming speech enhancement with GTCRN
 
 ```bash
 ./run-streaming-speech-enhancement-gtcrn.sh
 ```
 
-### Example 28: Streaming speech enhancement with DPDFNet
+### Example 32: Streaming speech enhancement with DPDFNet
 
 ```bash
 ./run-streaming-speech-enhancement-dpdfnet.sh
 ```
 
-### Example 29: Online punctuation
+### Example 33: Online punctuation
 
 ```bash
 ./run-online-punctuation.sh
 ```
 
-### Example 30: Keyword spotter
+### Example 34: Keyword spotter
 
 ```bash
 ./run-keyword-spotter.sh
 ```
 
-### Example 31: Spoken language identification
+### Example 35: Spoken language identification
 
 ```bash
 ./run-spoken-language-identification.sh
 ```
 
-### Example 32: Offline punctuation
+### Example 36: Offline punctuation
 
 ```bash
 ./run-offline-punctuation.sh
 ```
 
-### Example 33: Audio tagging with a Zipformer model
+### Example 37: Audio tagging with a Zipformer model
 
 ```bash
 ./run-audio-tagging-zipformer.sh
 ```
 
-### Example 34: Audio tagging with a CED model
+### Example 38: Audio tagging with a CED model
 
 ```bash
 ./run-audio-tagging-ced.sh
 ```
 
 
-### Example 35: Speaker embedding extractor
+### Example 39: Speaker embedding extractor
 
 ```bash
 ./run-speaker-embedding-extractor.sh
 ```
 
-### Example 36: Speaker embedding manager
+### Example 40: Speaker embedding manager
 
 ```bash
 ./run-speaker-embedding-manager.sh
 ```
 
 
-### Example 37: Speaker embedding cosine similarity
+### Example 41: Speaker embedding cosine similarity
 
 ```bash
 ./run-speaker-embedding-cosine-similarity.sh
 ```
 
 
-### Example 38: Offline speaker diarization
+### Example 42: Offline speaker diarization
 
 ```bash
 ./run-offline-speaker-diarization.sh
 ```
 
-### Example 39: Simulated streaming ASR with SenseVoice and VAD from microphone
+### Example 43: Simulated streaming ASR with SenseVoice and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 SenseVoice recognizer on each detected segment, providing an experience
@@ -345,7 +378,7 @@ similar to streaming ASR.
 ./run-sense-voice-simulate-streaming-microphone.sh
 ```
 
-### Example 40: Simulated streaming ASR with FireRedASR CTC and VAD from microphone
+### Example 44: Simulated streaming ASR with FireRedASR CTC and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 FireRedASR CTC recognizer on each detected segment.
@@ -354,7 +387,7 @@ FireRedASR CTC recognizer on each detected segment.
 ./run-fire-red-asr-ctc-simulate-streaming-microphone.sh
 ```
 
-### Example 41: Simulated streaming ASR with Parakeet TDT CTC and VAD from microphone
+### Example 45: Simulated streaming ASR with Parakeet TDT CTC and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 Parakeet TDT CTC recognizer on each detected segment (Japanese).
@@ -363,7 +396,7 @@ Parakeet TDT CTC recognizer on each detected segment (Japanese).
 ./run-parakeet-tdt-ctc-simulate-streaming-microphone.sh
 ```
 
-### Example 42: Simulated streaming ASR with Parakeet TDT transducer and VAD from microphone
+### Example 46: Simulated streaming ASR with Parakeet TDT transducer and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 Parakeet TDT transducer recognizer on each detected segment (English).
@@ -372,7 +405,7 @@ Parakeet TDT transducer recognizer on each detected segment (English).
 ./run-parakeet-tdt-simulate-streaming-microphone.sh
 ```
 
-### Example 43: Simulated streaming ASR with WeNet CTC and VAD from microphone
+### Example 47: Simulated streaming ASR with WeNet CTC and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 WeNet CTC recognizer on each detected segment (Cantonese).
@@ -381,7 +414,7 @@ WeNet CTC recognizer on each detected segment (Cantonese).
 ./run-wenet-ctc-simulate-streaming-microphone.sh
 ```
 
-### Example 44: Simulated streaming ASR with Zipformer CTC and VAD from microphone
+### Example 48: Simulated streaming ASR with Zipformer CTC and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 Zipformer CTC recognizer on each detected segment (Chinese).
@@ -390,7 +423,7 @@ Zipformer CTC recognizer on each detected segment (Chinese).
 ./run-zipformer-ctc-simulate-streaming-microphone.sh
 ```
 
-### Example 45: Simulated streaming ASR with Zipformer transducer and VAD from microphone
+### Example 49: Simulated streaming ASR with Zipformer transducer and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 Zipformer transducer recognizer on each detected segment (Chinese).
@@ -399,7 +432,7 @@ Zipformer transducer recognizer on each detected segment (Chinese).
 ./run-zipformer-transducer-simulate-streaming-microphone.sh
 ```
 
-### Example 46: Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone
+### Example 50: Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 Zipformer transducer recognizer on each detected segment (Japanese,
@@ -409,7 +442,7 @@ reazonspeech model).
 ./run-zipformer-ja-reazonspeech-simulate-streaming-microphone.sh
 ```
 
-### Example 47: Simulated streaming ASR with Qwen3 ASR and VAD from microphone
+### Example 51: Simulated streaming ASR with Qwen3 ASR and VAD from microphone
 
 This example uses Silero VAD to detect speech segments and runs the offline
 Qwen3 ASR recognizer on each detected segment.
@@ -418,25 +451,25 @@ Qwen3 ASR recognizer on each detected segment.
 ./run-qwen3-asr-simulate-streaming-microphone.sh
 ```
 
-### Example 48: ASR with non-streaming Whisper
+### Example 52: ASR with non-streaming Whisper
 
 ```bash
 ./run-whisper.sh
 ```
 
-### Example 49: ASR with non-streaming FunASR Nano
+### Example 53: ASR with non-streaming FunASR Nano
 
 ```bash
 ./run-funasr-nano.sh
 ```
 
-### Example 50: Remove silences from a file using ten-vad
+### Example 54: Remove silences from a file using ten-vad
 
 ```bash
 ./run-ten-vad-remove-silence.sh
 ```
 
-### Example 51: ASR with non-streaming Paraformer
+### Example 55: ASR with non-streaming Paraformer
 
 ```bash
 ./run-paraformer.sh

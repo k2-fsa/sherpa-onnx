@@ -8,6 +8,46 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-test-version.sh
+
+./run-tts-pocket-en.sh
+ls -lh
+rm -rf sherpa-onnx-pocket-*
+
+./run-tts-supertonic-en.sh
+ls -lh
+rm -rf sherpa-onnx-supertonic-*
+
+./run-tts-kitten-en-lexicon.sh
+ls -lh
+rm -rf kitten-*
+
+./run-tts-vits-lexicon.sh
+ls -lh
+rm -rf vits-piper-*
+
+./run-tts-kokoro-zh-en-lexicon.sh
+ls -lh
+rm -rf kokoro-multi-*
+
+./run-tts-kokoro-en-lexicon.sh
+ls -lh
+rm -rf kokoro-en-*
+
+./run-tts-matcha-zh-lexicon.sh
+ls -lh
+rm -rf matcha-icefall-*
+
+./run-tts-matcha-en-lexicon.sh
+ls -lh
+rm -rf matcha-icefall-*
+
+./run-tts-zipvoice-lexicon.sh
+ls -lh
+rm -rf sherpa-onnx-zipvoice-*
+rm -f vocos_24khz.onnx
+rm -f lexicon-en-us.txt
+
 ./run-cohere-transcribe.sh
 rm -rf sherpa-onnx-cohere-transcribe-*
 
@@ -23,21 +63,11 @@ rm -f qi-feng-le-zh.wav
 ./run-qwen3-asr.sh
 rm -rf sherpa-onnx-qwen3-*
 
-./run-test-version.sh
-
 ./run-moonshine-v2-asr.sh
 rm -rf sherpa-onnx-moonshine-*
 
 ./run-fire-red-asr-ctc.sh
 rm -rf sherpa-onnx-fire-red-*
-
-./run-tts-pocket-en.sh
-ls -lh
-rm -rf sherpa-onnx-pocket-*
-
-./run-tts-supertonic-en.sh
-ls -lh
-rm -rf sherpa-onnx-supertonic-*
 
 ./run-medasr-ctc-asr.sh
 rm -rf sherpa-onnx-medasr-*
@@ -52,16 +82,15 @@ rm -rf sherpa-onnx-omnilingual-*
 rm -rf sherpa-onnx-streaming-*
 
 ./run-compute-speaker-embeddings.sh
-rm -fv *.wav *.onnx
-
-./run-tts-kitten-en.sh
-ls -lh
-rm -rf kitten-*
+rm -f wespeaker_zh_cnceleb_resnet34.onnx fangjun-sr-1.wav fangjun-sr-2.wav leijun-sr-1.wav
 
 ./run-wenet-ctc-asr.sh
 rm -rf sherpa-onnx-*
 
 ./run-zipformer-ctc-asr.sh
+rm -rf sherpa-onnx-zipformer-*
+
+./run-zipformer-ctc-hlg.sh
 rm -rf sherpa-onnx-zipformer-*
 
 ./run-decode-file-sense-voice-with-hr.sh
@@ -80,35 +109,9 @@ ls -lh *.wav
 ./run-fire-red-asr.sh
 rm -rf sherpa-onnx-fire-red-asr-*
 
-./run-tts-vits.sh
-ls -lh
-rm -rf vits-piper-*
-
-./run-tts-kokoro-zh-en.sh
-ls -lh
-rm -rf kokoro-multi-*
-
-./run-tts-kokoro-en.sh
-ls -lh
-rm -rf kokoro-en-*
-
-./run-tts-matcha-zh.sh
-ls -lh
-rm -rf matcha-icefall-*
-
-./run-tts-matcha-en.sh
-ls -lh
-rm -rf matcha-icefall-*
-
-./run-tts-zipvoice.sh
-ls -lh
-rm -rf sherpa-onnx-zipvoice-*
-rm -f vocos_24khz.onnx
-
 ./run-speaker-diarization.sh
-rm -rf *.onnx
+rm -f 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx 0-four-speakers-zh.wav
 rm -rf sherpa-onnx-pyannote-segmentation-3-0
-rm -fv *.wav
 
 ./run-add-punctuations.sh
 rm ./add-punctuations
