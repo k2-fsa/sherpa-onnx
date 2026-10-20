@@ -368,7 +368,7 @@
 			repositoryURL = "https://github.com/csukuangfj/piper-phonemize";
 			requirement = {
 				kind = exactVersion;
-				version = 1.5.7;
+				version = 1.5.8;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

@@ -46,10 +46,10 @@ def get_models():
 
             pushd ..
             rm -rf piper-phonemize
-            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.7-wasm-browser.zip
-            unzip -q piper-phonemize-v1.5.7-wasm-browser.zip
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.8-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.8-wasm-browser.zip
             mv browser piper-phonemize
-            rm piper-phonemize-v1.5.7-wasm-browser.zip
+            rm piper-phonemize-v1.5.8-wasm-browser.zip
             popd
 
 
@@ -72,10 +72,10 @@ def get_models():
 
             pushd ..
             rm -rf piper-phonemize
-            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.7-wasm-browser.zip
-            unzip -q piper-phonemize-v1.5.7-wasm-browser.zip
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.8-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.8-wasm-browser.zip
             mv browser piper-phonemize
-            rm piper-phonemize-v1.5.7-wasm-browser.zip
+            rm piper-phonemize-v1.5.8-wasm-browser.zip
             popd
 
 
@@ -143,10 +143,10 @@ def get_models():
 
             pushd ..
             rm -rf piper-phonemize
-            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.7-wasm-browser.zip
-            unzip -q piper-phonemize-v1.5.7-wasm-browser.zip
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.8-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.8-wasm-browser.zip
             mv browser piper-phonemize
-            rm piper-phonemize-v1.5.7-wasm-browser.zip
+            rm piper-phonemize-v1.5.8-wasm-browser.zip
             popd
 
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx

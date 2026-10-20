@@ -1057,9 +1057,9 @@ checksum = "3b3cff922bd51709b605d9ead9aa71031d81447142d828eb4a6eba76fe619f9b"
 
 [[package]]
 name = "piper-phonemize"
-version = "1.5.7"
+version = "1.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d42a2ac0d0d73b191596fc82903d4998c46d786cd3417623340f511abc9ae717"
+checksum = "35c8504db04647f8929286fcffeb503a75c0e20bc9092d396b1208ae908251d4"
 dependencies = [
  "bzip2 0.4.4",
  "piper-phonemize-sys",
@@ -1069,9 +1069,9 @@ dependencies = [
 
 [[package]]
 name = "piper-phonemize-sys"
-version = "1.5.7"
+version = "1.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e185df205b708d3f66c50c47fcbf3614fe77cf347c3c59618d0837170a6f8cfe"
+checksum = "dd1ee1bf4669c378c95cb3848d11cb1dd29d0d0dcc98690b20845401b80ca5a1"
 dependencies = [
  "bzip2 0.4.4",
  "tar",
