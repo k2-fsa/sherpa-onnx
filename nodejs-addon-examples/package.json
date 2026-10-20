@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "node-cpal": "^0.1.1",
+    "piper-phonemize-node": "^1.5.9",
     "sherpa-onnx-node": "^1.13.8"
   }
 }

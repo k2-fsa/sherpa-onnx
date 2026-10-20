@@ -7,9 +7,11 @@ set(exported_functions
   SherpaOnnxCreateOfflineTts
   SherpaOnnxDestroyOfflineTts
   SherpaOnnxDestroyOfflineTtsGeneratedAudio
+  SherpaOnnxDestroyOfflineTtsLang
   SherpaOnnxOfflineTtsGenerate
   SherpaOnnxOfflineTtsGenerateWithCallback
   SherpaOnnxOfflineTtsGenerateWithConfig
+  SherpaOnnxOfflineTtsLang
   SherpaOnnxOfflineTtsNumSpeakers
   SherpaOnnxOfflineTtsSampleRate
   SherpaOnnxWriteWave

@@ -156,6 +156,12 @@ jobs:
         run: |
           ./.github/scripts/test-rust-shared.sh
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
   termux:
     name: Termux ${{ matrix.arch }} (${{ matrix.lib_setup }})
     runs-on: ${{ matrix.runner }}
@@ -255,7 +261,6 @@ jobs:
             --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
             --volume /tmp/sherpa-onnx-android-archive:/archive \
             --volume /tmp/sherpa-onnx-android-lib:/lib \
-            -e LIB_SETUP \
             -e SHERPA_ONNX_LIB_DIR \
             -e SHERPA_ONNX_ARCHIVE_DIR \
             termux/termux-docker:${{ matrix.arch }} \
@@ -276,27 +281,28 @@ jobs:
 
             cd /k2-fsa/sherpa-onnx
 
-            # Detect and set library paths based on available directories
+            # Detect and set library paths based on available directories.
+            #
+            # NOTE: the termux/termux-docker image does NOT pass -e environment
+            # variables into the container (verified: they arrive unset), so we
+            # must detect the library location by path here instead of
+            # receiving it from the host.
+            #
+            # This matters because sherpa-onnx-sys's build.rs silently falls
+            # back to downloading the *released* prebuilt libraries from GitHub
+            # when SHERPA_ONNX_LIB_DIR/SHERPA_ONNX_ARCHIVE_DIR are unset. For
+            # branches under test those prebuilt libs have older C struct
+            # layouts than the local checkout, so the examples crash with a
+            # wild-pointer SIGSEGV. Watch the "[build.rs]" cargo:warning lines
+            # in the log to confirm which library directory was picked up.
             echo "=== Detecting library setup ==="
-
-            # Detect Android ABI based on architecture
             ARCH=$(uname -m)
             case "$ARCH" in
-              aarch64|arm64)
-                ABI="arm64-v8a"
-                ;;
-              armv7*|armv8l)
-                ABI="armeabi-v7a"
-                ;;
-              x86_64)
-                ABI="x86_64"
-                ;;
-              i*86)
-                ABI="x86"
-                ;;
-              *)
-                ABI="arm64-v8a"  # default
-                ;;
+              aarch64|arm64) ABI="arm64-v8a" ;;
+              armv7*|armv8l) ABI="armeabi-v7a" ;;
+              x86_64) ABI="x86_64" ;;
+              i*86) ABI="x86" ;;
+              *) ABI="arm64-v8a" ;;
             esac
             echo "Detected architecture: $ARCH -> ABI: $ABI"
 
@@ -304,12 +310,14 @@ jobs:
               echo "Found pre-extracted libs at /lib/jniLibs/$ABI"
               export SHERPA_ONNX_LIB_DIR=/lib/jniLibs/$ABI
             fi
-            if ls /archive/*.tar.bz2 &>/dev/null; then
+            if ls /archive/*.tar.bz2 >/dev/null 2>&1; then
               echo "Found archive at /archive"
               export SHERPA_ONNX_ARCHIVE_DIR=/archive
             fi
 
-            # Add sherpa-onnx library path if available
+            echo "SHERPA_ONNX_LIB_DIR=${SHERPA_ONNX_LIB_DIR:-unset}"
+            echo "SHERPA_ONNX_ARCHIVE_DIR=${SHERPA_ONNX_ARCHIVE_DIR:-unset}"
+
             if [ -n "$SHERPA_ONNX_LIB_DIR" ]; then
               export LD_LIBRARY_PATH=$SHERPA_ONNX_LIB_DIR:$LD_LIBRARY_PATH
             fi
@@ -335,3 +343,9 @@ jobs:
             # Run all tests (Android only supports shared linking)
             bash .github/scripts/test-rust-shared.sh
           '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn

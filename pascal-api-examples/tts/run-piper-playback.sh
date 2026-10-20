@@ -29,11 +29,16 @@ if [[ ! -f ./vits-piper-en_US-libritts_r-medium/tokens.txt ]]; then
   rm vits-piper-en_US-libritts_r-medium.tar.bz2
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 fpc \
   -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   -Fl/usr/local/Cellar/portaudio/19.7.0/lib \
+  -Fl/opt/homebrew/Cellar/portaudio/19.7.0/lib \
   ./piper-playback.pas
 
 # Please see ../portaudio-test/README.md

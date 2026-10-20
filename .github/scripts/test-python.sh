@@ -87,12 +87,15 @@ download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts
 
 download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 python3 ./python-api-examples/zipvoice-tts.py
 
 cp generated-zipvoice-zh-en-python.wav tts/
 
 rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
 rm -f vocos_24khz.onnx
+rm -f lexicon-en-us.txt
 
 log "test Google MedASR"
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
@@ -347,6 +350,19 @@ python3 ./python-api-examples/online-zipformer-ctc-hlg-decode-file.py \
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
 
 
+log "test offline zipformer ctc HLG decoding"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+
+python3 ./python-api-examples/offline-zipformer-ctc-hlg-decode-files.py \
+  --tokens ./sherpa-onnx-zipformer-ctc-en-2023-10-02/tokens.txt \
+  --model ./sherpa-onnx-zipformer-ctc-en-2023-10-02/model.int8.onnx \
+  --graph ./sherpa-onnx-zipformer-ctc-en-2023-10-02/HLG.fst \
+  ./sherpa-onnx-zipformer-ctc-en-2023-10-02/test_wavs/0.wav
+
+rm -rf sherpa-onnx-zipformer-ctc-en-2023-10-02
+
+
 mkdir -p /tmp/icefall-models
 dir=/tmp/icefall-models
 
@@ -428,19 +444,21 @@ mkdir -p ./tts
 log "test kitten tts"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 
 python3 ./python-api-examples/offline-tts.py \
   --debug=1 \
   --kitten-model=./kitten-nano-en-v0_1-fp16/model.fp16.onnx \
   --kitten-voices=./kitten-nano-en-v0_1-fp16/voices.bin \
   --kitten-tokens=./kitten-nano-en-v0_1-fp16/tokens.txt \
-  --kitten-data-dir=./kitten-nano-en-v0_1-fp16/espeak-ng-data \
+  --kitten-lexicon=./lexicon-en-us.txt \
   --num-threads=2 \
   --sid=0 \
   --output-filename="./tts/kitten-0.wav" \
   "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
 rm -rf kitten-nano-en-v0_1-fp16
+rm -f lexicon-en-us.txt
 
 log "kokoro-multi-lang-v1_0 test"
 
@@ -451,7 +469,6 @@ python3 ./python-api-examples/offline-tts.py \
   --kokoro-model=./kokoro-multi-lang-v1_0/model.onnx \
   --kokoro-voices=./kokoro-multi-lang-v1_0/voices.bin \
   --kokoro-tokens=./kokoro-multi-lang-v1_0/tokens.txt \
-  --kokoro-data-dir=./kokoro-multi-lang-v1_0/espeak-ng-data \
   --kokoro-lexicon=./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt \
   --num-threads=2 \
   --sid=18 \
@@ -463,37 +480,41 @@ rm -rf kokoro-multi-lang-v1_0
 log "kokoro-en-v0_19 test"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 
 python3 ./python-api-examples/offline-tts.py \
   --debug=1 \
   --kokoro-model=./kokoro-en-v0_19/model.onnx \
   --kokoro-voices=./kokoro-en-v0_19/voices.bin \
   --kokoro-tokens=./kokoro-en-v0_19/tokens.txt \
-  --kokoro-data-dir=./kokoro-en-v0_19/espeak-ng-data \
+  --kokoro-lexicon=./lexicon-en-us.txt \
   --num-threads=2 \
   --sid=10 \
   --output-filename="./tts/kokoro-10.wav" \
   "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be  a statesman, a businessman, an official, or a scholar."
 
 rm -rf kokoro-en-v0_19
+rm -f lexicon-en-us.txt
 
 log "matcha-ljspeech-en test"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
 
 download https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 
 python3 ./python-api-examples/offline-tts.py \
   --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
-  --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
+  --matcha-lexicon=./lexicon-en-us.txt \
   --output-filename=./tts/test-matcha-ljspeech-en.wav \
   --num-threads=2 \
  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
 rm vocos-22khz-univ.onnx
 rm -rf matcha-icefall-en_US-ljspeech
+rm -f lexicon-en-us.txt
 
 log "matcha-baker-zh test"
 

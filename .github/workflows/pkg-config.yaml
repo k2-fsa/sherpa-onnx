@@ -106,8 +106,6 @@ jobs:
 
           gcc -o decode-file-c-api $(pkg-config --cflags sherpa-onnx) ./decode-file-c-api.c $(pkg-config --libs sherpa-onnx)
 
-          ./decode-file-c-api --help
-
       - name: Build C API example (tts)
         if: matrix.tts == 'ON'
         shell: bash
@@ -119,7 +117,15 @@ jobs:
 
           gcc -o offline-tts-c-api $(pkg-config --cflags sherpa-onnx) ./offline-tts-c-api.c $(pkg-config --libs sherpa-onnx)
 
-          ./offline-tts-c-api --help
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-ljs.tar.bz2
+          tar xf vits-ljs.tar.bz2
+          rm vits-ljs.tar.bz2
+
+          ./offline-tts-c-api
+
+          mkdir -p ../tts
+          mv generated-offline-tts-c.wav ../tts/
+          rm -rf vits-ljs
 
       - name: Test online transducer (C API)
         shell: bash

@@ -124,7 +124,6 @@ jobs:
               -DBUILD_SHARED_LIBS=ON \
               -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
               -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-              -DBUILD_ESPEAK_NG_EXE=OFF \
               -DSHERPA_ONNX_ENABLE_BINARY=OFF \
               -DCMAKE_INSTALL_PREFIX=./install \
               ..
@@ -183,3 +182,9 @@ jobs:
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
           .github/scripts/test-dart.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}
+          path: dart-api-examples/tts/*.wav
+          if-no-files-found: warn

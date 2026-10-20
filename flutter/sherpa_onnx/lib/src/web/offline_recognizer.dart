@@ -121,6 +121,12 @@ JSObject _buildConfig(OfflineRecognizerConfig config) {
   hr['ruleFsts'] = config.hr.ruleFsts.toJS;
   jsConfig['hr'] = hr;
 
+  // CTC FST decoder config.
+  final ctcFstDecoderConfig = JSObject();
+  ctcFstDecoderConfig['graph'] = config.ctcFstDecoderConfig.graph.toJS;
+  ctcFstDecoderConfig['maxActive'] = config.ctcFstDecoderConfig.maxActive.toJS;
+  jsConfig['ctcFstDecoderConfig'] = ctcFstDecoderConfig;
+
   // Scalar fields.
   jsConfig['decodingMethod'] = config.decodingMethod.toJS;
   jsConfig['maxActivePaths'] = config.maxActivePaths.toJS;

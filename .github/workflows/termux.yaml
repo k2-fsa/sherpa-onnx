@@ -85,10 +85,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -168,11 +164,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -315,10 +307,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -532,10 +520,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -615,11 +599,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -771,10 +751,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -989,10 +965,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -1072,11 +1044,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -1235,10 +1203,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -1318,11 +1282,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -1466,10 +1426,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -1678,10 +1634,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \

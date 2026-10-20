@@ -136,10 +136,6 @@ jobs:
           file build/bin/sherpa-onnx
           ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
-
-          rm -fv build/install/include/cargs.h
-          rm -fv build/install/lib/cargs.h
-          rm -fv build/install/lib/libcargs.so
           rm -rfv build/install/lib/pkgconfig
 
           strings build/install/lib/*.so | grep "^GLIBC_"
