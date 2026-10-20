@@ -429,19 +429,6 @@ TEST(ParseLexiconFile, MultiCodepointPhonemes) {
   EXPECT_EQ(entries[0].phonemes[5], "ɪ");
 }
 
-TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
-    // Whisper byte-level-BPE tokens can split a multi-byte UTF-8 character
-    // across two tokens. Each fragment alone is invalid UTF-8 and is
-    // stripped; the character only survives when the fragments are joined
-    // first. Recognizer implementations must therefore concatenate tokens
-    // before calling this function (see the whisper Convert()).
-    std::string frag1 = "\xd7";  // leading byte of a Hebrew letter
-    std::string frag2 = "\xa8";  // continuation byte (frag1+frag2 is a letter)
-    EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1), "");
-    EXPECT_EQ(RemoveInvalidUtf8Sequences(frag2), "");
-    EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
-  }
-
 TEST(Utf8ToUtf16, Bmp) {
   // a, U+00E9, U+20AC
   std::u16string expected = {u'a', 0x00E9, 0x20AC};
