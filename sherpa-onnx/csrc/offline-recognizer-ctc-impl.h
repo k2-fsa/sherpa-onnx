@@ -308,6 +308,12 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     constexpr size_t kOmnilingualMinNumSamples = 400;
     if (!config_.model_config.omnilingual.model.empty() &&
         f.size() < kOmnilingualMinNumSamples) {
+      SHERPA_ONNX_LOGE(
+          "Input audio is too short for omnilingual ASR model: %d samples "
+          "(minimum required: %d samples, %.1f ms at 16 kHz)",
+          static_cast<int>(f.size()),
+          static_cast<int>(kOmnilingualMinNumSamples),
+          kOmnilingualMinNumSamples / 16.0);
       OfflineRecognitionResult r;
       s->SetResult(r);
       return;
