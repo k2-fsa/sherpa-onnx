@@ -4,14 +4,12 @@ on:
   push:
     branches:
       - wheel
-      - wheel-armv7
   workflow_dispatch:
     inputs:
       publish_sherpa_onnx_bin:
         description: "Publish sherpa-onnx-bin"
         required: false
-        # default: "true"
-        default: "false"
+        default: "true"
         type: boolean
 
 env:
