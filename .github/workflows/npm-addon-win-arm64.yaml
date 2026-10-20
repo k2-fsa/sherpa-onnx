@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - node-addon
-      - win-arm64-node
   workflow_dispatch:
 
 concurrency:
