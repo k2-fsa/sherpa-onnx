@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - wheel
+      - wheel-armv7
   workflow_dispatch:
     inputs:
       publish_sherpa_onnx_bin:
