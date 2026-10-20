@@ -582,6 +582,16 @@ making it easy to match supported sherpa-onnx models to different hardware.
 - [Website](https://olerast67.github.io/voice-teleprompter-android/)
 - Android 10+ · no internet permission · GPL-3.0
 
+### [Loud Caption](https://github.com/DR1N0/loud-caption)
+
+> An open-source Flutter app for Android that turns nearby speech into large,
+> high-contrast captions for people with hearing loss. SenseVoice ASR and Silero
+> VAD run fully on-device through sherpa-onnx's Dart API; translation is
+> optional and also local. No account, analytics, or cloud audio.
+
+- [Download APK](https://github.com/DR1N0/loud-caption/releases/latest)
+- Android 8.0+ · arm64-v8a · MIT (app code)
+
 ### [Recly](https://github.com/rokrokss/recly)
 
 > An open-source recorder for Galaxy Watch, Android, Apple Watch, iPhone, macOS,
