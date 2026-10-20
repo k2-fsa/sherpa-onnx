@@ -2,6 +2,11 @@ const generateBtn = document.getElementById('generateBtn');
 const speakerIdLabel = document.getElementById('speakerIdLabel');
 const speakerIdInput = document.getElementById('speakerId');
 const speakerIdSection = document.getElementById('speakerIdSection');
+const langSection = document.getElementById('langSection');
+const langSelect = document.getElementById('lang');
+const frontendSection = document.getElementById('frontendSection');
+const frontendPhonemizeInput = document.getElementById('frontendPhonemize');
+const frontendLexiconInput = document.getElementById('frontendLexicon');
 const referenceAudioSection = document.getElementById('referenceAudioSection');
 const referenceTextSection = document.getElementById('referenceTextSection');
 const referenceAudioInput = document.getElementById('referenceAudio');
@@ -21,12 +26,14 @@ let audioCtx = null;
 const worker = new Worker("sherpa-onnx-tts.worker.js");
 let ttsInstanceInfo = {
   modelType: null,
+  usePhonemize: false,
   numSpeakers: 0,
+  lang: '',
   isReady: false,
 };
 worker.onmessage = (e) => {
   if (e.data.type === "sherpa-onnx-tts-progress") {
-    Module.setStatus(e.data.status);
+    uiStatus.setStatus(e.data.status);
     return;
   }
   if (e.data.type === "sherpa-onnx-tts-generation-progress") {
@@ -36,12 +43,15 @@ worker.onmessage = (e) => {
   }
   if (e.data.type === "sherpa-onnx-tts-ready") {
     ttsInstanceInfo.modelType = e.data.modelType;
+    ttsInstanceInfo.usePhonemize = e.data.usePhonemize;
     ttsInstanceInfo.numSpeakers = e.data.numSpeakers;
+    ttsInstanceInfo.lang = e.data.lang;
     ttsInstanceInfo.isReady = true;
     generateBtn.disabled = false;
     speakerIdLabel.innerHTML = `Speaker ID (0 - ${e.data.numSpeakers - 1}):`;
     updateUiForModelType();
-    Module.setStatus('');
+    uiStatus.setStatus('');
+    setGenerationStatus('');
     return;
   }
   if (e.data.type === "error") {
@@ -49,7 +59,7 @@ worker.onmessage = (e) => {
     if (ttsInstanceInfo.isReady) {
       setGenerationStatus(e.data.message);
     } else {
-      Module.setStatus(e.data.message);
+      uiStatus.setStatus(e.data.message);
     }
     return;
   }
@@ -80,10 +90,12 @@ worker.onmessage = (e) => {
   }
 };
 
-Module = {};
+// UI status helper, used by the sherpa-onnx worker messages below.
+const uiStatus = {};
 
-// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
-Module.setStatus = function(status) {
+// Mirrors emscripten's Module.setStatus:
+// https://emscripten.org/docs/api_reference/module.html#Module.setStatus
+uiStatus.setStatus = function(status) {
   console.log(`status ${status}`);
   if (status == 'Running...') {
     status = 'Model downloaded. Initializing text to speech model...'
@@ -117,6 +129,65 @@ Module.setStatus = function(status) {
     });
   }
 };
+
+// piper-phonemize's Emscripten module. This mirrors its standalone demo
+// (piper-phonemize/index.html + piper-phonemize/app-phonemize.js shipped in
+// the bundle): the app defines `Module`, the glue script is loaded last (see
+// index.html) and attaches its runtime to the same object.
+//
+// The one difference from that demo: it lives next to the bundle files while
+// this page is one directory above them. When the glue fetches its .data it
+// calls locateFile(name, "") with an empty scriptDirectory, so we must prefix
+// "piper-phonemize/" ourselves - otherwise the .data request resolves against
+// this page's URL, 404s, the espeak-ng data never reaches the wasm FS, and
+// espeak init fails.
+let resolvePiperReady;
+let rejectPiperReady;
+const piperReady = new Promise((resolve, reject) => {
+  resolvePiperReady = resolve;
+  rejectPiperReady = reject;
+});
+// Failures are reported at the generate step below; don't also warn here.
+piperReady.catch(() => {});
+
+// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+var Module = {
+  locateFile: function(path, scriptDirectory = '') {
+    return (scriptDirectory || 'piper-phonemize/') + path;
+  },
+
+  setStatus: function(status) {
+    // piper's runtime statuses are not about the TTS model; keep the status
+    // bar for the sherpa-onnx download/init progress.
+    if (status === 'Running...') return;
+    uiStatus.setStatus(status);
+  },
+
+  onRuntimeInitialized: function() {
+    console.log('piper-phonemize WASM runtime initialized');
+    try {
+      const ret = piperPhonemizeInitialize();
+      console.log('piperPhonemizeInitialize returned:', ret);
+      if (ret >= 0) {
+        // 22050 on the first call, 0 if espeak-ng was already initialized
+        resolvePiperReady();
+      } else {
+        rejectPiperReady(new Error('failed to initialize espeak-ng'));
+      }
+    } catch (e) {
+      console.error('piper-phonemize initialization error:', e);
+      rejectPiperReady(e);
+    }
+  },
+};
+
+// The glue is loaded after this file. If the bundle is missing entirely (see
+// assets/README.md), say so instead of waiting forever on the promise above.
+if (typeof piperPhonemizeInitialize !== 'function') {
+  rejectPiperReady(new Error(
+      'piper-phonemize bundle not loaded; see wasm/tts/assets/README.md'));
+}
+
 speedInput.oninput = function() {
   speedValue.innerHTML = this.value;
 };
@@ -124,11 +195,35 @@ speedInput.oninput = function() {
 function updateUiForModelType() {
   const isZipVoice = ttsInstanceInfo.modelType === 4;
   const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const isSupertonic = ttsInstanceInfo.modelType === 7;
   const useGenerationConfig = isZipVoice || isPocketTts;
   speakerIdSection.classList.toggle('hidden', useGenerationConfig);
   referenceAudioSection.classList.toggle('hidden', !useGenerationConfig);
   referenceTextSection.classList.toggle('hidden', !isZipVoice);
+  // SupertonicTTS supports 31 languages; no other model here needs a
+  // language picker.
+  langSection.classList.toggle('hidden', !isSupertonic);
+
+  // The picker is only meaningful for the English piper-family models, which
+  // can use either frontend. The Chinese/multi-lingual/zipvoice models have a
+  // lexicon only, the pocket model has its own frontend, and the German model
+  // is phonemize-only (no German lexicon exists).
+  const isEnglishFamily = [0, 3, 6].includes(ttsInstanceInfo.modelType) &&
+      (ttsInstanceInfo.lang || '').toLowerCase().startsWith('en');
+  frontendSection.classList.toggle('hidden', !isEnglishFamily);
+  frontendPhonemizeInput.checked = ttsInstanceInfo.usePhonemize;
+  frontendLexiconInput.checked = !ttsInstanceInfo.usePhonemize;
 }
+
+function onFrontendChange() {
+  const usePhonemize = frontendPhonemizeInput.checked;
+  generateBtn.disabled = true;
+  setGenerationStatus('Switching text frontend...');
+  worker.postMessage({type: 'setFrontend', usePhonemize: usePhonemize});
+}
+
+frontendPhonemizeInput.addEventListener('change', onFrontendChange);
+frontendLexiconInput.addEventListener('change', onFrontendChange);
 
 function setGenerationStatus(status) {
   if (!generationStatusElement) {
@@ -196,6 +291,7 @@ function downloadBlob(blob, filename) {
 generateBtn.onclick = async function() {
   const isZipVoice = ttsInstanceInfo.modelType === 4;
   const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const isSupertonic = ttsInstanceInfo.modelType === 7;
   const useGenerationConfig = isZipVoice || isPocketTts;
 
   let speakerId = speakerIdInput.value;
@@ -227,6 +323,26 @@ generateBtn.onclick = async function() {
   console.log('speakerId', speakerId);
   console.log('speed', speedInput.value);
   console.log('text', text);
+
+  if (isSupertonic) {
+    // SupertonicTTS has its own text frontend (unicode indexer): pass the
+    // raw text plus the language; no reference audio and no phonemize.
+    // numSteps is 8, like python-api-examples/supertonic-tts.py and
+    // nodejs-examples/test-offline-tts-supertonic.js.
+    generateBtn.disabled = true;
+    setGenerationStatus('Generating audio...');
+    worker.postMessage({
+      text,
+      type: 'generateWithConfig',
+      genConfig: {
+        sid: speakerId,
+        speed: parseFloat(speedInput.value),
+        numSteps: 8,
+        extra: {lang: langSelect.value},
+      },
+    });
+    return;
+  }
 
   if (useGenerationConfig) {
     if (!referenceAudioInput.files || referenceAudioInput.files.length === 0) {
@@ -269,6 +385,42 @@ generateBtn.onclick = async function() {
       genConfig,
       type: "generateWithConfig",
     }, [genConfig.referenceAudio.buffer]);
+    return;
+  }
+
+  if (ttsInstanceInfo.usePhonemize) {
+    // Option 1: phonemize the text with piper-phonemize (loaded from
+    // ./piper-phonemize/, see assets/README.md) and pass the phoneme
+    // codepoints. No lexicon file and no espeak-ng-data are needed. Set
+    // usePhonemize = false in sherpa-onnx-tts.js for option 2 (lexicon).
+    try {
+      await piperReady;
+    } catch (e) {
+      generateBtn.disabled = false;
+      setGenerationStatus(`piper-phonemize is not available: ${e.message}`);
+      return;
+    }
+    const voice = ttsInstanceInfo.lang || 'en-us';
+    const sentences = piperPhonemize(text, voice);
+    if (!sentences) {
+      generateBtn.disabled = false;
+      setGenerationStatus('Phonemization failed');
+      return;
+    }
+    // piper may emit empty sentences (e.g. a trailing segment after
+    // punctuation); the C API requires every sentence to be non-empty.
+    const phonemeCodepoints = sentences.filter((sentence) => sentence.length > 0);
+    generateBtn.disabled = true;
+    setGenerationStatus('Generating audio...');
+    worker.postMessage({
+      text: '',
+      genConfig: {
+        phonemeCodepoints: phonemeCodepoints,
+        sid: speakerId,
+        speed: parseFloat(speedInput.value),
+      },
+      type: "generateWithConfig",
+    });
     return;
   }
 

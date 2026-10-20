@@ -78,22 +78,22 @@ downstream ASR and `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 
 ```bash
 ./run-non-streaming-tts-coqui-de.sh
-./run-non-streaming-tts-kitten-en.sh
-./run-non-streaming-tts-kokoro-en.sh
-./run-non-streaming-tts-kokoro-zh-en.sh
-./run-non-streaming-tts-matcha-en.sh
-./run-non-streaming-tts-matcha-zh.sh
-./run-non-streaming-tts-piper-en-with-callback.sh
-./run-non-streaming-tts-piper-en.sh
-./run-non-streaming-tts-vits-zh.sh
+./run-non-streaming-tts-kitten-en-lexicon.sh
+./run-non-streaming-tts-kokoro-en-lexicon.sh
+./run-non-streaming-tts-kokoro-zh-en-lexicon.sh
+./run-non-streaming-tts-matcha-en-lexicon.sh
+./run-non-streaming-tts-matcha-zh-lexicon.sh
+./run-non-streaming-tts-piper-en-with-callback-lexicon.sh
+./run-non-streaming-tts-piper-en-lexicon.sh
+./run-non-streaming-tts-vits-zh-lexicon.sh
 ./run-pocket-tts.sh
-./run-zipvoice-tts.sh
+./run-zipvoice-tts-lexicon.sh
 ```
 
 ## Non-Streaming text-to-speech (Playback the audio as it is being generated)
 
 ```bash
-./run-non-streaming-tts-piper-en-with-callback.sh
+./run-non-streaming-tts-piper-en-with-callback-lexicon.sh
 ```
 
 ## Spoken language identification
@@ -151,8 +151,8 @@ The punctuation model supports both English and Chinese.
 ## VAD (Remove silence)
 
 ```bash
-./run-vad-remove-slience.sh
-./run-ten-vad-remove-slience.sh
+./run-vad-remove-silence.sh
+./run-ten-vad-remove-silence.sh
 ```
 
 ## VAD + Non-streaming Dolphin CTC for speech recognition

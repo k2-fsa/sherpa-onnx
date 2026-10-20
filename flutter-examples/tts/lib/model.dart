@@ -27,9 +27,8 @@ Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
     model: sherpa_onnx.OfflineTtsModelConfig(
       vits: sherpa_onnx.OfflineTtsVitsModelConfig(
         model: _abs(d, m.vits.model),
-        lexicon: _abs(d, m.vits.lexicon),
+        lexicon: _absMulti(d, m.vits.lexicon),
         tokens: _abs(d, m.vits.tokens),
-        dataDir: _abs(d, m.vits.dataDir),
         noiseScale: m.vits.noiseScale,
         noiseScaleW: m.vits.noiseScaleW,
         lengthScale: m.vits.lengthScale,
@@ -38,7 +37,6 @@ Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
         model: _abs(d, m.kokoro.model),
         voices: _abs(d, m.kokoro.voices),
         tokens: _abs(d, m.kokoro.tokens),
-        dataDir: _abs(d, m.kokoro.dataDir),
         lexicon: _absMulti(d, m.kokoro.lexicon),
         lang: m.kokoro.lang,
         lengthScale: m.kokoro.lengthScale,
@@ -47,15 +45,14 @@ Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
         model: _abs(d, m.kitten.model),
         voices: _abs(d, m.kitten.voices),
         tokens: _abs(d, m.kitten.tokens),
-        dataDir: _abs(d, m.kitten.dataDir),
+        lexicon: _absMulti(d, m.kitten.lexicon),
         lengthScale: m.kitten.lengthScale,
       ),
       matcha: sherpa_onnx.OfflineTtsMatchaModelConfig(
         acousticModel: _abs(d, m.matcha.acousticModel),
         vocoder: _abs(d, m.matcha.vocoder),
         tokens: _abs(d, m.matcha.tokens),
-        dataDir: _abs(d, m.matcha.dataDir),
-        lexicon: _abs(d, m.matcha.lexicon),
+        lexicon: _absMulti(d, m.matcha.lexicon),
         noiseScale: m.matcha.noiseScale,
         lengthScale: m.matcha.lengthScale,
       ),
@@ -83,8 +80,7 @@ Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
         encoder: _abs(d, m.zipvoice.encoder),
         decoder: _abs(d, m.zipvoice.decoder),
         vocoder: _abs(d, m.zipvoice.vocoder),
-        dataDir: _abs(d, m.zipvoice.dataDir),
-        lexicon: _abs(d, m.zipvoice.lexicon),
+        lexicon: _absMulti(d, m.zipvoice.lexicon),
         featScale: m.zipvoice.featScale,
         tShift: m.zipvoice.tShift,
         targetRms: m.zipvoice.targetRms,
@@ -96,7 +92,7 @@ Future<sherpa_onnx.OfflineTtsConfig> prepareModelConfig() async {
     ),
     ruleFsts: _absMulti(d, cfg.ruleFsts),
     ruleFars: _absMulti(d, cfg.ruleFars),
-    maxNumSenetences: cfg.maxNumSenetences,
+    maxNumSentences: cfg.maxNumSentences,
   );
 }
 

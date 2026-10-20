@@ -32,6 +32,7 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
   r.timestamps.reserve(src.timestamps.size());
 
   std::string text;
+  float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
 
   for (int32_t i = 0; i != src.tokens.size(); ++i) {
     if (sym_table.Contains("SIL") && src.tokens[i] == sym_table["SIL"]) {
@@ -57,6 +58,7 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     }
 
     r.tokens.push_back(std::move(sym));
+    r.timestamps.push_back(frame_shift_s * src.timestamps[i]);
   }
 
   if (sym_table.IsByteBpe()) {
@@ -68,12 +70,6 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
   }
 
   r.text = std::move(text);
-
-  float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
-  for (auto t : src.timestamps) {
-    float time = frame_shift_s * t;
-    r.timestamps.push_back(time);
-  }
 
   r.words = std::move(src.words);
 

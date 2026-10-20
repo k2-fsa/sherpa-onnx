@@ -13,6 +13,8 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-n
 tar xf kitten-nano-en-v0_1-fp16.tar.bz2
 rm kitten-nano-en-v0_1-fp16.tar.bz2
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 ./kitten-tts-en-cxx-api
 
  */
@@ -39,7 +41,7 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.kitten.model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
   config.model.kitten.voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
   config.model.kitten.tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
-  config.model.kitten.data_dir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
+  config.model.kitten.lexicon = "./lexicon-en-us.txt";
 
   config.model.num_threads = 2;
 

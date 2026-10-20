@@ -73,7 +73,6 @@ jobs:
             -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
             -D CMAKE_INSTALL_PREFIX=./install \
-            -D BUILD_ESPEAK_NG_EXE=OFF \
             ..
 
       - name: Check 1
@@ -198,8 +197,6 @@ jobs:
           fi
 
           rm -rf $dst/lib/pkgconfig
-          rm -f $dst/lib/cargs.dll $dst/lib/cargs.lib $dst/lib/cargs.h
-          rm -f $dst/include/cargs.h
 
           ls -lh $dst/bin/
           echo "---"
@@ -212,10 +209,8 @@ jobs:
           if [[ $shared_lib == "ON" ]]; then
             cp -av build/install/lib/*.dll ${lib_dst}/lib/
             cp -av build/install/lib/*.lib ${lib_dst}/lib/
-            rm -f ${lib_dst}/lib/cargs.dll ${lib_dst}/lib/cargs.lib
           else
             cp -av build/install/lib/*.lib ${lib_dst}/lib/
-            rm -f ${lib_dst}/lib/cargs.lib
           fi
           ls -lh ${lib_dst}/lib/
           tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
@@ -223,6 +218,15 @@ jobs:
           ls -lh $dst/
 
           ls -lh *.tar.bz2
+
+          # The PDB debug symbols (~200 MB each) are already inside the release
+          # tarballs above. The loose copies in build/ and build/install are only
+          # needed for debugging a crash locally, not for running CI tests, so
+          # drop them here to free several GB for the publish/test steps below.
+          rm -f build/bin/${{ matrix.build_type }}/*.pdb
+          rm -f build/install/bin/*.pdb
+          echo "Freed PDB files. Disk now:"
+          df -h .
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -267,7 +271,7 @@ jobs:
           file: sherpa-onnx-*-win-arm64*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.28
+          tag: v1.13.8
 
       - name: Release pre-compiled binaries and libs for Windows arm64
         if: github.repository_owner == 'k2-fsa'&& github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -276,6 +280,28 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*-win-arm64*.tar.bz2
+
+      # The release artifacts, the huggingface clone and the RelWithDebInfo/Debug
+      # PDB files are no longer needed once we get here (the Release steps above
+      # are tag-only and are skipped for branch builds). Windows arm64 runners
+      # have limited disk, and the tests below each download large ASR models,
+      # so free that space first or the model extraction fails with "no space
+      # left on device". Only the test binaries in build/bin/<build_type> and
+      # the shared libs they load are kept.
+      - name: Free disk space before tests
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          echo "Disk space before cleanup:"
+          df -h .
+          rm -rf huggingface
+          rm -rf sherpa-onnx-*-win-arm64*/
+          rm -f sherpa-onnx-*-win-arm64*.tar.bz2
+          rm -f build/bin/${{ matrix.build_type }}/*.pdb
+          rm -f build/install/bin/*.pdb
+          rm -rf build/install/share build/install/lib/pkgconfig
+          echo "Disk space after cleanup:"
+          df -h .
 
       - name: Test offline Cohere Transcribe for windows arm64
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

@@ -3,15 +3,6 @@ name: sanitizer
 on:
   workflow_dispatch:
 
-  schedule:
-    # minute (0-59)
-    # hour (0-23)
-    # day of the month (1-31)
-    # month (1-12)
-    # day of the week (0-6)
-    # nightly build at 22:50 UTC time every day
-    - cron: "50 22 * * *"
-
 concurrency:
   group: sanitizer-${{ github.ref }}
   cancel-in-progress: true
@@ -54,6 +45,7 @@ jobs:
 
           cmake \
             -DSHERPA_ONNX_ENABLE_PYTHON=ON \
+            -DPYTHON_EXECUTABLE="$(command -v python3)" \
             -DSHERPA_ONNX_ENABLE_TESTS=ON \
             -DSHERPA_ONNX_ENABLE_JNI=ON \
             -DSHERPA_ONNX_ENABLE_SANITIZER=ON \
@@ -75,6 +67,12 @@ jobs:
           ls -lh bin
 
           file ./bin/sherpa-onnx
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          cd build
+          ctest --output-on-failure
 
       - name: Display dependencies of sherpa-onnx for macos
         shell: bash

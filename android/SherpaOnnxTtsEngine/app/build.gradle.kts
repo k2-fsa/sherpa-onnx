@@ -61,6 +61,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")
+    // piper-phonemize provides the text frontend for models without a lexicon
+    implementation("com.github.csukuangfj.piper-phonemize:piper-phonemize:v1.5.9")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

@@ -165,6 +165,14 @@ jobs:
 
               echo "----"
               ls -lh install/bin
+
+              if [[ "${{ matrix.build_type }}" == "Release" &&
+                    "${{ matrix.shared_lib }}" == "OFF" &&
+                    "${{ matrix.with_tts }}" == "OFF" ]]; then
+                cmake -DSHERPA_ONNX_ENABLE_TESTS=ON .. &&
+                cmake --build . --target offline-recognizer-funasr-nano-impl-test --parallel 2 &&
+                ctest --output-on-failure --no-tests=error -R "^offline-recognizer-funasr-nano-impl-test$"
+              fi
             '
 
       - name: Display dependencies of sherpa-onnx for linux
@@ -184,10 +192,6 @@ jobs:
           file build/bin/sherpa-onnx
           ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
-
-          rm -fv build/install/include/cargs.h
-          rm -fv build/install/lib/cargs.h
-          rm -fv build/install/lib/libcargs.so
           rm -rfv build/install/lib/pkgconfig
 
       - uses: actions/upload-artifact@v4
@@ -230,10 +234,8 @@ jobs:
           mkdir -p ${lib_dst}/lib
           if [[ ${{ matrix.shared_lib }} == ON ]]; then
             cp -av build/install/lib/lib*.so* ${lib_dst}/lib/
-            rm -f ${lib_dst}/lib/libcargs.so ${lib_dst}/lib/libcargs.so.*
           else
             cp -av build/install/lib/lib*.a ${lib_dst}/lib/
-            rm -f ${lib_dst}/lib/libcargs.a
           fi
           tree ${lib_dst}
           tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
@@ -249,7 +251,7 @@ jobs:
           file: sherpa-onnx-*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.31
+          tag: v1.13.8
 
       - name: Release pre-compiled binaries and libs for linux x64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'

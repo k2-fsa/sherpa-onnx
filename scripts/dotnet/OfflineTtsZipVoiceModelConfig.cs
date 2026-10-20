@@ -1,4 +1,4 @@
-/// Copyright (c)  2025  Xiaomi Corporation (authors: Fangjun Kuang)
+﻿/// Copyright (c)  2025  Xiaomi Corporation (authors: Fangjun Kuang)
 
 using System.Runtime.InteropServices;
 
@@ -33,6 +33,10 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string Vocoder;
 
+        /// <summary>
+        /// Deprecated. Ignored since v2.0.0. Use Lexicon or
+        /// OfflineTtsGenerationConfig.PhonemeCodepoints instead.
+        /// </summary>
         [MarshalAs(UnmanagedType.LPStr)]
         public string DataDir;
 

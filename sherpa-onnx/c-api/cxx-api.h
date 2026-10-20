@@ -859,7 +859,12 @@ struct OfflineTtsVitsModelConfig {
   std::string lexicon;
   /** Token file. */
   std::string tokens;
-  /** Data directory such as `espeak-ng-data`. */
+  /**
+   * Data directory such as `espeak-ng-data`.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Reserved field. Currently unused by the wrapper. */
   std::string dict_dir;
@@ -882,7 +887,12 @@ struct OfflineTtsMatchaModelConfig {
   std::string lexicon;
   /** Token file. */
   std::string tokens;
-  /** Data directory such as `espeak-ng-data`. */
+  /**
+   * Data directory such as `espeak-ng-data`.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Reserved field. Currently unused by the wrapper. */
   std::string dict_dir;
@@ -901,7 +911,12 @@ struct OfflineTtsKokoroModelConfig {
   std::string voices;
   /** Token file. */
   std::string tokens;
-  /** Data directory such as `espeak-ng-data`. */
+  /**
+   * Data directory such as `espeak-ng-data`.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Reserved field. Currently unused by the wrapper. */
   std::string dict_dir;
@@ -922,11 +937,19 @@ struct OfflineTtsKittenModelConfig {
   std::string voices;
   /** Token file. */
   std::string tokens;
-  /** Data directory. */
+  /**
+   * Data directory.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
 
   /** Length scale. Values < 1 are faster; values > 1 are slower. */
   float length_scale = 1.0;
+
+  /** Lexicon file. */
+  std::string lexicon;
 };
 
 /** @brief ZipVoice model configuration. */
@@ -939,7 +962,12 @@ struct OfflineTtsZipvoiceModelConfig {
   std::string decoder;
   /** Vocoder model file. */
   std::string vocoder;
-  /** Data directory. */
+  /**
+   * Data directory.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Lexicon file. */
   std::string lexicon;
@@ -1042,6 +1070,27 @@ struct GenerationConfig {
 
   /** Model-specific extra attributes serialized to JSON internally. */
   std::unordered_map<std::string, std::string> extra;
+
+  /**
+   * Pre-phonemized input as Unicode codepoints.
+   *
+   * Phonemize the text yourself (for instance with piper_phonemize) and pass
+   * the resulting codepoints here. When set, it is used in place of the `text`
+   * argument. Leave empty to use `text` with a lexicon.
+   *
+   * Each inner vector is one sentence.
+   */
+  std::vector<std::vector<int32_t>> phoneme_codepoints;
+
+  /**
+   * Pre-tokenized input, e.g. Chinese pinyin like "zhong1".
+   *
+   * Each inner vector is one sentence.
+   *
+   * Mutually exclusive with `phoneme_codepoints`: if both are set, a warning
+   * is printed and generation fails.
+   */
+  std::vector<std::vector<std::string>> tokens;
 };
 
 /** @brief Configuration for offline TTS. */
@@ -1112,6 +1161,11 @@ class SHERPA_ONNX_API OfflineTts
 
   /** @brief Return the number of supported speakers. */
   int32_t NumSpeakers() const;
+
+  /** @brief Return the language/voice of the model, e.g., "en-us".
+   *
+   * Returns an empty string if such information is not available. */
+  std::string Lang() const;
 
   /**
    * @brief Generate speech using the simple speaker-id and speed interface.

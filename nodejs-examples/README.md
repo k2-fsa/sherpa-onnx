@@ -106,9 +106,9 @@ node ./test-offline-speaker-diarization.js
 
 In the following, we demonstrate how to run text-to-speech.
 
-## ./test-offline-tts-zipvoice-zh-en.js
+## ./test-offline-tts-zipvoice-zh-en-lexicon.js
 
-[./test-offline-tts-zipvoice-zh-en.js](./test-offline-tts-zipvoice-zh-en.js)
+[./test-offline-tts-zipvoice-zh-en-lexicon.js](./test-offline-tts-zipvoice-zh-en-lexicon.js)
 shows how to use ZipVoice for Zero-shot TTS in Chinese and English.
 
 Please make sure that the reference transcript matches the reference audio.
@@ -121,7 +121,7 @@ rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
-node ./test-offline-tts-zipvoice-zh-en.js
+node ./test-offline-tts-zipvoice-zh-en-lexicon.js
 ```
 
 ## ./test-offline-tts-supertonic.js
@@ -153,9 +153,9 @@ rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 node ./test-offline-tts-pocket-en.js
 ```
 
-## ./test-offline-tts-kitten-en.js
+## ./test-offline-tts-kitten-en-lexicon.js
 
-[./test-offline-tts-kitten-en.js](./test-offline-tts-kitten-en.js) shows how to use
+[./test-offline-tts-kitten-en-lexicon.js](./test-offline-tts-kitten-en-lexicon.js) shows how to use
 [kitten-nano-en-v0_1-fp16](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2)
 for text-to-speech.
 
@@ -166,12 +166,12 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/k
 tar xf kitten-nano-en-v0_1-fp16.tar.bz2
 rm kitten-nano-en-v0_1-fp16.tar.bz2
 
-node ./test-offline-tts-kitten-en.js
+node ./test-offline-tts-kitten-en-lexicon.js
 ```
 
-## ./test-offline-tts-kokoro-en.js
+## ./test-offline-tts-kokoro-en-lexicon.js
 
-[./test-offline-tts-kokoro-en.js](./test-offline-tts-kokoro-en.js) shows how to use
+[./test-offline-tts-kokoro-en-lexicon.js](./test-offline-tts-kokoro-en-lexicon.js) shows how to use
 [kokoro-en-v0_19](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2)
 for text-to-speech.
 
@@ -182,12 +182,12 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/k
 tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
-node ./test-offline-tts-kokoro-en.js
+node ./test-offline-tts-kokoro-en-lexicon.js
 ```
 
-## ./test-offline-tts-kokoro-zh-en.js
+## ./test-offline-tts-kokoro-zh-en-lexicon.js
 
-[./test-offline-tts-kokoro-zh-en.js](./test-offline-tts-kokoro-zh-en.js) shows how to use
+[./test-offline-tts-kokoro-zh-en-lexicon.js](./test-offline-tts-kokoro-zh-en-lexicon.js) shows how to use
 [kokoro-multi-lang-v1_0](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2)
 for text-to-speech in Chinese and English.
 
@@ -198,12 +198,12 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/k
 tar xf kokoro-multi-lang-v1_0.tar.bz2
 rm kokoro-multi-lang-v1_0.tar.bz2
 
-node ./test-offline-tts-kokoro-zh-en.js
+node ./test-offline-tts-kokoro-zh-en-lexicon.js
 ```
 
-## ./test-offline-tts-matcha-zh.js
+## ./test-offline-tts-matcha-zh-lexicon.js
 
-[./test-offline-tts-matcha-zh.js](./test-offline-tts-matcha-zh.js) shows how to use
+[./test-offline-tts-matcha-zh-lexicon.js](./test-offline-tts-matcha-zh-lexicon.js) shows how to use
 [matcha-icefall-zh-baker](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)
 for text-to-speech.
 
@@ -216,12 +216,12 @@ rm matcha-icefall-zh-baker.tar.bz2
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
-node ./test-offline-tts-matcha-zh.js
+node ./test-offline-tts-matcha-zh-lexicon.js
 ```
 
-## ./test-offline-tts-matcha-en.js
+## ./test-offline-tts-matcha-en-lexicon.js
 
-[./test-offline-tts-matcha-en.js](./test-offline-tts-matcha-en.js) shows how to use
+[./test-offline-tts-matcha-en-lexicon.js](./test-offline-tts-matcha-en-lexicon.js) shows how to use
 [matcha-icefall-en_US-ljspeech](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker)
 for text-to-speech.
 
@@ -234,12 +234,12 @@ rm matcha-icefall-en_US-ljspeech.tar.bz2
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
-node ./test-offline-tts-matcha-en.js
+node ./test-offline-tts-matcha-en-lexicon.js
 ```
 
-## ./test-offline-tts-vits-en.js
+## ./test-offline-tts-vits-en-lexicon.js
 
-[./test-offline-tts-vits-en.js](./test-offline-tts-vits-en.js) shows how to use
+[./test-offline-tts-vits-en-lexicon.js](./test-offline-tts-vits-en-lexicon.js) shows how to use
 [vits-piper-en_US-amy-low.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2)
 for text-to-speech.
 
@@ -248,12 +248,12 @@ You can use the following command to run it:
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xvf vits-piper-en_US-amy-low.tar.bz2
-node ./test-offline-tts-vits-en.js
+node ./test-offline-tts-vits-en-lexicon.js
 ```
 
-## ./test-offline-tts-vits-zh.js
+## ./test-offline-tts-vits-zh-lexicon.js
 
-[./test-offline-tts-vits-zh.js](./test-offline-tts-vits-zh.js) shows how to use
+[./test-offline-tts-vits-zh-lexicon.js](./test-offline-tts-vits-zh-lexicon.js) shows how to use
 a VITS pretrained model
 [aishell3](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vits-model-aishell3)
 for text-to-speech.
@@ -263,7 +263,7 @@ You can use the following command to run it:
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
 tar xvf vits-icefall-zh-aishell3.tar.bz2
-node ./test-offline-tts-vits-zh.js
+node ./test-offline-tts-vits-zh-lexicon.js
 ```
 
 # Speech-to-text

@@ -162,6 +162,11 @@ self.onmessage = async function(e) {
         genCfg.numSteps = msg.numSteps || 5;
       }
 
+      // Pre-phonemized input (number[][]); used in place of msg.text.
+      if (msg.phonemeCodepoints) {
+        genCfg.phonemeCodepoints = msg.phonemeCodepoints;
+      }
+
       const cfgWasm = initSherpaOnnxGenerationConfig(genCfg, Module);
 
       // Set up callback for streaming chunks.

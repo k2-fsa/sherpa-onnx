@@ -113,9 +113,18 @@ jobs:
           pushd $d
           npm install
           npm install wav
+          npm install piper-phonemize
           popd
 
           ./.github/scripts/test-nodejs-npm.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
+          # The examples are copied into scripts/nodejs and run from there
+          # (export d=scripts/nodejs), so their wavs land in scripts/nodejs,
+          # not in nodejs-examples.
+          path: scripts/nodejs/test-*.wav
+          if-no-files-found: warn
 
       - name: Setup tmate session
         if: false

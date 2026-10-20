@@ -397,10 +397,18 @@
  */
 
 /**
+ * CTC FST decoder options for offline CTC models.
+ * @typedef {Object} OfflineCtcFstDecoderConfig
+ * @property {string} [graph] - Path to the decoding graph.
+ * @property {number} [maxActive] - Decoder max-active setting. 0 means 3000.
+ */
+
+/**
  * Offline recognizer config passed to createOfflineRecognizer.
  * @typedef {Object} OfflineRecognizerConfig
  * @property {FeatureConfig} [featConfig]
  * @property {OfflineModelConfig} [modelConfig]
+ * @property {OfflineCtcFstDecoderConfig} [ctcFstDecoderConfig]
  */
 
 /**
@@ -440,6 +448,14 @@
  * @property {string=} referenceText
  *
  * @property {{[key: string]: number | string}} [extra]
+ *
+ * @property {number[][]} [phonemeCodepoints] - Pre-phonemized input as
+ *           Unicode codepoints, one inner array per sentence. When set, it is
+ *           used in place of the text argument. Mutually exclusive with
+ *           `tokens`.
+ * @property {string[][]} [tokens] - Pre-tokenized input, e.g. Chinese pinyin
+ *           like "zhong1", one inner array per sentence. Mutually exclusive
+ *           with `phonemeCodepoints`.
  */
 
 
@@ -525,7 +541,8 @@
  * @property {string} [model]
  * @property {string} [lexicon]
  * @property {string} [tokens]
- * @property {string} [dataDir]
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [noiseScale]
  * @property {number} [noiseScaleW]
  * @property {number} [lengthScale]
@@ -537,7 +554,8 @@
  * @property {string} [vocoder]
  * @property {string} [lexicon]
  * @property {string} [tokens]
- * @property {string} [dataDir]
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [noiseScale]
  * @property {number} [lengthScale]
  */
@@ -547,7 +565,8 @@
  * @property {string} [model]
  * @property {string} [voices]
  * @property {string} [tokens]
- * @property {string} [dataDir]
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [lengthScale]
  * @property {string} [lexicon]
  * @property {string} [lang]
@@ -558,7 +577,9 @@
  * @property {string} [model]
  * @property {string} [voices]
  * @property {string} [tokens]
- * @property {string} [dataDir]
+ * @property {string} [lexicon]
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {number} [lengthScale]
  */
 
@@ -568,7 +589,8 @@
  * @property {string} [encoder]
  * @property {string} [decoder]
  * @property {string} [vocoder]
- * @property {string} [dataDir]
+ * @property {string} [dataDir] - Deprecated. Ignored. Use lexicon, or
+ *           phonemeCodepoints or tokens instead.
  * @property {string} [lexicon]
  * @property {number} [featScale]
  * @property {number} [tShift]

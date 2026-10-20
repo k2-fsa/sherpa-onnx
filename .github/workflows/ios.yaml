@@ -39,9 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
-            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
-            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
-            -e '/requirement = {/,/};/d' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
             {} +
           git diff
           cat ios-swiftui/SherpaOnnxAsr/SherpaOnnxAsr.xcodeproj/project.pbxproj
@@ -97,9 +95,7 @@ jobs:
         run: |
           set -euo pipefail
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
-            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
-            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
-            -e '/requirement = {/,/};/d' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
             {} +
           git diff
           cat ios-swiftui/SherpaOnnx2Pass/SherpaOnnx2Pass.xcodeproj/project.pbxproj
@@ -155,9 +151,7 @@ jobs:
         run: |
           set -euo pipefail
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
-            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
-            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
-            -e '/requirement = {/,/};/d' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
             {} +
           git diff
           cat ios-swiftui/SherpaOnnxLangID/SherpaOnnxLangID.xcodeproj/project.pbxproj
@@ -213,9 +207,7 @@ jobs:
         run: |
           set -euo pipefail
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
-            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
-            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
-            -e '/requirement = {/,/};/d' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
             {} +
           git diff
           cat ios-swiftui/SherpaOnnxSubtitle/SherpaOnnxSubtitle.xcodeproj/project.pbxproj
@@ -271,20 +263,18 @@ jobs:
         run: |
           set -euo pipefail
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
-            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
-            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
-            -e '/requirement = {/,/};/d' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
             {} +
           git diff
-          cat ios-swiftui/SherpaOnnxTts/SherpaOnnxTts.xcodeproj/project.pbxproj
+          cat ios-swiftui/SherpaOnnxTtsLexicon/SherpaOnnxTtsLexicon.xcodeproj/project.pbxproj
 
-      - name: Build SherpaOnnxTts (local)
+      - name: Build SherpaOnnxTtsLexicon (local)
         shell: bash
         run: |
           set -euo pipefail
-          cd ios-swiftui/SherpaOnnxTts
-          xcodebuild -project SherpaOnnxTts.xcodeproj \
-            -scheme SherpaOnnxTts \
+          cd ios-swiftui/SherpaOnnxTtsLexicon
+          xcodebuild -project SherpaOnnxTtsLexicon.xcodeproj \
+            -scheme SherpaOnnxTtsLexicon \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             build
@@ -301,13 +291,69 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Build SherpaOnnxTts
+      - name: Build SherpaOnnxTtsLexicon
         shell: bash
         run: |
           set -euo pipefail
-          cd ios-swiftui/SherpaOnnxTts
-          xcodebuild -project SherpaOnnxTts.xcodeproj \
-            -scheme SherpaOnnxTts \
+          cd ios-swiftui/SherpaOnnxTtsLexicon
+          xcodebuild -project SherpaOnnxTtsLexicon.xcodeproj \
+            -scheme SherpaOnnxTtsLexicon \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+  sherpa-onnx-tts-phonemize-local:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Patch to local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
+            {} +
+          git diff
+          cat ios-swiftui/SherpaOnnxTtsPhonemize/SherpaOnnxTtsPhonemize.xcodeproj/project.pbxproj
+
+      - name: Build SherpaOnnxTtsPhonemize (local)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swiftui/SherpaOnnxTtsPhonemize
+          xcodebuild -project SherpaOnnxTtsPhonemize.xcodeproj \
+            -scheme SherpaOnnxTtsPhonemize \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            build
+
+  sherpa-onnx-tts-phonemize:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build SherpaOnnxTtsPhonemize
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd ios-swiftui/SherpaOnnxTtsPhonemize
+          xcodebuild -project SherpaOnnxTtsPhonemize.xcodeproj \
+            -scheme SherpaOnnxTtsPhonemize \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             build
@@ -329,9 +375,7 @@ jobs:
         run: |
           set -euo pipefail
           find ios-swiftui ios-swift -name "project.pbxproj" -exec sed -i '' \
-            -e 's|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|' \
-            -e 's|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|' \
-            -e '/requirement = {/,/};/d' \
+            -e '/\/\* XCRemoteSwiftPackageReference "sherpa-onnx" \*\/ = {/,/^\t\t};/{s|isa = XCRemoteSwiftPackageReference|isa = XCLocalSwiftPackageReference|;s|repositoryURL = "https://github.com/k2-fsa/sherpa-onnx"|relativePath = ../../|;/requirement = {/,/};/d;}' \
             {} +
           git diff
           cat ios-swift/SherpaOnnxAsr/SherpaOnnxAsr.xcodeproj/project.pbxproj
