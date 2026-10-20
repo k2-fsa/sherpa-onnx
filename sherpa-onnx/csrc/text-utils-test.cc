@@ -134,6 +134,33 @@ TEST(RemoveInvalidUtf8Sequences, DebugSpaceFollowedByInvalidByte) {
   EXPECT_EQ(output, " ");  // Expect `0xc4` to be removed, leaving only space
 }
 
+TEST(SplitUtf8, TruncatedSequenceAtEndIsSkipped) {
+  // "今天天气很好" without the last byte of "好"
+  std::string text(
+      "\xe4\xbb\x8a\xe5\xa4\xa9\xe5\xa4\xa9"
+      "\xe6\xb0\x94\xe5\xbe\x88\xe5\xa5",
+      17);
+  std::vector<std::string> expected = {"今", "天", "天", "气", "很"};
+  EXPECT_EQ(SplitUtf8(text), expected);
+
+  // The first byte of a 4-byte sequence, and nothing after it
+  std::string text2("0123456789abcdef\xf0", 17);
+  EXPECT_EQ(SplitUtf8(text2), std::vector<std::string>{"0123456789abcdef"});
+}
+
+TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
+  // Whisper byte-level-BPE tokens can split a multi-byte UTF-8 character
+  // across two tokens. Each fragment alone is invalid UTF-8 and is
+  // stripped; the character only survives when the fragments are joined
+  // first. Recognizer implementations must therefore concatenate tokens
+  // before calling this function (see the whisper Convert()).
+  std::string frag1 = "\xd7";  // leading byte of a Hebrew letter
+  std::string frag2 = "\xa8";  // continuation byte (frag1+frag2 is a letter)
+  EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1), "");
+  EXPECT_EQ(RemoveInvalidUtf8Sequences(frag2), "");
+  EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
+}
+
 TEST(SplitByAllPunctuation, English) {
   auto result = SplitByAllPunctuation("Hello, world. How are you?");
   ASSERT_EQ(result.size(), 3u);
