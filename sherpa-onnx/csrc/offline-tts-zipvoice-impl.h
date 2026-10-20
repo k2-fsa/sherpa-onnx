@@ -685,6 +685,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         model_->Run(std::move(tokens_tensor), std::move(prompt_tokens_tensor),
                     std::move(prompt_features_tensor), speed, num_steps,
                     t_shift, guidance_scale);
+    if (!mel) {
+      return {};
+    }
 
     // Assume mel_shape = {1, T, C}
     std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
