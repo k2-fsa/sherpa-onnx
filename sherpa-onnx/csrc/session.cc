@@ -420,12 +420,11 @@ Ort::SessionOptions GetSessionOptionsImpl(
         // On the intentional TensorRT-to-CUDA fallthrough the config keys
         // are meant for TensorRT; forwarding them would make ORT reject
         // unknown options and lose the GPU fallback entirely.
-        static const std::unordered_map<std::string, std::string>
-            kNoConfig;
+        const std::unordered_map<std::string, std::string> kNoConfig;
         AppendCudaProviderV2(
             &sess_opts,
             BuildCudaProviderOptions(
-                p == Provider::kCUDA ? config : kNoConfig, device_id,
+                p == Provider::kCUDA ? std::move(config) : kNoConfig, device_id,
                 algo_search),
             os.str());
 #else
