@@ -262,9 +262,11 @@ class OfflineStream::Impl {
       p += feature_dim;
     }
 
-    if (!config_.nemo_normalize_type.empty()) {
-      // use_log_fbank is false for NeMo models; apply NeMo's additive
-      // log-zero guard, log(x + 2**-24), to the raw mel energies
+    if (!config_.is_mfcc && !config_.nemo_normalize_type.empty()) {
+      // use_log_fbank is false for NeMo fbank models; apply NeMo's additive
+      // log-zero guard, log(x + 2**-24), to the raw mel energies.
+      // MFCC features (e.g. TeleSpeech) are already in the log domain and may
+      // be negative, so they must not go through this guard.
       for (float &v : features) {
         v = std::log(v + 5.9604644775390625e-08f);
       }
