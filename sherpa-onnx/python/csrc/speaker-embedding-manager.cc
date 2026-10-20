@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/python/csrc/speaker-embedding-manager.h"
 
+#include <cstddef>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -15,7 +16,7 @@ namespace sherpa_onnx {
 // The C++ methods read exactly Dim() floats from the pointer they are given.
 static void CheckDim(const SpeakerEmbeddingManager &self,
                      const std::vector<float> &v) {
-  if (static_cast<int32_t>(v.size()) != self.Dim()) {
+  if (v.size() != static_cast<std::size_t>(self.Dim())) {
     std::ostringstream os;
     os << "Expected an embedding of dimension " << self.Dim()
        << ". Given: " << v.size();
