@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - win-arm64-node
     paths:
       - '.github/workflows/test-nodejs-addon-npm.yaml'
       - '.github/scripts/test-nodejs-addon-npm.sh'
@@ -70,17 +69,6 @@ jobs:
           echo "dir: $d"
           cd $d
           npm install --verbose
-
-          # sherpa-onnx-node and piper-phonemize-node do not list their
-          # win-arm64 packages in optionalDependencies yet, so npm install
-          # would not fetch them on Windows arm64 and the addons would fail
-          # to load. Install them explicitly; the win/arm64 branches in
-          # addon-static-import.js resolve them via
-          # ../<pkg>-win-arm64/<pkg>.node.
-          if [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
-            npm install --no-save sherpa-onnx-win-arm64 piper-phonemize-win-arm64
-            ls -lh node_modules | grep -E "sherpa-onnx|piper"
-          fi
 
           git status
           ls -lh

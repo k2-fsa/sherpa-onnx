@@ -14,10 +14,10 @@ Choose exactly one of the two text frontends below (not both):
 
   ```bash
   cd sherpa-onnx/wasm/tts
-  wget -q https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.8-wasm-browser.zip
-  unzip -q piper-phonemize-v1.5.8-wasm-browser.zip
+  wget -q https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.9-wasm-browser.zip
+  unzip -q piper-phonemize-v1.5.9-wasm-browser.zip
   mv browser piper-phonemize
-  rm piper-phonemize-v1.5.8-wasm-browser.zip
+  rm piper-phonemize-v1.5.9-wasm-browser.zip
   ```
 
 - **option 2: lexicon** — set `usePhonemize = false` in
