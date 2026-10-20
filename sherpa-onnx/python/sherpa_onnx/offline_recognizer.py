@@ -379,6 +379,23 @@ class OfflineRecognizer(object):
         """
         Create an offline recognizer for FunASR-nano models.
 
+        Set per-utterance overrides before decoding with
+        ``stream.set_option("hotwords", "Sherpa,FunASR")``,
+        ``stream.set_option("language", "中文")``,
+        ``stream.set_option("itn", "0")``, or
+        ``stream.set_option("user_prompt", "前文：...\\n语音转写：")``.
+        Unset options use the recognizer defaults. Explicit empty hotwords,
+        language, and user_prompt strings clear the corresponding defaults.
+        For itn, "0" disables and any nonzero integer enables ITN (normally
+        use "1"); empty, unparsable, or out-of-range values use the recognizer
+        default. Options affect only their own stream.
+
+        A nonempty user_prompt is used verbatim only when hotwords and language
+        are empty and itn is enabled; otherwise the standard prompt is built
+        from hotwords, language, and itn. An empty user_prompt uses the standard
+        transcription prompt. To supply custom context, clear any configured
+        hotwords/language and set itn to "1" on that stream first.
+
         Args:
           encoder_adaptor:
             Path to ``encoder_adaptor.onnx``.
@@ -958,6 +975,8 @@ class OfflineRecognizer(object):
         hr_dict_dir: str = "",
         hr_rule_fsts: str = "",
         hr_lexicon: str = "",
+        ctc_graph: str = "",
+        ctc_max_active: int = 3000,
     ):
         """
         Please refer to
@@ -992,6 +1011,13 @@ class OfflineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
+          ctc_graph:
+            If not empty, it specifies the decoding graph (H.fst, HL.fst or
+            HLG.fst) for CTC+FST decoding. It is used together with the CTC
+            model.
+          ctc_max_active:
+            Used only when ctc_graph is not empty. It specifies the maximum
+            number of active tokens during CTC+FST decoding. 0 means 3000.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -1017,6 +1043,10 @@ class OfflineRecognizer(object):
                 dict_dir=hr_dict_dir,
                 lexicon=hr_lexicon,
                 rule_fsts=hr_rule_fsts,
+            ),
+            ctc_fst_decoder_config=OfflineCtcFstDecoderConfig(
+                graph=ctc_graph,
+                max_active=ctc_max_active,
             ),
         )
         self.recognizer = _Recognizer(recognizer_config)

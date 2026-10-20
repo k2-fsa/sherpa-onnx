@@ -3,15 +3,6 @@ name: test-nodejs-npm
 on:
   workflow_dispatch:
 
-  schedule:
-    # minute (0-59)
-    # hour (0-23)
-    # day of the month (1-31)
-    # month (1-12)
-    # day of the week (0-6)
-    # nightly build at 23:50 UTC time every day
-    - cron: "50 23 * * *"
-
 concurrency:
   group: test-nodejs-npm-${{ github.ref }}
   cancel-in-progress: true
@@ -63,3 +54,10 @@ jobs:
 
           export d=nodejs-examples
           ./.github/scripts/test-nodejs-npm.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
+          # all TTS outputs: *-lexicon.wav, *-phonemize.wav, plus the
+          # own-frontend models (test-pocket-en.wav, test-supertonic-*.wav)
+          path: nodejs-examples/test-*.wav
+          if-no-files-found: warn

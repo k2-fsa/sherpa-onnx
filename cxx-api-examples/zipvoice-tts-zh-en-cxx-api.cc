@@ -15,6 +15,8 @@ rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 ./zipvoice-tts-zh-en-cxx-api
 */
 // clang-format on
@@ -42,10 +44,9 @@ int32_t main(int32_t argc, char *argv[]) {
       "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx";
   config.model.zipvoice.decoder =
       "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx";
-  config.model.zipvoice.data_dir =
-      "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data";
   config.model.zipvoice.lexicon =
-      "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt";
+      "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt,"
+      "./lexicon-en-us.txt";
   config.model.zipvoice.tokens =
       "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt";
   config.model.zipvoice.vocoder = "./vocos_24khz.onnx";

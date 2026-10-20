@@ -9,13 +9,10 @@
 #include <cassert>
 #include <cctype>
 #include <charconv>
-#include <cinttypes>
-#include <climits>
 #include <cstdint>
 #include <cstdlib>
 #include <cwctype>
 #include <limits>
-#include <locale>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -33,6 +30,49 @@
 // https://github.com/kaldi-asr/kaldi/blob/master/src/util/text-utils.cc
 
 namespace sherpa_onnx {
+
+std::string QuoteJsonString(const std::string &text) {
+  constexpr char hex[] = "0123456789abcdef";
+  std::string ans;
+  ans.reserve(text.size() + 2);
+  ans.push_back('"');
+  for (unsigned char c : text) {
+    switch (c) {
+      case '"':
+        ans += "\\\"";
+        break;
+      case '\\':
+        ans += "\\\\";
+        break;
+      case '\b':
+        ans += "\\b";
+        break;
+      case '\f':
+        ans += "\\f";
+        break;
+      case '\n':
+        ans += "\\n";
+        break;
+      case '\r':
+        ans += "\\r";
+        break;
+      case '\t':
+        ans += "\\t";
+        break;
+      default:
+        if (c < 0x20) {
+          ans += "\\u00";
+          ans.push_back(hex[c >> 4]);
+          ans.push_back(hex[c & 0xf]);
+        } else {
+          ans.push_back(static_cast<char>(c));
+        }
+        break;
+    }
+  }
+  ans.push_back('"');
+  return ans;
+}
 
 // copied from kaldi/src/util/text-util.cc
 template <class T>
@@ -412,7 +452,7 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
       // this is an ascii
       ans.emplace_back(reinterpret_cast<const char *>(start), 1);
       ++start;
-    } else if (2 <= num_bytes && num_bytes <= 4) {
+    } else if (2 <= num_bytes && num_bytes <= 4 && num_bytes <= end - start) {
       ans.emplace_back(reinterpret_cast<const char *>(start), num_bytes);
       start += num_bytes;
     } else {
@@ -1127,6 +1167,14 @@ std::string RemoveLeadingSpaces(const std::string &text) {
   return text.substr(start);
 }
 
+std::string RemoveLeadingPunct(const std::string &text) {
+  std::u32string utf32 = Utf8ToUtf32(text);
+  if (utf32.empty() || !IsPunct(utf32[0])) {
+    return text;
+  }
+  return Utf32ToUtf8(utf32.substr(1));
+}
+
 std::string GetWord(const std::vector<std::string> &words, int32_t start,
                     int32_t end) {
   std::string ans;
@@ -1214,7 +1262,8 @@ void LengthsToMask(const std::vector<int64_t> &lengths,
   const int bsz = static_cast<int>(lengths.size());
   const int64_t max_len = *std::max_element(lengths.begin(), lengths.end());
   if (max_len < 0) {
-    SHERPA_ONNX_LOGE("LengthsToMask: max_len (%" PRId64 ") < 0", max_len);
+    SHERPA_ONNX_LOGE("LengthsToMask: max_len (%d) < 0",
+                     static_cast<int32_t>(max_len));
     SHERPA_ONNX_EXIT(-1);
   }
 
@@ -1305,8 +1354,12 @@ bool NeedSpaceBetween(const std::string &left, const std::string &right) {
     return false;
   }
 
-  if (IsCJK(last) || IsCJK(first) || IsChunkBoundary(last) ||
-      IsChunkBoundary(first)) {
+  // Add space between punctuation and a following letter (e.g., "world")
+  if (IsChunkBoundary(last) && !IsChunkBoundary(first) && !IsSpace(first)) {
+    return true;
+  }
+
+  if (IsCJK(last) || IsCJK(first)) {
     return false;
   }
 
@@ -1326,6 +1379,24 @@ std::vector<std::string> SplitByPunctuation(const std::string &text) {
   for (char32_t c : Utf8ToUtf32(text)) {
     cur.push_back(c);
     if (IsSentenceBoundary(c)) {
+      flush();
+    }
+  }
+  flush();
+  return sentences;
+}
+
+std::vector<std::string> SplitByAllPunctuation(const std::string &text) {
+  std::vector<std::string> sentences;
+  std::u32string cur;
+  auto flush = [&]() {
+    std::string s = Trim(Utf32ToUtf8(cur));
+    if (!s.empty()) sentences.emplace_back(std::move(s));
+    cur.clear();
+  };
+  for (char32_t c : Utf8ToUtf32(text)) {
+    cur.push_back(c);
+    if (IsChunkBoundary(c)) {
       flush();
     }
   }
@@ -1463,6 +1534,212 @@ std::vector<std::string> ChunkText(const std::string &text, size_t max_len) {
   flush();
   if (chunks.empty()) chunks.emplace_back(std::move(text_single));
   return chunks;
+}
+
+int32_t CountWords(const std::string &text) {
+  std::u32string u32 = Utf8ToUtf32(text);
+  int32_t count = 0;
+  bool in_word = false;
+
+  for (char32_t c : u32) {
+    if (IsCJK(c) || IsSentenceBoundary(c)) {
+      // Each CJK character or sentence-ending punctuation is a word
+      count++;
+      in_word = false;
+    } else if (IsSpace(c) || c == U',' || c == U';' || c == U':' ||
+               c == U'，' || c == U'；' || c == U'：') {
+      // Word boundary
+      in_word = false;
+    } else {
+      if (!in_word) {
+        count++;
+        in_word = true;
+      }
+    }
+  }
+
+  return count;
+}
+
+std::vector<std::string> MergeShortSentencesByWords(
+    const std::vector<std::string> &sentences, size_t min_words) {
+  std::vector<std::string> merged;
+  std::string buffer;
+
+  for (const auto &s : sentences) {
+    std::string piece = Trim(s);
+    if (piece.empty()) continue;
+
+    // Don't add space between pieces — preserve original spacing.
+    // SplitByAllPunctuation strips trailing space from each piece,
+    // so punctuation runs directly into the next text (correct for CJK).
+    buffer += piece;
+
+    if (static_cast<size_t>(CountWords(buffer)) >= min_words) {
+      merged.push_back(Trim(buffer));
+      buffer.clear();
+    }
+  }
+
+  if (!buffer.empty()) {
+    merged.push_back(Trim(buffer));
+  }
+
+  return merged;
+}
+
+std::vector<std::string> SplitLongSentenceByWords(const std::string &sentence,
+                                                  size_t max_words) {
+  std::vector<std::string> chunks;
+  if (max_words == 0) return chunks;
+  std::string s = Trim(sentence);
+  if (s.empty()) return chunks;
+
+  std::u32string u32 = Utf8ToUtf32(s);
+  size_t start = 0;
+  const size_t len = u32.size();
+
+  while (start < len) {
+    // Count words from start
+    int32_t word_count = 0;
+    bool in_word = false;
+    size_t end = start;
+
+    for (size_t i = start; i < len; ++i) {
+      char32_t c = u32[i];
+      if (IsCJK(c) || IsSentenceBoundary(c)) {
+        word_count++;
+        in_word = false;
+      } else if (IsSpace(c) || c == U',' || c == U';' || c == U':' ||
+                 c == U'，' || c == U'；' || c == U'：') {
+        in_word = false;
+      } else {
+        if (!in_word) {
+          word_count++;
+          in_word = true;
+        }
+      }
+
+      if (static_cast<size_t>(word_count) > max_words) {
+        break;
+      }
+      end = i + 1;
+    }
+
+    if (end >= len) {
+      std::string piece = Trim(Utf32ToUtf8(u32.substr(start)));
+      if (!piece.empty()) chunks.emplace_back(std::move(piece));
+      break;
+    }
+
+    // Try to split at punctuation or space boundary
+    size_t split_pos = end;
+    bool found = false;
+    for (size_t i = end; i > start; --i) {
+      char32_t c = u32[i - 1];
+      if (IsSpace(c)) {
+        split_pos = i - 1;
+        found = true;
+        break;
+      }
+      if (IsChunkBoundary(c)) {
+        split_pos = i;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found || split_pos <= start) {
+      // Force split at end. The `split_pos <= start` case happens when the
+      // only boundary found is the separator we started on; splitting there
+      // would not advance `start` and the loop below would never terminate.
+      split_pos = end;
+    }
+
+    std::string piece = Trim(Utf32ToUtf8(u32.substr(start, split_pos - start)));
+    if (!piece.empty()) chunks.emplace_back(std::move(piece));
+
+    start = split_pos;
+    while (start < len && IsSpace(u32[start])) {
+      ++start;
+    }
+  }
+
+  return chunks;
+}
+
+std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
+                                           int32_t *max_phrase_len_out) {
+  std::vector<LexiconEntry> entries;
+  int32_t max_phrase_len = 0;
+
+  std::string line;
+  while (std::getline(is, line)) {
+    if (line.empty() || line[0] == '#') continue;
+
+    std::string key;
+    std::vector<std::string> phonemes;
+
+    auto pos = line.find("||");
+    if (pos != std::string::npos) {
+      // New-format: word || phone1 phone2 ...
+      key = ToLowerCase(Trim(line.substr(0, pos)));
+      std::istringstream pss(Trim(line.substr(pos + 2)));
+      std::string phone;
+      while (pss >> phone) {
+        phonemes.push_back(std::move(phone));
+      }
+    } else {
+      // Old-format: word phone1 phone2 ...
+      std::istringstream iss(line);
+      std::string word;
+      iss >> word;
+      if (word.empty()) continue;
+      key = ToLowerCase(word);
+      std::string phone;
+      while (iss >> phone) {
+        phonemes.push_back(std::move(phone));
+      }
+    }
+
+    if (key.empty() || phonemes.empty()) continue;
+
+    int32_t word_count = static_cast<int32_t>(Utf8ToUtf32(key).size());
+    if (word_count > max_phrase_len) {
+      max_phrase_len = word_count;
+    }
+
+    // Split multi-codepoint phonemes into individual characters,
+    // but only if the last codepoint is NOT a digit (0-9) or letter (a-z).
+    // Pinyin tokens like "ao3", "zhong1", "de" end with digit/letter → keep.
+    // IPA phonemes like "dˈ", "oʊ", "ɑː" end with non-alphanumeric → split.
+    std::vector<std::string> split_phonemes;
+    for (const auto &p : phonemes) {
+      std::u32string u32 = Utf8ToUtf32(p);
+      bool keep = u32.size() <= 1;
+      if (!keep) {
+        char32_t last = u32.back();
+        keep = (last >= U'0' && last <= U'9') ||
+               (last >= U'a' && last <= U'z') ||
+               (last >= U'A' && last <= U'Z');
+      }
+      if (keep) {
+        split_phonemes.push_back(p);
+      } else {
+        for (char32_t cp : u32) {
+          split_phonemes.push_back(Utf32ToUtf8(std::u32string(1, cp)));
+        }
+      }
+    }
+
+    entries.push_back({std::move(key), std::move(split_phonemes)});
+  }
+
+  if (max_phrase_len_out) {
+    *max_phrase_len_out = max_phrase_len;
+  }
+
+  return entries;
 }
 
 }  // namespace sherpa_onnx

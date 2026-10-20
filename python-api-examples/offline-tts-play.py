@@ -16,10 +16,12 @@ Example (1/8)
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xf vits-piper-en_US-amy-low.tar.bz2
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 python3 ./python-api-examples/offline-tts-play.py \
  --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
  --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
- --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
+ --vits-lexicon=./lexicon-en-us.txt \
  --output-filename=./generated.wav \
  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
@@ -77,11 +79,13 @@ rm matcha-icefall-en_US-ljspeech.tar.bz2
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 python3 ./python-api-examples/offline-tts-play.py \
   --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
-  --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
+  --matcha-lexicon=./lexicon-en-us.txt \
   --output-filename=./test-matcha-ljspeech-en.wav \
   --num-threads=2 \
  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
@@ -94,12 +98,14 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/k
 tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 python3 ./python-api-examples/offline-tts.py \
   --debug=1 \
   --kokoro-model=./kokoro-en-v0_19/model.onnx \
   --kokoro-voices=./kokoro-en-v0_19/voices.bin \
   --kokoro-tokens=./kokoro-en-v0_19/tokens.txt \
-  --kokoro-data-dir=./kokoro-en-v0_19/espeak-ng-data \
+  --kokoro-lexicon=./lexicon-en-us.txt \
   --num-threads=2 \
   --sid=10 \
   --output-filename="./kokoro-10.wav" \
@@ -118,7 +124,6 @@ python3 ./python-api-examples/offline-tts-play.py \
   --kokoro-model=./kokoro-multi-lang-v1_0/model.onnx \
   --kokoro-voices=./kokoro-multi-lang-v1_0/voices.bin \
   --kokoro-tokens=./kokoro-multi-lang-v1_0/tokens.txt \
-  --kokoro-data-dir=./kokoro-multi-lang-v1_0/espeak-ng-data \
   --kokoro-lexicon=./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt \
   --num-threads=2 \
   --sid=18 \
@@ -131,12 +136,14 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/k
 tar xf kitten-nano-en-v0_1-fp16.tar.bz2
 rm kitten-nano-en-v0_1-fp16.tar.bz2
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 python3 ./python-api-examples/offline-tts-play.py \
   --debug=1 \
   --kitten-model=./kitten-nano-en-v0_1-fp16/model.fp16.onnx \
   --kitten-voices=./kitten-nano-en-v0_1-fp16/voices.bin \
   --kitten-tokens=./kitten-nano-en-v0_1-fp16/tokens.txt \
-  --kitten-data-dir=./kitten-nano-en-v0_1-fp16/espeak-ng-data \
+  --kitten-lexicon=./lexicon-en-us.txt \
   --num-threads=2 \
   --sid=0 \
   --output-filename="./kitten-0.wav" \
@@ -194,13 +201,6 @@ def add_vits_args(parser):
         help="Path to tokens.txt",
     )
 
-    parser.add_argument(
-        "--vits-data-dir",
-        type=str,
-        default="",
-        help="""Path to the dict directory of espeak-ng. If it is specified,
-        --vits-lexicon and --vits-tokens are ignored""",
-    )
 
 
 def add_matcha_args(parser):
@@ -232,13 +232,6 @@ def add_matcha_args(parser):
         help="Path to tokens.txt for matcha",
     )
 
-    parser.add_argument(
-        "--matcha-data-dir",
-        type=str,
-        default="",
-        help="""Path to the dict directory of espeak-ng. If it is specified,
-        --matcha-lexicon and --matcha-tokens are ignored""",
-    )
 
 
 def add_kokoro_args(parser):
@@ -263,12 +256,6 @@ def add_kokoro_args(parser):
         help="Path to tokens.txt for kokoro",
     )
 
-    parser.add_argument(
-        "--kokoro-data-dir",
-        type=str,
-        default="",
-        help="Path to the dict directory of espeak-ng.",
-    )
 
     parser.add_argument(
         "--kokoro-lexicon",
@@ -301,11 +288,12 @@ def add_kitten_args(parser):
     )
 
     parser.add_argument(
-        "--kitten-data-dir",
+        "--kitten-lexicon",
         type=str,
         default="",
-        help="Path to the dict directory of espeak-ng.",
+        help="Path to lexicon.txt for kitten",
     )
+
 
 
 def get_args():
@@ -503,7 +491,6 @@ def main():
             vits=sherpa_onnx.OfflineTtsVitsModelConfig(
                 model=args.vits_model,
                 lexicon=args.vits_lexicon,
-                data_dir=args.vits_data_dir,
                 tokens=args.vits_tokens,
             ),
             matcha=sherpa_onnx.OfflineTtsMatchaModelConfig(
@@ -511,20 +498,18 @@ def main():
                 vocoder=args.matcha_vocoder,
                 lexicon=args.matcha_lexicon,
                 tokens=args.matcha_tokens,
-                data_dir=args.matcha_data_dir,
             ),
             kokoro=sherpa_onnx.OfflineTtsKokoroModelConfig(
                 model=args.kokoro_model,
                 voices=args.kokoro_voices,
                 tokens=args.kokoro_tokens,
-                data_dir=args.kokoro_data_dir,
                 lexicon=args.kokoro_lexicon,
             ),
             kitten=sherpa_onnx.OfflineTtsKittenModelConfig(
                 model=args.kitten_model,
                 voices=args.kitten_voices,
                 tokens=args.kitten_tokens,
-                data_dir=args.kitten_data_dir,
+                lexicon=args.kitten_lexicon,
             ),
             provider=args.provider,
             debug=args.debug,

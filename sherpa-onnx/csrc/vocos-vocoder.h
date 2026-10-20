@@ -29,6 +29,8 @@ class VocosVocoder : public Vocoder {
    */
   std::vector<float> Run(Ort::Value mel) const override;
 
+  int32_t SampleRate() const override;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

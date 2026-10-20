@@ -59,17 +59,38 @@ Future<Map<String, Uint8List>> loadModelFileBytes() async {
 
   // Collect all model directory names from the config.
   final modelDirs = <String>{};
+  // lexicon is the text frontend; it may hold several files separated by
+  // commas (e.g. "lexicon-us-en.txt,lexicon-zh.txt"), so each entry is
+  // handled on its own.
+  // Note: dataDir is deliberately not consulted - it is deprecated and
+  // ignored since v2.0.0 (espeak-ng is no longer used).
   for (final path in [
-    cfg.model.vits.model, cfg.model.vits.tokens, cfg.model.vits.dataDir,
-    cfg.model.kokoro.model, cfg.model.kokoro.voices, cfg.model.kokoro.tokens,
-    cfg.model.kitten.model, cfg.model.kitten.voices, cfg.model.kitten.tokens,
-    cfg.model.matcha.acousticModel, cfg.model.matcha.vocoder,
-    cfg.model.pocket.lmFlow, cfg.model.pocket.lmMain,
+    cfg.model.vits.model,
+    cfg.model.vits.tokens,
+    cfg.model.vits.lexicon,
+    cfg.model.kokoro.model,
+    cfg.model.kokoro.voices,
+    cfg.model.kokoro.tokens,
+    cfg.model.kokoro.lexicon,
+    cfg.model.kitten.model,
+    cfg.model.kitten.voices,
+    cfg.model.kitten.tokens,
+    cfg.model.kitten.lexicon,
+    cfg.model.matcha.acousticModel,
+    cfg.model.matcha.vocoder,
+    cfg.model.matcha.lexicon,
+    cfg.model.pocket.lmFlow,
+    cfg.model.pocket.lmMain,
     cfg.model.supertonic.durationPredictor,
-    cfg.model.zipvoice.encoder, cfg.model.zipvoice.tokens,
+    cfg.model.zipvoice.encoder,
+    cfg.model.zipvoice.tokens,
+    cfg.model.zipvoice.lexicon,
   ]) {
-    if (path.isNotEmpty) {
-      modelDirs.add(path.split('/').first);
+    for (final entry in path.split(',')) {
+      final p = entry.trim();
+      if (p.isNotEmpty) {
+        modelDirs.add(p.split('/').first);
+      }
     }
   }
 

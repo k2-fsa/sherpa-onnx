@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/run-python-test.yaml'
       - '.github/scripts/test-python.sh'
+      - '.github/scripts/test-python-tts-frontends.sh'
       - '.github/scripts/test-speaker-recognition-python.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -19,6 +20,7 @@ on:
     paths:
       - '.github/workflows/run-python-test.yaml'
       - '.github/scripts/test-python.sh'
+      - '.github/scripts/test-python-tts-frontends.sh'
       - '.github/scripts/test-speaker-recognition-python.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -158,8 +160,13 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin soundfile 
+          python3 -m pip install --upgrade pip numpy pypinyin soundfile
           python3 -m pip install wheel twine setuptools
+          # External phonemizers used by the test-offline-tts-*-phonemize.py
+          # examples. piper_phonemize ships espeak-ng inside the wheel; it is
+          # a pip dependency, not a build dependency of sherpa-onnx.
+          python3 -m pip install --upgrade 'misaki[zh]' kaldifst
+          python3 -m pip install --upgrade piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
 
       - name: Install librosa (Linux/macOS)
         if: runner.os != 'Windows'
@@ -301,6 +308,7 @@ jobs:
           echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
           .github/scripts/test-python.sh
+          .github/scripts/test-python-tts-frontends.sh
           .github/scripts/test-speaker-recognition-python.sh
 
       - name: Test sherpa-onnx (macOS/Windows)
@@ -309,6 +317,7 @@ jobs:
         run: |
           export OS=${{ matrix.os }}
           .github/scripts/test-python.sh
+          .github/scripts/test-python-tts-frontends.sh
           .github/scripts/test-speaker-recognition-python.sh
 
       - uses: actions/upload-artifact@v4

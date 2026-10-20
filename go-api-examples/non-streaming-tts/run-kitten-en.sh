@@ -10,6 +10,10 @@ if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
   rm kitten-nano-en-v0_1-fp16.tar.bz2
 fi
 
+if [ ! -f ./lexicon-en-us.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+fi
+
 go mod tidy
 go build
 
@@ -17,7 +21,7 @@ go build
   --kitten-model=./kitten-nano-en-v0_1-fp16/model.fp16.onnx \
   --kitten-voices=./kitten-nano-en-v0_1-fp16/voices.bin \
   --kitten-tokens=./kitten-nano-en-v0_1-fp16/tokens.txt \
-  --kitten-data-dir=./kitten-nano-en-v0_1-fp16/espeak-ng-data \
+  --kitten-lexicon=./lexicon-en-us.txt \
   --debug=1 \
   --output-filename=./test-kitten-en.wav \
   "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."

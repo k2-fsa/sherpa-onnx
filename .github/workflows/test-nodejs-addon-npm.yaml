@@ -30,8 +30,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-14, ubuntu-latest, ubuntu-22.04, windows-2022]
+        os: [macos-latest, macos-15-intel, ubuntu-latest, ubuntu-22.04, ubuntu-24.04-arm, windows-2022, windows-11-arm]
         node-version: ["16", "17", "18", "19", "21", "22"]
+        exclude:
+          # Node.js has no win-arm64 builds before v19
+          - os: windows-11-arm
+            node-version: "16"
+          - os: windows-11-arm
+            node-version: "17"
+          - os: windows-11-arm
+            node-version: "18"
 
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +69,7 @@ jobs:
           echo "dir: $d"
           cd $d
           npm install --verbose
+
           git status
           ls -lh
           ls -lh node_modules
@@ -75,3 +84,10 @@ jobs:
           cd ../
 
           .github/scripts/test-nodejs-addon-npm.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
+          path: |
+            nodejs-addon-examples/test-*-lexicon.wav
+            nodejs-addon-examples/test-*-phonemize.wav
+          if-no-files-found: warn

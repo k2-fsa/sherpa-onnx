@@ -119,7 +119,6 @@ begin
   Config.Model.Matcha.Vocoder := './vocos-22khz-univ.onnx';
   Config.Model.Matcha.Lexicon := './matcha-icefall-zh-baker/lexicon.txt';
   Config.Model.Matcha.Tokens := './matcha-icefall-zh-baker/tokens.txt';
-  Config.Model.Matcha.DictDir := './matcha-icefall-zh-baker/dict';
   Config.Model.NumThreads := 1;
   Config.Model.Debug := False;
   Config.RuleFsts := './matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst';

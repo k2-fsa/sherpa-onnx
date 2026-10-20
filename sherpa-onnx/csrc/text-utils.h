@@ -24,6 +24,10 @@
 
 namespace sherpa_onnx {
 
+// Return a JSON string literal, including the surrounding quotes. Escape
+// control characters, quotes, and backslashes; preserve UTF-8 bytes unchanged.
+std::string QuoteJsonString(const std::string &text);
+
 /// Converts a string into an integer via strtoll and returns false if there was
 /// any kind of problem (i.e. the string was not an integer or contained extra
 /// non-whitespace junk, or the integer was too large to fit into the type it is
@@ -192,6 +196,9 @@ std::string RemoveSpaceBetweenCjk(const std::string &text);
 
 std::string RemoveLeadingSpaces(const std::string &text);
 
+// If the first character is a punctuation, drop it.
+std::string RemoveLeadingPunct(const std::string &text);
+
 bool StringToBool(const std::string &s);
 
 // end is inclusive
@@ -219,11 +226,39 @@ void LengthsToMask(const std::vector<int64_t> &lengths,
 // TTS text chunking helpers.
 std::vector<std::string> SplitByBlankLines(const std::string &text);
 std::vector<std::string> SplitByPunctuation(const std::string &text);
+// Split text at all punctuation boundaries: sentence-ending (.!?) and
+// mid-sentence (,;: and their Chinese equivalents).
+std::vector<std::string> SplitByAllPunctuation(const std::string &text);
 std::vector<std::string> MergeShortSentences(
     const std::vector<std::string> &sentences, size_t min_chars);
 std::vector<std::string> SplitLongSentence(const std::string &sentence,
                                            size_t max_chars);
 std::vector<std::string> ChunkText(const std::string &text, size_t max_len);
+
+// Count words in text. Each CJK character counts as one word.
+// English words are sequences of non-CJK, non-space, non-punctuation chars.
+int32_t CountWords(const std::string &text);
+
+// Word-based versions of MergeShortSentences and SplitLongSentence.
+// min_words/max_words are word counts (not codepoint counts).
+// Each CJK character is one word; English words are space-separated.
+std::vector<std::string> MergeShortSentencesByWords(
+    const std::vector<std::string> &sentences, size_t min_words);
+std::vector<std::string> SplitLongSentenceByWords(const std::string &sentence,
+                                                  size_t max_words);
+
+// A single lexicon entry: word (lowercased) and its phonemes as strings.
+struct LexiconEntry {
+  std::string key;                    // lowercased word/phrase
+  std::vector<std::string> phonemes;  // phoneme strings (IPA or token names)
+};
+
+// Parse a lexicon file. Supports both formats:
+//   - New-format (||): word1 word2 || phone1 phone2 phone3 ...
+//   - Old-format (space): word phone1 phone2 ...
+// Returns all entries and the max phrase length (in words/tokens).
+std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
+                                           int32_t *max_phrase_len_out);
 
 }  // namespace sherpa_onnx
 

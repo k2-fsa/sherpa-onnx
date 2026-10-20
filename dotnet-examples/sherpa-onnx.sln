@@ -9,9 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-decode-files", "off
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "speech-recognition-from-microphone", "speech-recognition-from-microphone\speech-recognition-from-microphone.csproj", "{FE4EA1FF-062A-46B3-B78D-C828FED7B82E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-tts", "offline-tts\offline-tts.csproj", "{72196886-7143-4043-96E2-BCACEC6C79EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-tts-lexicon", "offline-tts-lexicon\offline-tts-lexicon.csproj", "{72196886-7143-4043-96E2-BCACEC6C79EB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-tts-play", "offline-tts-play\offline-tts-play.csproj", "{40781464-5948-462B-BA4B-98932711513F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-tts-play-lexicon", "offline-tts-play-lexicon\offline-tts-play-lexicon.csproj", "{40781464-5948-462B-BA4B-98932711513F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "spoken-language-identification", "spoken-language-identification\spoken-language-identification.csproj", "{3D7CF3D6-AC45-4D50-9619-5687B1443E94}"
 EndProject
@@ -31,9 +31,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "keyword-spotting-from-micro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-speaker-diarization", "offline-speaker-diarization\offline-speaker-diarization.csproj", "{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts", "kokoro-tts\kokoro-tts.csproj", "{9C0ABE6C-1F54-42B5-804E-C3FED6668F52}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts-lexicon", "kokoro-tts-lexicon\kokoro-tts-lexicon.csproj", "{9C0ABE6C-1F54-42B5-804E-C3FED6668F52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts-play", "kokoro-tts-play\kokoro-tts-play.csproj", "{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts-play-lexicon", "kokoro-tts-play-lexicon\kokoro-tts-play-lexicon.csproj", "{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-enhancement-gtcrn", "speech-enhancement-gtcrn\speech-enhancement-gtcrn.csproj", "{DF2569C6-6011-4716-9538-F9E9069E00EB}"
 EndProject
@@ -43,9 +43,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "version-test", "version-tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-canary-decode-files", "non-streaming-canary-decode-files\non-streaming-canary-decode-files.csproj", "{925779DB-4429-4366-87C3-B14DD44AE1D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kitten-tts", "kitten-tts\kitten-tts.csproj", "{E5AB574B-9E31-45D4-9B75-1C1892241E41}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kitten-tts-lexicon", "kitten-tts-lexicon\kitten-tts-lexicon.csproj", "{E5AB574B-9E31-45D4-9B75-1C1892241E41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kitten-tts-play", "kitten-tts-play\kitten-tts-play.csproj", "{D60A8A84-D6D3-4B79-A18A-1817BEBD35B9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kitten-tts-play-lexicon", "kitten-tts-play-lexicon\kitten-tts-play-lexicon.csproj", "{D60A8A84-D6D3-4B79-A18A-1817BEBD35B9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-audio-tagging", "offline-audio-tagging\offline-audio-tagging.csproj", "{0EBE2CE5-8940-4472-8A38-6A0E976E678F}"
 EndProject
@@ -65,9 +65,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancemen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-dpdfnet", "streaming-speech-enhancement-dpdfnet\streaming-speech-enhancement-dpdfnet.csproj", "{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zipvoice-tts", "zipvoice-tts\zipvoice-tts.csproj", "{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zipvoice-tts-lexicon", "zipvoice-tts-lexicon\zipvoice-tts-lexicon.csproj", "{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zipvoice-tts-play", "zipvoice-tts-play\zipvoice-tts-play.csproj", "{84A37E18-095E-42A6-93CC-C27CD90B8478}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zipvoice-tts-play-lexicon", "zipvoice-tts-play-lexicon\zipvoice-tts-play-lexicon.csproj", "{84A37E18-095E-42A6-93CC-C27CD90B8478}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "online-punctuation", "online-punctuation\online-punctuation.csproj", "{210F6E27-E7FC-4185-BE4B-9F6703ECDA29}"
 EndProject
@@ -81,12 +81,33 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vad-non-streaming-qwen3-asr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-cohere-transcribe-decode-files", "non-streaming-cohere-transcribe-decode-files\non-streaming-cohere-transcribe-decode-files.csproj", "{32B1BF23-74BB-46BB-BBDD-EC9C79A69448}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-tts-phonemize", "offline-tts-phonemize\offline-tts-phonemize.csproj", "{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}"
+EndProject
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kitten-tts-phonemize", "kitten-tts-phonemize\kitten-tts-phonemize.csproj", "{1DC1A4A8-9AC6-4057-9A5D-954D2F81672C}"
+EndProject
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts-phonemize", "kokoro-tts-phonemize\kokoro-tts-phonemize.csproj", "{E5B2E5FB-4043-4BF3-9B05-CB67DB149BE8}"
+EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DC1A4A8-9AC6-4057-9A5D-954D2F81672C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DC1A4A8-9AC6-4057-9A5D-954D2F81672C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DC1A4A8-9AC6-4057-9A5D-954D2F81672C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DC1A4A8-9AC6-4057-9A5D-954D2F81672C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5B2E5FB-4043-4BF3-9B05-CB67DB149BE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5B2E5FB-4043-4BF3-9B05-CB67DB149BE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5B2E5FB-4043-4BF3-9B05-CB67DB149BE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5B2E5FB-4043-4BF3-9B05-CB67DB149BE8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{45307474-BECB-4ABE-9388-D01D55A1A9BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{45307474-BECB-4ABE-9388-D01D55A1A9BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45307474-BECB-4ABE-9388-D01D55A1A9BE}.Release|Any CPU.ActiveCfg = Release|Any CPU

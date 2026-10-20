@@ -90,6 +90,49 @@ cd ..
 
 Then edit `lib/model_config.dart` and set `const int selectedModelIndex = 2;`.
 
+**Alternative: Qwen3 ASR 0.6B (multilingual)**
+
+To use Qwen3 ASR, download the model and change `selectedModelIndex` to `6`
+in `lib/model_config.dart`. Note: the tokenizer requires three files
+(`vocab.json`, `merges.txt`, `tokenizer_config.json`), not a single
+`tokenizer.json`:
+
+```bash
+cd flutter-examples/vad-non-streaming-asr-from-microphone/assets
+rm -f .gitkeep
+
+# VAD model
+curl -SL -o silero_vad.onnx https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+# ASR model (Qwen3 ASR 0.6B)
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+# Remove files not required by the app
+cd sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+rm -rf test_wavs README.md
+cd ..
+
+cd ..
+./generate-asset-list.py
+```
+
+After downloading, the model directory should contain:
+
+```
+assets/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/
+├── conv_frontend.onnx
+├── decoder.int8.onnx
+├── encoder.int8.onnx
+└── tokenizer/
+    ├── merges.txt
+    ├── tokenizer_config.json
+    └── vocab.json
+```
+
+Then edit `lib/model_config.dart` and set `const int selectedModelIndex = 6;`.
+
 Note: `generate-asset-list.py` is a symlink to `../tts/generate-asset-list.py`.
 
 ### 2. Build the APP

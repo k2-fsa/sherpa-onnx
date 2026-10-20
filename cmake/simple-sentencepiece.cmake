@@ -1,3 +1,19 @@
+# Write ${content} to ${path} only when it differs from what is on disk.
+# The patches below run on every configure; a plain file(WRITE) would update
+# the header's mtime each time and make/ssentencepiece (plus every dependent
+# in sherpa-onnx-core) would recompile on every build.
+function(write_file_if_different path content)
+  string(SHA256 _want "${content}")
+  if(EXISTS "${path}")
+    file(READ "${path}" _existing)
+    string(SHA256 _have "${_existing}")
+    if(_have STREQUAL _want)
+      return()
+    endif()
+  endif()
+  file(WRITE "${path}" "${content}")
+endfunction()
+
 function(download_simple_sentencepiece)
   include(FetchContent)
 
@@ -47,7 +63,7 @@ function(download_simple_sentencepiece)
   if(SHERPA_ONNX_ENABLE_WASM)
     # Replace threadpool.h with a WASM-safe stub that provides a no-op ThreadPool.
     set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
-    file(WRITE "${_tp_header}" [=[
+    write_file_if_different("${_tp_header}" [=[
 // WASM-safe ThreadPool stub (std::thread not available).
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
@@ -83,7 +99,7 @@ class ThreadPool {
 
     # 1. Replace threadpool.h with an empty stub.
     set(_tp_header "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/threadpool.h")
-    file(WRITE "${_tp_header}" [=[
+    write_file_if_different("${_tp_header}" [=[
 // Empty stub — threading removed for Android/Termux.
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
@@ -99,7 +115,7 @@ class ThreadPool {
     string(REPLACE "pool_ = std::make_unique<ThreadPool>(num_threads);\n    Build(vocab_path);" "Build(vocab_path);" _sph_content "${_sph_content}")
     string(REPLACE "pool_ = std::make_unique<ThreadPool>(num_threads);" "" _sph_content "${_sph_content}")
     string(REPLACE "std::unique_ptr<ThreadPool> pool_;" "" _sph_content "${_sph_content}")
-    file(WRITE "${_sph}" "${_sph_content}")
+    write_file_if_different("${_sph}" "${_sph_content}")
 
     # 3. Patch ssentencepiece.cc: replace threaded Encode/Decode with synchronous loops.
     set(_spc "${simple-sentencepiece_SOURCE_DIR}/ssentencepiece/csrc/ssentencepiece.cc")
@@ -162,7 +178,7 @@ class ThreadPool {
   return res;]==]
       _spc_content "${_spc_content}")
 
-    file(WRITE "${_spc}" "${_spc_content}")
+    write_file_if_different("${_spc}" "${_spc_content}")
 
     message(STATUS "Patched ssentencepiece for Android: all threading removed")
   endif()

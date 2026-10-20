@@ -346,6 +346,10 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 - [NPM package](https://www.npmjs.com/package/@siteed/sherpa-onnx.rn)
 - [Live demo](https://deeeed.github.io/audiolab/sherpa-voice/)
 
+### [SmartVoice](https://github.com/dxhome/SmartVoice)
+
+> SmartVoice is a local speech application for speech recognition and text-to-speech. Its `smartvoice-auto` virtual model matches each request's task and language against an editable routing table, then dynamically routes it to the most suitable installed model. sherpa-onnx powers CPU inference; a web interface and HTTP API are included.
+
 ### [Speed of Sound](https://github.com/zugaldia/speedofsound)
 
 > A voice-typing application for the Linux desktop (GTK4/Adwaita).
@@ -519,7 +523,7 @@ cross-platform Node.js microphone streaming library with prebuilt native binarie
 
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=analytics-in-motion.wake-word)
 - [Open VSX](https://open-vsx.org/extension/analytics-in-motion/wake-word)
-- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/node/integrations/sherpa-onnx-stt.html)
+- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/integrations/stt/sherpa-onnx)
 
 ### [SmartSub](https://github.com/buxuku/SmartSub)
 
@@ -566,6 +570,18 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the app sleeps on idle but keeps the microphone open,
 > and the wake phrase brings the session back with no cloud calls.
 
+### [Suflyor](https://github.com/olerast67/voice-teleprompter-android)
+
+> An Android teleprompter that scrolls the script as you read it aloud. It runs
+> two streaming Zipformer models on the phone (Russian small-ru-vosk int8 and
+> English en-2023-06-26) and boosts the words of the script as hotwords with
+> modified beam search. A floating window shows the text over the camera app
+> while it records video.
+
+- [Download APK](https://github.com/olerast67/voice-teleprompter-android/releases/latest)
+- [Website](https://olerast67.github.io/voice-teleprompter-android/)
+- Android 10+ · no internet permission · GPL-3.0
+
 ### [Recly](https://github.com/rokrokss/recly)
 
 > An open-source recorder for Galaxy Watch, Android, Apple Watch, iPhone, macOS,
@@ -608,6 +624,18 @@ embeddings (`SpeakerEmbeddingExtractor`) help tell the speakers on the call apar
 After the call, Parakeet is the fast engine of the final pass and one of the
 engines of the fused pass. The larger Qwen3-ASR model runs outside sherpa-onnx, on
 llama-server.
+
+### [bot-reborn](https://github.com/beasaltfish/bot-reborn)
+
+> A $4 toy robot driven by an old Android phone, all from one web page in Chrome.
+> sherpa-onnx runs in the page as WebAssembly: Silero VAD decides when someone is
+> actually talking, so only real speech is sent to STT, and an optional keyword
+> spotter (`sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20`) handles the wake word.
+> Both run from one combined build, with the VAD symbols exported from the KWS
+> WebAssembly target.
+
+- [Build write-up](https://agentlenshq.com/maker/four-dollar-robot)
+- [Live page](https://bot-reborn.agentlenshq.com) (Chrome on Android)
 
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad

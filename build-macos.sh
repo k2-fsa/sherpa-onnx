@@ -24,7 +24,6 @@ cmake \
 
 make -j4
 make install
-rm -fv ./install/include/cargs.h
 
 libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-c-api.a \
@@ -35,9 +34,6 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-fst.a \
   ./install/lib/libsherpa-onnx-kaldifst-core.a \
   ./install/lib/libkaldi-decoder-core.a \
-  ./install/lib/libucd.a \
-  ./install/lib/libpiper_phonemize.a \
-  ./install/lib/libespeak-ng.a \
   ./install/lib/libssentencepiece_core.a
 
 # Rename to match the expected library name for linking with -l sherpa-onnx-c-api

@@ -175,16 +175,13 @@ def discover_common_deps(cmake_dir):
     # These cmake files contain platform-independent deps
     dep_files = [
         "asio.cmake",
-        "cargs.cmake",
         "eigen.cmake",
-        "espeak-ng-for-piper.cmake",
         "googletest.cmake",
         "hclust-cpp.cmake",
         "json.cmake",
         "kaldi-decoder.cmake",
         "kaldi-native-fbank.cmake",
         "openfst.cmake",
-        "piper-phonemize.cmake",
         "portaudio.cmake",
         "pybind11.cmake",
         "simple-sentencepiece.cmake",
@@ -414,7 +411,7 @@ def build_canonical_filename_lookup(cmake_dir):
     """Build a mapping from URL basename to canonical local filename.
 
     Scans cmake files for $ENV{HOME}/Downloads/<filename> entries, which
-    define the expected local filenames (e.g., "cargs-1.0.3.tar.gz" even
+    define the expected local filenames (e.g., "asio-1.28.0.tar.gz" even
     when the URL basename is just "v1.0.3.tar.gz").
     """
     lookup = {}
@@ -426,7 +423,7 @@ def build_canonical_filename_lookup(cmake_dir):
         for m in dl_pattern.finditer(text):
             local_name = m.group(1)
             # Also index by stripped version (without project prefix)
-            # so URLs like "v1.0.3.tar.gz" can map to "cargs-1.0.3.tar.gz"
+            # so URLs like "v1.28.0.tar.gz" can map to "asio-1.28.0.tar.gz"
             lookup[local_name] = local_name
     return lookup
 

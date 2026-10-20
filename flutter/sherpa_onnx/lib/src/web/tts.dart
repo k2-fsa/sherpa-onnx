@@ -1,5 +1,6 @@
 // Copyright (c)  2026  Xiaomi Corporation
 // Web implementation of OfflineTTS using dart:js_interop.
+import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
@@ -8,6 +9,13 @@ import '../tts_config.dart';
 import 'init.dart';
 
 export '../tts_config.dart';
+
+/// Parse [source] into a JS value with the host's JSON.parse.
+JSAny _jsonParse(String source) {
+  final json = globalContext.getProperty('JSON'.toJS) as JSObject;
+  final parse = json.getProperty('parse'.toJS) as JSFunction;
+  return parse.callAsFunction(null, source.toJS)!;
+}
 
 /// Offline text-to-speech engine (web implementation).
 class OfflineTts {
@@ -102,6 +110,19 @@ class OfflineTts {
       genConfig['extra'] = extraObj;
     }
 
+    // Pre-phonemized / pre-tokenized input (number[][] and string[][]).
+    // The JS glue validates the shapes (same strict contract as the native
+    // bindings), so just forward them. Built with JSON.parse to stay within
+    // the oldest supported dart:js_interop surface.
+    final codepoints = config.phonemeCodepoints;
+    if (codepoints != null && codepoints.isNotEmpty) {
+      genConfig['phonemeCodepoints'] = _jsonParse(jsonEncode(codepoints));
+    }
+    final tokenSentences = config.tokens;
+    if (tokenSentences != null && tokenSentences.isNotEmpty) {
+      genConfig['tokens'] = _jsonParse(jsonEncode(tokenSentences));
+    }
+
     if (onProgress != null) {
       // Create a JS callback that calls the Dart callback.
       genConfig['callback'] = (JSAny samplesPtr, JSAny n, JSAny progress, JSAny arg) {
@@ -134,6 +155,14 @@ class OfflineTts {
     final handle = ptr as JSObject;
     final val = handle.getProperty('numSpeakers'.toJS);
     return val is JSNumber ? val.toDartInt : 0;
+  }
+
+  /// Return the language/voice of the model, e.g., "en-us".
+  /// Returns an empty string if such information is not available.
+  String get lang {
+    final handle = ptr as JSObject;
+    final val = handle.getProperty('lang'.toJS);
+    return val is JSString ? val.toDart : "";
   }
 
   dynamic ptr;
@@ -183,6 +212,7 @@ JSObject _configToJs(OfflineTtsConfig config) {
   kitten['tokens'] = config.model.kitten.tokens.toJS;
   kitten['dataDir'] = config.model.kitten.dataDir.toJS;
   kitten['lengthScale'] = config.model.kitten.lengthScale.toJS;
+  kitten['lexicon'] = config.model.kitten.lexicon.toJS;
   model['kitten'] = kitten;
 
   final zipvoice = JSObject();
@@ -227,7 +257,7 @@ JSObject _configToJs(OfflineTtsConfig config) {
   jsConfig['offlineTtsModelConfig'] = model;
   jsConfig['ruleFsts'] = config.ruleFsts.toJS;
   jsConfig['ruleFars'] = config.ruleFars.toJS;
-  jsConfig['maxNumSentences'] = config.maxNumSenetences.toJS;
+  jsConfig['maxNumSentences'] = config.maxNumSentences.toJS;
   jsConfig['silenceScale'] = config.silenceScale.toJS;
 
   return jsConfig;

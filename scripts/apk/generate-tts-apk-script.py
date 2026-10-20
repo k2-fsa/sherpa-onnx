@@ -43,7 +43,7 @@ class TtsModel:
     lang2: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     rule_fars: Optional[List[str]] = None
-    data_dir: Optional[str] = None
+    phonemize: bool = False
     dict_dir: Optional[str] = None
     is_char: bool = False
     lang_iso_639_3: str = ""
@@ -78,7 +78,7 @@ def get_coqui_models() -> List[TtsModel]:
     ]
 
     for m in models:
-        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        m.phonemize = True
         m.model_name = "model.onnx"
         m.lang = "en"
 
@@ -134,6 +134,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-de_DE-eva_k-x_low"),
         TtsModel(model_dir="vits-piper-de_DE-karlsson-low"),
         TtsModel(model_dir="vits-piper-de_DE-kerstin-low"),
+        TtsModel(model_dir="vits-piper-de_DE-glados-low"),
         TtsModel(model_dir="vits-piper-de_DE-dii-high"),
         TtsModel(model_dir="vits-piper-de_DE-miro-high"),
         #  TtsModel(model_dir="vits-piper-de_DE-mls-medium"),
@@ -305,10 +306,10 @@ def get_piper_models() -> List[TtsModel]:
         if "zh_CN" in m.model_dir and (
             "xiao_ya" in m.model_dir or "chaowen" in m.model_dir
         ):
-            m.lexicon = f"{m.model_dir}/lexicon.txt"
+            m.lexicon = "lexicon.txt"
             m.rule_fsts = f"{m.model_dir}/phone.fst,{m.model_dir}/date.fst,{m.model_dir}/number.fst"
         else:
-            m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+            m.phonemize = True
 
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
@@ -332,7 +333,7 @@ def get_mimic3_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-mimic3-vi_VN-vais1000_low"),
     ]
     for m in models:
-        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        m.phonemize = True
         m.model_name = m.model_dir[len("vits-mimic3-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
 
@@ -478,7 +479,7 @@ def get_inflect_models() -> List[TtsModel]:
     ]
 
     for m in english_models:
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.phonemize = True
 
     return english_models
 
@@ -511,7 +512,6 @@ def get_matcha_models() -> List[TtsModel]:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts_zh]
         m.rule_fsts = ",".join(s)
         m.vocoder = "vocos-16khz-univ.onnx"
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
 
     english_persian_models = [
         TtsModel(
@@ -531,7 +531,7 @@ def get_matcha_models() -> List[TtsModel]:
         ),
     ]
     for m in english_persian_models:
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.phonemize = True
         m.vocoder = "vocos-22khz-univ.onnx"
 
     return chinese_models + english_persian_models + chinese_english_models
@@ -546,7 +546,7 @@ def get_kokoro_models() -> List[TtsModel]:
         )
     ]
     for m in english_models:
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.phonemize = True
         m.voices = "voices.bin"
 
     multi_lingual_models = [
@@ -579,13 +579,12 @@ def get_kokoro_models() -> List[TtsModel]:
         ),
     ]
     for m in multi_lingual_models:
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
         m.voices = "voices.bin"
         m.lexicon = f"{m.model_dir}/lexicon-us-en.txt,{m.model_dir}/lexicon-zh.txt"
         m.rule_fsts = f"{m.model_dir}/phone-zh.fst,{m.model_dir}/date-zh.fst,{m.model_dir}/number-zh.fst"
 
     for m in arabic_models:
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.phonemize = True
         m.voices = "voices.bin"
 
     return english_models + multi_lingual_models + arabic_models
@@ -630,7 +629,7 @@ def get_kitten_models() -> List[TtsModel]:
         ),
     ]
     for m in kitten_models:
-        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.phonemize = True
         m.voices = "voices.bin"
         m.is_kitten = True
 

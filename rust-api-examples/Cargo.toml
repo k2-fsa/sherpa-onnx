@@ -13,14 +13,43 @@ serde_json = "1.0"
 cpal = { version = "0.16", optional = true } # cross-platform audio I/O
 ctrlc = "3.4"
 
+# External phonemizer used only by the *-phonemize examples. Optional so the
+# lexicon-based examples never build it. Linked statically by default (its
+# own default feature) so the examples run without extra library-path setup;
+# on Android it links shared instead (piper-phonemize-sys forces this, same
+# as sherpa-onnx-sys).
+piper-phonemize = { version = "1.5.9", optional = true }
+
 [features]
 # Default to static linking so users can run examples without setting library paths
 default = ["static"]
 
 # Feature for using microphone
 mic = ["cpal"]
+# Feature for the *-phonemize examples
+phonemize = ["dep:piper-phonemize"]
 static = ["sherpa-onnx/static"]
 shared = ["sherpa-onnx/shared"]
+
+[[example]]
+name = "vits_tts_phonemize"
+required-features = ["phonemize"]
+
+[[example]]
+name = "vits_tts_de_phonemize"
+required-features = ["phonemize"]
+
+[[example]]
+name = "kitten_tts_en_phonemize"
+required-features = ["phonemize"]
+
+[[example]]
+name = "kokoro_tts_en_phonemize"
+required-features = ["phonemize"]
+
+[[example]]
+name = "matcha_tts_en_phonemize"
+required-features = ["phonemize"]
 
 [[example]]
 name = "streaming_zipformer_microphone"
