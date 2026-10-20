@@ -1,9 +1,11 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
+import './init_native.dart';
 import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
@@ -91,6 +93,35 @@ class OfflineRecognizer {
     }
 
     return OfflineRecognizer._(ptr: ptr, config: config);
+  }
+
+  /// Create a recognizer from [config] without blocking the calling isolate.
+  ///
+  /// Loading a model can take seconds. This runs the native create call in a
+  /// short-lived isolate (see [Isolate.run]) and returns a recognizer that is
+  /// used from the calling isolate as usual, including [free].
+  ///
+  /// Throws the same exception as [OfflineRecognizer.new] if the config is
+  /// invalid.
+  static Future<OfflineRecognizer> createAsync(
+    OfflineRecognizerConfig config,
+  ) async {
+    if (SherpaOnnxBindings.createOfflineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    final path = nativeLibraryPath;
+    final address = await Isolate.run(() {
+      // Bindings are per isolate. The library is already loaded in this
+      // process, so this only looks up the symbols again.
+      initNativeBindings(path);
+      return OfflineRecognizer(config).ptr.address;
+    });
+
+    return OfflineRecognizer._(
+      ptr: Pointer.fromAddress(address),
+      config: config,
+    );
   }
 
   /// Replace the runtime configuration.
