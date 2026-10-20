@@ -9,7 +9,7 @@
 # used by the phonemizer is embedded in those jars; it only feeds piper
 # phonemize, not sherpa-onnx.
 
-PIPER_PHONEMIZE_VERSION=v1.5.8
+PIPER_PHONEMIZE_VERSION=v1.5.9
 PIPER_BASE_URL=https://jitpack.io/com/github/csukuangfj/piper-phonemize
 
 # The native jar must match the JVM's architecture, not the shell's: Git
