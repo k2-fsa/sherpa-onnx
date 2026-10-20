@@ -165,6 +165,14 @@ jobs:
 
               echo "----"
               ls -lh install/bin
+
+              if [[ "${{ matrix.build_type }}" == "Release" &&
+                    "${{ matrix.shared_lib }}" == "OFF" &&
+                    "${{ matrix.with_tts }}" == "OFF" ]]; then
+                cmake -DSHERPA_ONNX_ENABLE_TESTS=ON .. &&
+                cmake --build . --target offline-recognizer-funasr-nano-impl-test --parallel 2 &&
+                ctest --output-on-failure --no-tests=error -R "^offline-recognizer-funasr-nano-impl-test$"
+              fi
             '
 
       - name: Display dependencies of sherpa-onnx for linux

@@ -344,6 +344,31 @@ config.model_config.tokens =
 
 Model package: `sherpa-onnx-funasr-nano-int8-2025-12-30`
 
+Before decoding, use SherpaOnnxOfflineStreamSetOption() to override `hotwords`,
+`language`, `itn`, or `user_prompt` for a single stream without reloading the
+model. Unset options use the recognizer configuration. Explicit empty hotwords,
+language, and user_prompt strings clear the corresponding defaults. For `itn`,
+`"0"` disables and any nonzero integer enables ITN (normally use `"1"`); empty,
+unparsable, or out-of-range values fall back to the configured value. These
+options do not change other streams.
+
+@code
+SherpaOnnxOfflineStreamSetOption(stream, "hotwords", "Sherpa,FunASR");
+@endcode
+
+For a custom context prompt, clear any configured hotwords and language and
+enable ITN so that the nonempty `user_prompt` is used verbatim:
+
+@code
+SherpaOnnxOfflineStreamSetOption(stream, "hotwords", "");
+SherpaOnnxOfflineStreamSetOption(stream, "language", "");
+SherpaOnnxOfflineStreamSetOption(stream, "itn", "1");
+SherpaOnnxOfflineStreamSetOption(stream, "user_prompt", "前文：...\n语音转写：");
+@endcode
+
+Otherwise the prompt is built from hotwords, language, and ITN as before.
+An empty `user_prompt` selects the standard transcription prompt.
+
 Example source: [funasr-nano-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/funasr-nano-c-api.c)
 
 @section offline_asr_qwen3 Qwen3-ASR
