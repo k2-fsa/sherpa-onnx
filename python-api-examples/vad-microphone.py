@@ -102,28 +102,28 @@ def main():
                     )
 
                 buffer = np.concatenate([buffer, samples])
-                while len(buffer) > window_size:
+                while len(buffer) >= window_size:
                     vad.accept_waveform(buffer[:window_size])
                     buffer = buffer[window_size:]
 
-                if vad.is_speech_detected() and not printed:
-                    print("Detected speech")
-                    printed = True
+                    if vad.is_speech_detected() and not printed:
+                        print("Detected speech")
+                        printed = True
 
-                if not vad.is_speech_detected():
-                    printed = False
+                    if not vad.is_speech_detected():
+                        printed = False
 
-                while not vad.empty():
-                    samples = vad.front.samples
-                    duration = len(samples) / sample_rate
-                    filename = f"seg-{k}-{duration:.3f}-seconds.wav"
-                    k += 1
-                    sherpa_onnx.write_wave(filename, samples, sample_rate)
-                    print(f"Duration: {duration:.3f} seconds")
-                    print(f"Saved to {filename}")
-                    print("----------")
+                    while not vad.empty():
+                        samples = vad.front.samples
+                        duration = len(samples) / sample_rate
+                        filename = f"seg-{k}-{duration:.3f}-seconds.wav"
+                        k += 1
+                        sherpa_onnx.write_wave(filename, samples, sample_rate)
+                        print(f"Duration: {duration:.3f} seconds")
+                        print(f"Saved to {filename}")
+                        print("----------")
 
-                    vad.pop()
+                        vad.pop()
     except KeyboardInterrupt:
         print("\nCaught Ctrl + C. Exit")
 
