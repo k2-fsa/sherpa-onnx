@@ -1,6 +1,6 @@
 # File description
 
-- [./http_server.py](./http_server.py) It defines which files to server.
+- [./http_server.py](./http_server.py) It defines which files to serve.
   Files are saved in [./web](./web).
 - [non_streaming_server.py](./non_streaming_server.py) WebSocket server for
   non-streaming models.

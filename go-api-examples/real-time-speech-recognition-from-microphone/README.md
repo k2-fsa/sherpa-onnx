@@ -1,6 +1,6 @@
 # Introduction
 
-This examples shows how to use the golang package of [sherpa-onnx][sherpa-onnx]
+This example shows how to use the golang package of [sherpa-onnx][sherpa-onnx]
 for real-time speech recognition from microphone.
 
 It uses <https://github.com/csukuangfj/portaudio-go>

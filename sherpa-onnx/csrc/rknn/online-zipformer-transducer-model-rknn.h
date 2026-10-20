@@ -15,7 +15,7 @@
 namespace sherpa_onnx {
 
 // this is for zipformer v1 and v2, i.e., the folder
-// pruned_transducer_statelss7_streaming
+// pruned_transducer_stateless7_streaming
 // and
 // zipformer
 // from icefall

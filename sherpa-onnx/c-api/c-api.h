@@ -63,7 +63,7 @@
  * - `audio-tagging-c-api.c` for audio tagging
  * - `add-punctuation-c-api.c` and `add-punctuation-online-c-api.c` for
  *   punctuation
- * - `offline-sepaker-diarization-c-api.c` for diarization
+ * - `offline-speaker-diarization-c-api.c` for diarization
  * - `speech-enhancement-gtcrn-c-api.c` and
  *   `online-speech-enhancement-gtcrn-c-api.c` for speech enhancement
  */
@@ -4015,7 +4015,7 @@ typedef struct SherpaOnnxFastClusteringConfig {
 /**
  * @brief Configuration for offline speaker diarization.
  *
- * Example based on `offline-sepaker-diarization-c-api.c`:
+ * Example based on `offline-speaker-diarization-c-api.c`:
  *
  * @code
  * SherpaOnnxOfflineSpeakerDiarizationConfig config;

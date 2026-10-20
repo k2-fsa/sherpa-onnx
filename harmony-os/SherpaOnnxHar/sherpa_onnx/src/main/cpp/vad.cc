@@ -71,7 +71,7 @@ static void CircularBufferPushWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array data = info[1].As<Napi::Float32Array>();
 
 #if __OHOS__
-  // Note(fangjun): Normally, we don't need to divied it by sizeof(float).
+  // Note(fangjun): Normally, we don't need to divide it by sizeof(float).
   // However, data.ElementLength() here returns number of bytes, not number of
   // elements.
   SherpaOnnxCircularBufferPush(buf, data.Data(),

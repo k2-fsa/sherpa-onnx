@@ -14,7 +14,7 @@ namespace sherpa_onnx {
 
 void CudaConfig::Register(ParseOptions *po) {
   po->Register("cuda-cudnn-conv-algo-search", &cudnn_conv_algo_search,
-               "CuDNN convolution algrorithm search");
+               "CuDNN convolution algorithm search");
 }
 
 bool CudaConfig::Validate() const {
