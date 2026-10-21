@@ -349,7 +349,7 @@ rm sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
 
 node ./test_asr_non_streaming_transducer.js
 
-# To run VAD + non-streaming ASR with transudcer using a microphone
+# To run VAD + non-streaming ASR with transducer using a microphone
 npm install node-cpal
 node ./test_vad_asr_non_streaming_transducer_microphone.js
 ```

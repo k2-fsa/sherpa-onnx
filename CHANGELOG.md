@@ -1129,7 +1129,7 @@
 * Update readme to contain links for pre-built Apps (#1853)
 * Modify the model used (#1855)
 * Flutter OnlinePunctuation (#1854)
-* Fix spliting text by languages for kokoro tts. (#1849)
+* Fix splitting text by languages for kokoro tts. (#1849)
 
 ## 1.10.43
 

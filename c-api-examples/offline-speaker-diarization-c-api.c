@@ -1,4 +1,4 @@
-// c-api-examples/offline-sepaker-diarization-c-api.c
+// c-api-examples/offline-speaker-diarization-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
 

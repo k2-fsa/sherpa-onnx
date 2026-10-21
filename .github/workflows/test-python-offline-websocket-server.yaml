@@ -87,7 +87,7 @@ jobs:
         if: matrix.model_type == 'transducer'
         shell: bash
         run: |
-          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+          python3 ./python-api-examples/offline-websocket-client-decode-files-parallel.py \
             ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/0.wav \
             ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/1.wav \
             ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/8k.wav
@@ -116,7 +116,7 @@ jobs:
         if: matrix.model_type == 'paraformer' && matrix.os != 'windows-2022'
         shell: bash
         run: |
-          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+          python3 ./python-api-examples/offline-websocket-client-decode-files-parallel.py \
             ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav \
             ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav \
             ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/2.wav \
@@ -147,7 +147,7 @@ jobs:
         if: matrix.model_type == 'nemo_ctc'
         shell: bash
         run: |
-          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+          python3 ./python-api-examples/offline-websocket-client-decode-files-parallel.py \
             ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/0.wav \
             ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/1.wav \
             ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/8k.wav
@@ -177,7 +177,7 @@ jobs:
         if: matrix.model_type == 'whisper'
         shell: bash
         run: |
-          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+          python3 ./python-api-examples/offline-websocket-client-decode-files-parallel.py \
             ./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav \
             ./sherpa-onnx-whisper-tiny.en/test_wavs/1.wav \
             ./sherpa-onnx-whisper-tiny.en/test_wavs/8k.wav
@@ -208,7 +208,7 @@ jobs:
         if: matrix.model_type == 'tdnn'
         shell: bash
         run: |
-          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+          python3 ./python-api-examples/offline-websocket-client-decode-files-parallel.py \
             ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_0_1_0_0_0_1.wav \
             ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_0_1_0.wav \
             ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_1_1_1.wav \

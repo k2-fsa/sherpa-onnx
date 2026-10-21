@@ -351,7 +351,7 @@ OnlineEbranchformerTransducerModel::GetEncoderInitStates() {
       ans.push_back(std::move(v));
     }
 
-    {  // cahced_value_{i}
+    {  // cached_value_{i}
       std::array<int64_t, 4> s{1, num_heads_, left_context_len_, head_dim_};
       auto v = Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
       Fill(&v, 0);

@@ -40,7 +40,7 @@ object Form1: TForm1
     Height = 25
     Top = 8
     Width = 280
-    Caption = 'Click me to intialize models before you start'
+    Caption = 'Click me to initialize models before you start'
     TabOrder = 3
     OnClick = InitBtnClick
   end

@@ -101,7 +101,7 @@ workerPort.onmessage = (e: MessageEvents) => {
     } else {
       workerPort.postMessage({
         msgType: 'manager-add-speaker-done',
-        status: `Failed to add ${name}. Possibly due to exsiting speaker name. Please recheck`,
+        status: `Failed to add ${name}. Possibly due to existing speaker name. Please recheck`,
         ok,
       });
     }
