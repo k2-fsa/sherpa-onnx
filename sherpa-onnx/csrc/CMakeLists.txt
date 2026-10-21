@@ -151,6 +151,7 @@ set(sources
   timer.cc
   transducer-keyword-decoder.cc
   transpose.cc
+  unicode-case-mapping.cc
   unbind.cc
   utils.cc
   vad-model-config.cc

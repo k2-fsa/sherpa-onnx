@@ -23,6 +23,7 @@
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/tts-text-normalizer.h"
+#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 
 namespace sherpa_onnx {
 
@@ -240,7 +241,10 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 
   std::string NormalizeText(const std::string &text, bool debug) const {
-    std::string result = text;
+    // Canonical composition first (NFC), so that e.g. "a" + U+0301 written in
+    // the input matches a lexicon entry stored as U+00E1. Must run before any
+    // lowercasing.
+    std::string result = NormalizeNfc(text);
 
     if (debug) {
 #if __OHOS__
@@ -625,12 +629,12 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
                                                         bool debug) const {
     std::vector<std::vector<int32_t>> result;
 
-    // split text into sentences by .!?
+    // split text into sentences by . ! ? ; :
     std::vector<std::string> sentences;
     std::string current;
     for (char c : text) {
       current.push_back(c);
-      if (c == '.' || c == '!' || c == '?') {
+      if (c == '.' || c == '!' || c == '?' || c == ';' || c == ':') {
         sentences.push_back(current);
         current.clear();
       }
@@ -678,6 +682,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           char c = words[i][0];
           if (c == ',' || c == '.' || c == '!' || c == '?' || c == ';' ||
               c == ':') {
+            // The word boundary that espeak/piper emit after punctuation is
+            // added by AppendWordBoundary() before the *next* word, so that a
+            // sentence ending in punctuation does not grow a trailing space.
             sentence_codepoints.push_back(static_cast<int32_t>(c));
             ++i;
             continue;
@@ -704,13 +711,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
               SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'", phrase.c_str(),
                                phonemes_str.c_str());
             }
-            // add space between words (like espeak does)
-            if (!sentence_codepoints.empty()) {
-              int32_t last = sentence_codepoints.back();
-              if (last != ',' && last != '.' && last != '!' && last != '?' &&
-                  last != ';' && last != ':' && last != ' ') {
-                sentence_codepoints.push_back(static_cast<int32_t>(' '));
-              }
+            // Word boundary before the next word (like espeak does). Idempotent
+            // w.r.t. the space already emitted after punctuation.
+            if (!sentence_codepoints.empty() &&
+                sentence_codepoints.back() != static_cast<int32_t>(' ')) {
+              sentence_codepoints.push_back(static_cast<int32_t>(' '));
             }
             sentence_codepoints.insert(sentence_codepoints.end(),
                                        it->second.begin(), it->second.end());
@@ -721,45 +726,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         }
 
         if (!found) {
-          // The word is not in the lexicon. If it contains '-', split it and
-          // look up each part separately, e.g. "two-thirds" -> "two" + "thirds".
-          std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
-          if (words[i].find('-') != std::string::npos && !parts.empty()) {
-            bool first = true;
-            for (const auto &part : parts) {
-              auto it = lexicon_.find(ToLowerCase(part));
-              if (it == lexicon_.end()) {
-                SHERPA_ONNX_LOGE("OOV word skipped: '%s'", part.c_str());
-                continue;
-              }
-              if (debug) {
-                std::string phonemes_str;
-                for (int32_t cp : it->second) {
-                  phonemes_str += Utf32ToUtf8(static_cast<char32_t>(cp));
-                }
-                SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'", part.c_str(),
-                                 phonemes_str.c_str());
-              }
-              if (first) {
-                // add space between words (like espeak does)
-                if (!sentence_codepoints.empty()) {
-                  int32_t last = sentence_codepoints.back();
-                  if (last != ',' && last != '.' && last != '!' &&
-                      last != '?' && last != ';' && last != ':' &&
-                      last != ' ') {
-                    sentence_codepoints.push_back(static_cast<int32_t>(' '));
-                  }
-                }
-                first = false;
-              }
-              // The parts of a hyphenated word form a single spoken word, so
-              // no extra space is inserted between them.
-              sentence_codepoints.insert(sentence_codepoints.end(),
-                                         it->second.begin(), it->second.end());
-            }
-          } else {
-            SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
-          }
+          // The whole token already missed in the loop above. Strip/split
+          // punctuation and retry -- see LookupPieces().
+          LookupPieces(words[i], &sentence_codepoints, debug);
           ++i;
         }
       }
@@ -781,6 +750,92 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     return result;
+  }
+
+  // Insert a word boundary unless the stream is empty or already ends with
+  // one. Idempotent w.r.t. the space emitted after punctuation.
+  static void AppendWordBoundary(std::vector<int32_t> *cps) {
+    if (!cps->empty() && cps->back() != static_cast<int32_t>(' ')) {
+      cps->push_back(static_cast<int32_t>(' '));
+    }
+  }
+
+  void LogMatched(const std::string &word, const std::vector<int32_t> &phonemes,
+                  bool debug) const {
+    if (!debug) return;
+    std::string phonemes_str;
+    for (int32_t cp : phonemes) {
+      phonemes_str += Utf32ToUtf8(static_cast<char32_t>(cp));
+    }
+    SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'", word.c_str(),
+                     phonemes_str.c_str());
+  }
+
+  // Emit phonemes for |word| when the whole token is not in the lexicon.
+  //
+  // (#4020) Words with punctuation attached -- "Dveme, word—, ‘word’, (word
+  // -- form a single token, miss the lexicon and get dropped. Rather than
+  // making those characters token separators (which would break tokens the
+  // lexicon does contain, e.g. don't), retry the lookup with the punctuation
+  // stripped away, and only then split.
+  void LookupPieces(const std::string &word,
+                    std::vector<int32_t> *sentence_codepoints,
+                    bool debug) const {
+    std::u32string u32 = Utf8ToUtf32(word);
+
+    // 1. strip leading/trailing non-word characters
+    std::size_t b = 0;
+    std::size_t e = u32.size();
+    while (b < e && !IsLexiconWordChar(u32[b])) ++b;
+    while (e > b && !IsLexiconWordChar(u32[e - 1])) --e;
+
+    std::u32string core = u32.substr(b, e - b);
+    if (core.empty()) {
+      // nothing but punctuation
+      SHERPA_ONNX_LOGE("OOV word skipped: '%s'", word.c_str());
+      return;
+    }
+
+    // 2. retry with the edges stripped
+    std::string core_s = Utf32ToUtf8(core);
+    auto it = lexicon_.find(ToLowerCase(core_s));
+    if (it != lexicon_.end()) {
+      AppendWordBoundary(sentence_codepoints);
+      LogMatched(core_s, it->second, debug);
+      sentence_codepoints->insert(sentence_codepoints->end(),
+                                  it->second.begin(), it->second.end());
+      return;
+    }
+
+    // 3. still OOV: split on non-word characters and look up each piece, e.g.
+    //    "two-thirds" -> "two" + "thirds". The pieces of one token form a
+    //    single spoken word, so only the first gets a word boundary.
+    bool first = true;
+    std::u32string piece;
+    for (std::size_t k = 0; k <= core.size(); ++k) {
+      if (k < core.size() && IsLexiconWordChar(core[k])) {
+        piece.push_back(core[k]);
+        continue;
+      }
+      if (piece.empty()) continue;
+
+      std::string piece_s = Utf32ToUtf8(piece);
+      piece.clear();
+
+      auto it2 = lexicon_.find(ToLowerCase(piece_s));
+      if (it2 == lexicon_.end()) {
+        // Always report dropped words; never hide them behind the debug flag.
+        SHERPA_ONNX_LOGE("OOV word skipped: '%s'", piece_s.c_str());
+        continue;
+      }
+      if (first) {
+        AppendWordBoundary(sentence_codepoints);
+        first = false;
+      }
+      LogMatched(piece_s, it2->second, debug);
+      sentence_codepoints->insert(sentence_codepoints->end(),
+                                  it2->second.begin(), it2->second.end());
+    }
   }
 
  private:

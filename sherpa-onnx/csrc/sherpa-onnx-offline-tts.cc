@@ -186,6 +186,7 @@ or details.
                          !config.model.zipvoice.decoder.empty();
 
   gen_config.sid = sid;
+  gen_config.silence_scale = config.silence_scale;
 
   if (emotion_id >= 0) {
     gen_config.extra["emotion_id"] = std::to_string(emotion_id);

@@ -4,6 +4,7 @@
 // Copyright      2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 
 #include <algorithm>
 #include <cassert>
@@ -467,70 +468,22 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
 }
 
 std::string ToLowerCase(const std::string &s) {
-  return ToString(ToLowerCase(ToWideString(s)));
+  std::u32string u32 = Utf8ToUtf32(s);
+  for (auto &c : u32) c = ToSimpleLower(c);
+  return Utf32ToUtf8(u32);
 }
 
-void ToLowerCase(std::string *in_out) {
-  std::transform(in_out->begin(), in_out->end(), in_out->begin(),
-                 [](unsigned char c) { return std::tolower(c); });
-}
+void ToLowerCase(std::string *in_out) { *in_out = ToLowerCase(*in_out); }
 
 std::wstring ToLowerCase(const std::wstring &s) {
+  // Note: wchar_t is a UTF-16 code unit on Windows, so this maps per code
+  // unit rather than per codepoint there. All of Latin Extended-A/B, Greek
+  // and Cyrillic live in the BMP and map correctly; non-BMP letters on
+  // Windows are left as they are. Prefer the std::string overload, which
+  // goes through UTF-32 and is exact.
   std::wstring ans(s.size(), 0);
   std::transform(s.begin(), s.end(), ans.begin(), [](wchar_t c) -> wchar_t {
-    switch (c) {
-      // French
-      case L'À':
-        return L'à';
-      case L'Â':
-        return L'â';
-      case L'Æ':
-        return L'æ';
-      case L'Ç':
-        return L'ç';
-      case L'È':
-        return L'è';
-      case L'É':
-        return L'é';
-      case L'Ë':
-        return L'ë';
-      case L'Î':
-        return L'î';
-      case L'Ï':
-        return L'ï';
-      case L'Ô':
-        return L'ô';
-      case L'Ù':
-        return L'ù';
-      case L'Û':
-        return L'û';
-      case L'Ü':
-        return L'ü';
-
-      // others
-      case L'Á':
-        return L'á';
-      case L'Í':
-        return L'í';
-      case L'Ó':
-        return L'ó';
-      case L'Ú':
-        return L'ú';
-      case L'Ñ':
-        return L'ñ';
-      case L'Ì':
-        return L'ì';
-      case L'Ò':
-        return L'ò';
-      case L'Ä':
-        return L'ä';
-      case L'Ö':
-        return L'ö';
-        // TODO(fangjun): Add more
-
-      default:
-        return std::towlower(c);
-    }
+    return static_cast<wchar_t>(ToSimpleLower(static_cast<char32_t>(c)));
   });
   return ans;
 }
@@ -1719,7 +1672,7 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
     auto pos = line.find("||");
     if (pos != std::string::npos) {
       // New-format: word || phone1 phone2 ...
-      key = ToLowerCase(Trim(line.substr(0, pos)));
+      key = ToLowerCase(NormalizeNfc(Trim(line.substr(0, pos))));
       std::istringstream pss(Trim(line.substr(pos + 2)));
       std::string phone;
       while (pss >> phone) {
@@ -1731,7 +1684,7 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
       std::string word;
       iss >> word;
       if (word.empty()) continue;
-      key = ToLowerCase(word);
+      key = ToLowerCase(NormalizeNfc(word));
       std::string phone;
       while (iss >> phone) {
         phonemes.push_back(std::move(phone));
@@ -1740,7 +1693,14 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
 
     if (key.empty() || phonemes.empty()) continue;
 
-    int32_t word_count = static_cast<int32_t>(Utf8ToUtf32(key).size());
+    // Count space-separated words, not codepoints. This value is consumed as a
+    // word count by the longest-match lookup (max_try = min(max_phrase_len, n - i)
+    // where n is the number of words), so counting codepoints made every word
+    // attempt up to ~40 redundant lookups for long lexicon phrases.
+    int32_t word_count = 1;
+    for (char c : key) {
+      if (c == ' ') ++word_count;
+    }
     if (word_count > max_phrase_len) {
       max_phrase_len = word_count;
     }

@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#include "sherpa-onnx/csrc/unicode-case-mapping.h"
+
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -332,7 +334,8 @@ TEST(ParseLexiconFile, NewFormat) {
   EXPECT_EQ(entries[0].phonemes[3], "o");
   EXPECT_EQ(entries[0].phonemes[4], "ʊ");
   EXPECT_EQ(entries[1].key, "world");
-  EXPECT_EQ(max_len, 5);
+  // max_len counts words, not codepoints (#4020). Both keys are one word.
+  EXPECT_EQ(max_len, 1);
 }
 
 TEST(ParseLexiconFile, OldFormat) {
@@ -352,7 +355,8 @@ TEST(ParseLexiconFile, OldFormat) {
   EXPECT_EQ(entries[0].phonemes[3], "ng");
   EXPECT_EQ(entries[0].phonemes[4], "1");
   EXPECT_EQ(entries[1].key, "guo2");
-  EXPECT_EQ(max_len, 6);
+  // max_len counts words, not codepoints (#4020).
+  EXPECT_EQ(max_len, 1);
 }
 
 TEST(ParseLexiconFile, MultiWord) {
@@ -367,7 +371,8 @@ TEST(ParseLexiconFile, MultiWord) {
   EXPECT_EQ(entries[0].phonemes[1], "j");
   EXPECT_EQ(entries[0].phonemes[2], "u");
   EXPECT_EQ(entries[0].phonemes[3], "ː");
-  EXPECT_EQ(max_len, 8);
+  // max_len counts words, not codepoints (#4020): "new york" is two words.
+  EXPECT_EQ(max_len, 2);
 }
 
 TEST(ParseLexiconFile, PinyinKeptWhole) {
@@ -506,5 +511,85 @@ TEST(Utf16ToUtf8, EmbeddedNull) {
 }
 
 TEST(Utf16ToUtf8, Empty) { EXPECT_EQ(Utf16ToUtf8(u""), ""); }
+
+// ---------------------------------------------------------------------
+// #4020: lexicon matching is case-insensitive and form-insensitive.
+// ---------------------------------------------------------------------
+
+TEST(ToSimpleLower, Ascii) {
+  EXPECT_EQ(ToSimpleLower(U'A'), U'a');
+  EXPECT_EQ(ToSimpleLower(U'z'), U'z');
+  EXPECT_EQ(ToSimpleLower(U'0'), U'0');
+}
+
+TEST(ToSimpleLower, LatinExtended) {
+  // The original hand-maintained switch could not do these: std::towlower()
+  // is a no-op for non-ASCII in the "C" locale.
+  EXPECT_EQ(ToSimpleLower(U'Ā'), U'ā');  // U+0100 -> U+0101
+  EXPECT_EQ(ToSimpleLower(U'Ī'), U'ī');  // U+012A -> U+012B
+  EXPECT_EQ(ToSimpleLower(U'Ñ'), U'ñ');  // U+00D1 -> U+00F1
+  EXPECT_EQ(ToSimpleLower(U'Ü'), U'ü');
+}
+
+TEST(ToSimpleLower, OtherScripts) {
+  EXPECT_EQ(ToSimpleLower(U'Α'), U'α');  // Greek
+  EXPECT_EQ(ToSimpleLower(U'Б'), U'б');  // Cyrillic
+  EXPECT_EQ(ToSimpleLower(U'Ա'), U'ա');  // Armenian
+}
+
+TEST(ToSimpleLower, UncasedIsUnchanged) {
+  EXPECT_EQ(ToSimpleLower(U'中'), U'中');  // CJK
+  EXPECT_EQ(ToSimpleLower(U'ก'), U'ก');  // Thai
+}
+
+TEST(IsLexiconWordChar, LettersAndMarks) {
+  EXPECT_TRUE(IsLexiconWordChar(U'a'));
+  EXPECT_TRUE(IsLexiconWordChar(U'Z'));
+  EXPECT_TRUE(IsLexiconWordChar(U'ā'));   // precomposed
+  EXPECT_TRUE(IsLexiconWordChar(U'́'));  // combining mark
+  EXPECT_TRUE(IsLexiconWordChar(U'中'));
+}
+
+TEST(IsLexiconWordChar, PunctuationIsNotAWordChar) {
+  EXPECT_FALSE(IsLexiconWordChar(U' '));
+  EXPECT_FALSE(IsLexiconWordChar(U','));
+  EXPECT_FALSE(IsLexiconWordChar(U'“'));  // U+201C
+  EXPECT_FALSE(IsLexiconWordChar(U'—'));  // U+2014
+  EXPECT_FALSE(IsLexiconWordChar(U'('));
+}
+
+TEST(NormalizeNfc, ComposesBasePlusMark) {
+  // "a" + COMBINING MACRON must become U+0101 so it matches a lexicon entry.
+  std::u32string s = {U'a', U'̄'};
+  EXPECT_TRUE(NormalizeNfc(&s));
+  EXPECT_EQ(s, std::u32string(1, U'ā'));
+}
+
+TEST(NormalizeNfc, ComposesCapitalBase) {
+  // U+0041 + COMBINING MACRON -> U+0100. Must compose before lowercasing,
+  // otherwise ToSimpleLower(U+0100) never sees it.
+  std::u32string s = {U'A', U'̄'};
+  NormalizeNfc(&s);
+  EXPECT_EQ(s, std::u32string(1, U'Ā'));
+  EXPECT_EQ(ToSimpleLower(s[0]), U'ā');
+}
+
+TEST(NormalizeNfc, AlreadyComposedIsUnchanged) {
+  std::u32string s = {U'ā'};
+  EXPECT_FALSE(NormalizeNfc(&s));
+  EXPECT_EQ(s, std::u32string(1, U'ā'));
+}
+
+TEST(NormalizeNfc, Utf8Overload) {
+  // a + U+0301 in UTF-8
+  EXPECT_EQ(NormalizeNfc(std::string("a\xcc\x81")), std::string("\xc3\xa1"));
+}
+
+TEST(ToLowerCase, NonAsciiIsLowercased) {
+  // Regression: ToLowerCase used std::tolower per byte, which is a no-op for
+  // UTF-8 multibyte sequences.
+  EXPECT_EQ(ToLowerCase(std::string("\xc4\x80")), std::string("\xc4\x81"));  // Ā -> ā
+  EXPECT_EQ(ToLowerCase("ABC"), "abc");
+}
 
 }  // namespace sherpa_onnx
