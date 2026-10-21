@@ -1,6 +1,6 @@
 # File description
 
-- [gigaam-uzbek.md](./gigaam-uzbek.md) Download and run the Uzbek GigaAM
+- [Uzbek GigaAM documentation](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/nemo/uzbek.html) Download and run the Uzbek GigaAM
   INT8 model using the existing NeMo CTC backend, with Python and command-line
   examples. See also
   [offline-gigaam-uzbek-ctc-decode-files.py](./offline-gigaam-uzbek-ctc-decode-files.py).
