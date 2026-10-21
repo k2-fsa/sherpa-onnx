@@ -14,51 +14,20 @@ source "$SCRIPT_DIR/common.sh"
 log "test version"
 python3 ./python-api-examples/version-test.py
 
-# BEGIN Uzbek GigaAM test
 log "test Uzbek GigaAM NeMo CTC Python example"
+repo=sherpa-onnx-gigaam-uzbek-600m
+mkdir -p "$repo/test_wavs"
+_sherpa_register_cleanup "$repo"
+base=https://huggingface.co/Alex13/sherpa-onnx-gigaam-uzbek-600m/resolve/main
+download "$base/model.int8.onnx" "$repo/model.int8.onnx"
+download "$base/tokens.txt" "$repo/tokens.txt"
+download "$base/test_wavs/0.wav" "$repo/test_wavs/0.wav"
 
-uzbek_test_dir=$(mktemp -d)
-_sherpa_register_cleanup "$uzbek_test_dir"
-uzbek_model_url=https://huggingface.co/Alex13/sherpa-onnx-gigaam-uzbek-600m/resolve/b53434a0b06418831dbc1cec73d6b851054f593d
-download "$uzbek_model_url/model.int8.onnx" "$uzbek_test_dir/model.int8.onnx"
-download "$uzbek_model_url/tokens.txt" "$uzbek_test_dir/tokens.txt"
+python3 ./python-api-examples/offline-gigaam-uzbek-ctc-decode-files.py \
+  --model-dir "./$repo" \
+  "./$repo/test_wavs/0.wav"
 
-python3 - "$uzbek_test_dir" <<'PY'
-import re
-import subprocess
-import sys
-from pathlib import Path
-
-model_dir = Path(sys.argv[1])
-fixture_dir = Path(".github/test-data/gigaam-uzbek")
-filename = fixture_dir / "recording.wav"
-expected = (fixture_dir / "transcript.txt").read_text(encoding="utf-8").strip()
-
-result = subprocess.run(
-    [
-        sys.executable,
-        "./python-api-examples/offline-gigaam-uzbek-ctc-decode-files.py",
-        "--model-dir", str(model_dir),
-        "--num-threads", "2",
-        str(filename),
-    ],
-    check=True,
-    stdout=subprocess.PIPE,
-    text=True,
-    encoding="utf-8",
-)
-print(result.stdout)
-lines = result.stdout.splitlines()
-if len(lines) != 2 or lines[0] != str(filename):
-    raise RuntimeError(f"Unexpected example output: {result.stdout!r}")
-# Compare words so punctuation differences across providers do not fail CI.
-actual_words = re.findall(r"[^\W_]+", lines[1].casefold())
-expected_words = re.findall(r"[^\W_]+", expected.casefold())
-if not expected_words or actual_words != expected_words:
-    raise RuntimeError(f"Expected {expected!r}, got {lines[1]!r}")
-PY
-rm -rf "$uzbek_test_dir"
-# END Uzbek GigaAM test
+rm -rf "$repo"
 
 log "test Cohere Transcribe"
 

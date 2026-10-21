@@ -9,7 +9,6 @@ on:
     paths:
       - '.github/workflows/run-python-test.yaml'
       - '.github/scripts/test-python.sh'
-      - '.github/test-data/gigaam-uzbek/**'
       - '.github/scripts/test-python-tts-frontends.sh'
       - '.github/scripts/test-speaker-recognition-python.sh'
       - 'cmake/**'
@@ -21,7 +20,6 @@ on:
     paths:
       - '.github/workflows/run-python-test.yaml'
       - '.github/scripts/test-python.sh'
-      - '.github/test-data/gigaam-uzbek/**'
       - '.github/scripts/test-python-tts-frontends.sh'
       - '.github/scripts/test-speaker-recognition-python.sh'
       - 'cmake/**'
