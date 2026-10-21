@@ -47,7 +47,7 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
   fprintf(stdout, "decoder: %s\n", transducer_model_config->decoder);
   fprintf(stdout, "joiner: %s\n", transducer_model_config->joiner);
 
-  fprintf(stdout, "----------online parformer model config----------\n");
+  fprintf(stdout, "----------online paraformer model config----------\n");
   fprintf(stdout, "encoder: %s\n", paraformer_model_config->encoder);
   fprintf(stdout, "decoder: %s\n", paraformer_model_config->decoder);
 

@@ -429,18 +429,39 @@ TEST(ParseLexiconFile, MultiCodepointPhonemes) {
   EXPECT_EQ(entries[0].phonemes[5], "ɪ");
 }
 
-TEST(RemoveInvalidUtf8Sequences, ByteLevelBpeTokenFragment) {
-    // Whisper byte-level-BPE tokens can split a multi-byte UTF-8 character
-    // across two tokens. Each fragment alone is invalid UTF-8 and is
-    // stripped; the character only survives when the fragments are joined
-    // first. Recognizer implementations must therefore concatenate tokens
-    // before calling this function (see the whisper Convert()).
-    std::string frag1 = "\xd7";  // leading byte of a Hebrew letter
-    std::string frag2 = "\xa8";  // continuation byte (frag1+frag2 is a letter)
-    EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1), "");
-    EXPECT_EQ(RemoveInvalidUtf8Sequences(frag2), "");
-    EXPECT_EQ(RemoveInvalidUtf8Sequences(frag1 + frag2), "\xd7\xa8");
-  }
+TEST(Utf8ToUtf16, Bmp) {
+  // a, U+00E9, U+20AC
+  std::u16string expected = {u'a', 0x00E9, 0x20AC};
+  EXPECT_EQ(Utf8ToUtf16("a\xc3\xa9\xe2\x82\xac"), expected);
+}
+
+TEST(Utf8ToUtf16, SurrogatePairs) {
+  // U+1F600 and U+20000 become surrogate pairs; the text after them is kept
+  std::u16string expected = {u'a', 0xD83D, 0xDE00, u'b', 0xD840, 0xDC00, u'c'};
+  EXPECT_EQ(Utf8ToUtf16("a\xf0\x9f\x98\x80"
+                        "b\xf0\xa0\x80\x80"
+                        "c"),
+            expected);
+
+  std::u16string max = {0xDBFF, 0xDFFF};
+  EXPECT_EQ(Utf8ToUtf16("\xf4\x8f\xbf\xbf"), max);  // U+10FFFF
+}
+
+TEST(Utf8ToUtf16, InvalidBytes) {
+  // an encoded surrogate (modified UTF-8, ed a0 bd) is not valid UTF-8
+  std::u16string expected = {0xFFFD, 0xFFFD, 0xFFFD, u'a'};
+  EXPECT_EQ(Utf8ToUtf16("\xed\xa0\xbd"
+                        "a"),
+            expected);
+}
+
+TEST(Utf8ToUtf16, EmbeddedNull) {
+  // the text after U+0000 is kept (modified UTF-8 would use c0 80)
+  std::u16string expected = {u'a', 0, u'b'};
+  EXPECT_EQ(Utf8ToUtf16(std::string("a\0b", 3)), expected);
+}
+
+TEST(Utf8ToUtf16, Empty) { EXPECT_EQ(Utf8ToUtf16(""), u""); }
 
 TEST(Utf16ToUtf8, Bmp) {
   // A, é, €, →

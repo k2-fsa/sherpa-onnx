@@ -1,6 +1,6 @@
 // Copyright 2026 Xiaomi Corporation
 
-// This file shows how to use aKittenTTS English KittenTTS English TTS model to convert text to
+// This file shows how to use a KittenTTS English TTS model to convert text to
 // speech.
 //
 // The text is phonemized outside of sherpa-onnx with piper-phonemize

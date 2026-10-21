@@ -38,7 +38,7 @@ public class AsrWebsocketServer extends WebSocketServer {
   private LinkedBlockingQueue<WebSocket> decoderQueue = new LinkedBlockingQueue<WebSocket>();
 
   // recognizer object
-  private OnlineRecognizer rcgOjb = null;
+  private OnlineRecognizer rcgObj = null;
 
   // mapping between websocket connection and connection data
   private ConcurrentHashMap<WebSocket, ConnectionData> connectionMap =
@@ -93,7 +93,7 @@ public class AsrWebsocketServer extends WebSocketServer {
     ConnectionData connData = null;
     try {
       if (!connectionMap.containsKey(conn)) {
-        OnlineStream stream = rcgOjb.createStream();
+        OnlineStream stream = rcgObj.createStream();
         connData = new ConnectionData(conn, stream);
         connectionMap.put(conn, connData);
       } else {
@@ -147,7 +147,7 @@ public class AsrWebsocketServer extends WebSocketServer {
   public void initModelWithCfg(Map<String, String> cfgMap, String cfgPath) {
     try {
 
-      rcgOjb = new OnlineRecognizer(cfgPath);
+      rcgObj = new OnlineRecognizer(cfgPath);
       // size of stream thread pool
       int streamThreadNum = Integer.valueOf(cfgMap.getOrDefault("stream_thread_num", "16"));
       // size of decoder thread pool
@@ -158,7 +158,7 @@ public class AsrWebsocketServer extends WebSocketServer {
       // size of streams for parallel decoding
       int parallelDecoderNum = Integer.valueOf(cfgMap.getOrDefault("parallel_decoder_num", "16"));
       // time(ms) out for connection data
-      int deocderTimeOut = Integer.valueOf(cfgMap.getOrDefault("deocder_time_out", "30000"));
+      int decoderTimeOut = Integer.valueOf(cfgMap.getOrDefault("decoder_time_out", "30000"));
 
       // create stream threads
       for (int i = 0; i < streamThreadNum; i++) {
@@ -169,10 +169,10 @@ public class AsrWebsocketServer extends WebSocketServer {
         new DecoderThreadHandler(
                 decoderQueue,
                 connectionMap,
-                rcgOjb,
+                rcgObj,
                 decoderTimeIdle,
                 parallelDecoderNum,
-                deocderTimeOut)
+                decoderTimeOut)
             .start();
       }
     } catch (Exception e) {

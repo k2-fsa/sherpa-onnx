@@ -338,6 +338,11 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [VocaRead](https://apps.apple.com/us/app/vocaread/id6757822401)
+
+> iOS app for reading EPUBs, PDFs, and documents aloud. It uses sherpa-onnx
+> to synthesize speech locally with Piper voices and can import books from OPDS catalogs.
+
 ### [Sherpa Voice / @siteed/sherpa-onnx.rn](https://github.com/deeeed/audiolab)
 
 > React Native wrapper and demo app for validating sherpa-onnx on iOS,

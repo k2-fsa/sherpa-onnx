@@ -169,6 +169,10 @@ std::string Join(const std::vector<std::string> &ss,
 // Converts a UTF-8 std::string to a UTF-32 std::u32string
 std::u32string Utf8ToUtf32(const std::string &str);
 
+// Converts a UTF-8 std::string to a UTF-16 std::u16string. A code point
+// above U+FFFF becomes a surrogate pair; invalid bytes become U+FFFD.
+std::u16string Utf8ToUtf16(const std::string &str);
+
 // Converts a UTF-32 std::u32string to a UTF-8 std::string
 std::string Utf32ToUtf8(const std::u32string &str);
 

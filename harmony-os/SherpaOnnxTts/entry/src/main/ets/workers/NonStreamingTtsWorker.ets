@@ -319,7 +319,7 @@ workerPort.onmessage = (e: MessageEvents) => {
 
   if (msgType == 'tts-generate') {
     const text = e.data['text'] as string;
-    console.log(`recevied text ${text}`);
+    console.log(`received text ${text}`);
     const input: TtsInput = new TtsInput();
     input.text = text;
     input.sid = e.data['sid'] as number;

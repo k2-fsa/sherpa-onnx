@@ -4,7 +4,7 @@
   INT8 model using the existing NeMo CTC backend, with Python and command-line
   examples. See also
   [offline-gigaam-uzbek-ctc-decode-files.py](./offline-gigaam-uzbek-ctc-decode-files.py).
-- [./http_server.py](./http_server.py) It defines which files to server.
+- [./http_server.py](./http_server.py) It defines which files to serve.
   Files are saved in [./web](./web).
 - [non_streaming_server.py](./non_streaming_server.py) WebSocket server for
   non-streaming models.

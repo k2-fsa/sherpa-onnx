@@ -65,6 +65,15 @@ class OfflineStream::Impl {
 
       opts_.mel_opts.is_librosa = config.is_librosa;
 
+      // NeMo mel preprocessing uses an additive log-zero guard,
+      // log(x + FLT_EPSILON / 2) (2**-24), while knf defaults to the hard
+      // floor log(max(x, FLT_EPSILON)). Select the additive guard with
+      // NeMo's value so the extracted features match NeMo directly.
+      if (!config_.nemo_normalize_type.empty()) {
+        opts_.use_log_floor = false;
+        opts_.eps = std::numeric_limits<float>::epsilon() / 2;
+      }
+
       fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
     }
   }
