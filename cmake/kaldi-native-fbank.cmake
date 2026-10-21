@@ -2,7 +2,6 @@ function(download_kaldi_native_fbank)
   include(FetchContent)
 
   set(kaldi_native_fbank_URL   "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.22.4.tar.gz")
-  set(kaldi_native_fbank_URL2)
   set(kaldi_native_fbank_HASH "SHA256=257fea639585ca6ee00860493bb9d7ab32488b8a5407ffe434c1f361ea545fae")
 
   set(KALDI_NATIVE_FBANK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -24,7 +23,6 @@ function(download_kaldi_native_fbank)
       set(kaldi_native_fbank_URL  "${f}")
       file(TO_CMAKE_PATH "${kaldi_native_fbank_URL}" kaldi_native_fbank_URL)
       message(STATUS "Found local downloaded kaldi-native-fbank: ${kaldi_native_fbank_URL}")
-      set(kaldi_native_fbank_URL2 )
       break()
     endif()
   endforeach()
@@ -32,7 +30,6 @@ function(download_kaldi_native_fbank)
   FetchContent_Declare(kaldi_native_fbank
     URL
       ${kaldi_native_fbank_URL}
-      ${kaldi_native_fbank_URL2}
     URL_HASH          ${kaldi_native_fbank_HASH}
   )
 
