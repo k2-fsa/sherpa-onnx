@@ -4,12 +4,25 @@
 
 #include "sherpa-onnx/python/csrc/speaker-embedding-manager.h"
 
+#include <cstddef>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 
 namespace sherpa_onnx {
+
+// The C++ methods read exactly Dim() floats from the pointer they are given.
+static void CheckDim(const SpeakerEmbeddingManager &self,
+                     const std::vector<float> &v) {
+  if (v.size() != static_cast<std::size_t>(self.Dim())) {
+    std::ostringstream os;
+    os << "Expected an embedding of dimension " << self.Dim()
+       << ". Given: " << v.size();
+    throw py::value_error(os.str());
+  }
+}
 
 static constexpr const char *kSpeakerEmbeddingManagerInitDoc = R"doc(
 Constructor for SpeakerEmbeddingManager.
@@ -129,11 +142,11 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           "add",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v) -> bool {
+            CheckDim(self, v);
+            py::gil_scoped_release release;
             return self.Add(name, v.data());
           },
-          py::arg("name"), py::arg("v"),
-          py::call_guard<py::gil_scoped_release>(),
-          kSpeakerEmbeddingManagerAddDoc)
+          py::arg("name"), py::arg("v"), kSpeakerEmbeddingManagerAddDoc)
       .def(
           "add",
           [](const PyClass &self, const std::string &name,
@@ -152,29 +165,33 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
           kSpeakerEmbeddingManagerRemoveDoc)
       .def(
           "search",
-          [](const PyClass &self, const std::vector<float> &v, float threshold)
-              -> std::string { return self.Search(v.data(), threshold); },
+          [](const PyClass &self, const std::vector<float> &v,
+             float threshold) -> std::string {
+            CheckDim(self, v);
+            py::gil_scoped_release release;
+            return self.Search(v.data(), threshold);
+          },
           py::arg("v"), py::arg("threshold"),
-          py::call_guard<py::gil_scoped_release>(),
           kSpeakerEmbeddingManagerSearchDoc)
       .def(
           "verify",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v, float threshold) -> bool {
+            CheckDim(self, v);
+            py::gil_scoped_release release;
             return self.Verify(name, v.data(), threshold);
           },
           py::arg("name"), py::arg("v"), py::arg("threshold"),
-          py::call_guard<py::gil_scoped_release>(),
           kSpeakerEmbeddingManagerVerifyDoc)
       .def(
           "score",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v) -> float {
+            CheckDim(self, v);
+            py::gil_scoped_release release;
             return self.Score(name, v.data());
           },
-          py::arg("name"), py::arg("v"),
-          py::call_guard<py::gil_scoped_release>(),
-          kSpeakerEmbeddingManagerScoreDoc);
+          py::arg("name"), py::arg("v"), kSpeakerEmbeddingManagerScoreDoc);
 }
 
 }  // namespace sherpa_onnx
