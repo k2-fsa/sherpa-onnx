@@ -3,7 +3,7 @@
 """Decode Uzbek speech with the offline GigaAM NeMo CTC model.
 
 For model downloads and usage, see:
-https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/nemo/uzbek.html
+https://github.com/k2-fsa/sherpa/blob/master/docs/source/onnx/pretrained_models/offline-ctc/nemo/uzbek.rst
 """
 
 import argparse
@@ -13,14 +13,16 @@ import sherpa_onnx
 import soundfile as sf
 
 MODEL_DOC_URL = (
-    "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/"
-    "offline-ctc/nemo/uzbek.html"
+    "https://github.com/k2-fsa/sherpa/blob/master/docs/source/onnx/"
+    "pretrained_models/offline-ctc/nemo/uzbek.rst"
 )
 
 
 def get_args():
     """Parse command-line arguments and validate the input files and thread count."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "--model-dir",
         type=Path,
