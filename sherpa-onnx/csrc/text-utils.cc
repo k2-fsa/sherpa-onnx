@@ -4,7 +4,9 @@
 // Copyright      2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/text-utils.h"
-#include "sherpa-onnx/csrc/unicode-case-mapping.h"
+#include "utf8proc.h"
+
+#include <cstdlib>
 
 #include <algorithm>
 #include <cassert>
@@ -467,13 +469,66 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
   return MergeCharactersIntoWords(ans);
 }
 
+// Unicode handling is delegated to utf8proc (see cmake/utf8proc.cmake) so we
+// do not maintain case or composition tables ourselves.
+
+char32_t ToSimpleLower(char32_t cp) {
+  return static_cast<char32_t>(
+      utf8proc_tolower(static_cast<utf8proc_int32_t>(cp)));
+}
+
+bool IsLexiconWordChar(char32_t cp) {
+  switch (utf8proc_category(static_cast<utf8proc_int32_t>(cp))) {
+    case UTF8PROC_CATEGORY_LU:
+    case UTF8PROC_CATEGORY_LL:
+    case UTF8PROC_CATEGORY_LT:
+    case UTF8PROC_CATEGORY_LM:
+    case UTF8PROC_CATEGORY_LO:
+    case UTF8PROC_CATEGORY_MN:
+    case UTF8PROC_CATEGORY_MC:
+    case UTF8PROC_CATEGORY_ME:
+    case UTF8PROC_CATEGORY_ND:
+    case UTF8PROC_CATEGORY_NL:
+    case UTF8PROC_CATEGORY_NO:
+      return true;
+    default:
+      return false;
+  }
+}
+
+std::string NormalizeNfc(const std::string &s) {
+  utf8proc_uint8_t *out = utf8proc_NFC(
+      reinterpret_cast<const utf8proc_uint8_t *>(s.c_str()));
+  if (out == nullptr) return s;
+  std::string result(reinterpret_cast<const char *>(out));
+  std::free(out);
+  return result;
+}
+
+bool NormalizeNfc(std::u32string *s) {
+  std::string before = Utf32ToUtf8(*s);
+  std::string after = NormalizeNfc(before);
+  if (after == before) return false;
+  *s = Utf8ToUtf32(after);
+  return true;
+}
+
 std::string ToLowerCase(const std::string &s) {
   std::u32string u32 = Utf8ToUtf32(s);
   for (auto &c : u32) c = ToSimpleLower(c);
   return Utf32ToUtf8(u32);
 }
 
-void ToLowerCase(std::string *in_out) { *in_out = ToLowerCase(*in_out); }
+void ToLowerCase(std::string *in_out) {
+  // Deliberately byte-wise, as before. This overload is used by the legacy
+  // lexicon loaders (CharacterLexicon, HomophoneReplacer, Lexicon, MeloTts,
+  // the NeMo transducer model) whose lookup paths do not apply Unicode
+  // lowercasing, so making it Unicode-aware would store `Ａ` as `ａ` and then
+  // fail to match an unchanged `Ａ` query. The TTS key transform goes through
+  // NormalizeLexiconKey(), which uses the Unicode-aware string overload.
+  std::transform(in_out->begin(), in_out->end(), in_out->begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+}
 
 std::string NormalizeLexiconKey(const std::string &s) {
   // NFC -> lowercase -> NFC. The trailing NFC matters: lowercasing can leave a
@@ -484,21 +539,28 @@ std::string NormalizeLexiconKey(const std::string &s) {
 }
 
 int32_t CountLexiconPhraseWords(const std::string &key) {
+  // Upper bound on the number of lookup tokens a key can consume.
+  //
+  // Kokoro, Kitten and Matcha keep spaces and punctuation as tokens of their
+  // own, and those consume `len` in the longest-match loop, so they must be
+  // counted. A key like "new   york" needs three tokens there, and an
+  // under-estimate silently loses the phrase because the longer candidate is
+  // never tried. VITS drops spaces and splits on punctuation, so this
+  // over-estimates for it -- harmless, since every caller clamps with `n - i`.
   std::u32string u32 = Utf8ToUtf32(key);
   int32_t count = 0;
   bool in_run = false;
   for (char32_t cp : u32) {
-    if (IsCJK(cp)) {
-      // A CJK character is one lookup token on its own.
-      in_run = false;
-      ++count;
-    } else if (cp == U' ') {
-      in_run = false;
-    } else {
+    if (IsLexiconWordChar(cp) && !IsCJK(cp)) {
+      // part of a plain word run
       if (!in_run) {
         in_run = true;
         ++count;
       }
+    } else {
+      // CJK: one token per character. Space or punctuation: one token each.
+      in_run = false;
+      ++count;
     }
   }
   return count;
@@ -544,19 +606,6 @@ std::vector<bool> AssignLexiconPieceBoundaries(
   return out;
 }
 
-std::wstring ToLowerCase(const std::wstring &s) {
-  // Note: wchar_t is a UTF-16 code unit on Windows, so this maps per code
-  // unit rather than per codepoint there. All of Latin Extended-A/B, Greek
-  // and Cyrillic live in the BMP and map correctly; non-BMP letters on
-  // Windows are left as they are. Prefer the std::string overload, which
-  // goes through UTF-32 and is exact.
-  std::wstring ans(s.size(), 0);
-  std::transform(s.begin(), s.end(), ans.begin(), [](wchar_t c) -> wchar_t {
-    return static_cast<wchar_t>(ToSimpleLower(static_cast<char32_t>(c)));
-  });
-  return ans;
-}
-
 static inline bool InRange(uint8_t x, uint8_t low, uint8_t high) {
   return low <= x && x <= high;
 }
@@ -564,7 +613,6 @@ static inline bool InRange(uint8_t x, uint8_t low, uint8_t high) {
 /*
 Please see
 https://stackoverflow.com/questions/6555015/check-for-invalid-utf8
-
 
 Table 3-7. Well-Formed UTF-8 Byte Sequences
 
@@ -1762,11 +1810,12 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
 
     if (key.empty() || phonemes.empty()) continue;
 
-    // Count lookup tokens: CJK one per character (that is how the CJK
-    // frontends tokenize), everything else one per space-separated run. This
-    // is an upper bound on the longest-match loop's `len`, which every caller
-    // clamps with `n - i`, so over-estimating is safe and under-estimating
-    // silently skips multi-token entries (e.g. a two-character `中国` key).
+    // Count lookup tokens: CJK one per character, and one each for a space,
+    // a punctuation mark or a plain word run. That matches how the
+    // space-preserving frontends tokenize, and it is an upper bound on the
+    // longest-match loop's `len`, which every caller clamps with `n - i`, so
+    // over-estimating is safe and under-estimating silently skips multi-token
+    // entries (e.g. a two-character `中国` key).
     int32_t word_count = CountLexiconPhraseWords(key);
     if (word_count > max_phrase_len) {
       max_phrase_len = word_count;

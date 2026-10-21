@@ -4,7 +4,6 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
-#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 
 #include <cstdio>
 #include <cstring>
@@ -41,51 +40,31 @@ TEST(QuoteJsonString, AllControlCharacters) {
             "\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f\"");
 }
 
-TEST(ToLowerCase, WideString) {
-  std::string text =
-      "Hallo! Übeltäter übergibt Ärzten öfters äußerst ätzende Öle 3€";
-  auto t = ToLowerCase(text);
-  std::cout << text << "\n";
-  std::cout << t << "\n";
+
+// Each test corrupts the lead byte of one multi-byte character in the same
+// base string and checks that exactly that character is dropped. Expectations
+// are literal results, so a failure shows the text rather than a size.
+static const char *kMixedScriptText = "\xe4\xbb\x8a\xe5\xa4\xa9is Monday, wie hei\xc3\x9f" "en Sie\xf0\x9d\x86\x81";
+
+TEST(RemoveInvalidUtf8Sequences, CorruptingThreeByteCharRemovesIt) {
+  // "今" occupies bytes 0..2.
+  std::string input = kMixedScriptText;
+  input[0] = static_cast<char>(0xC0);
+  EXPECT_EQ(RemoveInvalidUtf8Sequences(input), "\xe5\xa4\xa9is Monday, wie hei\xc3\x9f" "en Sie\xf0\x9d\x86\x81");
 }
 
-TEST(RemoveInvalidUtf8Sequences, Case1) {
-  std::vector<uint8_t> v = {
-      0xe4, 0xbb, 0x8a,                                  // 今
-      0xe5, 0xa4, 0xa9,                                  // 天
-      'i',  's',  ' ',  'M', 'o', 'd', 'a', 'y',  ',',   // is Monday,
-      ' ',  'w',  'i',  'e', ' ', 'h', 'e', 'i',  0xc3,  // wie heißen Size
-      0x9f, 'e',  'n',  ' ', 'S', 'i', 'e', 0xf0, 0x9d, 0x84, 0x81};
+TEST(RemoveInvalidUtf8Sequences, CorruptingTwoByteCharRemovesIt) {
+  // "ß" occupies bytes 24..25.
+  std::string input = kMixedScriptText;
+  input[24] = static_cast<char>(0xC1);
+  EXPECT_EQ(RemoveInvalidUtf8Sequences(input), "\xe4\xbb\x8a\xe5\xa4\xa9is Monday, wie heien Sie\xf0\x9d\x86\x81");
+}
 
-  std::vector<uint8_t> v0 = v;
-  v0[1] = 0xc0;  // make the first 3 bytes an invalid utf8 character
-  std::string s0{v0.begin(), v0.end()};
-  EXPECT_EQ(s0.size(), v0.size());
-
-  auto s = RemoveInvalidUtf8Sequences(s0);  // should remove 今
-
-  v0 = v;
-  // v0[23] == 0xc3
-  // v0[24] == 0x9f
-
-  v0[23] = 0xc1;
-
-  s0 = {v0.begin(), v0.end()};
-  s = RemoveInvalidUtf8Sequences(s0);  // should remove ß
-
-  EXPECT_EQ(s.size() + 2, v.size());
-
-  v0 = v;
-  // v0[31] = 0xf0;
-  // v0[32] = 0x9d;
-  // v0[33] = 0x84;
-  // v0[34] = 0x81;
-  v0[31] = 0xf5;
-
-  s0 = {v0.begin(), v0.end()};
-  s = RemoveInvalidUtf8Sequences(s0);
-
-  EXPECT_EQ(s.size() + 4, v.size());
+TEST(RemoveInvalidUtf8Sequences, CorruptingFourByteCharRemovesIt) {
+  // The musical symbol occupies bytes 32..35; 0xF5 is not a valid lead byte.
+  std::string input = kMixedScriptText;
+  input[32] = static_cast<char>(0xF5);
+  EXPECT_EQ(RemoveInvalidUtf8Sequences(input), "\xe4\xbb\x8a\xe5\xa4\xa9is Monday, wie hei\xc3\x9f" "en Sie");
 }
 
 // Tests for sanitizeUtf8
@@ -112,12 +91,6 @@ TEST(RemoveInvalidUtf8Sequences, MultipleInvalidBytes) {
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
-TEST(RemoveInvalidUtf8Sequences, BreakingCase_SpaceFollowedByInvalidByte) {
-  std::string input = "\x20\xC4";  // Space followed by an invalid byte
-  std::string expected = " ";      // 0xC4 removed
-  EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
-}
-
 TEST(RemoveInvalidUtf8Sequences, ValidUtf8WithEdgeCaseCharacters) {
   std::string input = "Edge 🏆💯";
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), input);
@@ -129,35 +102,11 @@ TEST(RemoveInvalidUtf8Sequences, MixedValidAndInvalidBytes) {
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
-TEST(RemoveInvalidUtf8Sequences, SpaceFollowedByInvalidByte) {
-  std::string input = "\x20\xC4";  // Space (0x20) followed by invalid (0xC4)
-  std::string expected = " ";      // Space remains, 0xC4 is removed
-  EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
-}
-
-TEST(RemoveInvalidUtf8Sequences, RemoveTruncatedC4) {
-  std::string input = "Hello \xc4 world";  // Invalid `0xC4`
-  std::string expected = "Hello  world";   // `0xC4` should be removed
-  EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
-}
-
-TEST(RemoveInvalidUtf8Sequences, SpaceFollowedByInvalidByte_Breaking) {
-  std::string input = "\x20\xc4";  // Space followed by invalid `0xc4`
-  std::string expected = " ";      // `0xc4` should be removed, space remains
-  EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
-}
-
-TEST(RemoveInvalidUtf8Sequences, DebugSpaceFollowedByInvalidByte) {
-  std::string input = "\x20\xc4";  // Space followed by invalid `0xc4`
-  std::string output = RemoveInvalidUtf8Sequences(input);
-
-  std::cout << "Processed string: ";
-  for (unsigned char c : output) {
-    printf("\\x%02x ", c);
-  }
-  std::cout << std::endl;
-
-  EXPECT_EQ(output, " ");  // Expect `0xc4` to be removed, leaving only space
+TEST(RemoveInvalidUtf8Sequences, TruncatedLeadByteIsDropped) {
+  // 0xC4 is a 2-byte lead byte with no continuation: the whole byte goes.
+  // The surrounding text is untouched, including the space before it.
+  EXPECT_EQ(RemoveInvalidUtf8Sequences(std::string("\x20\xc4")), " ");
+  EXPECT_EQ(RemoveInvalidUtf8Sequences("Hello \xc4 world"), "Hello  world");
 }
 
 TEST(SplitUtf8, TruncatedSequenceAtEndIsSkipped) {
@@ -371,8 +320,9 @@ TEST(ParseLexiconFile, MultiWord) {
   EXPECT_EQ(entries[0].phonemes[1], "j");
   EXPECT_EQ(entries[0].phonemes[2], "u");
   EXPECT_EQ(entries[0].phonemes[3], "ː");
-  // max_len counts words, not codepoints (#4020): "new york" is two words.
-  EXPECT_EQ(max_len, 2);
+  // max_len counts lookup tokens (#4020): "new york" is two runs plus the
+  // space token, and the space-preserving frontends need all three.
+  EXPECT_EQ(max_len, 3);
 }
 
 TEST(ParseLexiconFile, PinyinKeptWhole) {
@@ -600,11 +550,10 @@ TEST(NormalizeLexiconKey, ComposesThenLowercases) {
   EXPECT_EQ(NormalizeLexiconKey(std::string("A\xcc\x84")), std::string("\xc4\x81"));
 }
 
-TEST(CountLexiconPhraseWords, LatinCountsSpaceSeparatedRuns) {
+TEST(CountLexiconPhraseWords, LatinRuns) {
   EXPECT_EQ(CountLexiconPhraseWords("hello"), 1);
-  EXPECT_EQ(CountLexiconPhraseWords("hello world"), 2);
-  EXPECT_EQ(CountLexiconPhraseWords("new york city"), 3);
-  EXPECT_EQ(CountLexiconPhraseWords("  spaced   out  "), 2);
+  EXPECT_EQ(CountLexiconPhraseWords("hello world"), 3);   // run, space, run
+  EXPECT_EQ(CountLexiconPhraseWords("new york city"), 5);
   EXPECT_EQ(CountLexiconPhraseWords(""), 0);
 }
 
@@ -616,17 +565,27 @@ TEST(CountLexiconPhraseWords, CjkCountsOnePerCharacter) {
   EXPECT_EQ(CountLexiconPhraseWords("中国北京"), 4);
 }
 
+TEST(CountLexiconPhraseWords, SpacesAndPunctuationCountAsTokens) {
+  // Kokoro, Kitten and Matcha keep spaces and punctuation as tokens and those
+  // consume `len` in the longest-match loop. "new   york" therefore needs a
+  // bound of 5 there, and an under-estimate loses the phrase entirely.
+  EXPECT_EQ(CountLexiconPhraseWords("new   york"), 5);
+  EXPECT_EQ(CountLexiconPhraseWords("hello, world"), 4);  // run , space run
+  EXPECT_EQ(CountLexiconPhraseWords("a.b"), 3);
+}
+
 TEST(CountLexiconPhraseWords, MixedText) {
   // A non-CJK run is one token, each CJK character is one token.
   EXPECT_EQ(CountLexiconPhraseWords("hello中国"), 3);
   EXPECT_EQ(CountLexiconPhraseWords("zhong1"), 1);
-  EXPECT_EQ(CountLexiconPhraseWords("zhong1 guo2"), 2);
+  EXPECT_EQ(CountLexiconPhraseWords("zhong1 guo2"), 3);
 }
 
-TEST(CountLexiconPhraseWords, PunctuationIsNotCounted) {
-  // Punctuation tokens are passed through by the tokenizers, never looked up.
-  EXPECT_EQ(CountLexiconPhraseWords("hello, world"), 2);
-  EXPECT_EQ(CountLexiconPhraseWords("a.b"), 1);
+TEST(CountLexiconPhraseWords, SingleWordLexiconsGetABoundOfOne) {
+  // The case that motivated tightening the bound at all: a lexicon of plain
+  // words must not make every position try a 40-token phrase.
+  EXPECT_EQ(CountLexiconPhraseWords("rūpaṁ"), 1);
+  EXPECT_EQ(CountLexiconPhraseWords("saṅkhārā"), 1);
 }
 
 // ---------------------------------------------------------------------
@@ -853,6 +812,125 @@ TEST(AssignLexiconPieceBoundaries, ConsecutiveSkippedPiecesCollapseToOneBoundary
   EXPECT_FALSE(b[0]);
   EXPECT_FALSE(b[1]);
   EXPECT_TRUE(b[2]);
+}
+
+TEST(ToLowerCase, BytesOverloadStaysByteWise) {
+  // The legacy lexicon loaders (CharacterLexicon, HomophoneReplacer, Lexicon,
+  // MeloTts, the NeMo transducer model) call this overload and do not apply
+  // Unicode lowercasing when looking keys up. Making it Unicode-aware stored
+  // fullwidth A as its small form and then failed to match an unchanged query.
+  std::string s = "\xef\xbc\xa1";  // fullwidth A, U+FF21
+  ToLowerCase(&s);
+  EXPECT_EQ(s, std::string("\xef\xbc\xa1"));
+
+  std::string ascii = "ABC";
+  ToLowerCase(&ascii);
+  EXPECT_EQ(ascii, "abc");
+}
+
+TEST(NormalizeNfc, MarksComposeAndThenBlock) {
+  // a + dot-below(220) composes to U+1EA1; the acute(230) stays a mark on the
+  // composite. Confirmed against Python's unicodedata NFC.
+  std::u32string s = {U'a', 0x0323, 0x0301};
+  NormalizeNfc(&s);
+  ASSERT_EQ(s.size(), 2u);
+  EXPECT_EQ(s[0], 0x1EA1);
+  EXPECT_EQ(s[1], 0x0301);
+}
+
+TEST(NormalizeNfc, LeadingMarkIsNotACompositionTarget) {
+  // A leading mark must not be treated as a starter: it must not absorb a
+  // following mark, and it must count towards the blocking class.
+  std::u32string s = {0x0301, 0x0301, U'a'};
+  NormalizeNfc(&s);
+  std::u32string want = {0x0301, 0x0301, U'a'};
+  EXPECT_EQ(s, want);
+}
+
+TEST(NormalizeNfc, LongMarkRunIsNotQuadratic) {
+  // Regression for the O(n^2) rescan: a base followed by a long run of marks.
+  // At 50k marks the quadratic version needs ~2.5e9 backward-search steps and
+  // would stall; the incremental one is linear. This test is the guard.
+  std::u32string s(50001, 0x0301);
+  s[0] = U'b';
+  NormalizeNfc(&s);
+  EXPECT_EQ(s[0], U'b');
+}
+
+// Mark names are spelled out because raw codepoints in a table are impossible
+// to review. Expected values come from Python's unicodedata.normalize('NFC'),
+// the reference implementation.
+static constexpr char32_t kAcute = 0x0301;        // combining acute accent
+static constexpr char32_t kGrave = 0x0300;        // combining grave accent
+static constexpr char32_t kMacron = 0x0304;       // combining macron
+static constexpr char32_t kDotBelow = 0x0323;     // combining dot below
+static constexpr char32_t kGraveBelow = 0x0316;   // combining grave below
+static constexpr char32_t kCedilla = 0x0327;      // combining cedilla
+static constexpr char32_t kVoicedMark = 0x3099;   // combining voiced sound mark
+
+// Hangul jamo and syllables (UAX #15 section 16). The syllables are derived
+// from the jamo rather than typed in, so they cannot go stale.
+static constexpr char32_t kHangulL = 0x1112;   // choseong hieuh
+static constexpr char32_t kHangulV = 0x1161;   // jungseong a
+static constexpr char32_t kHangulT = 0x11A8;   // jongseong kiyeok
+static constexpr char32_t kHangulLV =
+    0xAC00 + ((kHangulL - 0x1100) * 21 + (kHangulV - 0x1161)) * 28;
+static constexpr char32_t kHangulLVT = kHangulLV + (kHangulT - 0x11A7);
+
+TEST(NormalizeNfc, MatchesUnicodeReference) {
+  struct Case {
+    const char *what;
+    std::u32string in;
+    std::u32string want;
+  };
+  static const Case cases[] = {
+      // ---- base + mark, where a precomposed form exists ----
+      {"a + acute composes", {U'a', kAcute}, {0x00E1}},
+      {"A + acute composes", {U'A', kAcute}, {0x00C1}},
+      {"a + macron composes", {U'a', kMacron}, {0x0101}},
+      {"A + macron composes to U+0100", {U'A', kMacron}, {0x0100}},
+      {"a + grave composes", {U'a', kGrave}, {0x00E0}},
+
+      // ---- base + mark, where no precomposed form exists ----
+      {"a + grave-below stays decomposed", {U'a', kGraveBelow}, {U'a', kGraveBelow}},
+      {"a + cedilla stays decomposed", {U'a', kCedilla}, {U'a', kCedilla}},
+
+      // ---- multi-stage: the pair is the immediate decomposition ----
+      {"a-circumflex + acute -> U+1EA5", {0x00E2, kAcute}, {0x1EA5}},
+      {"a + dot-below + acute", {U'a', kDotBelow, kAcute}, {0x1EA1, kAcute}},
+
+      // ---- starter + starter (Bengali, Tamil) ----
+      {"Bengali U+09C7 + U+09BE -> U+09CB", {0x09C7, 0x09BE}, {0x09CB}},
+      {"Tamil U+0BC6 + U+0BBE -> U+0BCA", {0x0BC6, 0x0BBE}, {0x0BCA}},
+
+      // ---- Hangul is algorithmic ----
+      {"Hangul L + V -> LV", {kHangulL, kHangulV}, {kHangulLV}},
+      {"Hangul LV + T -> LVT", {kHangulLV, kHangulT}, {kHangulLVT}},
+      {"precomposed syllable round-trips", {kHangulLVT}, {kHangulLVT}},
+
+      // ---- Japanese voiced mark, which IsCJK also accepts ----
+      {"HIRAGANA KA + voiced mark -> GA", {0x304B, kVoicedMark}, {0x304C}},
+
+      // ---- leading marks must not become composition targets ----
+      {"leading mark is inert", {kAcute, U'a'}, {kAcute, U'a'}},
+      {"two leading marks stay", {kAcute, kAcute, U'a'}, {kAcute, kAcute, U'a'}},
+
+      // ---- equal combining class blocks (UAX #15 D117) ----
+      {"a + acute + acute keeps the second", {U'a', kAcute, kAcute}, {0x00E1, kAcute}},
+
+      // ---- already-composed input round-trips ----
+      {"precomposed U+0101 round-trips", {0x0101}, {0x0101}},
+      {"precomposed U+1EA5 round-trips", {0x1EA5}, {0x1EA5}},
+
+      // ---- mixed ----
+      {"macron then grave and acute", {U'a', kMacron, kGrave, kAcute}, {0x0101, kGrave, kAcute}},
+  };
+
+  for (const auto &c : cases) {
+    std::u32string s = c.in;
+    NormalizeNfc(&s);
+    EXPECT_EQ(s, c.want) << c.what;
+  }
 }
 
 }  // namespace sherpa_onnx

@@ -18,7 +18,6 @@
 #include "sherpa-onnx/csrc/offline-tts-kitten-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
-#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 #include "sherpa-onnx/csrc/tts-text-normalizer.h"
 
 namespace sherpa_onnx {
@@ -227,7 +226,7 @@ class OfflineTtsKittenImpl : public OfflineTtsImpl {
       }
     } else {
       // Lexicon path
-      auto sentences = SplitByAllPunctuation(text);
+      auto sentences = SplitByAllPunctuation(NormalizeNfc(text));
       if (sentences.empty()) {
         SHERPA_ONNX_LOGE("No sentences after splitting");
         return {};

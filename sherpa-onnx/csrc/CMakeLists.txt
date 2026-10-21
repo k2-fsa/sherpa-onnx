@@ -151,7 +151,6 @@ set(sources
   timer.cc
   transducer-keyword-decoder.cc
   transpose.cc
-  unicode-case-mapping.cc
   unbind.cc
   utils.cc
   vad-model-config.cc
@@ -390,6 +389,7 @@ endif()
 
 target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
+  utf8proc
   kaldi-decoder-core
   ssentencepiece_core
 )

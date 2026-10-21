@@ -17,6 +17,7 @@
         kissfft-float.lib;
         onnxruntime.lib;
         ssentencepiece_core.lib;
+        utf8proc.lib;
     </SherpaOnnxLibraries>
   </PropertyGroup>
   <ItemDefinitionGroup>

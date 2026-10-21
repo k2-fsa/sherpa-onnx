@@ -18,7 +18,6 @@
 #include "sherpa-onnx/csrc/offline-tts-kokoro-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
-#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 #include "sherpa-onnx/csrc/tts-text-normalizer.h"
 
 namespace sherpa_onnx {

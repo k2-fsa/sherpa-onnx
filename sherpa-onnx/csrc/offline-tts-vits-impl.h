@@ -23,7 +23,6 @@
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/tts-text-normalizer.h"
-#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 
 namespace sherpa_onnx {
 
