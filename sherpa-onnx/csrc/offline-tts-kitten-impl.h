@@ -18,6 +18,7 @@
 #include "sherpa-onnx/csrc/offline-tts-kitten-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 #include "sherpa-onnx/csrc/tts-text-normalizer.h"
 
 namespace sherpa_onnx {
@@ -402,7 +403,7 @@ class OfflineTtsKittenImpl : public OfflineTtsImpl {
       bool debug, int32_t sentence_index = 0) const {
     std::vector<TokenIDs> result;
 
-    std::string normalized = ReplacePunctuations(text);
+    std::string normalized = NormalizeNfc(ReplacePunctuations(text));
 
     if (debug) {
 #if __OHOS__

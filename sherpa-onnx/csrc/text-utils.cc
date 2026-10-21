@@ -531,6 +531,19 @@ std::vector<LexiconPiece> SplitLexiconPieces(const std::u32string &core) {
   return pieces;
 }
 
+std::vector<bool> AssignLexiconPieceBoundaries(
+    const std::vector<bool> &needs_boundary, const std::vector<bool> &found) {
+  std::vector<bool> out(needs_boundary.size(), false);
+  bool pending = false;
+  for (std::size_t i = 0; i < needs_boundary.size(); ++i) {
+    if (needs_boundary[i]) pending = true;
+    if (!found[i]) continue;
+    out[i] = pending;
+    pending = false;
+  }
+  return out;
+}
+
 std::wstring ToLowerCase(const std::wstring &s) {
   // Note: wchar_t is a UTF-16 code unit on Windows, so this maps per code
   // unit rather than per codepoint there. All of Latin Extended-A/B, Greek

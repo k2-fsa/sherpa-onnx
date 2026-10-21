@@ -773,4 +773,86 @@ TEST(SplitLexiconPieces, LeadingTrailingSeparatorsProduceNoEmptyPieces) {
   EXPECT_TRUE(pieces[0].needs_boundary);
 }
 
+// ---------------------------------------------------------------------
+// Follow-up review findings.
+// ---------------------------------------------------------------------
+
+TEST(ToSimpleLower, SimpleMappingNotFullLowercase) {
+  // str.lower() maps U+0130 to i + U+0307 (two codepoints). The table must
+  // hold the *simple* mapping, U+0130 -> i, or Istanbul never matches
+  // istanbul.
+  EXPECT_EQ(ToSimpleLower(static_cast<char32_t>(0x130)), U'i');
+  // Cased numerals and symbols are not category L but still case-fold.
+  EXPECT_EQ(ToSimpleLower(static_cast<char32_t>(0x2167)), 0x2177);  // Ⅷ -> ⅸ
+  EXPECT_EQ(ToSimpleLower(static_cast<char32_t>(0x24B6)), 0x24D0);  // Ⓐ -> ⓐ
+}
+
+TEST(ToSimpleLower, ExpansionsAreNotMapped) {
+  // These have no 1:1 simple lowercase: U+00DF expands to "ss" and U+FB01 to
+  // "fi". Mapping them to their first character would be wrong.
+  EXPECT_EQ(ToSimpleLower(static_cast<char32_t>(0xDF)), 0xDF);
+  EXPECT_EQ(ToSimpleLower(static_cast<char32_t>(0xFB01)), 0xFB01);
+}
+
+TEST(NormalizeNfc, ComposesBeforeTokenizationWouldSplit) {
+  // U+3099 is a combining voiced sound mark that IsCJK() also accepts, so a
+  // tokenizer that splits before normalizing emits it as its own token and
+  // the pair can never match a stored が. Normalizing the whole query first
+  // keeps it as one character.
+  std::u32string s = {0x304B, 0x3099};  // HIRAGANA KA + voiced mark
+  NormalizeNfc(&s);
+  EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0x304C)));  // が
+}
+
+TEST(CountLexiconPhraseWords, CjkCountsOnePerCharacterAfterNfc) {
+  // Once normalized, a decomposed Hangul pair is one syllable, hence one
+  // lookup token; the Jamo form would count as two.
+  std::string jamo = "\xe1\x84\x92\xe1\x85\xa1";  // U+1112 U+1161
+  std::string syllable = NormalizeNfc(jamo);      // U+1112 + U+1161 -> U+D55C
+  EXPECT_EQ(CountLexiconPhraseWords(jamo), 2);
+  EXPECT_EQ(CountLexiconPhraseWords(syllable), 1);
+}
+
+TEST(AssignLexiconPieceBoundaries, SkippedPiecePassesItsBoundaryOn) {
+  // "hello zzzqxx-world": zzzqxx is OOV and dropped, but it still owes a
+  // boundary before "world", or the two spoken words run together.
+  std::vector<bool> needs = {true, true, false};  // hello | zzzqxx-world
+  std::vector<bool> found = {true, false, true};
+  auto b = AssignLexiconPieceBoundaries(needs, found);
+  ASSERT_EQ(b.size(), 3u);
+  EXPECT_TRUE(b[0]);   // hello
+  EXPECT_FALSE(b[1]);  // skipped
+  EXPECT_TRUE(b[2]);   // world inherits zzzqxx's claim
+}
+
+TEST(AssignLexiconPieceBoundaries, HyphenDoesNotSplitEmittedPieces) {
+  // "two-thirds": both found, hyphen joins them into one spoken word.
+  std::vector<bool> needs = {true, false};
+  std::vector<bool> found = {true, true};
+  auto b = AssignLexiconPieceBoundaries(needs, found);
+  ASSERT_EQ(b.size(), 2u);
+  EXPECT_TRUE(b[0]);
+  EXPECT_FALSE(b[1]);
+}
+
+TEST(AssignLexiconPieceBoundaries, TrailingSkippedPieceClaimsNothing) {
+  // Nothing after the skipped piece to receive the boundary.
+  std::vector<bool> needs = {true, true};
+  std::vector<bool> found = {true, false};
+  auto b = AssignLexiconPieceBoundaries(needs, found);
+  ASSERT_EQ(b.size(), 2u);
+  EXPECT_TRUE(b[0]);
+  EXPECT_FALSE(b[1]);
+}
+
+TEST(AssignLexiconPieceBoundaries, ConsecutiveSkippedPiecesCollapseToOneBoundary) {
+  std::vector<bool> needs = {true, true, false};
+  std::vector<bool> found = {false, false, true};
+  auto b = AssignLexiconPieceBoundaries(needs, found);
+  ASSERT_EQ(b.size(), 3u);
+  EXPECT_FALSE(b[0]);
+  EXPECT_FALSE(b[1]);
+  EXPECT_TRUE(b[2]);
+}
+
 }  // namespace sherpa_onnx

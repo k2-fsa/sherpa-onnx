@@ -24,6 +24,7 @@
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 #include "sherpa-onnx/csrc/tts-text-normalizer.h"
 #include "sherpa-onnx/csrc/vocoder.h"
 
@@ -389,7 +390,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 #endif
       }
 
-      std::string normalized = ReplacePunctuations(text);
+      std::string normalized = NormalizeNfc(ReplacePunctuations(text));
 
       auto sentences = SplitByAllPunctuation(normalized);
       if (sentences.empty()) {
@@ -730,7 +731,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   std::vector<int64_t> TokenizeText(const std::string &text,
                                     bool debug) const {
     std::vector<int64_t> ids;
-    std::string normalized = ReplacePunctuations(text);
+    std::string normalized = NormalizeNfc(ReplacePunctuations(text));
 
     if (debug) {
 #if __OHOS__

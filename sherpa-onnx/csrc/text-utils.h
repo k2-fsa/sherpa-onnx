@@ -160,6 +160,14 @@ struct LexiconPiece {
 // Split |core| into lookup pieces for the OOV fallback. |core| is assumed to
 // already have its leading/trailing non-word characters stripped.
 std::vector<LexiconPiece> SplitLexiconPieces(const std::u32string &core);
+
+// Decide which lookup pieces get a word boundary in front. |needs_boundary|
+// and |found| are parallel to the piece list; |found[i]| is false when the
+// piece has no lexicon entry and is skipped. A skipped piece passes its
+// boundary claim on to the next emitted one, so dropping a word cannot glue
+// the words around it together.
+std::vector<bool> AssignLexiconPieceBoundaries(
+    const std::vector<bool> &needs_boundary, const std::vector<bool> &found);
 void ToLowerCase(std::string *in_out);
 
 std::wstring ToLowerCase(const std::wstring &s);

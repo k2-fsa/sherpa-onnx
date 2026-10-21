@@ -308,11 +308,25 @@ def main() -> int:
         # digits when a punctuation-bearing token is split.
         if cat.startswith(("L", "M", "N")):
             word_cps.append(cp)
-        if cat[0] == "L":
-            lo = ch.lower()
-            # keep only simple 1:1 mappings (str.lower() can expand, e.g. SS)
-            if len(lo) == 1 and ord(lo) != cp:
-                pairs.append((cp, ord(lo)))
+
+        # Simple (1:1) lowercase mapping. Python's str.lower() is the *full*
+        # lowercase mapping and may expand -- U+0130 gives i + U+0307, U+00DF
+        # gives ss -- so taking it verbatim misses U+0130 -> i and would be
+        # wrong for U+00DF. The rule: a one-codepoint result is the mapping;
+        # a result that is one base plus combining marks has that base as its
+        # simple mapping; anything else has none. Do not restrict by category,
+        # or cased numerals (U+2167) and circled letters (U+24B6) are lost.
+        lo = ch.lower()
+        if len(lo) == 1:
+            mapped = ord(lo)
+        elif lo and all(unicodedata.category(c).startswith("M") for c in lo[1:]):
+            # One base plus combining marks: the base is the simple mapping.
+            # Only the tail may be marks -- the base itself is a letter.
+            mapped = ord(lo[0])
+        else:
+            mapped = cp
+        if mapped != cp:
+            pairs.append((cp, mapped))
 
         d = unicodedata.decomposition(ch)
         c = unicodedata.combining(ch)

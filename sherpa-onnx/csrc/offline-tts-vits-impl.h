@@ -807,20 +807,40 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       return;
     }
 
-    // 3. still OOV: split on non-word characters and look up each piece.
-    for (const auto &piece : SplitLexiconPieces(core)) {
+    // 3. still OOV: split on non-word characters and look up each piece. A
+    //    boundary owed by a skipped piece survives to the next emitted one, so
+    //    dropping a word cannot glue its neighbours together.
+    auto pieces = SplitLexiconPieces(core);
+    std::vector<bool> needs_boundary;
+    std::vector<bool> found;
+    std::vector<const std::vector<int32_t> *> matched;
+    needs_boundary.reserve(pieces.size());
+    found.reserve(pieces.size());
+    matched.reserve(pieces.size());
+
+    for (const auto &piece : pieces) {
+      needs_boundary.push_back(piece.needs_boundary);
       auto it2 = lexicon_.find(NormalizeLexiconKey(piece.text));
       if (it2 == lexicon_.end()) {
         // Always report dropped words; never hide them behind the debug flag.
         SHERPA_ONNX_LOGE("OOV word skipped: '%s'", piece.text.c_str());
-        continue;
+        found.push_back(false);
+        matched.push_back(nullptr);
+      } else {
+        found.push_back(true);
+        matched.push_back(&it2->second);
       }
-      if (piece.needs_boundary) {
+    }
+
+    auto boundaries = AssignLexiconPieceBoundaries(needs_boundary, found);
+    for (std::size_t i = 0; i < pieces.size(); ++i) {
+      if (!found[i]) continue;
+      if (boundaries[i]) {
         AppendWordBoundary(sentence_codepoints);
       }
-      LogMatched(piece.text, it2->second, debug);
+      LogMatched(pieces[i].text, *matched[i], debug);
       sentence_codepoints->insert(sentence_codepoints->end(),
-                                  it2->second.begin(), it2->second.end());
+                                  matched[i]->begin(), matched[i]->end());
     }
   }
 

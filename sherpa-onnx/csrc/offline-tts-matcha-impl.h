@@ -20,6 +20,7 @@
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/unicode-case-mapping.h"
 #include "sherpa-onnx/csrc/tts-text-normalizer.h"
 #include "sherpa-onnx/csrc/vocoder.h"
 
@@ -465,7 +466,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     } else {
       // Lexicon path: convert Chinese punctuations, split text into sentences,
       // merge short ones, split long ones, then tokenize each sentence.
-      std::string normalized = ReplacePunctuations(text);
+      std::string normalized = NormalizeNfc(ReplacePunctuations(text));
       if (debug) {
 #if __OHOS__
         SHERPA_ONNX_LOGE("After replacing punctuations: %{public}s",
