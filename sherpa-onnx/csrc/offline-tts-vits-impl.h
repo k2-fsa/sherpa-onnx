@@ -698,7 +698,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           std::string phrase;
           for (int32_t j = i; j < i + len; ++j) {
             if (j > i) phrase.push_back(' ');
-            phrase += ToLowerCase(words[j]);
+            phrase += NormalizeLexiconKey(words[j]);
           }
 
           auto it = lexicon_.find(phrase);
@@ -798,7 +798,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
     // 2. retry with the edges stripped
     std::string core_s = Utf32ToUtf8(core);
-    auto it = lexicon_.find(ToLowerCase(core_s));
+    auto it = lexicon_.find(NormalizeLexiconKey(core_s));
     if (it != lexicon_.end()) {
       AppendWordBoundary(sentence_codepoints);
       LogMatched(core_s, it->second, debug);
@@ -807,32 +807,18 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       return;
     }
 
-    // 3. still OOV: split on non-word characters and look up each piece, e.g.
-    //    "two-thirds" -> "two" + "thirds". The pieces of one token form a
-    //    single spoken word, so only the first gets a word boundary.
-    bool first = true;
-    std::u32string piece;
-    for (std::size_t k = 0; k <= core.size(); ++k) {
-      if (k < core.size() && IsLexiconWordChar(core[k])) {
-        piece.push_back(core[k]);
-        continue;
-      }
-      if (piece.empty()) continue;
-
-      std::string piece_s = Utf32ToUtf8(piece);
-      piece.clear();
-
-      auto it2 = lexicon_.find(ToLowerCase(piece_s));
+    // 3. still OOV: split on non-word characters and look up each piece.
+    for (const auto &piece : SplitLexiconPieces(core)) {
+      auto it2 = lexicon_.find(NormalizeLexiconKey(piece.text));
       if (it2 == lexicon_.end()) {
         // Always report dropped words; never hide them behind the debug flag.
-        SHERPA_ONNX_LOGE("OOV word skipped: '%s'", piece_s.c_str());
+        SHERPA_ONNX_LOGE("OOV word skipped: '%s'", piece.text.c_str());
         continue;
       }
-      if (first) {
+      if (piece.needs_boundary) {
         AppendWordBoundary(sentence_codepoints);
-        first = false;
       }
-      LogMatched(piece_s, it2->second, debug);
+      LogMatched(piece.text, it2->second, debug);
       sentence_codepoints->insert(sentence_codepoints->end(),
                                   it2->second.begin(), it2->second.end());
     }

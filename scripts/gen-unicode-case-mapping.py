@@ -140,8 +140,31 @@ uint32_t GetCanonicalCombiningClass(char32_t cp) {
 
 namespace {
 
+// Hangul syllable composition (UAX #15 section 16). Algorithmic, so the
+// syllables are absent from both tables above.
+constexpr char32_t kHangulSBase = 0xAC00;
+constexpr char32_t kHangulLBase = 0x1100;
+constexpr char32_t kHangulVBase = 0x1161;
+constexpr char32_t kHangulTBase = 0x11A7;
+constexpr int32_t kHangulLCount = 19;
+constexpr int32_t kHangulVCount = 21;
+constexpr int32_t kHangulTCount = 28;
+constexpr int32_t kHangulNCount = kHangulVCount * kHangulTCount;  // 588
+constexpr int32_t kHangulSCount = kHangulLCount * kHangulNCount;  // 11172
+
 // Recursive canonical decomposition of |cp| into |out|.
 void Decompose(char32_t cp, std::u32string *out) {
+  // Hangul syllables decompose algorithmically and so are absent from
+  // kDecompose.
+  if (cp >= kHangulSBase && cp < kHangulSBase + kHangulSCount) {
+    int32_t sindex = static_cast<int32_t>(cp - kHangulSBase);
+    out->push_back(kHangulLBase + sindex / kHangulNCount);
+    out->push_back(kHangulVBase + (sindex % kHangulNCount) / kHangulTCount);
+    int32_t t = sindex % kHangulTCount;
+    if (t != 0) out->push_back(kHangulTBase + t);
+    return;
+  }
+
   auto it = std::lower_bound(
       kDecompose, kDecompose + kDecomposeSize, cp,
       [](const Decomposition &p, char32_t v) { return p.cp < v; });
@@ -152,15 +175,30 @@ void Decompose(char32_t cp, std::u32string *out) {
   for (int32_t i = 0; i < it->len; ++i) Decompose(it->d[i], out);
 }
 
-// Canonical composition of (starter, mark) -> composite.
-bool TryCompose(char32_t starter, char32_t mark, char32_t *composed) {
-  char32_t key_a = starter, key_b = mark;
+// Canonical composition of (first, second) -> composite.
+bool TryCompose(char32_t first, char32_t second, char32_t *composed) {
+  // L + V -> LV, and LV + T -> LVT.
+  if (first >= kHangulLBase && first < kHangulLBase + kHangulLCount &&
+      second >= kHangulVBase && second < kHangulVBase + kHangulVCount) {
+    *composed = kHangulSBase +
+                ((first - kHangulLBase) * kHangulVCount +
+                 (second - kHangulVBase)) *
+                    kHangulTCount;
+    return true;
+  }
+  if (first >= kHangulSBase && first < kHangulSBase + kHangulSCount &&
+      (first - kHangulSBase) % kHangulTCount == 0 &&
+      second > kHangulTBase && second < kHangulTBase + kHangulTCount) {
+    *composed = first + (second - kHangulTBase);
+    return true;
+  }
+
   auto it = std::lower_bound(
-      kCompose, kCompose + kComposeSize, CodepointTriple{key_a, key_b, 0},
+      kCompose, kCompose + kComposeSize, CodepointTriple{first, second, 0},
       [](const CodepointTriple &p, const CodepointTriple &v) {
         return p.a != v.a ? p.a < v.a : p.b < v.b;
       });
-  if (it != kCompose + kComposeSize && it->a == starter && it->b == mark) {
+  if (it != kCompose + kComposeSize && it->a == first && it->b == second) {
     *composed = it->c;
     return true;
   }
@@ -193,10 +231,24 @@ bool NormalizeNfc(std::u32string *s) {
   std::u32string out;
   out.reserve(nfd.size());
   for (char32_t cp : nfd) {
-    uint32_t cc_cp = GetCanonicalCombiningClass(cp);
-    if (out.empty() || cc_cp == 0) {
-      // starters never compose with a previous starter
+    if (out.empty()) {
       out.push_back(cp);
+      continue;
+    }
+
+    uint32_t cc_cp = GetCanonicalCombiningClass(cp);
+    if (cc_cp == 0) {
+      // A starter may compose with the starter directly before it; anything
+      // intervening blocks it (UAX #15 D117). Bengali U+09CB, Tamil U+0BCA and
+      // friends are two starters that must recompose, so this must not be a
+      // blanket early return.
+      char32_t composed = 0;
+      if (GetCanonicalCombiningClass(out.back()) == 0 &&
+          TryCompose(out.back(), cp, &composed)) {
+        out.back() = composed;
+      } else {
+        out.push_back(cp);
+      }
       continue;
     }
 
@@ -251,7 +303,10 @@ def main() -> int:
     for cp in range(0x110000):
         ch = chr(cp)
         cat = unicodedata.category(ch)
-        if cat.startswith(("L", "M")):
+        # L = letter, M = combining mark, N = number. Numbers must count as
+        # word characters or pinyin keys like "zhong1-guo2" lose their tone
+        # digits when a punctuation-bearing token is split.
+        if cat.startswith(("L", "M", "N")):
             word_cps.append(cp)
         if cat[0] == "L":
             lo = ch.lower()
@@ -268,8 +323,20 @@ def main() -> int:
             if full != [cp]:
                 padded = list(full) + [0] * (4 - len(full))
                 dec.append((cp, len(full), padded[0], padded[1], padded[2], padded[3]))
-            if len(full) == 2:
-                comp.append((full[0], full[1], cp))
+            if len(full) >= 2:
+                # Primary composites must come from the *immediate* canonical
+                # decomposition, and only when NFC really recomposes to |cp|.
+                # Guarding on the fully-expanded length is wrong: multi-stage
+                # pairs such as â + acute -> ấ expand to three codepoints but
+                # still have a two-part immediate decomposition. The NFC check
+                # drops composition-exclusion pairs such as क + nukta -> U+0958
+                # that NFC deliberately refuses to compose.
+                imm = [int(x, 16) for x in d.split()]
+                if len(imm) == 2:
+                    base, mark = imm
+                    recomposed = unicodedata.normalize("NFC", chr(base) + chr(mark))
+                    if len(recomposed) == 1 and ord(recomposed) == cp:
+                        comp.append((base, mark, cp))
 
     # kCompose is binary-searched by (base, mark), so it must be sorted by
     # that key -- not by the composite codepoint the loop above walks.

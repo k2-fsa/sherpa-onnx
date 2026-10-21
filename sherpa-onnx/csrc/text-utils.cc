@@ -475,6 +475,62 @@ std::string ToLowerCase(const std::string &s) {
 
 void ToLowerCase(std::string *in_out) { *in_out = ToLowerCase(*in_out); }
 
+std::string NormalizeLexiconKey(const std::string &s) {
+  // NFC -> lowercase -> NFC. The trailing NFC matters: lowercasing can leave a
+  // decomposed sequence that only composes afterwards (J + U+030C lowercases
+  // to j + U+030C, which then composes to U+01F0 and matches a `ǰ` lexicon
+  // key). The leading NFC keeps the already-composed cases working.
+  return NormalizeNfc(ToLowerCase(NormalizeNfc(s)));
+}
+
+int32_t CountLexiconPhraseWords(const std::string &key) {
+  std::u32string u32 = Utf8ToUtf32(key);
+  int32_t count = 0;
+  bool in_run = false;
+  for (char32_t cp : u32) {
+    if (IsCJK(cp)) {
+      // A CJK character is one lookup token on its own.
+      in_run = false;
+      ++count;
+    } else if (cp == U' ') {
+      in_run = false;
+    } else {
+      if (!in_run) {
+        in_run = true;
+        ++count;
+      }
+    }
+  }
+  return count;
+}
+
+std::vector<LexiconPiece> SplitLexiconPieces(const std::u32string &core) {
+  std::vector<LexiconPiece> pieces;
+  std::u32string piece;
+  // A boundary belongs before the first piece, and before any piece that
+  // follows a separator other than a hyphen.
+  bool pending_boundary = true;
+
+  for (std::size_t k = 0; k <= core.size(); ++k) {
+    bool is_word = (k < core.size()) && IsLexiconWordChar(core[k]);
+    if (is_word) {
+      piece.push_back(core[k]);
+      continue;
+    }
+
+    if (!piece.empty()) {
+      pieces.push_back({Utf32ToUtf8(piece), pending_boundary});
+      piece.clear();
+      pending_boundary = false;
+    }
+
+    if (k < core.size() && core[k] != U'-') {
+      pending_boundary = true;
+    }
+  }
+  return pieces;
+}
+
 std::wstring ToLowerCase(const std::wstring &s) {
   // Note: wchar_t is a UTF-16 code unit on Windows, so this maps per code
   // unit rather than per codepoint there. All of Latin Extended-A/B, Greek
@@ -1672,7 +1728,7 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
     auto pos = line.find("||");
     if (pos != std::string::npos) {
       // New-format: word || phone1 phone2 ...
-      key = ToLowerCase(NormalizeNfc(Trim(line.substr(0, pos))));
+      key = NormalizeLexiconKey(Trim(line.substr(0, pos)));
       std::istringstream pss(Trim(line.substr(pos + 2)));
       std::string phone;
       while (pss >> phone) {
@@ -1684,7 +1740,7 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
       std::string word;
       iss >> word;
       if (word.empty()) continue;
-      key = ToLowerCase(NormalizeNfc(word));
+      key = NormalizeLexiconKey(word);
       std::string phone;
       while (iss >> phone) {
         phonemes.push_back(std::move(phone));
@@ -1693,14 +1749,12 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
 
     if (key.empty() || phonemes.empty()) continue;
 
-    // Count space-separated words, not codepoints. This value is consumed as a
-    // word count by the longest-match lookup (max_try = min(max_phrase_len, n - i)
-    // where n is the number of words), so counting codepoints made every word
-    // attempt up to ~40 redundant lookups for long lexicon phrases.
-    int32_t word_count = 1;
-    for (char c : key) {
-      if (c == ' ') ++word_count;
-    }
+    // Count lookup tokens: CJK one per character (that is how the CJK
+    // frontends tokenize), everything else one per space-separated run. This
+    // is an upper bound on the longest-match loop's `len`, which every caller
+    // clamps with `n - i`, so over-estimating is safe and under-estimating
+    // silently skips multi-token entries (e.g. a two-character `中国` key).
+    int32_t word_count = CountLexiconPhraseWords(key);
     if (word_count > max_phrase_len) {
       max_phrase_len = word_count;
     }

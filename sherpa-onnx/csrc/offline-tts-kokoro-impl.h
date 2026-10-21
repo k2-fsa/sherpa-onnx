@@ -682,7 +682,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
             if (j > i && !(prev_is_cjk && curr_is_cjk)) {
               phrase.push_back(' ');
             }
-            phrase += ToLowerCase(words[j]);
+            phrase += NormalizeLexiconKey(words[j]);
           }
 
           auto it = lexicon_str_.find(phrase);
@@ -705,7 +705,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
           if (ContainsCJK(words[i])) {
             std::vector<std::string> chars = SplitUtf8(words[i]);
             for (const auto &ch : chars) {
-              std::string ch_lower = ToLowerCase(ch);
+              std::string ch_lower = NormalizeLexiconKey(ch);
               auto it = lexicon_str_.find(ch_lower);
               if (it != lexicon_str_.end()) {
                 if (debug) {
@@ -727,7 +727,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
             std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
             if (words[i].find('-') != std::string::npos && !parts.empty()) {
               for (const auto &part : parts) {
-                std::string part_lower = ToLowerCase(part);
+                std::string part_lower = NormalizeLexiconKey(part);
                 auto it2 = lexicon_str_.find(part_lower);
                 if (it2 != lexicon_str_.end()) {
                   if (debug) {

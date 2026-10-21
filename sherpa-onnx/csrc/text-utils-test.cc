@@ -592,4 +592,185 @@ TEST(ToLowerCase, NonAsciiIsLowercased) {
   EXPECT_EQ(ToLowerCase("ABC"), "abc");
 }
 
+TEST(NormalizeLexiconKey, ComposesThenLowercases) {
+  // "A" + COMBINING MACRON must end up as the same key as U+0101, whichever
+  // form the lexicon and the query use.
+  EXPECT_EQ(NormalizeLexiconKey(std::string("A\xcc\x84")),
+            NormalizeLexiconKey(std::string("\xc4\x81")));
+  EXPECT_EQ(NormalizeLexiconKey(std::string("A\xcc\x84")), std::string("\xc4\x81"));
+}
+
+TEST(CountLexiconPhraseWords, LatinCountsSpaceSeparatedRuns) {
+  EXPECT_EQ(CountLexiconPhraseWords("hello"), 1);
+  EXPECT_EQ(CountLexiconPhraseWords("hello world"), 2);
+  EXPECT_EQ(CountLexiconPhraseWords("new york city"), 3);
+  EXPECT_EQ(CountLexiconPhraseWords("  spaced   out  "), 2);
+  EXPECT_EQ(CountLexiconPhraseWords(""), 0);
+}
+
+TEST(CountLexiconPhraseWords, CjkCountsOnePerCharacter) {
+  // The CJK frontends tokenize one character at a time, so a two-character
+  // key must report 2 or the longest-match loop never tries it.
+  EXPECT_EQ(CountLexiconPhraseWords("中"), 1);
+  EXPECT_EQ(CountLexiconPhraseWords("中国"), 2);
+  EXPECT_EQ(CountLexiconPhraseWords("中国北京"), 4);
+}
+
+TEST(CountLexiconPhraseWords, MixedText) {
+  // A non-CJK run is one token, each CJK character is one token.
+  EXPECT_EQ(CountLexiconPhraseWords("hello中国"), 3);
+  EXPECT_EQ(CountLexiconPhraseWords("zhong1"), 1);
+  EXPECT_EQ(CountLexiconPhraseWords("zhong1 guo2"), 2);
+}
+
+TEST(CountLexiconPhraseWords, PunctuationIsNotCounted) {
+  // Punctuation tokens are passed through by the tokenizers, never looked up.
+  EXPECT_EQ(CountLexiconPhraseWords("hello, world"), 2);
+  EXPECT_EQ(CountLexiconPhraseWords("a.b"), 1);
+}
+
+// ---------------------------------------------------------------------
+// #4020 follow-up review findings.
+// ---------------------------------------------------------------------
+
+TEST(IsLexiconWordChar, DigitsAreWordChars) {
+  // Regression: pinyin keys like "zhong1-guo2" must keep their tone digits
+  // when a punctuation-bearing token is split before lookup.
+  EXPECT_TRUE(IsLexiconWordChar(U'0'));
+  EXPECT_TRUE(IsLexiconWordChar(U'1'));
+  EXPECT_TRUE(IsLexiconWordChar(U'9'));
+  EXPECT_TRUE(IsLexiconWordChar(U'٣'));  // Arabic-Indic digit, category Nd
+  EXPECT_FALSE(IsLexiconWordChar(U','));
+  EXPECT_FALSE(IsLexiconWordChar(U'—'));
+}
+
+TEST(NormalizeNfc, StarterPlusStarterComposes) {
+  // UAX #15 D117: a starter may compose with the starter directly before it.
+  // These are NOT mark attachments -- ccc(U+09BE) == 0.
+  {
+    // Bengali U+09CB = U+09C7 + U+09BE
+    std::u32string s = {0x9C7, 0x9BE};
+    NormalizeNfc(&s);
+    EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0x9CB)));
+  }
+  {
+    // Tamil U+0BCA = U+0BC6 + U+0BBE
+    std::u32string s = {0xBC6, 0xBBE};
+    NormalizeNfc(&s);
+    EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0xBCA)));
+  }
+  {
+    // Already-composed input must be left alone (it decomposes and must
+    // recompose back).
+    std::u32string s = {static_cast<char32_t>(0x9CB)};
+    NormalizeNfc(&s);
+    EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0x9CB)));
+  }
+}
+
+TEST(NormalizeNfc, HangulComposesAlgorithmically) {
+  // L + V -> LV
+  {
+    std::u32string s = {0x1100, 0x1161};  // choseong kiyeok + jungseong a
+    NormalizeNfc(&s);
+    EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0xAC00)));  // 가
+  }
+  // LV + T -> LVT
+  {
+    std::u32string s = {static_cast<char32_t>(0xAC00), 0x11A8};
+    NormalizeNfc(&s);
+    EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0xAC01)));  // 각
+  }
+  // Precomposed syllables round-trip.
+  {
+    std::u32string s = {static_cast<char32_t>(0xAC01)};
+    NormalizeNfc(&s);
+    EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0xAC01)));
+  }
+}
+
+TEST(NormalizeNfc, MultiStageComposition) {
+  // â + COMBINING ACUTE -> U+1EA5. This is a two-part immediate decomposition
+  // whose full expansion is three codepoints, so it is easy to drop when the
+  // table is built from the wrong decomposition.
+  std::u32string s = {0xE2, 0x301};
+  NormalizeNfc(&s);
+  EXPECT_EQ(s, std::u32string(1, static_cast<char32_t>(0x1EA5)));
+}
+
+TEST(NormalizeNfc, CompositionExclusionsAreNotComposed) {
+  // NFC deliberately refuses these. They must stay decomposed.
+  {
+    // DEVANAGARI KA + NUKTA is not composed to U+0958.
+    std::u32string s = {0x915, 0x93C};
+    NormalizeNfc(&s);
+    EXPECT_EQ(s.size(), 2u);
+  }
+}
+
+TEST(NormalizeLexiconKey, MatchesAcrossDecompositionAndCase) {
+  // The lexicon entry and the query may use different forms; both must land
+  // on the same key.
+  EXPECT_EQ(NormalizeLexiconKey(std::string("J\xcc\x8c")),  // J + caron
+            NormalizeLexiconKey(std::string("\xc7\xb0")));  // ǰ
+  EXPECT_EQ(NormalizeLexiconKey(std::string("J\xcc\x8c")), std::string("\xc7\xb0"));
+}
+
+TEST(SplitLexiconPieces, HyphenJoinsPieces) {
+  // "two-thirds" is one spoken word: only the first piece takes a boundary.
+  auto pieces = SplitLexiconPieces(Utf8ToUtf32("two-thirds"));
+  ASSERT_EQ(pieces.size(), 2u);
+  EXPECT_EQ(pieces[0].text, "two");
+  EXPECT_TRUE(pieces[0].needs_boundary);
+  EXPECT_EQ(pieces[1].text, "thirds");
+  EXPECT_FALSE(pieces[1].needs_boundary);
+}
+
+TEST(SplitLexiconPieces, EmDashSplitsPieces) {
+  // An em dash is a word separator: both pieces take a boundary, so the two
+  // pronunciations are not run together.
+  auto pieces = SplitLexiconPieces(Utf8ToUtf32("hello—world"));
+  ASSERT_EQ(pieces.size(), 2u);
+  EXPECT_EQ(pieces[0].text, "hello");
+  EXPECT_TRUE(pieces[0].needs_boundary);
+  EXPECT_EQ(pieces[1].text, "world");
+  EXPECT_TRUE(pieces[1].needs_boundary);
+}
+
+TEST(SplitLexiconPieces, SinglePiece) {
+  auto pieces = SplitLexiconPieces(Utf8ToUtf32("Dveme"));
+  ASSERT_EQ(pieces.size(), 1u);
+  EXPECT_EQ(pieces[0].text, "Dveme");
+  EXPECT_TRUE(pieces[0].needs_boundary);
+}
+
+TEST(SplitLexiconPieces, DigitsSurviveSplitting) {
+  // Pinyin keys carry tone digits; they are word characters and must not be
+  // trimmed away when a hyphenated token is split.
+  auto pieces = SplitLexiconPieces(Utf8ToUtf32("zhong1-guo2"));
+  ASSERT_EQ(pieces.size(), 2u);
+  EXPECT_EQ(pieces[0].text, "zhong1");
+  EXPECT_EQ(pieces[1].text, "guo2");
+  EXPECT_FALSE(pieces[1].needs_boundary);
+}
+
+TEST(SplitLexiconPieces, MixedSeparators) {
+  // "a-b—c": hyphen joins a/b, em dash starts a new word at c.
+  auto pieces = SplitLexiconPieces(Utf8ToUtf32("a-b—c"));
+  ASSERT_EQ(pieces.size(), 3u);
+  EXPECT_EQ(pieces[0].text, "a");
+  EXPECT_TRUE(pieces[0].needs_boundary);
+  EXPECT_EQ(pieces[1].text, "b");
+  EXPECT_FALSE(pieces[1].needs_boundary);
+  EXPECT_EQ(pieces[2].text, "c");
+  EXPECT_TRUE(pieces[2].needs_boundary);
+}
+
+TEST(SplitLexiconPieces, LeadingTrailingSeparatorsProduceNoEmptyPieces) {
+  auto pieces = SplitLexiconPieces(Utf8ToUtf32("---word---"));
+  ASSERT_EQ(pieces.size(), 1u);
+  EXPECT_EQ(pieces[0].text, "word");
+  EXPECT_TRUE(pieces[0].needs_boundary);
+}
+
 }  // namespace sherpa_onnx
