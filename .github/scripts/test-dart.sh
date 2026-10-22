@@ -121,6 +121,7 @@ rm -rf sherpa-onnx-*
 
 echo '----------moonshine----------'
 ./run-moonshine.sh
+./run-moonshine-async.sh
 rm -rf sherpa-onnx-*
 
 echo '----------whisper----------'
