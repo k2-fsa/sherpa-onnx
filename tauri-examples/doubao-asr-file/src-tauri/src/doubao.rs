@@ -144,23 +144,23 @@ impl DoubaoClient {
         Err(last_err)
     }
 
-    /// Poll the task until it is done. Returns (transcript, diagnostic) — the
-    /// diagnostic is what the API said (status + body) so an empty transcript
-    /// is never a mystery.
+    /// Poll the task until it is done. Returns (transcript, api status code).
     fn query(&self, request_id: &str, log_id: &str) -> Result<(String, String), String> {
         let headers = build_headers(&self.api_key, &self.resource_id, request_id, log_id);
         let deadline = Instant::now() + Duration::from_secs_f32(self.query_timeout);
         while Instant::now() < deadline {
             let (status, _, body) = post(QUERY_URL, &headers, "{}")?;
-            let note = format!("status={status}, body={}", truncate(&body, 160));
             if status == STATUS_OK {
-                return Ok((parse_result_json(&body), note));
+                return Ok((parse_result_json(&body), status));
             }
             if status == STATUS_SILENCE {
-                return Ok((String::new(), note));
+                return Ok((String::new(), status));
             }
             if !STATUS_RUNNING.contains(&status.as_str()) {
-                return Err(format!("query failed: {note}"));
+                return Err(format!(
+                    "query failed: status={status}, {}",
+                    truncate(&body, 120)
+                ));
             }
             std::thread::sleep(Duration::from_secs_f32(self.query_interval));
         }
@@ -170,7 +170,7 @@ impl DoubaoClient {
         ))
     }
 
-    /// Recognize a single audio clip. Returns (transcript, diagnostic).
+    /// Recognize a single audio clip. Returns (transcript, api status code).
     pub fn recognize(&self, wav_bytes: &[u8]) -> Result<(String, String), String> {
         let request_id = uuid::Uuid::new_v4().to_string();
         let log_id = self.submit(&request_id, wav_bytes)?;

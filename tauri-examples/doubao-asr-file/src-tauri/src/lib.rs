@@ -34,6 +34,28 @@ const API_DOC_URL: &str = "https://www.doubao.com/thread/xXWsjZf94yLksVLtN";
 /// (streaming speech recognition).
 const PRICING_URL: &str = "https://console.volcengine.com/common-buy/Speech_Synthesis";
 
+/// Resolve display names of Android picker URIs ("msf:1495" -> "1_lei-jun.wav").
+/// Failure is non-fatal: we fall back to the URI basename.
+fn display_name_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
+    tauri::plugin::Builder::new("display_name")
+        .setup(|app, api| {
+            #[cfg(target_os = "android")]
+            {
+                if let Ok(handle) =
+                    api.register_android_plugin("com.plugin.displayname", "DisplayNamePlugin")
+                {
+                    app.manage(handle);
+                }
+            }
+            #[cfg(not(target_os = "android"))]
+            {
+                let _ = (&app, &api);
+            }
+            Ok(())
+        })
+        .build()
+}
+
 /// Shared application state, created once at startup.
 struct AppState {
     running: Arc<AtomicBool>,
@@ -162,6 +184,42 @@ fn is_pick_uri(input: &str) -> bool {
     input.contains("://")
 }
 
+/// Ask Android for the human-readable name of a picker URI ("msf:1495" is
+/// really "1_lei-jun.wav"). Needs DisplayNamePlugin, see android/.
+#[cfg(target_os = "android")]
+fn android_display_name(app: &tauri::AppHandle, input: &str) -> Option<String> {
+    let handle = app.state::<tauri::plugin::PluginHandle<tauri::Wry>>();
+    let v: serde_json::Value = handle
+        .run_mobile_plugin("getDisplayName", serde_json::json!({ "path": input }))
+        .ok()?;
+    v.get("name")
+        .and_then(|n| n.as_str())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
+/// Best-effort base name (with extension) of a picked input, used for the
+/// local copy and the result file names.
+#[cfg_attr(not(target_os = "android"), allow(unused_variables))]
+fn input_display_name(app: &tauri::AppHandle, input: &str) -> String {
+    #[cfg(target_os = "android")]
+    {
+        if is_pick_uri(input) {
+            if let Some(name) = android_display_name(app, input) {
+                if name.contains('.') {
+                    return name;
+                }
+            }
+        }
+    }
+    let base = input_file_name(input);
+    if base.contains('.') {
+        base
+    } else {
+        "transcript".to_string()
+    }
+}
+
 /// Where the result files for a picked location go. Results cannot be written
 /// beside a `content://` URI, so for picker URIs they sit next to the local
 /// copy in the app cache dir.
@@ -170,14 +228,16 @@ fn resolve_outputs(app: &tauri::AppHandle, input: &str) -> Result<(PathBuf, Path
         return Ok(output_paths(&percent_decode(input)));
     }
     let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
+    let name = input_display_name(app, input);
     Ok(output_paths(
-        cache.join("media").join(input_file_name(input)).to_str().unwrap_or("input"),
+        cache.join("media").join(name).to_str().unwrap_or("input"),
     ))
 }
 
 /// Return a local file path the decoder can open. Plain paths are used as-is;
 /// picker URIs (`content://`, `file://`) are copied into the app cache dir via
-/// the fs plugin, which knows how to read them on Android/iOS.
+/// the fs plugin, which knows how to read them on Android/iOS. The copy keeps
+/// the original file name so tools and the media preview recognize the type.
 fn materialize_input(app: &tauri::AppHandle, input: &str) -> Result<String, String> {
     if !is_pick_uri(input) {
         let decoded = percent_decode(input);
@@ -190,7 +250,7 @@ fn materialize_input(app: &tauri::AppHandle, input: &str) -> Result<String, Stri
     let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
     let media_dir = cache.join("media");
     std::fs::create_dir_all(&media_dir).map_err(|e| e.to_string())?;
-    let local = media_dir.join(input_file_name(input));
+    let local = media_dir.join(input_display_name(app, input));
 
     let mut opts = tauri_plugin_fs::OpenOptions::new();
     opts.read(true);
@@ -205,6 +265,24 @@ fn materialize_input(app: &tauri::AppHandle, input: &str) -> Result<String, Stri
         std::fs::File::create(&local).map_err(|e| format!("Cannot create {}: {e}", local.display()))?;
     std::io::copy(&mut src, &mut dst).map_err(|e| format!("Cannot copy {input}: {e}"))?;
     Ok(local.display().to_string())
+}
+
+#[derive(Serialize)]
+struct PreparedInput {
+    local_path: String,
+    base_name: String,
+}
+
+/// Copy a picked input into the app cache and report the local path plus the
+/// display name. The frontend uses the local path for the media preview
+/// (content:// URIs cannot be played directly) and the name for outputs.
+#[tauri::command]
+fn prepare_input(app: tauri::AppHandle, path: String) -> Result<PreparedInput, String> {
+    let local_path = materialize_input(&app, &path)?;
+    Ok(PreparedInput {
+        base_name: input_display_name(&app, &path),
+        local_path,
+    })
 }
 
 /// Auto-save the results next to the input file. Recognition is not free, so
@@ -445,24 +523,34 @@ fn run_recognition(
                 }
                 let seg = &raw[i];
                 let wav = audio::samples_to_wav(&seg.samples, 16000);
-                let (text, note) = match client.recognize(&wav) {
-                    Ok((t, note)) => (t.trim().to_string(), note),
+                let (text, detail) = match client.recognize(&wav) {
+                    Ok((t, status)) => {
+                        let t = t.trim().to_string();
+                        let detail = if t.is_empty() {
+                            format!("no speech: {status}")
+                        } else {
+                            String::new()
+                        };
+                        (t, detail)
+                    }
                     Err(e) => {
                         eprintln!("segment {:.2}s failed: {e}", seg.start);
-                        (String::new(), format!("failed: {e}"))
+                        let short: String = e.chars().take(100).collect();
+                        (String::new(), format!("failed: {short}"))
                     }
                 };
                 let n = done_count.fetch_add(1, Ordering::SeqCst) + 1;
                 if let Ok(mut l) = logs.lock() {
+                    // Progress only — the transcript itself shows in the
+                    // result area, not here.
                     if text.is_empty() {
                         l.push(format!(
-                            "[{n}/{total}] {}  (no text: {note})",
+                            "[{n}/{total}] {}  ({detail})",
                             subtitle::ts_loose(start_sec + seg.start)
                         ));
                     } else {
-                        let shown: String = text.chars().take(60).collect();
                         l.push(format!(
-                            "[{n}/{total}] {}  {shown}",
+                            "[{n}/{total}] {}",
                             subtitle::ts_loose(start_sec + seg.start)
                         ));
                     }
@@ -693,9 +781,14 @@ struct LoadedResults {
 }
 
 /// Load previously saved results for an input file, if any exist. Lets the
-/// user review old transcripts without paying for recognition again.
+/// user review old transcripts without paying for recognition again. The
+/// segments also go into the app state so export/share work on them.
 #[tauri::command]
-fn load_results(app: tauri::AppHandle, path: String) -> Result<Option<LoadedResults>, String> {
+fn load_results(
+    app: tauri::AppHandle,
+    path: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<Option<LoadedResults>, String> {
     let (srt_path, txt_path) = resolve_outputs(&app, &path)?;
     let srt_content = if srt_path.exists() {
         Some(std::fs::read_to_string(&srt_path).map_err(|e| e.to_string())?)
@@ -716,6 +809,11 @@ fn load_results(app: tauri::AppHandle, path: String) -> Result<Option<LoadedResu
         Some(content) => subtitle::parse_srt(&content)?,
         None => subtitle::parse_timestamped_txt(&txt_content.unwrap_or_default())?,
     };
+
+    // Publish into the shared state too, so export/share work on loaded text.
+    if let Ok(mut s) = state.segments.lock() {
+        *s = segs.clone();
+    }
 
     Ok(Some(LoadedResults {
         segments: segs
@@ -807,6 +905,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_share::init())
+        .plugin(display_name_plugin())
         .manage(AppState {
             running: Arc::new(AtomicBool::new(false)),
             cancelled: Arc::new(AtomicBool::new(false)),
@@ -826,6 +925,7 @@ pub fn run() {
             export_text,
             load_results,
             share_result,
+            prepare_input,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

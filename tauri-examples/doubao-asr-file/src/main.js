@@ -32,10 +32,18 @@ $("toggle-key").addEventListener("click", () => {
   $("toggle-key").textContent = showing ? "Show" : "Hide";
 });
 
-// Show/hide the info block (key help, free hours, privacy) — shown by default.
+// Show/hide the info block (key help, free hours, privacy) — shown by
+// default, and the last choice is remembered across restarts.
+const INFO_VISIBLE_KEY = "info_visible";
+if (localStorage.getItem(INFO_VISIBLE_KEY) === "hidden") {
+  $("key-info").classList.add("hidden");
+  $("toggle-info").textContent = "Show info";
+}
+
 $("toggle-info").addEventListener("click", () => {
   const hidden = $("key-info").classList.toggle("hidden");
   $("toggle-info").textContent = hidden ? "Show info" : "Hide info";
+  localStorage.setItem(INFO_VISIBLE_KEY, hidden ? "hidden" : "shown");
 });
 
 // Clear the stored API key — confirm first, since it is not free to lose
@@ -80,6 +88,8 @@ function wireLink(id, url) {
 
 // ---------------------------------------------------------------- media
 let selectedPath = null;
+/** Display name of the selected input (e.g. "1_lei-jun.wav"), for outputs. */
+let currentBaseName = "transcript";
 
 /** Recent input files, newest first, kept across app restarts. */
 const RECENT_KEY = "recent_input_files";
@@ -133,22 +143,31 @@ $("clear-history").addEventListener("click", () => {
 /** Select an input file (from the dialog or from the recent list). */
 async function selectFile(path) {
   selectedPath = path;
-  $("file-name").textContent = path.split(/[\\/]/).pop();
   showError("");
-
-  const media = $("media");
-  media.src = convertFileSrc(path);
-  // The <video> element plays audio-only files as well (blank frame).
-  $("media-wrap").classList.remove("hidden");
   resetResult();
   rememberFile(path);
   appendLog(`Selected: ${path}`);
+  try {
+    // Copy picker URIs to a local file and learn the real display name —
+    // content:// URIs cannot be played directly by the media element.
+    const prepared = await invoke("prepare_input", { path });
+    currentBaseName = (prepared.base_name || "transcript").replace(/\.[^.]+$/, "");
+    $("file-name").textContent = prepared.base_name;
+    const media = $("media");
+    media.src = convertFileSrc(prepared.local_path);
+    // The <video> element plays audio-only files as well (blank frame).
+    $("media-wrap").classList.remove("hidden");
+  } catch (e) {
+    showError(String(e));
+    return;
+  }
   await tryLoadExisting(path);
 }
 
 $("media").addEventListener("error", () => {
   if (selectedPath) {
-    showError(`Cannot open ${selectedPath} — has the file moved or been deleted?`);
+    $("status").textContent = "Preview unavailable for this file (recognition still works).";
+    appendLog("Media preview unavailable for this file");
   }
 });
 
@@ -567,20 +586,14 @@ async function exportAs(format, defaultName) {
   }
 }
 
-function baseName(path) {
-  const name = path.split(/[\\/]/).pop();
-  const idx = name.lastIndexOf(".");
-  return idx > 0 ? name.slice(0, idx) : name;
-}
-
 $("export-srt").addEventListener("click", () =>
-  exportAs("srt", `${baseName(selectedPath)}.srt`),
+  exportAs("srt", `${currentBaseName}.srt`),
 );
 $("export-timestamped").addEventListener("click", () =>
-  exportAs("timestamped_txt", `${baseName(selectedPath)}.txt`),
+  exportAs("timestamped_txt", `${currentBaseName}.txt`),
 );
 $("export-plain").addEventListener("click", () =>
-  exportAs("plain_txt", `${baseName(selectedPath)}.txt`),
+  exportAs("plain_txt", `${currentBaseName}.txt`),
 );
 
 // ---------------------------------------------------------------- share
@@ -588,7 +601,7 @@ $("export-plain").addEventListener("click", () =>
 async function shareAs(format) {
   if (segments.length === 0) return;
   try {
-    const name = selectedPath ? baseName(selectedPath) : "transcript";
+    const name = currentBaseName;
     await invoke("share_result", { format, name });
   } catch (e) {
     showError(String(e));
