@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04-arm]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314", "cp315"]
         # manylinux: [manylinux2014] #, manylinux_2_28]
         manylinux: [manylinux_2_28] #, manylinux_2_28]
 
@@ -36,7 +36,14 @@ jobs:
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
-      - name: Build wheels
+      #
+      # CPython 3.8 is EOL and has been dropped upstream: the manylinux images
+      # removed the interpreter and cibuildwheel 4.0 dropped support for
+      # building it. The last combination that still works is cibuildwheel 3.x
+      # plus a pinned image from before that drop. cp315 needs cibuildwheel 4.x,
+      # so the two are split here.
+      - name: Build wheels (cp38)
+        if: matrix.python-version == 'cp38'
         uses: pypa/cibuildwheel@v3.3.1
         env:
           CIBW_BEFORE_ALL: |
@@ -60,7 +67,39 @@ jobs:
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_MANYLINUX_AARCH64_IMAGE: "${{ matrix.python-version == 'cp38' && format('quay.io/pypa/{0}_aarch64:2025.11.29-1', matrix.manylinux) || format('quay.io/pypa/{0}_aarch64', matrix.manylinux) }}"
+          # last image that still ships a CPython 3.8 interpreter
+          CIBW_MANYLINUX_AARCH64_IMAGE: "${{ format('quay.io/pypa/{0}_aarch64:2025.11.29-1', matrix.manylinux) }}"
+          #  Don't repair Linux wheels
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
+          # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
+          # manylinux_2_24 is no longer supported
+
+      - name: Build wheels
+        if: matrix.python-version != 'cp38'
+        uses: pypa/cibuildwheel@v4.3.2
+        env:
+          CIBW_BEFORE_ALL: |
+            git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+            cd alsa-lib
+            ./gitcompile
+            cd ..
+            echo "PWD"
+            ls -lh /project/alsa-lib/src/.libs
+
+          CIBW_ENVIRONMENT: >
+            CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH
+            C_INCLUDE_PATH=/project/alsa-lib/include:$C_INCLUDE_PATH
+            SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs
+            LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR:$LD_LIBRARY_PATH
+            SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
+            SHERPA_ONNX_ENABLE_ALSA=1
+            SHERPA_ONNX_ENABLE_GPU=ON
+            SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON -DALSA_INCLUDE_DIR=/project/alsa-lib/include -DALSA_LIBRARY=/project/alsa-lib/src/.libs/libasound.so"
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_MANYLINUX_AARCH64_IMAGE: "${{ format('quay.io/pypa/{0}_aarch64', matrix.manylinux) }}"
           #  Don't repair Linux wheels
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.

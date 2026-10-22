@@ -50,13 +50,19 @@ jobs:
           python3 -m pip install wheel twine==5.0.0 setuptools
 
       - name: sccache
+        # sccache is disabled on windows-11-arm: sccache-action extracts its
+        # archive with pwsh, which crashes intermittently on this runner
+        # ("Internal CLR error. 0x80131506") and fails the job before the build.
+        if: matrix.os != 'windows-11-arm'
         uses: mozilla-actions/sccache-action@v0.0.7
 
       - name: Configure CMake
         shell: bash
         run: |
-          export CMAKE_C_COMPILER_LAUNCHER=sccache
-          export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          if command -v sccache >/dev/null 2>&1; then
+            export CMAKE_C_COMPILER_LAUNCHER=sccache
+            export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          fi
 
           mkdir build
           cd build
@@ -256,7 +262,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-11-arm]
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
     steps:
       - uses: actions/checkout@v4

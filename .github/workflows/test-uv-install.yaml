@@ -38,6 +38,8 @@ jobs:
             python-version: "3.13"
           - os: ubuntu-latest
             python-version: "3.14"
+          - os: ubuntu-latest
+            python-version: "3.15"
 
           # Linux arm64
           - os: ubuntu-24.04-arm
@@ -50,6 +52,8 @@ jobs:
             python-version: "3.13"
           - os: ubuntu-24.04-arm
             python-version: "3.14"
+          - os: ubuntu-24.04-arm
+            python-version: "3.15"
 
           # macOS x64
           - os: macos-15-intel
@@ -66,6 +70,10 @@ jobs:
             python-version: "3.12"
           - os: macos-latest
             python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.14"
+          - os: macos-latest
+            python-version: "3.15"
 
           # Windows x64
           - os: windows-2022
@@ -82,6 +90,8 @@ jobs:
             python-version: "3.13"
           - os: windows-2022
             python-version: "3.14"
+          - os: windows-2022
+            python-version: "3.15"
 
           # Windows arm64
           - os: windows-11-arm
@@ -92,6 +102,8 @@ jobs:
             python-version: "3.13"
           - os: windows-11-arm
             python-version: "3.14"
+          - os: windows-11-arm
+            python-version: "3.15"
 
           # Windows x86
           - os: windows-2022
@@ -114,6 +126,9 @@ jobs:
             architecture: x86
           - os: windows-2022
             python-version: "3.14"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.15"
             architecture: x86
 
     steps:
