@@ -39,7 +39,7 @@ endforeach()
 list(JOIN mangled_exported_functions "," all_exported_functions)
 
 include_directories(${CMAKE_SOURCE_DIR})
-set(MY_FLAGS " -s FORCE_FILESYSTEM=1 -s INITIAL_MEMORY=64MB -s ALLOW_MEMORY_GROWTH=1")
+set(MY_FLAGS " -sWASM_BIGINT=1 -s FORCE_FILESYSTEM=1 -s INITIAL_MEMORY=64MB -s ALLOW_MEMORY_GROWTH=1")
 string(APPEND MY_FLAGS " -sSTACK_SIZE=10485760 ") # 10MB
 string(APPEND MY_FLAGS " -sEXPORTED_FUNCTIONS=[_CopyHeap,_malloc,_free,${all_exported_functions}] ")
 string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets@. ")

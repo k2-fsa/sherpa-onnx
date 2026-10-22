@@ -2040,7 +2040,7 @@ SHERPA_ONNX_API void SherpaOnnxCircularBufferPush(
  * @endcode
  */
 SHERPA_ONNX_API const float *SherpaOnnxCircularBufferGet(
-    const SherpaOnnxCircularBuffer *buffer, int32_t start_index, int32_t n);
+    const SherpaOnnxCircularBuffer *buffer, int64_t start_index, int32_t n);
 
 /** @brief Free an array returned by SherpaOnnxCircularBufferGet(). */
 SHERPA_ONNX_API void SherpaOnnxCircularBufferFree(const float *p);
@@ -2072,7 +2072,7 @@ SherpaOnnxCircularBufferSize(const SherpaOnnxCircularBuffer *buffer);
  * @param buffer A pointer returned by SherpaOnnxCreateCircularBuffer().
  * @return The current head index.
  */
-SHERPA_ONNX_API int32_t
+SHERPA_ONNX_API int64_t
 SherpaOnnxCircularBufferHead(const SherpaOnnxCircularBuffer *buffer);
 
 /**
@@ -2091,8 +2091,13 @@ SHERPA_ONNX_API void SherpaOnnxCircularBufferReset(
  * @see SherpaOnnxVoiceActivityDetectorFront, SherpaOnnxDestroySpeechSegment
  */
 typedef struct SherpaOnnxSpeechSegment {
-  /** Start index, in input samples, of this segment. */
-  int32_t start;
+  /** Start index, in input samples, of this segment.
+   *
+   * It is an absolute position in the input stream and keeps increasing
+   * during the lifetime of a detector, so it is 64-bit. It is -1 if the
+   * segment is not valid.
+   */
+  int64_t start;
   /** Newly allocated mono samples for this segment. */
   float *samples;
   /** Number of samples in @c samples. */
@@ -2218,7 +2223,7 @@ SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorClear(
  * while (!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
  *   const SherpaOnnxSpeechSegment *segment =
  *       SherpaOnnxVoiceActivityDetectorFront(vad);
- *   printf("start=%d, samples=%d\n", segment->start, segment->n);
+ *   printf("start=%lld, samples=%d\n", (long long)segment->start, segment->n);
  *   SherpaOnnxDestroySpeechSegment(segment);
  *   SherpaOnnxVoiceActivityDetectorPop(vad);
  * }

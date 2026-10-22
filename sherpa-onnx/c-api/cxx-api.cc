@@ -946,7 +946,7 @@ void CircularBuffer::Push(const float *samples, int32_t n) const {
   SherpaOnnxCircularBufferPush(p_, samples, n);
 }
 
-std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
+std::vector<float> CircularBuffer::Get(int64_t start_index, int32_t n) const {
   const float *samples = SherpaOnnxCircularBufferGet(p_, start_index, n);
   if (!samples) return {};
 
@@ -965,7 +965,7 @@ int32_t CircularBuffer::Size() const {
   return SherpaOnnxCircularBufferSize(p_);
 }
 
-int32_t CircularBuffer::Head() const {
+int64_t CircularBuffer::Head() const {
   return SherpaOnnxCircularBufferHead(p_);
 }
 

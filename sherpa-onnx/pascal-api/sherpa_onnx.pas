@@ -647,17 +647,17 @@ type
     destructor Destroy; override;
     procedure Push(Samples: array of Single); overload;
     procedure Push(Samples: pcfloat; N: Integer); overload;
-    function Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
+    function Get(StartIndex: Int64; N: Integer): TSherpaOnnxSamplesArray;
     procedure Pop(N: Integer);
     procedure Reset;
     function Size: Integer;
-    function Head: Integer;
+    function Head: Int64;
     property GetHandle: Pointer Read Handle;
   end;
 
   TSherpaOnnxSpeechSegment = record
     Samples: array of Single;
-    Start: Integer;
+    Start: Int64;
   end;
 
   TSherpaOnnxVoiceActivityDetector = class
@@ -1158,7 +1158,7 @@ type
   PSherpaOnnxVadModelConfig = ^SherpaOnnxVadModelConfig;
 
   SherpaOnnxSpeechSegment = record
-    Start: cint32;
+    Start: cint64;
     Samples: pcfloat;
     N: cint32;
   end;
@@ -1583,7 +1583,7 @@ procedure SherpaOnnxDestroyCircularBuffer(Buffer: Pointer) ; cdecl;
 procedure SherpaOnnxCircularBufferPush(Buffer: Pointer; Samples: pcfloat; N: cint32); cdecl;
   external SherpaOnnxLibName;
 
-function SherpaOnnxCircularBufferGet(Buffer: Pointer; StartIndex: cint32; N: cint32): pcfloat ; cdecl;
+function SherpaOnnxCircularBufferGet(Buffer: Pointer; StartIndex: cint64; N: cint32): pcfloat ; cdecl;
   external SherpaOnnxLibName;
 
 procedure SherpaOnnxCircularBufferFree(P: pcfloat); cdecl;
@@ -1595,7 +1595,7 @@ procedure SherpaOnnxCircularBufferPop(Buffer: Pointer; N: cint32); cdecl;
 function SherpaOnnxCircularBufferSize(Buffer: Pointer): cint32; cdecl;
   external SherpaOnnxLibName;
 
-function SherpaOnnxCircularBufferHead(Buffer: Pointer): cint32; cdecl;
+function SherpaOnnxCircularBufferHead(Buffer: Pointer): cint64; cdecl;
   external SherpaOnnxLibName;
 
 procedure SherpaOnnxCircularBufferReset(Buffer: Pointer); cdecl;
@@ -2689,7 +2689,7 @@ begin
   SherpaOnnxCircularBufferPush(Self.Handle, Samples, N);
 end;
 
-function TSherpaOnnxCircularBuffer.Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
+function TSherpaOnnxCircularBuffer.Get(StartIndex: Int64; N: Integer): TSherpaOnnxSamplesArray;
 var
   P: pcfloat;
 begin
@@ -2724,7 +2724,7 @@ begin
   Result := SherpaOnnxCircularBufferSize(Self.Handle);
 end;
 
-function TSherpaOnnxCircularBuffer.Head: Integer;
+function TSherpaOnnxCircularBuffer.Head: Int64;
 begin
   Result := SherpaOnnxCircularBufferHead(Self.Handle);
 end;

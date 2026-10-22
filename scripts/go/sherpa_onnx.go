@@ -1769,8 +1769,8 @@ func (buffer *CircularBuffer) Push(samples []float32) {
 	C.SherpaOnnxCircularBufferPush(buffer.impl, (*C.float)(&samples[0]), C.int(len(samples)))
 }
 
-func (buffer *CircularBuffer) Get(start int, n int) []float32 {
-	samples := C.SherpaOnnxCircularBufferGet(buffer.impl, C.int(start), C.int(n))
+func (buffer *CircularBuffer) Get(start int64, n int) []float32 {
+	samples := C.SherpaOnnxCircularBufferGet(buffer.impl, C.int64_t(start), C.int(n))
 	defer C.SherpaOnnxCircularBufferFree(samples)
 
 	result := make([]float32, n)
@@ -1791,8 +1791,8 @@ func (buffer *CircularBuffer) Size() int {
 	return int(C.SherpaOnnxCircularBufferSize(buffer.impl))
 }
 
-func (buffer *CircularBuffer) Head() int {
-	return int(C.SherpaOnnxCircularBufferHead(buffer.impl))
+func (buffer *CircularBuffer) Head() int64 {
+	return int64(C.SherpaOnnxCircularBufferHead(buffer.impl))
 }
 
 func (buffer *CircularBuffer) Reset() {
@@ -1800,7 +1800,7 @@ func (buffer *CircularBuffer) Reset() {
 }
 
 type SpeechSegment struct {
-	Start   int
+	Start   int64
 	Samples []float32
 }
 
@@ -1875,7 +1875,7 @@ func (vad *VoiceActivityDetector) Front() *SpeechSegment {
 	defer C.SherpaOnnxDestroySpeechSegment(f)
 
 	ans := &SpeechSegment{}
-	ans.Start = int(f.start)
+	ans.Start = int64(f.start)
 
 	n := int(f.n)
 	ans.Samples = make([]float32, n)
