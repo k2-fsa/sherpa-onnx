@@ -11,11 +11,13 @@ mod vad;
 
 use doubao::DoubaoClient;
 use serde::Serialize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use subtitle::Segment;
+use tauri::Manager;
+use tauri_plugin_fs::FsExt;
 
 const MODEL_FILE: &str = "silero_vad.onnx";
 const MODEL_NAME: &str = "Silero VAD v4";
@@ -118,6 +120,93 @@ fn output_paths(input_path: &str) -> (PathBuf, PathBuf) {
     (base.with_extension("srt"), base.with_extension("txt"))
 }
 
+/// Percent-decode a URI component, e.g. `%3A` -> `:`.
+fn percent_decode(s: &str) -> String {
+    let mut out = Vec::with_capacity(s.len());
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let Ok(v) = u8::from_str_radix(&s[i + 1..i + 3], 16) {
+                out.push(v);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+/// File name (with extension) of a path or URI, percent-decoded. Used to name
+/// local copies of picked files and their result files.
+fn input_file_name(input: &str) -> String {
+    let decoded = percent_decode(input.split(['?', '#']).next().unwrap_or(input));
+    let name = decoded
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or("input")
+        .trim()
+        .to_string();
+    if name.is_empty() {
+        "input".to_string()
+    } else {
+        name
+    }
+}
+
+/// Is this a URI the picker returned (Android `content://`, iOS `file://`)
+/// rather than a plain file system path?
+fn is_pick_uri(input: &str) -> bool {
+    input.contains("://")
+}
+
+/// Where the result files for a picked location go. Results cannot be written
+/// beside a `content://` URI, so for picker URIs they sit next to the local
+/// copy in the app cache dir.
+fn resolve_outputs(app: &tauri::AppHandle, input: &str) -> Result<(PathBuf, PathBuf), String> {
+    if !is_pick_uri(input) {
+        return Ok(output_paths(&percent_decode(input)));
+    }
+    let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
+    Ok(output_paths(
+        cache.join("media").join(input_file_name(input)).to_str().unwrap_or("input"),
+    ))
+}
+
+/// Return a local file path the decoder can open. Plain paths are used as-is;
+/// picker URIs (`content://`, `file://`) are copied into the app cache dir via
+/// the fs plugin, which knows how to read them on Android/iOS.
+fn materialize_input(app: &tauri::AppHandle, input: &str) -> Result<String, String> {
+    if !is_pick_uri(input) {
+        let decoded = percent_decode(input);
+        if !Path::new(&decoded).is_file() {
+            return Err(format!("{input} does not exist"));
+        }
+        return Ok(decoded);
+    }
+
+    let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
+    let media_dir = cache.join("media");
+    std::fs::create_dir_all(&media_dir).map_err(|e| e.to_string())?;
+    let local = media_dir.join(input_file_name(input));
+
+    let mut opts = tauri_plugin_fs::OpenOptions::new();
+    opts.read(true);
+    let fp: tauri_plugin_fs::FilePath = input
+        .parse()
+        .map_err(|e| format!("Cannot parse {input}: {e}"))?;
+    let mut src = app
+        .fs()
+        .open(fp, opts)
+        .map_err(|e| format!("Cannot open {input}: {e}"))?;
+    let mut dst =
+        std::fs::File::create(&local).map_err(|e| format!("Cannot create {}: {e}", local.display()))?;
+    std::io::copy(&mut src, &mut dst).map_err(|e| format!("Cannot copy {input}: {e}"))?;
+    Ok(local.display().to_string())
+}
+
 /// Auto-save the results next to the input file. Recognition is not free, so
 /// whatever has been recognized is kept even if the run was stopped early.
 /// Returns the list of files that were written.
@@ -146,6 +235,7 @@ fn save_results(input_path: &str, segments: &[Segment]) -> Result<Vec<String>, S
 /// of the file" — the default processes the whole file.
 #[tauri::command]
 fn recognize_file(
+    app: tauri::AppHandle,
     path: String,
     api_key: String,
     start_sec: f32,
@@ -173,7 +263,7 @@ fn recognize_file(
     // Recognition is not free: refuse to run when the output files already
     // exist, before any decoding, VAD or API call — same as the Python
     // reference. Users should delete or rename them first.
-    let (srt_path, txt_path) = output_paths(&path);
+    let (srt_path, txt_path) = resolve_outputs(&app, &path)?;
     let existing: Vec<String> = [srt_path.clone(), txt_path.clone()]
         .iter()
         .filter(|p| p.exists())
@@ -190,6 +280,11 @@ fn recognize_file(
     if state.running.swap(true, Ordering::SeqCst) {
         return Err("Recognition is already running".to_string());
     }
+
+    // Plain paths are decoded in place; picker URIs (Android content://, iOS
+    // file://) are copied into the app cache first so the decoder can read
+    // them like a normal file.
+    let local_path = materialize_input(&app, &path)?;
 
     state.cancelled.store(false, Ordering::SeqCst);
     state.progress.store(0, Ordering::SeqCst);
@@ -223,7 +318,7 @@ fn recognize_file(
 
     std::thread::spawn(move || {
         run_recognition(
-            &path,
+            &local_path,
             &api_key,
             start_sec,
             end_sec,
@@ -517,8 +612,8 @@ struct LoadedResults {
 /// Load previously saved results for an input file, if any exist. Lets the
 /// user review old transcripts without paying for recognition again.
 #[tauri::command]
-fn load_results(path: String) -> Result<Option<LoadedResults>, String> {
-    let (srt_path, txt_path) = output_paths(&path);
+fn load_results(app: tauri::AppHandle, path: String) -> Result<Option<LoadedResults>, String> {
+    let (srt_path, txt_path) = resolve_outputs(&app, &path)?;
     let srt_content = if srt_path.exists() {
         Some(std::fs::read_to_string(&srt_path).map_err(|e| e.to_string())?)
     } else {
@@ -558,6 +653,24 @@ fn load_results(path: String) -> Result<Option<LoadedResults>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn percent_decode_handles_android_content_uris() {
+        assert_eq!(percent_decode("raw%3A%2Fstorage%2Femulated%2F0"), "raw:/storage/emulated/0");
+        assert_eq!(percent_decode("plain.txt"), "plain.txt");
+    }
+
+    #[test]
+    fn input_file_name_extracts_the_basename() {
+        assert_eq!(
+            input_file_name(
+                "content://com.android.providers.downloads.documents/document/raw%3A%2Fstorage%2Femulated%2F0%2FDownload%2FWeiXin%2F1_lei-jun.wav"
+            ),
+            "1_lei-jun.wav"
+        );
+        assert_eq!(input_file_name("file:///a/b/my%20clip.mp4"), "my clip.mp4");
+        assert_eq!(input_file_name("C:\\media\\talk.mkv"), "talk.mkv");
+    }
 
     #[test]
     fn output_paths_follow_the_python_naming() {
@@ -609,6 +722,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_fs::init())
         .manage(AppState {
             running: Arc::new(AtomicBool::new(false)),
             cancelled: Arc::new(AtomicBool::new(false)),
