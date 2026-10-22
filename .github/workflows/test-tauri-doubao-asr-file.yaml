@@ -1,0 +1,500 @@
+name: test-tauri-doubao-asr-file
+
+on:
+  push:
+    branches:
+      - master
+      - tauri-doubao-asr-gui
+  workflow_dispatch:
+
+concurrency:
+  group: test-tauri-doubao-asr-file-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+# sherpa-onnx is used as a plain Rust crate: sherpa-onnx-sys downloads the
+# prebuilt native libraries for the target (and wires the iOS xcframework /
+# Android jniLibs into the Tauri project by itself), so CI does not build
+# sherpa-onnx from source. Linking is static (the crate's default feature).
+
+jobs:
+  macos:
+    name: macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            os: macos-latest
+          - arch: x64
+            os: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download silero_vad.onnx
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/doubao-asr-file/src-tauri/assets
+          curl -sSL -o tauri-examples/doubao-asr-file/src-tauri/assets/silero_vad.onnx \
+            https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh tauri-examples/doubao-asr-file/src-tauri/assets/
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm install
+
+      - name: Build
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm run build
+
+      - name: Show artifacts
+        shell: bash
+        run: |
+          ls -lhR tauri-examples/doubao-asr-file/src-tauri/target/release/bundle/
+
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          app_path=$(find tauri-examples/doubao-asr-file/src-tauri/target/release/bundle/macos -name "*.app" | head -1)
+          if [ -n "$app_path" ]; then
+            .github/scripts/flutter/sign_macos_app.sh "$app_path"
+          fi
+
+      - name: Zip app
+        shell: bash
+        run: |
+          zip_name="tauri-doubao-asr-file-macos-${{ matrix.arch }}.zip"
+          app_path=$(find tauri-examples/doubao-asr-file/src-tauri/target/release/bundle/macos -name "*.app" | head -1)
+          if [ -n "$app_path" ]; then
+            app_name=$(basename "$app_path" .app)
+            cd tauri-examples/doubao-asr-file/src-tauri/target/release/bundle/macos/
+            rm -rf tauri-doubao-asr-file-macos-${{ matrix.arch }}
+            mkdir -p tauri-doubao-asr-file-macos-${{ matrix.arch }}
+            mv "${app_name}.app" tauri-doubao-asr-file-macos-${{ matrix.arch }}/
+            zip -r -y "$zip_name" tauri-doubao-asr-file-macos-${{ matrix.arch }}/
+            ls -lh "$zip_name"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-doubao-asr-file-macos-${{ matrix.arch }}
+          path: tauri-examples/doubao-asr-file/src-tauri/target/release/bundle/macos/tauri-doubao-asr-file-macos-${{ matrix.arch }}.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/doubao-asr-file/src-tauri/target/release/bundle/macos/tauri-doubao-asr-file-macos-${{ matrix.arch }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-examples/doubao-asr-file/src-tauri/target/release/bundle/macos/tauri-doubao-asr-file-macos-${{ matrix.arch }}.zip
+          tag: tauri
+
+  ios:
+    name: iOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download silero_vad.onnx
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/doubao-asr-file/src-tauri/assets
+          curl -sSL -o tauri-examples/doubao-asr-file/src-tauri/assets/silero_vad.onnx \
+            https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh tauri-examples/doubao-asr-file/src-tauri/assets/
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm install
+
+      - name: Init iOS
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          cargo-tauri ios init
+
+      - name: Build iOS
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          cargo-tauri ios build --target aarch64-apple-ios --no-codesign
+
+      - name: Package iOS artifacts
+        shell: bash
+        run: |
+          app_path=$(find tauri-examples/doubao-asr-file/src-tauri -path "*iphoneos*" -name "*.app" | head -1)
+          if [ -n "$app_path" ]; then
+            cd "$(dirname "$app_path")"
+            zip -r -y tauri-doubao-asr-file-ios-device.zip "$(basename "$app_path")"
+            mv tauri-doubao-asr-file-ios-device.zip $GITHUB_WORKSPACE/
+          fi
+          sim_path=$(find tauri-examples/doubao-asr-file/src-tauri -path "*iphonesimulator*" -name "*.app" | head -1)
+          if [ -n "$sim_path" ]; then
+            cd "$(dirname "$sim_path")"
+            zip -r -y tauri-doubao-asr-file-ios-simulator.zip "$(basename "$sim_path")"
+            mv tauri-doubao-asr-file-ios-simulator.zip $GITHUB_WORKSPACE/
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-doubao-asr-file-ios
+          path: tauri-doubao-asr-file-ios-*.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-ios-*.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-ios-*.zip
+          tag: tauri
+
+  linux:
+    name: Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            os: ubuntu-latest
+          - arch: arm64
+            os: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download silero_vad.onnx
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/doubao-asr-file/src-tauri/assets
+          curl -sSL -o tauri-examples/doubao-asr-file/src-tauri/assets/silero_vad.onnx \
+            https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh tauri-examples/doubao-asr-file/src-tauri/assets/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm install
+
+      - name: Run Rust unit tests
+        if: matrix.arch == 'x64'
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file/src-tauri
+          cargo test
+
+      - name: Build
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm run build
+
+      - name: Zip app
+        shell: bash
+        run: |
+          dist=tauri-examples/doubao-asr-file/src-tauri/target/release/bundle
+          zip_name="tauri-doubao-asr-file-linux-${{ matrix.arch }}.zip"
+          mkdir -p tauri-doubao-asr-file-linux-${{ matrix.arch }}
+          cp -r $dist/* tauri-doubao-asr-file-linux-${{ matrix.arch }}/ 2>/dev/null || true
+          zip -r -y "$zip_name" tauri-doubao-asr-file-linux-${{ matrix.arch }}/
+          ls -lh "$zip_name"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-doubao-asr-file-linux-${{ matrix.arch }}
+          path: tauri-doubao-asr-file-linux-${{ matrix.arch }}.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-linux-${{ matrix.arch }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-linux-${{ matrix.arch }}.zip
+          tag: tauri
+
+  windows:
+    name: Windows (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            os: windows-latest
+          - arch: arm64
+            os: windows-11-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download silero_vad.onnx
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/doubao-asr-file/src-tauri/assets
+          curl -sSL -o tauri-examples/doubao-asr-file/src-tauri/assets/silero_vad.onnx \
+            https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh tauri-examples/doubao-asr-file/src-tauri/assets/
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch == 'arm64' && 'amd64_arm64' || 'x64' }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm install
+
+      - name: Build
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm run build
+
+      - name: Zip app
+        shell: bash
+        run: |
+          dist=tauri-examples/doubao-asr-file/src-tauri/target/release/bundle
+          zip_name="tauri-doubao-asr-file-win-${{ matrix.arch }}.zip"
+          mkdir -p tauri-doubao-asr-file-win-${{ matrix.arch }}
+          cp -r $dist/* tauri-doubao-asr-file-win-${{ matrix.arch }}/ 2>/dev/null || true
+          7z a -tzip "$zip_name" tauri-doubao-asr-file-win-${{ matrix.arch }}/ -xr!.gitignore
+          ls -lh "$zip_name"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-doubao-asr-file-win-${{ matrix.arch }}
+          path: tauri-doubao-asr-file-win-${{ matrix.arch }}.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-win-${{ matrix.arch }}.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-win-${{ matrix.arch }}.zip
+          tag: tauri
+
+  android:
+    name: Android (${{ matrix.abi }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            rust_target: aarch64-linux-android
+            tauri_target: aarch64
+          - abi: armeabi-v7a
+            rust_target: armv7-linux-androideabi
+            tauri_target: armv7
+          - abi: x86_64
+            rust_target: x86_64-linux-android
+            tauri_target: x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download silero_vad.onnx
+        shell: bash
+        run: |
+          mkdir -p tauri-examples/doubao-asr-file/src-tauri/assets
+          curl -sSL -o tauri-examples/doubao-asr-file/src-tauri/assets/silero_vad.onnx \
+            https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          ls -lh tauri-examples/doubao-asr-file/src-tauri/assets/
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Install npm dependencies
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npm install
+
+      - name: Init Android
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          cargo-tauri android init
+
+      - name: Build Android
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          cargo-tauri android build --target ${{ matrix.tauri_target }} --apk --debug
+
+      - name: Rename APK
+        shell: bash
+        run: |
+          apk=$(find tauri-examples/doubao-asr-file/src-tauri -name "*.apk" | head -1)
+          if [ -n "$apk" ]; then
+            cp "$apk" "tauri-doubao-asr-file-${{ matrix.abi }}.apk"
+            ls -lh "tauri-doubao-asr-file-${{ matrix.abi }}.apk"
+          fi
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-${{ matrix.abi }}.apk
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tauri
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: tauri-doubao-asr-file-${{ matrix.abi }}.apk
+          tag: tauri

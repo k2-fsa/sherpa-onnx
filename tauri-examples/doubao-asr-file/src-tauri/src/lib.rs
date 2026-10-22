@@ -1,0 +1,632 @@
+// Doubao ASR from file: sherpa-onnx VAD + Doubao bigmodel API.
+//
+// Users only provide an API key and pick an audio/video file. There are no
+// other settings. Results can be exported as SRT, timestamped TXT or plain
+// TXT. The frontend plays the file and can seek to any transcript segment.
+
+mod audio;
+mod doubao;
+mod subtitle;
+mod vad;
+
+use doubao::DoubaoClient;
+use serde::Serialize;
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
+use subtitle::Segment;
+
+const MODEL_FILE: &str = "silero_vad.onnx";
+const MODEL_NAME: &str = "Silero VAD v4";
+const MODEL_URL: &str =
+    "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx";
+const MODEL_DOC_URL: &str = "https://k2-fsa.github.io/sherpa/onnx/vad/silero-vad.html";
+/// Help page describing how to get a Doubao API key.
+const API_DOC_URL: &str = "https://www.doubao.com/thread/xXWsjZf94yLksVLtN";
+
+/// Where to buy more recognition hours. Users must pick the package
+/// 豆包录音文件识别 (recording-file recognition), NOT 豆包流式语音识别
+/// (streaming speech recognition).
+const PRICING_URL: &str = "https://console.volcengine.com/common-buy/Speech_Synthesis";
+
+/// Shared application state, created once at startup.
+struct AppState {
+    running: Arc<AtomicBool>,
+    cancelled: Arc<AtomicBool>,
+    progress: Arc<AtomicU32>,
+    status: Arc<Mutex<String>>,
+    segments: Arc<Mutex<Vec<Segment>>>,
+    elapsed_secs: Arc<Mutex<f32>>,
+    audio_duration_secs: Arc<Mutex<f32>>,
+    /// Human-readable log lines, shown in the GUI log box.
+    logs: Arc<Mutex<Vec<String>>>,
+    /// How long decoding the input took, in seconds.
+    decode_secs: Arc<Mutex<f32>>,
+}
+
+#[derive(Serialize, Clone)]
+struct SegmentResult {
+    index: u32,
+    start: f32,
+    end: f32,
+    text: String,
+}
+
+#[derive(Serialize, Clone)]
+struct ProcessingState {
+    percent: u32,
+    status: String,
+    segments: Vec<SegmentResult>,
+    elapsed_secs: f32,
+    audio_duration_secs: f32,
+    decode_secs: f32,
+    logs: Vec<String>,
+}
+
+#[derive(Serialize, Clone)]
+struct AppInfo {
+    app_version: String,
+    sherpa_onnx_version: String,
+    git_sha1: String,
+    git_date: String,
+    onnxruntime_version: String,
+    model_name: String,
+    model_file: String,
+    model_url: String,
+    model_doc_url: String,
+    api_doc_url: String,
+    pricing_url: String,
+}
+
+/// Where the bundled assets (silero_vad.onnx) live at runtime.
+fn resource_dir() -> PathBuf {
+    if let Ok(exe) = std::env::current_exe() {
+        for ancestor in exe.ancestors() {
+            if ancestor.extension().map_or(false, |ext| ext == "app") {
+                let resources = ancestor.join("Contents").join("Resources");
+                if resources.exists() {
+                    let assets = resources.join("assets");
+                    if assets.exists() {
+                        return assets;
+                    }
+                    return resources;
+                }
+                break;
+            }
+        }
+        if let Some(exe_dir) = exe.parent() {
+            let assets_dir = exe_dir.join("assets");
+            if assets_dir.exists() {
+                return assets_dir;
+            }
+            return exe_dir.to_path_buf();
+        }
+    }
+    PathBuf::from(".")
+}
+
+fn model_path() -> PathBuf {
+    resource_dir().join(MODEL_FILE)
+}
+
+/// Output files written next to the input file, named like the Python
+/// reference: `<input>.srt` (standard subtitles) and `<input>.txt`
+/// (timestamped text).
+fn output_paths(input_path: &str) -> (PathBuf, PathBuf) {
+    let base = std::path::Path::new(input_path).with_extension("");
+    (base.with_extension("srt"), base.with_extension("txt"))
+}
+
+/// Auto-save the results next to the input file. Recognition is not free, so
+/// whatever has been recognized is kept even if the run was stopped early.
+/// Returns the list of files that were written.
+fn save_results(input_path: &str, segments: &[Segment]) -> Result<Vec<String>, String> {
+    if segments.is_empty() {
+        return Ok(Vec::new());
+    }
+    let (srt_path, txt_path) = output_paths(input_path);
+    let srt = subtitle::to_srt(segments);
+    let txt = subtitle::to_timestamped_txt(segments);
+    std::fs::write(&srt_path, srt)
+        .map_err(|e| format!("cannot write {}: {e}", srt_path.display()))?;
+    std::fs::write(&txt_path, txt)
+        .map_err(|e| format!("cannot write {}: {e}", txt_path.display()))?;
+    Ok(vec![
+        srt_path.display().to_string(),
+        txt_path.display().to_string(),
+    ])
+}
+
+/// Start recognition in a background thread. Returns immediately; the
+/// frontend polls `get_progress` for updates.
+///
+/// `start_sec`/`end_sec` limit the range of the file that is sent for
+/// recognition. `end_sec <= 0` (or an empty frontend field) means "to the end
+/// of the file" — the default processes the whole file.
+#[tauri::command]
+fn recognize_file(
+    path: String,
+    api_key: String,
+    start_sec: f32,
+    end_sec: f32,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    let api_key = api_key.trim().to_string();
+    if api_key.is_empty() {
+        return Err("Please provide a Doubao API key first".to_string());
+    }
+    if !audio::is_supported_extension(&path) {
+        return Err(format!(
+            "Unsupported file type: {path}. Please choose an audio or video file."
+        ));
+    }
+    let start_sec = if start_sec.is_finite() && start_sec > 0.0 {
+        start_sec
+    } else {
+        0.0
+    };
+    if end_sec.is_finite() && end_sec > 0.0 && end_sec <= start_sec {
+        return Err("Invalid range: the end time must be after the start time".to_string());
+    }
+
+    // Recognition is not free: refuse to run when the output files already
+    // exist, before any decoding, VAD or API call — same as the Python
+    // reference. Users should delete or rename them first.
+    let (srt_path, txt_path) = output_paths(&path);
+    let existing: Vec<String> = [srt_path.clone(), txt_path.clone()]
+        .iter()
+        .filter(|p| p.exists())
+        .map(|p| p.display().to_string())
+        .collect();
+    if !existing.is_empty() {
+        return Err(format!(
+            "Output file(s) already exist: {}. \
+             Please delete or rename the file(s) first!",
+            existing.join(", ")
+        ));
+    }
+
+    if state.running.swap(true, Ordering::SeqCst) {
+        return Err("Recognition is already running".to_string());
+    }
+
+    state.cancelled.store(false, Ordering::SeqCst);
+    state.progress.store(0, Ordering::SeqCst);
+    if let Ok(mut s) = state.status.lock() {
+        *s = "Starting...".to_string();
+    }
+    if let Ok(mut s) = state.segments.lock() {
+        s.clear();
+    }
+    if let Ok(mut l) = state.logs.lock() {
+        l.clear();
+        let range = if end_sec > 0.0 {
+            format!("range {start_sec}s..{end_sec}s")
+        } else if start_sec > 0.0 {
+            format!("range {start_sec}s..end")
+        } else {
+            "whole file".to_string()
+        };
+        l.push(format!("Started: {path} ({range})"));
+    }
+
+    let running = state.running.clone();
+    let cancelled = state.cancelled.clone();
+    let progress = state.progress.clone();
+    let status = state.status.clone();
+    let segments = state.segments.clone();
+    let elapsed_secs = state.elapsed_secs.clone();
+    let audio_duration_secs = state.audio_duration_secs.clone();
+    let logs = state.logs.clone();
+    let decode_secs_out = state.decode_secs.clone();
+
+    std::thread::spawn(move || {
+        run_recognition(
+            &path,
+            &api_key,
+            start_sec,
+            end_sec,
+            &running,
+            &cancelled,
+            &progress,
+            &status,
+            &segments,
+            &elapsed_secs,
+            &audio_duration_secs,
+            &logs,
+            &decode_secs_out,
+        );
+        running.store(false, Ordering::SeqCst);
+    });
+
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_recognition(
+    path: &str,
+    api_key: &str,
+    start_sec: f32,
+    end_sec: f32,
+    running: &AtomicBool,
+    cancelled: &AtomicBool,
+    progress: &AtomicU32,
+    status: &Mutex<String>,
+    segments: &Mutex<Vec<Segment>>,
+    elapsed_secs: &Mutex<f32>,
+    audio_duration_secs: &Mutex<f32>,
+    logs: &Mutex<Vec<String>>,
+    decode_secs_out: &Mutex<f32>,
+) {
+    let start_time = Instant::now();
+    let set_status = |s: &str| {
+        if let Ok(mut st) = status.lock() {
+            *st = s.to_string();
+        }
+    };
+    let log = |msg: String| {
+        if let Ok(mut l) = logs.lock() {
+            l.push(msg);
+        }
+    };
+
+    set_status("Decoding audio...");
+    let decode_start = Instant::now();
+    let samples = match audio::decode_to_mono_16k(path, start_sec, end_sec) {
+        Ok(s) => s,
+        Err(e) => {
+            set_status(&format!("Error: {e}"));
+            log(format!("Error: {e}"));
+            return;
+        }
+    };
+    let decode_secs = decode_start.elapsed().as_secs_f32();
+    log(format!(
+        "Decoded {:.3}s of audio in {:.3}s",
+        samples.len() as f32 / 16000.0,
+        decode_secs
+    ));
+    let duration = samples.len() as f32 / 16000.0;
+    if let Ok(mut d) = audio_duration_secs.lock() {
+        *d = duration;
+    }
+    progress.store(10, Ordering::SeqCst);
+
+    if cancelled.load(Ordering::SeqCst) {
+        set_status("Cancelled");
+        return;
+    }
+
+    set_status("Detecting speech...");
+    let raw = match vad::run_silero_vad(&samples, &model_path().to_string_lossy()) {
+        Ok(r) => r,
+        Err(e) => {
+            set_status(&format!("Error: {e}"));
+            log(format!("Error: {e}"));
+            return;
+        }
+    };
+    progress.store(30, Ordering::SeqCst);
+    log(format!("VAD detected {} speech segments", raw.len()));
+
+    if raw.is_empty() {
+        set_status("No speech detected");
+        return;
+    }
+
+    set_status(&format!("Recognizing 0/{} segments...", raw.len()));
+    let client = DoubaoClient::new(api_key.to_string());
+    let total = raw.len();
+    let done_count = Arc::new(AtomicU32::new(0));
+
+    // Send segments to the API with a bounded pool (4 workers) and publish
+    // each transcript as soon as it arrives, so the UI fills in live.
+    let next = std::sync::atomic::AtomicUsize::new(0);
+    let raw = &raw;
+    std::thread::scope(|scope| {
+        let workers = 4.min(raw.len()).max(1);
+        for _ in 0..workers {
+            let next = &next;
+            let raw = raw;
+            let client = &client;
+            let done_count = &done_count;
+            let segments = segments;
+            let status = status;
+            let cancelled = cancelled;
+            let progress = progress;
+            let logs = logs;
+            scope.spawn(move || loop {
+                let i = next.fetch_add(1, Ordering::SeqCst);
+                if i >= raw.len() {
+                    return;
+                }
+                if cancelled.load(Ordering::SeqCst) {
+                    return;
+                }
+                let seg = &raw[i];
+                let wav = audio::samples_to_wav(&seg.samples, 16000);
+                let text = match client.recognize(&wav) {
+                    Ok(t) => t.trim().to_string(),
+                    Err(e) => {
+                        eprintln!("segment {:.2}s failed: {e}", seg.start);
+                        if let Ok(mut l) = logs.lock() {
+                            l.push(format!(
+                                "[{}/{total}] {}  failed: {e}",
+                                done_count.load(Ordering::SeqCst) + 1,
+                                subtitle::ts_loose(start_sec + seg.start)
+                            ));
+                        }
+                        String::new()
+                    }
+                };
+                let n = done_count.fetch_add(1, Ordering::SeqCst) + 1;
+                if let Ok(mut l) = logs.lock() {
+                    let shown: String = text.chars().take(60).collect();
+                    l.push(format!(
+                        "[{n}/{total}] {}  {shown}",
+                        subtitle::ts_loose(start_sec + seg.start)
+                    ));
+                }
+                if !text.is_empty() {
+                    if let Ok(mut s) = segments.lock() {
+                        // Offset by the range start so times are file-absolute
+                        // and click-to-play seeks to the right place.
+                        s.push(Segment {
+                            start: start_sec + seg.start,
+                            end: start_sec + seg.end,
+                            text,
+                        });
+                        s.sort_by(|a, b| a.start.partial_cmp(&b.start).unwrap());
+                    }
+                }
+                progress.store(30 + (60 * n / total as u32), Ordering::SeqCst);
+                if let Ok(mut st) = status.lock() {
+                    *st = format!("Recognizing {n}/{total} segments...");
+                }
+            });
+        }
+    });
+
+    // Timing stats, same fields as the Python example prints at the end:
+    // audio duration, decode time, elapsed seconds and RTF.
+    let elapsed = start_time.elapsed().as_secs_f32();
+    let duration = audio_duration_secs.lock().map(|d| *d).unwrap_or(0.0);
+    let rtf = if duration > 0.0 {
+        elapsed / duration
+    } else {
+        0.0
+    };
+    if let Ok(mut e) = elapsed_secs.lock() {
+        *e = elapsed;
+    }
+    if let Ok(mut d) = decode_secs_out.lock() {
+        *d = decode_secs;
+    }
+    log(format!("Audio duration:\t{duration:.3} s"));
+    log(format!("Decode time:\t{decode_secs:.3} s"));
+    log(format!("Elapsed:\t{elapsed:.3} s"));
+    log(format!("RTF = {elapsed:.3}/{duration:.3} = {rtf:.3}"));
+
+    // Save whatever has been recognized — recognition is not free, so results
+    // are written even when the run was stopped early.
+    let final_segments = segments.lock().map(|s| s.clone()).unwrap_or_default();
+    match save_results(path, &final_segments) {
+        Ok(saved) => {
+            for p in &saved {
+                log(format!("Saved to {p}"));
+            }
+            let save_msg = if saved.is_empty() {
+                "nothing to save".to_string()
+            } else {
+                format!("Saved to {}", saved.join(" and "))
+            };
+            if cancelled.load(Ordering::SeqCst) {
+                set_status(&format!("Stopped. {save_msg}"));
+            } else {
+                progress.store(100, Ordering::SeqCst);
+                set_status(&format!("Done. {save_msg}"));
+            }
+        }
+        Err(e) => {
+            set_status(&format!("Error: {e}"));
+            log(format!("Error: {e}"));
+        }
+    }
+    let _ = running;
+}
+
+#[tauri::command]
+fn get_progress(state: tauri::State<'_, AppState>) -> ProcessingState {
+    let segments = state
+        .segments
+        .lock()
+        .map(|s| {
+            s.iter()
+                .enumerate()
+                .map(|(i, seg)| SegmentResult {
+                    index: i as u32 + 1,
+                    start: seg.start,
+                    end: seg.end,
+                    text: seg.text.clone(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    ProcessingState {
+        percent: state.progress.load(Ordering::Relaxed),
+        status: state.status.lock().map(|s| s.clone()).unwrap_or_default(),
+        segments,
+        elapsed_secs: state.elapsed_secs.lock().map(|e| *e).unwrap_or(0.0),
+        audio_duration_secs: state
+            .audio_duration_secs
+            .lock()
+            .map(|d| *d)
+            .unwrap_or(0.0),
+        decode_secs: state.decode_secs.lock().map(|d| *d).unwrap_or(0.0),
+        logs: state.logs.lock().map(|l| l.clone()).unwrap_or_default(),
+    }
+}
+
+#[tauri::command]
+fn cancel_recognition(state: tauri::State<'_, AppState>) {
+    state.cancelled.store(true, Ordering::SeqCst);
+}
+
+#[tauri::command]
+fn get_info() -> AppInfo {
+    AppInfo {
+        app_version: env!("CARGO_PKG_VERSION").to_string(),
+        sherpa_onnx_version: sherpa_onnx::version().to_string(),
+        git_sha1: sherpa_onnx::git_sha1().to_string(),
+        git_date: sherpa_onnx::git_date().to_string(),
+        onnxruntime_version: sherpa_onnx::onnxruntime_version().to_string(),
+        model_name: MODEL_NAME.to_string(),
+        model_file: MODEL_FILE.to_string(),
+        model_url: MODEL_URL.to_string(),
+        model_doc_url: MODEL_DOC_URL.to_string(),
+        api_doc_url: API_DOC_URL.to_string(),
+        pricing_url: PRICING_URL.to_string(),
+    }
+}
+
+/// Export the transcript. `format` is one of: srt, timestamped_txt, plain_txt.
+#[tauri::command]
+fn export_text(path: String, format: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    let segments = state.segments.lock().map_err(|e| e.to_string())?.clone();
+    if segments.is_empty() {
+        return Err("Nothing to export yet".to_string());
+    }
+    let content = match format.as_str() {
+        "srt" => subtitle::to_srt(&segments),
+        "timestamped_txt" => subtitle::to_timestamped_txt(&segments),
+        "plain_txt" => subtitle::to_plain_text(&segments),
+        other => return Err(format!("Unknown export format: {other}")),
+    };
+    std::fs::write(&path, content).map_err(|e| format!("Cannot write {path}: {e}"))
+}
+
+#[derive(Serialize, Clone)]
+struct LoadedResults {
+    segments: Vec<SegmentResult>,
+    srt_path: Option<String>,
+    txt_path: Option<String>,
+}
+
+/// Load previously saved results for an input file, if any exist. Lets the
+/// user review old transcripts without paying for recognition again.
+#[tauri::command]
+fn load_results(path: String) -> Result<Option<LoadedResults>, String> {
+    let (srt_path, txt_path) = output_paths(&path);
+    let srt_content = if srt_path.exists() {
+        Some(std::fs::read_to_string(&srt_path).map_err(|e| e.to_string())?)
+    } else {
+        None
+    };
+    let txt_content = if txt_path.exists() {
+        Some(std::fs::read_to_string(&txt_path).map_err(|e| e.to_string())?)
+    } else {
+        None
+    };
+    if srt_content.is_none() && txt_content.is_none() {
+        return Ok(None);
+    }
+
+    // Prefer .srt: it has explicit cues; fall back to the timestamped txt.
+    let segs = match srt_content {
+        Some(content) => subtitle::parse_srt(&content)?,
+        None => subtitle::parse_timestamped_txt(&txt_content.unwrap_or_default())?,
+    };
+
+    Ok(Some(LoadedResults {
+        segments: segs
+            .into_iter()
+            .enumerate()
+            .map(|(i, s)| SegmentResult {
+                index: i as u32 + 1,
+                start: s.start,
+                end: s.end,
+                text: s.text,
+            })
+            .collect(),
+        srt_path: srt_path.exists().then(|| srt_path.display().to_string()),
+        txt_path: txt_path.exists().then(|| txt_path.display().to_string()),
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn output_paths_follow_the_python_naming() {
+        let (srt, txt) = output_paths("/a/b/lecture.mp4");
+        assert_eq!(srt, PathBuf::from("/a/b/lecture.srt"));
+        assert_eq!(txt, PathBuf::from("/a/b/lecture.txt"));
+
+        let (srt, txt) = output_paths("movie.mkv");
+        assert_eq!(srt, PathBuf::from("movie.srt"));
+        assert_eq!(txt, PathBuf::from("movie.txt"));
+    }
+
+    #[test]
+    fn save_results_writes_srt_and_timestamped_txt() {
+        let dir = std::env::temp_dir().join("doubao-asr-file-test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let input = dir.join("sample.wav");
+        let (srt, txt) = output_paths(input.to_str().unwrap());
+        let _ = std::fs::remove_file(&srt);
+        let _ = std::fs::remove_file(&txt);
+
+        let segs = vec![Segment {
+            start: 1.25,
+            end: 2.0,
+            text: "你好".to_string(),
+        }];
+        let saved = save_results(input.to_str().unwrap(), &segs).unwrap();
+        assert_eq!(saved.len(), 2);
+        assert!(saved[0].ends_with("sample.srt"));
+        assert!(saved[1].ends_with("sample.txt"));
+        assert!(srt.exists());
+        assert!(txt.exists());
+        assert_eq!(
+            std::fs::read_to_string(&srt).unwrap(),
+            "1\n00:00:01,250 --> 00:00:02,000\n你好"
+        );
+        assert_eq!(
+            std::fs::read_to_string(&txt).unwrap(),
+            "0:00:01,250 --> 0:00:02,000  你好"
+        );
+
+        let _ = std::fs::remove_file(&srt);
+        let _ = std::fs::remove_file(&txt);
+    }
+}
+
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
+        .manage(AppState {
+            running: Arc::new(AtomicBool::new(false)),
+            cancelled: Arc::new(AtomicBool::new(false)),
+            progress: Arc::new(AtomicU32::new(0)),
+            status: Arc::new(Mutex::new("Idle".to_string())),
+            segments: Arc::new(Mutex::new(Vec::new())),
+            elapsed_secs: Arc::new(Mutex::new(0.0)),
+            audio_duration_secs: Arc::new(Mutex::new(0.0)),
+            logs: Arc::new(Mutex::new(Vec::new())),
+            decode_secs: Arc::new(Mutex::new(0.0)),
+        })
+        .invoke_handler(tauri::generate_handler![
+            recognize_file,
+            get_progress,
+            cancel_recognition,
+            get_info,
+            export_text,
+            load_results,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
