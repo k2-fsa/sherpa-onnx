@@ -6,6 +6,7 @@
 #
 #  ctest --verbose -R  test_text2token_py
 
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -14,6 +15,13 @@ try:
     has_sentencepiece = True
 except ImportError:
     has_sentencepiece = False
+
+try:
+    from click.testing import CliRunner
+
+    has_click = True
+except ImportError:
+    has_click = False
 
 import sherpa_onnx
 
@@ -209,6 +217,42 @@ class TestText2Token(unittest.TestCase):
             ],
             [182, 241, 87, 163, 35, 50, 70, 68, 38, 24, 130, 231, 87, 163],
         ], encoded_ids
+
+    @unittest.skipUnless(has_click, "click is not installed")
+    def test_cli_keeps_extra_info_of_each_line(self):
+        from sherpa_onnx.cli import cli
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tokens = Path(tmp) / "tokens.txt"
+            tokens.write_text("你 1\n好 2\n世 3\n界 4\n", encoding="utf-8")
+
+            # 再见 cannot be encoded with tokens.txt, so its line is skipped
+            input_file = Path(tmp) / "input.txt"
+            input_file.write_text(
+                "你好 :2.0 #0.6 @你好\n再见 :3.0 @再见\n世界 #0.3 @世界\n",
+                encoding="utf-8",
+            )
+            output_file = Path(tmp) / "output.txt"
+
+            result = CliRunner().invoke(
+                cli,
+                [
+                    "text2token",
+                    "--tokens",
+                    str(tokens),
+                    "--tokens-type",
+                    "cjkchar",
+                    str(input_file),
+                    str(output_file),
+                ],
+            )
+            assert result.exit_code == 0, result.output
+
+            lines = output_file.read_text(encoding="utf-8").splitlines()
+            assert lines == [
+                "你 好 :2.0 #0.6 @你好",
+                "世 界 #0.3 @世界",
+            ], lines
 
 
 if __name__ == "__main__":
