@@ -3,7 +3,7 @@ name: test-flutter-punct
 on:
   push:
     branches:
-      - apk
+      - master
 
   workflow_dispatch:
 
@@ -138,7 +138,9 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          zip -r -y flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
+          # Rename the bundle so the extracted app carries the demo name.
+          mv ${app_name}.app ${{ matrix.demo }}.app
+          zip -r -y flutter-${{ matrix.demo }}-macos.zip ${{ matrix.demo }}.app/
           ls -lh flutter-${{ matrix.demo }}-macos.zip
 
       - name: Release
@@ -280,7 +282,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
-          zip -r -y flutter-${{ matrix.demo }}-linux-x64.zip bundle/
+          # Rename the bundle dir so the extracted folder carries the demo name.
+          mv bundle ${{ matrix.demo }}
+          zip -r -y flutter-${{ matrix.demo }}-linux-x64.zip ${{ matrix.demo }}/
           ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
 
       - name: Release
@@ -403,7 +407,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip"
+          # Rename the folder so the extracted app carries the demo name.
+          mv Release ${{ matrix.demo }}
+          powershell -Command "Compress-Archive -Path ${{ matrix.demo }} -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip"
           ls -lh flutter-${{ matrix.demo }}-win-x64.zip
 
       - name: Release

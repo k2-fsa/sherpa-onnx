@@ -3,7 +3,7 @@ name: test-flutter-vad-asr
 on:
   push:
     branches:
-      - apk
+      - master
 
   workflow_dispatch:
 
@@ -178,7 +178,9 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos.zip ${app_name}.app/
+          # Rename the bundle so the extracted app carries the model name.
+          mv ${app_name}.app ${{ matrix.demo }}-${{ matrix.asr_model_name }}.app
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos.zip ${{ matrix.demo }}-${{ matrix.asr_model_name }}.app/
           ls -lh flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-macos.zip
 
       - name: Release
@@ -339,7 +341,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
-          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64.zip bundle/
+          # Rename the bundle dir so the extracted folder carries the model name.
+          mv bundle ${{ matrix.demo }}-${{ matrix.asr_model_name }}
+          zip -r -y flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64.zip ${{ matrix.demo }}-${{ matrix.asr_model_name }}/
           ls -lh flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-linux-x64.zip
 
       - name: Release
@@ -476,7 +480,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64.zip"
+          # Rename the folder so the extracted app carries the model name.
+          mv Release ${{ matrix.demo }}-${{ matrix.asr_model_name }}
+          powershell -Command "Compress-Archive -Path ${{ matrix.demo }}-${{ matrix.asr_model_name }} -DestinationPath flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64.zip"
           ls -lh flutter-${{ matrix.demo }}-${{ matrix.asr_model_name }}-win-x64.zip
 
       - name: Release
