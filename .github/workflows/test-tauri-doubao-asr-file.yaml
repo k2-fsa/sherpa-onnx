@@ -156,25 +156,30 @@ jobs:
           cd tauri-examples/doubao-asr-file
           npx tauri ios init
 
-      - name: Build iOS
+      - name: Build iOS for device
         shell: bash
         run: |
           cd tauri-examples/doubao-asr-file
-          npx tauri ios build --target aarch64-apple-ios --no-codesign
+          npx tauri ios build --target aarch64 --no-sign
+
+      - name: Build iOS for simulator
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file
+          npx tauri ios build --target aarch64-sim --no-sign
 
       - name: Package iOS artifacts
         shell: bash
         run: |
-          app_path=$(find tauri-examples/doubao-asr-file/src-tauri -path "*iphoneos*" -name "*.app" | head -1)
-          if [ -n "$app_path" ]; then
-            cd "$(dirname "$app_path")"
-            zip -r -y tauri-doubao-asr-file-ios-device.zip "$(basename "$app_path")"
-            mv tauri-doubao-asr-file-ios-device.zip $GITHUB_WORKSPACE/
+          ipa=$(find tauri-examples/doubao-asr-file/src-tauri -name "*.ipa" | head -1)
+          if [ -n "$ipa" ]; then
+            cp "$ipa" tauri-doubao-asr-file-ios-device.ipa
+            ls -lh tauri-doubao-asr-file-ios-device.ipa
           fi
-          sim_path=$(find tauri-examples/doubao-asr-file/src-tauri -path "*iphonesimulator*" -name "*.app" | head -1)
-          if [ -n "$sim_path" ]; then
-            cd "$(dirname "$sim_path")"
-            zip -r -y tauri-doubao-asr-file-ios-simulator.zip "$(basename "$sim_path")"
+          sim_app=$(find tauri-examples/doubao-asr-file/src-tauri -name "doubao-asr-file.app" | head -1)
+          if [ -n "$sim_app" ]; then
+            cd "$(dirname "$sim_app")"
+            zip -r -y tauri-doubao-asr-file-ios-simulator.zip "$(basename "$sim_app")"
             mv tauri-doubao-asr-file-ios-simulator.zip $GITHUB_WORKSPACE/
           fi
 
@@ -182,7 +187,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tauri-doubao-asr-file-ios
-          path: tauri-doubao-asr-file-ios-*.zip
+          path: tauri-doubao-asr-file-ios-*
+          if-no-files-found: ignore
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -264,12 +270,16 @@ jobs:
       - name: Zip app
         shell: bash
         run: |
-          dist=tauri-examples/doubao-asr-file/src-tauri/target/release/bundle
           zip_name="tauri-doubao-asr-file-linux-${{ matrix.arch }}.zip"
-          mkdir -p tauri-doubao-asr-file-linux-${{ matrix.arch }}
-          cp -r $dist/* tauri-doubao-asr-file-linux-${{ matrix.arch }}/ 2>/dev/null || true
-          zip -r -y "$zip_name" tauri-doubao-asr-file-linux-${{ matrix.arch }}/
-          ls -lh "$zip_name"
+          dir_name="tauri-doubao-asr-file-linux-${{ matrix.arch }}"
+          cd tauri-examples/doubao-asr-file/src-tauri/target/release/
+          rm -rf "$dir_name"
+          mkdir -p "$dir_name"
+          # Static linking: the executable is self-contained.
+          cp doubao-asr-file "$dir_name/"
+          zip -r -y "$zip_name" "$dir_name/"
+          mv "$zip_name" $GITHUB_WORKSPACE/
+          ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -340,8 +350,12 @@ jobs:
           cd tauri-examples/doubao-asr-file
           npm install
 
+      # pwsh, not bash: under Git Bash, /usr/bin comes first in PATH and its
+      # GNU coreutils `link.exe` shadows MSVC's linker, breaking every cargo
+      # link with "linking with `link.exe` failed ... /usr/bin/link: extra
+      # operand".
       - name: Build
-        shell: bash
+        shell: pwsh
         run: |
           cd tauri-examples/doubao-asr-file
           npm run build
@@ -349,12 +363,15 @@ jobs:
       - name: Zip app
         shell: bash
         run: |
-          dist=tauri-examples/doubao-asr-file/src-tauri/target/release/bundle
           zip_name="tauri-doubao-asr-file-win-${{ matrix.arch }}.zip"
-          mkdir -p tauri-doubao-asr-file-win-${{ matrix.arch }}
-          cp -r $dist/* tauri-doubao-asr-file-win-${{ matrix.arch }}/ 2>/dev/null || true
-          7z a -tzip "$zip_name" tauri-doubao-asr-file-win-${{ matrix.arch }}/ -xr!.gitignore
-          ls -lh "$zip_name"
+          dir_name="tauri-doubao-asr-file-win-${{ matrix.arch }}"
+          cd tauri-examples/doubao-asr-file/src-tauri/target/release/
+          rm -rf "$dir_name"
+          mkdir -p "$dir_name"
+          # Static linking: the executable is self-contained.
+          cp doubao-asr-file.exe "$dir_name/"
+          powershell -Command "Compress-Archive -Path $dir_name -DestinationPath $GITHUB_WORKSPACE/$zip_name"
+          ls -lh "$GITHUB_WORKSPACE/$zip_name"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

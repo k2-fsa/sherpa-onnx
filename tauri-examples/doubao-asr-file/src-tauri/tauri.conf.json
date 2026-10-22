@@ -25,8 +25,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": [],
+    "targets": ["app"],
     "icon": ["icons/icon.png", "icons/icon.ico"],
-    "resources": ["assets"]
+    "resources": ["assets"],
+    "iOS": {
+      "frameworks": ["sherpa-onnx.xcframework"]
+    }
   }
 }
