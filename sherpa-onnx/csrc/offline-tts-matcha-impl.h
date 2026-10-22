@@ -465,7 +465,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     } else {
       // Lexicon path: convert Chinese punctuations, split text into sentences,
       // merge short ones, split long ones, then tokenize each sentence.
-      std::string normalized = ReplacePunctuations(text);
+      std::string normalized = NormalizeNfc(ReplacePunctuations(text));
       if (debug) {
 #if __OHOS__
         SHERPA_ONNX_LOGE("After replacing punctuations: %{public}s",
@@ -967,7 +967,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
             if (j > i && !(prev_is_cjk && curr_is_cjk)) {
               phrase.push_back(' ');
             }
-            phrase += ToLowerCase(words[j]);
+            phrase += NormalizeLexiconKey(words[j]);
           }
 
           auto it = lexicon_str_.find(phrase);
@@ -1016,7 +1016,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
           if (ContainsCJK(words[i])) {
             std::vector<std::string> chars = SplitUtf8(words[i]);
             for (const auto &ch : chars) {
-              std::string ch_lower = ToLowerCase(ch);
+              std::string ch_lower = NormalizeLexiconKey(ch);
               auto it = lexicon_str_.find(ch_lower);
               if (it != lexicon_str_.end()) {
                 if (debug) {
@@ -1038,7 +1038,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
             std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
             if (words[i].find('-') != std::string::npos && !parts.empty()) {
               for (const auto &part : parts) {
-                std::string part_lower = ToLowerCase(part);
+                std::string part_lower = NormalizeLexiconKey(part);
                 auto it2 = lexicon_str_.find(part_lower);
                 if (it2 != lexicon_str_.end()) {
                   if (debug) {
@@ -1209,7 +1209,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
           std::string phrase;
           for (int32_t j = i; j < i + len; ++j) {
             if (j > i) phrase.push_back(' ');
-            phrase += ToLowerCase(words[j]);
+            phrase += NormalizeLexiconKey(words[j]);
           }
 
           auto it = lexicon_.find(phrase);
@@ -1239,7 +1239,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
         if (!found) {
           // Fallback: check lexicon_str_ (old-format, token string entries)
-          std::string key = ToLowerCase(words[i]);
+          std::string key = NormalizeLexiconKey(words[i]);
           auto it_str = lexicon_str_.find(key);
           if (it_str != lexicon_str_.end()) {
             if (debug) {
@@ -1259,7 +1259,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
             // CJK: split into individual characters
             std::vector<std::string> chars = SplitUtf8(words[i]);
             for (const auto &ch : chars) {
-              std::string ch_lower = ToLowerCase(ch);
+              std::string ch_lower = NormalizeLexiconKey(ch);
               auto it_lex = lexicon_str_.find(ch_lower);
               if (it_lex != lexicon_str_.end()) {
                 if (debug) {
@@ -1285,7 +1285,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
             std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
             if (words[i].find('-') != std::string::npos && !parts.empty()) {
               for (const auto &part : parts) {
-                std::string part_lower = ToLowerCase(part);
+                std::string part_lower = NormalizeLexiconKey(part);
                 auto it2 = lexicon_str_.find(part_lower);
                 if (it2 != lexicon_str_.end()) {
                   if (debug) {

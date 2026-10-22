@@ -389,6 +389,7 @@ endif()
 
 target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
+  utf8proc
   kaldi-decoder-core
   ssentencepiece_core
 )

@@ -389,7 +389,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 #endif
       }
 
-      std::string normalized = ReplacePunctuations(text);
+      std::string normalized = NormalizeNfc(ReplacePunctuations(text));
 
       auto sentences = SplitByAllPunctuation(normalized);
       if (sentences.empty()) {
@@ -730,7 +730,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   std::vector<int64_t> TokenizeText(const std::string &text,
                                     bool debug) const {
     std::vector<int64_t> ids;
-    std::string normalized = ReplacePunctuations(text);
+    std::string normalized = NormalizeNfc(ReplacePunctuations(text));
 
     if (debug) {
 #if __OHOS__
@@ -771,7 +771,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
           bool prev_cjk = !phrase.empty() && IsCJK(Utf8ToUtf32(phrase).back());
           bool curr_cjk = !words[j].empty() && IsCJK(Utf8ToUtf32(words[j]).front());
           if (j > i && !(prev_cjk && curr_cjk)) phrase.push_back(' ');
-          phrase += ToLowerCase(words[j]);
+          phrase += NormalizeLexiconKey(words[j]);
         }
         auto it = lexicon_str_.find(phrase);
         if (it != lexicon_str_.end()) {
@@ -791,7 +791,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       if (!found) {
         if (ContainsCJK(words[i])) {
           for (const auto &ch : SplitUtf8(words[i])) {
-            std::string ch_lower = ToLowerCase(ch);
+            std::string ch_lower = NormalizeLexiconKey(ch);
             auto it = lexicon_str_.find(ch_lower);
             if (it != lexicon_str_.end()) {
               if (debug) {
@@ -813,7 +813,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
           std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
           if (words[i].find('-') != std::string::npos && !parts.empty()) {
             for (const auto &part : parts) {
-              std::string part_lower = ToLowerCase(part);
+              std::string part_lower = NormalizeLexiconKey(part);
               auto it2 = lexicon_str_.find(part_lower);
               if (it2 != lexicon_str_.end()) {
                 if (debug) {

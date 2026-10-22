@@ -24,6 +24,7 @@ const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
     "kissfft-float",
     "onnxruntime",
     "ssentencepiece_core",
+    "utf8proc",
 ];
 
 type DynError = Box<dyn Error>;

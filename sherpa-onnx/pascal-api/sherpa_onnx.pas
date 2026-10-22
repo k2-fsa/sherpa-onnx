@@ -875,6 +875,7 @@ const
      {$linklib kaldi-native-fbank-core}
      {$linklib onnxruntime}
      {$linklib ssentencepiece_core}
+     {$linklib utf8proc}
 
      {$ifdef LINUX}
        {$linklib m}

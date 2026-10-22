@@ -542,6 +542,7 @@ if(SHERPA_ONNX_ENABLE_PYTHON)
 endif()
 
 include(kaldi-native-fbank)
+include(utf8proc)
 include(kaldi-decoder)
 include(onnxruntime)
 include(simple-sentencepiece)

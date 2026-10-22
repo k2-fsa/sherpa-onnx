@@ -134,9 +134,62 @@ bool ConvertStringToReal(const std::string &str, T *out);
 std::vector<std::string> SplitUtf8(const std::string &text);
 
 std::string ToLowerCase(const std::string &s);
+
+// The single transform applied to both lexicon keys and lookup queries:
+// Unicode NFC first, then lowercase. Every consumer of ParseLexiconFile --
+// VITS, Kokoro, Kitten, Matcha, ZipVoice -- must use this for queries too,
+// otherwise a normalized stored key will not match a decomposed query.
+// Unicode handling is delegated to utf8proc so we do not maintain case or
+// composition tables ourselves.
+
+// Simple (1:1) Unicode lowercase mapping. Returns cp unchanged when there is
+// no single-codepoint lowercase form (e.g. U+00DF LATIN SMALL LETTER SHARP S).
+char32_t ToSimpleLower(char32_t cp);
+
+// True if cp is a Unicode Letter (category L*) or Mark (category M*) or Number
+// (category N*), i.e. something that can appear inside a lexicon word. Used to
+// strip/split punctuation away from OOV tokens before retrying the lexicon.
+// Numbers count so pinyin keys like "zhong1" keep their tone digits.
+bool IsLexiconWordChar(char32_t cp);
+
+// Unicode NFC. Needed so that e.g. "a" + U+0301 matches a lexicon entry stored
+// as U+00E1. Returns true if |s| was modified.
+bool NormalizeNfc(std::u32string *s);
+std::string NormalizeNfc(const std::string &s);
+
+// The single transform applied to both lexicon keys and lookup queries
+std::string NormalizeLexiconKey(const std::string &s);
+
+// Number of lookup tokens in a lexicon key. CJK counts one per character,
+// and a space, a punctuation mark or a plain word run each counts one -- which
+// is how Kokoro, Kitten and Matcha tokenize. Deliberately an over-estimate for
+// VITS (it drops spaces) rather than an under-estimate: every longest-match
+// loop clamps with `n - i`, so a too-large bound is harmless while a too-small
+// one silently skips multi-token entries.
+int32_t CountLexiconPhraseWords(const std::string &key);
+
+// One lookup piece produced by splitting an OOV token on non-word characters.
+struct LexiconPiece {
+  std::string text;
+  // True when a word boundary belongs in front of this piece. A hyphen joins
+  // its pieces into one spoken word ("two-thirds" -> "two" + "thirds"); any
+  // other separator starts a new word ("hello" + EM DASH + "world" is two).
+  bool needs_boundary;
+};
+
+// Split |core| into lookup pieces for the OOV fallback. |core| is assumed to
+// already have its leading/trailing non-word characters stripped.
+std::vector<LexiconPiece> SplitLexiconPieces(const std::u32string &core);
+
+// Decide which lookup pieces get a word boundary in front. |needs_boundary|
+// and |found| are parallel to the piece list; |found[i]| is false when the
+// piece has no lexicon entry and is skipped. A skipped piece passes its
+// boundary claim on to the next emitted one, so dropping a word cannot glue
+// the words around it together.
+std::vector<bool> AssignLexiconPieceBoundaries(
+    const std::vector<bool> &needs_boundary, const std::vector<bool> &found);
 void ToLowerCase(std::string *in_out);
 
-std::wstring ToLowerCase(const std::wstring &s);
 
 std::string RemoveInvalidUtf8Sequences(const std::string &text,
                                        bool show_debug_msg = false);
