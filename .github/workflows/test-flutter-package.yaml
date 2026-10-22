@@ -52,6 +52,11 @@ jobs:
 
           ls -lh build/macos/Build/Products/Release/
 
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          .github/scripts/flutter/sign_macos_app.sh flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -100,6 +105,11 @@ jobs:
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
+
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          .github/scripts/flutter/sign_macos_app.sh flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
