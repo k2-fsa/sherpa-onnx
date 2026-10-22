@@ -23,14 +23,17 @@ to remove silences from a file.
 
   ./bin/sherpa-onnx-vad \
     --silero-vad-model=/path/to/silero_vad.onnx \
+    --smart-turn-model=/path/to/smart-turn-v3.2-int8.onnx \
     /path/to/input.wav
     /path/to/output.wav
 
 Please download silero_vad.onnx from
 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+https://huggingface.co/soniqo/Smart-Turn-v3.2-ONNX/resolve/main/smart-turn-v3.2-int8.onnx
 
 For instance, use
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+wget https://huggingface.co/soniqo/Smart-Turn-v3.2-ONNX/resolve/main/smart-turn-v3.2-int8.onnx
 
 input.wav should be 16kHz.
 )usage";
