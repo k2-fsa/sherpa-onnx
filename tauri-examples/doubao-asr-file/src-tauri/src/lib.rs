@@ -35,15 +35,17 @@ const API_DOC_URL: &str = "https://www.doubao.com/thread/xXWsjZf94yLksVLtN";
 const PRICING_URL: &str = "https://console.volcengine.com/common-buy/Speech_Synthesis";
 
 /// Resolve display names of Android picker URIs ("msf:1495" -> "1_lei-jun.wav").
-/// Failure is non-fatal: we fall back to the URI basename.
+/// Everything about it is best-effort: if the Kotlin class is missing the app
+/// must still start — we just fall back to the URI basename.
 fn display_name_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("display_name")
         .setup(|app, api| {
             #[cfg(target_os = "android")]
             {
-                if let Ok(handle) =
+                let registered = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                     api.register_android_plugin("com.plugin.displayname", "DisplayNamePlugin")
-                {
+                }));
+                if let Ok(Ok(handle)) = registered {
                     app.manage(handle);
                 }
             }
@@ -185,17 +187,22 @@ fn is_pick_uri(input: &str) -> bool {
 }
 
 /// Ask Android for the human-readable name of a picker URI ("msf:1495" is
-/// really "1_lei-jun.wav"). Needs DisplayNamePlugin, see android/.
+/// really "1_lei-jun.wav"). Needs DisplayNamePlugin, see android/. Returns
+/// None rather than ever panicking — the URI basename is the fallback.
 #[cfg(target_os = "android")]
 fn android_display_name(app: &tauri::AppHandle, input: &str) -> Option<String> {
-    let handle = app.state::<tauri::plugin::PluginHandle<tauri::Wry>>();
-    let v: serde_json::Value = handle
-        .run_mobile_plugin("getDisplayName", serde_json::json!({ "path": input }))
-        .ok()?;
-    v.get("name")
-        .and_then(|n| n.as_str())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
+    let handle = app.try_state::<tauri::plugin::PluginHandle<tauri::Wry>>()?;
+    let path = input.to_string();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let v: serde_json::Value = handle
+            .run_mobile_plugin("getDisplayName", serde_json::json!({ "path": path }))
+            .ok()?;
+        v.get("name")
+            .and_then(|n| n.as_str())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+    }));
+    result.ok().flatten()
 }
 
 /// Best-effort base name (with extension) of a picked input, used for the

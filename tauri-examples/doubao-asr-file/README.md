@@ -98,6 +98,15 @@ npm install
 npm run build
 ```
 
+For Android, after `npx tauri android init` copy the display-name helper into
+the generated project before building (it resolves real file names like
+`1_lei-jun.wav` from picker URIs):
+
+```bash
+d=src-tauri/gen/android/app/src/main/java/com/plugin/displayname
+mkdir -p "$d" && cp src-tauri/android/DisplayNamePlugin.kt "$d/"
+```
+
 To use the in-repo Rust crates instead of crates.io:
 
 ```bash
