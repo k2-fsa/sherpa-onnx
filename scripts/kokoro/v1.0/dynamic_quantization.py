@@ -30,11 +30,14 @@ NodeArg(name='audio', type='tensor(float)', shape=['audio_length'])
 def main():
     show("./kokoro.onnx")
 
+    stft_convs = ["/decoder/generator/Conv", "/decoder/generator/Conv_1"]
+
     quantize_dynamic(
         model_input="kokoro.onnx",
         model_output="kokoro.int8.onnx",
         #  op_types_to_quantize=["MatMul"],
         weight_type=QuantType.QUInt8,
+        nodes_to_exclude=stft_convs,
     )
 
 
