@@ -218,9 +218,9 @@ for a list of pre-trained models to download.
 
     while (!vad->Empty()) {
       const auto &segment = vad->Front();
-      float duration = segment.samples.size() / 16000.;
-      float start_time = segment.start / 16000.;
-      float end_time = start_time + duration;
+      double duration = segment.samples.size() / 16000.;
+      double start_time = segment.start / 16000.;
+      double end_time = start_time + duration;
       if (duration < 0.1) {
         vad->Pop();
         continue;

@@ -766,7 +766,7 @@ final class SherpaOnnxVadModelConfig extends Struct {
 }
 
 final class SherpaOnnxSpeechSegment extends Struct {
-  @Int32()
+  @Int64()
   external int start;
 
   external Pointer<Float> samples;
@@ -1655,7 +1655,7 @@ typedef SherpaOnnxCircularBufferPush =
     void Function(Pointer<SherpaOnnxCircularBuffer>, Pointer<Float>, int);
 
 typedef SherpaOnnxCircularBufferGetNative =
-    Pointer<Float> Function(Pointer<SherpaOnnxCircularBuffer>, Int32, Int32);
+    Pointer<Float> Function(Pointer<SherpaOnnxCircularBuffer>, Int64, Int32);
 
 typedef SherpaOnnxCircularBufferGet =
     Pointer<Float> Function(Pointer<SherpaOnnxCircularBuffer>, int, int);
@@ -1677,7 +1677,7 @@ typedef SherpaOnnxCircularBufferSize =
     int Function(Pointer<SherpaOnnxCircularBuffer>);
 
 typedef SherpaOnnxCircularBufferHeadNative =
-    Int32 Function(Pointer<SherpaOnnxCircularBuffer>);
+    Int64 Function(Pointer<SherpaOnnxCircularBuffer>);
 
 typedef SherpaOnnxCircularBufferHead =
     int Function(Pointer<SherpaOnnxCircularBuffer>);

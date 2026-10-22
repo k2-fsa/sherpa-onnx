@@ -99,8 +99,10 @@ class VoiceActivityDetector::Impl {
                           buffer_.Head());
         cur_segment_.start = start_;
       }
-      int32_t num_samples = buffer_.Tail() - start_ - 1;
-      cur_segment_.samples = buffer_.Get(start_, num_samples);
+      int64_t num_samples = buffer_.Tail() - start_ - 1;
+      // num_samples is bounded by the buffer size, so it fits in int32_t.
+      cur_segment_.samples =
+          buffer_.Get(start_, static_cast<int32_t>(num_samples));
     } else {
       // non-speech
 
@@ -109,9 +111,11 @@ class VoiceActivityDetector::Impl {
 
       if (start_ != -1 && buffer_.Size()) {
         // end of speech, save the speech segment
-        int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
+        int64_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
 
-        std::vector<float> s = buffer_.Get(start_, end - start_);
+        // end - start_ is bounded by the buffer size, so it fits in int32_t.
+        std::vector<float> s =
+            buffer_.Get(start_, static_cast<int32_t>(end - start_));
         SpeechSegment segment;
 
         segment.start = start_;
@@ -119,13 +123,14 @@ class VoiceActivityDetector::Impl {
 
         segments_.push(std::move(segment));
 
-        buffer_.Pop(end - buffer_.Head());
+        buffer_.Pop(static_cast<int32_t>(end - buffer_.Head()));
       }
 
       if (start_ == -1) {
-        int32_t end = buffer_.Tail() - 2 * model_->WindowSize() -
+        int64_t end = buffer_.Tail() - 2 * model_->WindowSize() -
                       model_->MinSpeechDurationSamples();
-        int32_t n = std::max(0, end - buffer_.Head());
+        int32_t n =
+            static_cast<int32_t>(std::max<int64_t>(0, end - buffer_.Head()));
         if (n > 0) {
           buffer_.Pop(n);
         }
@@ -172,12 +177,14 @@ class VoiceActivityDetector::Impl {
       return;
     }
 
-    int32_t end = buffer_.Tail();
+    int64_t end = buffer_.Tail();
     if (end <= start_) {
       return;
     }
 
-    std::vector<float> s = buffer_.Get(start_, end - start_);
+    // end - start_ is bounded by the buffer size, so it fits in int32_t.
+    std::vector<float> s =
+        buffer_.Get(start_, static_cast<int32_t>(end - start_));
 
     SpeechSegment segment;
 
@@ -186,7 +193,7 @@ class VoiceActivityDetector::Impl {
 
     segments_.push(std::move(segment));
 
-    buffer_.Pop(end - buffer_.Head());
+    buffer_.Pop(static_cast<int32_t>(end - buffer_.Head()));
     start_ = -1;
 
     cur_segment_.start = -1;
@@ -228,7 +235,7 @@ class VoiceActivityDetector::Impl {
   float new_min_silence_duration_s_ = 0.1;
   float new_threshold_ = 0.90;
 
-  int32_t start_ = -1;
+  int64_t start_ = -1;
 };
 
 VoiceActivityDetector::VoiceActivityDetector(

@@ -80,8 +80,8 @@ public class VadNonStreamingSenseVoice {
       if (vad.isSpeechDetected()) {
         while (!vad.empty()) {
           SpeechSegment segment = vad.front();
-          float startTime = segment.getStart() / 16000.0f;
-          float duration = segment.getSamples().length / 16000.0f;
+          double startTime = segment.getStart() / 16000.0;
+          double duration = segment.getSamples().length / 16000.0;
 
           OfflineStream stream = recognizer.createStream();
           stream.acceptWaveform(segment.getSamples(), 16000);
@@ -101,8 +101,8 @@ public class VadNonStreamingSenseVoice {
     vad.flush();
     while (!vad.empty()) {
       SpeechSegment segment = vad.front();
-      float startTime = segment.getStart() / 16000.0f;
-      float duration = segment.getSamples().length / 16000.0f;
+      double startTime = segment.getStart() / 16000.0;
+      double duration = segment.getSamples().length / 16000.0;
 
       OfflineStream stream = recognizer.createStream();
       stream.acceptWaveform(segment.getSamples(), 16000);

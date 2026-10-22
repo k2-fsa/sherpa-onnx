@@ -26,8 +26,8 @@ namespace SherpaOnnx
             }
         }
 
-        public int _start;
-        public int Start => _start;
+        public long _start;
+        public long Start => _start;
 
         private float[] _samples;
         public float[] Samples => _samples;
@@ -35,7 +35,7 @@ namespace SherpaOnnx
         [StructLayout(LayoutKind.Sequential)]
         struct Impl
         {
-            public int Start;
+            public long Start;
             public IntPtr Samples;
             public int Count;
         }

@@ -1262,7 +1262,7 @@ void SherpaOnnxCircularBufferPush(const SherpaOnnxCircularBuffer *buffer,
 }
 
 const float *SherpaOnnxCircularBufferGet(const SherpaOnnxCircularBuffer *buffer,
-                                         int32_t start_index, int32_t n) {
+                                         int64_t start_index, int32_t n) {
   if (!buffer) return nullptr;
   std::vector<float> v = buffer->impl->Get(start_index, n);
 
@@ -1291,7 +1291,7 @@ int32_t SherpaOnnxCircularBufferSize(const SherpaOnnxCircularBuffer *buffer) {
   return buffer->impl->Size();
 }
 
-int32_t SherpaOnnxCircularBufferHead(const SherpaOnnxCircularBuffer *buffer) {
+int64_t SherpaOnnxCircularBufferHead(const SherpaOnnxCircularBuffer *buffer) {
   if (!buffer) return 0;
   return buffer->impl->Head();
 }

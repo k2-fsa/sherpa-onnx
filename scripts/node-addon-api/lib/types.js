@@ -422,7 +422,7 @@
 /**
  * Speech segment returned by Vad.front().
  * @typedef {Object} SpeechSegment
- * @property {number} start - Start index (int32) of this segment.
+ * @property {number} start - Start index (int64 sample position) of this segment.
  * @property {Float32Array} samples - Float32Array of samples.
  * @see src/vad.cc
  */

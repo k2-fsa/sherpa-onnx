@@ -1437,8 +1437,11 @@ struct VadModelConfig {
 
 /** @brief One speech segment produced by the VAD wrapper. */
 struct SpeechSegment {
-  /** Start sample index relative to the processed audio timeline. */
-  int32_t start = 0;
+  /** Start sample index relative to the processed audio timeline.
+   *
+   * It is an absolute position and keeps increasing during the lifetime of
+   * a detector, so it is 64-bit. */
+  int64_t start = 0;
   /** Speech samples for the segment. */
   std::vector<float> samples;
 };
@@ -1457,7 +1460,7 @@ class SHERPA_ONNX_API CircularBuffer
   void Push(const float *p, int32_t n) const;
 
   /** @brief Copy a contiguous span from the buffer. */
-  std::vector<float> Get(int32_t start_index, int32_t n) const;
+  std::vector<float> Get(int64_t start_index, int32_t n) const;
 
   /** @brief Remove samples from the head of the buffer. */
   void Pop(int32_t n) const;
@@ -1466,7 +1469,7 @@ class SHERPA_ONNX_API CircularBuffer
   int32_t Size() const;
 
   /** @brief Return the current head index. */
-  int32_t Head() const;
+  int64_t Head() const;
 
   /** @brief Reset the buffer to empty. */
   void Reset() const;

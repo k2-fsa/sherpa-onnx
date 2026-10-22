@@ -169,9 +169,9 @@ for a list of pre-trained models to download.
 
     while (!vad->Empty()) {
       const auto &segment = vad->Front();
-      float duration = segment.samples.size() / 16000.;
-      float start_time = segment.start / 16000.;
-      float end_time = start_time + duration;
+      double duration = segment.samples.size() / 16000.;
+      double start_time = segment.start / 16000.;
+      double end_time = start_time + duration;
       auto s = recognizer.CreateStream();
       s->AcceptWaveform(16000, segment.samples.data(), segment.samples.size());
       s->AcceptWaveform(16000, tail_paddings.data(), tail_paddings.size());

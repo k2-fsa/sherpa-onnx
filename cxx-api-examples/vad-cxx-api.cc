@@ -99,9 +99,9 @@ int32_t main() {
 
     while (!vad.IsEmpty()) {
       auto segment = vad.Front();
-      float start_time = segment.start / static_cast<float>(sample_rate);
-      float end_time =
-          start_time + segment.samples.size() / static_cast<float>(sample_rate);
+      double start_time = segment.start / static_cast<double>(sample_rate);
+      double end_time =
+          start_time + segment.samples.size() / static_cast<double>(sample_rate);
       printf("%.3f -- %.3f\n", start_time, end_time);
 
       samples_without_silence.insert(samples_without_silence.end(),
