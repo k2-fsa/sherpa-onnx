@@ -46,6 +46,7 @@ symphonia = { version = "0.5.5", features = [
     "aiff",
     "caf",
 ] }
+tauri-plugin-share = "2"
 
 [profile.dev]
 debug = false

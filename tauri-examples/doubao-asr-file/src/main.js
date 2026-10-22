@@ -261,7 +261,14 @@ function resetResult() {
 function updateExportButtons() {
   // Keep everything that was recognized so far, including after Stop.
   const enabled = segments.length > 0;
-  for (const id of ["export-srt", "export-timestamped", "export-plain"]) {
+  for (const id of [
+    "export-srt",
+    "export-timestamped",
+    "export-plain",
+    "share-srt",
+    "share-timestamped",
+    "share-plain",
+  ]) {
     $(id).disabled = !enabled;
   }
 }
@@ -573,6 +580,22 @@ $("export-plain").addEventListener("click", () =>
   exportAs("plain_txt", `${baseName(selectedPath)}.txt`),
 );
 
+// ---------------------------------------------------------------- share
+// Android/iOS only (native share sheet, e.g. WeChat); hidden on desktop.
+async function shareAs(format) {
+  if (segments.length === 0) return;
+  try {
+    const name = selectedPath ? baseName(selectedPath) : "transcript";
+    await invoke("share_result", { format, name });
+  } catch (e) {
+    showError(String(e));
+  }
+}
+
+$("share-srt").addEventListener("click", () => shareAs("srt"));
+$("share-timestamped").addEventListener("click", () => shareAs("timestamped_txt"));
+$("share-plain").addEventListener("click", () => shareAs("plain_txt"));
+
 // ---------------------------------------------------------------- info
 async function loadInfo() {
   try {
@@ -588,6 +611,8 @@ async function loadInfo() {
     wireLink("info-api-doc", info.api_doc_url);
     wireLink("api-doc-link", info.api_doc_url);
     wireLink("pricing-link", info.pricing_url);
+    // Sharing goes through the system share sheet — mobile only.
+    $("share-row").classList.toggle("hidden", !info.is_mobile);
   } catch (e) {
     console.error("get_info failed", e);
   }

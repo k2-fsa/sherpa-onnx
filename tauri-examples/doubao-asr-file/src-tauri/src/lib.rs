@@ -18,6 +18,8 @@ use std::time::Instant;
 use subtitle::Segment;
 use tauri::Manager;
 use tauri_plugin_fs::FsExt;
+#[cfg(any(target_os = "android", target_os = "ios"))]
+use tauri_plugin_share::{ShareExt, ShareRequest};
 
 const MODEL_FILE: &str = "silero_vad.onnx";
 const MODEL_NAME: &str = "Silero VAD v4";
@@ -79,6 +81,7 @@ struct AppInfo {
     model_doc_url: String,
     api_doc_url: String,
     pricing_url: String,
+    is_mobile: bool,
 }
 
 /// Locate the bundled VAD model and return a path the VAD can open.
@@ -584,6 +587,7 @@ fn get_info() -> AppInfo {
         model_doc_url: MODEL_DOC_URL.to_string(),
         api_doc_url: API_DOC_URL.to_string(),
         pricing_url: PRICING_URL.to_string(),
+        is_mobile: cfg!(any(target_os = "android", target_os = "ios")),
     }
 }
 
@@ -628,6 +632,57 @@ fn export_text(
         other => return Err(format!("Unknown export format: {other}")),
     };
     write_output(&app, &path, &content)
+}
+
+/// Share one of the result formats to another app (WeChat etc.) via the
+/// system share sheet. Android/iOS only.
+#[tauri::command]
+fn share_result(
+    app: tauri::AppHandle,
+    format: String,
+    name: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        let _ = (app, format, name, state);
+        Err("Sharing to other apps is available on Android and iOS".to_string())
+    }
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+        let segments = state.segments.lock().map_err(|e| e.to_string())?.clone();
+        if segments.is_empty() {
+            return Err("Nothing to share yet".to_string());
+        }
+        let (content, ext) = match format.as_str() {
+            "srt" => (subtitle::to_srt(&segments), "srt"),
+            "timestamped_txt" => (subtitle::to_timestamped_txt(&segments), "txt"),
+            "plain_txt" => (subtitle::to_plain_text(&segments), "txt"),
+            other => return Err(format!("Unknown share format: {other}")),
+        };
+
+        // The share plugin takes a real file; stage it in the app cache.
+        let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
+        let dir = cache.join("share");
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        let stem = input_file_name(&name);
+        let stem = std::path::Path::new(&stem)
+            .file_stem()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_else(|| "transcript".to_string());
+        let file = dir.join(format!("{stem}.{ext}"));
+        std::fs::write(&file, &content)
+            .map_err(|e| format!("Cannot write {}: {e}", file.display()))?;
+
+        app.share_file()
+            .share_file(ShareRequest {
+                path: Some(file.display().to_string()),
+                mime: Some("text/plain".to_string()),
+                group: None,
+            })
+            .map_err(|e| format!("Share failed: {e}"))?;
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Clone)]
@@ -751,6 +806,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_share::init())
         .manage(AppState {
             running: Arc::new(AtomicBool::new(false)),
             cancelled: Arc::new(AtomicBool::new(false)),
@@ -769,6 +825,7 @@ pub fn run() {
             get_info,
             export_text,
             load_results,
+            share_result,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
