@@ -5,7 +5,7 @@ function(download_utf8proc)
   # case mapping and general categories. Keeping that in a library that tracks
   # the Unicode standard beats maintaining our own case/composition tables.
   set(utf8proc_URL   "https://github.com/JuliaStrings/utf8proc/archive/refs/tags/v2.12.0.tar.gz")
-  set(utf8proc_HASH  "SHA256=a393fbef160835fb315bc3e91ba8d86f7a73a7cec9e6198b6c60b848b498bfeb")
+  set(utf8proc_HASH  "SHA256=f564011d38b2888d583d510b08e69ffa15aa117155db1b9b49ef1dfe1fa25111")
 
   set(UTF8PROC_INSTALL OFF CACHE BOOL "" FORCE)
   set(UTF8PROC_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
