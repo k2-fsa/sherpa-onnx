@@ -3,7 +3,7 @@ name: test-flutter-package
 on:
   push:
     branches:
-      - flutter-ci-2
+      - master
 
   workflow_dispatch:
 
@@ -52,11 +52,22 @@ jobs:
 
           ls -lh build/macos/Build/Products/Release/
 
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          .github/scripts/flutter/sign_macos_app.sh flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+
+      - name: Rename the app
+        shell: bash
+        run: |
+          # Rename the bundle so the extracted app carries the variant name.
+          mv flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-pkg-macos-cocoapods.app
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hello-world-pkg-macos-cocoapods
-          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-pkg-macos-cocoapods.app
 
   macos_spm:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
@@ -101,11 +112,22 @@ jobs:
 
           ls -lh build/macos/Build/Products/Release/
 
+      - name: Ad-hoc sign the app
+        shell: bash
+        run: |
+          .github/scripts/flutter/sign_macos_app.sh flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+
+      - name: Rename the app
+        shell: bash
+        run: |
+          # Rename the bundle so the extracted app carries the variant name.
+          mv flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-pkg-macos-spm.app
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hello-world-pkg-macos-spm
-          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello_world.app
+          path: flutter-examples/hello_world/build/macos/Build/Products/Release/hello-world-pkg-macos-spm.app
 
   ios_cocoapods:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
