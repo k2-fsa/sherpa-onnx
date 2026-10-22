@@ -4,16 +4,12 @@
 // Copyright      2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/text-utils.h"
-#include "utf8proc.h"
-
-#include <cstdlib>
 
 #include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <charconv>
 #include <cstdint>
-#include <cstdlib>
 #include <cwctype>
 #include <limits>
 #include <sstream>
@@ -22,6 +18,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include "utf8proc.h"  // NOLINT
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -497,11 +495,14 @@ bool IsLexiconWordChar(char32_t cp) {
 }
 
 std::string NormalizeNfc(const std::string &s) {
-  utf8proc_uint8_t *out = utf8proc_NFC(
-      reinterpret_cast<const utf8proc_uint8_t *>(s.c_str()));
+  utf8proc_uint8_t *out =
+      utf8proc_NFC(reinterpret_cast<const utf8proc_uint8_t *>(s.c_str()));
   if (out == nullptr) return s;
   std::string result(reinterpret_cast<const char *>(out));
-  std::free(out);
+  // Must go through utf8proc_free, not std::free: utf8proc allocates from the
+  // C library it is linked against, which on Windows can be a different CRT
+  // than the one this translation unit uses.
+  utf8proc_free(out);
   return result;
 }
 
@@ -1832,8 +1833,7 @@ std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
       if (!keep) {
         char32_t last = u32.back();
         keep = (last >= U'0' && last <= U'9') ||
-               (last >= U'a' && last <= U'z') ||
-               (last >= U'A' && last <= U'Z');
+               (last >= U'a' && last <= U'z') || (last >= U'A' && last <= U'Z');
       }
       if (keep) {
         split_phonemes.push_back(p);

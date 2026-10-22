@@ -49,6 +49,12 @@ function(download_utf8proc)
 
   add_subdirectory(${utf8proc_SOURCE_DIR} ${utf8proc_BINARY_DIR} EXCLUDE_FROM_ALL)
 
+  # utf8proc renames the static library to utf8proc_static under MSVC, which
+  # would make the artifact name platform-dependent. Force it back to
+  # "utf8proc" everywhere so -lutf8proc / utf8proc.lib / {$linklib utf8proc}
+  # and the Rust static-lib list all stay correct on every OS.
+  set_target_properties(utf8proc PROPERTIES OUTPUT_NAME utf8proc)
+
   if(_build_shared_libs_bak)
     set_target_properties(utf8proc
       PROPERTIES
