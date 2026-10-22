@@ -475,14 +475,35 @@ jobs:
           cd tauri-examples/doubao-asr-file
           npx tauri android build --target ${{ matrix.tauri_target }} --apk --debug
 
-      - name: Rename APK
+      # Gradle (AGP 9) signs with APK Signature Scheme v2 only when minSdk>=24.
+      # Many OEM installers (e.g. MIUI/HyperOS) cannot parse v2-only APKs and
+      # fail with "packageInfo is null". Re-sign with apksigner forcing both
+      # v1 and v2, and verify afterwards.
+      - name: Re-sign APK (v1+v2) and rename
         shell: bash
         run: |
+          set -e
           apk=$(find tauri-examples/doubao-asr-file/src-tauri -name "*.apk" | head -1)
-          if [ -n "$apk" ]; then
-            cp "$apk" "tauri-doubao-asr-file-${{ matrix.abi }}.apk"
-            ls -lh "tauri-doubao-asr-file-${{ matrix.abi }}.apk"
+          if [ -z "$apk" ]; then
+            echo "no APK found"; exit 1
           fi
+          out="tauri-doubao-asr-file-${{ matrix.abi }}.apk"
+          bt=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "using build-tools: $bt"
+
+          ks="$RUNNER_TEMP/doubao-asr-file.keystore"
+          keytool -genkeypair -keystore "$ks" -storepass android -key-pass android \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=doubao-asr-file CI, OU=sherpa-onnx, O=k2-fsa, C=CN"
+
+          "$bt/zipalign" -P 16 -f 4 "$apk" aligned.apk
+          "$bt/apksigner" sign \
+            --ks "$ks" --ks-pass pass:android --key-pass pass:android \
+            --ks-key-alias androiddebugkey \
+            --v1-signing-enabled true --v2-signing-enabled true \
+            --out "$out" aligned.apk
+          "$bt/apksigner" verify --verbose "$out" | tail -8
+          ls -lh "$out"
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
