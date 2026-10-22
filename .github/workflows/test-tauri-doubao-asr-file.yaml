@@ -150,6 +150,19 @@ jobs:
           cd tauri-examples/doubao-asr-file
           npm install
 
+      # sherpa-onnx-sys downloads the prebuilt xcframework during a cargo
+      # build for the iOS target and copies it into src-tauri/ (referenced by
+      # bundle.iOS.frameworks in tauri.conf.json, same as the hello_world
+      # example). Xcode needs it on disk before it starts, so check-build
+      # once first.
+      - name: Fetch sherpa-onnx xcframework
+        shell: bash
+        run: |
+          cd tauri-examples/doubao-asr-file/src-tauri
+          cargo check --target aarch64-apple-ios
+          ls -lh
+          test -d sherpa-onnx.xcframework
+
       - name: Init iOS
         shell: bash
         run: |
