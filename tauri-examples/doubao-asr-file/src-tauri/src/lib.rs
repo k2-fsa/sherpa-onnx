@@ -445,27 +445,27 @@ fn run_recognition(
                 }
                 let seg = &raw[i];
                 let wav = audio::samples_to_wav(&seg.samples, 16000);
-                let text = match client.recognize(&wav) {
-                    Ok(t) => t.trim().to_string(),
+                let (text, note) = match client.recognize(&wav) {
+                    Ok((t, note)) => (t.trim().to_string(), note),
                     Err(e) => {
                         eprintln!("segment {:.2}s failed: {e}", seg.start);
-                        if let Ok(mut l) = logs.lock() {
-                            l.push(format!(
-                                "[{}/{total}] {}  failed: {e}",
-                                done_count.load(Ordering::SeqCst) + 1,
-                                subtitle::ts_loose(start_sec + seg.start)
-                            ));
-                        }
-                        String::new()
+                        (String::new(), format!("failed: {e}"))
                     }
                 };
                 let n = done_count.fetch_add(1, Ordering::SeqCst) + 1;
                 if let Ok(mut l) = logs.lock() {
-                    let shown: String = text.chars().take(60).collect();
-                    l.push(format!(
-                        "[{n}/{total}] {}  {shown}",
-                        subtitle::ts_loose(start_sec + seg.start)
-                    ));
+                    if text.is_empty() {
+                        l.push(format!(
+                            "[{n}/{total}] {}  (no text: {note})",
+                            subtitle::ts_loose(start_sec + seg.start)
+                        ));
+                    } else {
+                        let shown: String = text.chars().take(60).collect();
+                        l.push(format!(
+                            "[{n}/{total}] {}  {shown}",
+                            subtitle::ts_loose(start_sec + seg.start)
+                        ));
+                    }
                 }
                 if !text.is_empty() {
                     if let Ok(mut s) = segments.lock() {

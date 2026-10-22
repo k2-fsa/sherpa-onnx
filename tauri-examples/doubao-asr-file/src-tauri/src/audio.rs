@@ -297,4 +297,40 @@ mod tests {
         // 0.0 -> 0, 1.0 -> 32767, -1.0 -> -32767 (same as the Python reference)
         assert_eq!(&wav[44..50], &[0x00, 0x00, 0xff, 0x7f, 0x01, 0x80]);
     }
+
+    #[test]
+    fn decode_range_returns_exactly_that_slice() {
+        // 2 s at 16 kHz: first half-second loud (0.25), 1 s silence,
+        // last half-second louder (0.5).
+        let sr = 16000usize;
+        let mut samples = vec![0.0f32; sr * 2];
+        for s in samples[..sr / 2].iter_mut() {
+            *s = 0.25;
+        }
+        for s in samples[(sr * 3 / 2)..].iter_mut() {
+            *s = 0.5;
+        }
+        let dir = std::env::temp_dir().join("doubao-range-test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let wav = dir.join("tone.wav");
+        std::fs::write(&wav, samples_to_wav(&samples, sr as i32)).unwrap();
+
+        let all = decode_to_mono_16k(wav.to_str().unwrap(), 0.0, 0.0).unwrap();
+        assert_eq!(all.len(), sr * 2, "whole file");
+
+        // Range 1.0..2.0 s: silent first, loud tail.
+        let part = decode_to_mono_16k(wav.to_str().unwrap(), 1.0, 2.0).unwrap();
+        assert_eq!(part.len(), sr, "range length");
+        assert!(part[0].abs() < 0.01, "range starts in silence, got {}", part[0]);
+        assert!(
+            (part[sr - 1] - 0.5).abs() < 0.01,
+            "range ends loud, got {}",
+            part[sr - 1]
+        );
+
+        // Range 0.0..0.5 s: the loud head only.
+        let head = decode_to_mono_16k(wav.to_str().unwrap(), 0.0, 0.5).unwrap();
+        assert_eq!(head.len(), sr / 2);
+        assert!((head[0] - 0.25).abs() < 0.01, "got {}", head[0]);
+    }
 }

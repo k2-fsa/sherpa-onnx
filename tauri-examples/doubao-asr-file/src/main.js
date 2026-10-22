@@ -269,7 +269,9 @@ function updateExportButtons() {
     "share-timestamped",
     "share-plain",
   ]) {
-    $(id).disabled = !enabled;
+    // Null-safe: a missing button must never break the render loop.
+    const el = $(id);
+    if (el) el.disabled = !enabled;
   }
 }
 
@@ -489,6 +491,7 @@ async function poll() {
     clearInterval(pollTimer);
     pollTimer = null;
     showError(String(e));
+    appendLog(`Error: ${e}`);
     $("start").disabled = false;
     $("cancel").disabled = true;
     updateExportButtons();
@@ -592,9 +595,14 @@ async function shareAs(format) {
   }
 }
 
-$("share-srt").addEventListener("click", () => shareAs("srt"));
-$("share-timestamped").addEventListener("click", () => shareAs("timestamped_txt"));
-$("share-plain").addEventListener("click", () => shareAs("plain_txt"));
+for (const [id, fmt] of [
+  ["share-srt", "srt"],
+  ["share-timestamped", "timestamped_txt"],
+  ["share-plain", "plain_txt"],
+]) {
+  const el = $(id);
+  if (el) el.addEventListener("click", () => shareAs(fmt));
+}
 
 // ---------------------------------------------------------------- info
 async function loadInfo() {

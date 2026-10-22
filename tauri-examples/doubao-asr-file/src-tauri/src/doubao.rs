@@ -144,23 +144,23 @@ impl DoubaoClient {
         Err(last_err)
     }
 
-    /// Poll the task until it is done and return the transcript.
-    fn query(&self, request_id: &str, log_id: &str) -> Result<String, String> {
+    /// Poll the task until it is done. Returns (transcript, diagnostic) — the
+    /// diagnostic is what the API said (status + body) so an empty transcript
+    /// is never a mystery.
+    fn query(&self, request_id: &str, log_id: &str) -> Result<(String, String), String> {
         let headers = build_headers(&self.api_key, &self.resource_id, request_id, log_id);
         let deadline = Instant::now() + Duration::from_secs_f32(self.query_timeout);
         while Instant::now() < deadline {
             let (status, _, body) = post(QUERY_URL, &headers, "{}")?;
+            let note = format!("status={status}, body={}", truncate(&body, 160));
             if status == STATUS_OK {
-                return Ok(parse_result_json(&body));
+                return Ok((parse_result_json(&body), note));
             }
             if status == STATUS_SILENCE {
-                return Ok(String::new());
+                return Ok((String::new(), note));
             }
             if !STATUS_RUNNING.contains(&status.as_str()) {
-                return Err(format!(
-                    "query failed: X-Api-Status-Code={status}, {}",
-                    header_message(&body, &status)
-                ));
+                return Err(format!("query failed: {note}"));
             }
             std::thread::sleep(Duration::from_secs_f32(self.query_interval));
         }
@@ -170,8 +170,8 @@ impl DoubaoClient {
         ))
     }
 
-    /// Recognize a single audio clip and return its transcript.
-    pub fn recognize(&self, wav_bytes: &[u8]) -> Result<String, String> {
+    /// Recognize a single audio clip. Returns (transcript, diagnostic).
+    pub fn recognize(&self, wav_bytes: &[u8]) -> Result<(String, String), String> {
         let request_id = uuid::Uuid::new_v4().to_string();
         let log_id = self.submit(&request_id, wav_bytes)?;
         self.query(&request_id, &log_id)
@@ -179,7 +179,11 @@ impl DoubaoClient {
 }
 
 fn header_message(body: &str, status: &str) -> String {
-    format!("status={status}, body={}", &body.chars().take(200).collect::<String>())
+    format!("status={status}, body={}", truncate(body, 200))
+}
+
+fn truncate(s: &str, n: usize) -> String {
+    s.chars().take(n).collect()
 }
 
 /// Minimal base64 encoder (standard alphabet with padding) so the module has
