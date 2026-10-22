@@ -36,6 +36,8 @@ class AxclModel {
 
   std::vector<float> GetOutputTensorData(const std::string &name) const;
 
+  std::vector<uint8_t> GetOutputTensorDataRaw(const std::string &name) const;
+
   bool Run() const;
   bool IsInitialized() const;
 
