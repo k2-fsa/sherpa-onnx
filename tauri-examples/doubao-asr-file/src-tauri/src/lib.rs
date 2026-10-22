@@ -18,7 +18,7 @@ use std::time::Instant;
 use subtitle::Segment;
 use tauri::Manager;
 use tauri_plugin_fs::FsExt;
-#[cfg(any(target_os = "android", target_os = "ios"))]
+#[cfg(target_os = "ios")]
 use tauri_plugin_share::{ShareExt, ShareRequest};
 
 const MODEL_FILE: &str = "silero_vad.onnx";
@@ -43,7 +43,7 @@ fn display_name_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             #[cfg(target_os = "android")]
             {
                 let registered = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    api.register_android_plugin("com.plugin.displayname", "DisplayNamePlugin")
+                    api.register_android_plugin("com.plugin.apphelper", "AppHelperPlugin")
                 }));
                 if let Ok(Ok(handle)) = registered {
                     app.manage(handle);
@@ -106,6 +106,7 @@ struct AppInfo {
     api_doc_url: String,
     pricing_url: String,
     is_mobile: bool,
+    os: String,
 }
 
 /// Locate the bundled VAD model and return a path the VAD can open.
@@ -683,6 +684,7 @@ fn get_info() -> AppInfo {
         api_doc_url: API_DOC_URL.to_string(),
         pricing_url: PRICING_URL.to_string(),
         is_mobile: cfg!(any(target_os = "android", target_os = "ios")),
+        os: std::env::consts::OS.to_string(),
     }
 }
 
@@ -769,14 +771,43 @@ fn share_result(
         std::fs::write(&file, &content)
             .map_err(|e| format!("Cannot write {}: {e}", file.display()))?;
 
-        app.share_file()
-            .share_file(ShareRequest {
-                path: Some(file.display().to_string()),
-                mime: Some("text/plain".to_string()),
-                group: None,
-            })
-            .map_err(|e| format!("Share failed: {e}"))?;
-        Ok(())
+        #[cfg(target_os = "ios")]
+        {
+            return app
+                .share_file()
+                .share_file(ShareRequest {
+                    path: Some(file.display().to_string()),
+                    mime: Some("text/plain".to_string()),
+                    group: None,
+                })
+                .map(|_| ())
+                .map_err(|e| format!("Share failed: {e}"));
+        }
+
+        // Android: the stock tauri-plugin-share is broken (calls share_file
+        // but the Kotlin only has shareFile, and never resolves) — use our
+        // AppHelperPlugin instead, which falls back to sharing plain text.
+        #[cfg(target_os = "android")]
+        {
+            let handle = app
+                .try_state::<tauri::plugin::PluginHandle<tauri::Wry>>()
+                .ok_or_else(|| "AppHelperPlugin is unavailable".to_string())?;
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                handle.run_mobile_plugin::<serde_json::Value>(
+                    "share",
+                    serde_json::json!({
+                        "path": file.display().to_string(),
+                        "mime": "text/plain",
+                        "text": content,
+                    }),
+                )
+            }));
+            return match result {
+                Ok(Ok(_)) => Ok(()),
+                Ok(Err(e)) => Err(format!("Share failed: {e}")),
+                Err(_) => Err("Share failed".to_string()),
+            };
+        }
     }
 }
 

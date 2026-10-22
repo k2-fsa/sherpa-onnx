@@ -469,15 +469,15 @@ jobs:
           cd tauri-examples/doubao-asr-file
           npx tauri android init
 
-      # The Kotlin plugin must be in the generated project BEFORE Gradle runs,
-      # or it is never compiled into the APK and the app dies at startup
+      # The Kotlin helper plugin must be in the generated project BEFORE Gradle
+      # runs, or it is never compiled into the APK and the app dies at startup
       # looking up the class.
-      - name: Install display-name plugin into the Android project
+      - name: Install helper plugin into the Android project
         shell: bash
         run: |
-          d=tauri-examples/doubao-asr-file/src-tauri/gen/android/app/src/main/java/com/plugin/displayname
+          d=tauri-examples/doubao-asr-file/src-tauri/gen/android/app/src/main/java/com/plugin/apphelper
           mkdir -p "$d"
-          cp tauri-examples/doubao-asr-file/src-tauri/android/DisplayNamePlugin.kt "$d/"
+          cp tauri-examples/doubao-asr-file/src-tauri/android/AppHelperPlugin.kt "$d/"
           ls -lh "$d"
 
       - name: Build Android

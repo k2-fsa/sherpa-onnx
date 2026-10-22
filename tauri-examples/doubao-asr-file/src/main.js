@@ -90,6 +90,8 @@ function wireLink(id, url) {
 let selectedPath = null;
 /** Display name of the selected input (e.g. "1_lei-jun.wav"), for outputs. */
 let currentBaseName = "transcript";
+/** Set once get_info returns; hides the recent list on mobile. */
+let isMobile = false;
 
 /** Recent input files, newest first, kept across app restarts. */
 const RECENT_KEY = "recent_input_files";
@@ -145,7 +147,10 @@ async function selectFile(path) {
   selectedPath = path;
   showError("");
   resetResult();
-  rememberFile(path);
+  // Recent list is desktop-only: picker URIs lose their permission grant
+  // between launches (Android) / security scope (iOS), so old entries cannot
+  // be reopened on mobile.
+  if (!isMobile) rememberFile(path);
   appendLog(`Selected: ${path}`);
   try {
     // Copy picker URIs to a local file and learn the real display name —
@@ -633,7 +638,13 @@ async function loadInfo() {
     wireLink("api-doc-link", info.api_doc_url);
     wireLink("pricing-link", info.pricing_url);
     // Sharing goes through the system share sheet — mobile only.
-    $("share-row").classList.toggle("hidden", !info.is_mobile);
+    isMobile = !!info.is_mobile;
+    $("share-row").classList.toggle("hidden", !isMobile);
+    // Recent files are desktop-only (see selectFile).
+    if (isMobile) {
+      localStorage.removeItem(RECENT_KEY);
+      renderRecent();
+    }
   } catch (e) {
     console.error("get_info failed", e);
   }
