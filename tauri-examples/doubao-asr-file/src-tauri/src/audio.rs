@@ -14,21 +14,6 @@ use std::process::{Command, Stdio};
 
 pub const TARGET_SAMPLE_RATE: i32 = 16000;
 
-/// Extensions accepted by the file picker (kept in sync with the frontend).
-pub const SUPPORTED_AUDIO_EXT: [&str; 12] = [
-    "wav", "mp3", "flac", "ogg", "oga", "m4a", "aac", "opus", "weba", "wma", "aiff", "aif",
-];
-pub const SUPPORTED_VIDEO_EXT: [&str; 8] = ["mp4", "webm", "mov", "mkv", "avi", "m4v", "ogv", "3gp"];
-
-pub fn is_supported_extension(path: &str) -> bool {
-    let ext = Path::new(path)
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    SUPPORTED_AUDIO_EXT.contains(&ext.as_str()) || SUPPORTED_VIDEO_EXT.contains(&ext.as_str())
-}
-
 /// Decode a time range of the file to 16 kHz mono samples in [-1, 1].
 ///
 /// `start_sec` is the range start; `end_sec <= 0` means "to the end of the
@@ -65,7 +50,8 @@ pub fn decode_to_mono_16k(path: &str, start_sec: f32, end_sec: f32) -> Result<Ve
             } else {
                 Err(format!(
                     "Cannot decode {path}: {symphonia_err}. \
-                     Installing ffmpeg may add support for this format."
+                     The file may not be an audio/video file, or installing \
+                     ffmpeg may add support for this format."
                 ))
             }
         }
@@ -310,14 +296,5 @@ mod tests {
         // 44-byte header, then 3 mono int16 samples:
         // 0.0 -> 0, 1.0 -> 32767, -1.0 -> -32767 (same as the Python reference)
         assert_eq!(&wav[44..50], &[0x00, 0x00, 0xff, 0x7f, 0x01, 0x80]);
-    }
-
-    #[test]
-    fn supported_extensions_are_recognized() {
-        assert!(is_supported_extension("/a/b/c.MP4"));
-        assert!(is_supported_extension("x.weba"));
-        assert!(is_supported_extension("x.3gp"));
-        assert!(!is_supported_extension("x.txt"));
-        assert!(!is_supported_extension("x"));
     }
 }

@@ -246,11 +246,9 @@ fn recognize_file(
     if api_key.is_empty() {
         return Err("Please provide a Doubao API key first".to_string());
     }
-    if !audio::is_supported_extension(&path) {
-        return Err(format!(
-            "Unsupported file type: {path}. Please choose an audio or video file."
-        ));
-    }
+    // No extension gate here: picker URIs often carry no extension at all
+    // (e.g. Android "msf:1495" document ids). The decoder identifies the
+    // format by parsing the file content.
     let start_sec = if start_sec.is_finite() && start_sec > 0.0 {
         start_sec
     } else {
