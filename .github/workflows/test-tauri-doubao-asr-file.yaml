@@ -52,11 +52,6 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Tauri CLI
-        shell: bash
-        run: |
-          cargo install tauri-cli
-
       - name: Install npm dependencies
         shell: bash
         run: |
@@ -149,11 +144,6 @@ jobs:
         with:
           targets: aarch64-apple-ios,aarch64-apple-ios-sim
 
-      - name: Install Tauri CLI
-        shell: bash
-        run: |
-          cargo install tauri-cli
-
       - name: Install npm dependencies
         shell: bash
         run: |
@@ -164,13 +154,13 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/doubao-asr-file
-          cargo-tauri ios init
+          npx tauri ios init
 
       - name: Build iOS
         shell: bash
         run: |
           cd tauri-examples/doubao-asr-file
-          cargo-tauri ios build --target aarch64-apple-ios --no-codesign
+          npx tauri ios build --target aarch64-apple-ios --no-codesign
 
       - name: Package iOS artifacts
         shell: bash
@@ -251,11 +241,6 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Tauri CLI
-        shell: bash
-        run: |
-          cargo install tauri-cli
 
       - name: Install npm dependencies
         shell: bash
@@ -348,11 +333,6 @@ jobs:
           arch: ${{ matrix.arch == 'arm64' && 'amd64_arm64' || 'x64' }}
 
       - uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Tauri CLI
-        shell: bash
-        run: |
-          cargo install tauri-cli
 
       - name: Install npm dependencies
         shell: bash
@@ -447,11 +427,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Tauri CLI
-        shell: bash
-        run: |
-          cargo install tauri-cli
-
       - name: Install npm dependencies
         shell: bash
         run: |
@@ -462,13 +437,13 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/doubao-asr-file
-          cargo-tauri android init
+          npx tauri android init
 
       - name: Build Android
         shell: bash
         run: |
           cd tauri-examples/doubao-asr-file
-          cargo-tauri android build --target ${{ matrix.tauri_target }} --apk --debug
+          npx tauri android build --target ${{ matrix.tauri_target }} --apk --debug
 
       - name: Rename APK
         shell: bash
