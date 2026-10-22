@@ -81,35 +81,32 @@ struct AppInfo {
     pricing_url: String,
 }
 
-/// Where the bundled assets (silero_vad.onnx) live at runtime.
-fn resource_dir() -> PathBuf {
-    if let Ok(exe) = std::env::current_exe() {
-        for ancestor in exe.ancestors() {
-            if ancestor.extension().map_or(false, |ext| ext == "app") {
-                let resources = ancestor.join("Contents").join("Resources");
-                if resources.exists() {
-                    let assets = resources.join("assets");
-                    if assets.exists() {
-                        return assets;
-                    }
-                    return resources;
-                }
-                break;
+/// Locate the bundled VAD model and return a path the VAD can open.
+///
+/// Bundled resources live under the app's resource dir; on Android that is an
+/// `asset://` URI inside the APK, which must be copied to a real file first —
+/// the VAD library opens plain file paths only.
+fn model_path(app: &tauri::AppHandle) -> Result<String, String> {
+    let res = app.path().resource_dir().map_err(|e| e.to_string())?;
+    let candidates = [
+        res.join("assets").join(MODEL_FILE),
+        res.join(MODEL_FILE),
+        res.join("resources").join("assets").join(MODEL_FILE),
+    ];
+    for c in &candidates {
+        let s = c.to_string_lossy().to_string();
+        if is_pick_uri(&s) {
+            if let Ok(local) = materialize_input(app, &s) {
+                return Ok(local);
             }
-        }
-        if let Some(exe_dir) = exe.parent() {
-            let assets_dir = exe_dir.join("assets");
-            if assets_dir.exists() {
-                return assets_dir;
-            }
-            return exe_dir.to_path_buf();
+        } else if Path::new(&s).is_file() {
+            return Ok(s);
         }
     }
-    PathBuf::from(".")
-}
-
-fn model_path() -> PathBuf {
-    resource_dir().join(MODEL_FILE)
+    Err(format!(
+        "Cannot find {MODEL_FILE} (looked in {}). Please reinstall the app.",
+        res.display()
+    ))
 }
 
 /// Output files written next to the input file, named like the Python
@@ -283,6 +280,7 @@ fn recognize_file(
     // file://) are copied into the app cache first so the decoder can read
     // them like a normal file.
     let local_path = materialize_input(&app, &path)?;
+    let model = model_path(&app)?;
 
     state.cancelled.store(false, Ordering::SeqCst);
     state.progress.store(0, Ordering::SeqCst);
@@ -317,6 +315,7 @@ fn recognize_file(
     std::thread::spawn(move || {
         run_recognition(
             &local_path,
+            &model,
             &api_key,
             start_sec,
             end_sec,
@@ -339,6 +338,7 @@ fn recognize_file(
 #[allow(clippy::too_many_arguments)]
 fn run_recognition(
     path: &str,
+    model: &str,
     api_key: &str,
     start_sec: f32,
     end_sec: f32,
@@ -375,6 +375,9 @@ fn run_recognition(
         }
     };
     let decode_secs = decode_start.elapsed().as_secs_f32();
+    if let Ok(mut d) = decode_secs_out.lock() {
+        *d = decode_secs;
+    }
     log(format!(
         "Decoded {:.3}s of audio in {:.3}s",
         samples.len() as f32 / 16000.0,
@@ -392,7 +395,7 @@ fn run_recognition(
     }
 
     set_status("Detecting speech...");
-    let raw = match vad::run_silero_vad(&samples, &model_path().to_string_lossy()) {
+    let raw = match vad::run_silero_vad(&samples, model) {
         Ok(r) => r,
         Err(e) => {
             set_status(&format!("Error: {e}"));
@@ -584,9 +587,36 @@ fn get_info() -> AppInfo {
     }
 }
 
+/// Write a result file to a user-chosen location. On Android/iOS the save
+/// dialog hands back a URI (`content://`, `file://`) — those must be written
+/// through the fs plugin; desktop returns plain paths.
+fn write_output(app: &tauri::AppHandle, path: &str, content: &str) -> Result<(), String> {
+    if is_pick_uri(path) {
+        let mut opts = tauri_plugin_fs::OpenOptions::new();
+        opts.write(true).create(true).truncate(true);
+        let fp: tauri_plugin_fs::FilePath = path
+            .parse()
+            .map_err(|e| format!("Cannot parse {path}: {e}"))?;
+        let mut f = app
+            .fs()
+            .open(fp, opts)
+            .map_err(|e| format!("Cannot write {path}: {e}"))?;
+        std::io::Write::write_all(&mut f, content.as_bytes())
+            .map_err(|e| format!("Cannot write {path}: {e}"))
+    } else {
+        std::fs::write(percent_decode(path), content)
+            .map_err(|e| format!("Cannot write {path}: {e}"))
+    }
+}
+
 /// Export the transcript. `format` is one of: srt, timestamped_txt, plain_txt.
 #[tauri::command]
-fn export_text(path: String, format: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+fn export_text(
+    app: tauri::AppHandle,
+    path: String,
+    format: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
     let segments = state.segments.lock().map_err(|e| e.to_string())?.clone();
     if segments.is_empty() {
         return Err("Nothing to export yet".to_string());
@@ -597,7 +627,7 @@ fn export_text(path: String, format: String, state: tauri::State<'_, AppState>) 
         "plain_txt" => subtitle::to_plain_text(&segments),
         other => return Err(format!("Unknown export format: {other}")),
     };
-    std::fs::write(&path, content).map_err(|e| format!("Cannot write {path}: {e}"))
+    write_output(&app, &path, &content)
 }
 
 #[derive(Serialize, Clone)]
