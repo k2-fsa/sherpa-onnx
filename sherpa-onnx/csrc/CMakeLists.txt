@@ -326,6 +326,8 @@ list(APPEND sources
   offline-speech-denoiser-gtcrn-model.cc
   offline-speech-denoiser-impl.cc
   offline-speech-denoiser-model-config.cc
+  offline-speech-denoiser-voxlock-model-config.cc
+  offline-speech-denoiser-voxlock-model.cc
   offline-speech-denoiser.cc
   online-speech-denoiser-impl.cc
   online-speech-denoiser.cc
