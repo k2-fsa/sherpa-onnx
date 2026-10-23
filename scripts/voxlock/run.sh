@@ -18,7 +18,8 @@ chunk_fp16.onnx
 mkdir -p onnx
 for m in ${models[@]}; do
   if [ ! -f onnx/$m ]; then
-    curl -SL --output onnx/$m https://huggingface.co/arbazsiddiqui/voxlock/resolve/$revision/onnx/$m
+    curl -fSL --output onnx/$m.tmp https://huggingface.co/arbazsiddiqui/voxlock/resolve/$revision/onnx/$m
+    mv onnx/$m.tmp onnx/$m
   fi
 done
 
