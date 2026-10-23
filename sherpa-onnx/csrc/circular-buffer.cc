@@ -5,19 +5,30 @@
 #include "sherpa-onnx/csrc/circular-buffer.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
-CircularBuffer::CircularBuffer(int32_t capacity) {
+CircularBuffer::CircularBuffer(int32_t capacity, int64_t initial_position) {
   if (capacity <= 0) {
     SHERPA_ONNX_LOGE("Please specify a positive capacity. Given: %d\n",
                      capacity);
     SHERPA_ONNX_EXIT(-1);
   }
+  if (initial_position < 0) {
+    // A negative head_/tail_ makes `x % capacity` negative, which would make
+    // std::copy() below write to an invalid iterator.
+    SHERPA_ONNX_LOGE(
+        "Please specify a non-negative initial_position. Given: %lld\n",
+        static_cast<long long>(initial_position));
+    SHERPA_ONNX_EXIT(-1);
+  }
   buffer_.resize(capacity);
+  head_ = initial_position;
+  tail_ = initial_position;
 }
 
 void CircularBuffer::Resize(int32_t new_capacity) {
@@ -41,8 +52,8 @@ void CircularBuffer::Resize(int32_t new_capacity) {
   }
 
   std::vector<float> new_buffer(new_capacity);
-  int32_t start = head_ % capacity;
-  int32_t dest = head_ % new_capacity;
+  int32_t start = static_cast<int32_t>(head_ % capacity);
+  int32_t dest = static_cast<int32_t>(head_ % new_capacity);
 
   if (start + size <= capacity) {
     if (dest + size <= new_capacity) {
@@ -114,7 +125,7 @@ void CircularBuffer::Push(const float *p, int32_t n) {
     capacity = new_capacity;
   }
 
-  int32_t start = tail_ % capacity;
+  int32_t start = static_cast<int32_t>(tail_ % capacity);
 
   tail_ += n;
 
@@ -130,10 +141,12 @@ void CircularBuffer::Push(const float *p, int32_t n) {
   std::copy(p + part1_size, p + n, buffer_.begin());
 }
 
-std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
+std::vector<float> CircularBuffer::Get(int64_t start_index, int32_t n) const {
   if (start_index < head_ || start_index >= tail_) {
-    SHERPA_ONNX_LOGE("Invalid start_index: %d. head_: %d, tail_: %d",
-                     start_index, head_, tail_);
+    SHERPA_ONNX_LOGE("Invalid start_index: %lld. head_: %lld, tail_: %lld",
+                     static_cast<long long>(start_index),
+                     static_cast<long long>(head_),
+                     static_cast<long long>(tail_));
     return {};
   }
 
@@ -146,12 +159,14 @@ std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
   int32_t capacity = static_cast<int32_t>(buffer_.size());
 
   if (start_index - head_ + n > size) {
-    SHERPA_ONNX_LOGE("Invalid start_index: %d and n: %d. head_: %d, size: %d",
-                     start_index, n, head_, size);
+    SHERPA_ONNX_LOGE(
+        "Invalid start_index: %lld and n: %d. head_: %lld, size: %d",
+        static_cast<long long>(start_index), n,
+        static_cast<long long>(head_), size);
     return {};
   }
 
-  int32_t start = start_index % capacity;
+  int32_t start = static_cast<int32_t>(start_index % capacity);
 
   if (start + n < capacity) {
     return {buffer_.begin() + start, buffer_.begin() + start + n};

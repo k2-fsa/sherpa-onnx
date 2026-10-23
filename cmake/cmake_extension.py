@@ -42,13 +42,18 @@ def is_arm64():
     return platform.machine() in ["arm64", "aarch64"]
 
 
+def is_arm32():
+    # armv8l is a 32-bit armv7 userland running on an aarch64 kernel
+    return platform.machine() in ["arm", "armv7l", "armv8l"]
+
+
 def is_x86():
     return platform.machine() in ["i386", "i686", "x86_64"]
 
 
 def enable_alsa():
     build_alsa = os.environ.get("SHERPA_ONNX_ENABLE_ALSA", None)
-    return build_alsa and is_linux() and (is_arm64() or is_x86())
+    return build_alsa and is_linux() and (is_arm64() or is_arm32() or is_x86())
 
 
 def get_binaries():

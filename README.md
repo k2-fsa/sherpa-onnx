@@ -587,6 +587,16 @@ making it easy to match supported sherpa-onnx models to different hardware.
 - [Website](https://olerast67.github.io/voice-teleprompter-android/)
 - Android 10+ · no internet permission · GPL-3.0
 
+### [Loud Caption](https://github.com/DR1N0/loud-caption)
+
+> An open-source Flutter app for Android that turns nearby speech into large,
+> high-contrast captions for people with hearing loss. SenseVoice ASR and Silero
+> VAD run fully on-device through sherpa-onnx's Dart API; translation is
+> optional and also local. No account, analytics, or cloud audio.
+
+- [Download APK](https://github.com/DR1N0/loud-caption/releases/latest)
+- Android 8.0+ · arm64-v8a · MIT (app code)
+
 ### [Recly](https://github.com/rokrokss/recly)
 
 > An open-source recorder for Galaxy Watch, Android, Apple Watch, iPhone, macOS,
@@ -641,6 +651,18 @@ llama-server.
 
 - [Build write-up](https://agentlenshq.com/maker/four-dollar-robot)
 - [Live page](https://bot-reborn.agentlenshq.com) (Chrome on Android)
+
+### [Voltip](https://github.com/sunerpy/voltip)
+
+> An open-source (AGPL-3.0) push-to-talk dictation app for Windows, macOS, Linux
+> and Android: hold a hotkey, speak, and the text is inserted at the cursor in
+> the focused app. The desktop app uses the sherpa-onnx Rust crate for on-device
+> recognition with SenseVoice and Paraformer, a streaming Zipformer for the live
+> preview while the user speaks, and Silero VAD to trim silence and to split
+> recordings of up to two hours at pauses. Models are downloaded on demand.
+
+- [Website](https://voltip.firlab.app)
+- [Releases](https://github.com/sunerpy/voltip/releases)
 
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad

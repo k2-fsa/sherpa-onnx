@@ -25,9 +25,9 @@ type
   TMyWorkerThread = class(TThread)
   private
     Status: AnsiString;
-    StartTime: Single;
-    StopTime: Single;
-    TotalDuration: Single;
+    StartTime: Double;
+    StopTime: Double;
+    TotalDuration: Double;
     procedure ShowStatus;
     procedure ShowProgress;
   protected
@@ -69,7 +69,7 @@ var
   Offset: Integer;
   SpeechSegment: TSherpaOnnxSpeechSegment;
 
-  Duration: Single;
+  Duration: Double;
 
 
   Stream: TSherpaOnnxOfflineStream;

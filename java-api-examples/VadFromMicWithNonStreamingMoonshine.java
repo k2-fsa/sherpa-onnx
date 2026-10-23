@@ -125,8 +125,8 @@ public class VadFromMicNonStreamingMoonshine {
 
       while (!vad.empty()) {
         SpeechSegment segment = vad.front();
-        float startTime = segment.getStart() / (float) sampleRate;
-        float duration = segment.getSamples().length / (float) sampleRate;
+        double startTime = segment.getStart() / (double) sampleRate;
+        double duration = segment.getSamples().length / (double) sampleRate;
 
         OfflineStream stream = recognizer.createStream();
         stream.acceptWaveform(segment.getSamples(), sampleRate);

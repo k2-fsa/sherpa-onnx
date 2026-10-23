@@ -67,9 +67,17 @@ function writeFile(path, data) {
 
 function extractSegment(vadHandle, sampleRate) {
   const h = Module._SherpaOnnxVoiceActivityDetectorFront(vadHandle);
-  const segStart = Module.HEAP32[h / 4];
-  const samplesPtr = Module.HEAP32[h / 4 + 1] / 4;
-  const numSegSamples = Module.HEAP32[h / 4 + 2];
+  // SherpaOnnxSpeechSegment (wasm32): int64 start @0, float *samples @8, int32 n @12
+  // Rebuild the 64-bit `start` from its two little-endian 32-bit heap halves:
+  //   value = high * 2^32 + low, where 2^32 = 4294967296 = 0x100000000.
+  // `>>> 0` reads the low half unsigned (HEAP32 is signed).
+  // A JS Number is an IEEE754 double and holds integers exactly up to
+  // 2^53, i.e. ~17,800 years of 16 kHz samples, so no BigInt is needed.
+  const segStartLo = Module.HEAP32[h / 4] >>> 0;
+  const segStartHi = Module.HEAP32[h / 4 + 1];
+  const segStart = segStartHi * 4294967296 /* 2^32 */ + segStartLo;
+  const samplesPtr = Module.HEAP32[h / 4 + 2] / 4;
+  const numSegSamples = Module.HEAP32[h / 4 + 3];
 
   const segSamples = new Float32Array(numSegSamples);
   for (let j = 0; j < numSegSamples; j++) {

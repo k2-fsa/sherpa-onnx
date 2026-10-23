@@ -928,7 +928,7 @@ public class SherpaOnnxCircularBufferWrapper {
     guard startIndex >= 0 else { return [] }
     guard n > 0 else { return [] }
 
-    guard let ptr = SherpaOnnxCircularBufferGet(buffer, Int32(startIndex), Int32(n)) else {
+    guard let ptr = SherpaOnnxCircularBufferGet(buffer, Int64(startIndex), Int32(n)) else {
       return []
     }
     defer { SherpaOnnxCircularBufferFree(ptr) }

@@ -12,7 +12,14 @@
 namespace sherpa_onnx {
 
 struct SpeechSegment {
-  int32_t start;  // in samples
+  // Start of this segment in the input stream, in samples.
+  //
+  // It is an absolute position and keeps increasing during the lifetime of
+  // the detector, so it is 64-bit. 2^63 samples is about 18 million years
+  // at 16 kHz.
+  //
+  // It is -1 if this segment is not valid.
+  int64_t start = -1;
   std::vector<float> samples;
 };
 

@@ -204,3 +204,4 @@ swiftpm
 lexicon*.txt
 tts.json
 *.bin
+compile_commands.json

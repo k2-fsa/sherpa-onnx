@@ -9,6 +9,34 @@ import 'init.dart';
 
 export '../vad_config.dart';
 
+/// Convert a JavaScript value holding an integer into a Dart [int].
+///
+/// Positions in the C API are `int64_t` (see issue #3635), so depending on the
+/// JS wrapper version they may arrive as a JS number or as a JS `BigInt`.
+/// A JS number is only exact up to 2^53; a `BigInt` is converted through its
+/// decimal string so no precision is lost.
+int _jsToInt(JSAny? value) {
+  if (value == null) return 0;
+  if (value is JSNumber) return value.toDartInt;
+  // JSBigInt: round-trip via String for a lossless conversion.
+  final strFn = globalContext.getProperty('String'.toJS) as JSFunction;
+  final s = strFn.callAsFunction(null, value) as JSString;
+  return int.parse(s.toDart);
+}
+
+/// Convert a Dart [int] sample position into a JS value for the wrappers.
+///
+/// Uses `BigInt` when the value is outside the exact integer range of a JS
+/// number (2^53) so the int64 position survives the boundary intact. The JS
+/// wrapper accepts both forms.
+JSAny _intToJs(int value) {
+  if (value >= -9007199254740992 && value <= 9007199254740992) {
+    return value.toJS;
+  }
+  final bigIntFn = globalContext.getProperty('BigInt'.toJS) as JSFunction;
+  return bigIntFn.callAsFunction(null, value.toString().toJS) as JSAny;
+}
+
 /// Circular sample buffer used by VAD-related pipelines (web implementation).
 class CircularBuffer {
   CircularBuffer.fromPtr({required this.ptr});
@@ -50,7 +78,7 @@ class CircularBuffer {
     final handle = ptr as JSObject;
     final getFn = handle.getProperty('get'.toJS) as JSFunction?;
     if (getFn == null) return Float32List(0);
-    final result = getFn.callAsFunction(handle, startIndex.toJS, n.toJS);
+    final result = getFn.callAsFunction(handle, _intToJs(startIndex), n.toJS);
     if (result == null) return Float32List(0);
     return (result as JSFloat32Array).toDart;
   }
@@ -72,15 +100,16 @@ class CircularBuffer {
     final sizeFn = handle.getProperty('size'.toJS) as JSFunction?;
     if (sizeFn == null) return 0;
     final result = sizeFn.callAsFunction(handle);
-    return (result as JSNumber).toDartInt;
+    return _jsToInt(result);
   }
 
+  /// Absolute stream position of the oldest stored sample (int64 in C).
   int get head {
     final handle = ptr as JSObject;
     final headFn = handle.getProperty('head'.toJS) as JSFunction?;
     if (headFn == null) return 0;
     final result = headFn.callAsFunction(handle);
-    return (result as JSNumber).toDartInt;
+    return _jsToInt(result);
   }
 
   dynamic ptr;
@@ -191,7 +220,7 @@ class VoiceActivityDetector {
 
     final result = fn.callAsFunction(handle) as JSObject;
     final samples = (result.getProperty('samples'.toJS) as JSFloat32Array).toDart;
-    final start = (result.getProperty('start'.toJS) as JSNumber).toDartInt;
+    final start = _jsToInt(result.getProperty('start'.toJS));
 
     return SpeechSegment(samples: Float32List.fromList(samples), start: start);
   }
