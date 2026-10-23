@@ -30,7 +30,7 @@ const MODEL_DOC_URL: &str = "https://k2-fsa.github.io/sherpa/onnx/vad/silero-vad
 const API_DOC_URL: &str = "https://www.doubao.com/thread/xXWsjZf94yLksVLtN";
 
 /// Where to buy more recognition hours. Users must pick the package
-/// 豆包录音文件识别 (recording-file recognition), NOT 豆包流式语音识别
+/// 录音文件识别 (recording-file recognition), NOT 流式语音识别
 /// (streaming speech recognition).
 const PRICING_URL: &str = "https://console.volcengine.com/speech/new/purchase?chargeType=prepaid&productQueryId=10039&projectName=default";
 
@@ -1161,6 +1161,9 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_share::init())
+        // Opens URLs in the system browser — works on Android/iOS, unlike
+        // tauri-plugin-shell's open() which is desktop-only.
+        .plugin(tauri_plugin_opener::init())
         .plugin(display_name_plugin())
         .manage(AppState {
             running: Arc::new(AtomicBool::new(false)),

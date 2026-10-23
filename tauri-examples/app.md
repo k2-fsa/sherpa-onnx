@@ -21,6 +21,8 @@ Source code: [tauri-examples](https://github.com/k2-fsa/sherpa-onnx/tree/master/
   - [Windows](#windows-1)
   - [Android](#android-1)
   - [iOS](#ios-1)
+    - [Run iOS simulator example (doubao-asr-file)](#run-ios-simulator-example-doubao-asr-file)
+    - [Run iOS device example (doubao-asr-file)](#run-ios-device-example-doubao-asr-file)
 
 ## Tauri hello world
 
@@ -111,13 +113,24 @@ Generate subtitles for audio or video files with the
 [Sherpa-onnx VAD](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx)
 (nothing else runs in the cloud).
 
-- Enter a Doubao API key in the app, pick a file, press Start. Not sure how to
-  get a key? See the
+- Enter a Doubao API key, pick an **audio or video** file, press Start — no
+  other settings. Not sure how to get a key? See the
   [help on getting a Doubao API key](https://www.doubao.com/thread/xXWsjZf94yLksVLtN).
+- Click any transcript segment to **play** it; subtitles are shown over the
+  player. A range of the file can be recognized instead of the whole file.
+- View the transcript in **3 formats** — SRT, timestamped TXT, plain TXT —
+  and export each of them. On Android the results can also be **shared** to
+  other apps (e.g. WeChat).
+- Results are saved automatically as `<name>.srt` and `<name>.txt`
+  (timestamped): into the **Downloads** folder on Android, or next to the
+  input file on desktop. If they already exist, the app **loads them** and
+  offers to delete them, so recognition is never paid for twice.
+- Supported inputs — audio: `wav mp3 flac ogg oga m4a aac opus weba wma aiff
+  aif`; video: `mp4 webm mov mkv avi m4v ogv 3gp`.
 - New Volcengine accounts get **20 hours of free recognition**. For more,
   [buy hours](https://console.volcengine.com/speech/new/purchase?chargeType=prepaid&productQueryId=10039&projectName=default) and
-  select the package **豆包录音文件识别** (recording-file recognition) — not
-  豆包流式语音识别 (streaming speech recognition).
+  select the package **录音文件识别** (recording-file recognition) — not
+  流式语音识别 (streaming speech recognition).
 - **Privacy**: speech is uploaded to Volcengine for recognition; it is not
   processed entirely on your device.
 
@@ -159,8 +172,35 @@ Source code: [tauri-examples/doubao-asr-file](https://github.com/k2-fsa/sherpa-o
 | iOS device (arm64) | [tauri-doubao-asr-file-ios-device.ipa](https://github.com/k2-fsa/sherpa-onnx/releases/download/tauri/tauri-doubao-asr-file-ios-device.ipa) |
 | iOS simulator (arm64) | [tauri-doubao-asr-file-ios-simulator.zip](https://github.com/k2-fsa/sherpa-onnx/releases/download/tauri/tauri-doubao-asr-file-ios-simulator.zip) |
 
-The iOS apps are unsigned; see
-[Run iOS simulator example](#run-ios-simulator-example) and
-[Run iOS device example](#run-ios-device-example) above — replace
-`hello_world.app` with `doubao-asr-file.app` and the bundle id with
-`com.k2fsa.sherpa.onnx.doubao.asr.file`.
+#### Run iOS simulator example (doubao-asr-file)
+
+```bash
+# Download and unzip
+unzip tauri-doubao-asr-file-ios-simulator.zip
+
+# Boot a simulator
+xcrun simctl boot "iPhone 16"
+
+# Open Simulator app
+open -a Simulator
+
+# Install and launch
+xcrun simctl install "iPhone 16" doubao-asr-file.app
+xcrun simctl launch "iPhone 16" com.k2fsa.sherpa.onnx.doubao.asr.file
+```
+
+#### Run iOS device example (doubao-asr-file)
+
+The IPA is unsigned. To install on a real device, re-sign it with your Apple
+Developer certificate:
+
+```bash
+# Re-sign the IPA
+codesign --force --sign "iPhone Developer: Your Name (TEAMID)" \
+  --entitlements entitlements.plist \
+  tauri-doubao-asr-file-ios-device.ipa
+
+# Install via Xcode (Window → Devices and Simulators) or ios-deploy:
+brew install ios-deploy
+ios-deploy --bundle tauri-doubao-asr-file-ios-device.ipa
+```

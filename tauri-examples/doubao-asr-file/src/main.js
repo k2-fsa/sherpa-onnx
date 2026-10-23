@@ -1,6 +1,11 @@
 const { invoke, convertFileSrc } = window.__TAURI__.core;
 const { open, save, confirm } = window.__TAURI__.dialog;
-const { open: openUrl } = window.__TAURI__.shell;
+
+// Open links in the system browser. tauri-plugin-shell's open() is
+// desktop-only; the opener plugin works on Android/iOS too.
+function openUrl(url) {
+  return invoke("plugin:opener|open_url", { url });
+}
 
 const AUDIO_EXT = [
   "wav", "mp3", "flac", "ogg", "oga", "m4a", "aac", "opus", "weba", "wma", "aiff", "aif",
