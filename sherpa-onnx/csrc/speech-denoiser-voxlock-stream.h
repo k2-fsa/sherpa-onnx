@@ -75,9 +75,13 @@ inline std::vector<float> SelectVoxLockVoiceSample(const float *samples,
           .cast<float>();
 
   // Row i is the window that starts at frame i. The windows overlap, so
-  // consecutive rows are one element apart.
+  // consecutive rows are one element apart. Only windows whose `length`
+  // samples fit in the audio are candidates; frame_length * 100 is less than
+  // sample_rate if sample_rate is not a multiple of 100.
+  const int32_t num_windows = std::min(
+      num_frames - window + 1, (num_samples - length) / frame_length + 1);
   Eigen::Map<const RowMajorMatrixXf, 0, Eigen::Stride<1, 1>> windows(
-      energy.data(), num_frames - window + 1, window);
+      energy.data(), num_windows, window);
 
   // The first window with the largest energy
   Eigen::Index best = 0;
@@ -236,7 +240,8 @@ class SpeechDenoiserVoxLockStream {
   // stream.
   std::vector<float> Flush() {
     if (!started_) {
-      return {};
+      // Too short to build the padding at the start; return it unchanged
+      return std::exchange(head_, {});
     }
 
     // reflect padding at the end
