@@ -78,7 +78,13 @@ jobs:
 
           mkdir build
           cd build
-          cmake -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON ..
+          # The drv*/hal* symbols referenced by the toolkit's shared libraries
+          # (libruntime.so) come from the host's Ascend kernel driver, which
+          # does not exist in CI. They are resolved at runtime on real
+          # hardware, so ignore unresolved symbols from shared libraries at
+          # link time — the binaries here are only built (see "Show results").
+          cmake -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON \
+            -DCMAKE_EXE_LINKER_FLAGS="-Wl,--unresolved-symbols=ignore-in-shared-libs" ..
 
           make -j2
 
