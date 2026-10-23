@@ -6,6 +6,10 @@ public class OfflineQwen3AsrModelConfig {
     private final String decoder;
     private final String tokenizer;
     private final String hotwords;
+    private final String forcedAlignerConvFrontend;
+    private final String forcedAlignerEncoder;
+    private final String forcedAlignerDecoder;
+    private final String forcedAlignerTokenizer;
     private final int maxTotalLen;
     private final int maxNewTokens;
     private final float temperature;
@@ -18,6 +22,10 @@ public class OfflineQwen3AsrModelConfig {
         this.decoder = builder.decoder;
         this.tokenizer = builder.tokenizer;
         this.hotwords = builder.hotwords;
+        this.forcedAlignerConvFrontend = builder.forcedAlignerConvFrontend;
+        this.forcedAlignerEncoder = builder.forcedAlignerEncoder;
+        this.forcedAlignerDecoder = builder.forcedAlignerDecoder;
+        this.forcedAlignerTokenizer = builder.forcedAlignerTokenizer;
         this.maxTotalLen = builder.maxTotalLen;
         this.maxNewTokens = builder.maxNewTokens;
         this.temperature = builder.temperature;
@@ -49,6 +57,22 @@ public class OfflineQwen3AsrModelConfig {
         return hotwords;
     }
 
+    public String getForcedAlignerConvFrontend() {
+        return forcedAlignerConvFrontend;
+    }
+
+    public String getForcedAlignerEncoder() {
+        return forcedAlignerEncoder;
+    }
+
+    public String getForcedAlignerDecoder() {
+        return forcedAlignerDecoder;
+    }
+
+    public String getForcedAlignerTokenizer() {
+        return forcedAlignerTokenizer;
+    }
+
     public int getMaxTotalLen() {
         return maxTotalLen;
     }
@@ -75,6 +99,10 @@ public class OfflineQwen3AsrModelConfig {
         private String decoder = "";
         private String tokenizer = "";
         private String hotwords = "";
+        private String forcedAlignerConvFrontend = "";
+        private String forcedAlignerEncoder = "";
+        private String forcedAlignerDecoder = "";
+        private String forcedAlignerTokenizer = "";
         private int maxTotalLen = 512;
         private int maxNewTokens = 128;
         private float temperature = 1e-6f;
@@ -107,6 +135,26 @@ public class OfflineQwen3AsrModelConfig {
 
         public Builder setHotwords(String hotwords) {
             this.hotwords = hotwords;
+            return this;
+        }
+
+        public Builder setForcedAlignerConvFrontend(String forcedAlignerConvFrontend) {
+            this.forcedAlignerConvFrontend = forcedAlignerConvFrontend;
+            return this;
+        }
+
+        public Builder setForcedAlignerEncoder(String forcedAlignerEncoder) {
+            this.forcedAlignerEncoder = forcedAlignerEncoder;
+            return this;
+        }
+
+        public Builder setForcedAlignerDecoder(String forcedAlignerDecoder) {
+            this.forcedAlignerDecoder = forcedAlignerDecoder;
+            return this;
+        }
+
+        public Builder setForcedAlignerTokenizer(String forcedAlignerTokenizer) {
+            this.forcedAlignerTokenizer = forcedAlignerTokenizer;
             return this;
         }
 
