@@ -104,12 +104,16 @@ unzip tauri-hello-world-ios-device.ipa -d ipa
 # 2. Embed your provisioning profile in the app bundle
 cp YourProfile.mobileprovision ipa/Payload/hello_world.app/embedded.provisionprofile
 
-# 3. Sign the app bundle (the .app, not the .ipa)
+# 3. Extract the entitlements the provisioning profile expects
+security cms -D -i ipa/Payload/hello_world.app/embedded.provisionprofile > profile.plist
+/usr/libexec/PlistBuddy -x -c 'Print :Entitlements' profile.plist > entitlements.plist
+
+# 4. Sign the app bundle (the .app, not the .ipa) with those entitlements
 codesign --force --sign "Apple Development: Your Name (TEAMID)" \
   --entitlements entitlements.plist \
   ipa/Payload/hello_world.app
 
-# 4. Repack the IPA and install it
+# 5. Repack the IPA and install it
 (cd ipa && zip -r ../hello-world-signed.ipa Payload)
 brew install ios-deploy
 ios-deploy --bundle hello-world-signed.ipa
@@ -146,6 +150,9 @@ Generate subtitles for audio or video files with the
   流式语音识别 (streaming speech recognition).
 - **Privacy**: speech is uploaded to Volcengine for recognition; it is not
   processed entirely on your device.
+- **First launch on Windows**: SmartScreen warns about apps from an unknown
+  publisher — click **More info → Run anyway**. On macOS: right-click →
+  **Open**. (These builds are not signed with a company certificate.)
 
 Source code: [tauri-examples/doubao-asr-file](https://github.com/k2-fsa/sherpa-onnx/tree/master/tauri-examples/doubao-asr-file)
 
@@ -216,12 +223,16 @@ unzip tauri-doubao-asr-file-ios-device.ipa -d ipa
 # 2. Embed your provisioning profile in the app bundle
 cp YourProfile.mobileprovision ipa/Payload/doubao-asr-file.app/embedded.provisionprofile
 
-# 3. Sign the app bundle (the .app, not the .ipa)
+# 3. Extract the entitlements the provisioning profile expects
+security cms -D -i ipa/Payload/doubao-asr-file.app/embedded.provisionprofile > profile.plist
+/usr/libexec/PlistBuddy -x -c 'Print :Entitlements' profile.plist > entitlements.plist
+
+# 4. Sign the app bundle (the .app, not the .ipa) with those entitlements
 codesign --force --sign "Apple Development: Your Name (TEAMID)" \
   --entitlements entitlements.plist \
   ipa/Payload/doubao-asr-file.app
 
-# 4. Repack the IPA and install it
+# 5. Repack the IPA and install it
 (cd ipa && zip -r ../doubao-asr-file-signed.ipa Payload)
 brew install ios-deploy
 ios-deploy --bundle doubao-asr-file-signed.ipa

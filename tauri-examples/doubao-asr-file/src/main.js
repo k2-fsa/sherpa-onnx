@@ -11,6 +11,8 @@ const AUDIO_EXT = [
   "wav", "mp3", "flac", "ogg", "oga", "m4a", "aac", "opus", "weba", "wma", "aiff", "aif",
 ];
 const VIDEO_EXT = ["mp4", "webm", "mov", "mkv", "avi", "m4v", "ogv", "3gp"];
+/** Preview loads the whole file into memory — skip files larger than this. */
+const PREVIEW_MAX_BYTES = 512 * 1024 * 1024;
 
 const $ = (id) => document.getElementById(id);
 
@@ -175,6 +177,7 @@ async function selectFile(path) {
   // be reopened on mobile.
   if (!isMobile) rememberFile(path);
   appendLog(`Selected: ${path}`);
+  let preparedSize = 0;
   try {
     // Copy picker URIs to a local file and learn the real display name —
     // content:// URIs cannot be played directly by the media element.
@@ -184,16 +187,29 @@ async function selectFile(path) {
     currentFileName = prepared.base_name || "transcript";
     currentBaseName = currentFileName.replace(/\.[^.]+$/, "");
     $("file-name").textContent = currentFileName;
-    // Always load the preview through a Blob: it needs no WebView file
-    // access (the asset protocol is disabled) and works everywhere.
-    $("media").src = await loadMediaViaBlob(prepared.local_path);
-    // The <video> element plays audio-only files as well (blank frame).
-    $("media-wrap").classList.remove("hidden");
+    preparedSize = prepared.size || 0;
   } catch (e) {
     showError(String(e));
     return;
   }
+  // Show saved results first; the preview must never gate them.
   await tryLoadExisting(path);
+  // The preview is read fully into memory as a Blob — skip very large files,
+  // and never let a preview failure break the rest of the flow.
+  if (preparedSize > PREVIEW_MAX_BYTES) {
+    appendLog("Preview skipped: file is too large to load into memory");
+    return;
+  }
+  try {
+    const url = await loadMediaViaBlob(currentLocalPath);
+    if (selectedPath !== path) return; // a newer selection won
+    $("media").src = url;
+    // The <video> element plays audio-only files as well (blank frame).
+    $("media-wrap").classList.remove("hidden");
+  } catch (e) {
+    appendLog(`Preview unavailable: ${e}`);
+    $("status").textContent = "Preview unavailable for this file (recognition still works).";
+  }
 }
 
 // The preview is always a Blob; a load error means this webview cannot play

@@ -62,6 +62,16 @@ fn display_name_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .build()
 }
 
+/// Resets the running flag on every exit path of the worker, including when
+/// it panics — otherwise one panic would block all later runs until restart.
+struct RunningGuard(Arc<AtomicBool>);
+
+impl Drop for RunningGuard {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::SeqCst);
+    }
+}
+
 /// Shared application state, created once at startup.
 struct AppState {
     running: Arc<AtomicBool>,
@@ -281,6 +291,7 @@ fn materialize_input(app: &tauri::AppHandle, input: &str) -> Result<String, Stri
 struct PreparedInput {
     local_path: String,
     base_name: String,
+    size: u64,
 }
 
 // ---- result storage -------------------------------------------------------
@@ -420,9 +431,11 @@ fn store_delete(app: &tauri::AppHandle, input: &str) -> Result<Vec<String>, Stri
 #[tauri::command]
 fn prepare_input(app: tauri::AppHandle, path: String) -> Result<PreparedInput, String> {
     let local_path = materialize_input(&app, &path)?;
+    let size = std::fs::metadata(&local_path).map(|m| m.len()).unwrap_or(0);
     Ok(PreparedInput {
         base_name: input_display_name(&app, &path),
         local_path,
+        size,
     })
 }
 
@@ -560,7 +573,11 @@ fn recognize_file(
     let logs = state.logs.clone();
     let decode_secs_out = state.decode_secs.clone();
 
+    // The guard clears the running flag on every exit path of the worker,
+    // including a panic.
+    let guard = RunningGuard(running.clone());
     std::thread::spawn(move || {
+        let _guard = guard;
         run_recognition(
             &local_path,
             &path,
@@ -569,7 +586,6 @@ fn recognize_file(
             &api_key,
             start_sec,
             end_sec,
-            &running,
             &cancelled,
             &progress,
             &status,
@@ -579,7 +595,6 @@ fn recognize_file(
             &logs,
             &decode_secs_out,
         );
-        running.store(false, Ordering::SeqCst);
     });
 
     Ok(())
@@ -595,7 +610,6 @@ fn run_recognition(
     api_key: &str,
     start_sec: f32,
     end_sec: f32,
-    running: &AtomicBool,
     cancelled: &AtomicBool,
     progress: &AtomicU32,
     status: &Mutex<String>,
@@ -736,7 +750,11 @@ fn run_recognition(
                             end: start_sec + seg.end,
                             text,
                         });
-                        s.sort_by(|a, b| a.start.partial_cmp(&b.start).unwrap());
+                        s.sort_by(|a, b| {
+                            a.start
+                                .partial_cmp(&b.start)
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                        });
                     }
                 }
                 progress.store(30 + (60 * n / total as u32), Ordering::SeqCst);
@@ -793,7 +811,6 @@ fn run_recognition(
             log(format!("Error: {e}"));
         }
     }
-    let _ = running;
 }
 
 #[tauri::command]
