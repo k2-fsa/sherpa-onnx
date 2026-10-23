@@ -54,6 +54,10 @@ export class OfflineNemoEncDecCtcModelConfig {
 
 export class OfflineDolphinModelConfig {
   public model: string = '';
+  public encoder: string = '';
+  public decoder: string = '';
+  public language: string = '';
+  public region: string = '';
 }
 
 export class OfflineOmnilingualAsrCtcModelConfig {

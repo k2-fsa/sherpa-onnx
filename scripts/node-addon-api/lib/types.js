@@ -226,6 +226,10 @@
  * Offline Dolphin model config
  * @typedef {Object} OfflineDolphinModelConfig
  * @property {string} [model]
+ * @property {string} [encoder] Attention encoder; requires decoder.
+ * @property {string} [decoder] Attention decoder; takes precedence over CTC.
+ * @property {string} [language] Language token code; empty enables detection.
+ * @property {string} [region] Region token code; requires language.
  */
 
 /**

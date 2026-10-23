@@ -453,6 +453,14 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.dolphin.model, model,
                               dolphin_config_cls, dolphin_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.dolphin.encoder, encoder,
+                              dolphin_config_cls, dolphin_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.dolphin.decoder, decoder,
+                              dolphin_config_cls, dolphin_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.dolphin.language, language,
+                              dolphin_config_cls, dolphin_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.dolphin.region, region,
+                              dolphin_config_cls, dolphin_config);
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.telespeech_ctc, teleSpeech,
                               model_config_cls, model_config);
