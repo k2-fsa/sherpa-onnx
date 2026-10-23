@@ -67,7 +67,7 @@ computer. If you don't have one, please see the help:
 - When you first register on Volcengine, you get **20 hours of free
   recognition**.
 - If you need more hours, buy them at
-  <https://console.volcengine.com/common-buy/Speech_Synthesis>
+  <https://console.volcengine.com/speech/new/purchase?chargeType=prepaid&productQueryId=10039&projectName=default>
   and select the package **豆包录音文件识别** (recording-file recognition).
   **Do not select 豆包流式语音识别** (streaming speech recognition) — that is
   a different, wrong package for this app.

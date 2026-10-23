@@ -115,7 +115,7 @@ Generate subtitles for audio or video files with the
   get a key? See the
   [help on getting a Doubao API key](https://www.doubao.com/thread/xXWsjZf94yLksVLtN).
 - New Volcengine accounts get **20 hours of free recognition**. For more,
-  [buy hours](https://console.volcengine.com/common-buy/Speech_Synthesis) and
+  [buy hours](https://console.volcengine.com/speech/new/purchase?chargeType=prepaid&productQueryId=10039&projectName=default) and
   select the package **豆包录音文件识别** (recording-file recognition) — not
   豆包流式语音识别 (streaming speech recognition).
 - **Privacy**: speech is uploaded to Volcengine for recognition; it is not

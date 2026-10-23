@@ -32,7 +32,7 @@ const API_DOC_URL: &str = "https://www.doubao.com/thread/xXWsjZf94yLksVLtN";
 /// Where to buy more recognition hours. Users must pick the package
 /// 豆包录音文件识别 (recording-file recognition), NOT 豆包流式语音识别
 /// (streaming speech recognition).
-const PRICING_URL: &str = "https://console.volcengine.com/common-buy/Speech_Synthesis";
+const PRICING_URL: &str = "https://console.volcengine.com/speech/new/purchase?chargeType=prepaid&productQueryId=10039&projectName=default";
 
 /// Resolve display names of Android picker URIs ("msf:1495" -> "1_lei-jun.wav").
 /// Everything about it is best-effort: if the Kotlin class is missing the app
