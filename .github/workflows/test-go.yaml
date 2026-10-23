@@ -531,7 +531,7 @@ jobs:
           # Add replace directives so go-api-examples use the local package
           for dir in go-api-examples/*/; do
             if [ -f "$dir/go.mod" ]; then
-              echo 'replace github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx => ../../scripts/go/_internal' >> "$dir/go.mod"
+              echo 'replace github.com/k2-fsa/sherpa-onnx-go/v2/sherpa_onnx => ../../scripts/go/_internal' >> "$dir/go.mod"
             fi
           done
 

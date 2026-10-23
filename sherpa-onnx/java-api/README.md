@@ -49,7 +49,7 @@ After building, you will find:
 
 | File | Description |
 |---|---|
-| `target/sherpa-onnx-jvm-1.13.8.jar` | JVM API jar (classes only) |
+| `target/sherpa-onnx-jvm-2.0.0.jar` | JVM API jar (classes only) |
 
 ## Usage
 
@@ -61,7 +61,7 @@ Add to your `pom.xml`:
 <dependency>
     <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
     <artifactId>sherpa-onnx-jvm</artifactId>
-    <version>1.13.8</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -70,7 +70,7 @@ Add to your `pom.xml`:
 Add to your `build.gradle`:
 
 ```groovy
-implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:1.13.8'
+implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:2.0.0'
 ```
 
 ### In a Gradle Kotlin DSL Project
@@ -78,17 +78,17 @@ implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:1.13.8'
 Add to your `build.gradle.kts`:
 
 ```kotlin
-implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:1.13.8")
+implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:2.0.0")
 ```
 
 ### From Command Line
 
 ```bash
 # Compile your code against the jar
-javac -cp sherpa-onnx/java-api/target/sherpa-onnx-jvm-1.13.8.jar YourApp.java
+javac -cp sherpa-onnx/java-api/target/sherpa-onnx-jvm-2.0.0.jar YourApp.java
 
 # Run your code (with JNI library path)
-java -Djava.library.path=/path/to/jni/libs -cp sherpa-onnx/java-api/target/sherpa-onnx-jvm-1.13.8.jar YourApp
+java -Djava.library.path=/path/to/jni/libs -cp sherpa-onnx/java-api/target/sherpa-onnx-jvm-2.0.0.jar YourApp
 ```
 
 ## Native Libraries
@@ -120,7 +120,7 @@ Maven will automatically discover and compile it.
 
 ## Version
 
-The current version is `1.13.8` (defined in `pom.xml`).
+The current version is `2.0.0` (defined in `pom.xml`).
 
 To update the version:
 

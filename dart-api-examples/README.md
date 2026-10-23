@@ -121,7 +121,7 @@ cd my-example
 
 # Add sherpa_onnx to pubspec.yaml:
 #   dependencies:
-#     sherpa_onnx: ^1.13.8
+#     sherpa_onnx: ^2.0.0
 #     path: ^1.9.0
 
 dart pub get
