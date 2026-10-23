@@ -19,17 +19,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
-          #   name: "8.0.0-10b"
-          - image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
-            name: "8.0.0-310p"
+          # - image: "quay.io/ascend/cann:8.0.0-910b-ubuntu22.04-py3.9"
+          #   name: "8.0.0-910b"
+          - image: "quay.io/ascend/cann:8.0.rc1-310p-ubuntu20.04-py3.9"
+            name: "8.0.rc1-310p"
     container:
-      # image: ascendai/cann:latest
-      # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
-      # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
-      # see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
-      # and
-      # https://quay.io/repository/ascend/cann?tab=tags
+      # The gpustack/* images on Docker Hub are gone ("the image is not on
+      # docker now"); use the official quay.io/ascend/cann images instead.
+      # Tags: https://quay.io/repository/ascend/cann?tab=tags
+      #        https://github.com/Ascend/cann-container-image/blob/main/supported_tags.md
       image: ${{ matrix.image }}
 
     steps:
