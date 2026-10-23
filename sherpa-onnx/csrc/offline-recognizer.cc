@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
@@ -77,6 +78,12 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineRecognizerConfig::Validate() const {
+  if (!std::isfinite(length_reward)) {
+    SHERPA_ONNX_LOGE("--length-reward must be a finite number. Given: %f",
+                     length_reward);
+    return false;
+  }
+
   if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
     if (max_active_paths <= 0) {
       SHERPA_ONNX_LOGE("max_active_paths is less than 0! Given: %d",

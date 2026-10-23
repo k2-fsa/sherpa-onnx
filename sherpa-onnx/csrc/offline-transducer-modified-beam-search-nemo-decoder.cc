@@ -223,7 +223,11 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
       pending[t].clear();
       MergeAndPrune(&cur_hyps, max_active_paths_);
 
-      if (same_frame && !is_tdt_) {
+      // A token extension adds a log-prob (<= 0) plus length_reward_ and
+      // the context-graph score, so the early stop below is safe only when
+      // neither of those can raise a hypothesis above its current score.
+      bool can_gain = length_reward_ > 0 || context_graphs[b] != nullptr;
+      if (same_frame && !is_tdt_ && !can_gain) {
         // Without durations every token stays on its frame. As in NeMo's
         // beam search, stop expanding on this frame once there are
         // max_active_paths hypotheses beyond it that are all better than
