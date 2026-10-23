@@ -214,7 +214,8 @@ pub fn base64_encode(data: &[u8]) -> String {
     out
 }
 
-/// Minimal base64 decoder — inverse of `base64_encode`.
+/// Minimal base64 decoder — inverse of `base64_encode`. Used by tests.
+#[allow(dead_code)]
 pub fn base64_decode(s: &str) -> Vec<u8> {
     fn val(c: u8) -> Option<u32> {
         match c {

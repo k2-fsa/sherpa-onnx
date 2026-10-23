@@ -55,10 +55,17 @@ pub fn run_silero_vad(
 fn drain(vad: &VoiceActivityDetector, out: &mut Vec<RawSegment>) {
     while !vad.is_empty() {
         if let Some(seg) = vad.front() {
-            let start = seg.start() as f32 / 16000.0;
+            // seg.start() is a 64-bit sample index (i64 in current sherpa-onnx,
+            // i32 in older releases) — convert through f64 so long files keep
+            // exact positions before narrowing to f32 seconds.
+            let start = seg.start() as f64 / 16000.0;
             let samples = seg.samples().to_vec();
-            let end = start + samples.len() as f32 / 16000.0;
-            out.push(RawSegment { start, end, samples });
+            let end = start + samples.len() as f64 / 16000.0;
+            out.push(RawSegment {
+                start: start as f32,
+                end: end as f32,
+                samples,
+            });
         }
         vad.pop();
     }
