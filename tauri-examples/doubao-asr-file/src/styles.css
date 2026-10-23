@@ -25,14 +25,57 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  /* Keep clear of notches / status bars on phones. */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+body.mobile .app {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 24px);
 }
 
 main {
   flex: 1;
-  padding: 16px 16px 80px;
+  padding: 8px 16px 80px;
   max-width: 960px;
   width: 100%;
   margin: 0 auto;
+}
+
+/* Narrow screens (phones): stack the transcript rows and widen touch
+   targets so long times/texts don't run off the edge. */
+@media (max-width: 640px) {
+  main {
+    padding: 8px 10px 90px;
+  }
+
+  .segment-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .segment-time {
+    font-size: 11px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  button {
+    padding: 10px 14px;
+  }
+
+  .media video {
+    max-height: 240px;
+  }
 }
 
 .tab {

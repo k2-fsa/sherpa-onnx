@@ -351,12 +351,16 @@ fn recognize_file(
     let existing: Vec<String> = [srt_path.clone(), txt_path.clone()]
         .iter()
         .filter(|p| p.exists())
-        .map(|p| p.display().to_string())
+        .map(|p| {
+            p.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| p.display().to_string())
+        })
         .collect();
     if !existing.is_empty() {
+        // File names only — full paths are far too long for a phone banner.
         return Err(format!(
-            "Output file(s) already exist: {}. \
-             Please delete or rename the file(s) first!",
+            "Output file(s) already exist: {}. Delete them to re-run.",
             existing.join(", ")
         ));
     }
@@ -710,6 +714,28 @@ fn write_output(app: &tauri::AppHandle, path: &str, content: &str) -> Result<(),
     }
 }
 
+/// Delete the saved result files of an input so recognition can run again.
+/// Returns the deleted file names (not full paths — too long for phone UI).
+#[tauri::command]
+fn delete_results(app: tauri::AppHandle, path: String) -> Result<Vec<String>, String> {
+    let (srt, txt) = resolve_outputs(&app, &path)?;
+    let mut deleted = Vec::new();
+    for p in [srt, txt] {
+        if p.exists() {
+            let name = p
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| p.display().to_string());
+            std::fs::remove_file(&p).map_err(|e| format!("Cannot delete {name}: {e}"))?;
+            deleted.push(name);
+        }
+    }
+    if deleted.is_empty() {
+        return Err("No saved result files to delete".to_string());
+    }
+    Ok(deleted)
+}
+
 /// Export the transcript. `format` is one of: srt, timestamped_txt, plain_txt.
 #[tauri::command]
 fn export_text(
@@ -964,6 +990,7 @@ pub fn run() {
             load_results,
             share_result,
             prepare_input,
+            delete_results,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

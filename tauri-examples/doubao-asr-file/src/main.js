@@ -92,6 +92,12 @@ let selectedPath = null;
 let currentBaseName = "transcript";
 /** Set once get_info returns; hides the recent list on mobile. */
 let isMobile = false;
+/** True when saved result files exist for the current input. */
+let hasSavedResults = false;
+
+function updateDeleteButton() {
+  $("delete-results").classList.toggle("hidden", !hasSavedResults);
+}
 
 /** Recent input files, newest first, kept across app restarts. */
 const RECENT_KEY = "recent_input_files";
@@ -216,9 +222,11 @@ async function tryLoadExisting(selected) {
     renderResult();
     updateExportButtons();
     const src = loaded.srt_path || loaded.txt_path;
-    $("status").textContent = `Loaded existing results from ${src}`;
+    $("status").textContent = `Loaded existing results (${segments.length} segments)`;
     appendLog(`Loaded existing results: ${src} (${segments.length} segments)`);
-    appendLog("Delete or rename the .srt/.txt files before pressing Start to re-run.");
+    appendLog("Delete the saved results before pressing Start to re-run.");
+    hasSavedResults = true;
+    updateDeleteButton();
   } catch (e) {
     console.error("load_results failed", e);
   }
@@ -273,6 +281,7 @@ function resetResult() {
   matches = [];
   currentHit = -1;
   logShown = 0;
+  hasSavedResults = false;
   $("search").value = "";
   $("search-count").textContent = "";
   $("log-box").innerHTML = "";
@@ -280,6 +289,7 @@ function resetResult() {
   renderResult();
   $("progress-bar").style.width = "0%";
   updateExportButtons();
+  updateDeleteButton();
 }
 
 function updateExportButtons() {
@@ -509,7 +519,7 @@ async function poll() {
       clearInterval(pollTimer);
       pollTimer = null;
       $("start").disabled = false;
-      $("cancel").disabled = true;
+      $("cancel").disabled = $("media").paused;
     }
   } catch (e) {
     clearInterval(pollTimer);
@@ -517,7 +527,7 @@ async function poll() {
     showError(String(e));
     appendLog(`Error: ${e}`);
     $("start").disabled = false;
-    $("cancel").disabled = true;
+    $("cancel").disabled = $("media").paused;
     updateExportButtons();
   }
 }
@@ -565,14 +575,61 @@ $("start").addEventListener("click", async () => {
     $("start").disabled = false;
     $("cancel").disabled = true;
     updateExportButtons();
+    if (String(e).includes("already exist")) {
+      hasSavedResults = true;
+      updateDeleteButton();
+    }
   }
 });
 
-// Stop: keep everything recognized so far (segments stay on screen and can
-// still be exported).
+// Stop: ends playback of a selected segment and/or the running recognition.
+// Everything recognized so far is kept (segments stay on screen and can still
+// be exported).
 $("cancel").addEventListener("click", async () => {
-  await invoke("cancel_recognition");
-  $("status").textContent = "Stopping — keeping results so far...";
+  const media = $("media");
+  if (media && !media.paused) {
+    media.pause();
+    appendLog("Playback stopped");
+  }
+  if (pollTimer !== null) {
+    await invoke("cancel_recognition");
+    $("status").textContent = "Stopping — keeping results so far...";
+  }
+});
+
+// The Stop button is enabled while a recognition runs or media plays.
+const mediaEl = $("media");
+mediaEl.addEventListener("play", () => {
+  $("cancel").disabled = false;
+});
+for (const ev of ["pause", "ended"]) {
+  mediaEl.addEventListener(ev, () => {
+    if (pollTimer === null) $("cancel").disabled = true;
+  });
+}
+
+// Delete the saved .srt/.txt of the current input so Start can run again.
+// Deleting is permanent — always confirm first.
+$("delete-results").addEventListener("click", async () => {
+  if (!selectedPath) return;
+  const ok = await confirm(
+    `This will permanently delete the saved results:\n\n` +
+      `  ${currentBaseName}.srt\n  ${currentBaseName}.txt\n\n` +
+      `The transcript currently shown stays on screen, and you can press ` +
+      `Start to re-run recognition afterwards.\n\nContinue?`,
+    { title: "Delete saved results", type: "warning" },
+  );
+  if (!ok) return;
+  try {
+    const names = await invoke("delete_results", { path: selectedPath });
+    hasSavedResults = false;
+    updateDeleteButton();
+    showError("");
+    $("status").textContent = "Deleted — you can press Start now.";
+    appendLog(`Deleted ${names.join(", ")}`);
+  } catch (e) {
+    showError(String(e));
+  }
 });
 
 // ---------------------------------------------------------------- export
@@ -639,6 +696,7 @@ async function loadInfo() {
     wireLink("pricing-link", info.pricing_url);
     // Sharing goes through the system share sheet — mobile only.
     isMobile = !!info.is_mobile;
+    document.body.classList.toggle("mobile", isMobile);
     $("share-row").classList.toggle("hidden", !isMobile);
     // Recent files are desktop-only (see selectFile).
     if (isMobile) {
