@@ -289,7 +289,7 @@ jobs:
           go mod tidy
           cd ../..
           gopath=$(go env GOPATH)
-          win_mod=$(find "$gopath/pkg/mod/github.com/k2-fsa/" -maxdepth 1 -name "sherpa-onnx-go-windows@*" -type d | head -1)
+          win_mod=$(find "$gopath/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows" -maxdepth 1 -name "*@*" -type d | head -1)
           for dir in go-api-examples/*/; do
             if [ -f "$dir/go.mod" ]; then
               cp -v "$win_mod/lib/$win_lib_dir"/*.dll "$dir" || true
