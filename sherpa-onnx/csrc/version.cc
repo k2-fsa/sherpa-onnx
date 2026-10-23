@@ -9,12 +9,12 @@
 namespace sherpa_onnx {
 
 const char *GetGitDate() {
-  static const char *date = "Fri Oct 23 14:36:20 2026";
+  static const char *date = "Fri Oct 23 15:50:48 2026";
   return date;
 }
 
 const char *GetGitSha1() {
-  static const char *sha1 = "12b4f4af";
+  static const char *sha1 = "191a3d91";
   return sha1;
 }
 
