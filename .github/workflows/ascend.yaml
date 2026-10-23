@@ -43,7 +43,14 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          apt-get update && apt-get install -y git curl cmake gcc g++
+          # Non-interactive: without a TTY, tzdata's timezone prompt blocks
+          # the job forever ("debconf: falling back to frontend: Readline").
+          export DEBIAN_FRONTEND=noninteractive
+          export TZ=Etc/UTC
+          ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
+          echo $TZ > /etc/timezone
+          apt-get update
+          apt-get install -y git curl cmake gcc g++
 
       - name: Show GCC version
         shell: bash
