@@ -281,6 +281,136 @@ struct PreparedInput {
     base_name: String,
 }
 
+// ---- result storage -------------------------------------------------------
+// On Android, results go to the PUBLIC Downloads folder (via MediaStore) so
+// file managers can see them. Everywhere else they go next to the input file
+// (or beside the local copy for picker URIs), as before.
+
+/// Call one of our AppHelperPlugin Kotlin commands (Android only).
+#[cfg(target_os = "android")]
+fn helper_call(app: &tauri::AppHandle, cmd: &str, payload: serde_json::Value) -> Result<serde_json::Value, String> {
+    let handle = app
+        .try_state::<tauri::plugin::PluginHandle<tauri::Wry>>()
+        .ok_or_else(|| "AppHelperPlugin is unavailable".to_string())?;
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        handle.run_mobile_plugin::<serde_json::Value>(cmd, payload)
+    }));
+    match result {
+        Ok(Ok(v)) => Ok(v),
+        Ok(Err(e)) => Err(format!("{e}")),
+        Err(_) => Err("plugin call failed".to_string()),
+    }
+}
+
+/// File name of the results for an input, e.g. "1_lei-jun.srt".
+fn result_name(app: &tauri::AppHandle, input: &str, ext: &str) -> String {
+    let base = input_display_name(app, input);
+    let stem = Path::new(&base)
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "transcript".to_string());
+    format!("{stem}.{ext}")
+}
+
+fn name_of(p: &Path) -> String {
+    p.file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| p.display().to_string())
+}
+
+/// Which result files already exist (returned as file names).
+fn store_exists(app: &tauri::AppHandle, input: &str) -> Result<Vec<String>, String> {
+    #[cfg(target_os = "android")]
+    {
+        if is_pick_uri(input) {
+            let mut out = Vec::new();
+            for ext in ["srt", "txt"] {
+                let name = result_name(app, input, ext);
+                let v = helper_call(app, "existsInDownloads", serde_json::json!({ "name": name }))?;
+                if v.get("exists").and_then(|b| b.as_bool()).unwrap_or(false) {
+                    out.push(name);
+                }
+            }
+            return Ok(out);
+        }
+    }
+    let (srt, txt) = resolve_outputs(app, input)?;
+    Ok([srt, txt]
+        .iter()
+        .filter(|p| p.exists())
+        .map(|p| name_of(p))
+        .collect())
+}
+
+/// Read one result file, if it exists.
+fn store_read(app: &tauri::AppHandle, input: &str, ext: &str) -> Result<Option<String>, String> {
+    #[cfg(target_os = "android")]
+    {
+        if is_pick_uri(input) {
+            let name = result_name(app, input, ext);
+            return match helper_call(app, "readFromDownloads", serde_json::json!({ "name": name })) {
+                Ok(v) => Ok(v.get("content").and_then(|c| c.as_str()).map(|s| s.to_string())),
+                Err(_) => Ok(None),
+            };
+        }
+    }
+    let (srt, txt) = resolve_outputs(app, input)?;
+    let p = if ext == "srt" { srt } else { txt };
+    if !p.exists() {
+        return Ok(None);
+    }
+    std::fs::read_to_string(&p)
+        .map(Some)
+        .map_err(|e| format!("Cannot read {}: {e}", p.display()))
+}
+
+/// Write one result file; returns its file name.
+fn store_write(app: &tauri::AppHandle, input: &str, ext: &str, content: &str) -> Result<String, String> {
+    #[cfg(target_os = "android")]
+    {
+        if is_pick_uri(input) {
+            let name = result_name(app, input, ext);
+            helper_call(
+                app,
+                "saveToDownloads",
+                serde_json::json!({ "name": name, "content": content }),
+            )?;
+            return Ok(name);
+        }
+    }
+    let (srt, txt) = resolve_outputs(app, input)?;
+    let p = if ext == "srt" { srt } else { txt };
+    std::fs::write(&p, content).map_err(|e| format!("Cannot write {}: {e}", p.display()))?;
+    Ok(name_of(&p))
+}
+
+/// Delete the result files; returns the deleted file names.
+fn store_delete(app: &tauri::AppHandle, input: &str) -> Result<Vec<String>, String> {
+    #[cfg(target_os = "android")]
+    {
+        if is_pick_uri(input) {
+            let mut deleted = Vec::new();
+            for ext in ["srt", "txt"] {
+                let name = result_name(app, input, ext);
+                let v = helper_call(app, "deleteFromDownloads", serde_json::json!({ "name": name }))?;
+                if v.get("deleted").and_then(|b| b.as_bool()).unwrap_or(false) {
+                    deleted.push(name);
+                }
+            }
+            return Ok(deleted);
+        }
+    }
+    let (srt, txt) = resolve_outputs(app, input)?;
+    let mut deleted = Vec::new();
+    for p in [srt, txt] {
+        if p.exists() {
+            std::fs::remove_file(&p).map_err(|e| format!("Cannot delete {}: {e}", p.display()))?;
+            deleted.push(name_of(&p));
+        }
+    }
+    Ok(deleted)
+}
+
 /// Copy a picked input into the app cache and report the local path plus the
 /// display name. The frontend uses the local path for the media preview
 /// (content:// URIs cannot be played directly) and the name for outputs.
@@ -293,10 +423,9 @@ fn prepare_input(app: tauri::AppHandle, path: String) -> Result<PreparedInput, S
     })
 }
 
-/// Auto-save the results next to the input file. Recognition is not free, so
-/// whatever has been recognized is kept even if the run was stopped early.
-/// Returns the list of files that were written.
-fn save_results(input_path: &str, segments: &[Segment]) -> Result<Vec<String>, String> {
+/// Write the two result files with plain filesystem paths. Test-only helper.
+#[cfg(test)]
+fn save_files(input_path: &str, segments: &[Segment]) -> Result<Vec<String>, String> {
     if segments.is_empty() {
         return Ok(Vec::new());
     }
@@ -311,6 +440,35 @@ fn save_results(input_path: &str, segments: &[Segment]) -> Result<Vec<String>, S
         srt_path.display().to_string(),
         txt_path.display().to_string(),
     ])
+}
+
+/// Auto-save the results. Recognition is not free, so whatever has been
+/// recognized is kept even if the run was stopped early. Returns the file
+/// names that were written (e.g. "1_lei-jun.srt", "Downloads/1_lei-jun.srt").
+fn save_results(
+    app: &tauri::AppHandle,
+    input: &str,
+    segments: &[Segment],
+) -> Result<Vec<String>, String> {
+    if segments.is_empty() {
+        return Ok(Vec::new());
+    }
+    #[allow(unused_mut)] // reassigned only in the Android branch below
+    let mut saved = vec![
+        store_write(app, input, "srt", &subtitle::to_srt(segments))?,
+        store_write(app, input, "txt", &subtitle::to_timestamped_txt(segments))?,
+    ];
+    // Android picker inputs go to the public Downloads folder — say so.
+    #[cfg(target_os = "android")]
+    {
+        if is_pick_uri(input) {
+            saved = saved
+                .into_iter()
+                .map(|n| format!("Downloads/{n}"))
+                .collect();
+        }
+    }
+    Ok(saved)
 }
 
 /// Start recognition in a background thread. Returns immediately; the
@@ -346,17 +504,8 @@ fn recognize_file(
 
     // Recognition is not free: refuse to run when the output files already
     // exist, before any decoding, VAD or API call — same as the Python
-    // reference. Users should delete or rename them first.
-    let (srt_path, txt_path) = resolve_outputs(&app, &path)?;
-    let existing: Vec<String> = [srt_path.clone(), txt_path.clone()]
-        .iter()
-        .filter(|p| p.exists())
-        .map(|p| {
-            p.file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_else(|| p.display().to_string())
-        })
-        .collect();
+    // reference. Users should delete them first.
+    let existing = store_exists(&app, &path)?;
     if !existing.is_empty() {
         // File names only — full paths are far too long for a phone banner.
         return Err(format!(
@@ -408,6 +557,8 @@ fn recognize_file(
     std::thread::spawn(move || {
         run_recognition(
             &local_path,
+            &path,
+            &app,
             &model,
             &api_key,
             start_sec,
@@ -431,6 +582,8 @@ fn recognize_file(
 #[allow(clippy::too_many_arguments)]
 fn run_recognition(
     path: &str,
+    source: &str,
+    app: &tauri::AppHandle,
     model: &str,
     api_key: &str,
     start_sec: f32,
@@ -608,9 +761,10 @@ fn run_recognition(
     log(format!("RTF = {elapsed:.3}/{duration:.3} = {rtf:.3}"));
 
     // Save whatever has been recognized — recognition is not free, so results
-    // are written even when the run was stopped early.
+    // are written even when the run was stopped early. `source` is the
+    // original input: on Android its results go to the public Downloads.
     let final_segments = segments.lock().map(|s| s.clone()).unwrap_or_default();
-    match save_results(path, &final_segments) {
+    match save_results(app, source, &final_segments) {
         Ok(saved) => {
             for p in &saved {
                 log(format!("Saved to {p}"));
@@ -714,22 +868,32 @@ fn write_output(app: &tauri::AppHandle, path: &str, content: &str) -> Result<(),
     }
 }
 
+/// Read a chunk of a local file, base64-encoded. The frontend assembles these
+/// into a Blob for playback: on Android the webview's asset protocol only
+/// serves APK assets, so convertFileSrc() URLs can never load files from the
+/// app cache.
+#[tauri::command]
+fn read_media_chunk(path: String, offset: u64, len: u64) -> Result<String, String> {
+    use std::io::{Read, Seek, SeekFrom};
+    let mut f = std::fs::File::open(&path).map_err(|e| format!("Cannot open {path}: {e}"))?;
+    f.seek(SeekFrom::Start(offset)).map_err(|e| e.to_string())?;
+    let mut buf = vec![0u8; len.min(4 * 1024 * 1024) as usize];
+    let mut filled = 0usize;
+    while filled < buf.len() {
+        match f.read(&mut buf[filled..]) {
+            Ok(0) => break,
+            Ok(n) => filled += n,
+            Err(e) => return Err(e.to_string()),
+        }
+    }
+    Ok(doubao::base64_encode(&buf[..filled]))
+}
+
 /// Delete the saved result files of an input so recognition can run again.
 /// Returns the deleted file names (not full paths — too long for phone UI).
 #[tauri::command]
 fn delete_results(app: tauri::AppHandle, path: String) -> Result<Vec<String>, String> {
-    let (srt, txt) = resolve_outputs(&app, &path)?;
-    let mut deleted = Vec::new();
-    for p in [srt, txt] {
-        if p.exists() {
-            let name = p
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_else(|| p.display().to_string());
-            std::fs::remove_file(&p).map_err(|e| format!("Cannot delete {name}: {e}"))?;
-            deleted.push(name);
-        }
-    }
+    let deleted = store_delete(&app, &path)?;
     if deleted.is_empty() {
         return Err("No saved result files to delete".to_string());
     }
@@ -853,18 +1017,10 @@ fn load_results(
     path: String,
     state: tauri::State<'_, AppState>,
 ) -> Result<Option<LoadedResults>, String> {
-    let (srt_path, txt_path) = resolve_outputs(&app, &path)?;
-    let srt_content = if srt_path.exists() {
-        Some(std::fs::read_to_string(&srt_path).map_err(|e| e.to_string())?)
-    } else {
-        None
-    };
-    let txt_content = if txt_path.exists() {
-        Some(std::fs::read_to_string(&txt_path).map_err(|e| e.to_string())?)
-    } else {
-        None
-    };
-    if srt_content.is_none() && txt_content.is_none() {
+    let srt_content = store_read(&app, &path, "srt")?;
+    let txt_content = store_read(&app, &path, "txt")?;
+    let (had_srt, had_txt) = (srt_content.is_some(), txt_content.is_some());
+    if !had_srt && !had_txt {
         return Ok(None);
     }
 
@@ -890,8 +1046,8 @@ fn load_results(
                 text: s.text,
             })
             .collect(),
-        srt_path: srt_path.exists().then(|| srt_path.display().to_string()),
-        txt_path: txt_path.exists().then(|| txt_path.display().to_string()),
+        srt_path: had_srt.then(|| result_name(&app, &path, "srt")),
+        txt_path: had_txt.then(|| result_name(&app, &path, "txt")),
     }))
 }
 
@@ -929,7 +1085,7 @@ mod tests {
     }
 
     #[test]
-    fn save_results_writes_srt_and_timestamped_txt() {
+    fn save_files_writes_srt_and_timestamped_txt() {
         let dir = std::env::temp_dir().join("doubao-asr-file-test");
         std::fs::create_dir_all(&dir).unwrap();
         let input = dir.join("sample.wav");
@@ -942,7 +1098,7 @@ mod tests {
             end: 2.0,
             text: "你好".to_string(),
         }];
-        let saved = save_results(input.to_str().unwrap(), &segs).unwrap();
+        let saved = save_files(input.to_str().unwrap(), &segs).unwrap();
         assert_eq!(saved.len(), 2);
         assert!(saved[0].ends_with("sample.srt"));
         assert!(saved[1].ends_with("sample.txt"));
@@ -991,6 +1147,7 @@ pub fn run() {
             share_result,
             prepare_input,
             delete_results,
+            read_media_chunk,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

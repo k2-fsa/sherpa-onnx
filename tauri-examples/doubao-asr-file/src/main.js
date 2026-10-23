@@ -92,6 +92,12 @@ let selectedPath = null;
 let currentBaseName = "transcript";
 /** Set once get_info returns; hides the recent list on mobile. */
 let isMobile = false;
+/** Local copy of the selected input — used for the media preview. */
+let currentLocalPath = null;
+/** Seek requested before the media element finished loading. */
+let pendingSeek = null;
+/** One-shot fallback switch for the preview loader. */
+let blobFallbackTried = false;
 /** True when saved result files exist for the current input. */
 let hasSavedResults = false;
 
@@ -162,6 +168,9 @@ async function selectFile(path) {
     // Copy picker URIs to a local file and learn the real display name —
     // content:// URIs cannot be played directly by the media element.
     const prepared = await invoke("prepare_input", { path });
+    currentLocalPath = prepared.local_path;
+    blobFallbackTried = false;
+    pendingSeek = null;
     currentBaseName = (prepared.base_name || "transcript").replace(/\.[^.]+$/, "");
     $("file-name").textContent = prepared.base_name;
     const media = $("media");
@@ -175,11 +184,22 @@ async function selectFile(path) {
   await tryLoadExisting(path);
 }
 
-$("media").addEventListener("error", () => {
-  if (selectedPath) {
-    $("status").textContent = "Preview unavailable for this file (recognition still works).";
-    appendLog("Media preview unavailable for this file");
+// On Android the webview's asset protocol serves APK assets only, so the
+// convertFileSrc URL fails — fall back to reading the file as a Blob.
+$("media").addEventListener("error", async () => {
+  if (!currentLocalPath) return;
+  if (!blobFallbackTried) {
+    blobFallbackTried = true;
+    try {
+      const url = await loadMediaViaBlob(currentLocalPath);
+      $("media").src = url;
+      return;
+    } catch (e) {
+      appendLog(`Preview fallback failed: ${e}`);
+    }
   }
+  $("status").textContent = "Preview unavailable for this file (recognition still works).";
+  appendLog("Media preview unavailable for this file");
 });
 
 $("pick-file").addEventListener("click", async () => {
@@ -236,10 +256,71 @@ async function tryLoadExisting(selected) {
 function seekAndPlay(sec) {
   const media = $("media");
   if (!media.src) return;
+  if (media.readyState >= 1) {
+    media.currentTime = sec;
+    media.play().catch(() => {
+      /* autoplay may be blocked until the user interacts; ignore */
+    });
+  } else {
+    // Still loading (e.g. blob fallback) — seek once metadata is ready.
+    pendingSeek = sec;
+  }
+}
+
+$("media").addEventListener("loadedmetadata", () => {
+  if (pendingSeek == null) return;
+  const sec = pendingSeek;
+  pendingSeek = null;
+  const media = $("media");
   media.currentTime = sec;
-  media.play().catch(() => {
-    /* autoplay may be blocked until the user interacts; ignore */
-  });
+  media.play().catch(() => {});
+});
+
+function mimeFor(name) {
+  const ext = (name.split(".").pop() || "").toLowerCase();
+  return (
+    {
+      wav: "audio/wav",
+      mp3: "audio/mpeg",
+      m4a: "audio/mp4",
+      aac: "audio/aac",
+      flac: "audio/flac",
+      ogg: "audio/ogg",
+      oga: "audio/ogg",
+      opus: "audio/ogg",
+      weba: "audio/webm",
+      wma: "audio/x-ms-wma",
+      aiff: "audio/aiff",
+      aif: "audio/aiff",
+      mp4: "video/mp4",
+      m4v: "video/x-m4v",
+      mov: "video/quicktime",
+      webm: "video/webm",
+      mkv: "video/x-matroska",
+      avi: "video/x-msvideo",
+      ogv: "video/ogg",
+      "3gp": "video/3gpp",
+    }[ext] || "application/octet-stream"
+  );
+}
+
+/** Read the local file through Rust and turn it into a playable Blob URL. */
+async function loadMediaViaBlob(path) {
+  const chunkSize = 1024 * 1024;
+  const chunks = [];
+  let offset = 0;
+  for (;;) {
+    const b64 = await invoke("read_media_chunk", { path, offset, len: chunkSize });
+    if (!b64) break;
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    chunks.push(arr);
+    if (bin.length < chunkSize) break;
+    offset += chunkSize;
+  }
+  if (chunks.length === 0) throw new Error("no data");
+  return URL.createObjectURL(new Blob(chunks, { type: mimeFor(currentBaseName) }));
 }
 
 // ---------------------------------------------------------------- subtitles

@@ -25,6 +25,17 @@ class ShareArgs {
   var text: String = ""
 }
 
+@InvokeArg
+class NameArgs {
+  lateinit var name: String
+}
+
+@InvokeArg
+class SaveArgs {
+  lateinit var name: String
+  lateinit var content: String
+}
+
 /**
  * Small Android helpers that no Tauri plugin provides correctly:
  *
@@ -89,6 +100,116 @@ class AppHelperPlugin(private val activity: Activity) : Plugin(activity) {
       invoke.resolve(ret)
     } catch (ex: Exception) {
       invoke.reject(ex.message ?: "share failed")
+    }
+  }
+
+  // ---- public Downloads folder (MediaStore, Android 10+) ----------------
+  // Results live where users can find them (Files app), not in the private
+  // app sandbox. MediaStore.Downloads exists from API 29.
+
+  private fun downloadsUri(): Uri? {
+    if (android.os.Build.VERSION.SDK_INT < 29) return null
+    return android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
+  }
+
+  private fun findInDownloads(name: String): Uri? {
+    val collection = downloadsUri() ?: return null
+    activity.contentResolver.query(
+      collection,
+      arrayOf(android.provider.MediaStore.MediaColumns._ID),
+      "${android.provider.MediaStore.MediaColumns.DISPLAY_NAME}=? AND " +
+        "${android.provider.MediaStore.MediaColumns.RELATIVE_PATH}=?",
+      arrayOf(name, "Download/"),
+      null
+    )?.use { c ->
+      if (c.moveToFirst()) {
+        return android.content.ContentUris.withAppendedId(collection, c.getLong(0))
+      }
+    }
+    return null
+  }
+
+  @Command
+  fun saveToDownloads(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(SaveArgs::class.java)
+      val collection = downloadsUri()
+        ?: return invoke.reject("Saving to the public Downloads folder needs Android 10 or newer")
+      // Replace any earlier file of the same name.
+      findInDownloads(args.name)?.let { activity.contentResolver.delete(it, null, null) }
+      val values = android.content.ContentValues().apply {
+        put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, args.name)
+        put(
+          android.provider.MediaStore.MediaColumns.MIME_TYPE,
+          if (args.name.endsWith(".srt")) "application/x-subrip" else "text/plain"
+        )
+        put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Download")
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+          put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+      }
+      val uri = activity.contentResolver.insert(collection, values)
+        ?: return invoke.reject("Cannot create ${args.name} in Downloads")
+      activity.contentResolver.openOutputStream(uri)?.use { out ->
+        out.write(args.content.toByteArray(Charsets.UTF_8))
+      }
+      if (android.os.Build.VERSION.SDK_INT >= 29) {
+        val done = android.content.ContentValues()
+        done.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+        activity.contentResolver.update(uri, done, null, null)
+      }
+      val ret = JSObject()
+      ret.put("name", args.name)
+      invoke.resolve(ret)
+    } catch (ex: Exception) {
+      invoke.reject(ex.message ?: "save failed")
+    }
+  }
+
+  @Command
+  fun readFromDownloads(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(NameArgs::class.java)
+      val uri = findInDownloads(args.name)
+        ?: return invoke.reject("${args.name} does not exist in Downloads")
+      val text = activity.contentResolver.openInputStream(uri)?.use { input ->
+        input.readBytes().toString(Charsets.UTF_8)
+      } ?: return invoke.reject("Cannot read ${args.name}")
+      val ret = JSObject()
+      ret.put("content", text)
+      invoke.resolve(ret)
+    } catch (ex: Exception) {
+      invoke.reject(ex.message ?: "read failed")
+    }
+  }
+
+  @Command
+  fun existsInDownloads(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(NameArgs::class.java)
+      val ret = JSObject()
+      ret.put("exists", findInDownloads(args.name) != null)
+      invoke.resolve(ret)
+    } catch (ex: Exception) {
+      invoke.reject(ex.message ?: "query failed")
+    }
+  }
+
+  @Command
+  fun deleteFromDownloads(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(NameArgs::class.java)
+      val uri = findInDownloads(args.name)
+      val deleted = if (uri != null) {
+        activity.contentResolver.delete(uri, null, null) > 0
+      } else {
+        false
+      }
+      val ret = JSObject()
+      ret.put("deleted", deleted)
+      invoke.resolve(ret)
+    } catch (ex: Exception) {
+      invoke.reject(ex.message ?: "delete failed")
     }
   }
 }
