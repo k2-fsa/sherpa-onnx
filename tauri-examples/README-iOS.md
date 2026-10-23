@@ -19,7 +19,7 @@ statically linked in.
 
    ```toml
    [dependencies]
-   sherpa-onnx = { version = "1.13.8", default-features = false, features = ["shared"] }
+   sherpa-onnx = { version = "2.0.0", default-features = false, features = ["shared"] }
    ```
 
 2. Tell Tauri to link the xcframework in `src-tauri/tauri.conf.json`:
