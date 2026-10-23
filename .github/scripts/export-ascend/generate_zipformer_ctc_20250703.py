@@ -22,7 +22,7 @@ def get_image(cann: str, soc_version: str):
 
     cann2image_310 = {
         "7.0": "quay.io/ascend/cann:7.0.1-310p-ubuntu22.04-py3.9",
-        "8.0": "quay.io/ascend/cann:8.0.rc1-310p-ubuntu20.04-py3.9",
+        "8.0": "quay.io/ascend/cann:8.0.rc1-310p-ubuntu22.04-py3.9",
         "8.1": "quay.io/ascend/cann:8.1.rc1-310p-ubuntu22.04-py3.11",
         "8.2": "quay.io/ascend/cann:8.2.rc1-310p-ubuntu22.04-py3.11",
         "8.3": "quay.io/ascend/cann:8.3.rc2-310p-ubuntu22.04-py3.11",

@@ -21,7 +21,10 @@ jobs:
         include:
           # - image: "quay.io/ascend/cann:8.0.0-910b-ubuntu22.04-py3.9"
           #   name: "8.0.0-910b"
-          - image: "quay.io/ascend/cann:8.0.rc1-310p-ubuntu20.04-py3.9"
+          # ubuntu22.04 (GCC 11): the prebuilt libonnxruntime.a needs a newer
+          # libstdc++ than the ubuntu20.04 image's GCC 9 provides — linking
+          # fails with "undefined reference to std::__throw_bad_array_new_length".
+          - image: "quay.io/ascend/cann:8.0.rc1-310p-ubuntu22.04-py3.9"
             name: "8.0.rc1-310p"
     container:
       # The gpustack/* images on Docker Hub are gone ("the image is not on
