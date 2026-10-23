@@ -74,7 +74,7 @@ wget https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-mode
   --output-wav=output_16k.wav
 
 # It keeps the voice in the loudest 3 seconds of the first 15 seconds.
-# To choose the voice yourself, pass about 3 seconds of it with
+# To choose the voice yourself, pass at least 3 seconds of it with
 #   --speech-denoiser-voxlock-voice-sample=voxlock_test_voice_sample.wav
 # Use voxlock_chunk.onnx for the float32 model.
 )usage";

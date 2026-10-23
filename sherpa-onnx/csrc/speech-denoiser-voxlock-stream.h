@@ -10,12 +10,15 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
+#include "Eigen/Dense"
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser-voxlock-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -33,31 +36,9 @@ inline std::unique_ptr<LinearResample> CreateVoxLockResampler(
                                           lowpass_cutoff, lowpass_filter_width);
 }
 
-// Read a voice sample from a wave file and resample it to sample_rate
-inline std::vector<float> ReadVoxLockVoiceSample(const std::string &filename,
-                                                 int32_t sample_rate) {
-  int32_t file_sample_rate = -1;
-  bool is_ok = false;
-  std::vector<float> samples = ReadWave(filename, &file_sample_rate, &is_ok);
-  if (!is_ok) {
-    SHERPA_ONNX_LOGE("Failed to read the voxlock voice sample '%s'",
-                     filename.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  if (file_sample_rate == sample_rate) {
-    return samples;
-  }
-
-  std::vector<float> ans;
-  CreateVoxLockResampler(file_sample_rate, sample_rate)
-      ->Resample(samples.data(), samples.size(), true, &ans);
-  return ans;
-}
-
 /* Return the loudest `seconds` seconds in the first `search_seconds` seconds
- * of the audio, measured over 10 ms frames. If those first `search_seconds`
- * seconds are not longer than `seconds` seconds, it returns all of them.
+ * of the audio, measured over 10 ms frames. It returns an empty vector if
+ * the audio is shorter than `seconds` seconds.
  *
  * This is the voice sample VoxLock is benchmarked with.
  */
@@ -70,37 +51,120 @@ inline std::vector<float> SelectVoxLockVoiceSample(const float *samples,
   const int32_t frame_length = sample_rate / 100;
   const int32_t num_frames = num_samples / frame_length;
   const int32_t window = seconds * 100;
+  const int32_t length = seconds * sample_rate;
+
+  if (num_samples < length) {
+    return {};
+  }
 
   if (num_frames <= window) {
-    return {samples, samples + num_samples};
+    return {samples, samples + length};
   }
 
-  std::vector<float> energy(num_frames);
-  for (int32_t i = 0; i != num_frames; ++i) {
-    const float *p = samples + i * frame_length;
-    double sum = 0;
-    for (int32_t k = 0; k != frame_length; ++k) {
-      sum += static_cast<double>(p[k]) * p[k];
-    }
-    energy[i] = static_cast<float>(sum / frame_length);
-  }
+  using RowMajorMatrixXf =
+      Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-  int32_t best = 0;
-  double best_sum = -1;
-  for (int32_t i = 0; i + window <= num_frames; ++i) {
-    double sum = 0;
-    for (int32_t k = 0; k != window; ++k) {
-      sum += energy[i + k];
-    }
+  // Mean energy of each 10 ms frame, (num_frames,)
+  Eigen::VectorXf energy =
+      Eigen::Map<const RowMajorMatrixXf>(samples, num_frames, frame_length)
+          .cast<double>()
+          .array()
+          .square()
+          .rowwise()
+          .mean()
+          .cast<float>();
 
-    if (sum > best_sum) {
-      best_sum = sum;
-      best = i;
-    }
-  }
+  // Row i is the window that starts at frame i. The windows overlap, so
+  // consecutive rows are one element apart.
+  Eigen::Map<const RowMajorMatrixXf, 0, Eigen::Stride<1, 1>> windows(
+      energy.data(), num_frames - window + 1, window);
+
+  // The first window with the largest energy
+  Eigen::Index best = 0;
+  windows.cast<double>().rowwise().sum().maxCoeff(&best);
 
   const float *start = samples + best * frame_length;
-  return {start, start + seconds * sample_rate};
+  return {start, start + length};
+}
+
+// A voice sample longer than the model's voice_sample_seconds is searched
+// for its loudest voice_sample_seconds seconds within its first
+// kVoxLockMaxVoiceSampleSeconds seconds
+constexpr int32_t kVoxLockMaxVoiceSampleSeconds = 30;
+
+// Resample a voice sample to sample_rate and return exactly `seconds` seconds
+// of it
+inline std::vector<float> PrepareVoxLockVoiceSample(
+    const std::vector<float> &samples, int32_t file_sample_rate,
+    int32_t sample_rate, int32_t seconds, const std::string &filename) {
+  std::vector<float> resampled;
+  if (file_sample_rate == sample_rate) {
+    resampled = samples;
+  } else {
+    CreateVoxLockResampler(file_sample_rate, sample_rate)
+        ->Resample(samples.data(), samples.size(), true, &resampled);
+  }
+
+  const int32_t n = resampled.size();
+  if (n < seconds * sample_rate) {
+    SHERPA_ONNX_LOGE(
+        "The voxlock voice sample '%s' is %.3f seconds long. It needs at "
+        "least %d seconds.",
+        filename.c_str(), static_cast<float>(n) / sample_rate, seconds);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  if (n > seconds * sample_rate) {
+    SHERPA_ONNX_LOGE(
+        "The voxlock voice sample '%s' is %.3f seconds long. Use its loudest "
+        "%d seconds within its first %d seconds.",
+        filename.c_str(), static_cast<float>(n) / sample_rate, seconds,
+        kVoxLockMaxVoiceSampleSeconds);
+  }
+
+  return SelectVoxLockVoiceSample(resampled.data(), n, sample_rate, seconds,
+                                  kVoxLockMaxVoiceSampleSeconds);
+}
+
+// Read a voice sample from a wave file and return exactly `seconds` seconds
+// of it
+inline std::vector<float> ReadVoxLockVoiceSample(const std::string &filename,
+                                                 int32_t sample_rate,
+                                                 int32_t seconds) {
+  int32_t file_sample_rate = -1;
+  bool is_ok = false;
+  std::vector<float> samples = ReadWave(filename, &file_sample_rate, &is_ok);
+  if (!is_ok) {
+    SHERPA_ONNX_LOGE("Failed to read the voxlock voice sample '%s'",
+                     filename.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  return PrepareVoxLockVoiceSample(samples, file_sample_rate, sample_rate,
+                                   seconds, filename);
+}
+
+// Read a voice sample from a wave file with a manager, e.g., the asset
+// manager on Android, and return exactly `seconds` seconds of it
+template <typename Manager>
+std::vector<float> ReadVoxLockVoiceSample(Manager *mgr,
+                                          const std::string &filename,
+                                          int32_t sample_rate,
+                                          int32_t seconds) {
+  auto buf = ReadFile(mgr, filename);
+  std::istringstream is(std::string(buf.data(), buf.size()));
+
+  int32_t file_sample_rate = -1;
+  bool is_ok = false;
+  std::vector<float> samples = ReadWave(is, &file_sample_rate, &is_ok);
+  if (!is_ok) {
+    SHERPA_ONNX_LOGE("Failed to read the voxlock voice sample '%s'",
+                     filename.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  return PrepareVoxLockVoiceSample(samples, file_sample_rate, sample_rate,
+                                   seconds, filename);
 }
 
 /* Isolates the caller's voice in a stream of audio at the model's sample
@@ -263,6 +327,7 @@ class SpeechDenoiserVoxLockStream {
   }
 
  private:
+  // Borrowed, not owned by this class. It must outlive this object.
   const OfflineSpeechDenoiserVoxLockModel *model_;
   int32_t n_fft_;
   int32_t hop_length_;

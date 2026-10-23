@@ -81,21 +81,19 @@ def get_meta_data(role: str, precision: str):
         "window_type": "hann",
         "num_freq_bins": 257,
         "context_dim": 512,
+        # The chunk model accepts only the outputs of the enroll model for a
+        # voice sample of exactly this length
+        "voice_sample_seconds": 3,
         "model_url": "https://huggingface.co/arbazsiddiqui/voxlock",
         "hf_revision": HF_REVISION,
         "code_url": "https://github.com/arbazsiddiqui/voxlock",
         "license": "Apache-2.0",
         "comment": "VoxLock target-speaker voice isolation. "
-        "The enroll model runs once on about 3 seconds of the caller's voice; "
+        "The enroll model runs once on 3 seconds of the caller's voice; "
         "the chunk model runs on each chunk of the call.",
     }
 
-    if role == "enroll":
-        # The speaker encoder uses 25 ms fbank frames, so the voice sample
-        # must have at least one frame.
-        meta_data["min_voice_sample_length"] = 400
-        meta_data["voice_sample_seconds"] = 3
-    else:
+    if role == "chunk":
         meta_data["state_shape"] = "6,32,256"
         meta_data["frames_per_chunk"] = 100
         # The network returns the caller at about -2x its level in the input

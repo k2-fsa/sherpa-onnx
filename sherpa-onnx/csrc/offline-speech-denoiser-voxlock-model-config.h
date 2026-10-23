@@ -19,7 +19,9 @@ struct OfflineSpeechDenoiserVoxLockModelConfig {
   // Runs on each chunk of the audio
   std::string chunk_model;
 
-  // Optional. A wave file with about 3 seconds of the caller's voice.
+  // Optional. A wave file with at least 3 seconds of the caller's voice.
+  // From a longer file, the loudest 3 seconds within its first 30 seconds
+  // are used.
   // If empty, the voice sample is taken from the input audio: the loudest
   // 3 seconds in the first 15 seconds for the offline denoiser, and the
   // first 3 seconds of speech for the online denoiser, which passes audio

@@ -114,11 +114,12 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
 
   std::pair<Ort::Value, Ort::Value> Enroll(const float *samples,
                                            int32_t n) const {
-    if (n < meta_.min_voice_sample_length) {
+    if (n != meta_.voice_sample_seconds * meta_.sample_rate) {
       SHERPA_ONNX_LOGE(
-          "The voxlock voice sample is too short. It has %d samples. It "
-          "needs at least %d samples at %d Hz.",
-          n, meta_.min_voice_sample_length, meta_.sample_rate);
+          "The voxlock voice sample must have exactly %d samples (%d seconds "
+          "at %d Hz). Given: %d",
+          meta_.voice_sample_seconds * meta_.sample_rate,
+          meta_.voice_sample_seconds, meta_.sample_rate, n);
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -220,8 +221,6 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
     meta_.window_type = shared.window_type;
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macros below
-    SHERPA_ONNX_READ_META_DATA(meta_.min_voice_sample_length,
-                               "min_voice_sample_length");
     SHERPA_ONNX_READ_META_DATA(meta_.voice_sample_seconds,
                                "voice_sample_seconds");
 
@@ -287,6 +286,16 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macros below
+    int32_t voice_sample_seconds = 0;
+    SHERPA_ONNX_READ_META_DATA(voice_sample_seconds, "voice_sample_seconds");
+    if (voice_sample_seconds != meta_.voice_sample_seconds) {
+      SHERPA_ONNX_LOGE(
+          "The voxlock enroll and chunk models do not match. "
+          "voice_sample_seconds: %d vs %d",
+          meta_.voice_sample_seconds, voice_sample_seconds);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     SHERPA_ONNX_READ_META_DATA(meta_.frames_per_chunk, "frames_per_chunk");
     SHERPA_ONNX_READ_META_DATA_VEC(meta_.state_shape, "state_shape");
 

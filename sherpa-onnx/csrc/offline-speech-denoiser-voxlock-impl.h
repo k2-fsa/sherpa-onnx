@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_VOXLOCK_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_VOXLOCK_IMPL_H_
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -28,7 +29,7 @@ class OfflineSpeechDenoiserVoxLockImpl : public OfflineSpeechDenoiserImpl {
   OfflineSpeechDenoiserVoxLockImpl(Manager *mgr,
                                    const OfflineSpeechDenoiserConfig &config)
       : model_(mgr, config.model) {
-    Init(config);
+    Init(mgr, config);
   }
 
   DenoisedAudio Run(const float *samples, int32_t n,
@@ -62,12 +63,11 @@ class OfflineSpeechDenoiserVoxLockImpl : public OfflineSpeechDenoiserImpl {
       voice_sample = &selected;
     }
 
-    if (static_cast<int32_t>(voice_sample->size()) <
-        meta.min_voice_sample_length) {
+    if (voice_sample->empty()) {
       SHERPA_ONNX_LOGE(
-          "The input is too short to take a voice sample from: %d samples. "
-          "Return it unchanged.",
-          n);
+          "The input is shorter than %d seconds, too short to take a voice "
+          "sample from: %d samples. Return it unchanged.",
+          meta.voice_sample_seconds, n);
       denoised_audio.samples.assign(p, p + n);
       return denoised_audio;
     }
@@ -91,20 +91,20 @@ class OfflineSpeechDenoiserVoxLockImpl : public OfflineSpeechDenoiserImpl {
  private:
   void Init(const OfflineSpeechDenoiserConfig &config) {
     const auto &meta = model_.GetMetaData();
-    if (!config.model.voxlock.voice_sample.empty()) {
-      voice_sample_ = ReadVoxLockVoiceSample(config.model.voxlock.voice_sample,
-                                             meta.sample_rate);
+    const auto &filename = config.model.voxlock.voice_sample;
+    if (!filename.empty()) {
+      voice_sample_ = ReadVoxLockVoiceSample(filename, meta.sample_rate,
+                                             meta.voice_sample_seconds);
+    }
+  }
 
-      if (static_cast<int32_t>(voice_sample_.size()) <
-          meta.min_voice_sample_length) {
-        SHERPA_ONNX_LOGE(
-            "The voxlock voice sample '%s' is too short. It needs at least %d "
-            "samples at %d Hz. About %d seconds is best.",
-            config.model.voxlock.voice_sample.c_str(),
-            meta.min_voice_sample_length, meta.sample_rate,
-            meta.voice_sample_seconds);
-        SHERPA_ONNX_EXIT(-1);
-      }
+  template <typename Manager>
+  void Init(Manager *mgr, const OfflineSpeechDenoiserConfig &config) {
+    const auto &meta = model_.GetMetaData();
+    const auto &filename = config.model.voxlock.voice_sample;
+    if (!filename.empty()) {
+      voice_sample_ = ReadVoxLockVoiceSample(mgr, filename, meta.sample_rate,
+                                             meta.voice_sample_seconds);
     }
   }
 

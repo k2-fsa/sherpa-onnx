@@ -77,7 +77,7 @@ Usage:
 # VoxLock passes the audio through unchanged until it has heard 3 seconds
 # of speech, then keeps that voice and removes the others. Pass
 #   --speech-denoiser-voxlock-voice-sample=voxlock_test_voice_sample.wav
-# to keep the voice in a sample of about 3 seconds from the first chunk.
+# to keep the voice in a sample of at least 3 seconds from the first chunk.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);

@@ -9,7 +9,7 @@ speaker, e.g., the caller in a phone call, and removes the other voices.
 It has two models:
 
 - `voxlock_enroll.onnx` runs once on a voice sample of the caller
-  (about 3 seconds at 16 kHz)
+  (exactly 3 seconds at 16 kHz)
 - `voxlock_chunk*.onnx` runs on each chunk of the audio and carries the
   LSTM state from chunk to chunk
 

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <deque>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -45,22 +46,23 @@ class OnlineSpeechDenoiserVoxLockImpl : public OnlineSpeechDenoiserImpl {
   OnlineSpeechDenoiserVoxLockImpl(Manager *mgr,
                                   const OnlineSpeechDenoiserConfig &config)
       : model_(mgr, config.model) {
-    Init(config);
+    Init(mgr, config);
   }
 
   DenoisedAudio Run(const float *samples, int32_t n,
                     int32_t sample_rate) override {
+    const int32_t model_sample_rate = model_.GetMetaData().sample_rate;
+
     if (sample_rate <= 0) {
       SHERPA_ONNX_LOGE("Expected sample_rate > 0. Given: %d", sample_rate);
-      SHERPA_ONNX_EXIT(-1);
+      return {{}, model_sample_rate};
     }
 
     if (n < 0) {
       SHERPA_ONNX_LOGE("Expected n >= 0. Given: %d", n);
-      SHERPA_ONNX_EXIT(-1);
+      return {{}, model_sample_rate};
     }
 
-    const int32_t model_sample_rate = model_.GetMetaData().sample_rate;
     if (n == 0) {
       return {{}, model_sample_rate};
     }
@@ -79,9 +81,9 @@ class OnlineSpeechDenoiserVoxLockImpl : public OnlineSpeechDenoiserImpl {
     } else if (sample_rate != input_sample_rate_) {
       SHERPA_ONNX_LOGE(
           "Streaming denoiser expects a fixed input sample rate. Previous: %d. "
-          "Current: %d.",
+          "Current: %d. Call Flush() or Reset() before changing it.",
           input_sample_rate_, sample_rate);
-      SHERPA_ONNX_EXIT(-1);
+      return {{}, model_sample_rate};
     }
 
     std::vector<float> resampled;
@@ -161,27 +163,34 @@ class OnlineSpeechDenoiserVoxLockImpl : public OnlineSpeechDenoiserImpl {
  private:
   void Init(const OnlineSpeechDenoiserConfig &config) {
     const auto &meta = model_.GetMetaData();
+    const auto &filename = config.model.voxlock.voice_sample;
+    if (!filename.empty()) {
+      voice_sample_ = ReadVoxLockVoiceSample(filename, meta.sample_rate,
+                                             meta.voice_sample_seconds);
+    }
+
+    InitStream();
+  }
+
+  template <typename Manager>
+  void Init(Manager *mgr, const OnlineSpeechDenoiserConfig &config) {
+    const auto &meta = model_.GetMetaData();
+    const auto &filename = config.model.voxlock.voice_sample;
+    if (!filename.empty()) {
+      voice_sample_ = ReadVoxLockVoiceSample(mgr, filename, meta.sample_rate,
+                                             meta.voice_sample_seconds);
+    }
+
+    InitStream();
+  }
+
+  void InitStream() {
+    const auto &meta = model_.GetMetaData();
 
     frame_length_ = meta.sample_rate / 100;
     warm_up_length_ = meta.sample_rate / 4;
     fade_length_ = frame_length_;
     num_frames_needed_ = meta.voice_sample_seconds * 100;
-
-    if (!config.model.voxlock.voice_sample.empty()) {
-      voice_sample_ = ReadVoxLockVoiceSample(config.model.voxlock.voice_sample,
-                                             meta.sample_rate);
-
-      if (static_cast<int32_t>(voice_sample_.size()) <
-          meta.min_voice_sample_length) {
-        SHERPA_ONNX_LOGE(
-            "The voxlock voice sample '%s' is too short. It needs at least %d "
-            "samples at %d Hz. About %d seconds is best.",
-            config.model.voxlock.voice_sample.c_str(),
-            meta.min_voice_sample_length, meta.sample_rate,
-            meta.voice_sample_seconds);
-        SHERPA_ONNX_EXIT(-1);
-      }
-    }
 
     Reset();
   }

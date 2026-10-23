@@ -27,11 +27,13 @@ void OfflineSpeechDenoiserVoxLockModelConfig::Register(ParseOptions *po) {
 
   po->Register(
       "speech-denoiser-voxlock-voice-sample", &voice_sample,
-      "Optional. Path to a wave file with about 3 seconds of the caller's "
-      "voice. VoxLock keeps this voice and removes the others. If empty, the "
-      "offline denoiser uses the loudest 3 seconds in the first 15 seconds "
-      "of the input, and the online denoiser passes audio through unchanged "
-      "until it has heard 3 seconds of speech and then uses that speech.");
+      "Optional. Path to a wave file with at least 3 seconds of the caller's "
+      "voice. VoxLock keeps this voice and removes the others. From a longer "
+      "file, it uses the loudest 3 seconds within the first 30 seconds. If "
+      "empty, the offline denoiser uses the loudest 3 seconds in the first 15 "
+      "seconds of the input, and the online denoiser passes audio through "
+      "unchanged until it has heard 3 seconds of speech and then uses that "
+      "speech.");
 }
 
 bool OfflineSpeechDenoiserVoxLockModelConfig::Validate() const {

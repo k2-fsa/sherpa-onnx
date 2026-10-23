@@ -21,8 +21,8 @@ struct OfflineSpeechDenoiserVoxLockModelMetaData {
   int32_t window_length = 0;
   std::string window_type;
 
-  // From the enroll model
-  int32_t min_voice_sample_length = 0;
+  // The voice sample must be exactly this long. The chunk model accepts
+  // only the outputs of the enroll model for a voice sample of this length.
   int32_t voice_sample_seconds = 0;
 
   // From the chunk model

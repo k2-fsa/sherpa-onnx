@@ -28,8 +28,8 @@ class OfflineSpeechDenoiserVoxLockModel {
 
   /* Run the enroll model on a voice sample of the caller.
    *
-   * @param samples Voice sample at GetMetaData().sample_rate. It must have at
-   *                least GetMetaData().min_voice_sample_length samples.
+   * @param samples Voice sample at GetMetaData().sample_rate. It must have
+   *                exactly GetMetaData().voice_sample_seconds seconds.
    * @param n Number of samples.
    *
    * @return Return a pair containing:

@@ -48,7 +48,8 @@ def get_args():
         "--voice-sample",
         type=str,
         default="",
-        help="The --speech-denoiser-voxlock-voice-sample given to sherpa-onnx",
+        help="The --speech-denoiser-voxlock-voice-sample given to sherpa-onnx. "
+        "It must be exactly 3 seconds long for the voxlock package.",
     )
     return parser.parse_args()
 
