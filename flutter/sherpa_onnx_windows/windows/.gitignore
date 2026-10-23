@@ -7,7 +7,6 @@ flutter/
 *.sln.docstates
 
 # Visual Studio build-related files.
-x64/
 x86/
 
 # Visual Studio cache files
