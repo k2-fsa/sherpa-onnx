@@ -10,11 +10,13 @@ public class OfflineRecognizerResult {
     private final String emotion;
     private final String event;
     private final float[] durations;
+    // ysProbs[i] is the log probability for tokens[i]
+    private final float[] ysProbs;
     // The decoded word IDs. Empty for greedy search decoding, non-empty when
     // an HLG graph is used, i.e. when ctcFstDecoderConfig.graph is set.
     private final int[] words;
 
-    public OfflineRecognizerResult(String text, String[] tokens, float[] timestamps, String lang, String emotion, String event, float[] durations, int[] words) {
+    public OfflineRecognizerResult(String text, String[] tokens, float[] timestamps, String lang, String emotion, String event, float[] durations, float[] ysProbs, int[] words) {
         this.text = text;
         this.tokens = tokens;
         this.timestamps = timestamps;
@@ -22,6 +24,7 @@ public class OfflineRecognizerResult {
         this.emotion = emotion;
         this.event = event;
         this.durations = durations;
+        this.ysProbs = ysProbs;
         this.words = words;
     }
 
@@ -51,6 +54,10 @@ public class OfflineRecognizerResult {
 
     public float[] getDurations() {
         return durations;
+    }
+
+    public float[] getYsProbs() {
+        return ysProbs;
     }
 
     public int[] getWords() {
