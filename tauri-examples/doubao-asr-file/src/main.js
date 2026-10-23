@@ -174,7 +174,14 @@ async function selectFile(path) {
     currentBaseName = (prepared.base_name || "transcript").replace(/\.[^.]+$/, "");
     $("file-name").textContent = prepared.base_name;
     const media = $("media");
-    media.src = convertFileSrc(prepared.local_path);
+    if (isMobile) {
+      // On Android the asset protocol serves APK assets only, so go straight
+      // to the Blob loader instead of trying convertFileSrc first.
+      blobFallbackTried = true;
+      media.src = await loadMediaViaBlob(prepared.local_path);
+    } else {
+      media.src = convertFileSrc(prepared.local_path);
+    }
     // The <video> element plays audio-only files as well (blank frame).
     $("media-wrap").classList.remove("hidden");
   } catch (e) {
@@ -187,9 +194,12 @@ async function selectFile(path) {
 // On Android the webview's asset protocol serves APK assets only, so the
 // convertFileSrc URL fails — fall back to reading the file as a Blob.
 $("media").addEventListener("error", async () => {
+  const m = $("media");
+  const code = (m && m.error && m.error.code) || "?";
   if (!currentLocalPath) return;
   if (!blobFallbackTried) {
     blobFallbackTried = true;
+    appendLog(`Preview load failed (code ${code}), retrying via direct read`);
     try {
       const url = await loadMediaViaBlob(currentLocalPath);
       $("media").src = url;
@@ -199,7 +209,7 @@ $("media").addEventListener("error", async () => {
     }
   }
   $("status").textContent = "Preview unavailable for this file (recognition still works).";
-  appendLog("Media preview unavailable for this file");
+  appendLog(`Media preview unavailable (error code ${code})`);
 });
 
 $("pick-file").addEventListener("click", async () => {
@@ -256,25 +266,32 @@ async function tryLoadExisting(selected) {
 function seekAndPlay(sec) {
   const media = $("media");
   if (!media.src) return;
+  pendingSeek = sec;
   if (media.readyState >= 1) {
-    media.currentTime = sec;
-    media.play().catch(() => {
-      /* autoplay may be blocked until the user interacts; ignore */
-    });
-  } else {
-    // Still loading (e.g. blob fallback) — seek once metadata is ready.
-    pendingSeek = sec;
-  }
+    applyPendingSeek();
+  } // else: applied on loadedmetadata
+}
+
+function applyPendingSeek() {
+  if (pendingSeek == null) return;
+  const media = $("media");
+  const sec = pendingSeek;
+  pendingSeek = null;
+  media.currentTime = sec;
+  media.play().catch(() => {
+    /* autoplay may be blocked until the user interacts; ignore */
+  });
 }
 
 $("media").addEventListener("loadedmetadata", () => {
-  if (pendingSeek == null) return;
-  const sec = pendingSeek;
-  pendingSeek = null;
-  const media = $("media");
-  media.currentTime = sec;
-  media.play().catch(() => {});
+  const m = $("media");
+  const dur = Number.isFinite(m.duration) ? m.duration.toFixed(2) : "?";
+  appendLog(`Preview ready: duration ${dur}s`);
+  applyPendingSeek();
 });
+
+$("media").addEventListener("ended", () => appendLog("Preview reached the end of file"));
+$("media").addEventListener("stalled", () => appendLog("Preview stalled"));
 
 function mimeFor(name) {
   const ext = (name.split(".").pop() || "").toLowerCase();

@@ -1085,6 +1085,42 @@ mod tests {
     }
 
     #[test]
+    fn read_media_chunk_round_trips_a_whole_file() {
+        // 2.5 chunks worth of data with a recognizable pattern.
+        let dir = std::env::temp_dir().join("doubao-chunk-test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let f = dir.join("media.bin");
+        let mut data = Vec::with_capacity(2_500_000);
+        for i in 0..2_500_000u32 {
+            data.push((i % 251) as u8);
+        }
+        std::fs::write(&f, &data).unwrap();
+
+        let chunk = 1024 * 1024u64;
+        let mut out = Vec::new();
+        let mut offset = 0u64;
+        loop {
+            let b64 = read_media_chunk(f.to_str().unwrap().to_string(), offset, chunk).unwrap();
+            if b64.is_empty() {
+                break;
+            }
+            let part = doubao::base64_decode(&b64);
+            assert!(
+                (part.len() as u64) <= chunk,
+                "chunk larger than requested: {}",
+                part.len()
+            );
+            out.extend_from_slice(&part);
+            if (part.len() as u64) < chunk {
+                break;
+            }
+            offset += chunk;
+        }
+        assert_eq!(out.len(), data.len(), "reassembled length");
+        assert!(out == data, "reassembled bytes differ");
+    }
+
+    #[test]
     fn save_files_writes_srt_and_timestamped_txt() {
         let dir = std::env::temp_dir().join("doubao-asr-file-test");
         std::fs::create_dir_all(&dir).unwrap();
