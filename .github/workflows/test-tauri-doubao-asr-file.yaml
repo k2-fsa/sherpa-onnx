@@ -11,8 +11,9 @@ concurrency:
   group: test-tauri-doubao-asr-file-${{ github.ref }}
   cancel-in-progress: true
 
+# Read-only by default; each publishing job opts into contents: write.
 permissions:
-  contents: write
+  contents: read
 
 # sherpa-onnx is used as a plain Rust crate: sherpa-onnx-sys downloads the
 # prebuilt native libraries for the target (and wires the iOS xcframework /
@@ -23,6 +24,8 @@ jobs:
   macos:
     name: macOS (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write  # uploads release assets
     strategy:
       fail-fast: false
       matrix:
@@ -35,6 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Update version
         shell: bash
@@ -121,10 +125,13 @@ jobs:
   ios:
     name: iOS
     runs-on: macos-latest
+    permissions:
+      contents: write  # uploads release assets
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Update version
         shell: bash
@@ -184,17 +191,24 @@ jobs:
       - name: Package iOS artifacts
         shell: bash
         run: |
+          set -e
           ipa=$(find tauri-examples/doubao-asr-file/src-tauri -name "*.ipa" | head -1)
-          if [ -n "$ipa" ]; then
-            cp "$ipa" tauri-doubao-asr-file-ios-device.ipa
-            ls -lh tauri-doubao-asr-file-ios-device.ipa
+          if [ -z "$ipa" ]; then
+            echo "device IPA not found — refusing to publish incomplete artifacts" >&2
+            exit 1
           fi
+          cp "$ipa" tauri-doubao-asr-file-ios-device.ipa
+          ls -lh tauri-doubao-asr-file-ios-device.ipa
+
           sim_app=$(find tauri-examples/doubao-asr-file/src-tauri -name "doubao-asr-file.app" | head -1)
-          if [ -n "$sim_app" ]; then
-            cd "$(dirname "$sim_app")"
-            zip -r -y tauri-doubao-asr-file-ios-simulator.zip "$(basename "$sim_app")"
-            mv tauri-doubao-asr-file-ios-simulator.zip $GITHUB_WORKSPACE/
+          if [ -z "$sim_app" ]; then
+            echo "simulator app not found — refusing to publish incomplete artifacts" >&2
+            exit 1
           fi
+          cd "$(dirname "$sim_app")"
+          zip -r -y tauri-doubao-asr-file-ios-simulator.zip "$(basename "$sim_app")"
+          mv tauri-doubao-asr-file-ios-simulator.zip $GITHUB_WORKSPACE/
+          ls -lh $GITHUB_WORKSPACE/tauri-doubao-asr-file-ios-*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -209,7 +223,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: tauri-doubao-asr-file-ios-*.zip
+          file: tauri-doubao-asr-file-ios-*
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: tauri
@@ -220,12 +234,14 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: tauri-doubao-asr-file-ios-*.zip
+          file: tauri-doubao-asr-file-ios-*
           tag: tauri
 
   linux:
     name: Linux (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write  # uploads release assets
     strategy:
       fail-fast: false
       matrix:
@@ -238,6 +254,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Update version
         shell: bash
@@ -323,6 +340,8 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write  # uploads release assets
     strategy:
       fail-fast: false
       matrix:
@@ -335,6 +354,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Update version
         shell: bash
@@ -415,6 +435,8 @@ jobs:
   android:
     name: Android (${{ matrix.abi }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # uploads release assets
     strategy:
       fail-fast: false
       matrix:
@@ -432,6 +454,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Update version
         shell: bash
@@ -491,6 +514,8 @@ jobs:
       # and breaks upgrades on many OEM installers ("packageInfo is null").
       - name: Re-sign APK and rename
         shell: bash
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: |
           apk=$(find tauri-examples/doubao-asr-file/src-tauri -name "*.apk" | head -1)
           if [ -z "$apk" ]; then

@@ -22,6 +22,10 @@ use tauri_plugin_fs::FsExt;
 use tauri_plugin_share::{ShareExt, ShareRequest};
 
 const MODEL_FILE: &str = "silero_vad.onnx";
+/// The VAD model is embedded in the binary so every build is self-contained
+/// (a lone exe on Windows/Linux needs no assets/ folder). The VAD library
+/// opens model *paths*, so it is extracted to the app cache on first use.
+const VAD_MODEL_BYTES: &[u8] = include_bytes!("../assets/silero_vad.onnx");
 const MODEL_NAME: &str = "Silero VAD v4";
 const MODEL_URL: &str =
     "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx";
@@ -109,32 +113,26 @@ struct AppInfo {
     os: String,
 }
 
-/// Locate the bundled VAD model and return a path the VAD can open.
+/// Return a path to the VAD model that the library can open.
 ///
-/// Bundled resources live under the app's resource dir; on Android that is an
-/// `asset://` URI inside the APK, which must be copied to a real file first —
-/// the VAD library opens plain file paths only.
+/// The model bytes are embedded in the binary; extract them to the app cache
+/// once and reuse the copy (verified by size) on later runs.
 fn model_path(app: &tauri::AppHandle) -> Result<String, String> {
-    let res = app.path().resource_dir().map_err(|e| e.to_string())?;
-    let candidates = [
-        res.join("assets").join(MODEL_FILE),
-        res.join(MODEL_FILE),
-        res.join("resources").join("assets").join(MODEL_FILE),
-    ];
-    for c in &candidates {
-        let s = c.to_string_lossy().to_string();
-        if is_pick_uri(&s) {
-            if let Ok(local) = materialize_input(app, &s) {
-                return Ok(local);
-            }
-        } else if Path::new(&s).is_file() {
-            return Ok(s);
-        }
+    let dir = app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| e.to_string())?
+        .join("models");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let file = dir.join(MODEL_FILE);
+    let fresh = std::fs::metadata(&file)
+        .map(|m| m.len() == VAD_MODEL_BYTES.len() as u64)
+        .unwrap_or(false);
+    if !fresh {
+        std::fs::write(&file, VAD_MODEL_BYTES)
+            .map_err(|e| format!("Cannot extract {MODEL_FILE}: {e}"))?;
     }
-    Err(format!(
-        "Cannot find {MODEL_FILE} (looked in {}). Please reinstall the app.",
-        res.display()
-    ))
+    Ok(file.display().to_string())
 }
 
 /// Output files written next to the input file, named like the Python
@@ -145,15 +143,17 @@ fn output_paths(input_path: &str) -> (PathBuf, PathBuf) {
     (base.with_extension("srt"), base.with_extension("txt"))
 }
 
-/// Percent-decode a URI component, e.g. `%3A` -> `:`.
+/// Percent-decode a URI component, e.g. `%3A` -> `:`. Works on bytes so a `%`
+/// next to multi-byte characters cannot panic on a UTF-8 boundary.
 fn percent_decode(s: &str) -> String {
     let mut out = Vec::with_capacity(s.len());
     let bytes = s.as_bytes();
+    let hex = |b: u8| (b as char).to_digit(16);
     let mut i = 0;
     while i < bytes.len() {
         if bytes[i] == b'%' && i + 2 < bytes.len() {
-            if let Ok(v) = u8::from_str_radix(&s[i + 1..i + 3], 16) {
-                out.push(v);
+            if let (Some(h), Some(l)) = (hex(bytes[i + 1]), hex(bytes[i + 2])) {
+                out.push((h * 16 + l) as u8);
                 i += 3;
                 continue;
             }
@@ -233,7 +233,9 @@ fn input_display_name(app: &tauri::AppHandle, input: &str) -> String {
 /// copy in the app cache dir.
 fn resolve_outputs(app: &tauri::AppHandle, input: &str) -> Result<(PathBuf, PathBuf), String> {
     if !is_pick_uri(input) {
-        return Ok(output_paths(&percent_decode(input)));
+        // Plain desktop paths are used literally — they are not
+        // percent-encoded, and names like "a%20b.wav" must survive.
+        return Ok(output_paths(input));
     }
     let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
     let name = input_display_name(app, input);
@@ -248,11 +250,11 @@ fn resolve_outputs(app: &tauri::AppHandle, input: &str) -> Result<(PathBuf, Path
 /// the original file name so tools and the media preview recognize the type.
 fn materialize_input(app: &tauri::AppHandle, input: &str) -> Result<String, String> {
     if !is_pick_uri(input) {
-        let decoded = percent_decode(input);
-        if !Path::new(&decoded).is_file() {
+        // Plain path — never percent-decoded (see resolve_outputs).
+        if !Path::new(input).is_file() {
             return Err(format!("{input} does not exist"));
         }
-        return Ok(decoded);
+        return Ok(input.to_string());
     }
 
     let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?;
@@ -312,6 +314,7 @@ fn result_name(app: &tauri::AppHandle, input: &str, ext: &str) -> String {
     format!("{stem}.{ext}")
 }
 
+/// File name of a path, for display.
 fn name_of(p: &Path) -> String {
     p.file_name()
         .map(|n| n.to_string_lossy().to_string())
@@ -514,15 +517,18 @@ fn recognize_file(
         ));
     }
 
-    if state.running.swap(true, Ordering::SeqCst) {
-        return Err("Recognition is already running".to_string());
-    }
-
+    // Do the fallible setup BEFORE taking the running flag: if anything here
+    // fails we must not leave the flag set, or every later Start would report
+    // "already running" until the app restarts.
     // Plain paths are decoded in place; picker URIs (Android content://, iOS
     // file://) are copied into the app cache first so the decoder can read
     // them like a normal file.
     let local_path = materialize_input(&app, &path)?;
     let model = model_path(&app)?;
+
+    if state.running.swap(true, Ordering::SeqCst) {
+        return Err("Recognition is already running".to_string());
+    }
 
     state.cancelled.store(false, Ordering::SeqCst);
     state.progress.store(0, Ordering::SeqCst);
@@ -580,6 +586,7 @@ fn recognize_file(
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Worker: decode, VAD, recognize each segment over HTTP, then save.
 fn run_recognition(
     path: &str,
     source: &str,
@@ -790,6 +797,7 @@ fn run_recognition(
 }
 
 #[tauri::command]
+/// Current progress, segments and log lines for the frontend.
 fn get_progress(state: tauri::State<'_, AppState>) -> ProcessingState {
     let segments = state
         .segments
@@ -823,11 +831,13 @@ fn get_progress(state: tauri::State<'_, AppState>) -> ProcessingState {
 }
 
 #[tauri::command]
+/// Ask the running recognition to stop; results so far are kept.
 fn cancel_recognition(state: tauri::State<'_, AppState>) {
     state.cancelled.store(true, Ordering::SeqCst);
 }
 
 #[tauri::command]
+/// Version, model and platform information for the Info page.
 fn get_info() -> AppInfo {
     AppInfo {
         app_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -863,8 +873,8 @@ fn write_output(app: &tauri::AppHandle, path: &str, content: &str) -> Result<(),
         std::io::Write::write_all(&mut f, content.as_bytes())
             .map_err(|e| format!("Cannot write {path}: {e}"))
     } else {
-        std::fs::write(percent_decode(path), content)
-            .map_err(|e| format!("Cannot write {path}: {e}"))
+        // Plain path — used literally (see resolve_outputs).
+        std::fs::write(path, content).map_err(|e| format!("Cannot write {path}: {e}"))
     }
 }
 
@@ -1056,12 +1066,14 @@ mod tests {
     use super::*;
 
     #[test]
+    /// Tests percent-decoding of Android content URIs.
     fn percent_decode_handles_android_content_uris() {
         assert_eq!(percent_decode("raw%3A%2Fstorage%2Femulated%2F0"), "raw:/storage/emulated/0");
         assert_eq!(percent_decode("plain.txt"), "plain.txt");
     }
 
     #[test]
+    /// Tests display-name extraction from URIs and paths.
     fn input_file_name_extracts_the_basename() {
         assert_eq!(
             input_file_name(
@@ -1074,6 +1086,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests the .srt/.txt naming used by the Python example.
     fn output_paths_follow_the_python_naming() {
         let (srt, txt) = output_paths("/a/b/lecture.mp4");
         assert_eq!(srt, PathBuf::from("/a/b/lecture.srt"));
@@ -1085,6 +1098,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests chunked media reads reassemble the original bytes.
     fn read_media_chunk_round_trips_a_whole_file() {
         // 2.5 chunks worth of data with a recognizable pattern.
         let dir = std::env::temp_dir().join("doubao-chunk-test");
@@ -1121,6 +1135,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests auto-save contents match the export formats.
     fn save_files_writes_srt_and_timestamped_txt() {
         let dir = std::env::temp_dir().join("doubao-asr-file-test");
         std::fs::create_dir_all(&dir).unwrap();
@@ -1155,6 +1170,7 @@ mod tests {
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+/// Build and start the Tauri application.
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())

@@ -135,8 +135,9 @@ class AppHelperPlugin(private val activity: Activity) : Plugin(activity) {
       val args = invoke.parseArgs(SaveArgs::class.java)
       val collection = downloadsUri()
         ?: return invoke.reject("Saving to the public Downloads folder needs Android 10 or newer")
-      // Replace any earlier file of the same name.
-      findInDownloads(args.name)?.let { activity.contentResolver.delete(it, null, null) }
+      // Remember any earlier result: it is replaced only AFTER the new file is
+      // fully written, so a failed save never loses the previous transcript.
+      val oldUri = findInDownloads(args.name)
       val values = android.content.ContentValues().apply {
         put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, args.name)
         put(
@@ -150,14 +151,24 @@ class AppHelperPlugin(private val activity: Activity) : Plugin(activity) {
       }
       val uri = activity.contentResolver.insert(collection, values)
         ?: return invoke.reject("Cannot create ${args.name} in Downloads")
-      activity.contentResolver.openOutputStream(uri)?.use { out ->
-        out.write(args.content.toByteArray(Charsets.UTF_8))
+
+      // A null stream is a failed save — never report success for it.
+      try {
+        val stream = activity.contentResolver.openOutputStream(uri)
+          ?: throw Exception("cannot open ${args.name} for writing")
+        stream.use { out -> out.write(args.content.toByteArray(Charsets.UTF_8)) }
+      } catch (ex: Exception) {
+        activity.contentResolver.delete(uri, null, null) // drop the incomplete entry
+        return invoke.reject("Cannot write ${args.name} in Downloads: ${ex.message}")
       }
+
       if (android.os.Build.VERSION.SDK_INT >= 29) {
         val done = android.content.ContentValues()
         done.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
         activity.contentResolver.update(uri, done, null, null)
       }
+      // The replacement is complete — only now remove the previous copy.
+      oldUri?.let { activity.contentResolver.delete(it, null, null) }
       val ret = JSObject()
       ret.put("name", args.name)
       invoke.resolve(ret)

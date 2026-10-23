@@ -478,6 +478,8 @@ mark {
   display: flex;
   background: var(--card);
   border-top: 1px solid var(--border);
+  /* Keep clear of the home indicator / rounded corners on phones. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .nav-item {

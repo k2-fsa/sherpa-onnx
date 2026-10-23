@@ -529,6 +529,8 @@ jobs:
 
       - name: Re-sign APK and rename
         shell: bash
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: |
           apk=$(find tauri-examples/hello_world/src-tauri -name "*.apk" | head -1)
           if [ -n "$apk" ]; then

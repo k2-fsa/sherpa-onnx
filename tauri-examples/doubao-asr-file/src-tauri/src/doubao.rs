@@ -29,6 +29,7 @@ pub struct DoubaoClient {
 }
 
 impl DoubaoClient {
+    /// Create a client with sensible defaults (no settings exposed to users).
     pub fn new(api_key: String) -> Self {
         Self {
             api_key,
@@ -149,7 +150,21 @@ impl DoubaoClient {
         let headers = build_headers(&self.api_key, &self.resource_id, request_id, log_id);
         let deadline = Instant::now() + Duration::from_secs_f32(self.query_timeout);
         while Instant::now() < deadline {
-            let (status, _, body) = post(QUERY_URL, &headers, "{}")?;
+            // Retry short network blips instead of failing the whole segment.
+            let (status, _, body) = {
+                let mut attempt = 0;
+                loop {
+                    match post(QUERY_URL, &headers, "{}") {
+                        Ok(r) => break r,
+                        Err(e) if attempt < 2 => {
+                            attempt += 1;
+                            std::thread::sleep(Duration::from_secs_f32(self.query_interval));
+                            let _ = e;
+                        }
+                        Err(e) => return Err(format!("query failed: {e}")),
+                    }
+                }
+            };
             if status == STATUS_OK {
                 return Ok((parse_result_json(&body), status));
             }
@@ -178,10 +193,12 @@ impl DoubaoClient {
     }
 }
 
+/// Short description of an API response for error messages.
 fn header_message(body: &str, status: &str) -> String {
     format!("status={status}, body={}", truncate(body, 200))
 }
 
+/// Truncate a string to at most `n` characters.
 fn truncate(s: &str, n: usize) -> String {
     s.chars().take(n).collect()
 }
@@ -217,6 +234,7 @@ pub fn base64_encode(data: &[u8]) -> String {
 /// Minimal base64 decoder — inverse of `base64_encode`. Used by tests.
 #[allow(dead_code)]
 pub fn base64_decode(s: &str) -> Vec<u8> {
+    /// Value of one base64 alphabet character.
     fn val(c: u8) -> Option<u32> {
         match c {
             b'A'..=b'Z' => Some((c - b'A') as u32),
@@ -253,6 +271,7 @@ mod tests {
     use super::*;
 
     #[test]
+    /// Tests base64 encoding against known vectors.
     fn base64_matches_known_vectors() {
         assert_eq!(base64_encode(b""), "");
         assert_eq!(base64_encode(b"f"), "Zg==");
@@ -262,6 +281,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests header construction, including the log-id rule.
     fn headers_include_log_id_only_when_given() {
         let h = build_headers("k", "r", "req", "");
         assert!(h.iter().any(|(k, v)| k == "X-Api-Key" && v == "k"));
@@ -273,6 +293,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests the submit JSON body fields.
     fn submit_body_has_audio_and_request_fields() {
         let body = build_submit_body("AAAA", true, false);
         let v: serde_json::Value = serde_json::from_str(&body).unwrap();
@@ -285,6 +306,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests that result.text wins over utterances.
     fn parse_result_prefers_text() {
         assert_eq!(
             parse_result_json(r#"{"result":{"text":" 你好 ","utterances":[{"text":"IGNORED"}]}}"#),
@@ -293,6 +315,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests the utterances fallback.
     fn parse_result_falls_back_to_utterances() {
         assert_eq!(
             parse_result_json(r#"{"result":{"text":"","utterances":[{"text":"你"},{"text":"好"}]}}"#),
@@ -301,6 +324,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests that unparseable responses give empty text.
     fn parse_result_garbage_is_empty() {
         assert_eq!(parse_result_json("not json"), "");
     }

@@ -92,19 +92,32 @@ xcrun simctl launch "iPhone 16" com.k2fsa.sherpa.onnx.hello.world
 
 #### Run iOS device example
 
-The IPA is unsigned. To install on a real device, re-sign it with your Apple
-Developer certificate:
+The IPA is unsigned. Installing on a real device requires signing the **app
+bundle inside `Payload`** (not the `.ipa` container) with your Apple
+Developer certificate and a provisioning profile that covers the app id
+`com.k2fsa.sherpa.onnx.hello.world`, then repacking:
 
 ```bash
-# Re-sign the IPA
-codesign --force --sign "iPhone Developer: Your Name (TEAMID)" \
-  --entitlements entitlements.plist \
-  tauri-hello-world-ios-device.ipa
+# 1. Unpack the IPA
+unzip tauri-hello-world-ios-device.ipa -d ipa
 
-# Install via Xcode (Window → Devices and Simulators) or ios-deploy:
+# 2. Embed your provisioning profile in the app bundle
+cp YourProfile.mobileprovision ipa/Payload/hello_world.app/embedded.provisionprofile
+
+# 3. Sign the app bundle (the .app, not the .ipa)
+codesign --force --sign "Apple Development: Your Name (TEAMID)" \
+  --entitlements entitlements.plist \
+  ipa/Payload/hello_world.app
+
+# 4. Repack the IPA and install it
+(cd ipa && zip -r ../hello-world-signed.ipa Payload)
 brew install ios-deploy
-ios-deploy --bundle tauri-hello-world-ios-device.ipa
+ios-deploy --bundle hello-world-signed.ipa
 ```
+
+The comfortable alternative is Xcode: open the project and use
+**Product → Archive → Distribute App**, which signs and exports a
+device-installable IPA with a provisioning profile automatically.
 
 ## Doubao ASR from files
 
@@ -191,16 +204,29 @@ xcrun simctl launch "iPhone 16" com.k2fsa.sherpa.onnx.doubao.asr.file
 
 #### Run iOS device example (doubao-asr-file)
 
-The IPA is unsigned. To install on a real device, re-sign it with your Apple
-Developer certificate:
+The IPA is unsigned. Installing on a real device requires signing the **app
+bundle inside `Payload`** (not the `.ipa` container) with your Apple
+Developer certificate and a provisioning profile that covers the app id
+`com.k2fsa.sherpa.onnx.doubao.asr.file`, then repacking:
 
 ```bash
-# Re-sign the IPA
-codesign --force --sign "iPhone Developer: Your Name (TEAMID)" \
-  --entitlements entitlements.plist \
-  tauri-doubao-asr-file-ios-device.ipa
+# 1. Unpack the IPA
+unzip tauri-doubao-asr-file-ios-device.ipa -d ipa
 
-# Install via Xcode (Window → Devices and Simulators) or ios-deploy:
+# 2. Embed your provisioning profile in the app bundle
+cp YourProfile.mobileprovision ipa/Payload/doubao-asr-file.app/embedded.provisionprofile
+
+# 3. Sign the app bundle (the .app, not the .ipa)
+codesign --force --sign "Apple Development: Your Name (TEAMID)" \
+  --entitlements entitlements.plist \
+  ipa/Payload/doubao-asr-file.app
+
+# 4. Repack the IPA and install it
+(cd ipa && zip -r ../doubao-asr-file-signed.ipa Payload)
 brew install ios-deploy
-ios-deploy --bundle tauri-doubao-asr-file-ios-device.ipa
+ios-deploy --bundle doubao-asr-file-signed.ipa
 ```
+
+The comfortable alternative is Xcode: open the project and use
+**Product → Archive → Distribute App**, which signs and exports a
+device-installable IPA with a provisioning profile automatically.

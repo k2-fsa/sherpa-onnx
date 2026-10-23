@@ -165,6 +165,7 @@ pub fn parse_timestamped_txt(content: &str) -> Result<Vec<Segment>, String> {
 mod tests {
     use super::*;
 
+    /// Two sample segments used by the tests.
     fn segs() -> Vec<Segment> {
         vec![
             Segment {
@@ -181,24 +182,28 @@ mod tests {
     }
 
     #[test]
+    /// Tests SRT timestamps zero-pad hours.
     fn srt_hours_are_zero_padded() {
         assert_eq!(ts_srt(17.03), "00:00:17,030");
         assert_eq!(ts_srt(3723.5), "01:02:03,500");
     }
 
     #[test]
+    /// Tests timestamped-TXT timestamps leave hours unpadded.
     fn loose_hours_are_not_zero_padded() {
         assert_eq!(ts_loose(17.03), "0:00:17,030");
         assert_eq!(ts_loose(3723.5), "1:02:03,500");
     }
 
     #[test]
+    /// Tests invalid times clamp to zero.
     fn negative_and_nan_times_clamp_to_zero() {
         assert_eq!(ts_srt(-5.0), "00:00:00,000");
         assert_eq!(ts_srt(f32::NAN), "00:00:00,000");
     }
 
     #[test]
+    /// Tests the SRT layout matches the reference app.
     fn srt_matches_reference_layout() {
         let expected = "1\n00:00:17,030 --> 00:00:19,942\n大家好\n\n\
                         2\n00:01:01,500 --> 00:01:02,000\nhello";
@@ -206,6 +211,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests the timestamped-TXT layout (two spaces before text).
     fn timestamped_txt_uses_loose_times_and_two_spaces() {
         assert_eq!(
             to_timestamped_txt(&segs()),
@@ -214,11 +220,13 @@ mod tests {
     }
 
     #[test]
+    /// Tests plain text concatenates trimmed segment texts.
     fn plain_txt_concatenates_trimmed_texts() {
         assert_eq!(to_plain_text(&segs()), "大家好hello");
     }
 
     #[test]
+    /// Tests timestamp parsing for both hour widths.
     fn parse_time_accepts_padded_and_unpadded_hours() {
         assert_eq!(parse_time("00:00:17,030"), Some(17.03));
         assert_eq!(parse_time("0:00:17,030"), Some(17.03));
@@ -227,6 +235,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests SRT format -> parse round-trip.
     fn srt_round_trips() {
         let srt = to_srt(&segs());
         let parsed = parse_srt(&srt).unwrap();
@@ -238,6 +247,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests timestamped-TXT format -> parse round-trip.
     fn timestamped_txt_round_trips() {
         let txt = to_timestamped_txt(&segs());
         let parsed = parse_timestamped_txt(&txt).unwrap();

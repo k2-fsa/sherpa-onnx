@@ -52,6 +52,7 @@ pub fn run_silero_vad(
     Ok(out)
 }
 
+/// Move all completed VAD segments out of the detector.
 fn drain(vad: &VoiceActivityDetector, out: &mut Vec<RawSegment>) {
     while !vad.is_empty() {
         if let Some(seg) = vad.front() {

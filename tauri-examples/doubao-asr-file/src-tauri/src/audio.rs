@@ -79,21 +79,13 @@ fn decode_with_symphonia(path: &str, start_sec: f32, end_sec: f32) -> Result<Vec
 
     let mut format = probed.format;
 
-    let (track_id, sample_rate, num_channels) = {
+    let track_id = {
         let track = format
             .tracks()
             .iter()
             .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
             .ok_or_else(|| "No supported audio track found".to_string())?;
-        (
-            track.id,
-            track.codec_params.sample_rate.unwrap_or(16000),
-            track
-                .codec_params
-                .channels
-                .map(|c| c.count())
-                .unwrap_or(1),
-        )
+        track.id
     };
 
     let mut decoder = symphonia::default::get_codecs()
@@ -109,15 +101,17 @@ fn decode_with_symphonia(path: &str, start_sec: f32, end_sec: f32) -> Result<Vec
         .map_err(|e| format!("Cannot create decoder: {e}"))?;
 
     let mut samples: Vec<f32> = Vec::new();
-    let skip = (start_sec * sample_rate as f32) as usize;
-    let take = if end_sec.is_finite() {
-        (((end_sec - start_sec) * sample_rate as f32) as usize).max(1)
-    } else {
-        usize::MAX
-    };
     let mut produced: usize = 0; // mono samples at the native sample rate
+    // Sample rate and channel count come from the DECODED buffers: some
+    // containers leave codec_params empty until the first packet is decoded,
+    // and trusting the fallbacks would distort stereo audio and every
+    // timestamp. Range offsets are computed once the real rate is known.
+    let mut rate: Option<u32> = None;
+    let mut skip = 0usize;
+    let mut take = usize::MAX;
+
     loop {
-        if produced >= skip.saturating_add(take) {
+        if rate.is_some() && produced >= skip.saturating_add(take) {
             break;
         }
         let packet = match format.next_packet() {
@@ -135,7 +129,19 @@ fn decode_with_symphonia(path: &str, start_sec: f32, end_sec: f32) -> Result<Vec
         }
         match decoder.decode(&packet) {
             Ok(decoded) => {
-                let mono = decode_to_mono_f32(&decoded, num_channels);
+                let spec = *decoded.spec();
+                let channels = spec.channels.count().max(1);
+                if rate.is_none() {
+                    let r = spec.rate;
+                    rate = Some(r);
+                    skip = (start_sec * r as f32) as usize;
+                    take = if end_sec.is_finite() {
+                        (((end_sec - start_sec) * r as f32) as usize).max(1)
+                    } else {
+                        usize::MAX
+                    };
+                }
+                let mono = decode_to_mono_f32(&decoded, channels);
                 let chunk_start = produced;
                 let chunk_end = produced + mono.len();
                 produced = chunk_end;
@@ -156,6 +162,7 @@ fn decode_with_symphonia(path: &str, start_sec: f32, end_sec: f32) -> Result<Vec
         return Err("No audio samples decoded".to_string());
     }
 
+    let sample_rate = rate.unwrap_or(TARGET_SAMPLE_RATE as u32);
     if sample_rate == TARGET_SAMPLE_RATE as u32 {
         return Ok(samples);
     }
@@ -191,6 +198,7 @@ fn decode_to_mono_f32(
     mono
 }
 
+/// Is ffmpeg on PATH (used as a decode fallback)?
 fn ffmpeg_available() -> bool {
     Command::new("ffmpeg")
         .arg("-version")
@@ -288,6 +296,7 @@ mod tests {
     use super::*;
 
     #[test]
+    /// Tests the 44-byte wav header and int16 packing.
     fn wav_header_is_valid() {
         let wav = samples_to_wav(&[0.0, 1.0, -1.0], 16000);
         assert_eq!(&wav[0..4], b"RIFF");
@@ -299,6 +308,7 @@ mod tests {
     }
 
     #[test]
+    /// Tests that range decoding returns exactly that time slice of the file.
     fn decode_range_returns_exactly_that_slice() {
         // 2 s at 16 kHz: first half-second loud (0.25), 1 s silence,
         // last half-second louder (0.5).

@@ -5,13 +5,15 @@
 # ~/.android/debug.keystore, so each build of the same app has a different
 # signer. Installing a new build over an old one then fails on many OEM
 # installers (e.g. MIUI's "packageInfo is null"). This script signs every APK
-# with the committed keystore instead, so all builds of an app share one
-# identity and upgrades install cleanly. It also forces both v1 and v2
-# signature schemes for older installers (AGP ships v2-only when minSdk >= 24).
+# with the shared keystore (ANDROID_KEYSTORE_B64 secret) instead, so all
+# builds of an app share one identity and upgrades install cleanly. It also
+# forces both v1 and v2 signature schemes for older installers (AGP ships
+# v2-only when minSdk >= 24).
 #
 # Usage: sign_apk.sh <input.apk> <output.apk>
 
-set -e
+# pipefail: a failing apksigner must not be hidden by a successful tail.
+set -eo pipefail
 
 if [ $# != 2 ]; then
   echo "Usage: $0 <input.apk> <output.apk>"
@@ -31,7 +33,22 @@ fi
 build_tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
 echo "using build-tools: $build_tools"
 
-keystore="$(dirname "$0")/android/ci-apk.keystore"
+# The keystore is the base64 of a private key — it lives in the
+# ANDROID_KEYSTORE_B64 Actions secret, never in the repo (see
+# android/README.md). For manual local runs the gitignored file is used.
+keystore=""
+if [ -n "${ANDROID_KEYSTORE_B64:-}" ]; then
+  keystore="${RUNNER_TEMP:-/tmp}/ci-apk.keystore"
+  printf '%s' "$ANDROID_KEYSTORE_B64" | base64 --decode > "$keystore"
+  echo "using keystore from ANDROID_KEYSTORE_B64"
+elif [ -f "$(dirname "$0")/android/ci-apk.keystore" ]; then
+  keystore="$(dirname "$0")/android/ci-apk.keystore"
+  echo "using local keystore $keystore"
+else
+  echo "No signing keystore: set the ANDROID_KEYSTORE_B64 secret" >&2
+  echo "(see .github/scripts/android/README.md)" >&2
+  exit 1
+fi
 
 aligned=$(mktemp -t aligned-XXXXXX).apk
 "$build_tools/zipalign" -P 16 -f 4 "$in_apk" "$aligned"

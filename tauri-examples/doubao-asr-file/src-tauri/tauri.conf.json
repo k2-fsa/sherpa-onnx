@@ -16,18 +16,13 @@
       }
     ],
     "security": {
-      "csp": null,
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["**"]
-      }
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost"
     }
   },
   "bundle": {
     "active": true,
     "targets": ["app"],
     "icon": ["icons/icon.png", "icons/icon.ico"],
-    "resources": ["assets"],
     "iOS": {
       "frameworks": ["sherpa-onnx.xcframework"]
     }

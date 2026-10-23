@@ -1,4 +1,4 @@
-const { invoke, convertFileSrc } = window.__TAURI__.core;
+const { invoke } = window.__TAURI__.core;
 const { open, save, confirm } = window.__TAURI__.dialog;
 
 // Open links in the system browser. tauri-plugin-shell's open() is
@@ -95,14 +95,16 @@ function wireLink(id, url) {
 let selectedPath = null;
 /** Display name of the selected input (e.g. "1_lei-jun.wav"), for outputs. */
 let currentBaseName = "transcript";
+/** Full display name including extension — used for MIME detection. */
+let currentFileName = "transcript";
 /** Set once get_info returns; hides the recent list on mobile. */
 let isMobile = false;
 /** Local copy of the selected input — used for the media preview. */
 let currentLocalPath = null;
 /** Seek requested before the media element finished loading. */
 let pendingSeek = null;
-/** One-shot fallback switch for the preview loader. */
-let blobFallbackTried = false;
+/** Current preview Blob URL, revoked when replaced. */
+let currentObjectUrl = null;
 /** True when saved result files exist for the current input. */
 let hasSavedResults = false;
 
@@ -161,6 +163,10 @@ $("clear-history").addEventListener("click", () => {
 
 /** Select an input file (from the dialog or from the recent list). */
 async function selectFile(path) {
+  if (pollTimer !== null) {
+    showError("Recognition is running — stop it before selecting another file.");
+    return;
+  }
   selectedPath = path;
   showError("");
   resetResult();
@@ -174,19 +180,13 @@ async function selectFile(path) {
     // content:// URIs cannot be played directly by the media element.
     const prepared = await invoke("prepare_input", { path });
     currentLocalPath = prepared.local_path;
-    blobFallbackTried = false;
     pendingSeek = null;
-    currentBaseName = (prepared.base_name || "transcript").replace(/\.[^.]+$/, "");
-    $("file-name").textContent = prepared.base_name;
-    const media = $("media");
-    if (isMobile) {
-      // On Android the asset protocol serves APK assets only, so go straight
-      // to the Blob loader instead of trying convertFileSrc first.
-      blobFallbackTried = true;
-      media.src = await loadMediaViaBlob(prepared.local_path);
-    } else {
-      media.src = convertFileSrc(prepared.local_path);
-    }
+    currentFileName = prepared.base_name || "transcript";
+    currentBaseName = currentFileName.replace(/\.[^.]+$/, "");
+    $("file-name").textContent = currentFileName;
+    // Always load the preview through a Blob: it needs no WebView file
+    // access (the asset protocol is disabled) and works everywhere.
+    $("media").src = await loadMediaViaBlob(prepared.local_path);
     // The <video> element plays audio-only files as well (blank frame).
     $("media-wrap").classList.remove("hidden");
   } catch (e) {
@@ -196,28 +196,20 @@ async function selectFile(path) {
   await tryLoadExisting(path);
 }
 
-// On Android the webview's asset protocol serves APK assets only, so the
-// convertFileSrc URL fails — fall back to reading the file as a Blob.
-$("media").addEventListener("error", async () => {
+// The preview is always a Blob; a load error means this webview cannot play
+// the codec (recognition is unaffected).
+$("media").addEventListener("error", () => {
   const m = $("media");
   const code = (m && m.error && m.error.code) || "?";
-  if (!currentLocalPath) return;
-  if (!blobFallbackTried) {
-    blobFallbackTried = true;
-    appendLog(`Preview load failed (code ${code}), retrying via direct read`);
-    try {
-      const url = await loadMediaViaBlob(currentLocalPath);
-      $("media").src = url;
-      return;
-    } catch (e) {
-      appendLog(`Preview fallback failed: ${e}`);
-    }
-  }
   $("status").textContent = "Preview unavailable for this file (recognition still works).";
   appendLog(`Media preview unavailable (error code ${code})`);
 });
 
 $("pick-file").addEventListener("click", async () => {
+  if (pollTimer !== null) {
+    showError("Recognition is running — stop it before selecting another file.");
+    return;
+  }
   const selected = await open({
     multiple: false,
     filters: [{ name: "Audio & video", extensions: [...AUDIO_EXT, ...VIDEO_EXT] }],
@@ -342,7 +334,14 @@ async function loadMediaViaBlob(path) {
     offset += chunkSize;
   }
   if (chunks.length === 0) throw new Error("no data");
-  return URL.createObjectURL(new Blob(chunks, { type: mimeFor(currentBaseName) }));
+  if (currentObjectUrl) {
+    URL.revokeObjectURL(currentObjectUrl); // don't leak the previous Blob
+    currentObjectUrl = null;
+  }
+  currentObjectUrl = URL.createObjectURL(
+    new Blob(chunks, { type: mimeFor(currentFileName) }),
+  );
+  return currentObjectUrl;
 }
 
 // ---------------------------------------------------------------- subtitles

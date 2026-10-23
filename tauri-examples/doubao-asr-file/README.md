@@ -24,13 +24,14 @@ VAD runs locally. Only ASR is remote, via the Doubao (豆包) API.
   show/hide button, shown by default.
 - **Stop** at any time — everything recognized so far is kept and can still be
   exported.
-- Results are **auto-saved next to the input file** as `<name>.srt` and
-  `<name>.txt` (timestamped), like the Python example
-  (`generate-subtitles-doubao.py`). Recognition is not free, so results are
-  saved even when you stop early. If those files **already exist**, the app
-  refuses to start (before any decoding, VAD or API call) and asks you to
-  delete or rename them first — and it **loads the saved transcript and shows
-  it** right away, so previous results are never lost or paid for twice.
+- Results are **auto-saved** as `<name>.srt` and `<name>.txt` (timestamped),
+  like the Python example (`generate-subtitles-doubao.py`): into the public
+  **Downloads** folder on Android, or next to the input file on desktop.
+  Recognition is not free, so results are saved even when you stop early. If
+  those files **already exist**, the app refuses to start (before any
+  decoding, VAD or API call) and asks you to delete them first — and it
+  **loads the saved transcript and shows it** right away, so previous results
+  are never lost or paid for twice.
 - View the transcript in **3 formats** (switchable tabs): **SRT**
   (`00:00:17,030 --> 00:00:19,942`), **timestamped TXT**
   (`0:00:17,030 --> 0:00:19,942  text`), **plain TXT** (just the text).
@@ -98,13 +99,14 @@ npm install
 npm run build
 ```
 
-For Android, after `npx tauri android init` copy the display-name helper into
-the generated project before building (it resolves real file names like
-`1_lei-jun.wav` from picker URIs):
+For Android, after `npx tauri android init` copy the helper plugin into the
+generated project before building (it resolves real file names like
+`1_lei-jun.wav` from picker URIs and saves results to the public Downloads
+folder). The CI workflow does the same copy before Gradle runs:
 
 ```bash
-d=src-tauri/gen/android/app/src/main/java/com/plugin/displayname
-mkdir -p "$d" && cp src-tauri/android/DisplayNamePlugin.kt "$d/"
+d=src-tauri/gen/android/app/src/main/java/com/plugin/apphelper
+mkdir -p "$d" && cp src-tauri/android/AppHelperPlugin.kt "$d/"
 ```
 
 To use the in-repo Rust crates instead of crates.io:

@@ -205,3 +205,6 @@ lexicon*.txt
 tts.json
 *.bin
 compile_commands.json
+
+# APK signing keystore — lives only as the ANDROID_KEYSTORE_B64 Actions secret
+.github/scripts/android/ci-apk.keystore
