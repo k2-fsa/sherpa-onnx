@@ -130,6 +130,7 @@ class OfflineRecognizer(object):
         hr_lexicon: str = "",
         lodr_fst: str = "",
         lodr_scale: float = 0.0,
+        length_reward: float = 0.0,
     ):
         """
         Please refer to
@@ -198,6 +199,11 @@ class OfflineRecognizer(object):
             Path to the LODR FST file in binary format. If empty, LODR is disabled.
           lodr_scale:
             Scale factor for LODR rescoring. Only used when lodr_fst is provided.
+          length_reward:
+            Reward added to the score of a hypothesis for each non-blank token.
+            Used only by modified_beam_search for NeMo transducer models,
+            where a positive value (e.g., 0.5) keeps beam search from dropping
+            speech after a pause.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -258,6 +264,7 @@ class OfflineRecognizer(object):
                 lexicon=hr_lexicon,
                 rule_fsts=hr_rule_fsts,
             ),
+            length_reward=length_reward,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config

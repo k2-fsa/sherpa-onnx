@@ -48,6 +48,13 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
                "of higher insertions. "
                "Currently only applicable for transducer models.");
 
+  po->Register("length-reward", &length_reward,
+               "The reward added to the score of a hypothesis for each "
+               "non-blank token. A positive value counters the preference of "
+               "beam search for short hypotheses, e.g., NeMo TDT models "
+               "dropping speech after a pause. "
+               "Used only by modified_beam_search for NeMo transducer models.");
+
   po->Register(
       "hotwords-file", &hotwords_file,
       "The file containing hotwords, one words/phrases per line, For example: "
@@ -144,6 +151,7 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "blank_penalty=" << blank_penalty << ", ";
+  os << "length_reward=" << length_reward << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
   os << "rule_fars=\"" << rule_fars << "\", ";
   os << "hr=" << hr.ToString() << ")";

@@ -36,6 +36,10 @@ struct OfflineRecognizerConfig {
 
   float blank_penalty = 0.0;
 
+  // Added to the score of a hypothesis for each non-blank token it emits.
+  // Used only by modified_beam_search for NeMo transducer models.
+  float length_reward = 0.0;
+
   // If there are multiple rules, they are applied from left to right.
   std::string rule_fsts;
 
@@ -54,7 +58,8 @@ struct OfflineRecognizerConfig {
       const std::string &decoding_method, int32_t max_active_paths,
       const std::string &hotwords_file, float hotwords_score,
       float blank_penalty, const std::string &rule_fsts,
-      const std::string &rule_fars, const HomophoneReplacerConfig &hr)
+      const std::string &rule_fars, const HomophoneReplacerConfig &hr,
+      float length_reward = 0.0)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -66,7 +71,8 @@ struct OfflineRecognizerConfig {
         blank_penalty(blank_penalty),
         rule_fsts(rule_fsts),
         rule_fars(rule_fars),
-        hr(hr) {}
+        hr(hr),
+        length_reward(length_reward) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
