@@ -93,7 +93,8 @@ class SpokenLanguageIdentificationWhisperImpl
 
     try {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
-      int32_t lang_id = model_->DetectLanguage(cross_kv.first, cross_kv.second);
+      int32_t lang_id =
+          model_->DetectLanguage(cross_kv.first, cross_kv.second, {});
       const auto &id2lang = model_->GetID2Lang();
       if (id2lang.count(lang_id)) {
         return id2lang.at(lang_id);

@@ -832,6 +832,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     offline-recognizer-moonshine-v2-impl-test.cc
     offline-recognizer-qwen3-asr-impl-test.cc
     offline-recognizer-shared-rng-test.cc
+    offline-whisper-language-candidates-test.cc
     offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
