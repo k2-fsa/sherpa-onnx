@@ -103,8 +103,12 @@ jobs:
           cd c-api-examples
 
           pkg-config --cflags sherpa-onnx
+          pkg-config --libs sherpa-onnx
 
-          gcc -o decode-file-c-api $(pkg-config --cflags sherpa-onnx) ./decode-file-c-api.c $(pkg-config --libs sherpa-onnx)
+          # Compile as C, but link with g++: sherpa-onnx is a C++ library and the
+          # static pkg-config flags use -static-libstdc++, which is a g++ flag.
+          gcc -c -o decode-file-c-api.o $(pkg-config --cflags sherpa-onnx) ./decode-file-c-api.c
+          g++ -o decode-file-c-api decode-file-c-api.o $(pkg-config --libs sherpa-onnx)
 
       - name: Build C API example (tts)
         if: matrix.tts == 'ON'
@@ -114,8 +118,11 @@ jobs:
           cd c-api-examples
 
           pkg-config --cflags sherpa-onnx
+          pkg-config --libs sherpa-onnx
 
-          gcc -o offline-tts-c-api $(pkg-config --cflags sherpa-onnx) ./offline-tts-c-api.c $(pkg-config --libs sherpa-onnx)
+          # Compile as C, but link with g++: see the comment in the step above.
+          gcc -c -o offline-tts-c-api.o $(pkg-config --cflags sherpa-onnx) ./offline-tts-c-api.c
+          g++ -o offline-tts-c-api offline-tts-c-api.o $(pkg-config --libs sherpa-onnx)
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-ljs.tar.bz2
           tar xf vits-ljs.tar.bz2
