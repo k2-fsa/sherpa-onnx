@@ -65,7 +65,8 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
       decoder_ =
           std::make_unique<OfflineTransducerModifiedBeamSearchNeMoDecoder>(
               model_.get(), config_.max_active_paths, unk_id_,
-              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score);
+              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score,
+              config_.length_reward);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -105,7 +106,8 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
       decoder_ =
           std::make_unique<OfflineTransducerModifiedBeamSearchNeMoDecoder>(
               model_.get(), config_.max_active_paths, unk_id_,
-              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score);
+              config_.blank_penalty, model_->IsTDT(), config_.hotwords_score,
+              config_.length_reward);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());

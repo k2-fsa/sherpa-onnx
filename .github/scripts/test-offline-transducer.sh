@@ -377,3 +377,30 @@ time $EXE \
   $repo/test_wavs/en-english.wav
 
 rm -rf $repo
+
+log "------------------------------------------------------------"
+log "Run NeMo TDT transducer (modified_beam_search)"
+log "------------------------------------------------------------"
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet_tdt_transducer_110m-en-36000-int8.tar.bz2
+name=$(basename $url)
+download_and_extract $url
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+for length_reward in 0 0.5; do
+  log "Test NeMo TDT transducer with modified_beam_search, length_reward $length_reward"
+
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --encoder=$repo/encoder.int8.onnx \
+    --decoder=$repo/decoder.int8.onnx \
+    --joiner=$repo/joiner.int8.onnx \
+    --model-type=nemo_transducer \
+    --decoding-method=modified_beam_search \
+    --length-reward=$length_reward \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/en-english.wav
+done
+
+rm -rf $repo
