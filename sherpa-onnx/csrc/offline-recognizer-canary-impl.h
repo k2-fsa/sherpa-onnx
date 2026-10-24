@@ -217,9 +217,9 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         break;
       }
 
-      std::tie(logits, decoder_states) =
-          RunDecoder(tokens.back(), i, std::move(decoder_states),
-                     View(&enc_states), View(&enc_mask));
+      std::tie(logits, decoder_states) = RunDecoder(
+          tokens.back(), decoder_input.size() + i - 1,
+          std::move(decoder_states), View(&enc_states), View(&enc_mask));
       tokens.push_back(GetMaxTokenId(&logits));
     }
 
