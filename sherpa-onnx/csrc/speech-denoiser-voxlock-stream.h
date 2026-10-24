@@ -97,7 +97,7 @@ inline std::vector<float> SelectVoxLockVoiceSample(const float *samples,
 constexpr int32_t kVoxLockMaxVoiceSampleSeconds = 30;
 
 // Resample a voice sample to sample_rate and return exactly `seconds` seconds
-// of it
+// of it. Return an empty vector if it is shorter than `seconds` seconds.
 inline std::vector<float> PrepareVoxLockVoiceSample(
     const std::vector<float> &samples, int32_t file_sample_rate,
     int32_t sample_rate, int32_t seconds, const std::string &filename) {
@@ -112,10 +112,11 @@ inline std::vector<float> PrepareVoxLockVoiceSample(
   const int32_t n = resampled.size();
   if (n < seconds * sample_rate) {
     SHERPA_ONNX_LOGE(
-        "The voxlock voice sample '%s' is %.3f seconds long. It needs at "
-        "least %d seconds.",
+        "Ignore the voxlock voice sample '%s': it is %.3f seconds long, "
+        "shorter than %d seconds. Take the voice sample from the input audio "
+        "instead.",
         filename.c_str(), static_cast<float>(n) / sample_rate, seconds);
-    SHERPA_ONNX_EXIT(-1);
+    return {};
   }
 
   if (n > seconds * sample_rate) {
@@ -131,7 +132,7 @@ inline std::vector<float> PrepareVoxLockVoiceSample(
 }
 
 // Read a voice sample from a wave file and return exactly `seconds` seconds
-// of it
+// of it. Return an empty vector if it cannot be read or is too short.
 inline std::vector<float> ReadVoxLockVoiceSample(const std::string &filename,
                                                  int32_t sample_rate,
                                                  int32_t seconds) {
@@ -139,9 +140,11 @@ inline std::vector<float> ReadVoxLockVoiceSample(const std::string &filename,
   bool is_ok = false;
   std::vector<float> samples = ReadWave(filename, &file_sample_rate, &is_ok);
   if (!is_ok) {
-    SHERPA_ONNX_LOGE("Failed to read the voxlock voice sample '%s'",
-                     filename.c_str());
-    SHERPA_ONNX_EXIT(-1);
+    SHERPA_ONNX_LOGE(
+        "Ignore the voxlock voice sample '%s': failed to read it. Take the "
+        "voice sample from the input audio instead.",
+        filename.c_str());
+    return {};
   }
 
   return PrepareVoxLockVoiceSample(samples, file_sample_rate, sample_rate,
@@ -149,7 +152,8 @@ inline std::vector<float> ReadVoxLockVoiceSample(const std::string &filename,
 }
 
 // Read a voice sample from a wave file with a manager, e.g., the asset
-// manager on Android, and return exactly `seconds` seconds of it
+// manager on Android, and return exactly `seconds` seconds of it. Return an
+// empty vector if it cannot be read or is too short.
 template <typename Manager>
 std::vector<float> ReadVoxLockVoiceSample(Manager *mgr,
                                           const std::string &filename,
@@ -162,9 +166,11 @@ std::vector<float> ReadVoxLockVoiceSample(Manager *mgr,
   bool is_ok = false;
   std::vector<float> samples = ReadWave(is, &file_sample_rate, &is_ok);
   if (!is_ok) {
-    SHERPA_ONNX_LOGE("Failed to read the voxlock voice sample '%s'",
-                     filename.c_str());
-    SHERPA_ONNX_EXIT(-1);
+    SHERPA_ONNX_LOGE(
+        "Ignore the voxlock voice sample '%s': failed to read it. Take the "
+        "voice sample from the input audio instead.",
+        filename.c_str());
+    return {};
   }
 
   return PrepareVoxLockVoiceSample(samples, file_sample_rate, sample_rate,

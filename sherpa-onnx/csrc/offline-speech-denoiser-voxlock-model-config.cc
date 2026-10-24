@@ -29,9 +29,10 @@ void OfflineSpeechDenoiserVoxLockModelConfig::Register(ParseOptions *po) {
       "speech-denoiser-voxlock-voice-sample", &voice_sample,
       "Optional. Path to a wave file with at least 3 seconds of the caller's "
       "voice. VoxLock keeps this voice and removes the others. From a longer "
-      "file, it uses the loudest 3 seconds within the first 30 seconds. If "
-      "empty, the offline denoiser uses the loudest 3 seconds in the first 15 "
-      "seconds of the input, and the online denoiser passes audio through "
+      "file, it uses the loudest 3 seconds within the first 30 seconds. A "
+      "file that is shorter or cannot be read is ignored. If empty or "
+      "ignored, the offline denoiser uses the loudest 3 seconds in the first "
+      "15 seconds of the input, and the online denoiser passes audio through "
       "unchanged until it has heard 3 seconds of speech and then uses that "
       "speech.");
 }
@@ -56,12 +57,6 @@ bool OfflineSpeechDenoiserVoxLockModelConfig::Validate() const {
   if (!FileExists(chunk_model)) {
     SHERPA_ONNX_LOGE("voxlock chunk model file '%s' does not exist",
                      chunk_model.c_str());
-    return false;
-  }
-
-  if (!voice_sample.empty() && !FileExists(voice_sample)) {
-    SHERPA_ONNX_LOGE("voxlock voice sample '%s' does not exist",
-                     voice_sample.c_str());
     return false;
   }
 
