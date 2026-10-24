@@ -21,9 +21,9 @@ void OfflineWhisperGreedySearchDecoder::SetConfig(
 }
 
 std::vector<OfflineWhisperDecoderResult>
-OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
-                                          Ort::Value cross_v,
-                                          int32_t num_feature_frames) {
+OfflineWhisperGreedySearchDecoder::Decode(
+    Ort::Value cross_k, Ort::Value cross_v, int32_t num_feature_frames,
+    const std::vector<int32_t> &language_candidate_ids) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -64,7 +64,8 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       // 0: sot, 1: lang_id, 2: task, 3: no_timestamps
       initial_tokens[1] = lang_id;
     } else {
-      int32_t lang_id = model_->DetectLanguage(cross_k, cross_v);
+      int32_t lang_id =
+          model_->DetectLanguage(cross_k, cross_v, language_candidate_ids);
 
       // 0: sot, 1: lang_id, 2: task, 3: no_timestamps
       initial_tokens[1] = lang_id;
