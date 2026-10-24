@@ -617,16 +617,7 @@ if(NOT BUILD_SHARED_LIBS)
   endif()
 
   if(UNIX AND NOT APPLE)
-    if(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY)
-      # Link libstdc++ the same way the library itself is built (see the
-      # SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY block above). Advertising a plain
-      # -lstdc++ here makes consumers link libstdc++ dynamically and the resulting
-      # binary aborts at startup on Linux with "free(): invalid pointer".
-      # -static-libstdc++ is a g++ driver flag, so link C examples with g++.
-      set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-static-libstdc++ -static-libgcc -lm -pthread -ldl")
-    else()
-      set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lstdc++ -lm -pthread -ldl")
-    endif()
+    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lstdc++ -lm -pthread -ldl")
   endif()
 endif()
 

@@ -14,18 +14,37 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip")
-set(onnxruntime_HASH "SHA256=2dada92465b40a16fb5011956d93eaf90e3091cf621a953e5371a5e6a687794e")
+# Note: we use the glibc2_28 package, not glibc2_17.
+#
+# The glibc2_17 x86_64 static package is built in onnxruntime-build's
+# linux-217.yaml with Red Hat SCL devtoolset-11, whose gcc is configured
+# --with-default-libstdcxx-abi=gcc4-compatible, so it produces
+# _GLIBCXX_USE_CXX11_ABI=0 (old COW std::string). Every other package we
+# ship -- the aarch64 glibc2_17 and the x86_64 glibc2_28 builds -- is =1.
+#
+# Mixing the two corrupts the heap at startup with "free(): invalid
+# pointer": std::filesystem::path's non-inline members (_M_split_cmpts,
+# operator=) live in libstdc++ and are laid out for =1, while the path
+# objects in the archive are laid out for =0. Linking libstdc++ statically
+# does not help; the layout disagreement is independent of that.
+#
+# See also https://github.com/k2-fsa/sherpa-onnx/issues/3513
+#
+# TODO: once onnxruntime-build ships a glibc2_17 build made with
+# _GLIBCXX_USE_CXX11_ABI=1, switch back to it to keep the glibc 2.17 floor
+# for x86_64 Linux static binaries.
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_28.zip")
+set(onnxruntime_HASH "SHA256=cdff51ef93072792fa20f386e7576fd23b0140be202ad62f5d921e385ffb6103")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
-  /tmp/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_17.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_28.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_28.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_28.zip
+  /tmp/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_28.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.28.2-glibc2_28.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
