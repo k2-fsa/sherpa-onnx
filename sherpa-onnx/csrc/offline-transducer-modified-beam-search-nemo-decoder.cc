@@ -14,6 +14,7 @@
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/packed-sequence.h"
