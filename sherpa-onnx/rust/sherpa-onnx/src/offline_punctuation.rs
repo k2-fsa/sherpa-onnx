@@ -21,10 +21,12 @@
 //! ```
 
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Model configuration for offline punctuation restoration.
 pub struct OfflinePunctuationModelConfig {
     pub ct_transformer: Option<String>,
@@ -55,7 +57,8 @@ impl OfflinePunctuationModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`OfflinePunctuation`].
 pub struct OfflinePunctuationConfig {
     pub model: OfflinePunctuationModelConfig,

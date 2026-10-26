@@ -5,11 +5,13 @@
 //! chunk to drain any buffered state.
 
 use crate::offline_speech_denoiser::{DenoisedAudio, OfflineSpeechDenoiserModelConfig};
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::CString;
 use std::ptr;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`OnlineSpeechDenoiser`].
 pub struct OnlineSpeechDenoiserConfig {
     pub model: OfflineSpeechDenoiserModelConfig,

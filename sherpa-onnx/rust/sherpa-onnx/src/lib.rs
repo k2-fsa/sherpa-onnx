@@ -315,3 +315,100 @@ pub use tts::*;
 pub use utils::*;
 pub use vad::*;
 pub use wave::*;
+
+#[cfg(test)]
+mod serde_tests {
+    use super::*;
+    use serde::de::DeserializeOwned;
+    use serde::Serialize;
+    use serde_json::{from_value, json, to_value};
+
+    fn assert_empty_is_default<T: Default + Serialize + DeserializeOwned>() {
+        let name = std::any::type_name::<T>();
+        let config: T = from_value(json!({})).unwrap_or_else(|e| panic!("{name}: {e}"));
+        assert_eq!(
+            to_value(config).unwrap(),
+            to_value(T::default()).unwrap(),
+            "{name}"
+        );
+    }
+
+    macro_rules! assert_all_empty_is_default {
+        ($($t:ty),* $(,)?) => {
+            $(assert_empty_is_default::<$t>();)*
+        };
+    }
+
+    #[test]
+    fn every_config_accepts_an_empty_object() {
+        assert_all_empty_is_default!(
+            AudioTaggingConfig,
+            AudioTaggingModelConfig,
+            FastClusteringConfig,
+            ForcedAlignerConfig,
+            ForcedAlignmentOptions,
+            GenerationConfig,
+            HomophoneReplacerConfig,
+            KeywordSpotterConfig,
+            OfflineCanaryModelConfig,
+            OfflineCohereTranscribeModelConfig,
+            OfflineCtcFstDecoderConfig,
+            OfflineDolphinModelConfig,
+            OfflineFireRedAsrCtcModelConfig,
+            OfflineFireRedAsrModelConfig,
+            OfflineFunASRNanoModelConfig,
+            OfflineLMConfig,
+            OfflineMedAsrCtcModelConfig,
+            OfflineModelConfig,
+            OfflineMoonshineModelConfig,
+            OfflineNemoEncDecCtcModelConfig,
+            OfflineOmnilingualAsrCtcModelConfig,
+            OfflineParaformerModelConfig,
+            OfflinePunctuationConfig,
+            OfflinePunctuationModelConfig,
+            OfflineQwen3ASRModelConfig,
+            OfflineRecognizerConfig,
+            OfflineSenseVoiceModelConfig,
+            OfflineSpeakerDiarizationConfig,
+            OfflineSpeakerSegmentationModelConfig,
+            OfflineSpeakerSegmentationPyannoteModelConfig,
+            OfflineSpeechDenoiserConfig,
+            OfflineSpeechDenoiserDpdfNetModelConfig,
+            OfflineSpeechDenoiserGtcrnModelConfig,
+            OfflineSpeechDenoiserModelConfig,
+            OfflineSpeechDenoiserVoxLockModelConfig,
+            OfflineTdnnModelConfig,
+            OfflineTransducerModelConfig,
+            OfflineTtsConfig,
+            OfflineTtsKittenModelConfig,
+            OfflineTtsKokoroModelConfig,
+            OfflineTtsMatchaModelConfig,
+            OfflineTtsModelConfig,
+            OfflineTtsPocketModelConfig,
+            OfflineTtsSupertonicModelConfig,
+            OfflineTtsVitsModelConfig,
+            OfflineTtsZipvoiceModelConfig,
+            OfflineWenetCtcModelConfig,
+            OfflineWhisperModelConfig,
+            OfflineZipformerAudioTaggingModelConfig,
+            OfflineZipformerCtcModelConfig,
+            OnlineCtcFstDecoderConfig,
+            OnlineModelConfig,
+            OnlineNemoCtcModelConfig,
+            OnlineParaformerModelConfig,
+            OnlinePunctuationConfig,
+            OnlinePunctuationModelConfig,
+            OnlineRecognizerConfig,
+            OnlineSpeechDenoiserConfig,
+            OnlineToneCtcModelConfig,
+            OnlineTransducerModelConfig,
+            OnlineZipformer2CtcModelConfig,
+            SileroVadModelConfig,
+            SpeakerEmbeddingExtractorConfig,
+            SpokenLanguageIdentificationConfig,
+            SpokenLanguageIdentificationWhisperConfig,
+            TenVadModelConfig,
+            VadModelConfig,
+        );
+    }
+}

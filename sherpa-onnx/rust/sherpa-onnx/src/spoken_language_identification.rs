@@ -32,10 +32,12 @@
 
 use crate::offline_asr::OfflineStream;
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Whisper model configuration for spoken language identification.
 pub struct SpokenLanguageIdentificationWhisperConfig {
     pub encoder: Option<String>,
@@ -56,7 +58,8 @@ impl SpokenLanguageIdentificationWhisperConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`SpokenLanguageIdentification`].
 pub struct SpokenLanguageIdentificationConfig {
     pub whisper: SpokenLanguageIdentificationWhisperConfig,

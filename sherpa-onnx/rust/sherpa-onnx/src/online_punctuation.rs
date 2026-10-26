@@ -22,10 +22,12 @@
 //! ```
 
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Model-level options for online punctuation restoration.
 pub struct OnlinePunctuationModelConfig {
     pub cnn_bilstm: Option<String>,
@@ -59,7 +61,8 @@ impl OnlinePunctuationModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`OnlinePunctuation`].
 pub struct OnlinePunctuationConfig {
     pub model: OnlinePunctuationModelConfig,

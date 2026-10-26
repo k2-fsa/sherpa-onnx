@@ -7,10 +7,12 @@
 //! - `rust-api-examples/examples/audio_tagging_ced.rs`
 
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Zipformer audio tagging model path.
 pub struct OfflineZipformerAudioTaggingModelConfig {
     pub model: Option<String>,
@@ -24,7 +26,8 @@ impl OfflineZipformerAudioTaggingModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Model-level configuration for audio tagging.
 ///
 /// Configure either `zipformer` or `ced` for a concrete model package.
@@ -62,7 +65,8 @@ impl AudioTaggingModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`AudioTagging`].
 pub struct AudioTaggingConfig {
     pub model: AudioTaggingModelConfig,

@@ -4,12 +4,14 @@
 //! example that removes non-speech segments from a WAV file.
 
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use std::ffi::CString;
 use std::slice;
 
 use sherpa_onnx_sys as sys;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Silero VAD configuration.
 pub struct SileroVadModelConfig {
     pub model: Option<String>,
@@ -33,7 +35,8 @@ impl SileroVadModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Ten VAD configuration.
 pub struct TenVadModelConfig {
     pub model: Option<String>,
@@ -57,7 +60,8 @@ impl TenVadModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level model configuration for [`VoiceActivityDetector`].
 ///
 /// Configure exactly one model family for typical use.
