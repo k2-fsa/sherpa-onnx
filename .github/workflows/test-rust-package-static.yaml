@@ -114,3 +114,24 @@ jobs:
         shell: bash
         run: |
           ./.github/scripts/test-rust-static.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn

@@ -96,6 +96,10 @@ in your own Cargo project, see
 | 51 | [qwen3_asr_simulate_streaming_microphone](#example-51-simulated-streaming-asr-with-qwen3-asr-and-vad-from-microphone) | Simulated streaming ASR with Qwen3 ASR and VAD from microphone |
 | 52 | [whisper](#example-52-asr-with-non-streaming-whisper) | Non-streaming ASR with Whisper (multilingual) |
 | 55 | [paraformer](#example-55-asr-with-non-streaming-paraformer) | Non-streaming ASR with Paraformer |
+| 56 | [offline_speech_enhancement_voxlock](#example-56-offline-speech-enhancement-with-voxlock) | Offline speech enhancement with VoxLock (target-speaker voice isolation) |
+| 57 | [offline_speech_enhancement_voxlock_with_voice_sample](#example-57-offline-speech-enhancement-with-voxlock-and-a-voice-sample) | Offline speech enhancement with VoxLock and a voice sample |
+| 58 | [streaming_speech_enhancement_voxlock](#example-58-streaming-speech-enhancement-with-voxlock) | Streaming speech enhancement with VoxLock (target-speaker voice isolation) |
+| 59 | [streaming_speech_enhancement_voxlock_with_voice_sample](#example-59-streaming-speech-enhancement-with-voxlock-and-a-voice-sample) | Streaming speech enhancement with VoxLock and a voice sample |
 
 ## Run it
 
@@ -473,3 +477,29 @@ Qwen3 ASR recognizer on each detected segment.
 
 ```bash
 ./run-paraformer.sh
+### Example 56: Offline speech enhancement with VoxLock
+
+VoxLock keeps the voice of one speaker (the caller) and removes the other
+voices. The model is from https://github.com/arbazsiddiqui/voxlock
+
+```bash
+./run-offline-speech-enhancement-voxlock.sh
+```
+
+### Example 57: Offline speech enhancement with VoxLock and a voice sample
+
+```bash
+./run-offline-speech-enhancement-voxlock-with-voice-sample.sh
+```
+
+### Example 58: Streaming speech enhancement with VoxLock
+
+```bash
+./run-streaming-speech-enhancement-voxlock.sh
+```
+
+### Example 59: Streaming speech enhancement with VoxLock and a voice sample
+
+```bash
+./run-streaming-speech-enhancement-voxlock-with-voice-sample.sh
+```

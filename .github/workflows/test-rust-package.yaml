@@ -162,6 +162,27 @@ jobs:
           path: rust-api-examples/generated-*-rust.wav
           if-no-files-found: warn
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+
   termux:
     name: Termux ${{ matrix.arch }} (${{ matrix.lib_setup }})
     runs-on: ${{ matrix.runner }}
@@ -348,4 +369,25 @@ jobs:
         with:
           name: tts-waves-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
           path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock_with_voice_sample-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock_with_voice_sample-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock_with_voice_sample
           if-no-files-found: warn

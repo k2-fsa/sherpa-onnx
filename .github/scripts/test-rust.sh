@@ -9,6 +9,11 @@ trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
 
 bash ./run-version.sh
 
+bash ./run-offline-speech-enhancement-voxlock.sh
+bash ./run-offline-speech-enhancement-voxlock-with-voice-sample.sh
+bash ./run-streaming-speech-enhancement-voxlock.sh
+bash ./run-streaming-speech-enhancement-voxlock-with-voice-sample.sh
+
 bash ./run-vits-en-lexicon.sh
 bash ./run-vits-en-phonemize.sh
 rm -rf vits-piper-en_US-amy-low
