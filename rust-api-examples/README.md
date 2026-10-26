@@ -477,6 +477,8 @@ Qwen3 ASR recognizer on each detected segment.
 
 ```bash
 ./run-paraformer.sh
+```
+
 ### Example 56: Offline speech enhancement with VoxLock
 
 VoxLock keeps the voice of one speaker (the caller) and removes the other
