@@ -38,12 +38,7 @@ DynamicLibrary loadDylib(String? path) {
   throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
 }
 
-/// The library path passed to the last [initNativeBindings] call in this
-/// isolate. Worker isolates started by the async factories reuse it.
-String? nativeLibraryPath;
-
 void initNativeBindings(String? path) {
   final dylib = loadDylib(path);
   SherpaOnnxBindings.init(dylib);
-  nativeLibraryPath = path;
 }

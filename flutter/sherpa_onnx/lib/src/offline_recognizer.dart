@@ -110,11 +110,9 @@ class OfflineRecognizer {
       throw Exception("Please initialize sherpa-onnx first");
     }
 
-    final path = nativeLibraryPath;
     final address = await Isolate.run(() {
-      // Bindings are per isolate. The library is already loaded in this
-      // process, so this only looks up the symbols again.
-      initNativeBindings(path);
+      // Bindings are per isolate. Look up symbols in the already loaded library.
+      initNativeBindings(null);
       return OfflineRecognizer(config).ptr.address;
     });
 
