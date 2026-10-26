@@ -9,6 +9,21 @@ cd ./version-test
 ./run.sh
 ls -lh
 
+cd ../speech-enhancement-voxlock
+./run.sh
+ls -lh
+
+cd ../speech-enhancement-voxlock-with-voice-sample
+./run.sh
+ls -lh
+
+cd ../streaming-speech-enhancement-voxlock
+./run.sh
+ls -lh
+
+cd ../streaming-speech-enhancement-voxlock-with-voice-sample
+./run.sh
+ls -lh
 
 cd ../kitten-tts-lexicon
 ./run-kitten-lexicon.sh

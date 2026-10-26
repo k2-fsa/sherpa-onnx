@@ -11,6 +11,7 @@ namespace SherpaOnnx
         {
             Gtcrn = new OfflineSpeechDenoiserGtcrnModelConfig();
             Dpdfnet = new OfflineSpeechDenoiserDpdfNetModelConfig();
+            Voxlock = new OfflineSpeechDenoiserVoxLockModelConfig();
             NumThreads = 1;
             Debug = 0;
             Provider = "cpu";
@@ -26,5 +27,7 @@ namespace SherpaOnnx
         public string Provider;
 
         public OfflineSpeechDenoiserDpdfNetModelConfig Dpdfnet;
+
+        public OfflineSpeechDenoiserVoxLockModelConfig Voxlock;
     }
 }
