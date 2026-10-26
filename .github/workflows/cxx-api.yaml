@@ -1430,3 +1430,164 @@ jobs:
 
           rm -rf sherpa-onnx-whisper-tiny
           rm -v ./$name
+
+  test-speech-enhancement:
+    name: Test Speech Enhancement ${{ matrix.os }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, ubuntu-22.04-arm]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-${{ matrix.os }}
+          path: build/install
+
+      - name: Set up library path
+        shell: bash
+        run: |
+          echo "LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
+
+      - name: Test version
+        shell: bash
+        run: |
+          name=version-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+          ./$name
+      - name: Test Speech Enhancement (VoxLock)
+        shell: bash
+        run: |
+          name=speech-enhancement-voxlock-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+          tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+          rm sherpa-onnx-voxlock-int8.tar.bz2
+
+          ./$name
+
+          rm $name
+          mkdir -p $name
+          mv -v voxlock-enhanced-16k.wav $name/
+          cp -v sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav $name/
+
+          rm -rf sherpa-onnx-voxlock-int8
+
+      - name: Test Speech Enhancement (VoxLock, with voice sample)
+        shell: bash
+        run: |
+          name=speech-enhancement-voxlock-with-voice-sample-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+          tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+          rm sherpa-onnx-voxlock-int8.tar.bz2
+
+          ./$name
+
+          rm $name
+          mkdir -p $name
+          mv -v voxlock-enhanced-with-voice-sample-16k.wav $name/
+          cp -v sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav $name/
+          cp -v sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav $name/
+
+          rm -rf sherpa-onnx-voxlock-int8
+
+      - name: Test Online Speech Enhancement (VoxLock)
+        shell: bash
+        run: |
+          name=online-speech-enhancement-voxlock-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+          tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+          rm sherpa-onnx-voxlock-int8.tar.bz2
+
+          ./$name
+
+          rm $name
+          mkdir -p $name
+          mv -v voxlock-enhanced-online-16k.wav $name/
+          cp -v sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav $name/
+
+          rm -rf sherpa-onnx-voxlock-int8
+
+      - name: Test Online Speech Enhancement (VoxLock, with voice sample)
+        shell: bash
+        run: |
+          name=online-speech-enhancement-voxlock-with-voice-sample-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+          tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+          rm sherpa-onnx-voxlock-int8.tar.bz2
+
+          ./$name
+
+          rm $name
+          mkdir -p $name
+          mv -v voxlock-enhanced-online-with-voice-sample-16k.wav $name/
+          cp -v sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav $name/
+          cp -v sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav $name/
+
+          rm -rf sherpa-onnx-voxlock-int8
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-cxx-api-${{ matrix.os }}
+          path: speech-enhancement-voxlock-cxx-api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-with-voice-sample-cxx-api-${{ matrix.os }}
+          path: speech-enhancement-voxlock-with-voice-sample-cxx-api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: online-speech-enhancement-voxlock-cxx-api-${{ matrix.os }}
+          path: online-speech-enhancement-voxlock-cxx-api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: online-speech-enhancement-voxlock-with-voice-sample-cxx-api-${{ matrix.os }}
+          path: online-speech-enhancement-voxlock-with-voice-sample-cxx-api

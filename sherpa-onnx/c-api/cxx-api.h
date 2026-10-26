@@ -1288,6 +1288,27 @@ struct OfflineSpeechDenoiserDpdfNetModelConfig {
 };
 
 /**
+ * @brief VoxLock target-speaker voice isolation model configuration.
+ *
+ * VoxLock keeps the voice of one speaker (the caller) and removes other
+ * voices. The model is from https://github.com/arbazsiddiqui/voxlock
+ */
+struct OfflineSpeechDenoiserVoxLockModelConfig {
+  /** Path to the VoxLock enroll model, e.g., `enroll.onnx`. */
+  std::string enroll_model;
+  /** Path to the VoxLock chunk model, e.g., `chunk.onnx`. */
+  std::string chunk_model;
+  /**
+   * Optional. Path to a wave file with at least 3 seconds of the caller's
+   * voice. From a longer file, the loudest 3 seconds within the first 30
+   * seconds are used. A file that is shorter or cannot be read is ignored,
+   * as if it were empty. If empty or ignored, the voice sample is taken from
+   * the input audio; see the C API docs for the offline/online fallbacks.
+   */
+  std::string voice_sample;
+};
+
+/**
  * @brief Speech denoiser model configuration.
  *
  * Configure exactly one model family. If multiple model families are set, one
@@ -1298,6 +1319,8 @@ struct OfflineSpeechDenoiserModelConfig {
   OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   /** DPDFNet configuration. */
   OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
+  /** VoxLock configuration. */
+  OfflineSpeechDenoiserVoxLockModelConfig voxlock;
   /** Number of inference threads. */
   int32_t num_threads = 1;
   /** Enable verbose debug logging. */

@@ -21,6 +21,9 @@ static void FillSpeechDenoiserModelConfig(
   dst->gtcrn.model = src.gtcrn.model.c_str();
   dst->dpdfnet.model = src.dpdfnet.model.c_str();
   dst->dpdfnet.attenuation_limit_db = src.dpdfnet.attenuation_limit_db;
+  dst->voxlock.enroll_model = src.voxlock.enroll_model.c_str();
+  dst->voxlock.chunk_model = src.voxlock.chunk_model.c_str();
+  dst->voxlock.voice_sample = src.voxlock.voice_sample.c_str();
   dst->num_threads = src.num_threads;
   dst->provider = src.provider.c_str();
   dst->debug = src.debug;

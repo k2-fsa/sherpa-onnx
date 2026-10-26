@@ -37,6 +37,25 @@ add_executable(online-speech-enhancement-dpdfnet-cxx-api
 target_link_libraries(online-speech-enhancement-dpdfnet-cxx-api
                       sherpa-onnx-cxx-api)
 
+add_executable(speech-enhancement-voxlock-cxx-api
+               ./speech-enhancement-voxlock-cxx-api.cc)
+target_link_libraries(speech-enhancement-voxlock-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(speech-enhancement-voxlock-with-voice-sample-cxx-api
+               ./speech-enhancement-voxlock-with-voice-sample-cxx-api.cc)
+target_link_libraries(speech-enhancement-voxlock-with-voice-sample-cxx-api
+                      sherpa-onnx-cxx-api)
+
+add_executable(online-speech-enhancement-voxlock-cxx-api
+               ./online-speech-enhancement-voxlock-cxx-api.cc)
+target_link_libraries(online-speech-enhancement-voxlock-cxx-api
+                      sherpa-onnx-cxx-api)
+
+add_executable(online-speech-enhancement-voxlock-with-voice-sample-cxx-api
+               ./online-speech-enhancement-voxlock-with-voice-sample-cxx-api.cc)
+target_link_libraries(online-speech-enhancement-voxlock-with-voice-sample-cxx-api
+                      sherpa-onnx-cxx-api)
+
 add_executable(kws-cxx-api ./kws-cxx-api.cc)
 target_link_libraries(kws-cxx-api sherpa-onnx-cxx-api)
 

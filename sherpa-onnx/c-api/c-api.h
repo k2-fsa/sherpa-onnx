@@ -66,6 +66,10 @@
  * - `offline-speaker-diarization-c-api.c` for diarization
  * - `speech-enhancement-gtcrn-c-api.c` and
  *   `online-speech-enhancement-gtcrn-c-api.c` for speech enhancement
+ * - `speech-enhancement-voxlock-c-api.c` and
+ *   `online-speech-enhancement-voxlock-c-api.c` for target-speaker voice
+ *   isolation with VoxLock; the model is from
+ *   https://github.com/arbazsiddiqui/voxlock
  */
 
 #ifndef SHERPA_ONNX_C_API_C_API_H_
@@ -4263,6 +4267,44 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig {
 } SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
 
 /**
+ * @brief VoxLock target-speaker voice isolation model configuration.
+ *
+ * VoxLock keeps the voice of one speaker (the caller) and removes other
+ * voices. The model is from https://github.com/arbazsiddiqui/voxlock
+ */
+typedef struct SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig {
+  /**
+   * Path to the VoxLock enroll model, e.g., `enroll.onnx`.
+   *
+   * It runs once on a voice sample of the speaker to keep. Download the
+   * models from
+   * https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models
+   */
+  const char *enroll_model;
+  /**
+   * Path to the VoxLock chunk model, e.g., `chunk.onnx` or
+   * `chunk_int8.onnx`.
+   *
+   * It runs on each chunk of the audio.
+   */
+  const char *chunk_model;
+  /**
+   * Optional. Path to a wave file with at least 3 seconds of the caller's
+   * voice. VoxLock keeps this voice and removes the others. From a longer
+   * file, it uses the loudest 3 seconds within the first 30 seconds. A file
+   * that is shorter or cannot be read is ignored, as if it were empty.
+   *
+   * If empty or ignored, the voice sample is taken from the input audio:
+   *
+   * - Offline denoiser: the loudest 3 seconds in the first 15 seconds of
+   *   the input are used.
+   * - Online denoiser: the audio is passed through unchanged until 3 seconds
+   *   of speech have been heard; that speech is used as the voice sample.
+   */
+  const char *voice_sample;
+} SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig;
+
+/**
  * @brief Speech denoiser model configuration shared by offline and online APIs.
  *
  * Configure exactly one model family. If multiple model families are provided,
@@ -4279,6 +4321,8 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserModelConfig {
   const char *provider;
   /** DPDFNet model configuration. */
   SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
+  /** VoxLock model configuration. */
+  SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig voxlock;
 } SherpaOnnxOfflineSpeechDenoiserModelConfig;
 
 /** @brief Configuration for offline speech denoising. */
