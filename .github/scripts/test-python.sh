@@ -14,6 +14,21 @@ source "$SCRIPT_DIR/common.sh"
 log "test version"
 python3 ./python-api-examples/version-test.py
 
+log "test Uzbek GigaAM NeMo CTC Python example"
+repo=sherpa-onnx-gigaam-uzbek-600m
+mkdir -p "$repo/test_wavs"
+_sherpa_register_cleanup "$repo"
+base=https://huggingface.co/Alex13/sherpa-onnx-gigaam-uzbek-600m/resolve/main
+download "$base/model.int8.onnx" "$repo/model.int8.onnx"
+download "$base/tokens.txt" "$repo/tokens.txt"
+download "$base/test_wavs/0.wav" "$repo/test_wavs/0.wav"
+
+python3 ./python-api-examples/offline-gigaam-uzbek-ctc-decode-files.py \
+  --model-dir "./$repo" \
+  "./$repo/test_wavs/0.wav"
+
+rm -rf "$repo"
+
 log "test Cohere Transcribe"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
