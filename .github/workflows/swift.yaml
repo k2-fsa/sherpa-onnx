@@ -84,3 +84,28 @@ jobs:
             swift-api-examples/test-*-lexicon.wav
             swift-api-examples/generated-*.wav
           if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-${{ matrix.os }}
+          # each run-*.sh keeps the input and output wavs in wav/<example>
+          path: swift-api-examples/wav/speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: swift-api-examples/wav/speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: online-speech-enhancement-voxlock-${{ matrix.os }}
+          path: swift-api-examples/wav/online-speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: swift-api-examples/wav/online-speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn

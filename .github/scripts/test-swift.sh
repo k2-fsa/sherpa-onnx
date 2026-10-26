@@ -10,6 +10,11 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-speech-enhancement-voxlock.sh
+./run-speech-enhancement-voxlock-with-voice-sample.sh
+./run-online-speech-enhancement-voxlock.sh
+./run-online-speech-enhancement-voxlock-with-voice-sample.sh
+
 ./run-tts-pocket-en.sh
 ls -lh
 rm -rf sherpa-onnx-pocket-*
