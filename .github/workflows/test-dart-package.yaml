@@ -75,31 +75,31 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-waves-${{ github.job }}
+          name: tts-waves-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/tts/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: speech-enhancement-voxlock-${{ github.job }}
+          name: speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/speech-enhancement-voxlock/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: speech-enhancement-voxlock-with-voice-sample-${{ github.job }}
+          name: speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/speech-enhancement-voxlock-with-voice-sample/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: streaming-speech-enhancement-voxlock-${{ github.job }}
+          name: streaming-speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/streaming-speech-enhancement-voxlock/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ github.job }}
+          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
           if-no-files-found: warn
 
@@ -192,30 +192,30 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-waves-${{ github.job }}
+          name: tts-waves-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/tts/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: speech-enhancement-voxlock-${{ github.job }}
+          name: speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/speech-enhancement-voxlock/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: speech-enhancement-voxlock-with-voice-sample-${{ github.job }}
+          name: speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/speech-enhancement-voxlock-with-voice-sample/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: streaming-speech-enhancement-voxlock-${{ github.job }}
+          name: streaming-speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/streaming-speech-enhancement-voxlock/*.wav
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
-          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ github.job }}
+          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
           path: dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
           if-no-files-found: warn
