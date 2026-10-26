@@ -2076,11 +2076,43 @@ public func sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(
     attenuation_limit_db: attenuationLimitDb)
 }
 
+/// Return an instance of SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig.
+///
+/// VoxLock keeps the voice of one speaker (the caller) and removes the other
+/// voices. The model is from https://github.com/arbazsiddiqui/voxlock
+///
+/// - Parameters:
+///   - enrollModel: Path to the VoxLock enroll model, e.g., enroll.onnx. It
+///     runs once on a voice sample of the speaker to keep.
+///   - chunkModel: Path to the VoxLock chunk model, e.g., chunk.onnx or
+///     chunk_int8.onnx. It runs on each chunk of the audio.
+///   - voiceSample: Optional. Path to a wave file with at least 3 seconds of
+///     the caller's voice. VoxLock keeps this voice and removes the others.
+///     From a longer file, it uses the loudest 3 seconds within the first 30
+///     seconds. A file that is shorter or cannot be read is ignored, as if it
+///     were empty. If empty or ignored, the voice sample is taken from the
+///     input audio: the offline denoiser uses the loudest 3 seconds in the
+///     first 15 seconds of the input, and the online denoiser passes the audio
+///     through unchanged until 3 seconds of speech have been heard, then uses
+///     that speech.
+public func sherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig(
+  enrollModel: String = "",
+  chunkModel: String = "",
+  voiceSample: String = ""
+) -> SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig {
+  return SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig(
+    enroll_model: toCPointer(enrollModel),
+    chunk_model: toCPointer(chunkModel),
+    voice_sample: toCPointer(voiceSample))
+}
+
 public func sherpaOnnxOfflineSpeechDenoiserModelConfig(
   gtcrn: SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig =
     sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(),
   dpdfnet: SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig =
     sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(),
+  voxlock: SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig =
+    sherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig(),
   numThreads: Int = 1,
   provider: String = "cpu",
   debug: Int = 0
@@ -2090,7 +2122,8 @@ public func sherpaOnnxOfflineSpeechDenoiserModelConfig(
     num_threads: Int32(numThreads),
     debug: Int32(debug),
     provider: toCPointer(provider),
-    dpdfnet: dpdfnet
+    dpdfnet: dpdfnet,
+    voxlock: voxlock
   )
 }
 
