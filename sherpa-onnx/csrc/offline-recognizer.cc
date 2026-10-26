@@ -4,7 +4,6 @@
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 
-#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
@@ -49,13 +48,6 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
                "of higher insertions. "
                "Currently only applicable for transducer models.");
 
-  po->Register("length-reward", &length_reward,
-               "The reward added to the score of a hypothesis for each "
-               "non-blank token. A positive value counters the preference of "
-               "beam search for short hypotheses, e.g., NeMo TDT models "
-               "dropping speech after a pause. "
-               "Used only by modified_beam_search for NeMo transducer models.");
-
   po->Register(
       "hotwords-file", &hotwords_file,
       "The file containing hotwords, one words/phrases per line, For example: "
@@ -78,12 +70,6 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineRecognizerConfig::Validate() const {
-  if (!std::isfinite(length_reward)) {
-    SHERPA_ONNX_LOGE("--length-reward must be a finite number. Given: %f",
-                     length_reward);
-    return false;
-  }
-
   if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
     if (max_active_paths <= 0) {
       SHERPA_ONNX_LOGE("max_active_paths is less than 0! Given: %d",
@@ -158,7 +144,6 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "blank_penalty=" << blank_penalty << ", ";
-  os << "length_reward=" << length_reward << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
   os << "rule_fars=\"" << rule_fars << "\", ";
   os << "hr=" << hr.ToString() << ")";

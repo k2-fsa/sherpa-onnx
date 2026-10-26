@@ -48,9 +48,6 @@ Args:
     They are applied from left to right.
   hr:
     Config for homophone replacer.
-  length_reward:
-    Reward added to the score of a hypothesis for each non-blank token.
-    Only used by ``modified_beam_search`` for NeMo transducer models.
 )doc";
 
 static constexpr const char *kOfflineRecognizerInitDoc = R"doc(
@@ -116,7 +113,7 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
                     const OfflineLMConfig &, const OfflineCtcFstDecoderConfig &,
                     const std::string &, int32_t, const std::string &, float,
                     float, const std::string &, const std::string &,
-                    const HomophoneReplacerConfig &, float>(),
+                    const HomophoneReplacerConfig &>(),
            py::arg("feat_config") = FeatureExtractorConfig(),
            py::arg("model_config") = OfflineModelConfig(),
            py::arg("lm_config") = OfflineLMConfig(),
@@ -126,7 +123,7 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
            py::arg("hotwords_score") = 1.5, py::arg("blank_penalty") = 0.0,
            py::arg("rule_fsts") = "", py::arg("rule_fars") = "",
            py::arg("hr") = HomophoneReplacerConfig{},
-           py::arg("length_reward") = 0.0, kOfflineRecognizerConfigInitDoc)
+           kOfflineRecognizerConfigInitDoc)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
@@ -139,7 +136,6 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
       .def_readwrite("rule_fsts", &PyClass::rule_fsts)
       .def_readwrite("rule_fars", &PyClass::rule_fars)
       .def_readwrite("hr", &PyClass::hr)
-      .def_readwrite("length_reward", &PyClass::length_reward)
       .def("__str__", &PyClass::ToString);
 }
 

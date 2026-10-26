@@ -18,14 +18,13 @@ class OfflineTransducerModifiedBeamSearchNeMoDecoder
   OfflineTransducerModifiedBeamSearchNeMoDecoder(
       OfflineTransducerNeMoModel *model, int32_t max_active_paths,
       int32_t unk_id, float blank_penalty, bool is_tdt,
-      float hotwords_score = 0.0f, float length_reward = 0.0f)
+      float hotwords_score = 0.0f)
       : model_(model),
         max_active_paths_(max_active_paths),
         unk_id_(unk_id),
         blank_penalty_(blank_penalty),
         is_tdt_(is_tdt),
-        hotwords_score_(hotwords_score),
-        length_reward_(length_reward) {}
+        hotwords_score_(hotwords_score) {}
 
   std::vector<OfflineTransducerDecoderResult> Decode(
       Ort::Value encoder_out,
@@ -41,7 +40,6 @@ class OfflineTransducerModifiedBeamSearchNeMoDecoder
   float blank_penalty_;
   bool is_tdt_;  // Token-and-Duration Transducer mode
   float hotwords_score_;
-  float length_reward_;
 };
 
 }  // namespace sherpa_onnx

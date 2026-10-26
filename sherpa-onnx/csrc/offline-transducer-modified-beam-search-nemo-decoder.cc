@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-nemo-decoder.h"
 
 #include <algorithm>
+#include <cmath>
 #include <deque>
 #include <tuple>
 #include <utility>
@@ -161,10 +162,21 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
   // positions)
   for (int32_t b = 0; b < batch_size; ++b) {
     const ContextState *context_state = nullptr;
+    // Added to the score for each non-blank token: a positive value keeps
+    // beam search from dropping speech after a pause. Set per stream with
+    // stream.SetOption("length_reward", "0.5").
+    float length_reward = 0.0f;
     if (ss != nullptr) {
       context_graphs[b] = ss[b]->GetContextGraph();
       if (context_graphs[b] != nullptr) {
         context_state = context_graphs[b]->Root();
+      }
+      length_reward = ss[b]->GetOptionFloat("length_reward", 0.0f);
+      if (!std::isfinite(length_reward)) {
+        SHERPA_ONNX_LOGE(
+            "length_reward must be a finite number. Given: %f. Using 0",
+            length_reward);
+        length_reward = 0.0f;
       }
     }
 
@@ -223,10 +235,10 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
       pending[t].clear();
       MergeAndPrune(&cur_hyps, max_active_paths_);
 
-      // A token extension adds a log-prob (<= 0) plus length_reward_ and
+      // A token extension adds a log-prob (<= 0) plus length_reward and
       // the context-graph score, so the early stop below is safe only when
       // neither of those can raise a hypothesis above its current score.
-      bool can_gain = length_reward_ > 0 || context_graphs[b] != nullptr;
+      bool can_gain = length_reward > 0 || context_graphs[b] != nullptr;
       if (same_frame && !is_tdt_ && !can_gain) {
         // Without durations every token stays on its frame. As in NeMo's
         // beam search, stop expanding on this frame once there are
@@ -434,7 +446,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           int32_t d = std::get<2>(pairs[k]);
 
           float log_prob =
-              hyp.log_prob + token_logits[token] + length_reward_;
+              hyp.log_prob + token_logits[token] + length_reward;
           if (!top_durations.empty()) {
             log_prob += duration_logits[d];
           }
