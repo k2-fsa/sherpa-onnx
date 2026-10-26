@@ -765,9 +765,32 @@ type
     function ToString: AnsiString;
   end;
 
+  { VoxLock keeps the voice of one speaker (the caller) and removes the other
+    voices. The model is from https://github.com/arbazsiddiqui/voxlock }
+  TSherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig = record
+    { Path to the VoxLock enroll model, e.g., enroll.onnx. It runs once on a
+      voice sample of the speaker to keep. }
+    EnrollModel: AnsiString;
+    { Path to the VoxLock chunk model, e.g., chunk.onnx or chunk_int8.onnx. It
+      runs on each chunk of the audio. }
+    ChunkModel: AnsiString;
+    { Optional. Path to a wave file with at least 3 seconds of the caller's
+      voice. VoxLock keeps this voice and removes the others. From a longer
+      file, it uses the loudest 3 seconds within the first 30 seconds. A file
+      that is shorter or cannot be read is ignored, as if it were empty.
+
+      If empty or ignored, the voice sample is taken from the input audio: the
+      offline denoiser uses the loudest 3 seconds in the first 15 seconds of
+      the input, and the online denoiser passes the audio through unchanged
+      until 3 seconds of speech have been heard, then uses that speech. }
+    VoiceSample: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineSpeechDenoiserModelConfig = record
     Gtcrn: TSherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
     DpdfNet: TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
+    VoxLock: TSherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig;
     NumThreads: Integer;
     Debug: Boolean;
     Provider: AnsiString;
@@ -1352,12 +1375,19 @@ type
     AttenuationLimitDb: cfloat;
   end;
 
+  SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig = record
+    EnrollModel: PAnsiChar;
+    ChunkModel: PAnsiChar;
+    VoiceSample: PAnsiChar;
+  end;
+
   SherpaOnnxOfflineSpeechDenoiserModelConfig = record
     Gtcrn: SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
     NumThreads: cint32;
     Debug: cint32;
     Provider: PAnsiChar;
     DpdfNet: SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
+    VoxLock: SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig;
   end;
 
   SherpaOnnxOfflineSpeechDenoiserConfig = record
@@ -3576,15 +3606,23 @@ begin
     [Self.Model, Self.AttenuationLimitDb]);
 end;
 
+function TSherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig(' +
+    'EnrollModel := %s, ChunkModel := %s, VoiceSample := %s)',
+    [Self.EnrollModel, Self.ChunkModel, Self.VoiceSample]);
+end;
+
 function TSherpaOnnxOfflineSpeechDenoiserModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineSpeechDenoiserModelConfig(' +
     'Gtcrn := %s, '+
     'DpdfNet := %s, '+
+    'VoxLock := %s, '+
     'NumThreads := %d, '+
     'Debug := %s, '+
     'Provider := %s)',
-    [Self.Gtcrn.ToString, Self.DpdfNet.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider]);
+    [Self.Gtcrn.ToString, Self.DpdfNet.ToString, Self.VoxLock.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider]);
 end;
 
 class operator TSherpaOnnxOfflineSpeechDenoiserModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeechDenoiserModelConfig);
@@ -3631,6 +3669,9 @@ begin
   C.Model.DpdfNet.Model := PAnsiChar(Config.Model.DpdfNet.Model);
   C.Model.DpdfNet.AttenuationLimitDb :=
     Config.Model.DpdfNet.AttenuationLimitDb;
+  C.Model.VoxLock.EnrollModel := PAnsiChar(Config.Model.VoxLock.EnrollModel);
+  C.Model.VoxLock.ChunkModel := PAnsiChar(Config.Model.VoxLock.ChunkModel);
+  C.Model.VoxLock.VoiceSample := PAnsiChar(Config.Model.VoxLock.VoiceSample);
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Debug := Ord(Config.Model.Debug);
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
@@ -3666,6 +3707,9 @@ begin
   C := Default(SherpaOnnxOnlineSpeechDenoiserConfig);
   C.Model.Gtcrn.Model := PAnsiChar(Config.Model.Gtcrn.Model);
   C.Model.DpdfNet.Model := PAnsiChar(Config.Model.DpdfNet.Model);
+  C.Model.VoxLock.EnrollModel := PAnsiChar(Config.Model.VoxLock.EnrollModel);
+  C.Model.VoxLock.ChunkModel := PAnsiChar(Config.Model.VoxLock.ChunkModel);
+  C.Model.VoxLock.VoiceSample := PAnsiChar(Config.Model.VoxLock.VoiceSample);
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Debug := Ord(Config.Model.Debug);
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
