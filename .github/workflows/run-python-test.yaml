@@ -346,3 +346,29 @@ jobs:
         with:
           name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.python-version }}
           path: tts
+
+      # The VoxLock examples run first in test-python.sh; use if: always() so
+      # their input/output wavs are uploaded even when a later test fails.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: offline-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.python-version }}
+          path: offline-speech-enhancement-voxlock
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: offline-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.python-version }}
+          path: offline-speech-enhancement-voxlock-with-voice-sample
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: online-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.python-version }}
+          path: online-speech-enhancement-voxlock
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.python-version }}
+          path: online-speech-enhancement-voxlock-with-voice-sample

@@ -14,6 +14,34 @@ source "$SCRIPT_DIR/common.sh"
 log "test version"
 python3 ./python-api-examples/version-test.py
 
+log "test offline speech enhancement (VoxLock)"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+
+python3 ./python-api-examples/offline-speech-enhancement-voxlock.py
+mkdir -p offline-speech-enhancement-voxlock
+mv voxlock-enhanced-16k.wav offline-speech-enhancement-voxlock/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav offline-speech-enhancement-voxlock/
+
+python3 ./python-api-examples/offline-speech-enhancement-voxlock-with-voice-sample.py
+mkdir -p offline-speech-enhancement-voxlock-with-voice-sample
+mv voxlock-enhanced-with-voice-sample-16k.wav offline-speech-enhancement-voxlock-with-voice-sample/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav offline-speech-enhancement-voxlock-with-voice-sample/
+
+python3 ./python-api-examples/online-speech-enhancement-voxlock.py
+mkdir -p online-speech-enhancement-voxlock
+mv voxlock-enhanced-online-16k.wav online-speech-enhancement-voxlock/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav online-speech-enhancement-voxlock/
+
+python3 ./python-api-examples/online-speech-enhancement-voxlock-with-voice-sample.py
+mkdir -p online-speech-enhancement-voxlock-with-voice-sample
+mv voxlock-enhanced-online-with-voice-sample-16k.wav online-speech-enhancement-voxlock-with-voice-sample/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav online-speech-enhancement-voxlock-with-voice-sample/
+
+ls -lh offline-speech-enhancement-voxlock offline-speech-enhancement-voxlock-with-voice-sample online-speech-enhancement-voxlock online-speech-enhancement-voxlock-with-voice-sample
+
+rm -rf sherpa-onnx-voxlock-int8
+
 log "test Cohere Transcribe"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
