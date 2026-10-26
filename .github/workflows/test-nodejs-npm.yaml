@@ -61,3 +61,28 @@ jobs:
           # own-frontend models (test-pocket-en.wav, test-supertonic-*.wav)
           path: nodejs-examples/test-*.wav
           if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.node-version }}
+          # this workflow runs the tests from nodejs-examples (export d=...)
+          path: nodejs-examples/test-offline-speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-examples/test-offline-speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-examples/test-online-speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-examples/test-online-speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn

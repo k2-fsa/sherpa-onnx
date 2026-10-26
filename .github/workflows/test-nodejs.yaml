@@ -126,6 +126,31 @@ jobs:
           path: scripts/nodejs/test-*.wav
           if-no-files-found: warn
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.node-version }}
+          # the examples run from scripts/nodejs, see the comment above
+          path: scripts/nodejs/test-offline-speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.node-version }}
+          path: scripts/nodejs/test-offline-speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.node-version }}
+          path: scripts/nodejs/test-online-speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.node-version }}
+          path: scripts/nodejs/test-online-speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn
+
       - name: Setup tmate session
         if: false
         # if: failure()
