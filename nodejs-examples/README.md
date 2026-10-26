@@ -77,6 +77,19 @@ node ./test-offline-speech-enhancement-dpdfnet.js
 node ./test-online-speech-enhancement-dpdfnet.js
 ```
 
+VoxLock is a target-speaker voice isolation model. The model is from
+`https://github.com/arbazsiddiqui/voxlock`. Each variant has an example with
+and without a voice sample of the speaker to keep.
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+node ./test-offline-speech-enhancement-voxlock.js
+node ./test-offline-speech-enhancement-voxlock-with-voice-sample.js
+node ./test-online-speech-enhancement-voxlock.js
+node ./test-online-speech-enhancement-voxlock-with-voice-sample.js
+```
+
 The following four example files are available:
 
 ```bash

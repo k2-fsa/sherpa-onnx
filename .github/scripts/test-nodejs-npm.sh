@@ -13,6 +13,34 @@ ls -lh node_modules
 echo "---test version---"
 node ./test-version.js
 
+echo "---test voxlock speech enhancement---"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+
+node ./test-offline-speech-enhancement-voxlock.js
+mkdir -p test-offline-speech-enhancement-voxlock
+mv voxlock-enhanced-16k.wav test-offline-speech-enhancement-voxlock/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav test-offline-speech-enhancement-voxlock/
+
+node ./test-offline-speech-enhancement-voxlock-with-voice-sample.js
+mkdir -p test-offline-speech-enhancement-voxlock-with-voice-sample
+mv voxlock-enhanced-with-voice-sample-16k.wav test-offline-speech-enhancement-voxlock-with-voice-sample/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav test-offline-speech-enhancement-voxlock-with-voice-sample/
+
+node ./test-online-speech-enhancement-voxlock.js
+mkdir -p test-online-speech-enhancement-voxlock
+mv voxlock-enhanced-online-16k.wav test-online-speech-enhancement-voxlock/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav test-online-speech-enhancement-voxlock/
+
+node ./test-online-speech-enhancement-voxlock-with-voice-sample.js
+mkdir -p test-online-speech-enhancement-voxlock-with-voice-sample
+mv voxlock-enhanced-online-with-voice-sample-16k.wav test-online-speech-enhancement-voxlock-with-voice-sample/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav test-online-speech-enhancement-voxlock-with-voice-sample/
+
+ls -lh test-offline-speech-enhancement-voxlock test-offline-speech-enhancement-voxlock-with-voice-sample test-online-speech-enhancement-voxlock test-online-speech-enhancement-voxlock-with-voice-sample
+
+rm -rf sherpa-onnx-voxlock-int8
+
 # tts
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
