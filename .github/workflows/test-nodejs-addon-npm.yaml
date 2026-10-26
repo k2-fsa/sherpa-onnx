@@ -91,3 +91,27 @@ jobs:
             nodejs-addon-examples/test-*-lexicon.wav
             nodejs-addon-examples/test-*-phonemize.wav
           if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-addon-examples/test_offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-addon-examples/test_offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-addon-examples/test_online_speech_enhancement_voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-addon-examples/test_online_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn

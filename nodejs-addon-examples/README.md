@@ -51,6 +51,10 @@ The following tables list the examples in this folder.
 |[./test_offline_speech_enhancement_dpdfnet.js](./test_offline_speech_enhancement_dpdfnet.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement with DPDFNet.|
 |[./test_online_speech_enhancement_gtcrn.js](./test_online_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for online speech enhancement with GTCRN.|
 |[./test_online_speech_enhancement_dpdfnet.js](./test_online_speech_enhancement_dpdfnet.js)| It demonstrates how to use sherpa-onnx JavaScript API for online speech enhancement with DPDFNet.|
+|[./test_offline_speech_enhancement_voxlock.js](./test_offline_speech_enhancement_voxlock.js)| It demonstrates how to use sherpa-onnx JavaScript API for target-speaker voice isolation with VoxLock, without a voice sample.|
+|[./test_offline_speech_enhancement_voxlock_with_voice_sample.js](./test_offline_speech_enhancement_voxlock_with_voice_sample.js)| It demonstrates how to use sherpa-onnx JavaScript API for target-speaker voice isolation with VoxLock, with a voice sample.|
+|[./test_online_speech_enhancement_voxlock.js](./test_online_speech_enhancement_voxlock.js)| It demonstrates how to use sherpa-onnx JavaScript API for online target-speaker voice isolation with VoxLock, without a voice sample.|
+|[./test_online_speech_enhancement_voxlock_with_voice_sample.js](./test_online_speech_enhancement_voxlock_with_voice_sample.js)| It demonstrates how to use sherpa-onnx JavaScript API for online target-speaker voice isolation with VoxLock, with a voice sample.|
 
 ## Speaker diarization
 
@@ -221,6 +225,18 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 
 node ./test_offline_speech_enhancement_gtcrn.js
+```
+
+For VoxLock (the model is from https://github.com/arbazsiddiqui/voxlock):
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+
+node ./test_offline_speech_enhancement_voxlock.js
+node ./test_offline_speech_enhancement_voxlock_with_voice_sample.js
+node ./test_online_speech_enhancement_voxlock.js
+node ./test_online_speech_enhancement_voxlock_with_voice_sample.js
 ```
 
 ### Voice Activity detection (VAD)
