@@ -33,7 +33,8 @@ class OfflineZipformerCtcModelQnn::Impl {
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
     backend_ = std::make_unique<QnnBackend>(
         config.zipformer_ctc.qnn_config.backend_lib,
-        QnnBackendOptions{config_.debug});
+        QnnBackendOptions{config_.debug,
+                          config.zipformer_ctc.qnn_config.htp_perf_mode});
 
     const auto &context_binary =
         config_.zipformer_ctc.qnn_config.context_binary;

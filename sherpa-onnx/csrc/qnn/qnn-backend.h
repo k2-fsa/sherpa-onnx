@@ -13,6 +13,10 @@ namespace sherpa_onnx {
 
 struct QnnBackendOptions {
   bool debug = false;
+
+  // If true, pin HTP to max clocks (DCVS v3 PERFORMANCE_MODE and RPC polling).
+  // Device-wide while this process holds the power config id.
+  bool htp_perf_mode = false;
 };
 
 class QnnBackend {

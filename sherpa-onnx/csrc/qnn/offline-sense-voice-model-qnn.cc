@@ -34,7 +34,8 @@ class OfflineSenseVoiceModelQnn::Impl {
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
     backend_ = std::make_unique<QnnBackend>(
         config.sense_voice.qnn_config.backend_lib,
-        QnnBackendOptions{config_.debug});
+        QnnBackendOptions{config_.debug,
+                          config.sense_voice.qnn_config.htp_perf_mode});
 
     const auto &context_binary = config_.sense_voice.qnn_config.context_binary;
 

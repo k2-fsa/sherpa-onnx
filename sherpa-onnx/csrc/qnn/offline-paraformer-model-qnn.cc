@@ -185,7 +185,8 @@ class OfflineParaformerModelQnn::Impl {
                    const std::string &context_binary) {
     encoder_backend_ = std::make_unique<QnnBackend>(
         config_.paraformer.qnn_config.backend_lib,
-        QnnBackendOptions{config_.debug});
+        QnnBackendOptions{config_.debug,
+                          config_.paraformer.qnn_config.htp_perf_mode});
 
     if (context_binary.empty()) {
       if (config_.debug) {
@@ -230,7 +231,8 @@ class OfflineParaformerModelQnn::Impl {
                      const std::string &context_binary) {
     predictor_backend_ = std::make_unique<QnnBackend>(
         config_.paraformer.qnn_config.backend_lib,
-        QnnBackendOptions{config_.debug});
+        QnnBackendOptions{config_.debug,
+                          config_.paraformer.qnn_config.htp_perf_mode});
 
     if (context_binary.empty()) {
       if (config_.debug) {
@@ -274,7 +276,8 @@ class OfflineParaformerModelQnn::Impl {
                    const std::string &context_binary) {
     decoder_backend_ = std::make_unique<QnnBackend>(
         config_.paraformer.qnn_config.backend_lib,
-        QnnBackendOptions{config_.debug});
+        QnnBackendOptions{config_.debug,
+                          config_.paraformer.qnn_config.htp_perf_mode});
 
     if (context_binary.empty()) {
       if (config_.debug) {
