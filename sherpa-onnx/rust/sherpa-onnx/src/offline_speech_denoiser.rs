@@ -49,6 +49,44 @@ impl OfflineSpeechDenoiserDpdfNetModelConfig {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+/// VoxLock target-speaker voice isolation.
+///
+/// VoxLock keeps the voice of one speaker (the caller) and removes the other
+/// voices. The model is from https://github.com/arbazsiddiqui/voxlock
+pub struct OfflineSpeechDenoiserVoxLockModelConfig {
+    /// Path to the enroll model, e.g., `enroll.onnx`. It runs once on a voice
+    /// sample of the speaker to keep.
+    pub enroll_model: Option<String>,
+    /// Path to the chunk model, e.g., `chunk.onnx` or `chunk_int8.onnx`. It
+    /// runs on each chunk of the audio.
+    pub chunk_model: Option<String>,
+    /// Optional. Path to a wave file with at least 3 seconds of the caller's
+    /// voice. VoxLock keeps this voice and removes the others. From a longer
+    /// file, it uses the loudest 3 seconds within the first 30 seconds. A file
+    /// that is shorter or cannot be read is ignored, as if it were empty.
+    ///
+    /// If empty or ignored, the voice sample is taken from the input audio:
+    /// the offline denoiser uses the loudest 3 seconds in the first 15 seconds
+    /// of the input, and the online denoiser passes the audio through
+    /// unchanged until 3 seconds of speech have been heard, then uses that
+    /// speech.
+    pub voice_sample: Option<String>,
+}
+
+impl OfflineSpeechDenoiserVoxLockModelConfig {
+    pub(crate) fn to_sys(
+        &self,
+        cstrings: &mut Vec<CString>,
+    ) -> sys::OfflineSpeechDenoiserVoxLockModelConfig {
+        sys::OfflineSpeechDenoiserVoxLockModelConfig {
+            enroll_model: to_c_ptr(&self.enroll_model, cstrings),
+            chunk_model: to_c_ptr(&self.chunk_model, cstrings),
+            voice_sample: to_c_ptr(&self.voice_sample, cstrings),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 /// Aggregate model configuration for [`OfflineSpeechDenoiser`].
 ///
@@ -56,6 +94,7 @@ impl OfflineSpeechDenoiserDpdfNetModelConfig {
 pub struct OfflineSpeechDenoiserModelConfig {
     pub gtcrn: OfflineSpeechDenoiserGtcrnModelConfig,
     pub dpdfnet: OfflineSpeechDenoiserDpdfNetModelConfig,
+    pub voxlock: OfflineSpeechDenoiserVoxLockModelConfig,
     pub num_threads: i32,
     pub debug: bool,
     pub provider: Option<String>,
@@ -66,6 +105,7 @@ impl Default for OfflineSpeechDenoiserModelConfig {
         Self {
             gtcrn: Default::default(),
             dpdfnet: Default::default(),
+            voxlock: Default::default(),
             num_threads: 1,
             debug: false,
             provider: Some("cpu".to_string()),
@@ -87,6 +127,9 @@ impl OfflineSpeechDenoiserModelConfig {
             provider: to_c_ptr(&self.provider, cstrings),
             dpdfnet: self
                 .dpdfnet
+                .to_sys(cstrings),
+            voxlock: self
+                .voxlock
                 .to_sys(cstrings),
         }
     }
