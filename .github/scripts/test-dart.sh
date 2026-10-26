@@ -10,6 +10,26 @@ pushd version
 ./run.sh
 popd
 
+pushd speech-enhancement-voxlock
+echo "speech enhancement with VoxLock"
+./run.sh
+popd
+
+pushd speech-enhancement-voxlock-with-voice-sample
+echo "speech enhancement with VoxLock and a voice sample"
+./run.sh
+popd
+
+pushd streaming-speech-enhancement-voxlock
+echo "streaming speech enhancement with VoxLock"
+./run.sh
+popd
+
+pushd streaming-speech-enhancement-voxlock-with-voice-sample
+echo "streaming speech enhancement with VoxLock and a voice sample"
+./run.sh
+popd
+
 pushd tts
 
 echo '----------tts----------'

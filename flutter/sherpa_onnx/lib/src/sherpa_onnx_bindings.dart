@@ -13,6 +13,12 @@ final class SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig extends Struct {
   external double attenuationLimitDb;
 }
 
+final class SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig extends Struct {
+  external Pointer<Utf8> enrollModel;
+  external Pointer<Utf8> chunkModel;
+  external Pointer<Utf8> voiceSample;
+}
+
 final class SherpaOnnxOfflineSpeechDenoiserModelConfig extends Struct {
   external SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig gtcrn;
 
@@ -25,6 +31,8 @@ final class SherpaOnnxOfflineSpeechDenoiserModelConfig extends Struct {
   external Pointer<Utf8> provider;
 
   external SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
+
+  external SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig voxlock;
 }
 
 final class SherpaOnnxOfflineSpeechDenoiserConfig extends Struct {
