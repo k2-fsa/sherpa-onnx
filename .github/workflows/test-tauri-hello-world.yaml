@@ -108,7 +108,7 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world/src-tauri
-          sed -i.bak 's/sherpa-onnx = "2.0.0"/sherpa-onnx = { version = "2.0.0", default-features = false, features = ["shared"] }/' Cargo.toml
+          sed -i.bak 's/sherpa-onnx = "2.0.1"/sherpa-onnx = { version = "2.0.1", default-features = false, features = ["shared"] }/' Cargo.toml
           rm -f Cargo.toml.bak
           cat Cargo.toml
 
@@ -435,7 +435,7 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world/src-tauri
-          sed -i.bak 's/sherpa-onnx = "2.0.0"/sherpa-onnx = { version = "2.0.0", default-features = false, features = ["shared"] }/' Cargo.toml
+          sed -i.bak 's/sherpa-onnx = "2.0.1"/sherpa-onnx = { version = "2.0.1", default-features = false, features = ["shared"] }/' Cargo.toml
           rm -f Cargo.toml.bak
           cat Cargo.toml
 
@@ -616,7 +616,7 @@ jobs:
         shell: bash
         run: |
           cd tauri-examples/hello_world/src-tauri
-          sed -i.bak 's/sherpa-onnx = "2.0.0"/sherpa-onnx = { version = "2.0.0", default-features = false, features = ["shared"] }/' Cargo.toml
+          sed -i.bak 's/sherpa-onnx = "2.0.1"/sherpa-onnx = { version = "2.0.1", default-features = false, features = ["shared"] }/' Cargo.toml
           rm -f Cargo.toml.bak
           cat Cargo.toml
 

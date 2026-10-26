@@ -4,14 +4,14 @@ description: >
   This example demonstrates how to use the Dart API for VoxLock target-speaker
   voice isolation with a voice sample.
 
-version: 2.0.0
+version: 2.0.1
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
 
 # Add regular dependencies here.
 dependencies:
-  sherpa_onnx: 2.0.0
+  sherpa_onnx: 2.0.1
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
   path: ^1.9.0

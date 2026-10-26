@@ -1,3 +1,26 @@
+## 2.0.1
+
+* Add Pascal API for VoxLock (#4114)
+* Add Rust API for VoxLock (#4112)
+* Add Dart API for VoxLock (#4111)
+* Add Go API for VoxLock (#4110)
+* Add Swift API for VoxLock (#4109)
+* Fix CI failures (#4113)
+* Add C# API for VoxLock (#4108)
+* Add Java and Kotlin API for VoxLock (#4107)
+* Add JavaScript (WebAssembly) API for VoxLock (#4106)
+* Add JavaScript (node-addon) API for VoxLock (#4105)
+* Add C/CXX API for VoxLock (#4104)
+* Keep the STFT convs of Kokoro in float32 when quantizing to int8 (#4087)
+* Add OfflineRecognizer.createAsync() to the Dart API (#4070)
+* Use librosa-style fbank for streaming NeMo CTC models (#4092)
+* Add Python API for VoxLock (#4102)
+* Upload VoxLock models and test data (#4101)
+* Add CLAUDE.md with build, test and architecture guidance (#4099)
+* Add VoxLock target-speaker voice isolation to the speech denoisers (#4085)
+* Fix decoder positions of generated tokens in Canary greedy search (#4097)
+* Fix publishing flutter packages (#4091)
+
 ## 2.0.0
 
 * Add tauri example for Doubao ASR (#4083)

@@ -73,7 +73,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_macos: 2.0.0|  # sherpa_onnx_macos: 2.0.0\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_macos: 2.0.1|  # sherpa_onnx_macos: 2.0.1\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -82,7 +82,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter config --no-enable-swift-package-manager
@@ -173,7 +173,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_macos: 2.0.0|  # sherpa_onnx_macos: 2.0.0\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_macos: 2.0.1|  # sherpa_onnx_macos: 2.0.1\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -182,7 +182,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter config --enable-swift-package-manager
@@ -265,7 +265,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_ios: 2.0.0|  # sherpa_onnx_ios: 2.0.0\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_ios: 2.0.1|  # sherpa_onnx_ios: 2.0.1\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -274,7 +274,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter config --no-enable-swift-package-manager
@@ -341,7 +341,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_ios: 2.0.0|  # sherpa_onnx_ios: 2.0.0\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_ios: 2.0.1|  # sherpa_onnx_ios: 2.0.1\n  sherpa_onnx_ios:\n    path: ../sherpa_onnx_ios|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -350,7 +350,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter config --enable-swift-package-manager
@@ -444,7 +444,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_linux: 2.0.0|  # sherpa_onnx_linux: 2.0.0\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_linux: 2.0.1|  # sherpa_onnx_linux: 2.0.1\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -453,7 +453,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -520,7 +520,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_windows: 2.0.0|  # sherpa_onnx_windows: 2.0.0\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_windows: 2.0.1|  # sherpa_onnx_windows: 2.0.1\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -529,7 +529,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -625,7 +625,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  ${{ matrix.plugin_key }}: 2.0.0|  # ${{ matrix.plugin_key }}: 2.0.0\n  ${{ matrix.plugin_key }}:\n    path: ../${{ matrix.plugin }}|' pubspec.yaml
+          sed -i.bak 's|  ${{ matrix.plugin_key }}: 2.0.1|  # ${{ matrix.plugin_key }}: 2.0.1\n  ${{ matrix.plugin_key }}:\n    path: ../${{ matrix.plugin }}|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -634,7 +634,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -703,7 +703,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_web: 2.0.0|  # sherpa_onnx_web: 2.0.0\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_web: 2.0.1|  # sherpa_onnx_web: 2.0.1\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -712,7 +712,7 @@ jobs:
         run: |
           cd flutter-examples/hello_world
 
-          sed -i.bak 's|sherpa_onnx: 2.0.0|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get

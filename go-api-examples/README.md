@@ -30,6 +30,18 @@ for details.
 - [./streaming-speech-enhancement-dpdfnet](./streaming-speech-enhancement-dpdfnet) It shows how to use
   the online speech denoiser API with DPDFNet models.
 
+- [./speech-enhancement-voxlock](./speech-enhancement-voxlock) It shows how to use
+  the offline speech denoiser API with VoxLock.
+
+- [./speech-enhancement-voxlock-with-voice-sample](./speech-enhancement-voxlock-with-voice-sample) It shows how to use
+  the offline speech denoiser API with VoxLock and a voice sample.
+
+- [./streaming-speech-enhancement-voxlock](./streaming-speech-enhancement-voxlock) It shows how to use
+  the online speech denoiser API with VoxLock.
+
+- [./streaming-speech-enhancement-voxlock-with-voice-sample](./streaming-speech-enhancement-voxlock-with-voice-sample) It shows how to use
+  the online speech denoiser API with VoxLock and a voice sample.
+
 - [./non-streaming-tts](./non-streaming-tts) It shows how to use a non-streaming TTS
   model to convert text to speech. It uses a lexicon file for text normalization.
 

@@ -21,28 +21,28 @@ let package = Package(
     .binaryTarget(
       name: "SherpaOnnxMacOS",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.0-macos-static.xcframework.zip",
-      checksum: "5a8b8924c9f4e79a2f6655eef22027b31e3c4e2c57b61aa4862fd1ff5eed9abc"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.1-macos-static.xcframework.zip",
+      checksum: "3c378789ebcbf3b1fb2e7cf0c58dae8e5629001598148aee2edd4494dc939a27"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOS",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.0-ios-static.xcframework.zip",
-      checksum: "95550cc9e2d9699eccbc41d6d7462fb83cdfc12dd070d937533f8d0383a38286"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.1-ios-static.xcframework.zip",
+      checksum: "88aa569f71b7903e0bbdfbe6e2e114b3b95862b1ef0759eea3024f82926d7374"
     ),
 
     // --- Shared binary targets ---
     .binaryTarget(
       name: "SherpaOnnxMacOSShared",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.0-macos-shared.xcframework.zip",
-      checksum: "8ef57e8935f3fdb4da52a11f0b5dacee2aa4d525ae145a859c49ae12dee08145"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.1-macos-shared.xcframework.zip",
+      checksum: "5416f0ab5b1e123f9212d23854d6898c5f3ea6d63d1cf6deec70d117a8985896"
     ),
     .binaryTarget(
       name: "SherpaOnnxIOSShared",
       url:
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.0-ios-shared.xcframework.zip",
-      checksum: "8388076ec54af05aa06b4c8696f941d643cbbf48da95d3fc7750b1184315f1b1"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.1-ios-shared.xcframework.zip",
+      checksum: "3431e3822beacd74acb823796d4211c428c157429f60f4d537162678590e21f9"
     ),
 
     // --- Static wrapper target (default) ---
@@ -79,12 +79,16 @@ let package = Package(
         "omnilingual-asr-ctc.swift",
         "online-speech-enhancement-dpdfnet.swift",
         "online-speech-enhancement-gtcrn.swift",
+        "online-speech-enhancement-voxlock-with-voice-sample.swift",
+        "online-speech-enhancement-voxlock.swift",
         "qwen3-asr.swift",
         "source-separation-spleeter.swift",
         "source-separation-uvr.swift",
         "speaker-diarization.swift",
         "speech-enhancement-dpdfnet.swift",
         "speech-enhancement-gtcrn.swift",
+        "speech-enhancement-voxlock-with-voice-sample.swift",
+        "speech-enhancement-voxlock.swift",
         "spoken-language-identification.swift",
         "streaming-hlg-decode-file.swift",
         "test-version.swift",
@@ -99,6 +103,7 @@ let package = Package(
         "tts-zipvoice-lexicon.swift",
         "wenet-ctc-asr.swift",
         "zipformer-ctc-asr.swift",
+        "zipformer-ctc-hlg.swift",
         "run-add-punctuations-online.sh",
         "run-add-punctuations.sh",
         "run-cohere-transcribe.sh",
@@ -119,12 +124,16 @@ let package = Package(
         "run-omnilingual-asr-ctc-asr.sh",
         "run-online-speech-enhancement-dpdfnet.sh",
         "run-online-speech-enhancement-gtcrn.sh",
+        "run-online-speech-enhancement-voxlock-with-voice-sample.sh",
+        "run-online-speech-enhancement-voxlock.sh",
         "run-qwen3-asr.sh",
         "run-source-separation-spleeter.sh",
         "run-source-separation-uvr.sh",
         "run-speaker-diarization.sh",
         "run-speech-enhancement-dpdfnet.sh",
         "run-speech-enhancement-gtcrn.sh",
+        "run-speech-enhancement-voxlock-with-voice-sample.sh",
+        "run-speech-enhancement-voxlock.sh",
         "run-spoken-language-identification.sh",
         "run-streaming-hlg-decode-file.sh",
         "run-test-version.sh",
@@ -139,6 +148,7 @@ let package = Package(
         "run-tts-zipvoice-lexicon.sh",
         "run-wenet-ctc-asr.sh",
         "run-zipformer-ctc-asr.sh",
+        "run-zipformer-ctc-hlg.sh",
       ],
       sources: ["SherpaOnnx.swift"],
       linkerSettings: [

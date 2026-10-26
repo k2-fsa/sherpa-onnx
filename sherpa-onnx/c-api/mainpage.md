@@ -35,7 +35,7 @@ Each model family has its own documentation page with config examples:
 - @ref vad — Voice Activity Detection: Silero VAD, Ten VAD
 - @ref audio_tagging — Audio Tagging: Zipformer, CED
 - @ref punctuation — Punctuation: Offline (CT-Transformer), Online (CNN-BiLSTM)
-- @ref speech_enhancement — Speech Enhancement: GTCRN, DPDFNet (offline and online)
+- @ref speech_enhancement — Speech Enhancement: GTCRN, DPDFNet, VoxLock (offline and online)
 - @ref source_separation — Source Separation: Spleeter, UVR
 - @ref speaker_diarization — Speaker Diarization: Pyannote segmentation + embedding clustering
 - @ref speaker_embedding — Speaker Embedding: extraction, enrollment, search, verification

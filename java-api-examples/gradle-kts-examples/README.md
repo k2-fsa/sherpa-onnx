@@ -41,10 +41,10 @@ The project uses [JitPack](https://jitpack.io/) to fetch sherpa-onnx artifacts:
 ```kotlin
 dependencies {
     // 1. JVM core API
-    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v2.0.0")
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v2.0.1")
 
     // 2. Platform native lib (auto-detected)
-    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-$targetNativeClassifier:v2.0.0")
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-$targetNativeClassifier:v2.0.1")
 }
 ```
 

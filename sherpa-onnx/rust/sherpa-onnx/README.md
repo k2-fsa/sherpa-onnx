@@ -8,7 +8,7 @@ For most users, this is enough:
 
 ```toml
 [dependencies]
-sherpa-onnx = "2.0.0"
+sherpa-onnx = "2.0.1"
 ```
 
 The default Rust configuration uses **static** linking.
@@ -26,7 +26,7 @@ To use **shared** libraries instead of the default static mode:
 
 ```toml
 [dependencies]
-sherpa-onnx = { version = "2.0.0", default-features = false, features = ["shared"] }
+sherpa-onnx = { version = "2.0.1", default-features = false, features = ["shared"] }
 ```
 
 When shared libraries are used:

@@ -17,6 +17,18 @@ for details.
   It shows how to use the online speech denoiser API with GTCRN models.
 - [./streaming-speech-enhancement-dpdfnet](./streaming-speech-enhancement-dpdfnet)
   It shows how to use the online speech denoiser API with DPDFNet models.
+
+- [./speech-enhancement-voxlock](./speech-enhancement-voxlock) It shows how to
+  use the offline speech denoiser API with VoxLock for target-speaker voice
+  isolation.
+- [./speech-enhancement-voxlock-with-voice-sample](./speech-enhancement-voxlock-with-voice-sample)
+  It shows how to use the offline speech denoiser API with VoxLock and a voice
+  sample of the speaker to keep.
+- [./streaming-speech-enhancement-voxlock](./streaming-speech-enhancement-voxlock)
+  It shows how to use the online speech denoiser API with VoxLock.
+- [./streaming-speech-enhancement-voxlock-with-voice-sample](./streaming-speech-enhancement-voxlock-with-voice-sample)
+  It shows how to use the online speech denoiser API with VoxLock and a voice
+  sample of the speaker to keep.
 - [./zipvoice-tts-lexicon](./zipvoice-tts-lexicon) It shows how to use ZipVoice for
   Chinese/English zero-shot text-to-speech with the lexicon text frontend.
 - [./zipvoice-tts-play-lexicon](./zipvoice-tts-play-lexicon) It shows how to use

@@ -1,6 +1,6 @@
 [package]
 name = "doubao-asr-file"
-version = "2.0.0"
+version = "2.0.1"
 description = "Doubao ASR from audio/video files with sherpa-onnx VAD"
 edition = "2021"
 
@@ -23,7 +23,7 @@ uuid = { version = "1", features = ["v4"] }
 ureq = "2"
 # Default features = ["static"]: sherpa-onnx-sys downloads the prebuilt static
 # native libraries for the target — CI does not build sherpa-onnx from source.
-sherpa-onnx = "2.0.0"
+sherpa-onnx = "2.0.1"
 
 # symphonia: pure Rust audio decoder — no system deps, Tauri-packable.
 # Covers wav/mp3/flac/ogg/m4a/aac/aiff + the audio tracks of mp4/mov/mkv/webm/

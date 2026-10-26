@@ -22,7 +22,7 @@ Examples:
 
 - source build output: `/path/to/sherpa-onnx/build/install/lib`
 - manually extracted release archive:
-  `/path/to/sherpa-onnx-v2.0.0-linux-x64-static-lib/lib`
+  `/path/to/sherpa-onnx-v2.0.1-linux-x64-static-lib/lib`
 
 If `SHERPA_ONNX_LIB_DIR` is set, the build script uses that directory and does
 not auto-download another archive.
@@ -42,12 +42,12 @@ Most users just get this behavior automatically.
 
 | OS | Architecture | Archive example |
 |----|--------------|-----------------|
-| Linux | x86_64 | [`sherpa-onnx-v2.0.0-linux-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-x64-static-lib.tar.bz2) |
-| Linux | aarch64 | [`sherpa-onnx-v2.0.0-linux-aarch64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-aarch64-static-lib.tar.bz2) |
-| macOS | x86_64 | [`sherpa-onnx-v2.0.0-osx-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-x64-static-lib.tar.bz2) |
-| macOS | arm64 | [`sherpa-onnx-v2.0.0-osx-arm64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-arm64-static-lib.tar.bz2) |
-| Windows | x86_64 | [`sherpa-onnx-v2.0.0-win-x64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-x64-static-MT-Release-lib.tar.bz2) |
-| Windows | arm64 | [`sherpa-onnx-v2.0.0-win-arm64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-arm64-static-MT-Release-lib.tar.bz2) |
+| Linux | x86_64 | [`sherpa-onnx-v2.0.1-linux-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-x64-static-lib.tar.bz2) |
+| Linux | aarch64 | [`sherpa-onnx-v2.0.1-linux-aarch64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-aarch64-static-lib.tar.bz2) |
+| macOS | x86_64 | [`sherpa-onnx-v2.0.1-osx-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-x64-static-lib.tar.bz2) |
+| macOS | arm64 | [`sherpa-onnx-v2.0.1-osx-arm64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-arm64-static-lib.tar.bz2) |
+| Windows | x86_64 | [`sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2) |
+| Windows | arm64 | [`sherpa-onnx-v2.0.1-win-arm64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-arm64-static-MT-Release-lib.tar.bz2) |
 
 ### Shared mode
 
@@ -56,14 +56,14 @@ archives instead:
 
 | OS | Architecture | Archive example |
 |----|--------------|-----------------|
-| Linux | x86_64 | [`sherpa-onnx-v2.0.0-linux-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-x64-shared-lib.tar.bz2) |
-| Linux | aarch64 | [`sherpa-onnx-v2.0.0-linux-aarch64-shared-cpu-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-aarch64-shared-cpu-lib.tar.bz2) |
-| macOS | x86_64 | [`sherpa-onnx-v2.0.0-osx-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-x64-shared-lib.tar.bz2) |
-| macOS | arm64 | [`sherpa-onnx-v2.0.0-osx-arm64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-arm64-shared-lib.tar.bz2) |
-| Windows | x86_64 | [`sherpa-onnx-v2.0.0-win-x64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-x64-shared-MT-Release-lib.tar.bz2) |
-| Windows | arm64 | [`sherpa-onnx-v2.0.0-win-arm64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-arm64-shared-MT-Release-lib.tar.bz2) |
-| iOS | arm64 | [`sherpa-onnx-v2.0.0-ios-shared-onnxruntime-static.xcframework.zip`](https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.0-ios-shared-onnxruntime-static.xcframework.zip) |
-| Android | all ABIs | [`sherpa-onnx-v2.0.0-android.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-android.tar.bz2) |
+| Linux | x86_64 | [`sherpa-onnx-v2.0.1-linux-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-x64-shared-lib.tar.bz2) |
+| Linux | aarch64 | [`sherpa-onnx-v2.0.1-linux-aarch64-shared-cpu-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-aarch64-shared-cpu-lib.tar.bz2) |
+| macOS | x86_64 | [`sherpa-onnx-v2.0.1-osx-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-x64-shared-lib.tar.bz2) |
+| macOS | arm64 | [`sherpa-onnx-v2.0.1-osx-arm64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-arm64-shared-lib.tar.bz2) |
+| Windows | x86_64 | [`sherpa-onnx-v2.0.1-win-x64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-x64-shared-MT-Release-lib.tar.bz2) |
+| Windows | arm64 | [`sherpa-onnx-v2.0.1-win-arm64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-arm64-shared-MT-Release-lib.tar.bz2) |
+| iOS | arm64 | [`sherpa-onnx-v2.0.1-ios-shared-onnxruntime-static.xcframework.zip`](https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.1-ios-shared-onnxruntime-static.xcframework.zip) |
+| Android | all ABIs | [`sherpa-onnx-v2.0.1-android.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-android.tar.bz2) |
 
 In practice, use the latest release tag instead of the example version above.
 
@@ -75,7 +75,7 @@ This is enough for most users:
 
 ```toml
 [dependencies]
-sherpa-onnx = "2.0.0"
+sherpa-onnx = "2.0.1"
 ```
 
 That uses the crate's default feature set.
@@ -86,7 +86,7 @@ To use shared libraries instead, disable default features and enable `shared`:
 
 ```toml
 [dependencies]
-sherpa-onnx = { version = "2.0.0", default-features = false, features = ["shared"] }
+sherpa-onnx = { version = "2.0.1", default-features = false, features = ["shared"] }
 ```
 
 From the command line, the equivalent example command is:
@@ -324,8 +324,8 @@ Linux supports both **static** and **shared** linking on x86_64 and aarch64.
 
 | Architecture | Rust target | Archive (static) | Archive (shared) |
 |--------------|-------------|------------------|------------------|
-| x86_64 | `x86_64-unknown-linux-gnu` | [`sherpa-onnx-v2.0.0-linux-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-x64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.0-linux-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-x64-shared-lib.tar.bz2) |
-| aarch64 | `aarch64-unknown-linux-gnu` | [`sherpa-onnx-v2.0.0-linux-aarch64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-aarch64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.0-linux-aarch64-shared-cpu-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-linux-aarch64-shared-cpu-lib.tar.bz2) |
+| x86_64 | `x86_64-unknown-linux-gnu` | [`sherpa-onnx-v2.0.1-linux-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-x64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.1-linux-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-x64-shared-lib.tar.bz2) |
+| aarch64 | `aarch64-unknown-linux-gnu` | [`sherpa-onnx-v2.0.1-linux-aarch64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-aarch64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.1-linux-aarch64-shared-cpu-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-aarch64-shared-cpu-lib.tar.bz2) |
 
 ### Prerequisites
 
@@ -427,8 +427,8 @@ All Windows builds use the MSVC toolchain with static CRT (`/MT`).
 
 | Architecture | Rust target | Archive (static) | Archive (shared) |
 |--------------|-------------|------------------|------------------|
-| x86_64 | `x86_64-pc-windows-msvc` | [`sherpa-onnx-v2.0.0-win-x64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-x64-static-MT-Release-lib.tar.bz2) | [`sherpa-onnx-v2.0.0-win-x64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-x64-shared-MT-Release-lib.tar.bz2) |
-| arm64 | `aarch64-pc-windows-msvc` | [`sherpa-onnx-v2.0.0-win-arm64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-arm64-static-MT-Release-lib.tar.bz2) | [`sherpa-onnx-v2.0.0-win-arm64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-win-arm64-shared-MT-Release-lib.tar.bz2) |
+| x86_64 | `x86_64-pc-windows-msvc` | [`sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2) | [`sherpa-onnx-v2.0.1-win-x64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-x64-shared-MT-Release-lib.tar.bz2) |
+| arm64 | `aarch64-pc-windows-msvc` | [`sherpa-onnx-v2.0.1-win-arm64-static-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-arm64-static-MT-Release-lib.tar.bz2) | [`sherpa-onnx-v2.0.1-win-arm64-shared-MT-Release-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-arm64-shared-MT-Release-lib.tar.bz2) |
 
 ### Prerequisites
 
@@ -562,8 +562,8 @@ and x86_64 (Intel).
 
 | Architecture | Rust target | Archive (static) | Archive (shared) |
 |--------------|-------------|------------------|------------------|
-| arm64 | `aarch64-apple-darwin` | [`sherpa-onnx-v2.0.0-osx-arm64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-arm64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.0-osx-arm64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-arm64-shared-lib.tar.bz2) |
-| x86_64 | `x86_64-apple-darwin` | [`sherpa-onnx-v2.0.0-osx-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-x64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.0-osx-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.0/sherpa-onnx-v2.0.0-osx-x64-shared-lib.tar.bz2) |
+| arm64 | `aarch64-apple-darwin` | [`sherpa-onnx-v2.0.1-osx-arm64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-arm64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.1-osx-arm64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-arm64-shared-lib.tar.bz2) |
+| x86_64 | `x86_64-apple-darwin` | [`sherpa-onnx-v2.0.1-osx-x64-static-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-x64-static-lib.tar.bz2) | [`sherpa-onnx-v2.0.1-osx-x64-shared-lib.tar.bz2`](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-x64-shared-lib.tar.bz2) |
 
 ### Prerequisites
 

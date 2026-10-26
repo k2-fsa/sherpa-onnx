@@ -1,6 +1,6 @@
 [package]
 name = "sherpa-onnx-sys"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 description = "Raw FFI bindings to the sherpa-onnx C API"
 license = "Apache-2.0"

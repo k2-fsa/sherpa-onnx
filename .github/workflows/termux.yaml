@@ -202,7 +202,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -400,7 +400,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -637,7 +637,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -844,7 +844,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -1082,7 +1082,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -1320,7 +1320,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -1519,7 +1519,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -1727,7 +1727,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

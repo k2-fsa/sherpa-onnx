@@ -39,6 +39,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-enhancement-gtcrn", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-enhancement-dpdfnet", "speech-enhancement-dpdfnet\speech-enhancement-dpdfnet.csproj", "{016E5D0E-6D79-4AF6-B2C6-F0E091D78C00}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-enhancement-voxlock", "speech-enhancement-voxlock\speech-enhancement-voxlock.csproj", "{2FB6AEE7-8648-4A5B-818E-9B87962B7DA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-enhancement-voxlock-with-voice-sample", "speech-enhancement-voxlock-with-voice-sample\speech-enhancement-voxlock-with-voice-sample.csproj", "{B1DB251A-38A0-494F-B3B8-1ABD3D9C6AB2}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "version-test", "version-test\version-test.csproj", "{E57711E5-6546-4BA0-B627-79C94F415BC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-canary-decode-files", "non-streaming-canary-decode-files\non-streaming-canary-decode-files.csproj", "{925779DB-4429-4366-87C3-B14DD44AE1D4}"
@@ -64,6 +68,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-gtcrn", "streaming-speech-enhancement-gtcrn\streaming-speech-enhancement-gtcrn.csproj", "{5B87496C-EF81-4232-A448-6308F8E5A18C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-dpdfnet", "streaming-speech-enhancement-dpdfnet\streaming-speech-enhancement-dpdfnet.csproj", "{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-voxlock", "streaming-speech-enhancement-voxlock\streaming-speech-enhancement-voxlock.csproj", "{88DC7DC8-A412-497D-8726-D8C40E43CD6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-voxlock-with-voice-sample", "streaming-speech-enhancement-voxlock-with-voice-sample\streaming-speech-enhancement-voxlock-with-voice-sample.csproj", "{C68F9AF6-B6AA-4C56-BB67-5AD212A2C24B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zipvoice-tts-lexicon", "zipvoice-tts-lexicon\zipvoice-tts-lexicon.csproj", "{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}"
 EndProject
@@ -264,6 +272,22 @@ Global
 		{32B1BF23-74BB-46BB-BBDD-EC9C79A69448}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32B1BF23-74BB-46BB-BBDD-EC9C79A69448}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32B1BF23-74BB-46BB-BBDD-EC9C79A69448}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FB6AEE7-8648-4A5B-818E-9B87962B7DA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FB6AEE7-8648-4A5B-818E-9B87962B7DA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FB6AEE7-8648-4A5B-818E-9B87962B7DA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FB6AEE7-8648-4A5B-818E-9B87962B7DA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1DB251A-38A0-494F-B3B8-1ABD3D9C6AB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1DB251A-38A0-494F-B3B8-1ABD3D9C6AB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1DB251A-38A0-494F-B3B8-1ABD3D9C6AB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1DB251A-38A0-494F-B3B8-1ABD3D9C6AB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88DC7DC8-A412-497D-8726-D8C40E43CD6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88DC7DC8-A412-497D-8726-D8C40E43CD6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88DC7DC8-A412-497D-8726-D8C40E43CD6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88DC7DC8-A412-497D-8726-D8C40E43CD6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C68F9AF6-B6AA-4C56-BB67-5AD212A2C24B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C68F9AF6-B6AA-4C56-BB67-5AD212A2C24B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C68F9AF6-B6AA-4C56-BB67-5AD212A2C24B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C68F9AF6-B6AA-4C56-BB67-5AD212A2C24B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

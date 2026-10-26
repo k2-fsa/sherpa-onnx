@@ -20,6 +20,9 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ```bash
 ./run-non-streaming-speech-enhancement-gtcrn.sh
 ./run-non-streaming-speech-enhancement-dpdfnet.sh
+
+./run-non-streaming-speech-enhancement-voxlock.sh
+./run-non-streaming-speech-enhancement-voxlock-with-voice-sample.sh
 ```
 
 Use 16 kHz DPDFNet models such as

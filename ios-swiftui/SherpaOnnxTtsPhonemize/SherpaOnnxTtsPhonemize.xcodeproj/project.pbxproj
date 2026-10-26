@@ -360,7 +360,7 @@
 			repositoryURL = "https://github.com/k2-fsa/sherpa-onnx";
 			requirement = {
 				kind = exactVersion;
-				version = 2.0.0;
+				version = 2.0.1;
 			};
 		};
 		C9A4C6A0302B3BD60004DECB /* XCRemoteSwiftPackageReference "piper-phonemize" */ = {
