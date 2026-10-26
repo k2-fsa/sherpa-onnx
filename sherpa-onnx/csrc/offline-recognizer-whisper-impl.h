@@ -84,13 +84,18 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
  private:
   void DecodeStream(OfflineStream *s) const {
     std::vector<int32_t> language_candidate_ids;
-    if (s->HasOption("language_candidates") &&
-        !ResolveWhisperLanguageCandidates(
-            s->GetOption("language_candidates"),
-            config_.model_config.whisper.language, model_->IsMultiLingual(),
-            model_->GetLang2ID(), &language_candidate_ids)) {
-      s->SetResult(OfflineRecognitionResult{});
-      return;
+    if (s->HasOption("language_candidates")) {
+      const auto &candidates = s->GetOption("language_candidates");
+      const auto &language = config_.model_config.whisper.language;
+      bool is_multilingual = model_->IsMultiLingual();
+      const auto &lang2id = model_->GetLang2ID();
+      bool is_ok = ResolveWhisperLanguageCandidates(
+          candidates, language, is_multilingual, lang2id,
+          &language_candidate_ids);
+      if (!is_ok) {
+        s->SetResult({});
+        return;
+      }
     }
 
     decoder_->SetConfig(config_.model_config.whisper);

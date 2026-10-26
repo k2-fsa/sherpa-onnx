@@ -1283,11 +1283,13 @@ class OfflineRecognizer(object):
         case-sensitive and aliases are not converted. The first listed
         candidate wins an exact logit tie.
 
-        Invalid candidates, a nonempty fixed ``language``, or an English-only
-        model cause a diagnostic log and an empty result before the encoder
-        runs, clearing any previous result on the stream. There is no process
-        exit, unrestricted fallback, or separate error status. QNN and Ascend
-        Whisper recognizers reject this option before running the model.
+        For the standard ONNX recognizer, invalid candidates, a nonempty fixed
+        ``language``, or an English-only model cause a diagnostic log and an empty
+        result before the encoder runs, clearing any previous result on the
+        stream. There is no process exit, unrestricted fallback, or separate
+        error status. QNN and Ascend Whisper recognizers warn and ignore this
+        option, continuing normal recognition without restricting the language
+        to the candidate list.
 
         Without the option, existing behavior is unchanged. It does not alter
         the recognizer configuration, other streams, or the separate language

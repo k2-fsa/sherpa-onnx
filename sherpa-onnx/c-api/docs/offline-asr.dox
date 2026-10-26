@@ -109,13 +109,14 @@ An empty value, empty item (including a trailing comma), duplicate code, or
 unknown code is invalid. Codes are case-sensitive, with no alias conversion.
 The first candidate wins an exact logit tie.
 
-An invalid list, a nonempty fixed `language`, or an English-only model causes
-a diagnostic log and an empty result before encoder execution. Any previous
-result on that stream is cleared. The process is not terminated, and detection
-does not fall back to unrestricted selection. There is no separate error status:
-an empty result alone does not distinguish an option error from other empty
-recognition results. QNN and Ascend Whisper recognizers reject this option before
-running the model.
+For the standard ONNX recognizer, an invalid list, a nonempty fixed `language`,
+or an English-only model causes a diagnostic log and an empty result before
+encoder execution. Any previous result on that stream is cleared. The process
+is not terminated, and detection does not fall back to unrestricted selection.
+There is no separate error status: an empty result alone does not distinguish
+an option error from other empty recognition results. QNN and Ascend Whisper
+recognizers warn and ignore this option, continuing normal recognition without
+restricting the language to the candidate list.
 
 Omitting the option preserves the existing behavior. The option does not change
 the recognizer configuration, other streams, or the separate spoken-language

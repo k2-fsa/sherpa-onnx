@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-whisper-language-candidates.h
 //
-// Copyright (c)  2026  Xiaomi Corporation
+// Copyright (c)  2026  Ngoroth
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_WHISPER_LANGUAGE_CANDIDATES_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_WHISPER_LANGUAGE_CANDIDATES_H_
