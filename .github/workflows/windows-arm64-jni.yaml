@@ -101,7 +101,7 @@ jobs:
           file: sherpa-onnx-*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.0
+          tag: v2.0.1
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface

@@ -678,3 +678,7 @@ Hint: All of the following functions can be used in Flutter, even if some of the
 |Speech enhancement (DPDFNet)| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/speech-enhancement-dpdfnet)| macOS, Windows, Linux|
 |Streaming speech enhancement (GTCRN)| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/streaming-speech-enhancement-gtcrn)| macOS, Windows, Linux|
 |Streaming speech enhancement (DPDFNet)| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/streaming-speech-enhancement-dpdfnet)| macOS, Windows, Linux|
+|Speech enhancement (VoxLock)| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/speech-enhancement-voxlock)| macOS, Windows, Linux|
+|Speech enhancement (VoxLock with a voice sample)| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/speech-enhancement-voxlock-with-voice-sample)| macOS, Windows, Linux|
+|Streaming speech enhancement (VoxLock)| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/streaming-speech-enhancement-voxlock)| macOS, Windows, Linux|
+|Streaming speech enhancement (VoxLock with a voice sample)| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample)| macOS, Windows, Linux|

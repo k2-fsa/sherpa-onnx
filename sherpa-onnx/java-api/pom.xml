@@ -6,7 +6,7 @@
 
     <groupId>com.k2fsa.sherpa.onnx</groupId>
     <artifactId>sherpa-onnx-jvm</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
     <packaging>jar</packaging>
 
     <name>sherpa-onnx-jvm</name>

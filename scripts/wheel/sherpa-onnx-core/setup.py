@@ -23,7 +23,7 @@ def get_binaries():
 
 setup(
     name="sherpa-onnx-core",
-    version="2.0.0",
+    version="2.0.1",
     description="Core shared libraries for sherpa-onnx",
     packages=["sherpa_onnx"],
     include_package_data=True,
