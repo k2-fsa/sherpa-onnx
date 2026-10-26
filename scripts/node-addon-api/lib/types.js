@@ -645,10 +645,33 @@
  */
 
 /**
+ * VoxLock target-speaker voice isolation model config.
+ *
+ * VoxLock keeps the voice of one speaker (the caller) and removes the other
+ * voices. The model is from https://github.com/arbazsiddiqui/voxlock
+ *
+ * @typedef {Object} OfflineSpeechDenoiserVoxLockModelConfig
+ * @property {string} [enrollModel] Path to the enroll model, e.g.,
+ *   `enroll.onnx`. It runs once on a voice sample of the speaker to keep.
+ * @property {string} [chunkModel] Path to the chunk model, e.g., `chunk.onnx`
+ *   or `chunk_int8.onnx`. It runs on each chunk of the audio.
+ * @property {string} [voiceSample] Optional. Path to a wave file with at least
+ *   3 seconds of the caller's voice. VoxLock keeps this voice and removes the
+ *   others. From a longer file, it uses the loudest 3 seconds within the first
+ *   30 seconds. A file that is shorter or cannot be read is ignored, as if it
+ *   were empty. If empty or ignored, the voice sample is taken from the input
+ *   audio: the offline denoiser uses the loudest 3 seconds in the first 15
+ *   seconds of the input, and the online denoiser passes the audio through
+ *   unchanged until 3 seconds of speech have been heard, then uses that
+ *   speech.
+ */
+
+/**
  * Offline Speech Denoiser model config
  * @typedef {Object} OfflineSpeechDenoiserModelConfig
  * @property {OfflineSpeechDenoiserGtcrnModelConfig} [gtcrn]
  * @property {OfflineSpeechDenoiserDpdfNetModelConfig} [dpdfnet]
+ * @property {OfflineSpeechDenoiserVoxLockModelConfig} [voxlock]
  * @property {number} [numThreads]
  * @property {boolean|number} [debug]
  * @property {string} [provider]

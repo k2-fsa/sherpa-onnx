@@ -14,6 +14,34 @@ node_version=$(node -p "process.versions.node.split('.')[0]")
 echo "----------Version----------"
 node ./test_version.js
 
+echo "----------VoxLock speech enhancement----------"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+
+node ./test_offline_speech_enhancement_voxlock.js
+mkdir -p test_offline_speech_enhancement_voxlock
+mv voxlock-enhanced-16k.wav test_offline_speech_enhancement_voxlock/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav test_offline_speech_enhancement_voxlock/
+
+node ./test_offline_speech_enhancement_voxlock_with_voice_sample.js
+mkdir -p test_offline_speech_enhancement_voxlock_with_voice_sample
+mv voxlock-enhanced-with-voice-sample-16k.wav test_offline_speech_enhancement_voxlock_with_voice_sample/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav test_offline_speech_enhancement_voxlock_with_voice_sample/
+
+node ./test_online_speech_enhancement_voxlock.js
+mkdir -p test_online_speech_enhancement_voxlock
+mv voxlock-enhanced-online-16k.wav test_online_speech_enhancement_voxlock/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav test_online_speech_enhancement_voxlock/
+
+node ./test_online_speech_enhancement_voxlock_with_voice_sample.js
+mkdir -p test_online_speech_enhancement_voxlock_with_voice_sample
+mv voxlock-enhanced-online-with-voice-sample-16k.wav test_online_speech_enhancement_voxlock_with_voice_sample/
+cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav test_online_speech_enhancement_voxlock_with_voice_sample/
+
+ls -lh test_offline_speech_enhancement_voxlock test_offline_speech_enhancement_voxlock_with_voice_sample test_online_speech_enhancement_voxlock test_online_speech_enhancement_voxlock_with_voice_sample
+
+rm -rf sherpa-onnx-voxlock-int8
+
 echo "----------PocketTTS----------"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
