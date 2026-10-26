@@ -1,1 +1,2 @@
 link*.res
+!run-*.sh
