@@ -142,6 +142,11 @@ README-DEV.txt
 *.jit
 ##clion
 .idea
+
+## Eclipse and other IDEs
+.classpath
+.project
+.settings/
 sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 dict
 *.npz

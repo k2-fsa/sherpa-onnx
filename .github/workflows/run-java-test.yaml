@@ -158,6 +158,41 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run speech enhancement (VoxLock)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-speech-enhancement-voxlock.sh
+          ./run-non-streaming-speech-enhancement-voxlock-with-voice-sample.sh
+          ./run-streaming-speech-enhancement-voxlock.sh
+          ./run-streaming-speech-enhancement-voxlock-with-voice-sample.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NonStreamingSpeechEnhancementVoxLock-${{ matrix.os }}
+          # each run-*.sh keeps its input and output wavs in a folder named
+          # after the example
+          path: java-api-examples/NonStreamingSpeechEnhancementVoxLock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NonStreamingSpeechEnhancementVoxLockWithVoiceSample-${{ matrix.os }}
+          path: java-api-examples/NonStreamingSpeechEnhancementVoxLockWithVoiceSample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StreamingSpeechEnhancementVoxLock-${{ matrix.os }}
+          path: java-api-examples/StreamingSpeechEnhancementVoxLock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StreamingSpeechEnhancementVoxLockWithVoiceSample-${{ matrix.os }}
+          path: java-api-examples/StreamingSpeechEnhancementVoxLockWithVoiceSample
+          if-no-files-found: warn
+
       - name:  Run java test (Non-Streaming TTS)
         shell: bash
         run: |

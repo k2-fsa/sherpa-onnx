@@ -930,7 +930,113 @@ function testOfflineZipformerCtcHlg() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineSpeechDenoiserVoxLock() {
+  if [ ! -d ./sherpa-onnx-voxlock-int8 ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+    tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+    rm sherpa-onnx-voxlock-int8.tar.bz2
+  fi
+
+  out_filename=test_offline_speech_denoiser_voxlock.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_speech_denoiser_voxlock.kt \
+    OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  mkdir -p test_offline_speech_denoiser_voxlock
+  mv voxlock-enhanced-16k.wav test_offline_speech_denoiser_voxlock/
+  cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav test_offline_speech_denoiser_voxlock/
+}
+
+function testOfflineSpeechDenoiserVoxLockWithVoiceSample() {
+  if [ ! -d ./sherpa-onnx-voxlock-int8 ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+    tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+    rm sherpa-onnx-voxlock-int8.tar.bz2
+  fi
+
+  out_filename=test_offline_speech_denoiser_voxlock_with_voice_sample.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_speech_denoiser_voxlock_with_voice_sample.kt \
+    OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  mkdir -p test_offline_speech_denoiser_voxlock_with_voice_sample
+  mv voxlock-enhanced-with-voice-sample-16k.wav test_offline_speech_denoiser_voxlock_with_voice_sample/
+  cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav test_offline_speech_denoiser_voxlock_with_voice_sample/
+}
+
+function testOnlineSpeechDenoiserVoxLock() {
+  if [ ! -d ./sherpa-onnx-voxlock-int8 ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+    tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+    rm sherpa-onnx-voxlock-int8.tar.bz2
+  fi
+
+  out_filename=test_online_speech_denoiser_voxlock.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_online_speech_denoiser_voxlock.kt \
+    OnlineSpeechDenoiser.kt \
+    OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  mkdir -p test_online_speech_denoiser_voxlock
+  mv voxlock-enhanced-online-16k.wav test_online_speech_denoiser_voxlock/
+  cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav test_online_speech_denoiser_voxlock/
+}
+
+function testOnlineSpeechDenoiserVoxLockWithVoiceSample() {
+  if [ ! -d ./sherpa-onnx-voxlock-int8 ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2
+    tar xvf sherpa-onnx-voxlock-int8.tar.bz2
+    rm sherpa-onnx-voxlock-int8.tar.bz2
+  fi
+
+  out_filename=test_online_speech_denoiser_voxlock_with_voice_sample.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_online_speech_denoiser_voxlock_with_voice_sample.kt \
+    OnlineSpeechDenoiser.kt \
+    OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  mkdir -p test_online_speech_denoiser_voxlock_with_voice_sample
+  mv voxlock-enhanced-online-with-voice-sample-16k.wav test_online_speech_denoiser_voxlock_with_voice_sample/
+  cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav test_online_speech_denoiser_voxlock_with_voice_sample/
+}
+
 testVersion
+testOfflineSpeechDenoiserVoxLock
+testOfflineSpeechDenoiserVoxLockWithVoiceSample
+testOnlineSpeechDenoiserVoxLock
+testOnlineSpeechDenoiserVoxLockWithVoiceSample
 testPocketTts
 testZipVoiceTtsLexicon
 testSupertonicTts
