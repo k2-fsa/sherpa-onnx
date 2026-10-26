@@ -231,7 +231,7 @@ jobs:
           - os: macos-latest
             arch: arm64
             index: 0
-            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+            tests: "hello-world speech-enhancement-voxlock speech-enhancement-voxlock-with-voice-sample streaming-speech-enhancement-voxlock streaming-speech-enhancement-voxlock-with-voice-sample non-streaming-decode-files speaker-identification source-separation"
           - os: macos-latest
             arch: arm64
             index: 1
@@ -268,7 +268,7 @@ jobs:
           - os: macos-15-intel
             arch: amd64
             index: 0
-            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+            tests: "hello-world speech-enhancement-voxlock speech-enhancement-voxlock-with-voice-sample streaming-speech-enhancement-voxlock streaming-speech-enhancement-voxlock-with-voice-sample non-streaming-decode-files speaker-identification source-separation"
           - os: macos-15-intel
             arch: amd64
             index: 1
@@ -305,7 +305,7 @@ jobs:
           - os: ubuntu-latest
             arch: amd64
             index: 0
-            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+            tests: "hello-world speech-enhancement-voxlock speech-enhancement-voxlock-with-voice-sample streaming-speech-enhancement-voxlock streaming-speech-enhancement-voxlock-with-voice-sample non-streaming-decode-files speaker-identification source-separation"
           - os: ubuntu-latest
             arch: amd64
             index: 1
@@ -342,7 +342,7 @@ jobs:
           - os: ubuntu-22.04-arm
             arch: arm64
             index: 0
-            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+            tests: "hello-world speech-enhancement-voxlock speech-enhancement-voxlock-with-voice-sample streaming-speech-enhancement-voxlock streaming-speech-enhancement-voxlock-with-voice-sample non-streaming-decode-files speaker-identification source-separation"
           - os: ubuntu-22.04-arm
             arch: arm64
             index: 1
@@ -379,7 +379,7 @@ jobs:
           - os: windows-2022
             arch: x64
             index: 0
-            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+            tests: "hello-world speech-enhancement-voxlock speech-enhancement-voxlock-with-voice-sample streaming-speech-enhancement-voxlock streaming-speech-enhancement-voxlock-with-voice-sample non-streaming-decode-files speaker-identification source-separation"
           - os: windows-2022
             arch: x64
             index: 1
@@ -416,7 +416,7 @@ jobs:
           - os: windows-2022
             arch: x86
             index: 0
-            tests: "hello-world non-streaming-decode-files speaker-identification"
+            tests: "hello-world speech-enhancement-voxlock speech-enhancement-voxlock-with-voice-sample streaming-speech-enhancement-voxlock streaming-speech-enhancement-voxlock-with-voice-sample non-streaming-decode-files speaker-identification"
           - os: windows-2022
             arch: x86
             index: 1
@@ -453,7 +453,7 @@ jobs:
           - os: windows-11-arm
             arch: arm64
             index: 0
-            tests: "hello-world non-streaming-decode-files speaker-identification source-separation"
+            tests: "hello-world speech-enhancement-voxlock speech-enhancement-voxlock-with-voice-sample streaming-speech-enhancement-voxlock streaming-speech-enhancement-voxlock-with-voice-sample non-streaming-decode-files speaker-identification source-separation"
           - os: windows-11-arm
             arch: arm64
             index: 1
@@ -561,4 +561,32 @@ jobs:
             go-api-examples/zero-shot-pocket-tts/*.wav
             go-api-examples/zero-shot-pocket-tts-play/*.wav
             go-api-examples/supertonic-tts/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: contains(matrix.tests, 'voxlock')
+        with:
+          name: speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.arch }}
+          path: go-api-examples/speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: contains(matrix.tests, 'voxlock')
+        with:
+          name: speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.arch }}
+          path: go-api-examples/speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: contains(matrix.tests, 'voxlock')
+        with:
+          name: streaming-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.arch }}
+          path: go-api-examples/streaming-speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: contains(matrix.tests, 'voxlock')
+        with:
+          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.arch }}
+          path: go-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
           if-no-files-found: warn

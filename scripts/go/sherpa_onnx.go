@@ -2686,9 +2686,32 @@ type OfflineSpeechDenoiserDpdfNetModelConfig struct {
 	AttenuationLimitDb float32
 }
 
+// VoxLock keeps the voice of one speaker (the caller) and removes the other
+// voices. The model is from https://github.com/arbazsiddiqui/voxlock
+type OfflineSpeechDenoiserVoxLockModelConfig struct {
+	// Path to the VoxLock enroll model, e.g., enroll.onnx. It runs once on a
+	// voice sample of the speaker to keep.
+	EnrollModel string
+
+	// Path to the VoxLock chunk model, e.g., chunk.onnx or chunk_int8.onnx.
+	// It runs on each chunk of the audio.
+	ChunkModel string
+
+	// Optional. Path to a wave file with at least 3 seconds of the caller's
+	// voice. VoxLock keeps this voice and removes the others. From a longer
+	// file, it uses the loudest 3 seconds within the first 30 seconds. A file
+	// that is shorter or cannot be read is ignored, as if it were empty. If
+	// empty or ignored, the voice sample is taken from the input audio: the
+	// offline denoiser uses the loudest 3 seconds in the first 15 seconds of
+	// the input, and the online denoiser passes the audio through unchanged
+	// until 3 seconds of speech have been heard, then uses that speech.
+	VoiceSample string
+}
+
 type OfflineSpeechDenoiserModelConfig struct {
 	Gtcrn      OfflineSpeechDenoiserGtcrnModelConfig
 	DpdfNet    OfflineSpeechDenoiserDpdfNetModelConfig
+	VoxLock    OfflineSpeechDenoiserVoxLockModelConfig
 	NumThreads int32
 	Debug      int32
 	Provider   string
@@ -2765,6 +2788,13 @@ func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeec
 	defer C.free(unsafe.Pointer(c.model.dpdfnet.model))
 	c.model.dpdfnet.attenuation_limit_db = C.float(config.Model.DpdfNet.AttenuationLimitDb)
 
+	c.model.voxlock.enroll_model = C.CString(config.Model.VoxLock.EnrollModel)
+	defer C.free(unsafe.Pointer(c.model.voxlock.enroll_model))
+	c.model.voxlock.chunk_model = C.CString(config.Model.VoxLock.ChunkModel)
+	defer C.free(unsafe.Pointer(c.model.voxlock.chunk_model))
+	c.model.voxlock.voice_sample = C.CString(config.Model.VoxLock.VoiceSample)
+	defer C.free(unsafe.Pointer(c.model.voxlock.voice_sample))
+
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
 
@@ -2813,6 +2843,13 @@ func NewOnlineSpeechDenoiser(config *OnlineSpeechDenoiserConfig) *OnlineSpeechDe
 	defer C.free(unsafe.Pointer(c.model.gtcrn.model))
 	c.model.dpdfnet.model = C.CString(config.Model.DpdfNet.Model)
 	defer C.free(unsafe.Pointer(c.model.dpdfnet.model))
+
+	c.model.voxlock.enroll_model = C.CString(config.Model.VoxLock.EnrollModel)
+	defer C.free(unsafe.Pointer(c.model.voxlock.enroll_model))
+	c.model.voxlock.chunk_model = C.CString(config.Model.VoxLock.ChunkModel)
+	defer C.free(unsafe.Pointer(c.model.voxlock.chunk_model))
+	c.model.voxlock.voice_sample = C.CString(config.Model.VoxLock.VoiceSample)
+	defer C.free(unsafe.Pointer(c.model.voxlock.voice_sample))
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
