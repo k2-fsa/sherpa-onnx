@@ -3019,6 +3019,12 @@ static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
   c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
   c.model.dpdfnet.attenuation_limit_db =
       config->model.dpdfnet.attenuation_limit_db;
+  c.model.voxlock.enroll_model =
+      SHERPA_ONNX_OR(config->model.voxlock.enroll_model, "");
+  c.model.voxlock.chunk_model =
+      SHERPA_ONNX_OR(config->model.voxlock.chunk_model, "");
+  c.model.voxlock.voice_sample =
+      SHERPA_ONNX_OR(config->model.voxlock.voice_sample, "");
 
   if (c.model.debug) {
 #if __OHOS__
@@ -3236,6 +3242,12 @@ static sherpa_onnx::OnlineSpeechDenoiserConfig GetOnlineSpeechDenoiserConfig(
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
   c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
+  c.model.voxlock.enroll_model =
+      SHERPA_ONNX_OR(config->model.voxlock.enroll_model, "");
+  c.model.voxlock.chunk_model =
+      SHERPA_ONNX_OR(config->model.voxlock.chunk_model, "");
+  c.model.voxlock.voice_sample =
+      SHERPA_ONNX_OR(config->model.voxlock.voice_sample, "");
 
   if (c.model.debug) {
 #if __OHOS__

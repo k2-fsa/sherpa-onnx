@@ -28,6 +28,24 @@ add_executable(online-speech-enhancement-dpdfnet-c-api
                online-speech-enhancement-dpdfnet-c-api.c)
 target_link_libraries(online-speech-enhancement-dpdfnet-c-api sherpa-onnx-c-api)
 
+add_executable(speech-enhancement-voxlock-c-api
+               speech-enhancement-voxlock-c-api.c)
+target_link_libraries(speech-enhancement-voxlock-c-api sherpa-onnx-c-api)
+
+add_executable(speech-enhancement-voxlock-with-voice-sample-c-api
+               speech-enhancement-voxlock-with-voice-sample-c-api.c)
+target_link_libraries(speech-enhancement-voxlock-with-voice-sample-c-api
+                      sherpa-onnx-c-api)
+
+add_executable(online-speech-enhancement-voxlock-c-api
+               online-speech-enhancement-voxlock-c-api.c)
+target_link_libraries(online-speech-enhancement-voxlock-c-api sherpa-onnx-c-api)
+
+add_executable(online-speech-enhancement-voxlock-with-voice-sample-c-api
+               online-speech-enhancement-voxlock-with-voice-sample-c-api.c)
+target_link_libraries(online-speech-enhancement-voxlock-with-voice-sample-c-api
+                      sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(offline-tts-c-api offline-tts-c-api.c)
   target_link_libraries(offline-tts-c-api sherpa-onnx-c-api)
