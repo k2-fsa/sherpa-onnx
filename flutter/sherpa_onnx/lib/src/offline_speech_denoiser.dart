@@ -25,6 +25,12 @@ class OfflineSpeechDenoiser {
     c.ref.model.dpdfnet.model = config.model.dpdfnet.model.toNativeUtf8();
     c.ref.model.dpdfnet.attenuationLimitDb =
         config.model.dpdfnet.attenuationLimitDb;
+    c.ref.model.voxlock.enrollModel =
+        config.model.voxlock.enrollModel.toNativeUtf8();
+    c.ref.model.voxlock.chunkModel =
+        config.model.voxlock.chunkModel.toNativeUtf8();
+    c.ref.model.voxlock.voiceSample =
+        config.model.voxlock.voiceSample.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
@@ -37,6 +43,9 @@ class OfflineSpeechDenoiser {
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.gtcrn.model);
     calloc.free(c.ref.model.dpdfnet.model);
+    calloc.free(c.ref.model.voxlock.enrollModel);
+    calloc.free(c.ref.model.voxlock.chunkModel);
+    calloc.free(c.ref.model.voxlock.voiceSample);
     calloc.free(c);
 
     if (ptr == nullptr) {

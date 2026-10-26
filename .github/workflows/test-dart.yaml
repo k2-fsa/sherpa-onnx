@@ -176,6 +176,10 @@ jobs:
           cp scripts/dart/speech-enhancement-dpdfnet-pubspec.yaml dart-api-examples/speech-enhancement-dpdfnet/pubspec.yaml
           cp scripts/dart/streaming-speech-enhancement-gtcrn-pubspec.yaml dart-api-examples/streaming-speech-enhancement-gtcrn/pubspec.yaml
           cp scripts/dart/streaming-speech-enhancement-dpdfnet-pubspec.yaml dart-api-examples/streaming-speech-enhancement-dpdfnet/pubspec.yaml
+          cp scripts/dart/speech-enhancement-voxlock-pubspec.yaml dart-api-examples/speech-enhancement-voxlock/pubspec.yaml
+          cp scripts/dart/speech-enhancement-voxlock-with-voice-sample-pubspec.yaml dart-api-examples/speech-enhancement-voxlock-with-voice-sample/pubspec.yaml
+          cp scripts/dart/streaming-speech-enhancement-voxlock-pubspec.yaml dart-api-examples/streaming-speech-enhancement-voxlock/pubspec.yaml
+          cp scripts/dart/streaming-speech-enhancement-voxlock-with-voice-sample-pubspec.yaml dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/pubspec.yaml
           cp scripts/dart/slid-pubspec.yaml dart-api-examples/spoken-language-identification/pubspec.yaml
           cp scripts/dart/version-pubspec.yaml dart-api-examples/version/pubspec.yaml
 
@@ -187,4 +191,28 @@ jobs:
         with:
           name: tts-waves-${{ matrix.os }}
           path: dart-api-examples/tts/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-${{ matrix.os }}
+          path: dart-api-examples/speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: dart-api-examples/speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-${{ matrix.os }}
+          path: dart-api-examples/streaming-speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
           if-no-files-found: warn
