@@ -32,7 +32,8 @@ class OfflineParakeetCtcModelQnn::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
     backend_ = std::make_unique<QnnBackend>(
-        config.nemo_ctc.qnn_config.backend_lib, config_.debug);
+        config.nemo_ctc.qnn_config.backend_lib,
+        QnnBackendOptions{config_.debug});
 
     const auto &context_binary =
         config_.nemo_ctc.qnn_config.context_binary;

@@ -126,8 +126,8 @@ class OfflineMoonshineModelQnn::Impl {
   void InitEncoder() {
     const auto &qnn_config = config_.moonshine.qnn_config;
 
-    encoder_backend_ = std::make_unique<QnnBackend>(qnn_config.backend_lib,
-                                                    config_.debug);
+    encoder_backend_ = std::make_unique<QnnBackend>(
+        qnn_config.backend_lib, QnnBackendOptions{config_.debug});
 
     const auto &context_binary = qnn_config.context_binary;
 
@@ -178,8 +178,8 @@ class OfflineMoonshineModelQnn::Impl {
   void InitDecoder() {
     const auto &qnn_config = config_.moonshine.qnn_config;
 
-    decoder_backend_ = std::make_unique<QnnBackend>(qnn_config.backend_lib,
-                                                    config_.debug);
+    decoder_backend_ = std::make_unique<QnnBackend>(
+        qnn_config.backend_lib, QnnBackendOptions{config_.debug});
 
     const auto &context_binary = qnn_config.context_binary;
 

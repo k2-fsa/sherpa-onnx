@@ -22,7 +22,8 @@ namespace sherpa_onnx {
 
 class QnnBackend::Impl {
  public:
-  explicit Impl(const std::string &backend_lib, bool debug) : debug_(debug) {
+  Impl(const std::string &backend_lib, const QnnBackendOptions &opts)
+      : opts_(opts) {
     bool ok = InitQnnInterface(backend_lib);
     if (!ok) {
       SHERPA_ONNX_LOGE("Failed to init qnn interface from '%s'",
@@ -96,7 +97,7 @@ class QnnBackend::Impl {
       return false;
     }
 
-    if (debug_) {
+    if (opts_.debug) {
       SHERPA_ONNX_LOGE("loaded %s", backend_lib.c_str());
     }
 
@@ -110,7 +111,7 @@ class QnnBackend::Impl {
       return false;
     }
 
-    if (debug_) {
+    if (opts_.debug) {
       SHERPA_ONNX_LOGE("Got %s", symbol);
     }
 
@@ -132,7 +133,7 @@ class QnnBackend::Impl {
 
     bool found_valid_interface = false;
 
-    if (debug_) {
+    if (opts_.debug) {
       SHERPA_ONNX_LOGE("QNN_API_VERSION_MAJOR: %d", QNN_API_VERSION_MAJOR);
       SHERPA_ONNX_LOGE("QNN_API_VERSION_MINOR: %d", QNN_API_VERSION_MINOR);
       SHERPA_ONNX_LOGE("QNN_API_VERSION_PATCH: %d", QNN_API_VERSION_PATCH);
@@ -141,7 +142,7 @@ class QnnBackend::Impl {
     for (size_t idx = 0; idx < num_providers; ++idx) {
       auto p = interface_providers[idx];
 
-      if (debug_) {
+      if (opts_.debug) {
         std::ostringstream os;
         os << "---" << idx << "----\n";
         os << "backendId: " << p->backendId << "\n";
@@ -171,7 +172,7 @@ class QnnBackend::Impl {
       return false;
     }
 
-    if (debug_) {
+    if (opts_.debug) {
       const char *build_id = nullptr;
       ret = qnn_interface_.backendGetBuildId(&build_id);
       SHERPA_ONNX_QNN_CHECK(ret, "Failed to call backendGetBuildId()");
@@ -200,7 +201,7 @@ class QnnBackend::Impl {
   }
 
  private:
-  bool debug_ = true;
+  QnnBackendOptions opts_;
   std::unique_ptr<void, decltype(&dlclose)> backend_lib_handle_{nullptr,
                                                                 &dlclose};
 
@@ -224,8 +225,9 @@ class QnnBackend::Impl {
 
 QnnBackend::~QnnBackend() = default;
 
-QnnBackend::QnnBackend(const std::string &backend_lib, bool debug)
-    : impl_(std::make_unique<Impl>(backend_lib, debug)) {}
+QnnBackend::QnnBackend(const std::string &backend_lib,
+                       const QnnBackendOptions &opts)
+    : impl_(std::make_unique<Impl>(backend_lib, opts)) {}
 
 void QnnBackend::InitContext() const { impl_->InitContext(); }
 

@@ -11,9 +11,13 @@
 
 namespace sherpa_onnx {
 
+struct QnnBackendOptions {
+  bool debug = false;
+};
+
 class QnnBackend {
  public:
-  explicit QnnBackend(const std::string &backend_lib, bool debug);
+  QnnBackend(const std::string &backend_lib, const QnnBackendOptions &opts);
   ~QnnBackend();
 
   void InitContext() const;
