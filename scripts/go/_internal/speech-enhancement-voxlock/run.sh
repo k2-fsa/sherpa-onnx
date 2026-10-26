@@ -1,0 +1,1 @@
+../../../../go-api-examples/speech-enhancement-voxlock/run.sh
