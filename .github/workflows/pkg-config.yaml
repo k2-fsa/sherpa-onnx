@@ -103,6 +103,7 @@ jobs:
           cd c-api-examples
 
           pkg-config --cflags sherpa-onnx
+          pkg-config --libs sherpa-onnx
 
           gcc -o decode-file-c-api $(pkg-config --cflags sherpa-onnx) ./decode-file-c-api.c $(pkg-config --libs sherpa-onnx)
 
@@ -114,6 +115,7 @@ jobs:
           cd c-api-examples
 
           pkg-config --cflags sherpa-onnx
+          pkg-config --libs sherpa-onnx
 
           gcc -o offline-tts-c-api $(pkg-config --cflags sherpa-onnx) ./offline-tts-c-api.c $(pkg-config --libs sherpa-onnx)
 

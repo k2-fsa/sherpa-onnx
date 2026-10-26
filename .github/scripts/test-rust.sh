@@ -113,5 +113,17 @@ bash ./run-offline-speech-enhancement-dpdfnet.sh
 bash ./run-streaming-speech-enhancement-gtcrn.sh
 bash ./run-streaming-speech-enhancement-dpdfnet.sh
 
-bash ./run-cohere-transcribe.sh
-rm -rf sherpa-onnx-cohere-transcribe-*
+# The cohere encoder ships a 2.6G external-data file that does not fit 32-bit
+# platforms: ORT cannot parse its offsets ("Failed to parse value") and the
+# model cannot load in a 32-bit address space anyway. The example stays covered
+# by the 64-bit jobs. (uname -m because getconf is not available everywhere,
+# e.g. Termux.)
+case "$(uname -m)" in
+  armv7* | armv8l | i386 | i486 | i586 | i686 | x86)
+    echo "Skipping run-cohere-transcribe.sh on 32-bit platforms"
+    ;;
+  *)
+    bash ./run-cohere-transcribe.sh
+    rm -rf sherpa-onnx-cohere-transcribe-*
+    ;;
+esac
