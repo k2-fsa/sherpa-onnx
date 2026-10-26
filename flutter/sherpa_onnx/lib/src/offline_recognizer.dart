@@ -5,7 +5,7 @@ import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
-import './init_native.dart';
+import '../sherpa_onnx.dart' show initBindings;
 import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
@@ -111,8 +111,8 @@ class OfflineRecognizer {
     }
 
     final address = await Isolate.run(() {
-      // Bindings are per isolate. Look up symbols in the already loaded library.
-      initNativeBindings(null);
+      // Bindings are per isolate.
+      initBindings();
       return OfflineRecognizer(config).ptr.address;
     });
 
