@@ -26,18 +26,21 @@ class OfflineSpeechDenoiserVoxLockModel {
 
   using States = std::vector<Ort::Value>;
 
+  // The outputs of the enroll model, in the order the chunk model takes them
+  using Voice = std::vector<Ort::Value>;
+
   /* Run the enroll model on a voice sample of the caller.
    *
    * @param samples Voice sample at GetMetaData().sample_rate. It must have
    *                exactly GetMetaData().voice_sample_seconds seconds.
    * @param n Number of samples.
    *
-   * @return Return a pair containing:
-   *  - enroll_mag, a tensor of shape (1, num_freq_bins, num_frames)
-   *  - context, a tensor of shape (1, context_dim, num_context_frames)
+   * @return Return the outputs of the enroll model. Version 1 models return
+   *         enroll_mag and context; version 2 models return enroll_n, k and v,
+   *         which also hold the speaker attention's keys and values, so the
+   *         chunk model does not recompute them for every chunk.
    */
-  std::pair<Ort::Value, Ort::Value> Enroll(const float *samples,
-                                           int32_t n) const;
+  Voice Enroll(const float *samples, int32_t n) const;
 
   // Zero LSTM states h and c
   States GetInitStates() const;
@@ -45,8 +48,7 @@ class OfflineSpeechDenoiserVoxLockModel {
   /* Run the chunk model.
    *
    * @param wav A tensor of shape (1, (K - 1) * hop_length + n_fft)
-   * @param enroll_mag Returned by Enroll()
-   * @param context Returned by Enroll()
+   * @param voice Returned by Enroll()
    * @param states LSTM states from GetInitStates() or a previous call
    *
    * @return Return a pair containing:
@@ -54,8 +56,8 @@ class OfflineSpeechDenoiserVoxLockModel {
    *    the synthesis window and is ready for overlap-add.
    *  - next states
    */
-  std::pair<Ort::Value, States> Run(Ort::Value wav, Ort::Value enroll_mag,
-                                    Ort::Value context, States states) const;
+  std::pair<Ort::Value, States> Run(Ort::Value wav, Voice voice,
+                                    States states) const;
 
   const OfflineSpeechDenoiserVoxLockModelMetaData &GetMetaData() const;
 

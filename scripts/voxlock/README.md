@@ -2,7 +2,7 @@
 
 This folder contains scripts for adding meta data to the
 [VoxLock](https://github.com/arbazsiddiqui/voxlock) ONNX models from
-<https://huggingface.co/arbazsiddiqui/voxlock/tree/main/onnx>.
+<https://huggingface.co/arbazsiddiqui/voxlock/tree/main/onnx/v2>.
 
 VoxLock is a target-speaker voice isolation model. It keeps the voice of one
 speaker, e.g., the caller in a phone call, and removes the other voices.
@@ -21,7 +21,14 @@ It has two models:
 | fp32 | `voxlock_enroll.onnx` | `voxlock_chunk.onnx` |
 
 The models with meta data can be downloaded from
-<https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models>
+<https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models-v2>
+
+These are the models of VoxLock 1.2.0. They give the same output as the
+models of VoxLock 1.1.1
+(<https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models>),
+which still work, but use less CPU: the enroll model also computes everything
+that depends only on the voice sample, instead of the chunk model computing it
+again for every chunk.
 
 - [./run.sh](./run.sh) downloads the models and runs
   [./add_meta_data.py](./add_meta_data.py), which also checks that the outputs

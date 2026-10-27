@@ -201,7 +201,7 @@ class SpeechDenoiserVoxLockStream {
         window_square_(n_fft_),
         overlap_add_(n_fft_),
         window_sum_(n_fft_) {
-    std::tie(enroll_mag_, context_) = model_->Enroll(voice_sample, n);
+    voice_ = model_->Enroll(voice_sample, n);
     states_ = model_->GetInitStates();
 
     constexpr double kPi = 3.14159265358979323846;
@@ -288,10 +288,15 @@ class SpeechDenoiserVoxLockStream {
           memory_info_, buffer_.data() + offset_, num_samples, wav_shape.data(),
           wav_shape.size());
 
+      OfflineSpeechDenoiserVoxLockModel::Voice voice;
+      voice.reserve(voice_.size());
+      for (auto &v : voice_) {
+        voice.push_back(View(&v));
+      }
+
       Ort::Value frames{nullptr};
       std::tie(frames, states_) =
-          model_->Run(std::move(wav), View(&enroll_mag_), View(&context_),
-                      std::move(states_));
+          model_->Run(std::move(wav), std::move(voice), std::move(states_));
 
       if (frames.GetTensorTypeAndShapeInfo().GetElementCount() !=
           static_cast<size_t>(num_frames) * n_fft_) {
@@ -347,8 +352,7 @@ class SpeechDenoiserVoxLockStream {
   float output_gain_;
   Ort::MemoryInfo memory_info_;
 
-  Ort::Value enroll_mag_{nullptr};
-  Ort::Value context_{nullptr};
+  OfflineSpeechDenoiserVoxLockModel::Voice voice_;
   OfflineSpeechDenoiserVoxLockModel::States states_;
 
   std::vector<float> window_square_;

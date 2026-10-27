@@ -3,7 +3,7 @@
 
 """
 Compare the output of sherpa-onnx-offline-denoiser with the reference
-implementation in the voxlock Python package (pip install voxlock==1.1.1).
+implementation in the voxlock Python package (pip install voxlock==1.2.0).
 
 ./build/bin/sherpa-onnx-offline-denoiser \
   --speech-denoiser-voxlock-enroll-model=./models/voxlock_enroll.onnx \
