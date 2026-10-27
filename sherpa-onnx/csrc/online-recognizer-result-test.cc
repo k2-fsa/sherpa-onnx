@@ -108,8 +108,8 @@ TEST(OnlineRecognizerResult, RemoveLeadingPunctLeavesByteTokensAlone) {
   RemoveLeadingPunct(&r);
 
   EXPECT_EQ(r.text, "你好");
-  EXPECT_EQ(r.tokens, (std::vector<std::string>{"<0xE3>", "<0x80>", "<0x82>",
-                                                 "你好"}));
+  EXPECT_EQ(r.tokens,
+            (std::vector<std::string>{"<0xE3>", "<0x80>", "<0x82>", "你好"}));
   EXPECT_EQ(r.timestamps, (std::vector<float>{0.1, 0.1, 0.1, 0.5}));
 }
 
