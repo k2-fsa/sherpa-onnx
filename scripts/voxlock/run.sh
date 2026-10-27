@@ -15,14 +15,15 @@ enroll_fp16.onnx
 chunk_fp16.onnx
 )
 
-mkdir -p onnx
+onnx_dir=onnx/$revision
+mkdir -p $onnx_dir
 for m in ${models[@]}; do
-  if [ ! -f onnx/$m ]; then
-    curl -fSL --output onnx/$m.tmp https://huggingface.co/arbazsiddiqui/voxlock/resolve/$revision/onnx/v2/$m
-    mv onnx/$m.tmp onnx/$m
+  if [ ! -f $onnx_dir/$m ]; then
+    curl -fSL --output $onnx_dir/$m.tmp https://huggingface.co/arbazsiddiqui/voxlock/resolve/$revision/onnx/v2/$m
+    mv $onnx_dir/$m.tmp $onnx_dir/$m
   fi
 done
 
-python3 ./add_meta_data.py --in-dir ./onnx --out-dir ./models
+python3 ./add_meta_data.py --in-dir ./$onnx_dir --out-dir ./models
 
 ls -lh models

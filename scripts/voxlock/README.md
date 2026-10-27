@@ -26,9 +26,9 @@ The models with meta data can be downloaded from
 These are the models of VoxLock 1.2.0. They give the same output as the
 models of VoxLock 1.1.1
 (<https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models>),
-which still work, but use less CPU: the enroll model also computes everything
-that depends only on the voice sample, instead of the chunk model computing it
-again for every chunk.
+which still work. The 1.2.0 models use less CPU: their enroll model also
+computes everything that depends only on the voice sample, instead of the chunk
+model computing it again for every chunk.
 
 - [./run.sh](./run.sh) downloads the models and runs
   [./add_meta_data.py](./add_meta_data.py), which also checks that the outputs
