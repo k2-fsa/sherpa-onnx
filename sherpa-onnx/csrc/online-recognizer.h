@@ -91,6 +91,12 @@ struct OnlineRecognizerResult {
   std::string AsJsonString() const;
 };
 
+// If r->text starts with a punctuation, drop it. If the first non-space
+// token starts with the same punctuation as plain text, drop it there too,
+// and drop that token's timestamp and scores when the token becomes empty.
+// Encoded tokens (byte fallback, byte-level BPE) are left unchanged.
+void RemoveLeadingPunct(OnlineRecognizerResult *r);
+
 struct OnlineRecognizerConfig {
   FeatureExtractorConfig feat_config;
   OnlineModelConfig model_config;
