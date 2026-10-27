@@ -1266,6 +1266,38 @@ class OfflineRecognizer(object):
         to download pre-trained models for different kinds of whisper models,
         e.g., tiny, tiny.en, base, base.en, etc.
 
+        For automatic detection with a multilingual ONNX model, pass
+        ``language=""`` (the default is a fixed ``"en"``). Before decoding,
+        restrict the input languages for one stream with::
+
+            stream = recognizer.create_stream()
+            stream.set_option("language_candidates", "nl,ru,en")
+
+        Accept audio and decode as usual; ``stream.result.lang`` contains the
+        selected input language. This reuses one encoder execution and produces
+        one transcript, not one recognition per candidate.
+
+        Candidates are comma-separated exact model language codes.
+        Surrounding whitespace is trimmed and a single candidate is allowed.
+        Empty values/items, duplicate or unknown codes are invalid; codes are
+        case-sensitive and aliases are not converted. The first listed
+        candidate wins an exact logit tie.
+
+        For the standard ONNX recognizer, invalid candidates, a nonempty fixed
+        ``language``, or an English-only model cause a diagnostic log and an empty
+        result before the encoder runs, clearing any previous result on the
+        stream. There is no process exit, unrestricted fallback, or separate
+        error status. QNN and Ascend Whisper recognizers warn and ignore this
+        option, continuing normal recognition without restricting the language
+        to the candidate list.
+
+        Without the option, existing behavior is unchanged. It does not alter
+        the recognizer configuration, other streams, or the separate language
+        identification API. Empty is invalid, not an option reset; use a new
+        stream without the option for unrestricted detection. Restricting
+        candidates does not guarantee accuracy or reject silence/out-of-list
+        speech.
+
         Args:
           encoder:
             Path to the encoder model, e.g., tiny-encoder.onnx,

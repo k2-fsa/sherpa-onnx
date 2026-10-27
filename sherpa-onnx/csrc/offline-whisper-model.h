@@ -77,8 +77,10 @@ class OfflineWhisperModel {
                  Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
                  Ort::Value n_layer_cross_v, Ort::Value offset) const;
 
-  int32_t DetectLanguage(Ort::Value &cross_k,   // NOLINT
-                         Ort::Value &cross_v);  // NOLINT
+  // Empty language_candidate_ids means unrestricted language detection.
+  int32_t DetectLanguage(
+      Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
+      const std::vector<int32_t> &language_candidate_ids);
 
   /** Return the initial self kv cache in a pair
    *  - n_layer_self_k_cache A 4-D tensor of shape

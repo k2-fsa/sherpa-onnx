@@ -76,6 +76,12 @@ class OfflineRecognizerWhisperTplImpl : public OfflineRecognizerImpl {
   }
 
   void DecodeStream(OfflineStream *s) const {
+    if (s->HasOption("language_candidates")) {
+      SHERPA_ONNX_LOGE(
+          "Warning: language_candidates is not supported by the QNN/Ascend "
+          "Whisper recognizer; ignoring the option and continuing recognition");
+    }
+
     int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
     int32_t num_frames = f.size() / feat_dim;
