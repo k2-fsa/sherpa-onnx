@@ -28,6 +28,22 @@ GetOfflineSpeakerSegmentationPyannoteModelConfig(Napi::Object obj) {
   return c;
 }
 
+static SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig
+GetOfflineSpeakerSegmentationSortformerModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("sortformer") || !obj.Get("sortformer").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("sortformer").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(threshold, threshold);
+
+  return c;
+}
+
 static SherpaOnnxOfflineSpeakerSegmentationModelConfig
 GetOfflineSpeakerSegmentationModelConfig(Napi::Object obj) {
   SherpaOnnxOfflineSpeakerSegmentationModelConfig c;
@@ -40,6 +56,7 @@ GetOfflineSpeakerSegmentationModelConfig(Napi::Object obj) {
   Napi::Object o = obj.Get("segmentation").As<Napi::Object>();
 
   c.pyannote = GetOfflineSpeakerSegmentationPyannoteModelConfig(o);
+  c.sortformer = GetOfflineSpeakerSegmentationSortformerModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
@@ -176,6 +193,7 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
 #endif
 
   SHERPA_ONNX_DELETE_C_STR(c.segmentation.pyannote.model);
+  SHERPA_ONNX_DELETE_C_STR(c.segmentation.sortformer.model);
   SHERPA_ONNX_DELETE_C_STR(c.segmentation.provider);
   SHERPA_ONNX_DELETE_C_STR(c.embedding.model);
   SHERPA_ONNX_DELETE_C_STR(c.embedding.provider);

@@ -12,6 +12,7 @@ namespace sherpa_onnx {
 
 void OfflineSpeakerSegmentationModelConfig::Register(ParseOptions *po) {
   pyannote.Register(po);
+  sortformer.Register(po);
 
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
@@ -27,6 +28,10 @@ bool OfflineSpeakerSegmentationModelConfig::Validate() const {
   if (num_threads < 1) {
     SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
     return false;
+  }
+
+  if (!sortformer.model.empty()) {
+    return sortformer.Validate();
   }
 
   if (!pyannote.model.empty()) {
@@ -47,6 +52,7 @@ std::string OfflineSpeakerSegmentationModelConfig::ToString() const {
 
   os << "OfflineSpeakerSegmentationModelConfig(";
   os << "pyannote=" << pyannote.ToString() << ", ";
+  os << "sortformer=" << sortformer.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";
