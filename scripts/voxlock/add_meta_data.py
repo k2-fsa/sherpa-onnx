@@ -177,7 +177,8 @@ def main():
         meta_data = get_meta_data(role, precision)
 
         add_meta_data(in_filename, out_filename, meta_data)
-        enroll_filename = str(Path(args.in_dir) / "enroll.onnx")
+        enroll_name = "enroll_fp16.onnx" if precision == "fp16" else "enroll.onnx"
+        enroll_filename = str(Path(args.in_dir) / enroll_name)
         check(in_filename, out_filename, meta_data, enroll_filename)
         print(f"{in_filename} -> {out_filename}: meta data added, outputs unchanged")
 
