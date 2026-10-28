@@ -16,8 +16,17 @@ swiftc -O -sanitize=address -lc++ \
   ./tests/sortformer-config-lifetime.swift ./SherpaOnnx.swift \
   -L ../build-macos/install/lib -l sherpa-onnx-c-api -l onnxruntime \
   -o ../build-macos/sortformer-config-lifetime-test
+
+# Uncomment after sherpa-onnx-nemotron-3-diarization.tar.bz2 is published
+# download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-nemotron-3-diarization.tar.bz2
+# export SHERPA_ONNX_SORTFORMER_MODEL="$PWD/sherpa-onnx-nemotron-3-diarization/model.int8.onnx"
+
+sortformer_model_args=()
+if [ -n "${SHERPA_ONNX_SORTFORMER_MODEL:-}" ]; then
+  sortformer_model_args=("$SHERPA_ONNX_SORTFORMER_MODEL")
+fi
 DYLD_LIBRARY_PATH="$PWD/../build-macos/install/lib:${DYLD_LIBRARY_PATH:-}" \
-  ../build-macos/sortformer-config-lifetime-test
+  ../build-macos/sortformer-config-lifetime-test "${sortformer_model_args[@]}"
 
 ./run-speech-enhancement-voxlock.sh
 ./run-speech-enhancement-voxlock-with-voice-sample.sh
