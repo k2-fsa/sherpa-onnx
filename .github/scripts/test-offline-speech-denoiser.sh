@@ -35,7 +35,7 @@ rm ./gtcrn_simple.onnx
 log "------------------------------------------------------------"
 log "Run voxlock"
 log "------------------------------------------------------------"
-voxlock_url=https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models
+voxlock_url=https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models-v2
 download $voxlock_url/voxlock_enroll.onnx
 download $voxlock_url/voxlock_chunk_int8.onnx
 download $voxlock_url/voxlock_test_call.wav

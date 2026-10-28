@@ -3,20 +3,25 @@
 
 """
 Add meta data to the VoxLock ONNX models from
-https://huggingface.co/arbazsiddiqui/voxlock/tree/main/onnx
+https://huggingface.co/arbazsiddiqui/voxlock/tree/main/onnx/v2
 
-enroll.onnx runs once on a voice sample of the caller:
+enroll.onnx runs once on a voice sample of the caller. Besides the normalized
+magnitude of the sample, it returns the keys and values of the speaker
+attention for every band, so the chunk model does not recompute them for
+every chunk:
 
-NodeArg(name='enroll', type='tensor(float)', shape=[1, 'Te'])
+NodeArg(name='enroll', type='tensor(float)', shape=[1, 48000])
 -----
-NodeArg(name='enroll_mag', type='tensor(float)', shape=[1, 257, 'Fe'])
-NodeArg(name='context', type='tensor(float)', shape=[1, 512, 'Fc'])
+NodeArg(name='enroll_n', type='tensor(float)', shape=[257, 376])
+NodeArg(name='k', type='tensor(float)', shape=[32, 2, 64, 298])
+NodeArg(name='v', type='tensor(float)', shape=[32, 2, 298, 64])
 
 chunk.onnx runs on each chunk of the call and carries the LSTM state:
 
 NodeArg(name='wav', type='tensor(float)', shape=[1, 'S'])
-NodeArg(name='enroll_mag', type='tensor(float)', shape=[1, 257, 'Fe'])
-NodeArg(name='context', type='tensor(float)', shape=[1, 512, 'Fc'])
+NodeArg(name='enroll_n', type='tensor(float)', shape=[257, 376])
+NodeArg(name='k', type='tensor(float)', shape=[32, 2, 64, 298])
+NodeArg(name='v', type='tensor(float)', shape=[32, 2, 298, 64])
 NodeArg(name='h', type='tensor(float)', shape=[6, 32, 256])
 NodeArg(name='c', type='tensor(float)', shape=[6, 32, 256])
 -----
@@ -36,8 +41,8 @@ import numpy as np
 import onnx
 import onnxruntime as ort
 
-# Weights of VoxLock 1.1.1
-HF_REVISION = "a50f4e1d109301d4b6f61dec57ebb1a61e7d8f03"
+# Models of VoxLock 1.2.0
+HF_REVISION = "2413b292bc2c337bfc19a9802aaf3e011e68e9c4"
 
 # (input file, output file, role, precision)
 MODELS = [
@@ -71,8 +76,8 @@ def get_meta_data(role: str, precision: str):
     meta_data = {
         "model_type": "voxlock",
         "model_role": role,
-        "version": 1,
-        "model_version": "1.1.1",
+        "version": 2,
+        "model_version": "1.2.0",
         "precision": precision,
         "sample_rate": 16000,
         "n_fft": 512,
@@ -80,7 +85,6 @@ def get_meta_data(role: str, precision: str):
         "window_length": 512,
         "window_type": "hann",
         "num_freq_bins": 257,
-        "context_dim": 512,
         # The chunk model accepts only the outputs of the enroll model for a
         # voice sample of exactly this length
         "voice_sample_seconds": 3,
@@ -118,25 +122,35 @@ def add_meta_data(in_filename: str, out_filename: str, meta_data):
     onnx.save(model, out_filename)
 
 
-def make_inputs(sess, rng):
-    """Random inputs for a session; enroll_mag and context come from enroll."""
+def make_inputs(sess, rng, enroll_filename: str):
+    """Random inputs for a session. For a chunk model, enroll_n, k and v are
+    the outputs of the enroll model on a random voice sample."""
+    opts = ort.SessionOptions()
+    opts.log_severity_level = 3
+    enroll = ort.InferenceSession(
+        enroll_filename, opts, providers=["CPUExecutionProvider"]
+    )
+    voice_sample = {
+        "enroll": (rng.standard_normal((1, 48000)) * 0.1).astype(np.float32)
+    }
+
     names = [i.name for i in sess.get_inputs()]
     if names == ["enroll"]:
-        return {"enroll": (rng.standard_normal((1, 48000)) * 0.1).astype(np.float32)}
+        return voice_sample
 
     num_frames = 100
+    voice = enroll.run(None, voice_sample)
     return {
         "wav": (rng.standard_normal((1, (num_frames - 1) * 128 + 512)) * 0.1).astype(
             np.float32
         ),
-        "enroll_mag": np.abs(rng.standard_normal((1, 257, 376))).astype(np.float32),
-        "context": rng.standard_normal((1, 512, 298)).astype(np.float32),
+        **{o.name: x for o, x in zip(enroll.get_outputs(), voice)},
         "h": (rng.standard_normal((6, 32, 256)) * 0.1).astype(np.float32),
         "c": (rng.standard_normal((6, 32, 256)) * 0.1).astype(np.float32),
     }
 
 
-def check(in_filename: str, out_filename: str, meta_data):
+def check(in_filename: str, out_filename: str, meta_data, enroll_filename: str):
     opts = ort.SessionOptions()
     opts.log_severity_level = 3
     opts.intra_op_num_threads = 1
@@ -147,7 +161,7 @@ def check(in_filename: str, out_filename: str, meta_data):
     for key, value in meta_data.items():
         assert got[key] == str(value), (key, got[key], value)
 
-    inputs = make_inputs(a, np.random.default_rng(0))
+    inputs = make_inputs(a, np.random.default_rng(0), enroll_filename)
     for x, y in zip(a.run(None, inputs), b.run(None, inputs)):
         assert np.array_equal(x, y), out_filename
 
@@ -163,7 +177,9 @@ def main():
         meta_data = get_meta_data(role, precision)
 
         add_meta_data(in_filename, out_filename, meta_data)
-        check(in_filename, out_filename, meta_data)
+        enroll_name = "enroll_fp16.onnx" if precision == "fp16" else "enroll.onnx"
+        enroll_filename = str(Path(args.in_dir) / enroll_name)
+        check(in_filename, out_filename, meta_data, enroll_filename)
         print(f"{in_filename} -> {out_filename}: meta data added, outputs unchanged")
 
 

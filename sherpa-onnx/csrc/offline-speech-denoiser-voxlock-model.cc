@@ -112,8 +112,7 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
     }
   }
 
-  std::pair<Ort::Value, Ort::Value> Enroll(const float *samples,
-                                           int32_t n) const {
+  Voice Enroll(const float *samples, int32_t n) const {
     if (n != meta_.voice_sample_seconds * meta_.sample_rate) {
       SHERPA_ONNX_LOGE(
           "The voxlock voice sample must have exactly %d samples (%d seconds "
@@ -136,7 +135,7 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
                                  1, enroll_output_names_ptr_.data(),
                                  enroll_output_names_ptr_.size());
 
-    return {std::move(out[0]), std::move(out[1])};
+    return out;
   }
 
   States GetInitStates() {
@@ -157,13 +156,14 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
     return states;
   }
 
-  std::pair<Ort::Value, States> Run(Ort::Value wav, Ort::Value enroll_mag,
-                                    Ort::Value context, States states) const {
+  std::pair<Ort::Value, States> Run(Ort::Value wav, Voice voice,
+                                    States states) const {
     std::vector<Ort::Value> inputs;
-    inputs.reserve(3 + states.size());
+    inputs.reserve(1 + voice.size() + states.size());
     inputs.push_back(std::move(wav));
-    inputs.push_back(std::move(enroll_mag));
-    inputs.push_back(std::move(context));
+    for (auto &v : voice) {
+      inputs.push_back(std::move(v));
+    }
     for (auto &s : states) {
       inputs.push_back(std::move(s));
     }
@@ -204,10 +204,12 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
     auto shared =
         ReadSharedMetaData(meta_data, "enroll", config_.voxlock.enroll_model);
 
-    if (enroll_input_names_.size() != 1 || enroll_output_names_.size() != 2) {
+    // version 1 outputs: enroll_mag, context
+    // version 2 outputs: enroll_n, k, v
+    if (enroll_input_names_.size() != 1 || enroll_output_names_.size() < 2) {
       SHERPA_ONNX_LOGE(
-          "Expect the voxlock enroll model to have 1 input and 2 outputs. "
-          "Given %d inputs and %d outputs",
+          "Expect the voxlock enroll model to have 1 input and at least 2 "
+          "outputs. Given %d inputs and %d outputs",
           static_cast<int32_t>(enroll_input_names_.size()),
           static_cast<int32_t>(enroll_output_names_.size()));
       SHERPA_ONNX_EXIT(-1);
@@ -256,15 +258,30 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
     auto shared =
         ReadSharedMetaData(meta_data, "chunk", config_.voxlock.chunk_model);
 
-    // inputs: wav, enroll_mag, context, h, c
+    // inputs: wav, the outputs of the enroll model, h, c
     // outputs: frames, h_out, c_out
-    if (chunk_input_names_.size() != 5 || chunk_output_names_.size() != 3) {
+    int32_t num_voice = static_cast<int32_t>(enroll_output_names_.size());
+    if (static_cast<int32_t>(chunk_input_names_.size()) != num_voice + 3 ||
+        chunk_output_names_.size() != 3) {
       SHERPA_ONNX_LOGE(
-          "Expect the voxlock chunk model to have 5 inputs and 3 outputs. "
-          "Given %d inputs and %d outputs",
-          static_cast<int32_t>(chunk_input_names_.size()),
+          "Expect the voxlock chunk model to have %d inputs and 3 outputs. "
+          "Given %d inputs and %d outputs. Are the enroll and chunk models "
+          "from the same release?",
+          num_voice + 3, static_cast<int32_t>(chunk_input_names_.size()),
           static_cast<int32_t>(chunk_output_names_.size()));
       SHERPA_ONNX_EXIT(-1);
+    }
+
+    for (int32_t i = 0; i != num_voice; ++i) {
+      if (chunk_input_names_[i + 1] != enroll_output_names_[i]) {
+        SHERPA_ONNX_LOGE(
+            "Input %d of the voxlock chunk model is '%s'. Expect '%s', output "
+            "%d of the enroll model. Are the enroll and chunk models from the "
+            "same release?",
+            i + 1, chunk_input_names_[i + 1].c_str(),
+            enroll_output_names_[i].c_str(), i);
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
 
     if (shared.version != meta_.version ||
@@ -310,10 +327,12 @@ class OfflineSpeechDenoiserVoxLockModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    auto h_shape =
-        chunk_sess_->GetInputTypeInfo(3).GetTensorTypeAndShapeInfo().GetShape();
-    auto c_shape =
-        chunk_sess_->GetInputTypeInfo(4).GetTensorTypeAndShapeInfo().GetShape();
+    auto h_shape = chunk_sess_->GetInputTypeInfo(num_voice + 1)
+                       .GetTensorTypeAndShapeInfo()
+                       .GetShape();
+    auto c_shape = chunk_sess_->GetInputTypeInfo(num_voice + 2)
+                       .GetTensorTypeAndShapeInfo()
+                       .GetShape();
     if (h_shape != meta_.state_shape || c_shape != meta_.state_shape) {
       SHERPA_ONNX_LOGE(
           "The state shape in the voxlock chunk model does not match its meta "
@@ -387,8 +406,9 @@ OfflineSpeechDenoiserVoxLockModel::OfflineSpeechDenoiserVoxLockModel(
     Manager *mgr, const OfflineSpeechDenoiserModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 
-std::pair<Ort::Value, Ort::Value> OfflineSpeechDenoiserVoxLockModel::Enroll(
-    const float *samples, int32_t n) const {
+OfflineSpeechDenoiserVoxLockModel::Voice
+OfflineSpeechDenoiserVoxLockModel::Enroll(const float *samples,
+                                          int32_t n) const {
   return impl_->Enroll(samples, n);
 }
 
@@ -398,11 +418,9 @@ OfflineSpeechDenoiserVoxLockModel::GetInitStates() const {
 }
 
 std::pair<Ort::Value, OfflineSpeechDenoiserVoxLockModel::States>
-OfflineSpeechDenoiserVoxLockModel::Run(Ort::Value wav, Ort::Value enroll_mag,
-                                       Ort::Value context,
+OfflineSpeechDenoiserVoxLockModel::Run(Ort::Value wav, Voice voice,
                                        States states) const {
-  return impl_->Run(std::move(wav), std::move(enroll_mag), std::move(context),
-                    std::move(states));
+  return impl_->Run(std::move(wav), std::move(voice), std::move(states));
 }
 
 const OfflineSpeechDenoiserVoxLockModelMetaData &
