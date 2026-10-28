@@ -126,11 +126,17 @@ class OfflineZipformerTransducerModelQnn::Impl {
   void Init() {
     ParseContextBinaries();
     encoder_backend_ = std::make_unique<QnnBackend>(
-        config_.transducer.qnn_config.backend_lib, config_.debug);
+        config_.transducer.qnn_config.backend_lib,
+        QnnBackendOptions{config_.debug,
+                          config_.transducer.qnn_config.htp_perf_mode});
     decoder_backend_ = std::make_unique<QnnBackend>(
-        config_.transducer.qnn_config.backend_lib, config_.debug);
+        config_.transducer.qnn_config.backend_lib,
+        QnnBackendOptions{config_.debug,
+                          config_.transducer.qnn_config.htp_perf_mode});
     joiner_backend_ = std::make_unique<QnnBackend>(
-        config_.transducer.qnn_config.backend_lib, config_.debug);
+        config_.transducer.qnn_config.backend_lib,
+        QnnBackendOptions{config_.debug,
+                          config_.transducer.qnn_config.htp_perf_mode});
 
     InitEncoder();
     InitDecoder();
