@@ -1,9 +1,11 @@
 // Copyright (c)  2026  Nexmoe
 
 const assert = require('assert');
+const {createRequire} = require('module');
 const {MessageChannel} = require('worker_threads');
-const sherpa_onnx = require('../lib/sherpa-onnx.js');
-const addon = require('../lib/addon.js');
+const modulePath = process.argv[3] || require.resolve('../lib/sherpa-onnx.js');
+const sherpa_onnx = require(modulePath);
+const addon = createRequire(modulePath)('./addon.js');
 
 /** Validate every native entry point without loading a model. */
 function testValidation() {

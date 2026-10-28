@@ -14,6 +14,27 @@ node_version=$(node -p "process.versions.node.split('.')[0]")
 echo "----------Version----------"
 node ./test_version.js
 
+echo "----------Source separation----------"
+
+if [ -f ./sherpa-onnx.js ]; then
+  source_separation_module="$PWD/sherpa-onnx.js"
+else
+  source_separation_module=$(node -p "require.resolve('sherpa-onnx-node')")
+fi
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+
+node ./test_offline_source_separation_spleeter.js
+node --expose-gc ../scripts/node-addon-api/test/test_source_separation.js spleeter "$source_separation_module"
+
+download https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/UVR-MDX-NET-Voc_FT.onnx
+node ./test_offline_source_separation_uvr.js
+node --expose-gc ../scripts/node-addon-api/test/test_source_separation.js uvr "$source_separation_module"
+
+rm -rf sherpa-onnx-spleeter-2stems-fp16
+rm -f UVR-MDX-NET-Voc_FT.onnx qi-feng-le-zh.wav
+
 echo "----------VoxLock speech enhancement----------"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/sherpa-onnx-voxlock-int8.tar.bz2

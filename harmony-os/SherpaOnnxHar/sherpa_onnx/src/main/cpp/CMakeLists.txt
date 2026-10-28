@@ -47,6 +47,7 @@ add_library(sherpa_onnx SHARED
   non-streaming-speech-denoiser.cc
   non-streaming-tts.cc
   offline-punctuation.cc
+  offline-source-separation.cc
   online-punctuation.cc
   streaming-speech-denoiser.cc
   sherpa-onnx-node-addon-api.cc
