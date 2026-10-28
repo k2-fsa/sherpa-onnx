@@ -7,6 +7,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 // createLinearResampler(inputSampleRate, outputSampleRate)
 // Returns an External handle to a SherpaOnnxLinearResampler.
@@ -103,7 +104,7 @@ static Napi::Float32Array ResampleLinearWrapper(
       info[0].As<Napi::External<SherpaOnnxLinearResampler>>().Data();
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
-  int32_t input_dim = samples.ElementLength();
+  int32_t input_dim = GetFloat32ArrayElementLength(samples);
   int32_t flush = info[2].As<Napi::Number>().Int32Value();
 
   const SherpaOnnxResampleOut *out =

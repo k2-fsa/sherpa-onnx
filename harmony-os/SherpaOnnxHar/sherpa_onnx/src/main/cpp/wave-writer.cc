@@ -9,6 +9,7 @@
 
 #include "napi.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 // (filename, {samples: samples, sampleRate: sampleRate}
 static Napi::Boolean WriteWaveWrapper(const Napi::CallbackInfo &info) {
@@ -70,15 +71,9 @@ static Napi::Boolean WriteWaveWrapper(const Napi::CallbackInfo &info) {
 
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
-#if __OHOS__
   int32_t ok = SherpaOnnxWriteWave(
-      samples.Data(), samples.ElementLength() / sizeof(float), sample_rate,
+      samples.Data(), GetFloat32ArrayElementLength(samples), sample_rate,
       info[0].As<Napi::String>().Utf8Value().c_str());
-#else
-  int32_t ok =
-      SherpaOnnxWriteWave(samples.Data(), samples.ElementLength(), sample_rate,
-                          info[0].As<Napi::String>().Utf8Value().c_str());
-#endif
 
   return Napi::Boolean::New(env, ok);
 }
@@ -166,10 +161,7 @@ static Napi::Boolean WriteWaveMultiChannelWrapper(
   int32_t n = 0;
   for (const auto &value : channel_values) {
     Napi::Float32Array samples = value.As<Napi::Float32Array>();
-    int32_t length = samples.ElementLength();
-#if __OHOS__
-    length /= sizeof(float);
-#endif
+    int32_t length = GetFloat32ArrayElementLength(samples);
     if (length <= 0 || (n != 0 && length != n)) {
       Napi::RangeError::New(env, "Channels should have equal, nonzero lengths")
           .ThrowAsJavaScriptException();

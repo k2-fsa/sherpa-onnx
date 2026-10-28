@@ -7,6 +7,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 // defined in ./streaming-asr.cc
 SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj);
@@ -787,15 +788,8 @@ static void AcceptWaveformOfflineWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
 
-#if __OHOS__
-  // Note(fangjun): For unknown reasons on HarmonyOS, we need to divide it by
-  // sizeof(float) here
   SherpaOnnxAcceptWaveformOffline(stream, sample_rate, samples.Data(),
-                                  samples.ElementLength() / sizeof(float));
-#else
-  SherpaOnnxAcceptWaveformOffline(stream, sample_rate, samples.Data(),
-                                  samples.ElementLength());
-#endif
+                                  GetFloat32ArrayElementLength(samples));
 }
 
 static void OfflineStreamSetOptionWrapper(const Napi::CallbackInfo &info) {

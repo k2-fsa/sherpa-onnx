@@ -9,6 +9,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 static Napi::External<SherpaOnnxSpeakerEmbeddingExtractor>
 CreateSpeakerEmbeddingExtractorWrapper(const Napi::CallbackInfo &info) {
@@ -35,7 +36,8 @@ CreateSpeakerEmbeddingExtractorWrapper(const Napi::CallbackInfo &info) {
 #endif
 
   if (!info[0].IsObject()) {
-    Napi::TypeError::New(env, "You should pass an object as the first argument.")
+    Napi::TypeError::New(
+        env, "You should pass an object as the first argument.")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -381,9 +383,16 @@ static Napi::Boolean SpeakerEmbeddingManagerAddWrapper(
     return {};
   }
 
+  // Read all properties before using the buffer: a getter may detach v's
+  // ArrayBuffer.
   Napi::Float32Array v = obj.Get("v").As<Napi::Float32Array>();
-  Napi::String js_name = obj.Get("name").As<Napi::String>();
-  std::string name = js_name.Utf8Value();
+  std::string name = obj.Get("name").As<Napi::String>().Utf8Value();
+
+  if (!CheckFloat32ArrayLength(
+          env, v, SherpaOnnxSpeakerEmbeddingManagerDim(manager),
+          "The object['v'] must have dim elements")) {
+    return {};
+  }
 
   int32_t ok =
       SherpaOnnxSpeakerEmbeddingManagerAdd(manager, name.c_str(), v.Data());
@@ -465,11 +474,24 @@ static Napi::Boolean SpeakerEmbeddingManagerAddListFlattenedWrapper(
     return {};
   }
 
+  // Read all properties before using the buffer: a getter may detach v's
+  // ArrayBuffer.
   Napi::Float32Array v = obj.Get("vv").As<Napi::Float32Array>();
-  Napi::String js_name = obj.Get("name").As<Napi::String>();
+  std::string name = obj.Get("name").As<Napi::String>().Utf8Value();
   int32_t n = obj.Get("n").As<Napi::Number>().Int32Value();
 
-  std::string name = js_name.Utf8Value();
+  int64_t dim = SherpaOnnxSpeakerEmbeddingManagerDim(manager);
+  if (n <= 0) {
+    Napi::RangeError::New(env, "The object['n'] should be a positive integer")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!CheckFloat32ArrayLength(env, v, n * dim,
+                               "The object['vv'] must have n * dim elements")) {
+    return {};
+  }
 
   int32_t ok = SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(
       manager, name.c_str(), v.Data(), n);
@@ -578,8 +600,16 @@ static Napi::String SpeakerEmbeddingManagerSearchWrapper(
     return {};
   }
 
+  // Read all properties before using the buffer: a getter may detach v's
+  // ArrayBuffer.
   Napi::Float32Array v = obj.Get("v").As<Napi::Float32Array>();
   float threshold = obj.Get("threshold").As<Napi::Number>().FloatValue();
+
+  if (!CheckFloat32ArrayLength(
+          env, v, SherpaOnnxSpeakerEmbeddingManagerDim(manager),
+          "The object['v'] must have dim elements")) {
+    return {};
+  }
 
   const char *name =
       SherpaOnnxSpeakerEmbeddingManagerSearch(manager, v.Data(), threshold);
@@ -670,11 +700,17 @@ static Napi::Boolean SpeakerEmbeddingManagerVerifyWrapper(
     return {};
   }
 
+  // Read all properties before using the buffer: a getter may detach v's
+  // ArrayBuffer.
   Napi::Float32Array v = obj.Get("v").As<Napi::Float32Array>();
   float threshold = obj.Get("threshold").As<Napi::Number>().FloatValue();
+  std::string name = obj.Get("name").As<Napi::String>().Utf8Value();
 
-  Napi::String js_name = obj.Get("name").As<Napi::String>();
-  std::string name = js_name.Utf8Value();
+  if (!CheckFloat32ArrayLength(
+          env, v, SherpaOnnxSpeakerEmbeddingManagerDim(manager),
+          "The object['v'] must have dim elements")) {
+    return {};
+  }
 
   int32_t found = SherpaOnnxSpeakerEmbeddingManagerVerify(manager, name.c_str(),
                                                           v.Data(), threshold);

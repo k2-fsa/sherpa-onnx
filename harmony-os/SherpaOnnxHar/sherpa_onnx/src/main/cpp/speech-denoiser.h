@@ -10,6 +10,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 static inline SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig
 GetSpeechDenoiserGtcrnModelConfig(Napi::Object obj) {
@@ -103,14 +104,6 @@ static inline bool GetEnableExternalBuffer(Napi::Object obj) {
   }
 
   return true;
-}
-
-static inline int32_t GetFloat32ArrayElementLength(Napi::Float32Array samples) {
-#if __OHOS__
-  return samples.ElementLength() / sizeof(float);
-#else
-  return samples.ElementLength();
-#endif
 }
 
 static inline Napi::Object CreateDenoisedAudioObject(
