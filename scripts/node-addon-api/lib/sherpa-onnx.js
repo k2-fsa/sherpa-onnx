@@ -1,4 +1,5 @@
 /** @typedef {import('./types').WaveObject} WaveObject */
+/** @typedef {import('./types').MultiChannelWaveObject} MultiChannelWaveObject */
 /**
  * @typedef {import('./types').OnlineRecognizerResult} OnlineRecognizerResult
  */
@@ -29,6 +30,8 @@ module.exports = {
   GenerationConfig : non_streaming_tts.GenerationConfig,
   readWave : addon.readWave,
   writeWave : addon.writeWave,
+  readWaveMultiChannel : addon.readWaveMultiChannel,
+  writeWaveMultiChannel : addon.writeWaveMultiChannel,
   Display : streaming_asr.Display,
   Vad : vad.Vad,
   CircularBuffer : vad.CircularBuffer,

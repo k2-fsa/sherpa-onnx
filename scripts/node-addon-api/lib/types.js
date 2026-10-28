@@ -425,6 +425,16 @@
  */
 
 /**
+ * Multi-channel wave object returned by readWaveMultiChannel and used by
+ * writeWaveMultiChannel.
+ * @typedef {Object} MultiChannelWaveObject
+ * @property {Float32Array[]} samples - samples[c] holds channel c 1-D float32
+ *   samples in [-1, 1]. All channels have the same number of samples.
+ * @property {number} sampleRate - Sample rate as an integer (e.g., 44100).
+ * @see src/wave-reader.cc
+ */
+
+/**
  * Speech segment returned by Vad.front().
  * @typedef {Object} SpeechSegment
  * @property {number} start - Start index (int64 sample position) of this segment.
@@ -862,7 +872,8 @@
 /**
  * @typedef {Object} SourceSeparationRequest
  * @property {Float32Array[]} samples - One or two equal-length channels.
- *   Mono input is duplicated to stereo. Values should be in [-1, 1].
+ *   Mono input is duplicated to stereo internally by sherpa-onnx; you don't
+ *   need to duplicate it yourself. Values should be in [-1, 1].
  * @property {number} sampleRate - Positive integer input sample rate in Hz,
  *   no greater than 2147483647.
  * @property {boolean} [enableExternalBuffer=true] - Set false for Electron.

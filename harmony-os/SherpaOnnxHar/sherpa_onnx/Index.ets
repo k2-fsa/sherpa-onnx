@@ -1,4 +1,4 @@
-export { listRawfileDir, readWave, readWaveFromBinary, } from "libsherpa_onnx.so";
+export { listRawfileDir, readWave, readWaveFromBinary, readWaveMultiChannel, writeWaveMultiChannel, } from "libsherpa_onnx.so";
 
 export { CircularBuffer, SileroVadConfig, TenVadConfig, SpeechSegment, Vad, VadConfig, } from './src/main/ets/components/Vad';
 
@@ -88,3 +88,12 @@ export { KeywordSpotterConfig,
   KeywordSpotterResult,
   KeywordSpotter,
 } from './src/main/ets/components/KeywordSpotting';
+
+export { OfflineSourceSeparationSpleeterModelConfig,
+  OfflineSourceSeparationUvrModelConfig,
+  OfflineSourceSeparationModelConfig,
+  OfflineSourceSeparationConfig,
+  SourceSeparationInput,
+  SourceSeparationOutput,
+  OfflineSourceSeparation,
+} from './src/main/ets/components/OfflineSourceSeparation';

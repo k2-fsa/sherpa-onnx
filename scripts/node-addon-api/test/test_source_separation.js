@@ -1,6 +1,7 @@
 // Copyright (c)  2026  Nexmoe
 
 const assert = require('assert');
+const fs = require('fs');
 const {createRequire} = require('module');
 const {MessageChannel} = require('worker_threads');
 const modulePath = process.argv[3] || require.resolve('../lib/sherpa-onnx.js');
@@ -52,6 +53,87 @@ function testValidation() {
   assert.throws(
       () => addon.offlineSourceSeparationGetNumberOfStems(), TypeError);
   assert.throws(() => addon.offlineSourceSeparationProcess(), TypeError);
+}
+
+/** Round-trip multi-channel wave IO without loading a model. */
+function testWaveIO() {
+  assert.strictEqual(typeof sherpa_onnx.readWaveMultiChannel, 'function');
+  assert.strictEqual(typeof sherpa_onnx.writeWaveMultiChannel, 'function');
+
+  const left = new Float32Array(1600);
+  const right = new Float32Array(1600);
+  for (let i = 0; i < left.length; ++i) {
+    left[i] = 0.9 * Math.sin(i / 10);
+    right[i] = -0.5 * Math.cos(i / 7);
+  }
+
+  const filename = 'test-wave-io-roundtrip.wav';
+  try {
+    assert.strictEqual(
+        sherpa_onnx.writeWaveMultiChannel(
+            filename, {samples: [left, right], sampleRate: 16000}),
+        true);
+    for (const enableExternalBuffer of [true, false]) {
+      const wave =
+          sherpa_onnx.readWaveMultiChannel(filename, enableExternalBuffer);
+      assert.strictEqual(wave.sampleRate, 16000);
+      assert.deepStrictEqual(
+          wave.samples.map(channel => channel.length), [1600, 1600]);
+      // 16-bit PCM quantization
+      for (const [actual, expected] of [[wave.samples[0], left],
+                                        [wave.samples[1], right]]) {
+        for (let i = 0; i < expected.length; ++i) {
+          assert(Math.abs(actual[i] - expected[i]) <= 2 / 32768);
+        }
+      }
+      assert.notDeepStrictEqual(wave.samples[0], wave.samples[1]);
+    }
+
+    assert.strictEqual(
+        sherpa_onnx.writeWaveMultiChannel(
+            filename, {samples: [left], sampleRate: 16000}),
+        true);
+    const mono = sherpa_onnx.readWaveMultiChannel(filename, false);
+    assert.strictEqual(mono.samples.length, 1);
+    assert.strictEqual(mono.samples[0].length, 1600);
+
+    // Any channel count is fine, not only 1 or 2.
+    assert.strictEqual(
+        sherpa_onnx.writeWaveMultiChannel(
+            filename, {samples: Array(3).fill(left), sampleRate: 16000}),
+        true);
+    const three = sherpa_onnx.readWaveMultiChannel(filename, false);
+    assert.strictEqual(three.samples.length, 3);
+  } finally {
+    fs.unlinkSync(filename);
+  }
+
+  for (const obj of [undefined, null, 1, [], {samples: [left]},
+                     {samples: [left], sampleRate: '16000'}]) {
+    assert.throws(
+        () => sherpa_onnx.writeWaveMultiChannel(filename, obj), TypeError);
+  }
+  for (const samples of [[], [new Float32Array(0)],
+                         [new Float32Array(10), new Float32Array(11)]]) {
+    assert.throws(
+        () => sherpa_onnx.writeWaveMultiChannel(
+            filename, {samples, sampleRate: 16000}),
+        RangeError);
+  }
+  for (const samples of [[new Int16Array(10)], [left, 1], ['a']]) {
+    assert.throws(
+        () => sherpa_onnx.writeWaveMultiChannel(
+            filename, {samples, sampleRate: 16000}),
+        TypeError);
+  }
+  assert.throws(() => sherpa_onnx.readWaveMultiChannel(), TypeError);
+  assert.throws(() => sherpa_onnx.readWaveMultiChannel(1), TypeError);
+  assert.throws(
+      () => sherpa_onnx.readWaveMultiChannel('no-such-file.wav'), TypeError);
+  assert.throws(
+      () => sherpa_onnx.readWaveMultiChannel(filename, 1), TypeError);
+  assert.throws(
+      () => sherpa_onnx.readWaveMultiChannel(filename, true, true), TypeError);
 }
 
 /** Reject malformed audio before it reaches native inference. */
@@ -185,6 +267,23 @@ async function testModel(kind) {
   let stereo = separator.process({...request, samples: [left, left]});
   assert.deepStrictEqual(mono, stereo);
 
+  // The test wav is real stereo; readWaveMultiChannel must keep both channels
+  // while readWave keeps only the first one.
+  const multi = sherpa_onnx.readWaveMultiChannel('./qi-feng-le-zh.wav', false);
+  assert.strictEqual(multi.sampleRate, wave.sampleRate);
+  assert.deepStrictEqual(
+      multi.samples.map(channel => channel.length),
+      [wave.samples.length, wave.samples.length]);
+  assert.deepStrictEqual(multi.samples[0], wave.samples);
+  assert.notDeepStrictEqual(multi.samples[0], multi.samples[1]);
+  checkOutput(
+      separator.process({
+        samples: multi.samples.map(channel => channel.subarray(0, n)),
+        sampleRate: multi.sampleRate,
+        enableExternalBuffer: false,
+      }),
+      separator, n / multi.sampleRate);
+
   const resampler = new sherpa_onnx.LinearResampler(wave.sampleRate, 16000);
   const resampled = resampler.flush(left);
   let resampledOutput = separator.process({
@@ -206,6 +305,7 @@ async function testModel(kind) {
 /** Run model-free checks, then optional real-model regression checks. */
 async function main() {
   testValidation();
+  testWaveIO();
   if (process.argv[2]) await testModel(process.argv[2]);
   console.log('Source separation tests passed');
 }
