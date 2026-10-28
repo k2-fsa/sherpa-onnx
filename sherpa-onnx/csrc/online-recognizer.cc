@@ -255,8 +255,52 @@ void OnlineRecognizer::DecodeStreams(OnlineStream **ss, int32_t n) const {
 OnlineRecognizerResult OnlineRecognizer::GetResult(OnlineStream *s) const {
   auto r = impl_->GetResult(s);
   r.text = RemoveLeadingSpaces(r.text);
-  r.text = RemoveLeadingPunct(r.text);
+  RemoveLeadingPunct(&r);
   return r;
+}
+
+void RemoveLeadingPunct(OnlineRecognizerResult *r) {
+  std::string text = RemoveLeadingPunct(r->text);
+  if (text.size() == r->text.size()) {
+    return;
+  }
+
+  std::string punct = r->text.substr(0, r->text.size() - text.size());
+  r->text = std::move(text);
+
+  // The first token with visible content must start with the removed
+  // punctuation. Otherwise, e.g., for byte fallback or byte-level BPE
+  // tokens, leave tokens alone.
+  auto &tokens = r->tokens;
+  for (size_t i = 0; i != tokens.size(); ++i) {
+    size_t start = tokens[i].find_first_not_of(' ');
+    if (start == std::string::npos) {
+      continue;
+    }
+
+    if (tokens[i].compare(start, punct.size(), punct) != 0) {
+      return;
+    }
+
+    if (start + punct.size() < tokens[i].size()) {
+      tokens[i].erase(start, punct.size());
+      return;
+    }
+
+    int32_t n = static_cast<int32_t>(tokens.size());
+    auto erase = [i, n](auto *v) {
+      if (static_cast<int32_t>(v->size()) == n) {
+        v->erase(v->begin() + i);
+      }
+    };
+
+    erase(&r->timestamps);
+    erase(&r->ys_probs);
+    erase(&r->lm_probs);
+    erase(&r->context_scores);
+    tokens.erase(tokens.begin() + i);
+    return;
+  }
 }
 
 bool OnlineRecognizer::IsEndpoint(OnlineStream *s) const {
