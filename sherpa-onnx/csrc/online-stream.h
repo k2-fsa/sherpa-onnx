@@ -56,12 +56,22 @@ class OnlineStream {
 
   /** Get n frames starting from the given frame index.
    *
-   * @param frame_index  The starting frame index
+   * @param frame_index  The starting frame index, relative to the last Reset().
+   *                     It may be negative to read retained left context; the
+   *                     caller must not request frames already discarded by
+   *                     an earlier GetFrames() call.
    * @param n  Number of frames to get.
    * @return Return a 2-D tensor of shape (n, feature_dim).
    *         which is flattened into a 1-D vector (flattened in row major)
    */
   std::vector<float> GetFrames(int32_t frame_index, int32_t n) const;
+
+  // Internal buffered NeMo feature extraction; indices are segment-relative.
+  std::vector<float> GetBufferedFeatures(int32_t frame_index, int32_t n,
+                                         bool is_final,
+                                         int32_t *start_sample_offset) const;
+
+  int32_t NumTrailingSamples() const;
 
   void Reset();
 

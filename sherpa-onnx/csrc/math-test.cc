@@ -171,4 +171,29 @@ TEST(NemoNormalizePerFeature, ConstantFeatureNormalizesToZero) {
   }
 }
 
+TEST(NemoNormalizePerFeature, SampleVariance) {
+  std::vector<float> x{1.0f, 2.0f, 3.0f};
+  NemoNormalizePerFeature(x.data(), 3, 1, true);
+  EXPECT_NEAR(x[0], -1.0f, 2e-5f);
+  EXPECT_NEAR(x[1], 0.0f, 1e-6f);
+  EXPECT_NEAR(x[2], 1.0f, 2e-5f);
+}
+
+TEST(NemoNormalizePerFeature, SingleFrameSampleVariance) {
+  std::vector<float> x{3.0f, -2.0f};
+  NemoNormalizePerFeature(x.data(), 1, 2, true);
+  EXPECT_EQ(x[0], 0.0f);
+  EXPECT_EQ(x[1], 0.0f);
+}
+
+TEST(NemoNormalizePerFeature, ConstantLogFloorSampleVariance) {
+  for (int32_t frames : {112, 672}) {
+    std::vector<float> x(frames * 2, -15.94f);
+    NemoNormalizePerFeature(x.data(), frames, 2, true);
+    for (float value : x) {
+      EXPECT_EQ(value, 0.0f);
+    }
+  }
+}
+
 }  // namespace sherpa_onnx
