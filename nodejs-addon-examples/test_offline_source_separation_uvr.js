@@ -11,19 +11,32 @@ const separator = new sherpa_onnx.OfflineSourceSeparation({
   },
 });
 
-const wave = sherpa_onnx.readWave('./qi-feng-le-zh.wav');
+// The model expects stereo; readWave() would keep only the first channel.
+const wave = sherpa_onnx.readWaveMultiChannel('./qi-feng-le-zh.wav');
+
+const start = Date.now();
 const output = separator.process({
-  samples: [wave.samples],
+  samples: wave.samples,
   sampleRate: wave.sampleRate,
   enableExternalBuffer: false,
 });
+const end = Date.now();
 
-// writeWave writes mono audio. Each stem contains separate stereo channels.
+// Each stem contains one channel per input channel; writeWaveMultiChannel
+// writes a stem to a single wave file.
 for (let i = 0; i < output.stems.length; ++i) {
-  const name = ['vocals', 'accompaniment'][i];
-  output.stems[i].forEach((samples, channel) => {
-    const filename = `uvr-${name}-${channel}.wav`;
-    sherpa_onnx.writeWave(filename, {samples, sampleRate: output.sampleRate});
-    console.log(`Saved ${filename}`);
-  });
+  const filename = ['uvr-vocals.wav', 'uvr-non-vocals.wav'][i];
+  sherpa_onnx.writeWaveMultiChannel(
+      filename, {samples: output.stems[i], sampleRate: output.sampleRate});
+  console.log(`Saved ${filename}`);
 }
+
+const elapsed_seconds = (end - start) / 1000;
+const audio_duration = wave.samples[0].length / wave.sampleRate;
+const real_time_factor = elapsed_seconds / audio_duration;
+
+console.log(`Elapsed seconds: ${elapsed_seconds.toFixed(3)}`);
+console.log(`Audio duration in seconds: ${audio_duration.toFixed(3)}`);
+console.log(
+    `RTF: ${elapsed_seconds.toFixed(3)}/${audio_duration.toFixed(3)} =`,
+    real_time_factor.toFixed(3));

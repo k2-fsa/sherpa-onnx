@@ -2,6 +2,8 @@ export const listRawfileDir: (mgr: object, dir: string) => Array<string>;
 
 export const readWave: (filename: string, enableExternalBuffer: boolean = true) => {samples: Float32Array, sampleRate: number};
 export const readWaveFromBinary: (data: Uint8Array, enableExternalBuffer: boolean = true) => {samples: Float32Array, sampleRate: number};
+export const readWaveMultiChannel: (filename: string, enableExternalBuffer: boolean = true) => {samples: Float32Array[], sampleRate: number};
+export const writeWaveMultiChannel: (filename: string, obj: {samples: Float32Array[], sampleRate: number}) => boolean;
 export const createCircularBuffer: (capacity: number) => object;
 export const circularBufferPush: (handle: object, samples: Float32Array) => void;
 export const circularBufferGet: (handle: object, index: number, n: number, enableExternalBuffer: boolean = true) => Float32Array;

@@ -20,7 +20,8 @@ class OfflineSourceSeparation {
   }
 
   /**
-   * Separate audio synchronously. Mono input is duplicated to stereo.
+   * Separate audio synchronously. Mono input is duplicated to stereo
+   * internally by sherpa-onnx; you don't need to duplicate it yourself.
    * @param {SourceSeparationRequest} obj
    * @returns {SourceSeparationOutput}
    */

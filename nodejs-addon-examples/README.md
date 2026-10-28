@@ -52,9 +52,6 @@ The following tables list the examples in this folder.
 
 Download the models and sample audio before running these examples:
 
-Until a published release includes `OfflineSourceSeparation`, these examples
-require a source-built `sherpa-onnx-node` addon.
-
 ```bash
 curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
 tar xjf sherpa-onnx-spleeter-2stems-fp16.tar.bz2
@@ -64,9 +61,15 @@ node test_offline_source_separation_spleeter.js
 node test_offline_source_separation_uvr.js
 ```
 
+The examples read the stereo test file with `readWaveMultiChannel` (`readWave`
+keeps only the first channel) and write each stem to a single wave file with
+`writeWaveMultiChannel`, e.g., `spleeter-vocals.wav` and
+`spleeter-non-vocals.wav`.
+
 `OfflineSourceSeparation.process({samples, sampleRate, enableExternalBuffer})`
 runs synchronously. `samples` is an array containing one or two `Float32Array`
-channels of equal, nonzero length. Mono input is duplicated to stereo. The
+channels of equal, nonzero length. Mono input is duplicated to stereo
+internally by sherpa-onnx; you don't need to duplicate it yourself. The
 native engine resamples input to the model's output sample rate if needed.
 
 The result is `{stems, sampleRate}`. For the models above, `stems[0]` is vocals
