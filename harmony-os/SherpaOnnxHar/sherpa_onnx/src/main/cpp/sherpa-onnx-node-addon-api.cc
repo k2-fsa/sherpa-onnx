@@ -33,6 +33,10 @@ void InitNonStreamingSpeechDenoiser(Napi::Env env, Napi::Object exports);
 
 void InitOnlineSpeechDenoiser(Napi::Env env, Napi::Object exports);
 
+#if !__OHOS__
+void InitOfflineSourceSeparation(Napi::Env env, Napi::Object exports);
+#endif
+
 void InitVersion(Napi::Env env, Napi::Object exports);
 
 void InitResampler(Napi::Env env, Napi::Object exports);
@@ -57,6 +61,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitNonStreamingSpeakerDiarization(env, exports);
   InitNonStreamingSpeechDenoiser(env, exports);
   InitOnlineSpeechDenoiser(env, exports);
+#if !__OHOS__
+  InitOfflineSourceSeparation(env, exports);
+#endif
   InitVersion(env, exports);
   InitResampler(env, exports);
 

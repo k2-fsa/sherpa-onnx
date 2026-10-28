@@ -43,6 +43,49 @@ export LD_LIBRARY_PATH=$PWD/node_modules/.pnpm/sherpa-onnx-node@<REPLACE-THIS-WI
 
 The following tables list the examples in this folder.
 
+## Source separation
+
+|File| Description|
+|---|---|
+|[./test_offline_source_separation_spleeter.js](./test_offline_source_separation_spleeter.js)| Separate vocals and accompaniment with Spleeter.|
+|[./test_offline_source_separation_uvr.js](./test_offline_source_separation_uvr.js)| Separate vocals and accompaniment with UVR (MDX-Net).|
+
+Download the models and sample audio before running these examples:
+
+```bash
+curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+tar xjf sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/UVR-MDX-NET-Voc_FT.onnx
+curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+node test_offline_source_separation_spleeter.js
+node test_offline_source_separation_uvr.js
+```
+
+`OfflineSourceSeparation.process({samples, sampleRate, enableExternalBuffer})`
+runs synchronously. `samples` is an array containing one or two `Float32Array`
+channels of equal, nonzero length. Mono input is duplicated to stereo. The
+native engine resamples input to the model's output sample rate if needed.
+
+The result is `{stems, sampleRate}`. For the models above, `stems[0]` is vocals
+and `stems[1]` is accompaniment. Each stem is an array of separate stereo
+`Float32Array` channels. `separator.sampleRate` and `separator.numStems` expose
+the model's output sample rate and stem count.
+
+`enableExternalBuffer` defaults to `true`. Returned channels keep native audio
+alive independently of the separator and other channels. Set it to `false`
+for runtimes such as Electron that require JavaScript-owned buffers.
+
+For `UVR-MDX-NET-Voc_FT.onnx` in macOS Electron 43.4.1, also disable the ONNX
+Runtime CPU memory arena to avoid a native allocator trap. Create a provider
+configuration file, e.g., `cpu.config`, containing:
+
+```text
+EnableCpuMemArena=0
+```
+
+Set `model.provider` to `cpu:./cpu.config` when creating the separator, and
+use `enableExternalBuffer: false` when processing audio.
+
 ## Speech enhancement/denoising
 
 |File| Description|

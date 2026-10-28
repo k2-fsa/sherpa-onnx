@@ -8,6 +8,7 @@ on:
     paths:
       - '.github/workflows/test-nodejs-addon-api.yaml'
       - '.github/scripts/test-nodejs-addon-npm.sh'
+      - '.github/scripts/test-nodejs-addon-source-separation.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -148,6 +149,10 @@ jobs:
           npm i
 
           ./node_modules/.bin/cmake-js compile --log-level verbose
+
+      - name: Test source separation
+        shell: bash
+        run: bash .github/scripts/test-nodejs-addon-source-separation.sh
 
       - name: Run tests
         shell: bash
