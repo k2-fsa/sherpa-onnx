@@ -10,6 +10,15 @@ ls -lh
 
 ./run-test-version.sh
 
+swiftc -O -sanitize=address -lc++ \
+  -I ../build-macos/install/include \
+  -import-objc-header ./SherpaOnnx-Bridging-Header.h \
+  ./tests/sortformer-config-lifetime.swift ./SherpaOnnx.swift \
+  -L ../build-macos/install/lib -l sherpa-onnx-c-api -l onnxruntime \
+  -o ../build-macos/sortformer-config-lifetime-test
+DYLD_LIBRARY_PATH="$PWD/../build-macos/install/lib:${DYLD_LIBRARY_PATH:-}" \
+  ../build-macos/sortformer-config-lifetime-test
+
 ./run-speech-enhancement-voxlock.sh
 ./run-speech-enhancement-voxlock-with-voice-sample.sh
 ./run-online-speech-enhancement-voxlock.sh

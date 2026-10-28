@@ -1877,13 +1877,29 @@ public func sherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
 
 /// Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
 /// If model is set, pyannote, embedding and clustering are ignored.
-public func sherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
+///
+/// The model path is valid only inside body. Create the native diarizer
+/// inside this closure; do not return or store the C config for later use.
+/// The created diarizer can be returned because native creation copies the path.
+///
+///     let sd = withSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
+///       model: modelPath
+///     ) { sortformer in
+///       var config = sherpaOnnxOfflineSpeakerDiarizationConfig(
+///         segmentation: sherpaOnnxOfflineSpeakerSegmentationModelConfig(
+///           sortformer: sortformer))
+///       return SherpaOnnxOfflineSpeakerDiarizationWrapper(config: &config)
+///     }
+public func withSherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig<Result>(
   model: String = "",
-  threshold: Float = 0.5
-) -> SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig {
-  return SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
-    model: toCPointer(model),
-    threshold: threshold)
+  threshold: Float = 0.5,
+  _ body: (SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig) throws -> Result
+) rethrows -> Result {
+  return try model.withCString { modelPointer in
+    try body(SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(
+      model: modelPointer,
+      threshold: threshold))
+  }
 }
 
 public func sherpaOnnxOfflineSpeakerSegmentationModelConfig(
@@ -1893,7 +1909,7 @@ public func sherpaOnnxOfflineSpeakerSegmentationModelConfig(
   debug: Int = 0,
   provider: String = "cpu",
   sortformer: SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig =
-    sherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig()
+    SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig(model: nil, threshold: 0.5)
 ) -> SherpaOnnxOfflineSpeakerSegmentationModelConfig {
   return SherpaOnnxOfflineSpeakerSegmentationModelConfig(
     pyannote: pyannote,
