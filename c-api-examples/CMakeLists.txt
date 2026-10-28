@@ -1,11 +1,9 @@
-include(cargs)
-
 include_directories(${PROJECT_SOURCE_DIR})
 add_executable(version-c-api version-c-api.c)
 target_link_libraries(version-c-api sherpa-onnx-c-api)
 
 add_executable(decode-file-c-api decode-file-c-api.c)
-target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
+target_link_libraries(decode-file-c-api sherpa-onnx-c-api)
 
 add_executable(kws-c-api kws-c-api.c)
 target_link_libraries(kws-c-api sherpa-onnx-c-api)
@@ -30,9 +28,27 @@ add_executable(online-speech-enhancement-dpdfnet-c-api
                online-speech-enhancement-dpdfnet-c-api.c)
 target_link_libraries(online-speech-enhancement-dpdfnet-c-api sherpa-onnx-c-api)
 
+add_executable(speech-enhancement-voxlock-c-api
+               speech-enhancement-voxlock-c-api.c)
+target_link_libraries(speech-enhancement-voxlock-c-api sherpa-onnx-c-api)
+
+add_executable(speech-enhancement-voxlock-with-voice-sample-c-api
+               speech-enhancement-voxlock-with-voice-sample-c-api.c)
+target_link_libraries(speech-enhancement-voxlock-with-voice-sample-c-api
+                      sherpa-onnx-c-api)
+
+add_executable(online-speech-enhancement-voxlock-c-api
+               online-speech-enhancement-voxlock-c-api.c)
+target_link_libraries(online-speech-enhancement-voxlock-c-api sherpa-onnx-c-api)
+
+add_executable(online-speech-enhancement-voxlock-with-voice-sample-c-api
+               online-speech-enhancement-voxlock-with-voice-sample-c-api.c)
+target_link_libraries(online-speech-enhancement-voxlock-with-voice-sample-c-api
+                      sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(offline-tts-c-api offline-tts-c-api.c)
-  target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
+  target_link_libraries(offline-tts-c-api sherpa-onnx-c-api)
 
   add_executable(matcha-tts-zh-c-api matcha-tts-zh-c-api.c)
   target_link_libraries(matcha-tts-zh-c-api sherpa-onnx-c-api)

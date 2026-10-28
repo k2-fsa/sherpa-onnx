@@ -26,7 +26,8 @@ void PybindOfflineTtsMatchaModelConfig(py::module *m) {
       .def_readwrite("vocoder", &PyClass::vocoder)
       .def_readwrite("lexicon", &PyClass::lexicon)
       .def_readwrite("tokens", &PyClass::tokens)
-      .def_readwrite("data_dir", &PyClass::data_dir)
+      .def_readwrite("data_dir", &PyClass::data_dir,
+                     "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. Use lexicon, or GenerationConfig.phoneme_codepoints / tokens with an external phonemizer instead.")
       .def_readwrite("dict_dir", &PyClass::dict_dir)
       .def_readwrite("noise_scale", &PyClass::noise_scale)
       .def_readwrite("length_scale", &PyClass::length_scale)

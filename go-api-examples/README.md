@@ -30,8 +30,25 @@ for details.
 - [./streaming-speech-enhancement-dpdfnet](./streaming-speech-enhancement-dpdfnet) It shows how to use
   the online speech denoiser API with DPDFNet models.
 
+- [./speech-enhancement-voxlock](./speech-enhancement-voxlock) It shows how to use
+  the offline speech denoiser API with VoxLock.
+
+- [./speech-enhancement-voxlock-with-voice-sample](./speech-enhancement-voxlock-with-voice-sample) It shows how to use
+  the offline speech denoiser API with VoxLock and a voice sample.
+
+- [./streaming-speech-enhancement-voxlock](./streaming-speech-enhancement-voxlock) It shows how to use
+  the online speech denoiser API with VoxLock.
+
+- [./streaming-speech-enhancement-voxlock-with-voice-sample](./streaming-speech-enhancement-voxlock-with-voice-sample) It shows how to use
+  the online speech denoiser API with VoxLock and a voice sample.
+
 - [./non-streaming-tts](./non-streaming-tts) It shows how to use a non-streaming TTS
-  model to convert text to speech
+  model to convert text to speech. It uses a lexicon file for text normalization.
+
+- [./non-streaming-tts-phonemize](./non-streaming-tts-phonemize) It shows how to use a
+  non-streaming TTS model to convert text to speech. It phonemizes the text outside of
+  sherpa-onnx with [piper-phonemize-go](https://github.com/csukuangfj/piper-phonemize-go)
+  and passes the phoneme codepoints to sherpa-onnx.
 
 - [./offline-tts-play](./offline-tts-play) It shows how to use a non-streaming TTS
   model to convert text to speech. It plays the audio back as it is being generated.

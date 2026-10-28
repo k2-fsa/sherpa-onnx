@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "HTP/QnnHtpDevice.h"
+#include "HTP/QnnHtpPerfInfrastructure.h"
 #include "QnnInterface.h"
 #include "System/QnnSystemInterface.h"
 #include "sherpa-onnx/csrc/qnn/macros.h"
@@ -22,7 +24,8 @@ namespace sherpa_onnx {
 
 class QnnBackend::Impl {
  public:
-  explicit Impl(const std::string &backend_lib, bool debug) : debug_(debug) {
+  Impl(const std::string &backend_lib, const QnnBackendOptions &opts)
+      : opts_(opts) {
     bool ok = InitQnnInterface(backend_lib);
     if (!ok) {
       SHERPA_ONNX_LOGE("Failed to init qnn interface from '%s'",
@@ -34,6 +37,10 @@ class QnnBackend::Impl {
     InitBackend();
     InitDevice();
 
+    if (opts_.htp_perf_mode) {
+      InitHtpPerfMode();
+    }
+
     is_initialized_ = true;
   }
 
@@ -41,6 +48,14 @@ class QnnBackend::Impl {
     if (context_handle_) {
       auto ret = qnn_interface_.contextFree(context_handle_, nullptr);
       SHERPA_ONNX_QNN_CHECK(ret, "Failed to call contextFree");
+    }
+
+    if (htp_perf_infra_ && htp_power_config_id_ != 0) {
+      auto ret = htp_perf_infra_->destroyPowerConfigId(htp_power_config_id_);
+      if (ret != QNN_SUCCESS) {
+        SHERPA_ONNX_LOGE("destroyPowerConfigId failed: %d",
+                         static_cast<int>(ret));
+      }
     }
 
     if (device_handle_) {
@@ -96,7 +111,7 @@ class QnnBackend::Impl {
       return false;
     }
 
-    if (debug_) {
+    if (opts_.debug) {
       SHERPA_ONNX_LOGE("loaded %s", backend_lib.c_str());
     }
 
@@ -110,7 +125,7 @@ class QnnBackend::Impl {
       return false;
     }
 
-    if (debug_) {
+    if (opts_.debug) {
       SHERPA_ONNX_LOGE("Got %s", symbol);
     }
 
@@ -132,7 +147,7 @@ class QnnBackend::Impl {
 
     bool found_valid_interface = false;
 
-    if (debug_) {
+    if (opts_.debug) {
       SHERPA_ONNX_LOGE("QNN_API_VERSION_MAJOR: %d", QNN_API_VERSION_MAJOR);
       SHERPA_ONNX_LOGE("QNN_API_VERSION_MINOR: %d", QNN_API_VERSION_MINOR);
       SHERPA_ONNX_LOGE("QNN_API_VERSION_PATCH: %d", QNN_API_VERSION_PATCH);
@@ -141,7 +156,7 @@ class QnnBackend::Impl {
     for (size_t idx = 0; idx < num_providers; ++idx) {
       auto p = interface_providers[idx];
 
-      if (debug_) {
+      if (opts_.debug) {
         std::ostringstream os;
         os << "---" << idx << "----\n";
         os << "backendId: " << p->backendId << "\n";
@@ -171,7 +186,7 @@ class QnnBackend::Impl {
       return false;
     }
 
-    if (debug_) {
+    if (opts_.debug) {
       const char *build_id = nullptr;
       ret = qnn_interface_.backendGetBuildId(&build_id);
       SHERPA_ONNX_QNN_CHECK(ret, "Failed to call backendGetBuildId()");
@@ -199,8 +214,87 @@ class QnnBackend::Impl {
     SHERPA_ONNX_QNN_CHECK(ret, "Failed to call deviceCreate");
   }
 
+  // Pin the HTP (NPU DSP) to max clocks for the lifetime of this backend.
+  //
+  // - DCVS v3 with DCVS disabled, PERFORMANCE_MODE, all voltage corners
+  //   pinned to MAX_VOLTAGE_CORNER.
+  //
+  // - RPC polling kept hot so autoregressive decoders don't pay the
+  //   wake-up cost on every step.
+  //
+  // Pattern referenced from:
+  // https://docs.qualcomm.com/nav/home/htp_backend.html?product=924033590759186372
+  void InitHtpPerfMode() {
+    QnnDevice_Infrastructure_t device_infra = nullptr;
+    auto ret = qnn_interface_.deviceGetInfrastructure(&device_infra);
+    if (ret != QNN_SUCCESS || device_infra == nullptr) {
+      SHERPA_ONNX_LOGE(
+          "deviceGetInfrastructure failed (%d): skipping HTP perf config. "
+          "HTP will run at default clocks.",
+          static_cast<int>(ret));
+      return;
+    }
+
+    auto *htp_infra =
+        static_cast<QnnHtpDevice_Infrastructure_t *>(device_infra);
+    htp_perf_infra_ = &htp_infra->perfInfra;
+
+    ret = htp_perf_infra_->createPowerConfigId(/*deviceId=*/0, /*coreId=*/0,
+                                               &htp_power_config_id_);
+    if (ret != QNN_SUCCESS) {
+      SHERPA_ONNX_LOGE("createPowerConfigId failed: %d",
+                       static_cast<int>(ret));
+      htp_perf_infra_ = nullptr;
+      return;
+    }
+
+    QnnHtpPerfInfrastructure_PowerConfig_t dcvs{};
+    dcvs.option = QNN_HTP_PERF_INFRASTRUCTURE_POWER_CONFIGOPTION_DCVS_V3;
+    dcvs.dcvsV3Config.contextId = htp_power_config_id_;
+    dcvs.dcvsV3Config.setDcvsEnable = 1;
+    dcvs.dcvsV3Config.dcvsEnable = 0;
+    dcvs.dcvsV3Config.powerMode =
+        QNN_HTP_PERF_INFRASTRUCTURE_POWERMODE_PERFORMANCE_MODE;
+    dcvs.dcvsV3Config.setSleepLatency = 1;
+    dcvs.dcvsV3Config.sleepLatency = 40;
+    dcvs.dcvsV3Config.setBusParams = 1;
+    dcvs.dcvsV3Config.setCoreParams = 1;
+    dcvs.dcvsV3Config.busVoltageCornerMin =
+        DCVS_VOLTAGE_VCORNER_MAX_VOLTAGE_CORNER;
+    dcvs.dcvsV3Config.busVoltageCornerTarget =
+        DCVS_VOLTAGE_VCORNER_MAX_VOLTAGE_CORNER;
+    dcvs.dcvsV3Config.busVoltageCornerMax =
+        DCVS_VOLTAGE_VCORNER_MAX_VOLTAGE_CORNER;
+    dcvs.dcvsV3Config.coreVoltageCornerMin =
+        DCVS_VOLTAGE_VCORNER_MAX_VOLTAGE_CORNER;
+    dcvs.dcvsV3Config.coreVoltageCornerTarget =
+        DCVS_VOLTAGE_VCORNER_MAX_VOLTAGE_CORNER;
+    dcvs.dcvsV3Config.coreVoltageCornerMax =
+        DCVS_VOLTAGE_VCORNER_MAX_VOLTAGE_CORNER;
+
+    QnnHtpPerfInfrastructure_PowerConfig_t rpc_polling_time{};
+    rpc_polling_time.option =
+        QNN_HTP_PERF_INFRASTRUCTURE_POWER_CONFIGOPTION_RPC_POLLING_TIME;
+    rpc_polling_time.rpcPollingTimeConfig = 9999;  // microseconds
+
+    QnnHtpPerfInfrastructure_PowerConfig_t rpc_control_latency{};
+    rpc_control_latency.option =
+        QNN_HTP_PERF_INFRASTRUCTURE_POWER_CONFIGOPTION_RPC_CONTROL_LATENCY;
+    rpc_control_latency.rpcControlLatencyConfig = 100;  // microseconds
+
+    const QnnHtpPerfInfrastructure_PowerConfig_t *configs[] = {
+        &dcvs, &rpc_polling_time, &rpc_control_latency, nullptr};
+    ret = htp_perf_infra_->setPowerConfig(htp_power_config_id_, configs);
+    if (ret != QNN_SUCCESS) {
+      SHERPA_ONNX_LOGE("setPowerConfig failed: %d", static_cast<int>(ret));
+    } else if (opts_.debug) {
+      SHERPA_ONNX_LOGE(
+          "HTP perf: PERFORMANCE_MODE, DCVS disabled, max voltage corner");
+    }
+  }
+
  private:
-  bool debug_ = true;
+  QnnBackendOptions opts_;
   std::unique_ptr<void, decltype(&dlclose)> backend_lib_handle_{nullptr,
                                                                 &dlclose};
 
@@ -220,12 +314,16 @@ class QnnBackend::Impl {
   Qnn_ContextHandle_t context_handle_ = nullptr;
   const QnnContext_Config_t **context_config_ = nullptr;
   bool is_initialized_ = false;
+
+  QnnHtpDevice_PerfInfrastructure_t *htp_perf_infra_ = nullptr;
+  uint32_t htp_power_config_id_ = 0;
 };
 
 QnnBackend::~QnnBackend() = default;
 
-QnnBackend::QnnBackend(const std::string &backend_lib, bool debug)
-    : impl_(std::make_unique<Impl>(backend_lib, debug)) {}
+QnnBackend::QnnBackend(const std::string &backend_lib,
+                       const QnnBackendOptions &opts)
+    : impl_(std::make_unique<Impl>(backend_lib, opts)) {}
 
 void QnnBackend::InitContext() const { impl_->InitContext(); }
 

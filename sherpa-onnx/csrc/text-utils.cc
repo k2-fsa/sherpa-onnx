@@ -9,19 +9,17 @@
 #include <cassert>
 #include <cctype>
 #include <charconv>
-#include <cinttypes>
-#include <climits>
 #include <cstdint>
-#include <cstdlib>
 #include <cwctype>
 #include <limits>
-#include <locale>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include "utf8proc.h"  // NOLINT
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -33,6 +31,49 @@
 // https://github.com/kaldi-asr/kaldi/blob/master/src/util/text-utils.cc
 
 namespace sherpa_onnx {
+
+std::string QuoteJsonString(const std::string &text) {
+  constexpr char hex[] = "0123456789abcdef";
+  std::string ans;
+  ans.reserve(text.size() + 2);
+  ans.push_back('"');
+  for (unsigned char c : text) {
+    switch (c) {
+      case '"':
+        ans += "\\\"";
+        break;
+      case '\\':
+        ans += "\\\\";
+        break;
+      case '\b':
+        ans += "\\b";
+        break;
+      case '\f':
+        ans += "\\f";
+        break;
+      case '\n':
+        ans += "\\n";
+        break;
+      case '\r':
+        ans += "\\r";
+        break;
+      case '\t':
+        ans += "\\t";
+        break;
+      default:
+        if (c < 0x20) {
+          ans += "\\u00";
+          ans.push_back(hex[c >> 4]);
+          ans.push_back(hex[c & 0xf]);
+        } else {
+          ans.push_back(static_cast<char>(c));
+        }
+        break;
+    }
+  }
+  ans.push_back('"');
+  return ans;
+}
 
 // copied from kaldi/src/util/text-util.cc
 template <class T>
@@ -412,7 +453,7 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
       // this is an ascii
       ans.emplace_back(reinterpret_cast<const char *>(start), 1);
       ++start;
-    } else if (2 <= num_bytes && num_bytes <= 4) {
+    } else if (2 <= num_bytes && num_bytes <= 4 && num_bytes <= end - start) {
       ans.emplace_back(reinterpret_cast<const char *>(start), num_bytes);
       start += num_bytes;
     } else {
@@ -426,73 +467,144 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
   return MergeCharactersIntoWords(ans);
 }
 
+// Unicode handling is delegated to utf8proc (see cmake/utf8proc.cmake) so we
+// do not maintain case or composition tables ourselves.
+
+char32_t ToSimpleLower(char32_t cp) {
+  return static_cast<char32_t>(
+      utf8proc_tolower(static_cast<utf8proc_int32_t>(cp)));
+}
+
+bool IsLexiconWordChar(char32_t cp) {
+  switch (utf8proc_category(static_cast<utf8proc_int32_t>(cp))) {
+    case UTF8PROC_CATEGORY_LU:
+    case UTF8PROC_CATEGORY_LL:
+    case UTF8PROC_CATEGORY_LT:
+    case UTF8PROC_CATEGORY_LM:
+    case UTF8PROC_CATEGORY_LO:
+    case UTF8PROC_CATEGORY_MN:
+    case UTF8PROC_CATEGORY_MC:
+    case UTF8PROC_CATEGORY_ME:
+    case UTF8PROC_CATEGORY_ND:
+    case UTF8PROC_CATEGORY_NL:
+    case UTF8PROC_CATEGORY_NO:
+      return true;
+    default:
+      return false;
+  }
+}
+
+std::string NormalizeNfc(const std::string &s) {
+  utf8proc_uint8_t *out =
+      utf8proc_NFC(reinterpret_cast<const utf8proc_uint8_t *>(s.c_str()));
+  if (out == nullptr) return s;
+  std::string result(reinterpret_cast<const char *>(out));
+  // Must go through utf8proc_free, not std::free: utf8proc allocates from the
+  // C library it is linked against, which on Windows can be a different CRT
+  // than the one this translation unit uses.
+  utf8proc_free(out);
+  return result;
+}
+
+bool NormalizeNfc(std::u32string *s) {
+  std::string before = Utf32ToUtf8(*s);
+  std::string after = NormalizeNfc(before);
+  if (after == before) return false;
+  *s = Utf8ToUtf32(after);
+  return true;
+}
+
 std::string ToLowerCase(const std::string &s) {
-  return ToString(ToLowerCase(ToWideString(s)));
+  std::u32string u32 = Utf8ToUtf32(s);
+  for (auto &c : u32) c = ToSimpleLower(c);
+  return Utf32ToUtf8(u32);
 }
 
 void ToLowerCase(std::string *in_out) {
+  // Deliberately byte-wise, as before. This overload is used by the legacy
+  // lexicon loaders (CharacterLexicon, HomophoneReplacer, Lexicon, MeloTts,
+  // the NeMo transducer model) whose lookup paths do not apply Unicode
+  // lowercasing, so making it Unicode-aware would store `Ａ` as `ａ` and then
+  // fail to match an unchanged `Ａ` query. The TTS key transform goes through
+  // NormalizeLexiconKey(), which uses the Unicode-aware string overload.
   std::transform(in_out->begin(), in_out->end(), in_out->begin(),
                  [](unsigned char c) { return std::tolower(c); });
 }
 
-std::wstring ToLowerCase(const std::wstring &s) {
-  std::wstring ans(s.size(), 0);
-  std::transform(s.begin(), s.end(), ans.begin(), [](wchar_t c) -> wchar_t {
-    switch (c) {
-      // French
-      case L'À':
-        return L'à';
-      case L'Â':
-        return L'â';
-      case L'Æ':
-        return L'æ';
-      case L'Ç':
-        return L'ç';
-      case L'È':
-        return L'è';
-      case L'É':
-        return L'é';
-      case L'Ë':
-        return L'ë';
-      case L'Î':
-        return L'î';
-      case L'Ï':
-        return L'ï';
-      case L'Ô':
-        return L'ô';
-      case L'Ù':
-        return L'ù';
-      case L'Û':
-        return L'û';
-      case L'Ü':
-        return L'ü';
+std::string NormalizeLexiconKey(const std::string &s) {
+  // NFC -> lowercase -> NFC. The trailing NFC matters: lowercasing can leave a
+  // decomposed sequence that only composes afterwards (J + U+030C lowercases
+  // to j + U+030C, which then composes to U+01F0 and matches a `ǰ` lexicon
+  // key). The leading NFC keeps the already-composed cases working.
+  return NormalizeNfc(ToLowerCase(NormalizeNfc(s)));
+}
 
-      // others
-      case L'Á':
-        return L'á';
-      case L'Í':
-        return L'í';
-      case L'Ó':
-        return L'ó';
-      case L'Ú':
-        return L'ú';
-      case L'Ñ':
-        return L'ñ';
-      case L'Ì':
-        return L'ì';
-      case L'Ò':
-        return L'ò';
-      case L'Ä':
-        return L'ä';
-      case L'Ö':
-        return L'ö';
-        // TODO(fangjun): Add more
-
-      default:
-        return std::towlower(c);
+int32_t CountLexiconPhraseWords(const std::string &key) {
+  // Upper bound on the number of lookup tokens a key can consume.
+  //
+  // Kokoro, Kitten and Matcha keep spaces and punctuation as tokens of their
+  // own, and those consume `len` in the longest-match loop, so they must be
+  // counted. A key like "new   york" needs three tokens there, and an
+  // under-estimate silently loses the phrase because the longer candidate is
+  // never tried. VITS drops spaces and splits on punctuation, so this
+  // over-estimates for it -- harmless, since every caller clamps with `n - i`.
+  std::u32string u32 = Utf8ToUtf32(key);
+  int32_t count = 0;
+  bool in_run = false;
+  for (char32_t cp : u32) {
+    if (IsLexiconWordChar(cp) && !IsCJK(cp)) {
+      // part of a plain word run
+      if (!in_run) {
+        in_run = true;
+        ++count;
+      }
+    } else {
+      // CJK: one token per character. Space or punctuation: one token each.
+      in_run = false;
+      ++count;
     }
-  });
-  return ans;
+  }
+  return count;
+}
+
+std::vector<LexiconPiece> SplitLexiconPieces(const std::u32string &core) {
+  std::vector<LexiconPiece> pieces;
+  std::u32string piece;
+  // A boundary belongs before the first piece, and before any piece that
+  // follows a separator other than a hyphen.
+  bool pending_boundary = true;
+
+  for (std::size_t k = 0; k <= core.size(); ++k) {
+    bool is_word = (k < core.size()) && IsLexiconWordChar(core[k]);
+    if (is_word) {
+      piece.push_back(core[k]);
+      continue;
+    }
+
+    if (!piece.empty()) {
+      pieces.push_back({Utf32ToUtf8(piece), pending_boundary});
+      piece.clear();
+      pending_boundary = false;
+    }
+
+    if (k < core.size() && core[k] != U'-') {
+      pending_boundary = true;
+    }
+  }
+  return pieces;
+}
+
+std::vector<bool> AssignLexiconPieceBoundaries(
+    const std::vector<bool> &needs_boundary, const std::vector<bool> &found) {
+  std::vector<bool> out(needs_boundary.size(), false);
+  bool pending = false;
+  for (std::size_t i = 0; i < needs_boundary.size(); ++i) {
+    if (needs_boundary[i]) pending = true;
+    if (!found[i]) continue;
+    out[i] = pending;
+    pending = false;
+  }
+  return out;
 }
 
 static inline bool InRange(uint8_t x, uint8_t low, uint8_t high) {
@@ -502,7 +614,6 @@ static inline bool InRange(uint8_t x, uint8_t low, uint8_t high) {
 /*
 Please see
 https://stackoverflow.com/questions/6555015/check-for-invalid-utf8
-
 
 Table 3-7. Well-Formed UTF-8 Byte Sequences
 
@@ -979,6 +1090,24 @@ std::u32string Utf8ToUtf32(const std::string &str) {
   return out;
 }
 
+std::u16string Utf8ToUtf16(const std::string &str) {
+  std::u16string out;
+  out.reserve(str.size());
+
+  // Utf8ToUtf32 never returns surrogates or code points above U+10FFFF
+  for (char32_t cp : Utf8ToUtf32(str)) {
+    if (cp >= 0x10000) {
+      cp -= 0x10000;
+      out.push_back(static_cast<char16_t>(0xD800 + (cp >> 10)));
+      out.push_back(static_cast<char16_t>(0xDC00 + (cp & 0x3FF)));
+    } else {
+      out.push_back(static_cast<char16_t>(cp));
+    }
+  }
+
+  return out;
+}
+
 std::string Utf32ToUtf8(const std::u32string &str) {
   std::string out;
   out.reserve(str.size() * 2);  // rough estimate
@@ -1007,6 +1136,24 @@ std::string Utf32ToUtf8(const std::u32string &str) {
   }
 
   return out;
+}
+
+std::string Utf16ToUtf8(const std::u16string &str) {
+  std::u32string u32;
+  u32.reserve(str.size());
+
+  for (size_t i = 0; i < str.size(); ++i) {
+    char32_t c = str[i];
+    if (c >= 0xD800 && c <= 0xDBFF && i + 1 < str.size() &&
+        str[i + 1] >= 0xDC00 && str[i + 1] <= 0xDFFF) {
+      c = 0x10000 + ((c - 0xD800) << 10) + (str[i + 1] - 0xDC00);
+      ++i;
+    }
+    // Utf32ToUtf8 turns an unpaired surrogate into U+FFFD
+    u32.push_back(c);
+  }
+
+  return Utf32ToUtf8(u32);
 }
 
 // Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
@@ -1127,6 +1274,14 @@ std::string RemoveLeadingSpaces(const std::string &text) {
   return text.substr(start);
 }
 
+std::string RemoveLeadingPunct(const std::string &text) {
+  std::u32string utf32 = Utf8ToUtf32(text);
+  if (utf32.empty() || !IsPunct(utf32[0])) {
+    return text;
+  }
+  return Utf32ToUtf8(utf32.substr(1));
+}
+
 std::string GetWord(const std::vector<std::string> &words, int32_t start,
                     int32_t end) {
   std::string ans;
@@ -1214,7 +1369,8 @@ void LengthsToMask(const std::vector<int64_t> &lengths,
   const int bsz = static_cast<int>(lengths.size());
   const int64_t max_len = *std::max_element(lengths.begin(), lengths.end());
   if (max_len < 0) {
-    SHERPA_ONNX_LOGE("LengthsToMask: max_len (%" PRId64 ") < 0", max_len);
+    SHERPA_ONNX_LOGE("LengthsToMask: max_len (%d) < 0",
+                     static_cast<int32_t>(max_len));
     SHERPA_ONNX_EXIT(-1);
   }
 
@@ -1305,8 +1461,12 @@ bool NeedSpaceBetween(const std::string &left, const std::string &right) {
     return false;
   }
 
-  if (IsCJK(last) || IsCJK(first) || IsChunkBoundary(last) ||
-      IsChunkBoundary(first)) {
+  // Add space between punctuation and a following letter (e.g., "world")
+  if (IsChunkBoundary(last) && !IsChunkBoundary(first) && !IsSpace(first)) {
+    return true;
+  }
+
+  if (IsCJK(last) || IsCJK(first)) {
     return false;
   }
 
@@ -1326,6 +1486,24 @@ std::vector<std::string> SplitByPunctuation(const std::string &text) {
   for (char32_t c : Utf8ToUtf32(text)) {
     cur.push_back(c);
     if (IsSentenceBoundary(c)) {
+      flush();
+    }
+  }
+  flush();
+  return sentences;
+}
+
+std::vector<std::string> SplitByAllPunctuation(const std::string &text) {
+  std::vector<std::string> sentences;
+  std::u32string cur;
+  auto flush = [&]() {
+    std::string s = Trim(Utf32ToUtf8(cur));
+    if (!s.empty()) sentences.emplace_back(std::move(s));
+    cur.clear();
+  };
+  for (char32_t c : Utf8ToUtf32(text)) {
+    cur.push_back(c);
+    if (IsChunkBoundary(c)) {
       flush();
     }
   }
@@ -1463,6 +1641,217 @@ std::vector<std::string> ChunkText(const std::string &text, size_t max_len) {
   flush();
   if (chunks.empty()) chunks.emplace_back(std::move(text_single));
   return chunks;
+}
+
+int32_t CountWords(const std::string &text) {
+  std::u32string u32 = Utf8ToUtf32(text);
+  int32_t count = 0;
+  bool in_word = false;
+
+  for (char32_t c : u32) {
+    if (IsCJK(c) || IsSentenceBoundary(c)) {
+      // Each CJK character or sentence-ending punctuation is a word
+      count++;
+      in_word = false;
+    } else if (IsSpace(c) || c == U',' || c == U';' || c == U':' ||
+               c == U'，' || c == U'；' || c == U'：') {
+      // Word boundary
+      in_word = false;
+    } else {
+      if (!in_word) {
+        count++;
+        in_word = true;
+      }
+    }
+  }
+
+  return count;
+}
+
+std::vector<std::string> MergeShortSentencesByWords(
+    const std::vector<std::string> &sentences, size_t min_words) {
+  std::vector<std::string> merged;
+  std::string buffer;
+
+  for (const auto &s : sentences) {
+    std::string piece = Trim(s);
+    if (piece.empty()) continue;
+
+    // Don't add space between pieces — preserve original spacing.
+    // SplitByAllPunctuation strips trailing space from each piece,
+    // so punctuation runs directly into the next text (correct for CJK).
+    buffer += piece;
+
+    if (static_cast<size_t>(CountWords(buffer)) >= min_words) {
+      merged.push_back(Trim(buffer));
+      buffer.clear();
+    }
+  }
+
+  if (!buffer.empty()) {
+    merged.push_back(Trim(buffer));
+  }
+
+  return merged;
+}
+
+std::vector<std::string> SplitLongSentenceByWords(const std::string &sentence,
+                                                  size_t max_words) {
+  std::vector<std::string> chunks;
+  if (max_words == 0) return chunks;
+  std::string s = Trim(sentence);
+  if (s.empty()) return chunks;
+
+  std::u32string u32 = Utf8ToUtf32(s);
+  size_t start = 0;
+  const size_t len = u32.size();
+
+  while (start < len) {
+    // Count words from start
+    int32_t word_count = 0;
+    bool in_word = false;
+    size_t end = start;
+
+    for (size_t i = start; i < len; ++i) {
+      char32_t c = u32[i];
+      if (IsCJK(c) || IsSentenceBoundary(c)) {
+        word_count++;
+        in_word = false;
+      } else if (IsSpace(c) || c == U',' || c == U';' || c == U':' ||
+                 c == U'，' || c == U'；' || c == U'：') {
+        in_word = false;
+      } else {
+        if (!in_word) {
+          word_count++;
+          in_word = true;
+        }
+      }
+
+      if (static_cast<size_t>(word_count) > max_words) {
+        break;
+      }
+      end = i + 1;
+    }
+
+    if (end >= len) {
+      std::string piece = Trim(Utf32ToUtf8(u32.substr(start)));
+      if (!piece.empty()) chunks.emplace_back(std::move(piece));
+      break;
+    }
+
+    // Try to split at punctuation or space boundary
+    size_t split_pos = end;
+    bool found = false;
+    for (size_t i = end; i > start; --i) {
+      char32_t c = u32[i - 1];
+      if (IsSpace(c)) {
+        split_pos = i - 1;
+        found = true;
+        break;
+      }
+      if (IsChunkBoundary(c)) {
+        split_pos = i;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found || split_pos <= start) {
+      // Force split at end. The `split_pos <= start` case happens when the
+      // only boundary found is the separator we started on; splitting there
+      // would not advance `start` and the loop below would never terminate.
+      split_pos = end;
+    }
+
+    std::string piece = Trim(Utf32ToUtf8(u32.substr(start, split_pos - start)));
+    if (!piece.empty()) chunks.emplace_back(std::move(piece));
+
+    start = split_pos;
+    while (start < len && IsSpace(u32[start])) {
+      ++start;
+    }
+  }
+
+  return chunks;
+}
+
+std::vector<LexiconEntry> ParseLexiconFile(std::istream &is,
+                                           int32_t *max_phrase_len_out) {
+  std::vector<LexiconEntry> entries;
+  int32_t max_phrase_len = 0;
+
+  std::string line;
+  while (std::getline(is, line)) {
+    if (line.empty() || line[0] == '#') continue;
+
+    std::string key;
+    std::vector<std::string> phonemes;
+
+    auto pos = line.find("||");
+    if (pos != std::string::npos) {
+      // New-format: word || phone1 phone2 ...
+      key = NormalizeLexiconKey(Trim(line.substr(0, pos)));
+      std::istringstream pss(Trim(line.substr(pos + 2)));
+      std::string phone;
+      while (pss >> phone) {
+        phonemes.push_back(std::move(phone));
+      }
+    } else {
+      // Old-format: word phone1 phone2 ...
+      std::istringstream iss(line);
+      std::string word;
+      iss >> word;
+      if (word.empty()) continue;
+      key = NormalizeLexiconKey(word);
+      std::string phone;
+      while (iss >> phone) {
+        phonemes.push_back(std::move(phone));
+      }
+    }
+
+    if (key.empty() || phonemes.empty()) continue;
+
+    // Count lookup tokens: CJK one per character, and one each for a space,
+    // a punctuation mark or a plain word run. That matches how the
+    // space-preserving frontends tokenize, and it is an upper bound on the
+    // longest-match loop's `len`, which every caller clamps with `n - i`, so
+    // over-estimating is safe and under-estimating silently skips multi-token
+    // entries (e.g. a two-character `中国` key).
+    int32_t word_count = CountLexiconPhraseWords(key);
+    if (word_count > max_phrase_len) {
+      max_phrase_len = word_count;
+    }
+
+    // Split multi-codepoint phonemes into individual characters,
+    // but only if the last codepoint is NOT a digit (0-9) or letter (a-z).
+    // Pinyin tokens like "ao3", "zhong1", "de" end with digit/letter → keep.
+    // IPA phonemes like "dˈ", "oʊ", "ɑː" end with non-alphanumeric → split.
+    std::vector<std::string> split_phonemes;
+    for (const auto &p : phonemes) {
+      std::u32string u32 = Utf8ToUtf32(p);
+      bool keep = u32.size() <= 1;
+      if (!keep) {
+        char32_t last = u32.back();
+        keep = (last >= U'0' && last <= U'9') ||
+               (last >= U'a' && last <= U'z') || (last >= U'A' && last <= U'Z');
+      }
+      if (keep) {
+        split_phonemes.push_back(p);
+      } else {
+        for (char32_t cp : u32) {
+          split_phonemes.push_back(Utf32ToUtf8(std::u32string(1, cp)));
+        }
+      }
+    }
+
+    entries.push_back({std::move(key), std::move(split_phonemes)});
+  }
+
+  if (max_phrase_len_out) {
+    *max_phrase_len_out = max_phrase_len;
+  }
+
+  return entries;
 }
 
 }  // namespace sherpa_onnx

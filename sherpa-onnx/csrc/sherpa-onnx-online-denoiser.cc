@@ -38,6 +38,10 @@ Currently this binary supports:
   dpdfnet8_8khz.onnx
   dpdfnet2_48khz_hr.onnx
   dpdfnet8_48khz_hr.onnx
+  voxlock_enroll.onnx with voxlock_chunk_int8.onnx or voxlock_chunk.onnx
+
+VoxLock models are available from
+https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models
 
 Usage:
 
@@ -61,6 +65,19 @@ Usage:
 
 # Use dpdfnet2_8khz.onnx or dpdfnet8_8khz.onnx for 8 kHz audio, and
 # dpdfnet8_48khz_hr.onnx for the highest-quality 48 kHz audio.
+
+./bin/sherpa-onnx-online-denoiser \
+  --speech-denoiser-voxlock-enroll-model=voxlock_enroll.onnx \
+  --speech-denoiser-voxlock-chunk-model=voxlock_chunk_int8.onnx \
+  --num-threads=2 \
+  --chunk-duration-ms=80 \
+  --input-wav=voxlock_test_call.wav \
+  --output-wav=output_16k.wav
+
+# VoxLock passes the audio through unchanged until it has heard 3 seconds
+# of speech, then keeps that voice and removes the others. Pass
+#   --speech-denoiser-voxlock-voice-sample=voxlock_test_voice_sample.wav
+# to keep the voice in a sample of at least 3 seconds from the first chunk.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);

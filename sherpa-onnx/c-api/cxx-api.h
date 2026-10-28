@@ -859,7 +859,12 @@ struct OfflineTtsVitsModelConfig {
   std::string lexicon;
   /** Token file. */
   std::string tokens;
-  /** Data directory such as `espeak-ng-data`. */
+  /**
+   * Data directory such as `espeak-ng-data`.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Reserved field. Currently unused by the wrapper. */
   std::string dict_dir;
@@ -882,7 +887,12 @@ struct OfflineTtsMatchaModelConfig {
   std::string lexicon;
   /** Token file. */
   std::string tokens;
-  /** Data directory such as `espeak-ng-data`. */
+  /**
+   * Data directory such as `espeak-ng-data`.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Reserved field. Currently unused by the wrapper. */
   std::string dict_dir;
@@ -901,7 +911,12 @@ struct OfflineTtsKokoroModelConfig {
   std::string voices;
   /** Token file. */
   std::string tokens;
-  /** Data directory such as `espeak-ng-data`. */
+  /**
+   * Data directory such as `espeak-ng-data`.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Reserved field. Currently unused by the wrapper. */
   std::string dict_dir;
@@ -922,11 +937,19 @@ struct OfflineTtsKittenModelConfig {
   std::string voices;
   /** Token file. */
   std::string tokens;
-  /** Data directory. */
+  /**
+   * Data directory.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
 
   /** Length scale. Values < 1 are faster; values > 1 are slower. */
   float length_scale = 1.0;
+
+  /** Lexicon file. */
+  std::string lexicon;
 };
 
 /** @brief ZipVoice model configuration. */
@@ -939,7 +962,12 @@ struct OfflineTtsZipvoiceModelConfig {
   std::string decoder;
   /** Vocoder model file. */
   std::string vocoder;
-  /** Data directory. */
+  /**
+   * Data directory.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * GenerationConfig::phoneme_codepoints (or ::tokens) instead.
+   */
   std::string data_dir;
   /** Lexicon file. */
   std::string lexicon;
@@ -1042,6 +1070,27 @@ struct GenerationConfig {
 
   /** Model-specific extra attributes serialized to JSON internally. */
   std::unordered_map<std::string, std::string> extra;
+
+  /**
+   * Pre-phonemized input as Unicode codepoints.
+   *
+   * Phonemize the text yourself (for instance with piper_phonemize) and pass
+   * the resulting codepoints here. When set, it is used in place of the `text`
+   * argument. Leave empty to use `text` with a lexicon.
+   *
+   * Each inner vector is one sentence.
+   */
+  std::vector<std::vector<int32_t>> phoneme_codepoints;
+
+  /**
+   * Pre-tokenized input, e.g. Chinese pinyin like "zhong1".
+   *
+   * Each inner vector is one sentence.
+   *
+   * Mutually exclusive with `phoneme_codepoints`: if both are set, a warning
+   * is printed and generation fails.
+   */
+  std::vector<std::vector<std::string>> tokens;
 };
 
 /** @brief Configuration for offline TTS. */
@@ -1112,6 +1161,11 @@ class SHERPA_ONNX_API OfflineTts
 
   /** @brief Return the number of supported speakers. */
   int32_t NumSpeakers() const;
+
+  /** @brief Return the language/voice of the model, e.g., "en-us".
+   *
+   * Returns an empty string if such information is not available. */
+  std::string Lang() const;
 
   /**
    * @brief Generate speech using the simple speaker-id and speed interface.
@@ -1234,6 +1288,27 @@ struct OfflineSpeechDenoiserDpdfNetModelConfig {
 };
 
 /**
+ * @brief VoxLock target-speaker voice isolation model configuration.
+ *
+ * VoxLock keeps the voice of one speaker (the caller) and removes other
+ * voices. The model is from https://github.com/arbazsiddiqui/voxlock
+ */
+struct OfflineSpeechDenoiserVoxLockModelConfig {
+  /** Path to the VoxLock enroll model, e.g., `enroll.onnx`. */
+  std::string enroll_model;
+  /** Path to the VoxLock chunk model, e.g., `chunk.onnx`. */
+  std::string chunk_model;
+  /**
+   * Optional. Path to a wave file with at least 3 seconds of the caller's
+   * voice. From a longer file, the loudest 3 seconds within the first 30
+   * seconds are used. A file that is shorter or cannot be read is ignored,
+   * as if it were empty. If empty or ignored, the voice sample is taken from
+   * the input audio; see the C API docs for the offline/online fallbacks.
+   */
+  std::string voice_sample;
+};
+
+/**
  * @brief Speech denoiser model configuration.
  *
  * Configure exactly one model family. If multiple model families are set, one
@@ -1244,6 +1319,8 @@ struct OfflineSpeechDenoiserModelConfig {
   OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   /** DPDFNet configuration. */
   OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
+  /** VoxLock configuration. */
+  OfflineSpeechDenoiserVoxLockModelConfig voxlock;
   /** Number of inference threads. */
   int32_t num_threads = 1;
   /** Enable verbose debug logging. */
@@ -1383,8 +1460,11 @@ struct VadModelConfig {
 
 /** @brief One speech segment produced by the VAD wrapper. */
 struct SpeechSegment {
-  /** Start sample index relative to the processed audio timeline. */
-  int32_t start = 0;
+  /** Start sample index relative to the processed audio timeline.
+   *
+   * It is an absolute position and keeps increasing during the lifetime of
+   * a detector, so it is 64-bit. */
+  int64_t start = 0;
   /** Speech samples for the segment. */
   std::vector<float> samples;
 };
@@ -1403,7 +1483,7 @@ class SHERPA_ONNX_API CircularBuffer
   void Push(const float *p, int32_t n) const;
 
   /** @brief Copy a contiguous span from the buffer. */
-  std::vector<float> Get(int32_t start_index, int32_t n) const;
+  std::vector<float> Get(int64_t start_index, int32_t n) const;
 
   /** @brief Remove samples from the head of the buffer. */
   void Pop(int32_t n) const;
@@ -1412,7 +1492,7 @@ class SHERPA_ONNX_API CircularBuffer
   int32_t Size() const;
 
   /** @brief Return the current head index. */
-  int32_t Head() const;
+  int64_t Head() const;
 
   /** @brief Reset the buffer to empty. */
   void Reset() const;

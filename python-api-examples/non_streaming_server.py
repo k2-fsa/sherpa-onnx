@@ -779,7 +779,7 @@ or <a href="/offline_record.html">/offline_record.html</a>
 
         The second and remaining messages contain audio samples.
 
-        Please refer to ./offline-websocket-client-decode-files-paralell.py
+        Please refer to ./offline-websocket-client-decode-files-parallel.py
         and ./offline-websocket-client-decode-files-sequential.py
         for how the client sends the message.
 

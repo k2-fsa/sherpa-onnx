@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>录音文件识别 (Doubao ASR)</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <main>
+        <!-- ===================== ASR tab ===================== -->
+        <section id="tab-asr" class="tab active">
+          <div class="card">
+            <h2>Doubao API key</h2>
+            <div class="row">
+              <input
+                id="api-key"
+                type="password"
+                placeholder="Paste your key here, e.g. 8fa26c90-e3eb-4ddc-89ca-691b9ee899bd"
+                autocomplete="off"
+              />
+              <button id="toggle-key" class="secondary" type="button">Show</button>
+            </div>
+            <div class="row actions">
+              <button id="clear-key" class="danger" type="button">
+                Clear API key
+              </button>
+              <button id="toggle-info" class="secondary" type="button">
+                Hide info
+              </button>
+            </div>
+            <div id="key-info">
+              <p class="hint">
+                Your key is stored only on this computer and sent only to the
+                Doubao API. Not sure how to get one? See the
+                <a id="api-doc-link" href="#">help on getting a Doubao API key</a>.
+                <b>No API key? Please provide one to continue.</b>
+              </p>
+              <p class="hint">
+                New Volcengine accounts get <b>20 hours of free recognition</b>.
+                Need more?
+                <a id="pricing-link" href="#">Buy more hours</a>
+                and select the package <b>录音文件识别</b>
+                (recording-file recognition) — <b>not</b>
+                流式语音识别 (streaming speech recognition). Please don't
+                pick the wrong package.
+              </p>
+              <p class="hint privacy">
+                <b>Privacy:</b> your speech is uploaded to Volcengine (Doubao)
+                for recognition — it is <b>not processed entirely on this
+                device</b>. Please keep this in mind for sensitive audio.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Input file</h2>
+            <div class="row">
+              <button id="pick-file" type="button">Select audio or video file…</button>
+              <span id="file-name" class="hint">No file selected</span>
+            </div>
+            <div id="recent-wrap" class="recent hidden">
+              <div class="row">
+                <span class="hint">Recent files (last 50):</span>
+                <select id="recent-list">
+                  <option value="">Select a recent file…</option>
+                </select>
+                <button id="clear-history" class="secondary" type="button">
+                  Clear history
+                </button>
+              </div>
+            </div>
+            <div class="row range-row">
+              <label>
+                Range (optional): from
+                <input id="range-start" type="number" min="0" step="0.1" placeholder="0" />
+                s to
+                <input id="range-end" type="number" min="0" step="0.1" placeholder="end" />
+                s
+              </label>
+              <span class="hint">Leave empty to recognize the whole file</span>
+            </div>
+            <div class="row media-toolbar">
+              <button id="toggle-subtitles" type="button">Subtitles: On</button>
+              <span class="hint">Captions are shown over the player</span>
+            </div>
+            <div id="media-wrap" class="media hidden">
+              <video id="media" controls></video>
+              <div id="subtitle-overlay" class="subtitle-overlay hidden">
+                <span id="subtitle-text"></span>
+              </div>
+            </div>
+            <div class="row actions">
+              <button id="start" class="primary" type="button">Start</button>
+              <button id="cancel" class="secondary" type="button" disabled>Stop</button>
+            </div>
+            <div class="progress-wrap">
+              <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <p id="status" class="hint">Idle</p>
+            <p class="hint">
+              Results are saved automatically as <b>&lt;name&gt;.srt</b> and
+              <b>&lt;name&gt;.txt</b> (timestamped) — into the
+              <b>Downloads</b> folder on Android, or next to the input file on
+              desktop. Recognition is not free, so nothing is lost even if you
+              press Stop. If those files already exist, delete them first.
+            </p>
+            <p id="error" class="error hidden"></p>
+          </div>
+
+          <div class="card" id="result-card">
+            <h2>Transcript</h2>
+            <div class="row toolbar">
+              <div class="format-tabs" id="format-tabs">
+                <button type="button" class="fmt active" data-format="timestamped">
+                  Timestamped TXT
+                </button>
+                <button type="button" class="fmt" data-format="srt">SRT</button>
+                <button type="button" class="fmt" data-format="plain">Plain text</button>
+              </div>
+              <div class="search">
+                <input id="search" type="text" placeholder="Search text…" />
+                <span id="search-count" class="hint"></span>
+                <button id="search-prev" type="button" title="Previous match (Shift+Enter)" disabled>
+                  ↑
+                </button>
+                <button id="search-next" type="button" title="Next match (Enter)" disabled>
+                  ↓
+                </button>
+              </div>
+            </div>
+            <p class="hint">
+              Click a row to play that segment. Use search to highlight words;
+              Enter / Shift+Enter jump between matches.
+            </p>
+            <div id="segments" class="segments"></div>
+            <div class="row actions">
+              <button id="export-srt" type="button" disabled>Export .srt</button>
+              <button id="export-timestamped" type="button" disabled>
+                Export timestamped .txt
+              </button>
+              <button id="export-plain" type="button" disabled>Export plain .txt</button>
+              <button id="delete-results" class="danger hidden" type="button">
+                Delete saved results
+              </button>
+            </div>
+            <div id="share-row" class="row actions hidden">
+              <button id="share-srt" type="button" disabled>Share .srt</button>
+              <button id="share-timestamped" type="button" disabled>
+                Share timestamped .txt
+              </button>
+              <button id="share-plain" type="button" disabled>Share plain .txt</button>
+            </div>
+          </div>
+
+          <div class="card" id="log-card">
+            <h2>Log</h2>
+            <p id="stats" class="hint"></p>
+            <div id="log-box" class="log-box"></div>
+          </div>
+        </section>
+
+        <!-- ===================== Info tab ===================== -->
+        <section id="tab-info" class="tab">
+          <div class="card">
+            <h2>Version</h2>
+            <div class="info-row"><span class="label">App</span><span id="info-app-version">-</span></div>
+            <div class="info-row"><span class="label">sherpa-onnx</span><span id="info-version">-</span></div>
+            <div class="info-row"><span class="label">Git SHA1</span><span id="info-git-sha1">-</span></div>
+            <div class="info-row"><span class="label">Git date</span><span id="info-git-date">-</span></div>
+            <div class="info-row"><span class="label">onnxruntime</span><span id="info-onnxruntime">-</span></div>
+          </div>
+
+          <div class="card">
+            <h2>Current model</h2>
+            <p class="model-name" id="info-model-file">silero_vad.onnx</p>
+            <div class="links">
+              <a id="info-model-url" href="#">Download</a>
+              <a id="info-model-doc" href="#">Documentation</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Resources</h2>
+            <div class="links">
+              <a id="info-github" href="#">GitHub</a>
+              <a id="info-docs" href="#">Documentation</a>
+              <a id="info-releases" href="#">Model releases</a>
+              <a id="info-api-doc" href="#">Get a Doubao API key</a>
+              <a id="info-dev" href="#">Developer's personal GitHub</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Community</h2>
+            <div class="info-row"><span class="label">QQ Group</span><span>744602236</span></div>
+            <div class="links">
+              <a id="info-wechat" href="#">WeChat groups</a>
+            </div>
+          </div>
+
+          <p class="footer">
+            Powered by
+            <a id="info-footer-link" href="#">sherpa-onnx</a>
+          </p>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <button id="nav-asr" class="nav-item active" type="button">
+          <span class="nav-icon">🎙</span>
+          <span>ASR</span>
+        </button>
+        <button id="nav-info" class="nav-item" type="button">
+          <span class="nav-icon">ℹ️</span>
+          <span>Info</span>
+        </button>
+      </nav>
+    </div>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

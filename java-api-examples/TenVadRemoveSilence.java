@@ -53,7 +53,7 @@ public class TenVadRemoveSilence {
         while (!vad.empty()) {
 
           // if you want to get the starting time of this segment, you can use
-          /* float startTime = vad.front().getStart() / 16000.0f; */
+          /* double startTime = vad.front().getStart() / 16000.0; */
 
           segments.add(vad.front().getSamples());
           vad.pop();
@@ -65,7 +65,7 @@ public class TenVadRemoveSilence {
     while (!vad.empty()) {
 
       // if you want to get the starting time of this segment, you can use
-      /* float startTime = vad.front().getStart() / 16000.0f; */
+      /* double startTime = vad.front().getStart() / 16000.0; */
 
       segments.add(vad.front().getSamples());
       vad.pop();

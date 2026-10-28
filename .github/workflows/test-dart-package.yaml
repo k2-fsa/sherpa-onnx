@@ -5,15 +5,6 @@ on:
     branches:
       - dart-xcframework-2
 
-  schedule:
-    # minute (0-59)
-    # hour (0-23)
-    # day of the month (1-31)
-    # month (1-12)
-    # day of the week (0-6)
-    # nightly build at 15:50 UTC time every day
-    - cron: "50 15 * * *"
-
   workflow_dispatch:
 
 concurrency:
@@ -81,6 +72,36 @@ jobs:
         shell: bash
         run: |
           .github/scripts/test-dart.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/tts/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/streaming-speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn
 
   # Test using xcframework built from source (SPM approach)
   test_dart_package_xcframework:
@@ -158,9 +179,43 @@ jobs:
           cp scripts/dart/speech-enhancement-dpdfnet-pubspec.yaml dart-api-examples/speech-enhancement-dpdfnet/pubspec.yaml
           cp scripts/dart/streaming-speech-enhancement-gtcrn-pubspec.yaml dart-api-examples/streaming-speech-enhancement-gtcrn/pubspec.yaml
           cp scripts/dart/streaming-speech-enhancement-dpdfnet-pubspec.yaml dart-api-examples/streaming-speech-enhancement-dpdfnet/pubspec.yaml
+          cp scripts/dart/speech-enhancement-voxlock-pubspec.yaml dart-api-examples/speech-enhancement-voxlock/pubspec.yaml
+          cp scripts/dart/speech-enhancement-voxlock-with-voice-sample-pubspec.yaml dart-api-examples/speech-enhancement-voxlock-with-voice-sample/pubspec.yaml
+          cp scripts/dart/streaming-speech-enhancement-voxlock-pubspec.yaml dart-api-examples/streaming-speech-enhancement-voxlock/pubspec.yaml
+          cp scripts/dart/streaming-speech-enhancement-voxlock-with-voice-sample-pubspec.yaml dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/pubspec.yaml
           cp scripts/dart/slid-pubspec.yaml dart-api-examples/spoken-language-identification/pubspec.yaml
           cp scripts/dart/version-pubspec.yaml dart-api-examples/version/pubspec.yaml
 
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
           .github/scripts/test-dart.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/tts/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/streaming-speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ github.job }}-${{ matrix.os }}
+          path: dart-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn

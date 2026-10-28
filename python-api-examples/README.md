@@ -1,6 +1,6 @@
 # File description
 
-- [./http_server.py](./http_server.py) It defines which files to server.
+- [./http_server.py](./http_server.py) It defines which files to serve.
   Files are saved in [./web](./web).
 - [non_streaming_server.py](./non_streaming_server.py) WebSocket server for
   non-streaming models.
@@ -28,6 +28,20 @@
   `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR and
   `dpdfnet2_8khz.onnx` or `dpdfnet8_8khz.onnx` for 8 kHz enhancement.
   Use `dpdfnet2_48khz_hr.onnx` or `dpdfnet8_48khz_hr.onnx` for 48 kHz output.
+
+- [offline-speech-enhancement-voxlock.py](./offline-speech-enhancement-voxlock.py)
+  It shows how to use the offline speech denoiser API with VoxLock.
+
+- [offline-speech-enhancement-voxlock-with-voice-sample.py](./offline-speech-enhancement-voxlock-with-voice-sample.py)
+  It shows how to use the offline speech denoiser API with VoxLock and a voice
+  sample.
+
+- [online-speech-enhancement-voxlock.py](./online-speech-enhancement-voxlock.py)
+  It shows how to use the online speech denoiser API with VoxLock.
+
+- [online-speech-enhancement-voxlock-with-voice-sample.py](./online-speech-enhancement-voxlock-with-voice-sample.py)
+  It shows how to use the online speech denoiser API with VoxLock and a voice
+  sample.
 
 - [pocket-tts.py](./pocket-tts.py) It shows how to use PocketTTS with the
   `GenerationConfig` API.

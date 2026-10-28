@@ -61,7 +61,7 @@ int32_t main(int32_t argc, char *argv[]) {
               "Thread pool size for network connections.");
 
   po.Register("num-work-threads", &num_work_threads,
-              "Thread pool size for for neural network "
+              "Thread pool size for neural network "
               "computation and decoding.");
 
   po.Register("port", &port, "The port on which the server will listen.");

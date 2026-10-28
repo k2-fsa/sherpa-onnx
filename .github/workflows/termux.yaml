@@ -85,10 +85,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -168,11 +164,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -210,7 +202,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -315,10 +307,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -412,7 +400,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -532,10 +520,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -615,11 +599,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -657,7 +637,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -771,10 +751,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -868,7 +844,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -989,10 +965,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -1072,11 +1044,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -1114,7 +1082,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -1235,10 +1203,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -1318,11 +1282,7 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
-
-          rm -fv $dst/lib/cargs.h
-          rm -fv $dst/lib/libcargs.so
           rm -fv $dst/lib/libonnxruntime4j_jni.so
-          rm -fv $dst/include/cargs.h
 
           echo "strip"
           strip $dst/bin/*
@@ -1360,7 +1320,7 @@ jobs:
           file: sherpa-onnx-*-termux-shared.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -1466,10 +1426,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -1563,7 +1519,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -1678,10 +1634,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -1775,7 +1727,7 @@ jobs:
           file: sherpa-onnx-*-termux-static.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

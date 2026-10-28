@@ -24,8 +24,9 @@ void OfflineTtsMatchaModelConfig::Register(ParseOptions *po) {
   po->Register("matcha-tokens", &tokens,
                "Path to tokens.txt for Matcha models");
   po->Register("matcha-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng. If it is "
-               "given, --matcha-lexicon is ignored.");
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --matcha-lexicon or "
+               "GenerationConfig.phoneme_codepoints instead.");
   po->Register("matcha-dict-dir", &dict_dir,
                "Not used. You don't need to provide a value for it");
   po->Register("matcha-noise-scale", &noise_scale,
@@ -57,33 +58,10 @@ bool OfflineTtsMatchaModelConfig::Validate() const {
   }
 
   if (!data_dir.empty()) {
-    if (!FileExists(data_dir + "/phontab")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/phontab' does not exist. Please check --matcha-data-dir",
-          data_dir.c_str());
-      return false;
-    }
-
-    if (!FileExists(data_dir + "/phonindex")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/phonindex' does not exist. Please check --matcha-data-dir",
-          data_dir.c_str());
-      return false;
-    }
-
-    if (!FileExists(data_dir + "/phondata")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/phondata' does not exist. Please check --matcha-data-dir",
-          data_dir.c_str());
-      return false;
-    }
-
-    if (!FileExists(data_dir + "/intonations")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/intonations' does not exist. Please check --matcha-data-dir",
-          data_dir.c_str());
-      return false;
-    }
+    SHERPA_ONNX_LOGE(
+        "WARNING: --matcha-data-dir is deprecated. Please use "
+        "--matcha-lexicon or GenerationConfig.phoneme_codepoints with an "
+        "external phonemizer (e.g. piper_phonemize) instead.");
   }
 
   if (!lexicon.empty()) {

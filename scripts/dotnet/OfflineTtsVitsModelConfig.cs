@@ -1,4 +1,4 @@
-/// Copyright (c)  2024.5 by 东风破
+﻿/// Copyright (c)  2024.5 by 东风破
 
 using System.Runtime.InteropServices;
 
@@ -29,6 +29,10 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string Tokens;
 
+        /// <summary>
+        /// Deprecated. Ignored since v2.0.0. Use Lexicon or
+        /// OfflineTtsGenerationConfig.PhonemeCodepoints instead.
+        /// </summary>
         [MarshalAs(UnmanagedType.LPStr)]
         public string DataDir;
 

@@ -5,8 +5,10 @@
 #ifndef SHERPA_ONNX_JNI_COMMON_H_
 #define SHERPA_ONNX_JNI_COMMON_H_
 
+#include <exception>  // NOLINT
 #include <string>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #if __ANDROID_API__ >= 9
@@ -144,16 +146,44 @@
 jobject NewInteger(JNIEnv *env, int32_t value);
 jobject NewFloat(JNIEnv *env, float value);
 
-// Wrapper for NewStringUTF that strips invalid UTF-8 byte sequences first.
-// This prevents JNI crashes when the ASR model outputs invalid UTF-8
-// (e.g., orphaned UTF-16 surrogate halves from the Arabic moonshine model).
+// Create a Java string from UTF-8 text. Invalid UTF-8 byte sequences are
+// stripped first. This prevents JNI crashes when the ASR model outputs
+// invalid UTF-8 (e.g., orphaned UTF-16 surrogate halves from the Arabic
+// moonshine model).
+//
+// NewStringUTF is not used since it expects modified UTF-8. Given a 4-byte
+// sequence (a code point above U+FFFF, e.g., an emoji), it returns garbage
+// and drops characters at the end of the string.
 inline jstring SafeNewStringUTF(JNIEnv *env, const std::string &s) {
-  return env->NewStringUTF(sherpa_onnx::RemoveInvalidUtf8Sequences(s).c_str());
+  std::u16string u16 =
+      sherpa_onnx::Utf8ToUtf16(sherpa_onnx::RemoveInvalidUtf8Sequences(s));
+  static_assert(sizeof(jchar) == sizeof(char16_t), "jchar must be 16-bit");
+  return env->NewString(reinterpret_cast<const jchar *>(u16.data()),
+                        static_cast<jsize>(u16.size()));
 }
 
 inline jstring SafeNewStringUTF(JNIEnv *env, const char *s) {
   if (!s) return env->NewStringUTF("");
   return SafeNewStringUTF(env, std::string(s));
+}
+
+// Convert a Java string to standard UTF-8.
+//
+// Unlike GetStringUTFChars, which returns modified UTF-8 and encodes a code
+// point above U+FFFF (e.g., an emoji) as two 3-byte surrogates instead of
+// one 4-byte sequence, this returns valid UTF-8. An unpaired surrogate is
+// replaced with U+FFFD.
+inline std::string JStringToUtf8(JNIEnv *env, jstring s) {
+  if (!s) return {};
+
+  jsize n = env->GetStringLength(s);
+  if (n == 0) return {};
+
+  std::u16string u16(n, u'\0');
+  static_assert(sizeof(jchar) == sizeof(char16_t), "jchar must be 16-bit");
+  env->GetStringRegion(s, 0, n, reinterpret_cast<jchar *>(&u16[0]));
+
+  return sherpa_onnx::Utf16ToUtf8(u16);
 }
 
 // Template function for non-void return types
@@ -221,6 +251,37 @@ inline bool ValidatePointer(JNIEnv *env, jlong ptr, const char *functionName,
 
 namespace sherpa_onnx {
 void PrependAdspLibraryPath(const std::string &new_path);
+}
+
+
+// Convert a C++ exception caught in a JNI function into a Java exception, so
+// callers on the Kotlin/Java side can catch it. Without this, an exception
+// escaping a JNI boundary calls std::terminate and aborts the process (e.g. an
+// Ort::Exception raised while loading a corrupt model file).
+inline void RethrowCxxExceptionAsJava(JNIEnv *env, const std::exception &e,
+                                      const char *context) {
+  SHERPA_ONNX_LOGE("%s: %s", context, e.what());
+  // JNI string functions expect modified UTF-8; an arbitrary what() buffer is
+  // not guaranteed to be valid, and ThrowNew with malformed input is
+  // undefined at the boundary. Fall back to the (ASCII, literal) context when
+  // the message is not printable ASCII, so the Java side always gets a valid
+  // string; the full message is preserved in the log line above.
+  const char *msg = e.what();
+  bool printable = msg[0] != '\0';
+  for (const char *p = msg; *p; ++p) {
+    unsigned char c = static_cast<unsigned char>(*p);
+    if (c < 0x20 || c > 0x7e) {
+      printable = false;
+      break;
+    }
+  }
+  jclass exception_class = env->FindClass("java/lang/Exception");
+  if (exception_class == nullptr) {
+    // FindClass itself failed; nothing more we can do here.
+    return;
+  }
+  env->ThrowNew(exception_class, printable ? msg : context);
+  env->DeleteLocalRef(exception_class);
 }
 
 #endif  // SHERPA_ONNX_JNI_COMMON_H_

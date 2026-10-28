@@ -95,7 +95,6 @@ function initTts(context: Context): OfflineTts {
   let ruleFsts = '';
   let ruleFars = '';
   let lexicon = '';
-  let dataDir = '';
   /*
     You can select an example below and change it according to match your
     selected tts model
@@ -115,7 +114,10 @@ function initTts(context: Context): OfflineTts {
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
   // modelDir = 'vits-piper-en_US-amy-low';
   // modelName = 'en_US-amy-low.onnx';
-  // dataDir = 'espeak-ng-data';
+  // lexicon = 'lexicon-en-us.txt';
+  //   The lexicon is not inside the model package; download it from
+  //   https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+  //   and put it next to the model. espeak-ng is no longer used.
 
   // Example 3:
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
@@ -141,7 +143,6 @@ function initTts(context: Context): OfflineTts {
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2
   // modelDir = 'vits-piper-en_US-libritts_r-medium';
   // modelName = 'en_US-libritts_r-medium.onnx';
-  // dataDir = 'espeak-ng-data';
 
   // Example 7
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -166,21 +167,18 @@ function initTts(context: Context): OfflineTts {
   // modelDir = 'matcha-icefall-en_US-ljspeech';
   // acousticModelName = 'model-steps-3.onnx';
   // vocoder = 'vocos-22khz-univ.onnx';
-  // dataDir = 'espeak-ng-data';
 
   // Example 10
   // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html#kokoro-en-v0-19-english-11-speakers
   // modelDir = 'kokoro-en-v0_19';
   // modelName = 'model.onnx';
   // voices = 'voices.bin'
-  // dataDir = 'espeak-ng-data';
 
   // Example 11
   // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
   // modelDir = 'kokoro-multi-lang-v1_0';
   // modelName = 'model.onnx';
   // voices = 'voices.bin'
-  // dataDir = 'espeak-ng-data';
   // lexicon = 'lexicon-us-en.txt,lexicon-zh.txt';
   // ruleFsts = `date-zh.fst,phone-zh.fst,number-zh.fst`;
 
@@ -241,12 +239,6 @@ function initTts(context: Context): OfflineTts {
     lexicon = modelDir + '/' + lexicon;
   }
 
-  if (dataDir != '') {
-    copyRawFileDirToSandbox(context, modelDir + '/' + dataDir)
-    let sandboxPath: string = context.getApplicationContext().filesDir;
-    dataDir = sandboxPath + '/' + modelDir + '/' + dataDir;
-  }
-
   const tokens = modelDir + '/tokens.txt';
 
   const config: OfflineTtsConfig = new OfflineTtsConfig();
@@ -259,13 +251,11 @@ function initTts(context: Context): OfflineTts {
   if (voices == '') {
     config.model.vits.lexicon = lexicon;
     config.model.vits.tokens = tokens;
-    config.model.vits.dataDir = dataDir;
 
     config.model.matcha.acousticModel = acousticModelName;
     config.model.matcha.vocoder = vocoder;
     config.model.matcha.lexicon = lexicon;
     config.model.matcha.tokens = tokens;
-    config.model.matcha.dataDir = dataDir;
   }
 
   if (voices != '') {
@@ -277,7 +267,6 @@ function initTts(context: Context): OfflineTts {
   if (voices != '') {
     config.model.kokoro.voices = voices;
     config.model.kokoro.tokens = tokens;
-    config.model.kokoro.dataDir = dataDir;
     config.model.kokoro.lexicon = lexicon;
   }
 
@@ -330,7 +319,7 @@ workerPort.onmessage = (e: MessageEvents) => {
 
   if (msgType == 'tts-generate') {
     const text = e.data['text'] as string;
-    console.log(`recevied text ${text}`);
+    console.log(`received text ${text}`);
     const input: TtsInput = new TtsInput();
     input.text = text;
     input.sid = e.data['sid'] as number;

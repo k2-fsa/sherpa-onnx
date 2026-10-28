@@ -63,9 +63,13 @@
  * - `audio-tagging-c-api.c` for audio tagging
  * - `add-punctuation-c-api.c` and `add-punctuation-online-c-api.c` for
  *   punctuation
- * - `offline-sepaker-diarization-c-api.c` for diarization
+ * - `offline-speaker-diarization-c-api.c` for diarization
  * - `speech-enhancement-gtcrn-c-api.c` and
  *   `online-speech-enhancement-gtcrn-c-api.c` for speech enhancement
+ * - `speech-enhancement-voxlock-c-api.c` and
+ *   `online-speech-enhancement-voxlock-c-api.c` for target-speaker voice
+ *   isolation with VoxLock; the model is from
+ *   https://github.com/arbazsiddiqui/voxlock
  */
 
 #ifndef SHERPA_ONNX_C_API_C_API_H_
@@ -2040,7 +2044,7 @@ SHERPA_ONNX_API void SherpaOnnxCircularBufferPush(
  * @endcode
  */
 SHERPA_ONNX_API const float *SherpaOnnxCircularBufferGet(
-    const SherpaOnnxCircularBuffer *buffer, int32_t start_index, int32_t n);
+    const SherpaOnnxCircularBuffer *buffer, int64_t start_index, int32_t n);
 
 /** @brief Free an array returned by SherpaOnnxCircularBufferGet(). */
 SHERPA_ONNX_API void SherpaOnnxCircularBufferFree(const float *p);
@@ -2072,7 +2076,7 @@ SherpaOnnxCircularBufferSize(const SherpaOnnxCircularBuffer *buffer);
  * @param buffer A pointer returned by SherpaOnnxCreateCircularBuffer().
  * @return The current head index.
  */
-SHERPA_ONNX_API int32_t
+SHERPA_ONNX_API int64_t
 SherpaOnnxCircularBufferHead(const SherpaOnnxCircularBuffer *buffer);
 
 /**
@@ -2091,8 +2095,13 @@ SHERPA_ONNX_API void SherpaOnnxCircularBufferReset(
  * @see SherpaOnnxVoiceActivityDetectorFront, SherpaOnnxDestroySpeechSegment
  */
 typedef struct SherpaOnnxSpeechSegment {
-  /** Start index, in input samples, of this segment. */
-  int32_t start;
+  /** Start index, in input samples, of this segment.
+   *
+   * It is an absolute position in the input stream and keeps increasing
+   * during the lifetime of a detector, so it is 64-bit. It is -1 if the
+   * segment is not valid.
+   */
+  int64_t start;
   /** Newly allocated mono samples for this segment. */
   float *samples;
   /** Number of samples in @c samples. */
@@ -2218,7 +2227,7 @@ SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorClear(
  * while (!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
  *   const SherpaOnnxSpeechSegment *segment =
  *       SherpaOnnxVoiceActivityDetectorFront(vad);
- *   printf("start=%d, samples=%d\n", segment->start, segment->n);
+ *   printf("start=%lld, samples=%d\n", (long long)segment->start, segment->n);
  *   SherpaOnnxDestroySpeechSegment(segment);
  *   SherpaOnnxVoiceActivityDetectorPop(vad);
  * }
@@ -2268,11 +2277,16 @@ SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorFlush(
 typedef struct SherpaOnnxOfflineTtsVitsModelConfig {
   /** Path to the VITS ONNX model, for example `./vits-ljs.onnx`. */
   const char *model;
-  /** Path to the lexicon file. Ignored if @c data_dir is provided. */
+  /** Path to the lexicon file. */
   const char *lexicon;
   /** Path to the tokens file. */
   const char *tokens;
-  /** Optional path to espeak-ng-data. */
+  /**
+   * Path to espeak-ng-data.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * SherpaOnnxGenerationConfig.phoneme_codepoints (or .tokens) instead.
+   */
   const char *data_dir;
   /** VITS noise scale. */
   float noise_scale;
@@ -2294,7 +2308,12 @@ typedef struct SherpaOnnxOfflineTtsMatchaModelConfig {
   const char *lexicon;
   /** Path to the tokens file. */
   const char *tokens;
-  /** Optional path to espeak-ng-data. */
+  /**
+   * Path to espeak-ng-data.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * SherpaOnnxGenerationConfig.phoneme_codepoints (or .tokens) instead.
+   */
   const char *data_dir;
   /** Matcha noise scale. */
   float noise_scale;
@@ -2312,7 +2331,12 @@ typedef struct SherpaOnnxOfflineTtsKokoroModelConfig {
   const char *voices;
   /** Path to the tokens file. */
   const char *tokens;
-  /** Optional path to espeak-ng-data. */
+  /**
+   * Path to espeak-ng-data.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * SherpaOnnxGenerationConfig.phoneme_codepoints (or .tokens) instead.
+   */
   const char *data_dir;
   /** Speech rate scale. Values < 1 are slower; values > 1 are faster. */
   float length_scale;
@@ -2332,10 +2356,17 @@ typedef struct SherpaOnnxOfflineTtsKittenModelConfig {
   const char *voices;
   /** Path to the tokens file. */
   const char *tokens;
-  /** Optional path to espeak-ng-data. */
+  /**
+   * Path to espeak-ng-data.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * SherpaOnnxGenerationConfig.phoneme_codepoints (or .tokens) instead.
+   */
   const char *data_dir;
   /** Speech rate scale. Values < 1 are slower; values > 1 are faster. */
   float length_scale;
+  /** Path to the lexicon file. */
+  const char *lexicon;
 } SherpaOnnxOfflineTtsKittenModelConfig;
 
 /** @brief Configuration for a ZipVoice TTS model. */
@@ -2348,7 +2379,12 @@ typedef struct SherpaOnnxOfflineTtsZipvoiceModelConfig {
   const char *decoder;
   /** Path to the vocoder model. */
   const char *vocoder;
-  /** Optional path to espeak-ng-data. */
+  /**
+   * Path to espeak-ng-data.
+   *
+   * @deprecated Ignored since v2.0.0. Pass pre-phonemized input via
+   * SherpaOnnxGenerationConfig.phoneme_codepoints (or .tokens) instead.
+   */
   const char *data_dir;
   /** Path to the lexicon file. */
   const char *lexicon;
@@ -2450,7 +2486,9 @@ typedef struct SherpaOnnxOfflineTtsModelConfig {
  * config.model.kokoro.model = "./kokoro-en-v0_19/model.onnx";
  * config.model.kokoro.voices = "./kokoro-en-v0_19/voices.bin";
  * config.model.kokoro.tokens = "./kokoro-en-v0_19/tokens.txt";
- * config.model.kokoro.data_dir = "./kokoro-en-v0_19/espeak-ng-data";
+ * // Download it from
+ * // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+ * config.model.kokoro.lexicon = "./lexicon-en-us.txt";
  * config.model.num_threads = 2;
  * config.model.provider = "cpu";
  * config.model.debug = 0;
@@ -2540,7 +2578,9 @@ typedef struct SherpaOnnxOfflineTts SherpaOnnxOfflineTts;
  * config.model.kokoro.model = "./kokoro-en-v0_19/model.onnx";
  * config.model.kokoro.voices = "./kokoro-en-v0_19/voices.bin";
  * config.model.kokoro.tokens = "./kokoro-en-v0_19/tokens.txt";
- * config.model.kokoro.data_dir = "./kokoro-en-v0_19/espeak-ng-data";
+ * // Download it from
+ * // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+ * config.model.kokoro.lexicon = "./lexicon-en-us.txt";
  * config.model.num_threads = 2;
  *
  * const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
@@ -2578,6 +2618,26 @@ SherpaOnnxOfflineTtsSampleRate(const SherpaOnnxOfflineTts *tts);
  */
 SHERPA_ONNX_API int32_t
 SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts);
+
+/**
+ * @brief Return the language/voice of the model, e.g., "en-us".
+ *
+ * The returned string is empty if such information is not available. It is
+ * never NULL; free it with SherpaOnnxDestroyOfflineTtsLang().
+ *
+ * @param tts A pointer returned by SherpaOnnxCreateOfflineTts().
+ * @return Language/voice of the model. Free it with
+ *         SherpaOnnxDestroyOfflineTtsLang().
+ */
+SHERPA_ONNX_API const char *
+SherpaOnnxOfflineTtsLang(const SherpaOnnxOfflineTts *tts);
+
+/**
+ * @brief Free a string returned by SherpaOnnxOfflineTtsLang().
+ *
+ * @param s A pointer returned by SherpaOnnxOfflineTtsLang().
+ */
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsLang(const char *s);
 
 /**
  * @brief Generate speech from text using the simple sid/speed interface.
@@ -2754,6 +2814,44 @@ typedef struct SherpaOnnxGenerationConfig {
   int32_t num_steps;
   /** Optional model-specific JSON string with extra key/value pairs. */
   const char *extra;
+
+  /**
+   * Pre-phonemized input as Unicode codepoints.
+   *
+   * Phonemize the text yourself (for instance with piper_phonemize) and pass
+   * the resulting codepoints here. When set, it is used in place of @c text.
+   * Leave as NULL to use @c text with a lexicon.
+   *
+   * Each sentence is one sub-array. All codepoints of all sentences are stored
+   * flattened in this array; see @c phoneme_codepoints_lens for the boundaries.
+   */
+  const int32_t *phoneme_codepoints;
+
+  /** Number of codepoints in each sentence. It has
+   *  @c phoneme_codepoints_num_sentences entries. If not NULL, every entry
+   *  must be > 0. */
+  const int32_t *phoneme_codepoints_lens;
+
+  /** Number of sentences in @c phoneme_codepoints_lens. */
+  int32_t phoneme_codepoints_num_sentences;
+
+  /**
+   * Pre-tokenized input, e.g. Chinese pinyin like "zhong1".
+   *
+   * Each sentence is one sub-array. All token strings of all sentences are
+   * stored flattened in this array; see @c tokens_lens for the boundaries.
+   *
+   * Mutually exclusive with @c phoneme_codepoints: if both are set, a warning
+   * is printed and generation fails.
+   */
+  const char *const *tokens;
+
+  /** Number of tokens in each sentence. It has @c tokens_num_sentences
+   *  entries. If not NULL, every entry must be > 0. */
+  const int32_t *tokens_lens;
+
+  /** Number of sentences in @c tokens_lens. */
+  int32_t tokens_num_sentences;
 } SherpaOnnxGenerationConfig;
 
 /**
@@ -3949,7 +4047,7 @@ typedef struct SherpaOnnxFastClusteringConfig {
 /**
  * @brief Configuration for offline speaker diarization.
  *
- * Example based on `offline-sepaker-diarization-c-api.c`:
+ * Example based on `offline-speaker-diarization-c-api.c`:
  *
  * @code
  * SherpaOnnxOfflineSpeakerDiarizationConfig config;
@@ -4194,6 +4292,44 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig {
 } SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
 
 /**
+ * @brief VoxLock target-speaker voice isolation model configuration.
+ *
+ * VoxLock keeps the voice of one speaker (the caller) and removes other
+ * voices. The model is from https://github.com/arbazsiddiqui/voxlock
+ */
+typedef struct SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig {
+  /**
+   * Path to the VoxLock enroll model, e.g., `enroll.onnx`.
+   *
+   * It runs once on a voice sample of the speaker to keep. Download the
+   * models from
+   * https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models
+   */
+  const char *enroll_model;
+  /**
+   * Path to the VoxLock chunk model, e.g., `chunk.onnx` or
+   * `chunk_int8.onnx`.
+   *
+   * It runs on each chunk of the audio.
+   */
+  const char *chunk_model;
+  /**
+   * Optional. Path to a wave file with at least 3 seconds of the caller's
+   * voice. VoxLock keeps this voice and removes the others. From a longer
+   * file, it uses the loudest 3 seconds within the first 30 seconds. A file
+   * that is shorter or cannot be read is ignored, as if it were empty.
+   *
+   * If empty or ignored, the voice sample is taken from the input audio:
+   *
+   * - Offline denoiser: the loudest 3 seconds in the first 15 seconds of
+   *   the input are used.
+   * - Online denoiser: the audio is passed through unchanged until 3 seconds
+   *   of speech have been heard; that speech is used as the voice sample.
+   */
+  const char *voice_sample;
+} SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig;
+
+/**
  * @brief Speech denoiser model configuration shared by offline and online APIs.
  *
  * Configure exactly one model family. If multiple model families are provided,
@@ -4210,6 +4346,8 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserModelConfig {
   const char *provider;
   /** DPDFNet model configuration. */
   SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
+  /** VoxLock model configuration. */
+  SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig voxlock;
 } SherpaOnnxOfflineSpeechDenoiserModelConfig;
 
 /** @brief Configuration for offline speech denoising. */

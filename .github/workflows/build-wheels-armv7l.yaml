@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -39,11 +39,6 @@ jobs:
           ./new-release.sh
           git diff .
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: arm
-
       - name: Display PWD
         shell: bash
         run: |
@@ -54,13 +49,11 @@ jobs:
       - name: Build sherpa-onnx
         shell: bash
         run: |
-          docker run --rm \
-            --platform linux/arm/v7 \
-            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
-            quay.io/pypa/manylinux_2_35_armv7l \
+            docker run --rm \
+              --platform linux/arm/v7 \
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+              quay.io/pypa/manylinux_2_35_armv7l \
             bash -c '
-              find / -name "*gcc*" 2>/dev/null
-
               uname -a
               gcc --version
               cmake --version
@@ -70,7 +63,7 @@ jobs:
 
               cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
-              # find /opt -name "python*"
+              find /opt -name "python*"
 
               echo "--------------------"
               PY_PATH=$(echo /opt/_internal/cpython-3.10*/bin)
@@ -112,16 +105,8 @@ jobs:
               echo "----"
               ls -lh install/lib
 
-              file install/lib/*
-
-              rm -fv install/lib/libcargs.so
-
               echo "----"
               ls -lh install/bin
-
-              file install/bin/*
-
-              ./install/bin/sherpa-onnx --help
 
               echo "sherpa-onnx-core"
               mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
@@ -202,14 +187,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04-arm]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Retrieve artifact from Linux
+      - name: Retrieve artifact from Linux armv7l
         uses: actions/download-artifact@v4
         with:
           name: wheels-core-linux-armv7l-patched
@@ -224,6 +209,73 @@ jobs:
         shell: bash
         run: |
           ls -lh /tmp/wheels
+
+      # The wheels are tagged manylinux_2_35_armv7l, so install and run them
+      # inside an armv7 container; the arm64 host python refuses that platform
+      # tag even though the CPUs here can execute armv7 binaries.
+      #
+      # The venv is kept on the host at /tmp/venv so the steps below can reuse
+      # it. All steps of a job run on the same VM and the image tag resolves to
+      # the same local image, so the interpreter path stays valid.
+      - name: Install
+        shell: bash
+        run: |
+            mkdir -p /tmp/venv
+            docker run --rm \
+              --platform linux/arm/v7 \
+              --volume /tmp/wheels:/wheels \
+              --volume /tmp/venv:/venv \
+              quay.io/pypa/manylinux_2_35_armv7l \
+            bash -c '
+              PY_PATH=$(echo /opt/_internal/cpython-3.10*/bin)
+              export PATH=$PY_PATH:$PATH
+              which python3
+              python3 --version
+
+              python3 -m venv /venv
+
+              /venv/bin/python3 -m pip install /wheels/*.whl
+            '
+
+      - name: Show version
+        shell: bash
+        run: |
+            docker run --rm \
+              --platform linux/arm/v7 \
+              --volume /tmp/venv:/venv \
+              quay.io/pypa/manylinux_2_35_armv7l \
+            bash -c '
+              export PATH=/venv/bin:$(echo /opt/_internal/cpython-3.10*/bin):$PATH
+
+              sherpa-onnx-version
+            '
+
+      - name: Show help
+        shell: bash
+        run: |
+            docker run --rm \
+              --platform linux/arm/v7 \
+              --volume /tmp/venv:/venv \
+              quay.io/pypa/manylinux_2_35_armv7l \
+            bash -c '
+              export PATH=/venv/bin:$(echo /opt/_internal/cpython-3.10*/bin):$PATH
+
+              sherpa-onnx --help
+
+              echo "---"
+
+              ls -lh $(which sherpa-onnx)
+              file $(which sherpa-onnx)
+              readelf -d $(which sherpa-onnx)
+
+              ldd $(which sherpa-onnx)
+
+              sherpa-onnx-offline --help
+
+              echo "---"
+
+              sherpa-onnx-vad --help
+            '
 
       - name: Publish to huggingface
         env:
@@ -275,6 +327,7 @@ jobs:
 
 
   build_wheels_armv7l:
+    needs: [core, test]
     name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -282,8 +335,8 @@ jobs:
       matrix:
         # see https://github.com/pypa/cibuildwheel/issues/2257
         # we don't use qemu from now on
-        os: [ubuntu-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        os: [ubuntu-24.04-arm]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314", "cp315"]
         manylinux: [manylinux_2_35] #, manylinux_2_28]
 
     steps:
@@ -295,94 +348,88 @@ jobs:
           ./new-release.sh
           git diff .
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: arm
+      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
+      # for a list of versions
+      #
+      # CPython 3.8 is EOL and has been dropped upstream: the manylinux images
+      # removed the interpreter and cibuildwheel 4.0 dropped support for
+      # building it. The last combination that still works is cibuildwheel 3.x
+      # plus a pinned image from before that drop. cp315 needs cibuildwheel 4.x,
+      # so the two are split here.
+      - name: Build wheels (cp38)
+        if: matrix.python-version == 'cp38'
+        uses: pypa/cibuildwheel@v3.3.1
+        env:
+          CIBW_BEFORE_ALL: |
+            git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+            cd alsa-lib
+            ./gitcompile
+            cd ..
+            echo "PWD"
+            ls -lh /project/alsa-lib/src/.libs
 
-      - name: Build sherpa-onnx
-        shell: bash
-        run: |
-          docker run --rm \
-            --platform linux/arm/v7 \
-            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
-            quay.io/pypa/manylinux_2_35_armv7l${{ matrix.python-version == '3.8' && ':2025.11.29-1' || '' }} \
-            bash -c '
-              find / -name "*gcc*" 2>/dev/null
+          CIBW_ENVIRONMENT: >
+            SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+            C_INCLUDE_PATH=/project/alsa-lib/include:$C_INCLUDE_PATH
+            CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH
+            SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs
+            LD_LIBRARY_PATH=/project/build/bdist.linux-armv7l/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR
+            CFLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=neon"
+            CXXFLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=neon"
+            SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
+            SHERPA_ONNX_ENABLE_ALSA=1
+            SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF -DALSA_INCLUDE_DIR=/project/alsa-lib/include -DALSA_LIBRARY=/project/alsa-lib/src/.libs/libasound.so"
 
-              uname -a
-              gcc --version
-              cmake --version
-              cat /etc/*release
-              id
-              pwd
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ARCHS_LINUX: armv7l
+          # https://quay.io/repository/pypa/manylinux_2_35_armv7l?tab=tags
+          # last image that still ships a CPython 3.8 interpreter
+          CIBW_MANYLINUX_ARMV7L_IMAGE: "${{ format('quay.io/pypa/{0}_armv7l:2025.11.29-1', matrix.manylinux) }}"
+          # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
+          # manylinux_2_24 is no longer supported
+          CIBW_REPAIR_WHEEL_COMMAND: >
+            auditwheel repair -w {dest_dir}
+            --exclude libonnxruntime.so
+            {wheel}
 
-              python_version=${{ matrix.python-version }}
+      - name: Build wheels
+        if: matrix.python-version != 'cp38'
+        uses: pypa/cibuildwheel@v4.3.2
+        env:
+          CIBW_BEFORE_ALL: |
+            git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+            cd alsa-lib
+            ./gitcompile
+            cd ..
+            echo "PWD"
+            ls -lh /project/alsa-lib/src/.libs
 
-              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+          CIBW_ENVIRONMENT: >
+            SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+            C_INCLUDE_PATH=/project/alsa-lib/include:$C_INCLUDE_PATH
+            CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH
+            SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs
+            LD_LIBRARY_PATH=/project/build/bdist.linux-armv7l/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR
+            CFLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=neon"
+            CXXFLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=neon"
+            SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
+            SHERPA_ONNX_ENABLE_ALSA=1
+            SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF -DALSA_INCLUDE_DIR=/project/alsa-lib/include -DALSA_LIBRARY=/project/alsa-lib/src/.libs/libasound.so"
 
-              # find /opt -name "python*"
-
-              echo "--------------------"
-              # Construct glob pattern
-              PY_GLOB="/opt/_internal/cpython-${python_version}*/bin"
-
-              # Expand the glob safely
-              shopt -s nullglob  # Avoid literal string if no match
-              matches=($PY_GLOB)
-              shopt -u nullglob
-
-              if [[ ${#matches[@]} -eq 0 ]]; then
-                echo "No Python installation found for version $python_version"
-                exit 1
-              elif [[ ${#matches[@]} -gt 1 ]]; then
-                echo "Multiple Python installations found for version $python_version:"
-                printf "  %s\n" "${matches[@]}"
-                echo "Using the first one: ${matches[0]}"
-              fi
-
-              PY_PATH="${matches[0]}"
-
-              echo "$PY_PATH"
-              export PATH="$PY_PATH:$PATH"
-              echo $PY_PATH
-              export PATH=$PY_PATH:$PATH
-              which python3
-              python3 --version
-
-              python3 -m venv my
-
-              source ./my/bin/activate
-
-              python3 -m pip install setuptools wheel twine
-
-              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
-              pushd alsa-lib
-              ./gitcompile
-              popd
-
-              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
-              echo "SHERPA_ONNX_ALSA_LIB_DIR: $SHERPA_ONNX_ALSA_LIB_DIR"
-
-              export LD_LIBRARY_PATH=$PWD/build/bdist.linux-aarch64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR:$LD_LIBRARY_PATH
-              export LIBRARY_PATH=$PWD/build/bdist.linux-aarch64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR:$LIBRARY_PATH
-
-              echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-              echo "LIBRARY_PATH: $LIBRARY_PATH"
-
-              export C_INCLUDE_PATH=$PWD/alsa-lib/include:$C_INCLUDE_PATH
-              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
-              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
-
-              export SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
-              export SHERPA_ONNX_ENABLE_ALSA=1
-              export SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_C_FLAGS=\"-march=armv7-a -mfloat-abi=hard -mfpu=neon\" -DCMAKE_CXX_FLAGS=\"-march=armv7-a -mfloat-abi=hard -mfpu=neon\" -DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF -DSHERPA_ONNX_ENABLE_C_API=ON -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF -DALSA_INCLUDE_DIR=$p/alsa-lib/include -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so"
-              python3 setup.py bdist_wheel
-              ls -lh dist
-
-              mkdir wheelhouse
-              cp -v dist/* wheelhouse/
-            '
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ARCHS_LINUX: armv7l
+          # https://quay.io/repository/pypa/manylinux_2_35_armv7l?tab=tags
+          CIBW_MANYLINUX_ARMV7L_IMAGE: "${{ format('quay.io/pypa/{0}_armv7l', matrix.manylinux) }}"
+          # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
+          # manylinux_2_24 is no longer supported
+          CIBW_REPAIR_WHEEL_COMMAND: >
+            auditwheel repair -w {dest_dir}
+            --exclude libonnxruntime.so
+            {wheel}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -446,7 +493,7 @@ jobs:
             git status
             git add .
             git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI
         env:

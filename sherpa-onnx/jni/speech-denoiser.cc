@@ -33,6 +33,19 @@ OfflineSpeechDenoiserModelConfig GetOfflineSpeechDenoiserModelConfig(
   SHERPA_ONNX_JNI_READ_FLOAT(ans.dpdfnet.attenuation_limit_db,
                             attenuationLimitDb, dpdfnet_cls, dpdfnet);
 
+  fid = env->GetFieldID(
+      model_config_cls, "voxlock",
+      "Lcom/k2fsa/sherpa/onnx/OfflineSpeechDenoiserVoxLockModelConfig;");
+  jobject voxlock = env->GetObjectField(model, fid);
+  jclass voxlock_cls = env->GetObjectClass(voxlock);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.voxlock.enroll_model, enrollModel, voxlock_cls,
+                              voxlock);
+  SHERPA_ONNX_JNI_READ_STRING(ans.voxlock.chunk_model, chunkModel, voxlock_cls,
+                              voxlock);
+  SHERPA_ONNX_JNI_READ_STRING(ans.voxlock.voice_sample, voiceSample, voxlock_cls,
+                              voxlock);
+
   SHERPA_ONNX_JNI_READ_INT(ans.num_threads, numThreads, model_config_cls,
                            model);
   SHERPA_ONNX_JNI_READ_BOOL(ans.debug, debug, model_config_cls, model);

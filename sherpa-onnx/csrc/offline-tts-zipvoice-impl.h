@@ -15,7 +15,6 @@
 #include "kaldi-native-fbank/csrc/mel-computations.h"
 #include "kaldi-native-fbank/csrc/stft.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
@@ -23,7 +22,9 @@
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/resample.h"
+#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/tts-text-normalizer.h"
 #include "sherpa-onnx/csrc/vocoder.h"
 
 namespace sherpa_onnx {
@@ -34,7 +35,40 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       : config_(config),
         model_(std::make_unique<OfflineTtsZipvoiceModel>(config.model)),
         vocoder_(Vocoder::Create(config.model)) {
-    InitFrontend();
+    if (vocoder_ && vocoder_->SampleRate() != model_->GetMetaData().sample_rate) {
+      SHERPA_ONNX_LOGE(
+          "ERROR: Vocoder sample rate (%d Hz) does not match the ZipVoice "
+          "model sample rate (%d Hz).",
+          vocoder_->SampleRate(), model_->GetMetaData().sample_rate);
+      SHERPA_ONNX_LOGE(
+          "Please download the correct vocoder from "
+          "https://github.com/k2-fsa/sherpa-onnx/releases/tag/vocoder-models");
+      if (model_->GetMetaData().sample_rate == 16000) {
+        SHERPA_ONNX_LOGE("For 16kHz models, use vocos-16khz-univ.onnx");
+      } else if (model_->GetMetaData().sample_rate == 22050) {
+        SHERPA_ONNX_LOGE("For 22050Hz models, use vocos-22khz-univ.onnx");
+      } else if (model_->GetMetaData().sample_rate == 24000) {
+        SHERPA_ONNX_LOGE("For 24kHz models, use vocos_24khz.onnx");
+      }
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (!config.model.zipvoice.tokens.empty()) {
+      auto is = OpenInputFile(config.model.zipvoice.tokens);
+      token_str2id_ = ReadTokens(is);
+    }
+
+    if (!config.model.zipvoice.lexicon.empty()) {
+      std::vector<std::string> files;
+      SplitStringToVector(config.model.zipvoice.lexicon, ",", false, &files);
+      for (const auto &f : files) {
+        auto is = OpenInputFile(f);
+        LoadLexicon(is, config.model.debug);
+      }
+    }
+
+    tn_list_ = LoadTextNormalizers(config.rule_fsts, config.rule_fars,
+                                   config.model.debug);
 
     PostInit();
   }
@@ -44,7 +78,42 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       : config_(config),
         model_(std::make_unique<OfflineTtsZipvoiceModel>(mgr, config.model)),
         vocoder_(Vocoder::Create(mgr, config.model)) {
-    InitFrontend(mgr);
+    if (vocoder_ && vocoder_->SampleRate() != model_->GetMetaData().sample_rate) {
+      SHERPA_ONNX_LOGE(
+          "ERROR: Vocoder sample rate (%d Hz) does not match the ZipVoice "
+          "model sample rate (%d Hz).",
+          vocoder_->SampleRate(), model_->GetMetaData().sample_rate);
+      SHERPA_ONNX_LOGE(
+          "Please download the correct vocoder from "
+          "https://github.com/k2-fsa/sherpa-onnx/releases/tag/vocoder-models");
+      if (model_->GetMetaData().sample_rate == 16000) {
+        SHERPA_ONNX_LOGE("For 16kHz models, use vocos-16khz-univ.onnx");
+      } else if (model_->GetMetaData().sample_rate == 22050) {
+        SHERPA_ONNX_LOGE("For 22050Hz models, use vocos-22khz-univ.onnx");
+      } else if (model_->GetMetaData().sample_rate == 24000) {
+        SHERPA_ONNX_LOGE("For 24kHz models, use vocos_24khz.onnx");
+      }
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (!config.model.zipvoice.tokens.empty()) {
+      auto buf = ReadFile(mgr, config.model.zipvoice.tokens);
+      std::istringstream is(std::string(buf.data(), buf.size()));
+      token_str2id_ = ReadTokens(is);
+    }
+
+    if (!config.model.zipvoice.lexicon.empty()) {
+      std::vector<std::string> files;
+      SplitStringToVector(config.model.zipvoice.lexicon, ",", false, &files);
+      for (const auto &f : files) {
+        auto buf = ReadFile(mgr, f);
+        std::istringstream is(std::string(buf.data(), buf.size()));
+        LoadLexicon(is, config.model.debug);
+      }
+    }
+
+    tn_list_ = LoadTextNormalizers(mgr, config.rule_fsts, config.rule_fars,
+                                   config.model.debug);
 
     PostInit();
   }
@@ -53,19 +122,40 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     return model_->GetMetaData().sample_rate;
   }
 
+  /**
+   *
+   * Supported options in GenerationConfig:
+   *   - speed: Speech speed factor (default: 1.0)
+   *   - silence_scale: Scale applied to pauses in the generated audio
+   *   - reference_audio: Mono float32 audio samples for zero-shot cloning
+   *   - reference_sample_rate: Sample rate of reference_audio
+   *   - reference_text: Transcript of reference_audio
+   *   - tokens: Vector of sentences, each a vector of token strings.
+   *     tokens[0] is used for the reference text, tokens[1..] for generated text.
+   *
+   * Supported extra parameters:
+   *
+   *  - debug, int, default from model config
+   *  - min_words_in_sentence, int, default 5.
+   *    Merge adjacent sentences if the number of words is less than this.
+   *    Each CJK character counts as one word; English words are space-separated.
+   *  - max_words_in_sentence, int, default 20.
+   *    Split a sentence into chunks if the number of words exceeds this.
+   *    Splits at punctuation or space boundaries.
+   *  - num_steps, int, default 4.
+   *    Number of flow-matching denoising steps.
+   *  - feat_scale, float, default from model config.
+   *    Prompt mel log scaling factor.
+   *  - t_shift, float, default from model config.
+   *    Timestep shift used by the decoder schedule.
+   *  - target_rms, float, default from model config.
+   *    Prompt RMS normalization target.
+   *  - guidance_scale, float, default from model config.
+   *    Classifier-free guidance scale for the decoder.
+   */
   GeneratedAudio Generate(
       const std::string &text, const GenerationConfig &config,
       GeneratedAudioCallback callback = nullptr) const override {
-    // Supported extra options in config.extra:
-    //   - "speed" (float): Speech speed factor (default: 1.0)
-    //   - "num_steps" (int): Number of flow-matching steps (default: 4)
-    //   - "max_char_in_sentence" (int): Max characters per chunk (default: 200)
-    //   - "min_char_in_sentence" (int): Merge shorter chunks until this size
-    //     (default: 30)
-    //   - "feat_scale" (float): Prompt mel log scaling factor (default:
-    //     config.model.zipvoice.feat_scale)
-    //   - "t_shift" (float): Timestep shift used by the decoder schedule
-    //     (default: config.model.zipvoice.t_shift)
     //   - "target_rms" (float): Prompt RMS normalization target (default:
     //     config.model.zipvoice.target_rms)
     //   - "guidance_scale" (float): Classifier-free guidance scale for the
@@ -132,10 +222,26 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       return {};
     }
 
-    std::vector<TokenIDs> prompt_token_ids =
-        frontend_->ConvertTextToTokenIds(config.reference_text);
-    if (prompt_token_ids.empty() ||
-        (prompt_token_ids.size() == 1 && prompt_token_ids[0].tokens.empty())) {
+    // Tokenize reference text
+    std::vector<int64_t> prompt_tokens;
+    if (!config.phoneme_codepoints.empty()) {
+      SHERPA_ONNX_LOGE(
+          "GenerationConfig.phoneme_codepoints is not supported by ZipVoice "
+          "models and is ignored. Use lexicon or GenerationConfig.tokens "
+          "instead.");
+    }
+    if (!config.tokens.empty()) {
+      // tokens path: use first sentence as prompt tokens
+      for (const auto &tok : config.tokens[0]) {
+        auto it = token_str2id_.find(tok);
+        if (it != token_str2id_.end()) {
+          prompt_tokens.push_back(it->second);
+        }
+      }
+    } else {
+      prompt_tokens = TokenizeText(config.reference_text, config_.model.debug);
+    }
+    if (prompt_tokens.empty()) {
 #if __OHOS__
       SHERPA_ONNX_LOGE(
           "Failed to convert prompt text '%{public}s' to token IDs",
@@ -147,12 +253,6 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       return {};
     }
 
-    std::vector<int64_t> prompt_tokens;
-    for (const auto &t : prompt_token_ids) {
-      prompt_tokens.insert(prompt_tokens.end(), t.tokens.begin(),
-                           t.tokens.end());
-    }
-
     std::vector<float> prompt_features = ComputePromptFeatures(
         config.reference_audio, config.reference_sample_rate, feat_scale,
         target_rms);
@@ -161,60 +261,203 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       return {};
     }
 
-    auto sentences = SplitByPunctuation(text);
-    if (sentences.empty()) {
-      return {};
-    }
-
-    int32_t max_char_in_sentence =
-        config.GetExtraInt("max_char_in_sentence", 200);
-    int32_t min_char_in_sentence =
-        config.GetExtraInt("min_char_in_sentence", 30);
-
-    if (max_char_in_sentence <= 0) {
-      SHERPA_ONNX_LOGE("max_char_in_sentence must be > 0. Given: %d",
-                       max_char_in_sentence);
-      return {};
-    }
-
-    if (min_char_in_sentence <= 0) {
-      SHERPA_ONNX_LOGE("min_char_in_sentence must be > 0. Given: %d",
-                       min_char_in_sentence);
-      return {};
-    }
-
-    sentences = MergeShortSentences(sentences, min_char_in_sentence);
-
-    std::vector<std::string> final_chunks;
-    for (const auto &s : sentences) {
-      auto pieces = SplitLongSentence(s, max_char_in_sentence);
-      final_chunks.insert(final_chunks.end(), pieces.begin(), pieces.end());
-    }
-
-    sentences = std::move(final_chunks);
-    if (sentences.empty()) {
-      return {};
-    }
-
     GeneratedAudio result;
     result.sample_rate = SampleRate();
 
-    const int32_t total = static_cast<int32_t>(sentences.size());
+    if (!config.tokens.empty()) {
+      // tokens path: use token strings directly for generated text
+      // config.tokens[0] was used for prompt, config.tokens[1..] for generated
 
-    for (int32_t i = 0; i < total; ++i) {
+      // Flatten all generated tokens
+      std::vector<std::string> all_tokens;
+      for (size_t si = 1; si < config.tokens.size(); ++si) {
+        for (const auto &tok : config.tokens[si]) {
+          all_tokens.push_back(tok);
+        }
+      }
+
+      // Split at punctuation tokens into sub-sentences
+      auto IsPunctToken = [](const std::string &t) {
+        return t == "," || t == "." || t == "!" || t == "?" || t == ";" ||
+               t == ":";
+      };
+
+      std::vector<std::vector<std::string>> token_sentences;
+      std::vector<std::string> current;
+      for (const auto &tok : all_tokens) {
+        current.push_back(tok);
+        if (IsPunctToken(tok)) {
+          token_sentences.push_back(std::move(current));
+          current.clear();
+        }
+      }
+      if (!current.empty()) {
+        token_sentences.push_back(std::move(current));
+      }
+
+      // Merge short token sentences
+      int32_t min_words =
+          config.GetExtraInt("min_words_in_sentence", 5);
+      std::vector<std::vector<std::string>> merged;
+      std::vector<std::string> buffer;
+      for (auto &ts : token_sentences) {
+        buffer.insert(buffer.end(), ts.begin(), ts.end());
+        if (static_cast<int32_t>(buffer.size()) >= min_words) {
+          merged.push_back(std::move(buffer));
+          buffer.clear();
+        }
+      }
+      if (!buffer.empty()) {
+        if (!merged.empty()) {
+          merged.back().insert(merged.back().end(), buffer.begin(),
+                               buffer.end());
+        } else {
+          merged.push_back(std::move(buffer));
+        }
+      }
+
       if (config_.model.debug) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("Processing %{public}d/%{public}d: %{public}s", i + 1,
-                         total, sentences[i].c_str());
+        SHERPA_ONNX_LOGE("Reference text: %{public}s",
+                         config.reference_text.c_str());
+        SHERPA_ONNX_LOGE("Using tokens path: %{public}d sentence(s)",
+                         static_cast<int32_t>(merged.size()));
 #else
-        SHERPA_ONNX_LOGE("Processing %d/%d: %s", i + 1, total,
-                         sentences[i].c_str());
+        SHERPA_ONNX_LOGE("Reference text: %s",
+                         config.reference_text.c_str());
+        SHERPA_ONNX_LOGE("Using tokens path: %d sentence(s)",
+                         static_cast<int32_t>(merged.size()));
 #endif
       }
 
-      GeneratedAudio cur = GenerateChunk(
-          sentences[i], prompt_tokens, prompt_features, speed, num_steps,
-          feat_scale, t_shift, guidance_scale);
+      // Convert token strings to IDs and process each sentence
+      int32_t sentence_idx = 0;
+      for (const auto &sentence : merged) {
+        std::vector<int64_t> tokens;
+        std::vector<std::string> id_strs;
+        for (const auto &tok : sentence) {
+          auto it = token_str2id_.find(tok);
+          if (it != token_str2id_.end()) {
+            tokens.push_back(it->second);
+            id_strs.push_back(tok + "(" + std::to_string(it->second) + ")");
+          } else {
+            if (config_.model.debug) {
+              SHERPA_ONNX_LOGE("Skip unknown token: '%s'", tok.c_str());
+            }
+          }
+        }
+
+        // Merge single-token sentence into previous
+        if (tokens.size() == 1 && !result.samples.empty()) {
+          // Skip — don't process single-token sentences alone
+          continue;
+        }
+
+        if (tokens.empty()) continue;
+
+        if (config_.model.debug) {
+          std::ostringstream os;
+          os << "Sentence " << sentence_idx << " tokens: [";
+          for (size_t j = 0; j < id_strs.size(); ++j) {
+            if (j > 0) os << ", ";
+            os << id_strs[j];
+          }
+          os << "]";
+#if __OHOS__
+          SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+          SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
+          ++sentence_idx;
+        }
+
+        GeneratedAudio cur = Process(tokens, prompt_tokens, prompt_features,
+                                     speed, num_steps, feat_scale, t_shift,
+                                     guidance_scale);
+        if (cur.samples.empty()) continue;
+        result.samples.insert(result.samples.end(), cur.samples.begin(),
+                              cur.samples.end());
+      }
+    } else {
+      // Text path: convert punctuations, split into sentences, merge short,
+      // split long, tokenize each.
+      if (config_.model.debug) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Raw text: %{public}s", text.c_str());
+#else
+        SHERPA_ONNX_LOGE("Raw text: %s", text.c_str());
+#endif
+      }
+
+      std::string normalized = NormalizeNfc(ReplacePunctuations(text));
+
+      auto sentences = SplitByAllPunctuation(normalized);
+      if (sentences.empty()) {
+        return {};
+      }
+
+      int32_t min_words =
+          config.GetExtraInt("min_words_in_sentence", 5);
+      int32_t max_words =
+          config.GetExtraInt("max_words_in_sentence", 20);
+
+      sentences = MergeShortSentencesByWords(sentences, min_words);
+
+      std::vector<std::string> final_chunks;
+      for (const auto &s : sentences) {
+        auto pieces = SplitLongSentenceByWords(s, max_words);
+        final_chunks.insert(final_chunks.end(), pieces.begin(), pieces.end());
+      }
+
+      // Merge punctuation-only chunks into previous
+      std::vector<std::string> merged_chunks;
+      for (const auto &s : final_chunks) {
+        std::u32string u32 = Utf8ToUtf32(Trim(s));
+        bool all_punct = !u32.empty();
+        for (char32_t c : u32) {
+          if (c != U',' && c != U'.' && c != U'!' && c != U'?' &&
+              c != U';' && c != U':' && c != U' ') {
+            all_punct = false;
+            break;
+          }
+        }
+        if (all_punct && !merged_chunks.empty()) {
+          merged_chunks.back() += Trim(s);
+        } else {
+          merged_chunks.push_back(s);
+        }
+      }
+      sentences = std::move(merged_chunks);
+
+      if (config_.model.debug) {
+        SHERPA_ONNX_LOGE("After split/merge: %d sentences",
+                         static_cast<int32_t>(sentences.size()));
+        for (int32_t i = 0; i < static_cast<int32_t>(sentences.size()); ++i) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("  sentence %d: '%{public}s'", i,
+                           sentences[i].c_str());
+#else
+          SHERPA_ONNX_LOGE("  sentence %d: '%s'", i, sentences[i].c_str());
+#endif
+        }
+      }
+
+      const int32_t total = static_cast<int32_t>(sentences.size());
+
+      for (int32_t i = 0; i < total; ++i) {
+        if (config_.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("Processing %{public}d/%{public}d: %{public}s",
+                           i + 1, total, sentences[i].c_str());
+#else
+          SHERPA_ONNX_LOGE("Processing %d/%d: %s", i + 1, total,
+                           sentences[i].c_str());
+#endif
+        }
+
+        GeneratedAudio cur = GenerateChunk(
+            sentences[i], prompt_tokens, prompt_features, speed, num_steps,
+            feat_scale, t_shift, guidance_scale);
 
       if (cur.samples.empty()) {
         continue;
@@ -231,6 +474,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         }
       }
     }
+    }  // end else (text path)
 
     if (config.silence_scale != 1) {
       result = result.ScaleSilence(config.silence_scale);
@@ -283,15 +527,13 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
   template <typename Manager>
   void InitFrontend(Manager *mgr) {
-    frontend_ = std::make_unique<MatchaTtsLexicon>(
-        mgr, config_.model.zipvoice.lexicon, config_.model.zipvoice.tokens,
-        config_.model.zipvoice.data_dir, config_.model.debug, true);
+    // No longer using MatchaTtsLexicon (espeak-ng removed).
+    // Lexicon-based tokenization is handled by LoadLexicon + TokenizeText.
   }
 
   void InitFrontend() {
-    frontend_ = std::make_unique<MatchaTtsLexicon>(
-        config_.model.zipvoice.lexicon, config_.model.zipvoice.tokens,
-        config_.model.zipvoice.data_dir, config_.model.debug, true);
+    // No longer using MatchaTtsLexicon (espeak-ng removed).
+    // Lexicon-based tokenization is handled by LoadLexicon + TokenizeText.
   }
 
   void ComputeMelSpectrogram(const std::vector<float> &_samples,
@@ -367,11 +609,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
                                const std::vector<float> &prompt_features,
                                float speed, int32_t num_steps, float feat_scale,
                                float t_shift, float guidance_scale) const {
-    std::vector<TokenIDs> text_token_ids =
-        frontend_->ConvertTextToTokenIds(text);
+    std::vector<int64_t> tokens = TokenizeText(text, config_.model.debug);
 
-    if (text_token_ids.empty() ||
-        (text_token_ids.size() == 1 && text_token_ids[0].tokens.empty())) {
+    if (tokens.empty()) {
 #if __OHOS__
       SHERPA_ONNX_LOGE("Failed to convert '%{public}s' to token IDs",
                        text.c_str());
@@ -379,11 +619,6 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       SHERPA_ONNX_LOGE("Failed to convert '%s' to token IDs", text.c_str());
 #endif
       return {};
-    }
-
-    std::vector<int64_t> tokens;
-    for (const auto &t : text_token_ids) {
-      tokens.insert(tokens.end(), t.tokens.begin(), t.tokens.end());
     }
 
     return Process(tokens, prompt_tokens, prompt_features, speed, num_steps,
@@ -450,6 +685,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         model_->Run(std::move(tokens_tensor), std::move(prompt_tokens_tensor),
                     std::move(prompt_features_tensor), speed, num_steps,
                     t_shift, guidance_scale);
+    if (!mel) {
+      return {};
+    }
 
     // Assume mel_shape = {1, T, C}
     std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
@@ -477,12 +715,193 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     return ans;
   }
 
+  void LoadLexicon(std::istream &is, bool debug) {
+    auto entries = ParseLexiconFile(is, &max_lexicon_phrase_len_);
+    for (auto &e : entries) {
+      lexicon_str_[std::move(e.key)] = std::move(e.phonemes);
+    }
+    if (debug) {
+      SHERPA_ONNX_LOGE("Loaded lexicon: %d entries, max phrase len %d",
+                       static_cast<int32_t>(lexicon_str_.size()),
+                       max_lexicon_phrase_len_);
+    }
+  }
+
+  std::vector<int64_t> TokenizeText(const std::string &text,
+                                    bool debug) const {
+    std::vector<int64_t> ids;
+    std::string normalized = NormalizeNfc(ReplacePunctuations(text));
+
+    if (debug) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("TokenizeText: text='%{public}s'", normalized.c_str());
+#else
+      SHERPA_ONNX_LOGE("TokenizeText: text='%s'", normalized.c_str());
+#endif
+    }
+
+    std::vector<std::string> words = SplitUtf8(normalized);
+
+    int32_t i = 0;
+    int32_t n = static_cast<int32_t>(words.size());
+    while (i < n) {
+      if (words[i] == " ") {
+        auto it = token_str2id_.find(" ");
+        if (it != token_str2id_.end()) ids.push_back(it->second);
+        ++i;
+        continue;
+      }
+      if (IsPunctWord(words[i])) {
+        auto it = token_str2id_.find(words[i]);
+        if (it != token_str2id_.end()) {
+          ids.push_back(it->second);
+          if (debug) {
+            SHERPA_ONNX_LOGE("Punctuation: '%s' -> %d", words[i].c_str(),
+                             it->second);
+          }
+        }
+        ++i;
+        continue;
+      }
+      bool found = false;
+      int32_t max_try = std::min(max_lexicon_phrase_len_, n - i);
+      for (int32_t len = max_try; len >= 1; --len) {
+        std::string phrase;
+        for (int32_t j = i; j < i + len; ++j) {
+          bool prev_cjk = !phrase.empty() && IsCJK(Utf8ToUtf32(phrase).back());
+          bool curr_cjk = !words[j].empty() && IsCJK(Utf8ToUtf32(words[j]).front());
+          if (j > i && !(prev_cjk && curr_cjk)) phrase.push_back(' ');
+          phrase += NormalizeLexiconKey(words[j]);
+        }
+        auto it = lexicon_str_.find(phrase);
+        if (it != lexicon_str_.end()) {
+          if (debug) {
+            std::string phones_str;
+            for (const auto &p : it->second) phones_str += p + " ";
+            SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'", phrase.c_str(),
+                             phones_str.c_str());
+          }
+          auto tok_ids = ConvertPhonemeStringsToIds(it->second);
+          ids.insert(ids.end(), tok_ids.begin(), tok_ids.end());
+          i += len;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        if (ContainsCJK(words[i])) {
+          for (const auto &ch : SplitUtf8(words[i])) {
+            std::string ch_lower = NormalizeLexiconKey(ch);
+            auto it = lexicon_str_.find(ch_lower);
+            if (it != lexicon_str_.end()) {
+              if (debug) {
+                std::string phones_str;
+                for (const auto &p : it->second) phones_str += p + " ";
+                SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'",
+                                 ch_lower.c_str(), phones_str.c_str());
+              }
+              auto tok_ids = ConvertPhonemeStringsToIds(it->second);
+              ids.insert(ids.end(), tok_ids.begin(), tok_ids.end());
+            } else if (debug) {
+              SHERPA_ONNX_LOGE("OOV character skipped: '%s'", ch.c_str());
+            }
+          }
+        } else {
+          // The word is not in the lexicon. If it contains '-', split it and
+          // look up each part separately, e.g. "two-thirds" -> "two" +
+          // "thirds".
+          std::vector<std::string> parts = SplitStringAndTrim(words[i], '-');
+          if (words[i].find('-') != std::string::npos && !parts.empty()) {
+            for (const auto &part : parts) {
+              std::string part_lower = NormalizeLexiconKey(part);
+              auto it2 = lexicon_str_.find(part_lower);
+              if (it2 != lexicon_str_.end()) {
+                if (debug) {
+                  std::string phones_str;
+                  for (const auto &p : it2->second) phones_str += p + " ";
+                  SHERPA_ONNX_LOGE("Lexicon matched: '%s' -> '%s'",
+                                   part_lower.c_str(), phones_str.c_str());
+                }
+                auto tok_ids = ConvertPhonemeStringsToIds(it2->second);
+                ids.insert(ids.end(), tok_ids.begin(), tok_ids.end());
+              } else if (debug) {
+                SHERPA_ONNX_LOGE("OOV word skipped: '%s'", part.c_str());
+              }
+            }
+          } else if (debug) {
+            SHERPA_ONNX_LOGE("OOV word skipped: '%s'", words[i].c_str());
+          }
+        }
+        ++i;
+      }
+    }
+
+    if (debug) {
+      std::ostringstream os;
+      os << "Tokens (" << ids.size() << "): [";
+      for (size_t j = 0; j < ids.size(); ++j) {
+        if (j > 0) os << ", ";
+        // Look up token string
+        std::string tok_str = "?";
+        for (const auto &kv : token_str2id_) {
+          if (kv.second == ids[j]) {
+            tok_str = kv.first;
+            break;
+          }
+        }
+        os << tok_str << "(" << ids[j] << ")";
+      }
+      os << "]";
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
+    }
+
+    return ids;
+  }
+
+  std::vector<int64_t> ConvertPhonemeStringsToIds(
+      const std::vector<std::string> &phones) const {
+    std::vector<int64_t> ans;
+    for (const auto &p : phones) {
+      auto it = token_str2id_.find(p);
+      if (it != token_str2id_.end()) ans.push_back(it->second);
+    }
+    return ans;
+  }
+
+  static std::string ReplacePunctuations(const std::string &s) {
+    static const std::vector<std::pair<std::string, std::string>> r = {
+        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","}, {":", ","},
+        {"。", "."}, {"？", "?"}, {"！", "!"}, {"…", "..."},
+    };
+    std::string result = s;
+    for (const auto &p : r) {
+      size_t pos = 0;
+      while ((pos = result.find(p.first, pos)) != std::string::npos) {
+        result.replace(pos, p.first.size(), p.second);
+        pos += p.second.size();
+      }
+    }
+    return result;
+  }
+
+  static bool IsPunctWord(const std::string &s) {
+    if (s.empty()) return false;
+    static const std::string puncts = ",.;:!?";
+    return s.size() == 1 && puncts.find(s[0]) != std::string::npos;
+  }
+
  private:
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsZipvoiceModel> model_;
   std::unique_ptr<Vocoder> vocoder_;
-  std::unique_ptr<OfflineTtsFrontend> frontend_;
-
+  std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
+  std::unordered_map<std::string, int32_t> token_str2id_;
+  std::unordered_map<std::string, std::vector<std::string>> lexicon_str_;
+  int32_t max_lexicon_phrase_len_ = 1;
   std::unique_ptr<knf::MelBanks> mel_banks_;
 };
 

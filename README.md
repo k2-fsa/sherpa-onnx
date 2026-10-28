@@ -106,7 +106,7 @@ This repository supports running the following functions **locally**
   - Spoken language identification
   - Audio tagging
   - VAD (e.g., [silero-vad][silero-vad])
-  - Speech enhancement (e.g., [gtcrn][gtcrn], [DPDFNet](https://github.com/ceva-ip/DPDFNet))
+  - Speech enhancement (e.g., [gtcrn][gtcrn], [DPDFNet](https://github.com/ceva-ip/DPDFNet), [VoxLock](https://github.com/arbazsiddiqui/voxlock))
   - Keyword spotting
   - Source separation (e.g., [spleeter][spleeter], [UVR][UVR])
 
@@ -337,6 +337,11 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [VocaRead](https://apps.apple.com/us/app/vocaread/id6757822401)
+
+> iOS app for reading EPUBs, PDFs, and documents aloud. It uses sherpa-onnx
+> to synthesize speech locally with Piper voices and can import books from OPDS catalogs.
+
 ### [Sherpa Voice / @siteed/sherpa-onnx.rn](https://github.com/deeeed/audiolab)
 
 > React Native wrapper and demo app for validating sherpa-onnx on iOS,
@@ -345,6 +350,10 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 - [NPM package](https://www.npmjs.com/package/@siteed/sherpa-onnx.rn)
 - [Live demo](https://deeeed.github.io/audiolab/sherpa-voice/)
+
+### [SmartVoice](https://github.com/dxhome/SmartVoice)
+
+> SmartVoice is a local speech application for speech recognition and text-to-speech. Its `smartvoice-auto` virtual model matches each request's task and language against an editable routing table, then dynamically routes it to the most suitable installed model. sherpa-onnx powers CPU inference; a web interface and HTTP API are included.
 
 ### [Speed of Sound](https://github.com/zugaldia/speedofsound)
 
@@ -519,7 +528,7 @@ cross-platform Node.js microphone streaming library with prebuilt native binarie
 
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=analytics-in-motion.wake-word)
 - [Open VSX](https://open-vsx.org/extension/analytics-in-motion/wake-word)
-- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/node/integrations/sherpa-onnx-stt.html)
+- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/integrations/stt/sherpa-onnx)
 
 ### [SmartSub](https://github.com/buxuku/SmartSub)
 
@@ -566,6 +575,28 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > the app sleeps on idle but keeps the microphone open,
 > and the wake phrase brings the session back with no cloud calls.
 
+### [Suflyor](https://github.com/olerast67/voice-teleprompter-android)
+
+> An Android teleprompter that scrolls the script as you read it aloud. It runs
+> two streaming Zipformer models on the phone (Russian small-ru-vosk int8 and
+> English en-2023-06-26) and boosts the words of the script as hotwords with
+> modified beam search. A floating window shows the text over the camera app
+> while it records video.
+
+- [Download APK](https://github.com/olerast67/voice-teleprompter-android/releases/latest)
+- [Website](https://olerast67.github.io/voice-teleprompter-android/)
+- Android 10+ · no internet permission · GPL-3.0
+
+### [Loud Caption](https://github.com/DR1N0/loud-caption)
+
+> An open-source Flutter app for Android that turns nearby speech into large,
+> high-contrast captions for people with hearing loss. SenseVoice ASR and Silero
+> VAD run fully on-device through sherpa-onnx's Dart API; translation is
+> optional and also local. No account, analytics, or cloud audio.
+
+- [Download APK](https://github.com/DR1N0/loud-caption/releases/latest)
+- Android 8.0+ · arm64-v8a · MIT (app code)
+
 ### [Recly](https://github.com/rokrokss/recly)
 
 > An open-source recorder for Galaxy Watch, Android, Apple Watch, iPhone, macOS,
@@ -575,6 +606,65 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > splits each recording into speech segments, and sherpa-onnx's INT8 export of
 > Qwen3-ASR 0.6B transcribes them. The ~1 GB model is downloaded on demand.
 
+### China Unicom 中国联通安卓 App
+
+> The Android App (version `>= 12.14.1 (2026.07.28)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
+
+<img width="800" alt="APK lib screenshot showing only armeabi-v7a" src="https://github.com/user-attachments/assets/a9ce9731-1ec7-4975-a62e-2dd44b8f3bfe" />
+
+### China Life 中国人寿 App
+
+> The Android App (version `>= 3.5.46 (2026.03.23)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
+
+<img width="800" alt="APK lib screenshot" src="https://github.com/user-attachments/assets/0d9d8021-f908-4659-993f-95b5c789d5c6" />
+
+### [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
+
+> It [uses](https://github.com/deepseek-ai/deepseek-harness/commit/47ae64ee68b416cc0aa78891892ae9e9be6590c5)
+> the JavaScript npm package [sherpa-onnx-node][sherpa-onnx-node] with [SenseVoice](https://k2-fsa.github.io/sherpa/onnx/sense-voice/pretrained.html#sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-chinese-english-japanese-korean-cantonese)
+for local speech recognition.
+
+### [akou](https://github.com/GeiserX/akou)
+
+> An open-source (GPL-3.0-or-later) call and meeting recorder for macOS that transcribes
+> on the machine. It records the microphone and the call audio on two channels,
+> shows a live transcript, and lets a terminal agent such as Claude Code or Codex
+> follow and question the call over MCP. The same core runs as a self-hosted
+> transcription server in Docker.
+
+It runs [sherpa-onnx-node][sherpa-onnx-node] in a Bun Worker: [silero-vad][silero-vad]
+splits each channel into speech segments, Parakeet TDT 0.6B v3 (`OfflineRecognizer`)
+or streaming Nemotron (`OnlineRecognizer`) writes the live transcript, and TitaNet
+embeddings (`SpeakerEmbeddingExtractor`) help tell the speakers on the call apart.
+After the call, Parakeet is the fast engine of the final pass and one of the
+engines of the fused pass. The larger Qwen3-ASR model runs outside sherpa-onnx, on
+llama-server.
+
+### [bot-reborn](https://github.com/beasaltfish/bot-reborn)
+
+> A $4 toy robot driven by an old Android phone, all from one web page in Chrome.
+> sherpa-onnx runs in the page as WebAssembly: Silero VAD decides when someone is
+> actually talking, so only real speech is sent to STT, and an optional keyword
+> spotter (`sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20`) handles the wake word.
+> Both run from one combined build, with the VAD symbols exported from the KWS
+> WebAssembly target.
+
+- [Build write-up](https://agentlenshq.com/maker/four-dollar-robot)
+- [Live page](https://bot-reborn.agentlenshq.com) (Chrome on Android)
+
+### [Voltip](https://github.com/sunerpy/voltip)
+
+> An open-source (AGPL-3.0) push-to-talk dictation app for Windows, macOS, Linux
+> and Android: hold a hotkey, speak, and the text is inserted at the cursor in
+> the focused app. The desktop app uses the sherpa-onnx Rust crate for on-device
+> recognition with SenseVoice and Paraformer, a streaming Zipformer for the live
+> preview while the user speaks, and Silero VAD to trim silence and to split
+> recordings of up to two hours at pauses. Models are downloaded on demand.
+
+- [Website](https://voltip.firlab.app)
+- [Releases](https://github.com/sunerpy/voltip/releases)
+
+[sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf

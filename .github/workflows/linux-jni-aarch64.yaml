@@ -103,9 +103,6 @@ jobs:
               ls -lh lib
               rm -rf ./install/lib/pkgconfig
               rm -rf ./install/lib/share
-              rm -rf ./install/lib/cargs.h
-              rm -rf ./install/include/cargs.h
-              rm -rf ./install/lib/libcargs.so
               rm -rf ./install/lib/libsherpa-onnx-c-api.so
 
               echo "----"
@@ -181,7 +178,7 @@ jobs:
           file: sherpa-onnx-*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.13.8
+          tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs for linux aarch64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.java-version == '21'

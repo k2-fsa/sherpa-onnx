@@ -24,7 +24,6 @@ cmake \
 
 make -j4
 make install
-rm -fv ./install/include/cargs.h
 
 libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-c-api.a \
@@ -35,10 +34,8 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-fst.a \
   ./install/lib/libsherpa-onnx-kaldifst-core.a \
   ./install/lib/libkaldi-decoder-core.a \
-  ./install/lib/libucd.a \
-  ./install/lib/libpiper_phonemize.a \
-  ./install/lib/libespeak-ng.a \
-  ./install/lib/libssentencepiece_core.a
+  ./install/lib/libssentencepiece_core.a \
+  ./install/lib/libutf8proc.a
 
 # Rename to match the expected library name for linking with -l sherpa-onnx-c-api
 mv -v install/lib/libsherpa-onnx.a install/lib/libsherpa-onnx-c-api.a
@@ -80,9 +77,9 @@ cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
   <key>CFBundleExecutable</key>
   <string>SherpaOnnxC</string>
   <key>CFBundleVersion</key>
-  <string>20260910</string>
+  <string>20261026</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.13.8</string>
+  <string>2.0.1</string>
 </dict>
 </plist>
 EOF

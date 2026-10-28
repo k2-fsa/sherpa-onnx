@@ -19,6 +19,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
 #include "sherpa-onnx/csrc/offline-whisper-dtw.h"
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
+#include "sherpa-onnx/csrc/offline-whisper-language-candidates.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
@@ -82,6 +83,21 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
  private:
   void DecodeStream(OfflineStream *s) const {
+    std::vector<int32_t> language_candidate_ids;
+    if (s->HasOption("language_candidates")) {
+      const auto &candidates = s->GetOption("language_candidates");
+      const auto &language = config_.model_config.whisper.language;
+      bool is_multilingual = model_->IsMultiLingual();
+      const auto &lang2id = model_->GetLang2ID();
+      bool is_ok = ResolveWhisperLanguageCandidates(
+          candidates, language, is_multilingual, lang2id,
+          &language_candidate_ids);
+      if (!is_ok) {
+        s->SetResult({});
+        return;
+      }
+    }
+
     decoder_->SetConfig(config_.model_config.whisper);
 
     int32_t max_num_frames = 3000;
@@ -132,8 +148,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     try {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
 
-      auto results = decoder_->Decode(std::move(cross_kv.first),
-                                      std::move(cross_kv.second), num_frames);
+      auto results = decoder_->Decode(
+          std::move(cross_kv.first), std::move(cross_kv.second), num_frames,
+          language_candidate_ids);
 
       auto r = Convert(results[0], symbol_table_);
       s->SetResult(r);

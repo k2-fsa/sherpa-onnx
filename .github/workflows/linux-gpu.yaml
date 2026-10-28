@@ -136,10 +136,6 @@ jobs:
           file build/bin/sherpa-onnx
           ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
-
-          rm -fv build/install/include/cargs.h
-          rm -fv build/install/lib/cargs.h
-          rm -fv build/install/lib/libcargs.so
           rm -rfv build/install/lib/pkgconfig
 
           strings build/install/lib/*.so | grep "^GLIBC_"
@@ -170,7 +166,7 @@ jobs:
           file: sherpa-onnx-*gpu.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.13.8
+          # tag: v2.0.1
 
       - name: Release pre-compiled binaries and libs for linux x64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

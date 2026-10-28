@@ -71,6 +71,11 @@ function linux() {
   echo "Process linux"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-linux.git
 
+  # Go modules with major version >= 2 must have a /vN suffix in the module
+  # path (semantic import versioning).
+  sed -i.bak "s|^module github.com/k2-fsa/sherpa-onnx-go-linux.*|module github.com/k2-fsa/sherpa-onnx-go-linux/v2|" ./sherpa-onnx-go-linux/go.mod
+  rm -f ./sherpa-onnx-go-linux/go.mod.bak
+
   rm -v ./sherpa-onnx-go-linux/*.go
 
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-linux/
@@ -125,13 +130,18 @@ function linux() {
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
   cd ..
-  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-linux" "v$SHERPA_ONNX_VERSION"
+  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-linux/v2" "v$SHERPA_ONNX_VERSION"
   rm -rf sherpa-onnx-go-linux
 }
 
 function osx() {
   echo "Process osx-x64"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-macos.git
+
+  # Go modules with major version >= 2 must have a /vN suffix in the module
+  # path (semantic import versioning).
+  sed -i.bak "s|^module github.com/k2-fsa/sherpa-onnx-go-macos.*|module github.com/k2-fsa/sherpa-onnx-go-macos/v2|" ./sherpa-onnx-go-macos/go.mod
+  rm -f ./sherpa-onnx-go-macos/go.mod.bak
   rm -v ./sherpa-onnx-go-macos/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-macos/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-macos/
@@ -180,13 +190,18 @@ function osx() {
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
   cd ..
-  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-macos" "v$SHERPA_ONNX_VERSION"
+  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-macos/v2" "v$SHERPA_ONNX_VERSION"
   rm -rf sherpa-onnx-go-macos
 }
 
 function windows() {
   echo "Process windows"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-windows.git
+
+  # Go modules with major version >= 2 must have a /vN suffix in the module
+  # path (semantic import versioning).
+  sed -i.bak "s|^module github.com/k2-fsa/sherpa-onnx-go-windows.*|module github.com/k2-fsa/sherpa-onnx-go-windows/v2|" ./sherpa-onnx-go-windows/go.mod
+  rm -f ./sherpa-onnx-go-windows/go.mod.bak
   rm -v ./sherpa-onnx-go-windows/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-windows/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-windows/
@@ -237,7 +252,7 @@ function windows() {
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
   cd ..
-  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-windows" "v$SHERPA_ONNX_VERSION"
+  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-windows/v2" "v$SHERPA_ONNX_VERSION"
   rm -rf sherpa-onnx-go-windows
 }
 
@@ -249,14 +264,21 @@ function basic() {
 
   cd sherpa-onnx-go
 
-  # Update go.mod to reference the new platform package versions.
+  # Go modules with major version >= 2 must have a /vN suffix in the module
+  # path (semantic import versioning). Keep the suffix in sync with
+  # SHERPA_ONNX_VERSION when cutting a new major release.
+  local module_suffix="/v2"
+
+  # Update go.mod: module path gets the /v2 suffix and the platform
+  # requirements point at the newly tagged platform packages.
   # The platform packages (linux/macos/windows) have already been published
   # and tagged with v$SHERPA_ONNX_VERSION.
   local ver="v$SHERPA_ONNX_VERSION"
-  sed -i.bak \
-    -e "s|github.com/k2-fsa/sherpa-onnx-go-linux .*|github.com/k2-fsa/sherpa-onnx-go-linux $ver|" \
-    -e "s|github.com/k2-fsa/sherpa-onnx-go-macos .*|github.com/k2-fsa/sherpa-onnx-go-macos $ver|" \
-    -e "s|github.com/k2-fsa/sherpa-onnx-go-windows .*|github.com/k2-fsa/sherpa-onnx-go-windows $ver|" \
+  sed -i.bak -E \
+    -e "s|^module github.com/k2-fsa/sherpa-onnx-go$|module github.com/k2-fsa/sherpa-onnx-go${module_suffix}|" \
+    -e "s|github.com/k2-fsa/sherpa-onnx-go-linux(/v[0-9]+)? .*|github.com/k2-fsa/sherpa-onnx-go-linux${module_suffix} $ver|" \
+    -e "s|github.com/k2-fsa/sherpa-onnx-go-macos(/v[0-9]+)? .*|github.com/k2-fsa/sherpa-onnx-go-macos${module_suffix} $ver|" \
+    -e "s|github.com/k2-fsa/sherpa-onnx-go-windows(/v[0-9]+)? .*|github.com/k2-fsa/sherpa-onnx-go-windows${module_suffix} $ver|" \
     go.mod
   rm -f go.mod.bak
 
@@ -269,7 +291,7 @@ function basic() {
   # several minutes after a git tag push before the module is downloadable.
   local pkg
   for pkg in sherpa-onnx-go-linux sherpa-onnx-go-macos sherpa-onnx-go-windows; do
-    wait_for_go_proxy "github.com/k2-fsa/$pkg" "$ver"
+    wait_for_go_proxy "github.com/k2-fsa/$pkg${module_suffix}" "$ver"
   done
 
   # go remove stale go.sum entries, then re-resolve with the new versions

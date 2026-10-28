@@ -62,7 +62,10 @@ jobs:
           key: ${{ matrix.os }}-java
 
       - name: sccache (Windows)
-        if: runner.os == 'Windows'
+        # sccache is disabled on windows-11-arm: sccache-action extracts its
+        # archive with pwsh, which crashes intermittently on this runner
+        # ("Internal CLR error. 0x80131506") and fails the job before the build.
+        if: runner.os == 'Windows' && matrix.os != 'windows-11-arm'
         uses: mozilla-actions/sccache-action@v0.0.7
 
       - name: Set up MSVC
@@ -107,8 +110,10 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            export CMAKE_C_COMPILER_LAUNCHER=sccache
-            export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+            if command -v sccache >/dev/null 2>&1; then
+              export CMAKE_C_COMPILER_LAUNCHER=sccache
+              export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+            fi
           else
             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           fi
@@ -129,7 +134,6 @@ jobs:
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-            -DBUILD_ESPEAK_NG_EXE=OFF \
             -DSHERPA_ONNX_ENABLE_JNI=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
@@ -153,6 +157,98 @@ jobs:
         run: |
           cd ./java-api-examples
           ./run-version-test.sh
+
+      - name:  Run speech enhancement (VoxLock)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-speech-enhancement-voxlock.sh
+          ./run-non-streaming-speech-enhancement-voxlock-with-voice-sample.sh
+          ./run-streaming-speech-enhancement-voxlock.sh
+          ./run-streaming-speech-enhancement-voxlock-with-voice-sample.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NonStreamingSpeechEnhancementVoxLock-${{ matrix.os }}
+          # each run-*.sh keeps its input and output wavs in a folder named
+          # after the example
+          path: java-api-examples/NonStreamingSpeechEnhancementVoxLock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NonStreamingSpeechEnhancementVoxLockWithVoiceSample-${{ matrix.os }}
+          path: java-api-examples/NonStreamingSpeechEnhancementVoxLockWithVoiceSample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StreamingSpeechEnhancementVoxLock-${{ matrix.os }}
+          path: java-api-examples/StreamingSpeechEnhancementVoxLock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StreamingSpeechEnhancementVoxLockWithVoiceSample-${{ matrix.os }}
+          path: java-api-examples/StreamingSpeechEnhancementVoxLockWithVoiceSample
+          if-no-files-found: warn
+
+      - name:  Run java test (Non-Streaming TTS)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+
+           ./run-pocket-tts.sh
+           ./run-zipvoice-tts-lexicon.sh
+           ./run-supertonic-tts.sh
+           ./run-non-streaming-tts-kitten-en-lexicon.sh
+           ./run-non-streaming-tts-kokoro-zh-en-lexicon.sh
+           ./run-non-streaming-tts-kokoro-en-lexicon.sh
+           ./run-non-streaming-tts-matcha-zh-lexicon.sh
+          ./run-non-streaming-tts-matcha-en-lexicon.sh
+          ls -lh
+
+           rm -rf sherpa-onnx-pocket-tts-*
+           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+           rm -rf sherpa-onnx-supertonic-*
+           rm -rf kitten-nano-en-*
+           rm -rf kokoro-multi-*
+           rm -rf kokoro-en-*
+
+           rm -rf matcha-icefall-*
+           rm vocos-22khz-univ.onnx
+           rm vocos_24khz.onnx
+           rm -f lexicon-en-us.txt
+
+          ./run-non-streaming-tts-piper-en-lexicon.sh
+          ./run-non-streaming-tts-piper-en-with-callback-lexicon.sh
+          rm -rf vits-piper-*
+          rm -f lexicon-en-us.txt
+
+          ./run-non-streaming-tts-coqui-de.sh
+          rm -rf vits-coqui-*
+
+          ./run-non-streaming-tts-vits-zh-lexicon.sh
+          rm -rf vits-zh-*
+
+          ./run-non-streaming-tts-piper-en-phonemize.sh
+          ./run-non-streaming-tts-piper-en-with-callback-phonemize.sh
+          ./run-non-streaming-tts-kitten-en-phonemize.sh
+          ./run-non-streaming-tts-kokoro-en-phonemize.sh
+          ./run-non-streaming-tts-matcha-en-phonemize.sh
+          ./run-non-streaming-tts-vits-de-phonemize.sh
+          ls -lh
+
+          rm -rf vits-piper-* kitten-nano-en-* kokoro-en-* matcha-icefall-*
+          rm -f vocos-22khz-univ.onnx
+          rm -f piper-phonemize-*.jar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-wav-files-${{ matrix.os }}
+          path: |
+            java-api-examples/tts-*.wav
+            java-api-examples/generated-*.wav
 
       - name:  Run java test (speaker diarization)
         shell: bash
@@ -189,6 +285,9 @@ jobs:
           ./run-non-streaming-decode-file-fire-red-asr-ctc.sh
 
           ./run-non-streaming-decode-file-zipformer-ctc.sh
+          rm -rf sherpa-onnx-zipformer-ctc-*
+
+          ./run-non-streaming-zipformer-ctc-hlg.sh
           rm -rf sherpa-onnx-zipformer-ctc-*
 
           ./run-non-streaming-decode-file-dolphin-ctc.sh
@@ -410,46 +509,6 @@ jobs:
           ./run-streaming-decode-file-transducer.sh
           rm -rf sherpa-onnx-streaming-*
 
-      - name:  Run java test (Non-Streaming TTS)
-        shell: bash
-        run: |
-          cd ./java-api-examples
-
-           ./run-pocket-tts.sh
-           ./run-zipvoice-tts.sh
-           ./run-supertonic-tts.sh
-           ./run-non-streaming-tts-kitten-en.sh
-           ./run-non-streaming-tts-kokoro-zh-en.sh
-           ./run-non-streaming-tts-kokoro-en.sh
-           ./run-non-streaming-tts-matcha-zh.sh
-          ./run-non-streaming-tts-matcha-en.sh
-          ls -lh
-
-           rm -rf sherpa-onnx-pocket-tts-*
-           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
-           rm -rf sherpa-onnx-supertonic-*
-           rm -rf kitten-nano-en-*
-           rm -rf kokoro-multi-*
-           rm -rf kokoro-en-*
-
-           rm -rf matcha-icefall-*
-           rm vocos-22khz-univ.onnx
-           rm vocos_24khz.onnx
-
-          ./run-non-streaming-tts-piper-en.sh
-          rm -rf vits-piper-*
-
-          ./run-non-streaming-tts-coqui-de.sh
-          rm -rf vits-coqui-*
-
-          ./run-non-streaming-tts-vits-zh.sh
-          rm -rf vits-zh-*
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tts-wav-files-${{ matrix.os }}
-          path: java-api-examples/*.wav
-
   run_maven_test:
     runs-on: ${{ matrix.os }}
     name: maven-${{ matrix.os }} ${{ matrix.arch }}
@@ -563,16 +622,16 @@ jobs:
           cd java-api-examples/maven-examples
 
           echo "=== Jar size ==="
-          ls -lh target/sherpa-onnx-maven-example-1.13.8.jar
+          ls -lh target/sherpa-onnx-maven-example-2.0.1.jar
 
           echo "=== Native libs in jar ==="
-          unzip -l target/sherpa-onnx-maven-example-1.13.8.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+          unzip -l target/sherpa-onnx-maven-example-2.0.1.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
 
       - name: Run maven example
         shell: bash
         run: |
           cd java-api-examples/maven-examples
-          java -jar target/sherpa-onnx-maven-example-1.13.8.jar
+          java -jar target/sherpa-onnx-maven-example-2.0.1.jar
 
   run_maven_test_approach1:
     runs-on: ${{ matrix.os }}
@@ -627,7 +686,7 @@ jobs:
 
               <groupId>com.k2fsa.sherpa.onnx</groupId>
               <artifactId>sherpa-onnx-maven-example</artifactId>
-              <version>1.13.8</version>
+              <version>2.0.1</version>
               <packaging>jar</packaging>
 
               <name>sherpa-onnx Maven Example</name>
@@ -644,7 +703,7 @@ jobs:
                   <dependency>
                       <groupId>com.github.k2-fsa</groupId>
                       <artifactId>sherpa-onnx</artifactId>
-                      <version>1.13.8</version>
+                      <version>2.0.1</version>
                   </dependency>
               </dependencies>
 
@@ -708,16 +767,16 @@ jobs:
           cd java-api-examples/maven-examples
 
           echo "=== Jar size ==="
-          ls -lh target/sherpa-onnx-maven-example-1.13.8.jar
+          ls -lh target/sherpa-onnx-maven-example-2.0.1.jar
 
           echo "=== Native libs in jar ==="
-          unzip -l target/sherpa-onnx-maven-example-1.13.8.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+          unzip -l target/sherpa-onnx-maven-example-2.0.1.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
 
       - name: Run maven example
         shell: bash
         run: |
           cd java-api-examples/maven-examples
-          java -jar target/sherpa-onnx-maven-example-1.13.8.jar
+          java -jar target/sherpa-onnx-maven-example-2.0.1.jar
 
   run_gradle_test:
     runs-on: ${{ matrix.os }}
@@ -916,7 +975,7 @@ jobs:
           }
 
           dependencies {
-              implementation 'com.github.k2-fsa:sherpa-onnx:1.13.8'
+              implementation 'com.github.k2-fsa:sherpa-onnx:2.0.1'
           }
 
           java {

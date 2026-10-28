@@ -15,6 +15,7 @@ except ImportError:
     print("to install it")
     sys.exit(-1)
 
+import numpy as np
 import sherpa_onnx
 
 
@@ -53,6 +54,9 @@ def main():
     config.silero_vad.model = args.silero_vad_model
     config.sample_rate = sample_rate
 
+    window_size = config.silero_vad.window_size
+
+    buffer = []
     vad = sherpa_onnx.VoiceActivityDetector(config, buffer_size_in_seconds=30)
 
     # python3 -m sounddevice
@@ -97,26 +101,29 @@ def main():
                         samples, orig_sr=mic_sample_rate, target_sr=sample_rate
                     )
 
-                vad.accept_waveform(samples)
+                buffer = np.concatenate([buffer, samples])
+                while len(buffer) >= window_size:
+                    vad.accept_waveform(buffer[:window_size])
+                    buffer = buffer[window_size:]
 
-                if vad.is_speech_detected() and not printed:
-                    print("Detected speech")
-                    printed = True
+                    if vad.is_speech_detected() and not printed:
+                        print("Detected speech")
+                        printed = True
 
-                if not vad.is_speech_detected():
-                    printed = False
+                    if not vad.is_speech_detected():
+                        printed = False
 
-                while not vad.empty():
-                    samples = vad.front.samples
-                    duration = len(samples) / sample_rate
-                    filename = f"seg-{k}-{duration:.3f}-seconds.wav"
-                    k += 1
-                    sherpa_onnx.write_wave(filename, samples, sample_rate)
-                    print(f"Duration: {duration:.3f} seconds")
-                    print(f"Saved to {filename}")
-                    print("----------")
+                    while not vad.empty():
+                        samples = vad.front.samples
+                        duration = len(samples) / sample_rate
+                        filename = f"seg-{k}-{duration:.3f}-seconds.wav"
+                        k += 1
+                        sherpa_onnx.write_wave(filename, samples, sample_rate)
+                        print(f"Duration: {duration:.3f} seconds")
+                        print(f"Saved to {filename}")
+                        print("----------")
 
-                    vad.pop()
+                        vad.pop()
     except KeyboardInterrupt:
         print("\nCaught Ctrl + C. Exit")
 

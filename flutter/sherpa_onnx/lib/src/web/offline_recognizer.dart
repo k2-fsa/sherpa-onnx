@@ -39,6 +39,15 @@ class OfflineRecognizer {
     return OfflineRecognizer._(ptr: handle, config: config);
   }
 
+  /// Same as [OfflineRecognizer.new]. Web has no isolates, so the model is
+  /// loaded on the calling thread; this exists so code using the native
+  /// async factory also compiles for web.
+  static Future<OfflineRecognizer> createAsync(
+    OfflineRecognizerConfig config,
+  ) async {
+    return OfflineRecognizer(config);
+  }
+
   final dynamic ptr;
   final OfflineRecognizerConfig config;
   bool _freed = false;
@@ -120,6 +129,12 @@ JSObject _buildConfig(OfflineRecognizerConfig config) {
   hr['lexicon'] = config.hr.lexicon.toJS;
   hr['ruleFsts'] = config.hr.ruleFsts.toJS;
   jsConfig['hr'] = hr;
+
+  // CTC FST decoder config.
+  final ctcFstDecoderConfig = JSObject();
+  ctcFstDecoderConfig['graph'] = config.ctcFstDecoderConfig.graph.toJS;
+  ctcFstDecoderConfig['maxActive'] = config.ctcFstDecoderConfig.maxActive.toJS;
+  jsConfig['ctcFstDecoderConfig'] = ctcFstDecoderConfig;
 
   // Scalar fields.
   jsConfig['decodingMethod'] = config.decodingMethod.toJS;

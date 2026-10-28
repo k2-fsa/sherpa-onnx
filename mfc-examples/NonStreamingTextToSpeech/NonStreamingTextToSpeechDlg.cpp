@@ -446,8 +446,10 @@ void CNonStreamingTextToSpeechDlg::Init() {
     error_message += "Cannot find ./tokens.txt\r\n";
     ok = false;
   }
-  // it is OK to leave lexicon.txt and espeak-ng-data empty
-  // since models using characters don't need them
+  // it is OK to leave the lexicon files empty
+  // since models using characters don't need them.
+  // Note: espeak-ng is no longer used; text goes through a lexicon (or
+  // GenerationConfig.phoneme_codepoints / .tokens).
 
   if (!ok) {
     generate_btn_.EnableWindow(FALSE);
@@ -541,10 +543,22 @@ void CNonStreamingTextToSpeechDlg::Init() {
     config.model.kokoro.model = "./model.onnx";
     config.model.kokoro.voices = "./voices.bin";
     config.model.kokoro.tokens = "./tokens.txt";
-    config.model.kokoro.data_dir = "./espeak-ng-data";
-    if (Exists("./dict/jieba.dict.utf8") && Exists("./lexicon-zh.txt")) {
+    // Text frontend is the lexicon; espeak-ng is no longer used.
+    std::string lex;
+    if (Exists("./lexicon-us-en.txt")) {
+      lex = "./lexicon-us-en.txt";
+    }
+    if (Exists("./lexicon-zh.txt")) {
+      if (!lex.empty()) {
+        lex += ",";
+      }
+      lex += "./lexicon-zh.txt";
+    }
+    if (!lex.empty()) {
+      config.model.kokoro.lexicon = lex.c_str();
+    }
+    if (Exists("./dict/jieba.dict.utf8")) {
       config.model.kokoro.dict_dir = "./dict";
-      config.model.kokoro.lexicon = "./lexicon-us-en.txt,./lexicon-zh.txt";
     }
   } else if (Exists("./hifigan.onnx") || Exists("./vocos.onnx")) {
     // it is a matcha tts model
@@ -558,10 +572,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
 
     config.model.matcha.tokens = "./tokens.txt";
 
-    if (Exists("./espeak-ng-data/phontab")) {
-      config.model.matcha.data_dir = "./espeak-ng-data";
-    }
-
+    // Text frontend is the lexicon; espeak-ng is no longer used.
     if(Exists("./lexicon.txt")) {
       config.model.matcha.lexicon = "./lexicon.txt";
     }
@@ -573,10 +584,8 @@ void CNonStreamingTextToSpeechDlg::Init() {
     // it is a vits tts model
     config.model.vits.model = "./model.onnx";
     config.model.vits.tokens = "./tokens.txt";
-    if (Exists("./espeak-ng-data/phontab")) {
-      config.model.vits.data_dir = "./espeak-ng-data";
-    } 
 
+    // Text frontend is the lexicon; espeak-ng is no longer used.
     if (Exists("./lexicon.txt")) {
       config.model.vits.lexicon = "./lexicon.txt";
     }

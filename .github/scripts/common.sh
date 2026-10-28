@@ -9,6 +9,49 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+# --- Extracted-model cleanup ---------------------------------------------
+# Test scripts download large ASR models. Each script normally ends with an
+# `rm -rf $repo`, but if the script aborts early (e.g. `set -e` when a test
+# fails, or a download/extract error) that line never runs and the model is
+# left on disk. Across the many test steps in a single CI job this fills the
+# runner's disk. To avoid that, download_and_extract registers every extracted
+# top-level path here and they are all removed when the script exits, whether
+# it succeeded or failed.
+_sherpa_cleanup_dirs=()
+_sherpa_cleanup_saved_exit_trap=""
+_sherpa_cleanup_installed=0
+
+_sherpa_cleanup_on_exit() {
+  local d
+  for d in ${_sherpa_cleanup_dirs[@]+"${_sherpa_cleanup_dirs[@]}"}; do
+    if [ -n "$d" ] && [ -e "$d" ]; then
+      log "Cleaning up extracted model: $d"
+      rm -rf "$d"
+    fi
+  done
+  # Run any EXIT trap that was installed before ours (e.g. test-rust.sh's
+  # diagnostic trap) so we never clobber another script's cleanup.
+  if [ -n "$_sherpa_cleanup_saved_exit_trap" ]; then
+    eval "$_sherpa_cleanup_saved_exit_trap"
+  fi
+}
+
+_sherpa_register_cleanup() {
+  _sherpa_cleanup_dirs+=("$1")
+  if [ "$_sherpa_cleanup_installed" -eq 0 ]; then
+    _sherpa_cleanup_installed=1
+    # Save whatever EXIT trap is currently installed so ours can chain to it.
+    local saved
+    saved="$(trap -p EXIT)"
+    if [ -n "$saved" ]; then
+      # saved looks like: trap -- 'some command' EXIT
+      _sherpa_cleanup_saved_exit_trap="${saved#trap -- \'}"
+      _sherpa_cleanup_saved_exit_trap="${_sherpa_cleanup_saved_exit_trap%\' EXIT}"
+    fi
+    trap _sherpa_cleanup_on_exit EXIT
+  fi
+}
+
 # Download a file with retry logic and validation
 # Validates that downloaded files are not empty and not HTML error pages
 # Retries with random sleep (1-10 seconds) between attempts
@@ -101,11 +144,21 @@ download_and_extract() {
     fi
 
     # Extract based on file extension
+    # Compute the top-level name the archive extracts to (release model
+    # archives are named after the directory they contain) so we can clean it
+    # up automatically when the script exits.
+    local extracted="$filename"
+    extracted="${extracted%.tar.bz2}"; extracted="${extracted%.tar.bz}"
+    extracted="${extracted%.tbz2}"; extracted="${extracted%.tbz}"
+    extracted="${extracted%.tar.gz}"; extracted="${extracted%.tgz}"
+    extracted="${extracted%.tar.xz}"; extracted="${extracted%.txz}"
+    extracted="${extracted%.zip}"
     case "$filename" in
       *.tar.bz2|*.tar.bz|*.tbz2|*.tbz)
         if tar jxvf "$filename" -C "$output_dir" 2>/dev/null; then
           log "Successfully extracted: $filename"
           rm -f "$filename"
+          _sherpa_register_cleanup "$output_dir/$extracted"
           return 0
         fi
         ;;
@@ -113,6 +166,7 @@ download_and_extract() {
         if tar zxvf "$filename" -C "$output_dir" 2>/dev/null; then
           log "Successfully extracted: $filename"
           rm -f "$filename"
+          _sherpa_register_cleanup "$output_dir/$extracted"
           return 0
         fi
         ;;
@@ -120,6 +174,7 @@ download_and_extract() {
         if tar Jxvf "$filename" -C "$output_dir" 2>/dev/null; then
           log "Successfully extracted: $filename"
           rm -f "$filename"
+          _sherpa_register_cleanup "$output_dir/$extracted"
           return 0
         fi
         ;;
@@ -127,6 +182,7 @@ download_and_extract() {
         if unzip -q "$filename" -d "$output_dir" 2>/dev/null; then
           log "Successfully extracted: $filename"
           rm -f "$filename"
+          _sherpa_register_cleanup "$output_dir/$extracted"
           return 0
         fi
         ;;

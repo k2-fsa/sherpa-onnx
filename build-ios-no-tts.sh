@@ -35,10 +35,6 @@ echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 
 cmake \
   -DSHERPA_ONNX_ENABLE_TTS=OFF \
-  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-  -DBUILD_ESPEAK_NG_EXE=OFF \
-  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=SIMULATOR64 \
@@ -64,10 +60,6 @@ echo "Building for simulator (arm64)"
 
 cmake \
   -DSHERPA_ONNX_ENABLE_TTS=OFF \
-  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-  -DBUILD_ESPEAK_NG_EXE=OFF \
-  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=SIMULATORARM64 \
@@ -98,10 +90,6 @@ export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframewo
 
 cmake \
   -DSHERPA_ONNX_ENABLE_TTS=OFF \
-  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-  -DBUILD_ESPEAK_NG_EXE=OFF \
-  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=OS64 \
@@ -130,7 +118,7 @@ echo "Generate xcframework"
 
 mkdir -p "build/simulator/lib"
 for f in libkaldi-native-fbank-core.a libkissfft-float.a libsherpa-onnx-c-api.a libsherpa-onnx-core.a \
-         libsherpa-onnx-fst.a libsherpa-onnx-fstfar.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a libssentencepiece_core.a; do
+         libsherpa-onnx-fst.a libsherpa-onnx-fstfar.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a libssentencepiece_core.a libutf8proc.a; do
   lipo -create build/simulator_arm64/lib/${f} \
                build/simulator_x86_64/lib/${f} \
        -output build/simulator/lib/${f}
@@ -147,7 +135,8 @@ libtool -static -o build/simulator/sherpa-onnx.a \
   build/simulator/lib/libsherpa-onnx-fstfar.a   \
   build/simulator/lib/libsherpa-onnx-kaldifst-core.a \
   build/simulator/lib/libkaldi-decoder-core.a \
-  build/simulator/lib/libssentencepiece_core.a
+  build/simulator/lib/libssentencepiece_core.a \
+  build/simulator/lib/libutf8proc.a
 
 libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libkaldi-native-fbank-core.a \
@@ -158,7 +147,8 @@ libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libsherpa-onnx-fstfar.a   \
   build/os64/lib/libsherpa-onnx-kaldifst-core.a \
   build/os64/lib/libkaldi-decoder-core.a \
-  build/os64/lib/libssentencepiece_core.a
+  build/os64/lib/libssentencepiece_core.a \
+  build/os64/lib/libutf8proc.a
 
 # Rename to match the shared library naming convention
 mv -v build/os64/sherpa-onnx.a build/os64/libsherpa-onnx-c-api.a
@@ -201,9 +191,9 @@ MEOF
   <key>CFBundleExecutable</key>
   <string>SherpaOnnxC</string>
   <key>CFBundleVersion</key>
-  <string>20260910</string>
+  <string>20261026</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.13.8</string>
+  <string>2.0.1</string>
   <key>MinimumOSVersion</key>
   <string>13.0</string>
   <key>CFBundleSupportedPlatforms</key>

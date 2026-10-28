@@ -71,7 +71,7 @@ static void CircularBufferPushWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array data = info[1].As<Napi::Float32Array>();
 
 #if __OHOS__
-  // Note(fangjun): Normally, we don't need to divied it by sizeof(float).
+  // Note(fangjun): Normally, we don't need to divide it by sizeof(float).
   // However, data.ElementLength() here returns number of bytes, not number of
   // elements.
   SherpaOnnxCircularBufferPush(buf, data.Data(),
@@ -130,7 +130,7 @@ static Napi::Float32Array CircularBufferGetWrapper(
     }
   }
 
-  int32_t start_index = info[1].As<Napi::Number>().Int32Value();
+  int64_t start_index = info[1].As<Napi::Number>().Int64Value();
   int32_t n = info[2].As<Napi::Number>().Int32Value();
 
   const float *data = SherpaOnnxCircularBufferGet(buf, start_index, n);
@@ -245,9 +245,9 @@ static Napi::Number CircularBufferHeadWrapper(const Napi::CallbackInfo &info) {
   const SherpaOnnxCircularBuffer *buf =
       info[0].As<Napi::External<SherpaOnnxCircularBuffer>>().Data();
 
-  int32_t size = SherpaOnnxCircularBufferHead(buf);
+  int64_t head = SherpaOnnxCircularBufferHead(buf);
 
-  return Napi::Number::New(env, size);
+  return Napi::Number::New(env, head);
 }
 
 static void CircularBufferResetWrapper(const Napi::CallbackInfo &info) {
@@ -619,7 +619,8 @@ static Napi::Object VoiceActivityDetectorFrontWrapper(
         Napi::Float32Array::New(env, segment->n, arrayBuffer, 0);
 
     Napi::Object obj = Napi::Object::New(env);
-    obj.Set(Napi::String::New(env, "start"), segment->start);
+    obj.Set(Napi::String::New(env, "start"),
+            Napi::Number::New(env, static_cast<double>(segment->start)));
     obj.Set(Napi::String::New(env, "samples"), float32Array);
 
     return obj;
@@ -634,7 +635,8 @@ static Napi::Object VoiceActivityDetectorFrontWrapper(
               float32Array.Data());
 
     Napi::Object obj = Napi::Object::New(env);
-    obj.Set(Napi::String::New(env, "start"), segment->start);
+    obj.Set(Napi::String::New(env, "start"),
+            Napi::Number::New(env, static_cast<double>(segment->start)));
     obj.Set(Napi::String::New(env, "samples"), float32Array);
 
     SherpaOnnxDestroySpeechSegment(segment);

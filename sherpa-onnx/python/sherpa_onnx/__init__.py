@@ -48,6 +48,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineSpeechDenoiserDpdfNetModelConfig,
     OfflineSpeechDenoiserGtcrnModelConfig,
     OfflineSpeechDenoiserModelConfig,
+    OfflineSpeechDenoiserVoxLockModelConfig,
     OfflineStream,
     OfflineTdnnModelConfig,
     OfflineTransducerModelConfig,

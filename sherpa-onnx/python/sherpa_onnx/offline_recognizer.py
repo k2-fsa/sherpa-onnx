@@ -379,6 +379,23 @@ class OfflineRecognizer(object):
         """
         Create an offline recognizer for FunASR-nano models.
 
+        Set per-utterance overrides before decoding with
+        ``stream.set_option("hotwords", "Sherpa,FunASR")``,
+        ``stream.set_option("language", "中文")``,
+        ``stream.set_option("itn", "0")``, or
+        ``stream.set_option("user_prompt", "前文：...\\n语音转写：")``.
+        Unset options use the recognizer defaults. Explicit empty hotwords,
+        language, and user_prompt strings clear the corresponding defaults.
+        For itn, "0" disables and any nonzero integer enables ITN (normally
+        use "1"); empty, unparsable, or out-of-range values use the recognizer
+        default. Options affect only their own stream.
+
+        A nonempty user_prompt is used verbatim only when hotwords and language
+        are empty and itn is enabled; otherwise the standard prompt is built
+        from hotwords, language, and itn. An empty user_prompt uses the standard
+        transcription prompt. To supply custom context, clear any configured
+        hotwords/language and set itn to "1" on that stream first.
+
         Args:
           encoder_adaptor:
             Path to ``encoder_adaptor.onnx``.
@@ -958,6 +975,8 @@ class OfflineRecognizer(object):
         hr_dict_dir: str = "",
         hr_rule_fsts: str = "",
         hr_lexicon: str = "",
+        ctc_graph: str = "",
+        ctc_max_active: int = 3000,
     ):
         """
         Please refer to
@@ -992,6 +1011,13 @@ class OfflineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
+          ctc_graph:
+            If not empty, it specifies the decoding graph (H.fst, HL.fst or
+            HLG.fst) for CTC+FST decoding. It is used together with the CTC
+            model.
+          ctc_max_active:
+            Used only when ctc_graph is not empty. It specifies the maximum
+            number of active tokens during CTC+FST decoding. 0 means 3000.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -1017,6 +1043,10 @@ class OfflineRecognizer(object):
                 dict_dir=hr_dict_dir,
                 lexicon=hr_lexicon,
                 rule_fsts=hr_rule_fsts,
+            ),
+            ctc_fst_decoder_config=OfflineCtcFstDecoderConfig(
+                graph=ctc_graph,
+                max_active=ctc_max_active,
             ),
         )
         self.recognizer = _Recognizer(recognizer_config)
@@ -1235,6 +1265,38 @@ class OfflineRecognizer(object):
         `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/index.html>`_
         to download pre-trained models for different kinds of whisper models,
         e.g., tiny, tiny.en, base, base.en, etc.
+
+        For automatic detection with a multilingual ONNX model, pass
+        ``language=""`` (the default is a fixed ``"en"``). Before decoding,
+        restrict the input languages for one stream with::
+
+            stream = recognizer.create_stream()
+            stream.set_option("language_candidates", "nl,ru,en")
+
+        Accept audio and decode as usual; ``stream.result.lang`` contains the
+        selected input language. This reuses one encoder execution and produces
+        one transcript, not one recognition per candidate.
+
+        Candidates are comma-separated exact model language codes.
+        Surrounding whitespace is trimmed and a single candidate is allowed.
+        Empty values/items, duplicate or unknown codes are invalid; codes are
+        case-sensitive and aliases are not converted. The first listed
+        candidate wins an exact logit tie.
+
+        For the standard ONNX recognizer, invalid candidates, a nonempty fixed
+        ``language``, or an English-only model cause a diagnostic log and an empty
+        result before the encoder runs, clearing any previous result on the
+        stream. There is no process exit, unrestricted fallback, or separate
+        error status. QNN and Ascend Whisper recognizers warn and ignore this
+        option, continuing normal recognition without restricting the language
+        to the candidate list.
+
+        Without the option, existing behavior is unchanged. It does not alter
+        the recognizer configuration, other streams, or the separate language
+        identification API. Empty is invalid, not an option reset; use a new
+        stream without the option for unrestricted detection. Restricting
+        candidates does not guarantee accuracy or reject silence/out-of-list
+        speech.
 
         Args:
           encoder:

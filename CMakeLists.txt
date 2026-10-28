@@ -28,7 +28,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./CHANGELOG.md
 # ./new-release.sh
-set(SHERPA_ONNX_VERSION "1.13.8")
+set(SHERPA_ONNX_VERSION "2.0.1")
 
 # Disable warning about
 #
@@ -50,9 +50,9 @@ option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
 option(SHERPA_ONNX_ENABLE_CHECK "Whether to build with assert" OFF)
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" OFF)
 option(SHERPA_ONNX_ENABLE_PORTAUDIO "Whether to build with portaudio" ON)
-option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)
+option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI interface" OFF)
 option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
-option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
+option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build websocket server/client" ON)
 option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
 option(SHERPA_ONNX_ENABLE_DIRECTML "Enable ONNX Runtime DirectML support" OFF)
 option(SHERPA_ONNX_LINK_D3D "Whether static ONNX runtime lib with DML" OFF)
@@ -542,6 +542,7 @@ if(SHERPA_ONNX_ENABLE_PYTHON)
 endif()
 
 include(kaldi-native-fbank)
+include(utf8proc)
 include(kaldi-decoder)
 include(onnxruntime)
 include(simple-sentencepiece)
@@ -565,13 +566,6 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
 endif()
 
 include(json)
-
-if(SHERPA_ONNX_ENABLE_TTS)
-  include(espeak-ng-for-piper)
-  set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
-  message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
-  include(piper-phonemize)
-endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   include(hclust-cpp)
@@ -607,7 +601,6 @@ endif()
 add_subdirectory(sherpa-onnx)
 
 if(SHERPA_ONNX_ENABLE_C_API AND SHERPA_ONNX_ENABLE_BINARY AND SHERPA_ONNX_BUILD_C_API_EXAMPLES)
-  set(SHERPA_ONNX_PKG_WITH_CARGS "-lcargs")
   add_subdirectory(c-api-examples)
   add_subdirectory(cxx-api-examples)
 endif()

@@ -80,10 +80,6 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_TTS=ON \
                 -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
                 -DSHERPA_ONNX_ENABLE_BINARY=ON \
-                -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-                -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DBUILD_ESPEAK_NG_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
                 -DSHERPA_ONNX_ENABLE_TESTS=OFF \
                 -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -115,7 +111,6 @@ jobs:
               cp -v ./install/lib/lib*.so ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
               mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
               cp -v ./install/include/sherpa-onnx/c-api/*.h ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
-              rm -fv ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib/libcargs.so
               rm -fv ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib/libonnxruntime4j_jni.so
 
               pushd ../scripts/wheel/sherpa-onnx-core

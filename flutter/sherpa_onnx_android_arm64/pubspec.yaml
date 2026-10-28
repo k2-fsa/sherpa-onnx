@@ -4,7 +4,7 @@ description: >
   Speech recognition, speech synthesis, and speaker recognition using next-gen Kaldi
   with onnxruntime without Internet connection. Android arm64-v8a native libraries.
 
-version: 1.13.8
+version: 2.0.1
 
 repository: https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter
 
@@ -22,6 +22,7 @@ topics:
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=2.8.1"
 
 flutter:
   plugin:

@@ -41,6 +41,31 @@ show_stripped_size() {
   rm -f "$tmp"
 }
 
+show_compact() {
+  local bin="$1"
+  local name raw stripped tmp strip_tool=""
+  name="$(basename "$bin")"
+  raw="$(ls -lh "$bin" | awk '{print $5}')"
+  stripped="-"
+
+  if command -v llvm-strip >/dev/null 2>&1; then
+    strip_tool="llvm-strip"
+  elif command -v strip >/dev/null 2>&1; then
+    strip_tool="strip"
+  fi
+
+  if [[ -n "$strip_tool" ]]; then
+    tmp="$(mktemp "${TMPDIR:-/tmp}/$(basename "$bin").XXXXXX")"
+    cp "$bin" "$tmp"
+    if "$strip_tool" "$tmp" >/dev/null 2>&1; then
+      stripped="$(ls -lh "$tmp" | awk '{print $5}')"
+    fi
+    rm -f "$tmp"
+  fi
+
+  printf '%-45s %8s -> %s\n' "$name" "$raw" "$stripped"
+}
+
 show_one() {
   local bin="$1"
 
@@ -108,9 +133,16 @@ if [[ "${1:-}" == "--all" ]]; then
     exit 0
   fi
 
+  echo "=== Example binaries ==="
+  first=1
   printf '%s\n' "${bins[@]}" | sort | while IFS= read -r bin; do
-    show_one "$bin"
-    echo
+    if [[ $first -eq 1 ]]; then
+      first=0
+      show_one "$bin"
+      echo "--- remaining binaries (size -> after strip) ---"
+    else
+      show_compact "$bin"
+    fi
   done
 else
   name="${1:?Please provide an example binary name or use --all}"

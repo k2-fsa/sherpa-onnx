@@ -5,13 +5,17 @@
 #include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-nemo-decoder.h"
 
 #include <algorithm>
+#include <cmath>
 #include <deque>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/packed-sequence.h"
 #include "sherpa-onnx/csrc/slice.h"
@@ -81,6 +85,38 @@ struct NeMoHypothesis {
   NeMoHypothesis &operator=(NeMoHypothesis &&) = default;
 };
 
+// Merge hypotheses with the same token sequence (log-add of their scores,
+// keeping the state of the better one) and keep the best max_active_paths.
+static void MergeAndPrune(std::vector<NeMoHypothesis> *hyps,
+                          int32_t max_active_paths) {
+  std::vector<NeMoHypothesis> merged;
+  merged.reserve(hyps->size());
+  LogAdd<float> log_add;
+  for (auto &hyp : *hyps) {
+    auto it = std::find_if(
+        merged.begin(), merged.end(),
+        [&hyp](const NeMoHypothesis &h) { return h.ys == hyp.ys; });
+    if (it == merged.end()) {
+      merged.push_back(std::move(hyp));
+    } else if (hyp.log_prob > it->log_prob) {
+      float log_prob = log_add(hyp.log_prob, it->log_prob);
+      *it = std::move(hyp);
+      it->log_prob = log_prob;
+    } else {
+      it->log_prob = log_add(it->log_prob, hyp.log_prob);
+    }
+  }
+
+  int32_t keep =
+      std::min(max_active_paths, static_cast<int32_t>(merged.size()));
+  std::partial_sort(merged.begin(), merged.begin() + keep, merged.end(),
+                    [](const NeMoHypothesis &a, const NeMoHypothesis &b) {
+                      return a.log_prob > b.log_prob;
+                    });
+  merged.resize(keep);
+  *hyps = std::move(merged);
+}
+
 std::vector<OfflineTransducerDecoderResult>
 OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     Ort::Value encoder_out, Ort::Value encoder_out_length,
@@ -127,10 +163,21 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
   // positions)
   for (int32_t b = 0; b < batch_size; ++b) {
     const ContextState *context_state = nullptr;
+    // Added to the score for each non-blank token: a positive value keeps
+    // beam search from dropping speech after a pause. Set per stream with
+    // stream.SetOption("length_reward", "0.5").
+    float length_reward = 0.0f;
     if (ss != nullptr) {
       context_graphs[b] = ss[b]->GetContextGraph();
       if (context_graphs[b] != nullptr) {
         context_state = context_graphs[b]->Root();
+      }
+      length_reward = ss[b]->GetOptionFloat("length_reward", 0.0f);
+      if (!std::isfinite(length_reward)) {
+        SHERPA_ONNX_LOGE(
+            "length_reward must be a finite number. Given: %f. Using 0",
+            length_reward);
+        length_reward = 0.0f;
       }
     }
 
@@ -149,30 +196,73 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
       cur_hyps.push_back(std::move(blank_hyp));
     }
 
-    // Process until all hypotheses have finished
+    // A TDT hypothesis jumps ahead by its predicted duration, so hypotheses
+    // can be at different frames. Their scores are only comparable if they
+    // have consumed the same frames: a hypothesis that is ahead has not yet
+    // paid for the frames the others still have to consume. Keep one
+    // bucket of hypotheses per frame and only compare (merge and prune)
+    // hypotheses within a bucket.
+    std::vector<std::vector<NeMoHypothesis>> pending(this_num_frames);
+    std::vector<NeMoHypothesis> finished;
+
+    auto place = [&](NeMoHypothesis &&hyp) {
+      if (hyp.frame_offset >= this_num_frames) {
+        finished.push_back(std::move(hyp));
+      } else {
+        pending[hyp.frame_offset].push_back(std::move(hyp));
+      }
+    };
+
+    for (auto &hyp : cur_hyps) {
+      place(std::move(hyp));
+    }
+
+    std::vector<float> selection_logits;
+    int32_t t = 0;
+    bool same_frame = false;
     while (true) {
-      // Find minimum frame offset among active hypotheses
-      int32_t min_frame = this_num_frames;
-      for (const auto &hyp : cur_hyps) {
-        if (hyp.frame_offset < min_frame) {
-          min_frame = hyp.frame_offset;
-        }
+      while (t < this_num_frames && pending[t].empty()) {
+        ++t;
+        same_frame = false;
       }
 
-      if (min_frame >= this_num_frames) {
+      if (t >= this_num_frames) {
         break;  // All hypotheses have finished
       }
 
-      // Process hypotheses at the minimum frame
-      std::vector<std::pair<float, NeMoHypothesis>> all_candidates;
+      // Hypotheses that emit a token with duration 0 go back to pending[t]
+      // and are expanded again in the next iteration.
+      cur_hyps = std::move(pending[t]);
+      pending[t].clear();
+      MergeAndPrune(&cur_hyps, max_active_paths_);
 
-      for (auto &hyp : cur_hyps) {
-        if (hyp.frame_offset > min_frame) {
-          // This hypothesis is ahead, keep it as-is
-          all_candidates.emplace_back(hyp.log_prob, std::move(hyp));
+      // A token extension adds a log-prob (<= 0) plus length_reward and
+      // the context-graph score, so the early stop below is safe only when
+      // neither of those can raise a hypothesis above its current score.
+      bool can_gain = length_reward > 0 || context_graphs[b] != nullptr;
+      if (same_frame && !is_tdt_ && !can_gain) {
+        // Without durations every token stays on its frame. As in NeMo's
+        // beam search, stop expanding on this frame once there are
+        // max_active_paths hypotheses beyond it that are all better than
+        // the best one left on it.
+        float best = cur_hyps[0].log_prob;
+        int32_t num_better = 0;
+        for (int32_t k = t + 1;
+             k < this_num_frames && num_better < max_active_paths_; ++k) {
+          for (const auto &h : pending[k]) {
+            num_better += h.log_prob > best;
+          }
+        }
+        for (const auto &h : finished) {
+          num_better += h.log_prob > best;
+        }
+        if (num_better >= max_active_paths_) {
           continue;
         }
+      }
+      same_frame = true;
 
+      for (auto &hyp : cur_hyps) {
         if (hyp.num_symbols >= max_symbols_per_frame) {
           // Reached the per-frame symbol limit, force blank to advance frame
           NeMoHypothesis new_hyp;
@@ -189,7 +279,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
             new_hyp.decoder_states.push_back(Clone(allocator, &state));
           }
           new_hyp.frame_offset = hyp.frame_offset + 1;
-          all_candidates.emplace_back(new_hyp.log_prob, std::move(new_hyp));
+          place(std::move(new_hyp));
           continue;
         }
 
@@ -260,46 +350,34 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
         // Compute log softmax for tokens only
         LogSoftmax(token_logits, token_vocab_size, 1);
 
-        // Apply context boosting BEFORE top-k selection so hotword tokens
-        // have a chance to be selected even if their base probability is low
+        // Boost hotword continuations when selecting the top-k tokens so
+        // they have a chance to be selected even if their base probability is
+        // low. The boost is only used for the selection: the score of a
+        // hypothesis gets the context graph score below, which is taken back
+        // if the hotword is not completed.
+        const float *selection = token_logits;
         if (context_graphs[b] != nullptr && hyp.context_state != nullptr) {
+          selection_logits.assign(token_logits,
+                                  token_logits + token_vocab_size);
           for (const auto &pair : hyp.context_state->next) {
             int32_t token_id = pair.first;
             if (token_id >= 0 && token_id < token_vocab_size) {
-              token_logits[token_id] += hotwords_score_;
+              selection_logits[token_id] += hotwords_score_;
             }
           }
+          selection = selection_logits.data();
         }
 
-        auto top_k_tokens =
-            TopkIndex(token_logits, token_vocab_size, max_active_paths_);
-
-        // Determine duration/skip for TDT
-        int32_t predicted_skip = 1;  // Default: advance by 1 frame
-        float duration_log_prob = 0.0f;
+        // Candidate durations: the top-k durations for TDT. Otherwise a token
+        // stays on the current frame and blank advances by one frame.
+        std::vector<int32_t> top_durations;
         if (is_tdt_ && duration_logits != nullptr && num_durations > 0) {
-          // Apply log softmax to duration logits
           LogSoftmax(duration_logits, num_durations, 1);
-
-          // Find best duration
-          predicted_skip = static_cast<int32_t>(
-              std::distance(duration_logits,
-                            std::max_element(duration_logits,
-                                             duration_logits + num_durations)));
-
-          // Get the log probability for the selected duration
-          duration_log_prob = duration_logits[predicted_skip];
+          top_durations = TopkIndex(duration_logits, num_durations,
+                                    std::min(max_active_paths_, num_durations));
         }
 
-        // Create candidate hypotheses
-        for (int32_t idx : top_k_tokens) {
-          int32_t token = idx;
-          // For TDT: joint probability = P(token) * P(duration)
-          // In log space: log P(token, duration) = log P(token) + log
-          // P(duration)
-          float token_log_prob =
-              token_logits[token] + duration_log_prob + hyp.log_prob;
-
+        auto extend = [&](float log_prob) {
           NeMoHypothesis new_hyp;
           new_hyp.ys = hyp.ys;
           new_hyp.timestamps = hyp.timestamps;
@@ -307,81 +385,104 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           new_hyp.ys_probs = hyp.ys_probs;
           new_hyp.context_state = hyp.context_state;
           new_hyp.allocator = allocator;
-          new_hyp.log_prob = token_log_prob;
+          new_hyp.log_prob = log_prob;
+          return new_hyp;
+        };
 
-          float context_score = 0.0f;
+        // Blank: keep the decoder state and advance by each candidate
+        // duration. As in the greedy search, blank never has duration 0.
+        std::vector<int32_t> blank_skips;
+        for (int32_t d : top_durations) {
+          if (d > 0) {
+            blank_skips.push_back(d);
+          }
+        }
+        if (blank_skips.empty()) {
+          blank_skips.push_back(1);
+        }
 
-          if (token == blank_id || token == unk_id_) {
-            // Blank or unk: keep decoder state, advance frame
-            new_hyp.decoder_states.reserve(hyp.decoder_states.size());
-            for (const auto &state : hyp.decoder_states) {
-              new_hyp.decoder_states.push_back(Clone(allocator, &state));
-            }
-            // For blank/unk in TDT, always advance by at least 1
-            new_hyp.frame_offset =
-                hyp.frame_offset + std::max(1, predicted_skip);
-            new_hyp.num_symbols = 0;
-          } else {
-            // Non-blank: add token, use new decoder state
-            new_hyp.ys.push_back(token);
-            new_hyp.timestamps.push_back(hyp.frame_offset);
-            new_hyp.ys_probs.push_back(token_logits[token]);
-            if (is_tdt_) {
-              new_hyp.durations.push_back(predicted_skip);
-            }
-
-            new_hyp.decoder_states.reserve(next_states.size());
-            for (const auto &state : next_states) {
-              new_hyp.decoder_states.push_back(Clone(allocator, &state));
-            }
-
-            // For non-blank in TDT, advance by predicted duration (can be 0 to
-            // emit more tokens) For non-TDT, stay on same frame to allow more
-            // tokens
-            if (is_tdt_) {
-              new_hyp.frame_offset = hyp.frame_offset + predicted_skip;
-              new_hyp.num_symbols =
-                  predicted_skip > 0 ? 0 : hyp.num_symbols + 1;
-            } else {
-              new_hyp.frame_offset = hyp.frame_offset;
-              new_hyp.num_symbols = hyp.num_symbols + 1;
-            }
-
-            // Update context graph
-            if (context_graphs[b] != nullptr) {
-              auto context_res = context_graphs[b]->ForwardOneStep(
-                  new_hyp.context_state, token, false);
-              context_score = std::get<0>(context_res);
-              new_hyp.context_state = std::get<1>(context_res);
-            }
-            new_hyp.log_prob += context_score;
+        for (int32_t d : blank_skips) {
+          // For TDT: log P(blank, d) = log P(blank) + log P(d)
+          float log_prob = hyp.log_prob + token_logits[blank_id];
+          if (!top_durations.empty()) {
+            log_prob += duration_logits[d];
           }
 
-          all_candidates.emplace_back(new_hyp.log_prob, std::move(new_hyp));
+          NeMoHypothesis new_hyp = extend(log_prob);
+          new_hyp.decoder_states.reserve(hyp.decoder_states.size());
+          for (const auto &state : hyp.decoder_states) {
+            new_hyp.decoder_states.push_back(Clone(allocator, &state));
+          }
+          new_hyp.frame_offset = hyp.frame_offset + d;
+          new_hyp.num_symbols = 0;
+          place(std::move(new_hyp));
+        }
+
+        // Non-blank: the top-k (token, duration) pairs by P(token) * P(d).
+        // blank_id is the last token, so TopkIndex over the first blank_id
+        // entries excludes it.
+        std::vector<std::tuple<float, int32_t, int32_t>> pairs;
+        for (int32_t token :
+             TopkIndex(selection, blank_id, max_active_paths_)) {
+          if (token == unk_id_) {
+            continue;
+          }
+          if (top_durations.empty()) {
+            pairs.emplace_back(selection[token], token, 0);
+          }
+          for (int32_t d : top_durations) {
+            pairs.emplace_back(selection[token] + duration_logits[d], token, d);
+          }
+        }
+
+        int32_t num_pairs =
+            std::min(max_active_paths_, static_cast<int32_t>(pairs.size()));
+        std::partial_sort(pairs.begin(), pairs.begin() + num_pairs, pairs.end(),
+                          [](const auto &a, const auto &b) {
+                            return std::get<0>(a) > std::get<0>(b);
+                          });
+
+        for (int32_t k = 0; k < num_pairs; ++k) {
+          int32_t token = std::get<1>(pairs[k]);
+          int32_t d = std::get<2>(pairs[k]);
+
+          float log_prob =
+              hyp.log_prob + token_logits[token] + length_reward;
+          if (!top_durations.empty()) {
+            log_prob += duration_logits[d];
+          }
+
+          NeMoHypothesis new_hyp = extend(log_prob);
+          new_hyp.ys.push_back(token);
+          new_hyp.timestamps.push_back(hyp.frame_offset);
+          new_hyp.ys_probs.push_back(token_logits[token]);
+          if (is_tdt_) {
+            new_hyp.durations.push_back(d);
+          }
+
+          new_hyp.decoder_states.reserve(next_states.size());
+          for (const auto &state : next_states) {
+            new_hyp.decoder_states.push_back(Clone(allocator, &state));
+          }
+
+          // Update context graph
+          if (context_graphs[b] != nullptr) {
+            auto context_res = context_graphs[b]->ForwardOneStep(
+                new_hyp.context_state, token, false);
+            new_hyp.log_prob += std::get<0>(context_res);
+            new_hyp.context_state = std::get<1>(context_res);
+          }
+
+          // With duration 0, more tokens can be emitted on the same frame
+          new_hyp.frame_offset = hyp.frame_offset + d;
+          new_hyp.num_symbols = d > 0 ? 0 : hyp.num_symbols + 1;
+          place(std::move(new_hyp));
         }
       }
-
-      // Keep top-k hypotheses
-      if (all_candidates.empty()) {
-        break;
-      }
-
-      std::partial_sort(
-          all_candidates.begin(),
-          all_candidates.begin() +
-              std::min(max_active_paths_,
-                       static_cast<int32_t>(all_candidates.size())),
-          all_candidates.end(),
-          [](const auto &a, const auto &b) { return a.first > b.first; });
-
-      int32_t keep = std::min(max_active_paths_,
-                              static_cast<int32_t>(all_candidates.size()));
-      cur_hyps.clear();
-      cur_hyps.reserve(keep);
-      for (int32_t k = 0; k < keep; ++k) {
-        cur_hyps.push_back(std::move(all_candidates[k].second));
-      }
     }
+
+    cur_hyps = std::move(finished);
+    MergeAndPrune(&cur_hyps, max_active_paths_);
 
     // Finalize context biasing
     for (auto &hyp : cur_hyps) {

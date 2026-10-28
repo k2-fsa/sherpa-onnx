@@ -77,8 +77,8 @@ class VadNonStreamingQwen3Asr
         while (!vad.IsEmpty())
         {
           SpeechSegment segment = vad.Front();
-          var startTime = segment.Start / (float)sampleRate;
-          var duration = segment.Samples.Length / (float)sampleRate;
+          var startTime = segment.Start / (double)sampleRate;
+          var duration = segment.Samples.Length / (double)sampleRate;
 
           OfflineStream stream = recognizer.CreateStream();
           stream.AcceptWaveform(sampleRate, segment.Samples);
@@ -101,8 +101,8 @@ class VadNonStreamingQwen3Asr
     while (!vad.IsEmpty())
     {
       var segment = vad.Front();
-      float startTime = segment.Start / (float)sampleRate;
-      float duration = segment.Samples.Length / (float)sampleRate;
+      double startTime = segment.Start / (double)sampleRate;
+      double duration = segment.Samples.Length / (double)sampleRate;
 
       var stream = recognizer.CreateStream();
       stream.AcceptWaveform(sampleRate, segment.Samples);

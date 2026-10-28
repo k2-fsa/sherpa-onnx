@@ -30,7 +30,7 @@ data class VadModelConfig(
     var debug: Boolean = false,
 )
 
-class SpeechSegment(val start: Int, val samples: FloatArray)
+class SpeechSegment(val start: Long, val samples: FloatArray)
 
 class Vad(
     assetManager: AssetManager? = null,
