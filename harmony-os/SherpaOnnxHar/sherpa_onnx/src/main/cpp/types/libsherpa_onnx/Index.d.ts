@@ -42,6 +42,16 @@ export const getOfflineTtsNumSpeakers: (handle: object) => number;
 export const getOfflineTtsSampleRate: (handle: object) => number;
 export const getOfflineTtsLang: (handle: object) => string;
 
+export type SourceSeparationOutput = {
+  stems: Float32Array[][];
+  sampleRate: number;
+};
+
+export const createOfflineSourceSeparation: (config: object, mgr?: object) => object;
+export const offlineSourceSeparationGetOutputSampleRate: (handle: object) => number;
+export const offlineSourceSeparationGetNumberOfStems: (handle: object) => number;
+export const offlineSourceSeparationProcess: (handle: object, input: object) => SourceSeparationOutput;
+
 export type TtsOutput = {
   samples: Float32Array;
   sampleRate: number;

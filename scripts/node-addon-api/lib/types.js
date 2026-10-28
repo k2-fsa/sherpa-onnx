@@ -101,6 +101,11 @@
  */
 
 /**
+ * @typedef {Object} OfflineSourceSeparationHandle
+ * @see src/offline-source-separation.cc
+ */
+
+/**
  * @typedef {Object} OnlineSpeechDenoiserHandle
  * @see src/online-speech-denoiser.cc
  */
@@ -827,6 +832,46 @@
 /**
  * @typedef {Object} DisplayObject
  * @property {DisplayHandle} handle
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationSpleeterModelConfig
+ * @property {string} vocals - Path to the vocals ONNX model.
+ * @property {string} accompaniment - Path to the accompaniment ONNX model.
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationUvrModelConfig
+ * @property {string} model - Path to the UVR (MDX-Net) ONNX model.
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationModelConfig
+ * @property {OfflineSourceSeparationSpleeterModelConfig} [spleeter]
+ * @property {OfflineSourceSeparationUvrModelConfig} [uvr]
+ * @property {number} [numThreads=1] - Positive int32 thread count.
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationConfig
+ * @property {OfflineSourceSeparationModelConfig} model
+ */
+
+/**
+ * @typedef {Object} SourceSeparationRequest
+ * @property {Float32Array[]} samples - One or two equal-length channels.
+ *   Mono input is duplicated to stereo. Values should be in [-1, 1].
+ * @property {number} sampleRate - Positive integer input sample rate in Hz,
+ *   no greater than 2147483647.
+ * @property {boolean} [enableExternalBuffer=true] - Set false for Electron.
+ */
+
+/**
+ * @typedef {Object} SourceSeparationOutput
+ * @property {Float32Array[][]} stems - Each stem contains separate channels.
+ * @property {number} sampleRate - Output sample rate in Hz.
  */
 
 // Export typedefs so they can be referenced by require('./types.js')

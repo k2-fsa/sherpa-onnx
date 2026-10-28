@@ -20,6 +20,7 @@ const sd = require('./non-streaming-speaker-diarization.js');
 const speech_denoiser = require('./non-streaming-speech-denoiser.js');
 const online_speech_denoiser = require('./online-speech-denoiser.js');
 const resampler = require('./resampler.js');
+const source_separation = require('./offline-source-separation.js');
 
 module.exports = {
   OnlineRecognizer : streaming_asr.OnlineRecognizer,
@@ -42,6 +43,7 @@ module.exports = {
   OfflineSpeechDenoiser : speech_denoiser.OfflineSpeechDenoiser,
   OnlineSpeechDenoiser : online_speech_denoiser.OnlineSpeechDenoiser,
   LinearResampler : resampler.LinearResampler,
+  OfflineSourceSeparation : source_separation.OfflineSourceSeparation,
   version : addon.version,
   gitSha1 : addon.gitSha1,
   gitDate : addon.gitDate,
