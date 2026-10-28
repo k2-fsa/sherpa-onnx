@@ -18,36 +18,47 @@ static const napi_type_tag kSourceSeparationTypeTag = {0x9d3b5ef1f2264ad1,
                                                        0x82216b13b4d8f534};
 #endif
 
-static SherpaOnnxOfflineSourceSeparationSpleeterModelConfig
-GetSpleeterModelConfig(Napi::Object obj) {
-  SherpaOnnxOfflineSourceSeparationSpleeterModelConfig c{};
-  if (!obj.Has("spleeter") || !obj.Get("spleeter").IsObject()) return c;
+static void GetSpleeterModelConfig(
+    Napi::Object obj, SherpaOnnxOfflineSourceSeparationSpleeterModelConfig &c) {
+  if (!obj.Has("spleeter") || !obj.Get("spleeter").IsObject()) return;
   Napi::Object o = obj.Get("spleeter").As<Napi::Object>();
   SHERPA_ONNX_ASSIGN_ATTR_STR(vocals, vocals);
   SHERPA_ONNX_ASSIGN_ATTR_STR(accompaniment, accompaniment);
-  return c;
 }
 
-static SherpaOnnxOfflineSourceSeparationUvrModelConfig GetUvrModelConfig(
-    Napi::Object obj) {
-  SherpaOnnxOfflineSourceSeparationUvrModelConfig c{};
-  if (!obj.Has("uvr") || !obj.Get("uvr").IsObject()) return c;
+static void GetUvrModelConfig(
+    Napi::Object obj, SherpaOnnxOfflineSourceSeparationUvrModelConfig &c) {
+  if (!obj.Has("uvr") || !obj.Get("uvr").IsObject()) return;
   Napi::Object o = obj.Get("uvr").As<Napi::Object>();
   SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
-  return c;
 }
 
-static SherpaOnnxOfflineSourceSeparationModelConfig GetModelConfig(
-    Napi::Object obj) {
-  SherpaOnnxOfflineSourceSeparationModelConfig c{};
+static void GetModelConfig(Napi::Object obj,
+                           SherpaOnnxOfflineSourceSeparationModelConfig &c) {
   if (!obj.Has("model") || !obj.Get("model").IsObject()) {
-    return c;
+    return;
   }
 
   Napi::Object o = obj.Get("model").As<Napi::Object>();
-  c.spleeter = GetSpleeterModelConfig(o);
-  c.uvr = GetUvrModelConfig(o);
-  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
+  GetSpleeterModelConfig(o, c.spleeter);
+  GetUvrModelConfig(o, c.uvr);
+  auto threads = o.Get("numThreads");
+  if (!threads.IsUndefined()) {
+    if (!threads.IsNumber()) {
+      Napi::TypeError::New(o.Env(), "numThreads must be a positive int32")
+          .ThrowAsJavaScriptException();
+      return;
+    }
+    double value = threads.As<Napi::Number>().DoubleValue();
+    if (!std::isfinite(value) || value <= 0 ||
+        value > std::numeric_limits<int32_t>::max() ||
+        value != std::floor(value)) {
+      Napi::RangeError::New(o.Env(), "numThreads must be a positive int32")
+          .ThrowAsJavaScriptException();
+      return;
+    }
+    c.num_threads = static_cast<int32_t>(value);
+  }
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
   if (o.Has("debug")) {
     if (o.Get("debug").IsBoolean()) {
@@ -56,8 +67,14 @@ static SherpaOnnxOfflineSourceSeparationModelConfig GetModelConfig(
       c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
     }
   }
+}
 
-  return c;
+static void DeleteConfig(SherpaOnnxOfflineSourceSeparationConfig *c) {
+  SHERPA_ONNX_DELETE_C_STR(c->model.spleeter.vocals);
+  SHERPA_ONNX_DELETE_C_STR(c->model.spleeter.accompaniment);
+  SHERPA_ONNX_DELETE_C_STR(c->model.uvr.model);
+  SHERPA_ONNX_DELETE_C_STR(c->model.provider);
+  delete c;
 }
 
 static Napi::External<SherpaOnnxOfflineSourceSeparation>
@@ -91,8 +108,12 @@ CreateOfflineSourceSeparationWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
-  SherpaOnnxOfflineSourceSeparationConfig c{};
-  c.model = GetModelConfig(info[0].As<Napi::Object>());
+  // Keep partial configuration allocations owned if a JS getter throws.
+  std::unique_ptr<SherpaOnnxOfflineSourceSeparationConfig,
+                  decltype(&DeleteConfig)>
+      c(new SherpaOnnxOfflineSourceSeparationConfig{}, &DeleteConfig);
+  GetModelConfig(info[0].As<Napi::Object>(), c->model);
+  if (env.IsExceptionPending()) return {};
 #if __OHOS__
   const SherpaOnnxOfflineSourceSeparation *ss = nullptr;
   if (use_resource_manager) {
@@ -100,17 +121,13 @@ CreateOfflineSourceSeparationWrapper(const Napi::CallbackInfo &info) {
                     decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
         mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
             &OH_ResourceManager_ReleaseNativeResourceManager);
-    ss = SherpaOnnxCreateOfflineSourceSeparationOHOS(&c, mgr.get());
+    ss = SherpaOnnxCreateOfflineSourceSeparationOHOS(c.get(), mgr.get());
   } else {
-    ss = SherpaOnnxCreateOfflineSourceSeparation(&c);
+    ss = SherpaOnnxCreateOfflineSourceSeparation(c.get());
   }
 #else
-  const auto *ss = SherpaOnnxCreateOfflineSourceSeparation(&c);
+  const auto *ss = SherpaOnnxCreateOfflineSourceSeparation(c.get());
 #endif
-  SHERPA_ONNX_DELETE_C_STR(c.model.spleeter.vocals);
-  SHERPA_ONNX_DELETE_C_STR(c.model.spleeter.accompaniment);
-  SHERPA_ONNX_DELETE_C_STR(c.model.uvr.model);
-  SHERPA_ONNX_DELETE_C_STR(c.model.provider);
 
   if (!ss) {
     Napi::TypeError::New(env, "Please check your source separation config!")
@@ -269,6 +286,12 @@ static Napi::Object ProcessWrapper(const Napi::CallbackInfo &info) {
         (!samples.empty() && length != n)) {
       Napi::RangeError::New(env,
                             "Channels must have equal, nonzero int32 lengths")
+          .ThrowAsJavaScriptException();
+      return {};
+    }
+    if (!std::all_of(array.Data(), array.Data() + length,
+                     [](float value) { return std::isfinite(value); })) {
+      Napi::RangeError::New(env, "Channel samples must be finite")
           .ThrowAsJavaScriptException();
       return {};
     }

@@ -52,6 +52,9 @@ The following tables list the examples in this folder.
 
 Download the models and sample audio before running these examples:
 
+Until a published release includes `OfflineSourceSeparation`, these examples
+require a source-built `sherpa-onnx-node` addon.
+
 ```bash
 curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
 tar xjf sherpa-onnx-spleeter-2stems-fp16.tar.bz2

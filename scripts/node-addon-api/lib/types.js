@@ -849,7 +849,7 @@
  * @typedef {Object} OfflineSourceSeparationModelConfig
  * @property {OfflineSourceSeparationSpleeterModelConfig} [spleeter]
  * @property {OfflineSourceSeparationUvrModelConfig} [uvr]
- * @property {number} [numThreads]
+ * @property {number} [numThreads=1] - Positive int32 thread count.
  * @property {boolean|number} [debug]
  * @property {string} [provider]
  */
@@ -863,7 +863,8 @@
  * @typedef {Object} SourceSeparationRequest
  * @property {Float32Array[]} samples - One or two equal-length channels.
  *   Mono input is duplicated to stereo. Values should be in [-1, 1].
- * @property {number} sampleRate - Positive input sample rate in Hz.
+ * @property {number} sampleRate - Positive integer input sample rate in Hz,
+ *   no greater than 2147483647.
  * @property {boolean} [enableExternalBuffer=true] - Set false for Electron.
  */
 

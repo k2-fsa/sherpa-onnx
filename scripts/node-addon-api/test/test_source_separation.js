@@ -19,6 +19,24 @@ function testValidation() {
       () => new sherpa_onnx.OfflineSourceSeparation({model: {}}),
       /source separation config/);
 
+  for (const numThreads of [0, -1, NaN, Infinity, 1.5, 2 ** 31]) {
+    assert.throws(
+        () => new sherpa_onnx.OfflineSourceSeparation({model: {numThreads}}),
+        RangeError);
+  }
+  assert.throws(
+      () => new sherpa_onnx.OfflineSourceSeparation({model: {numThreads: '1'}}),
+      TypeError);
+  const getterError = new Error('Config getter failed');
+  assert.throws(() => new sherpa_onnx.OfflineSourceSeparation({
+    model: {
+      spleeter: {
+        vocals: 'partially-allocated.onnx',
+        get accompaniment() { throw getterError; },
+      },
+    },
+  }), error => error === getterError);
+
   const foreignHandle = addon.createLinearResampler(16000, 44100);
   for (const handle of [undefined, null, {}, 1, foreignHandle]) {
     assert.throws(
@@ -59,6 +77,11 @@ function testInvalidAudio(separator) {
   }
   assert.throws(
       () => separator.process({...valid, enableExternalBuffer: 1}), TypeError);
+  for (const value of [NaN, Infinity, -Infinity]) {
+    assert.throws(
+        () => separator.process({...valid, samples: [new Float32Array([value])]}),
+        RangeError);
+  }
   assert.throws(
       () => addon.offlineSourceSeparationProcess(separator.handle), TypeError);
 
@@ -104,6 +127,7 @@ function checkOutput(output, separator, duration) {
     }
   }
   assert(energy > 0);
+  assert.notDeepStrictEqual(output.stems[0], output.stems[1]);
 }
 
 /** Let native finalizers run while a single output channel remains live. */
