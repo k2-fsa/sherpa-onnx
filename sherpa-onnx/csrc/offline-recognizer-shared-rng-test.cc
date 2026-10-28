@@ -44,7 +44,7 @@ class SharedRngSampler {
   //   float sample = dist(rng_);
   float Sample() {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    std::lock_guard<std::mutex> lock(rng_mutex_);
+    std::scoped_lock lock(rng_mutex_);
     return DrawLocked(&dist);
   }
 

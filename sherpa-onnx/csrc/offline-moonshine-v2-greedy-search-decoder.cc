@@ -58,7 +58,7 @@ OfflineMoonshineV2GreedySearchDecoder::Decode(Ort::Value encoder_out) {
 
   int32_t vocab_size = logits.GetTensorTypeAndShapeInfo().GetShape()[2];
 
-  int64_t max_token_id;
+  int64_t max_token_id = 0;
 
   for (int32_t i = 0; i != max_len; ++i) {
     const float *p = logits.GetTensorData<float>();

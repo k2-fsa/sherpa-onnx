@@ -27,10 +27,11 @@
 namespace sherpa_onnx {
 
 static OnlineRecognizerResult ConvertCtc(const OnlineCtcDecoderResult &src,
-                                  const SymbolTable &sym_table,
-                                  float frame_shift_ms,
-                                  int32_t subsampling_factor, int32_t segment,
-                                  int32_t frames_since_start) {
+                                         const SymbolTable &sym_table,
+                                         float frame_shift_ms,
+                                         int32_t subsampling_factor,
+                                         int32_t segment,
+                                         int32_t frames_since_start) {
   OnlineRecognizerResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
@@ -68,7 +69,7 @@ static OnlineRecognizerResult ConvertCtc(const OnlineCtcDecoderResult &src,
 
   r.num_trailing_blanks = src.num_trailing_blanks;
   r.segment = segment;
-  r.words = std::move(src.words);
+  r.words = src.words;
   r.start_time = frames_since_start * frame_shift_ms / 1000.;
 
   return r;

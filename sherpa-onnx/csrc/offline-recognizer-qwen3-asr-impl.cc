@@ -26,7 +26,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "onnxruntime_cxx_api.h"
+#include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -49,7 +49,7 @@ constexpr int32_t kQwen3MelDim = 128;
 // Qwen3-ASR hotwords are placed in the system-role segment of the chat template
 constexpr char kQwen3SystemPromptPrefix[] = "<|im_start|>system\n";
 constexpr char kQwen3SystemPromptSuffix[] =
-    "<|im_end|>\n<|im_start|>user\n<|audio_start|>";
+    "<|im_end|>\n<|im_start|>user\n<|audio_start|>";  // NOLINT
 
 // Format hotwords for the Qwen3 chat template: ASCII comma-separated list
 // (e.g. "foo,bar,baz");
@@ -328,7 +328,7 @@ bool IsDegenerateRepetition(const std::vector<int64_t> &ids) {
     return false;
   }
 
-  std::array<int64_t, kQwen3LoopMaxDistinct> distinct{};
+  std::array<int64_t, kQwen3LoopMaxDistinct> distinct = {};
   int32_t num_distinct = 0;
   for (size_t i = ids.size() - kQwen3LoopWindow; i != ids.size(); ++i) {
     bool seen = false;
@@ -355,7 +355,7 @@ bool IsDegenerateRepetition(const std::vector<int64_t> &ids) {
 // it ends with a token the loop happens to reuse. What remains is the text
 // decoded before the loop started (possibly nothing).
 void TrimDegenerateTail(std::vector<int64_t> *ids) {
-  std::array<int64_t, kQwen3LoopMaxDistinct> distinct{};
+  std::array<int64_t, kQwen3LoopMaxDistinct> distinct = {};
   int32_t num_distinct = 0;
   for (size_t i = ids->size() - kQwen3LoopWindow; i != ids->size(); ++i) {
     bool seen = false;
@@ -694,7 +694,7 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
 
     for (int32_t i = 0; i < vocab_size; ++i) {
       if (probs[i] > 0.0f) {
-        prob_idx.push_back({i, probs[i]});
+        prob_idx.emplace_back(i, probs[i]);
       }
     }
 
@@ -730,9 +730,9 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
       return prob_idx[0].first;
     }
 
-    float r;
+    float r = 0.0f;
     {
-      std::lock_guard<std::mutex> lock(rng_mutex_);
+      std::scoped_lock lock(rng_mutex_);
       r = std::uniform_real_distribution<float>(0.0f, kept_sum)(rng_);
     }
     float cumsum = 0.0f;
@@ -746,9 +746,9 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
     return prob_idx[cutoff - 1].first;
   }
 
-  float r;
+  float r = 0.0f;
   {
-    std::lock_guard<std::mutex> lock(rng_mutex_);
+    std::scoped_lock lock(rng_mutex_);
     r = std::uniform_real_distribution<float>(0.0f, sum)(rng_);
   }
   float cumsum = 0.0f;
@@ -803,7 +803,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     SHERPA_ONNX_LOGE(
         "qwen3-asr: audio_features shape=[%d,%d,%d] abs_max=%f "
         "audio_token_len=%d",
-        static_cast<int32_t>(trimmed_shape.size() > 0 ? trimmed_shape[0] : -1),
+        static_cast<int32_t>(!trimmed_shape.empty() ? trimmed_shape[0] : -1),
         static_cast<int32_t>(trimmed_shape.size() > 1 ? trimmed_shape[1] : -1),
         static_cast<int32_t>(trimmed_shape.size() > 2 ? trimmed_shape[2] : -1),
         abs_max, audio_token_len);

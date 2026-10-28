@@ -36,8 +36,7 @@ struct OnlineTransducerDecoderResult {
   // used only in modified beam_search
   Hypotheses hyps;
 
-  OnlineTransducerDecoderResult()
-      : tokens{}, num_trailing_blanks(0), decoder_out{nullptr}, hyps{} {}
+  OnlineTransducerDecoderResult() : tokens{}, decoder_out{nullptr}, hyps{} {}
 
   OnlineTransducerDecoderResult(const OnlineTransducerDecoderResult &other);
 

@@ -243,9 +243,8 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     // read the remaining frames and pad with zeros to chunk_size_.
     bool is_short_final = is_final && available_frames < chunk_size_;
 
-    std::vector<float> frames =
-        s->GetFrames(num_processed_frames,
-                     is_short_final ? available_frames : chunk_size_);
+    std::vector<float> frames = s->GetFrames(
+        num_processed_frames, is_short_final ? available_frames : chunk_size_);
 
     if (is_short_final) {
       int32_t feat_dim_raw = config_.feat_config.feature_dim;
@@ -398,6 +397,8 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
         std::move(acoustic_embedding_tensor),
         std::move(acoustic_embedding_length_tensor), std::move(states));
 
+    // states is moved-from but valid; refill it with the new decoder states.
+    // NOLINTNEXTLINE(bugprone-use-after-move)
     states.reserve(model_.DecoderNumBlocks());
     for (int32_t i = 2; i != decoder_out_vec.size(); ++i) {
       // TODO(fangjun): When we change chunk_size_, we need to

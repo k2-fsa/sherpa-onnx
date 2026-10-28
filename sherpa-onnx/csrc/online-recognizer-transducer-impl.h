@@ -32,10 +32,12 @@
 
 namespace sherpa_onnx {
 
-OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
-                               const SymbolTable &sym_table,
-                               float frame_shift_ms, int32_t subsampling_factor,
-                               int32_t segment, int32_t frames_since_start) {
+inline OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
+                                      const SymbolTable &sym_table,
+                                      float frame_shift_ms,
+                                      int32_t subsampling_factor,
+                                      int32_t segment,
+                                      int32_t frames_since_start) {
   OnlineRecognizerResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
@@ -76,9 +78,9 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
     r.timestamps.push_back(time);
   }
 
-  r.ys_probs = std::move(src.ys_probs);
-  r.lm_probs = std::move(src.lm_probs);
-  r.context_scores = std::move(src.context_scores);
+  r.ys_probs = src.ys_probs;
+  r.lm_probs = src.lm_probs;
+  r.context_scores = src.context_scores;
   r.num_trailing_blanks = src.num_trailing_blanks;
 
   r.segment = segment;
@@ -427,8 +429,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // but reset all contextual biasing graph states to root
     if (config_.decoding_method == "modified_beam_search" &&
         nullptr != s->GetContextGraph()) {
-      for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
-        it->second.context_state = s->GetContextGraph()->Root();
+      for (auto &hyp : r.hyps) {
+        hyp.second.context_state = s->GetContextGraph()->Root();
       }
     }
 
@@ -504,8 +506,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     if (config_.decoding_method == "modified_beam_search" &&
         nullptr != stream->GetContextGraph()) {
       // r.hyps has only one element.
-      for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
-        it->second.context_state = stream->GetContextGraph()->Root();
+      for (auto &hyp : r.hyps) {
+        hyp.second.context_state = stream->GetContextGraph()->Root();
       }
     }
 

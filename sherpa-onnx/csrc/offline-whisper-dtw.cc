@@ -332,8 +332,8 @@ DTWResult WhisperDTW::RunDTW(const float *cost_matrix, int32_t n_tokens,
       float c1 = cost_at(i - 1, j);      // up
       float c2 = cost_at(i, j - 1);      // left
 
-      float min_cost;
-      int32_t trace_dir;
+      float min_cost = 0.0f;
+      int32_t trace_dir = 0;
 
       if (c0 <= c1 && c0 <= c2) {
         min_cost = c0;
@@ -368,7 +368,7 @@ DTWResult WhisperDTW::RunDTW(const float *cost_matrix, int32_t n_tokens,
   path.reserve(N + M);
 
   while (i > 0 || j > 0) {
-    path.push_back({i - 1, j - 1});
+    path.emplace_back(i - 1, j - 1);
 
     int32_t dir = trace_at(i, j);
     if (dir == 0) {  // diagonal

@@ -334,7 +334,7 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
       ends_with_punct = IsEndingPunctuationCodepoint(LastCodepointUtf8(result));
     }
     if (!ends_with_punct) {
-      result += ".";
+      result += '.';
     }
   }
 

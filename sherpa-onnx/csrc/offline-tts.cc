@@ -26,10 +26,14 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
 struct SilenceInterval {
   int32_t start;
   int32_t end;
 };
+
+}  // namespace
 
 // Supported range for --tts-silence-scale. The lower bound keeps a pause from
 // collapsing to nothing; the upper bound is a sanity limit, far below the
@@ -60,7 +64,7 @@ GeneratedAudio GeneratedAudio::ScaleSilence(float scale) const {
   int32_t num_samples = static_cast<int32_t>(samples.size());
 
   int32_t last = -1;
-  int32_t i;
+  int32_t i = 0;
   for (i = 0; i != num_samples; ++i) {
     if (fabs(samples[i]) <= 0.01) {
       if (last == -1) {
@@ -175,7 +179,8 @@ std::string GenerationConfig::ToString() const {
   }
 
   if (!phoneme_codepoints.empty()) {
-    os << ", phoneme_codepoints=[" << phoneme_codepoints.size() << " sentences]";
+    os << ", phoneme_codepoints=[" << phoneme_codepoints.size()
+       << " sentences]";
   }
 
   if (!tokens.empty()) {

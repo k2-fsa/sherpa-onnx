@@ -87,7 +87,7 @@ std::once_flag g_oov_piece_log_once;
 std::once_flag g_incomplete_utf8_log_once;
 
 void InitByteToUnicode() {
-  std::array<bool, 256> used{};
+  std::array<bool, 256> used = {};
 
   std::vector<int32_t> bytes;
   bytes.reserve(256);
@@ -233,7 +233,7 @@ bool Utf8Next(const std::string &s, size_t *i, uint32_t *cp,
   return false;
 }
 
-enum class Utf8ConsumeStatus {
+enum class Utf8ConsumeStatus : std::uint8_t {
   kOk = 0,
   kIncomplete = 1,
   kInvalid = 2,
@@ -937,7 +937,7 @@ std::vector<std::string> BpeEncode(
     std::unordered_map<std::string, std::vector<std::string>> *cache,
     std::mutex *cache_mutex) {
   if (!word.empty() && cache && cache_mutex) {
-    std::lock_guard<std::mutex> lock(*cache_mutex);
+    std::scoped_lock lock(*cache_mutex);
     auto it = cache->find(word);
     if (it != cache->end()) {
       return it->second;
@@ -947,7 +947,7 @@ std::vector<std::string> BpeEncode(
   std::vector<std::string> symbols = SplitUtf8ToChars(word);
   if (symbols.size() <= 1) {
     if (cache && cache_mutex) {
-      std::lock_guard<std::mutex> lock(*cache_mutex);
+      std::scoped_lock lock(*cache_mutex);
       (*cache)[word] = symbols;
     }
     return symbols;
@@ -987,7 +987,7 @@ std::vector<std::string> BpeEncode(
   }
 
   if (cache && cache_mutex) {
-    std::lock_guard<std::mutex> lock(*cache_mutex);
+    std::scoped_lock lock(*cache_mutex);
     (*cache)[word] = symbols;
   }
 
@@ -1006,7 +1006,7 @@ void BuildSpecialTokens(
 
   for (const auto &kv : token2id) {
     if (IsSpecialToken(kv.first)) {
-      special_tokens->push_back(kv);
+      special_tokens->emplace_back(kv);
     }
   }
 
@@ -1137,7 +1137,7 @@ void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
   BuildSpecialTokens(token2id_, &special_tokens_);
 
   {
-    std::lock_guard<std::mutex> lock(bpe_cache_mutex_);
+    std::scoped_lock lock(bpe_cache_mutex_);
     bpe_cache_.clear();
   }
 

@@ -4,10 +4,13 @@ on:
   push:
     branches:
       - master
-      - clang-tidy
     paths:
       - 'sherpa-onnx/csrc/**'
-
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'sherpa-onnx/csrc/**'
 
   workflow_dispatch:
 
@@ -21,6 +24,10 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
+        # Each job checks 1/n of the sources (round-robin) via the
+        # SHERPA_ONNX_TIDY_SHARD logic in sherpa-onnx/csrc/CMakeLists.txt.
+        # Keep the entries in sync with n.
+        shard: ["1/6", "2/6", "3/6", "4/6", "5/6", "6/6"]
       fail-fast: false
 
     steps:
@@ -49,7 +56,8 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DSHERPA_ONNX_ENABLE_PYTHON=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DSHERPA_ONNX_ENABLE_PYTHON=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DSHERPA_ONNX_TIDY_SHARD=${{ matrix.shard }} ..
 
       - name: Check with clang-tidy
         shell: bash

@@ -15,13 +15,13 @@ struct OfflineCtTransformerModelMetaData {
   std::unordered_map<std::string, int32_t> punct2id;
   std::vector<std::string> id2punct;
 
-  int32_t unk_id;
-  int32_t dot_id;
-  int32_t comma_id;
-  int32_t quest_id;
-  int32_t pause_id;
-  int32_t underline_id;
-  int32_t num_punctuations;
+  int32_t unk_id = 0;
+  int32_t dot_id = 0;
+  int32_t comma_id = 0;
+  int32_t quest_id = 0;
+  int32_t pause_id = 0;
+  int32_t underline_id = 0;
+  int32_t num_punctuations = 0;
 };
 
 }  // namespace sherpa_onnx

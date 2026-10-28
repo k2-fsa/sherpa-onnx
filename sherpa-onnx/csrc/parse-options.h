@@ -187,14 +187,14 @@ class ParseOptions {
   struct DocInfo {
     DocInfo() = default;
     DocInfo(const std::string &name, const std::string &usemsg)
-        : name_(name), use_msg_(usemsg), is_standard_(false) {}
+        : name_(name), use_msg_(usemsg) {}
     DocInfo(const std::string &name, const std::string &usemsg,
             bool is_standard)
         : name_(name), use_msg_(usemsg), is_standard_(is_standard) {}
 
     std::string name_;
     std::string use_msg_;
-    bool is_standard_;
+    bool is_standard_ = false;
   };
   using DocMapType = std::unordered_map<std::string, DocInfo>;
   DocMapType doc_map_;  ///< map for the documentation

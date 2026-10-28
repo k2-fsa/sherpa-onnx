@@ -74,7 +74,7 @@ class OnlineSpeechDenoiserGtcrnImpl : public OnlineSpeechDenoiserImpl {
 
   void ProcessFrame(float *spec, size_t spec_size, float *enhanced) {
     const int32_t num_bins = stream_.GetNumBins();
-    const size_t expected_size = static_cast<size_t>(num_bins * 2);
+    const size_t expected_size = static_cast<size_t>(num_bins) * 2;
     if (spec_size != expected_size) {
       SHERPA_ONNX_LOGE("Unexpected GTCRN spec size. Expected: %d. Given: %d",
                        num_bins * 2, static_cast<int32_t>(spec_size));

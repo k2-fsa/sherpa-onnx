@@ -68,7 +68,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
         iss >> sym;
         if (sym.empty()) continue;
         if (iss.eof()) {
-          id = atoi(sym.c_str());
+          id = ToIntOrDefault(sym, -1);
+          if (id == -1) {
+            SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+            continue;
+          }
           sym = " ";
         } else {
           iss >> id;
@@ -148,7 +152,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
         iss >> sym;
         if (sym.empty()) continue;
         if (iss.eof()) {
-          id = atoi(sym.c_str());
+          id = ToIntOrDefault(sym, -1);
+          if (id == -1) {
+            SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+            continue;
+          }
           sym = " ";
         } else {
           iss >> id;
@@ -203,7 +211,9 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     return model_->GetMetaData().num_speakers;
   }
 
-  std::string Lang() const override { return LastLang(model_->GetMetaData().voice); }
+  std::string Lang() const override {
+    return LastLang(model_->GetMetaData().voice);
+  }
 
   /**
    *
@@ -839,10 +849,10 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
   static std::string ReplacePunctuations(const std::string &s) {
     // Convert Chinese punctuations to English equivalents
-    static const std::vector<std::pair<std::string, std::string>> replacements =
-        {
-            {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},  {":", ","},
-            {"。", "."}, {"？", "?"}, {"！", "!"}, {"…", "..."},
+    using Replacement = std::pair<std::string, std::string>;
+    static const std::vector<Replacement> replacements = {
+        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},  {":", ","},
+        {"。", "."}, {"？", "?"}, {"！", "!"}, {"…", "..."},
     };
     std::string result = s;
     for (const auto &p : replacements) {
@@ -891,18 +901,10 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
                 u32.substr(current_word_start, ci - current_word_start)));
             in_word = false;
           }
-          words.push_back(" ");
+          words.emplace_back(" ");
         } else if (c == U',' || c == U'.' || c == U'!' || c == U'?' ||
-                   c == U';' || c == U':') {
-          // ASCII punctuation: keep as separate token
-          if (in_word) {
-            words.push_back(Utf32ToUtf8(
-                u32.substr(current_word_start, ci - current_word_start)));
-            in_word = false;
-          }
-          words.push_back(Utf32ToUtf8(u32.substr(ci, 1)));
-        } else if (IsCJK(c)) {
-          // CJK character: each is a separate word
+                   c == U';' || c == U':' || IsCJK(c)) {
+          // ASCII punctuation or CJK character: keep as separate token
           if (in_word) {
             words.push_back(Utf32ToUtf8(
                 u32.substr(current_word_start, ci - current_word_start)));

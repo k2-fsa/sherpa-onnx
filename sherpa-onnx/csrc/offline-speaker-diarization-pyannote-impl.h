@@ -173,11 +173,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
       chunk_speaker_pair.reserve(valid_indexes.size());
       sample_indexes.reserve(valid_indexes.size());
       for (auto i : valid_indexes) {
-        if (i < 0 ||
-            i >= static_cast<int32_t>(
-                     chunk_speaker_samples_list_pair.first.size())) {
-          SHERPA_ONNX_LOGE("valid_indexes: index %d out of range [0, %d)",
-                           i,
+        if (i < 0 || i >= static_cast<int32_t>(
+                              chunk_speaker_samples_list_pair.first.size())) {
+          SHERPA_ONNX_LOGE("valid_indexes: index %d out of range [0, %d)", i,
                            static_cast<int32_t>(
                                chunk_speaker_samples_list_pair.first.size()));
           continue;
@@ -380,7 +378,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     int32_t num_rows = m.rows();
     Matrix2DInt32 ans(num_rows, powerset_mapping_.cols());
 
-    std::ptrdiff_t col_id;
+    std::ptrdiff_t col_id = 0;
 
     for (int32_t i = 0; i != num_rows; ++i) {
       m.row(i).maxCoeff(&col_id);
@@ -411,8 +409,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
     weight.setZero();
 
     for (int32_t i = 0; i != num_chunks; ++i) {
-      int32_t start =
-          static_cast<float>(i) * window_shift / receptive_field_shift + 0.5;
+      int32_t start = static_cast<int32_t>(std::lround(
+          static_cast<float>(i) * window_shift / receptive_field_shift));
 
       auto seq = Eigen::seqN(start, labels[i].rows());
 
@@ -461,7 +459,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
         std::vector<Int32Pair> this_speaker_samples;
 
         bool is_active = false;
-        int32_t start_index;
+        int32_t start_index = 0;
 
         for (int32_t k = 0; k != num_frames; ++k) {
           if (d[k] != 0) {
@@ -632,12 +630,10 @@ class OfflineSpeakerDiarizationPyannoteImpl
         int32_t new_speaker_index =
             chunk_speaker_to_cluster.at({chunk_index, speaker_index});
 
-        if (new_speaker_index < 0 ||
-            new_speaker_index >= new_label.cols()) {
+        if (new_speaker_index < 0 || new_speaker_index >= new_label.cols()) {
           SHERPA_ONNX_LOGE(
               "ReLabel: new_speaker_index %d out of range [0, %d), skipping",
-              new_speaker_index,
-              static_cast<int32_t>(new_label.cols()));
+              new_speaker_index, static_cast<int32_t>(new_label.cols()));
           continue;
         }
 
@@ -673,8 +669,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
     count.setZero();
 
     for (int32_t i = 0; i != num_chunks; ++i) {
-      int32_t start =
-          static_cast<float>(i) * window_shift / receptive_field_shift + 0.5;
+      int32_t start = static_cast<int32_t>(std::lround(
+          static_cast<float>(i) * window_shift / receptive_field_shift));
 
       auto seq = Eigen::seqN(start, labels[i].rows());
 
@@ -783,8 +779,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
       for (auto &seg : this_speaker) {
         if (seg.Duration() > config_.min_duration_on) {
           if (has_intervals) {
-            seg.SetConfidence(ComputeSegmentConfidence(cluster_it->second, seg,
-                                                       sample_rate));
+            seg.SetConfidence(
+                ComputeSegmentConfidence(cluster_it->second, seg, sample_rate));
           }
           ans.Add(seg);
         }
@@ -856,8 +852,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     int32_t num_frames_to_keep = std::min(new_num_frames, num_frames);
 
-    return ComputeResult(
-        final_labels(Eigen::seqN(0, num_frames_to_keep), Eigen::placeholders::all));
+    return ComputeResult(final_labels(Eigen::seqN(0, num_frames_to_keep),
+                                      Eigen::placeholders::all));
   }
 
   void MergeSegments(

@@ -162,7 +162,7 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
           uint8_t byte = static_cast<uint8_t>(word[i]);
           tokens += id2token.at(byte);
           if ((i + 1) % 3 == 0 && (i + 1) < word.length()) {
-            tokens += " ";
+            tokens += ' ';
           }
         }
 

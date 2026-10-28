@@ -24,7 +24,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "onnxruntime_cxx_api.h"
+#include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -497,7 +497,7 @@ class OfflineQwen3ASRModel::Impl {
     auto logits_info = logits.GetTensorTypeAndShapeInfo();
     auto logits_type =
         static_cast<ONNXTensorElementDataType>(logits_info.GetElementType());
-    if (outputs.size() < 1 || ((outputs.size() - 1) % 2) != 0) {
+    if (outputs.empty() || ((outputs.size() - 1) % 2) != 0) {
       SHERPA_ONNX_LOGE(
           "ForwardLLM: output count mismatch: expect 1+2*num_layers, got %zu",
           outputs.size());
@@ -544,7 +544,7 @@ class OfflineQwen3ASRModel::Impl {
     int64_t hd = tpl[3];
     std::vector<int64_t> key_shape = {
         batch, static_cast<int64_t>(max_total_len_), kv_h, hd};
-    std::vector<int64_t> value_shape = key_shape;
+    const std::vector<int64_t> &value_shape = key_shape;
 
     size_t key_numel = NumelFromShape(key_shape);
     size_t value_numel = NumelFromShape(value_shape);

@@ -462,7 +462,7 @@ float HalfBitsToFloat(uint16_t h) {
     const uint32_t e = exp + (127 - 15);
     fbits = sign | (e << 23) | (mant << 13);
   }
-  float out;
+  float out = 0.0f;
   std::memcpy(&out, &fbits, sizeof(out));
   return out;
 }
@@ -471,7 +471,7 @@ float HalfBitsToFloat(uint16_t h) {
 // float. Handles overflow (clamped to infinity), underflow (clamped to zero),
 // and normal values with proper rounding.
 uint16_t FloatToHalfBits(float f) {
-  uint32_t x;
+  uint32_t x = 0;
   std::memcpy(&x, &f, sizeof(x));
   const uint32_t sign = (x >> 16) & 0x8000u;
   const int32_t exp = static_cast<int32_t>((x >> 23) & 0xFFu);

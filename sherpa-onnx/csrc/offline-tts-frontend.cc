@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-kitten-model-meta-data.h"
@@ -46,7 +49,11 @@ std::unordered_map<char32_t, int32_t> ReadPiperTokens(std::istream &is) {
     std::istringstream iss(line);
     iss >> sym;
     if (iss.eof()) {
-      id = atoi(sym.c_str());
+      id = ToIntOrDefault(sym, -1);
+      if (id == -1) {
+        SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+        continue;
+      }
       sym = " ";
     } else {
       iss >> id;
@@ -162,7 +169,7 @@ std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
       }
       ans.push_back(std::move(current));
       if (bos >= 0) {
-        current.push_back(bos);
+        current.push_back(bos);  // NOLINT(bugprone-use-after-move)
       }
     }
   }
@@ -199,7 +206,8 @@ std::vector<std::vector<int64_t>> PiperPhonemesToIdsKitten(
           current.push_back(meta_data.pad_id);
         }
         ans.push_back(std::move(current));
-        current.reserve(phonemes.size());
+        // current is moved-from but valid; refill it as the next chunk.
+        current.reserve(phonemes.size());  // NOLINT(bugprone-use-after-move)
         current.push_back(meta_data.start_id);
       }
       current.push_back(token2id.at(p));

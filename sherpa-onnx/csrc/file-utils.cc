@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -13,8 +14,9 @@
 #include <windows.h>
 #else
 #include <sys/stat.h>
-#include <limits.h>
-#include <stdlib.h>
+
+#include <climits>
+#include <cstdlib>
 #endif
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -46,7 +48,7 @@ bool FileExists(const std::string &filename) {
   return attributes != INVALID_FILE_ATTRIBUTES &&
          !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 #else
-  struct stat file_stat;
+  struct stat file_stat = {};
   return stat(filename.c_str(), &file_stat) == 0 && S_ISREG(file_stat.st_mode);
 #endif
 }
@@ -63,7 +65,8 @@ std::vector<char> ReadFile(const std::string &filename) {
     return {};
   }
 
-  std::ifstream file = OpenInputFile(filename, std::ios::binary | std::ios::ate);
+  std::ifstream file =
+      OpenInputFile(filename, std::ios::binary | std::ios::ate);
   if (!file.is_open()) {
     return {};
   }
@@ -155,23 +158,20 @@ std::string ResolveAbsolutePath(const std::string &path) {
   try {
 #ifdef _WIN32
     std::wstring wide_path = ToWideString(path);
-    DWORD required_size = GetFullPathNameW(wide_path.c_str(), 0, nullptr, nullptr);
+    DWORD required_size =
+        GetFullPathNameW(wide_path.c_str(), 0, nullptr, nullptr);
     if (required_size == 0) {
       return path;
     }
-    
+
     std::vector<wchar_t> buffer(required_size);
-    DWORD actual_size = GetFullPathNameW(
-        wide_path.c_str(),
-        required_size,
-        buffer.data(),
-        nullptr
-    );
-    
+    DWORD actual_size = GetFullPathNameW(wide_path.c_str(), required_size,
+                                         buffer.data(), nullptr);
+
     if (actual_size == 0 || actual_size >= required_size) {
       return path;
     }
-    
+
     std::wstring resolved_wide(buffer.data(), actual_size);
     return ToString(resolved_wide);
 #else
@@ -181,7 +181,7 @@ std::string ResolveAbsolutePath(const std::string &path) {
     }
     return std::string(resolved_path);
 #endif
-  } catch (const std::exception&) {
+  } catch (const std::exception &) {
     return path;
   }
 }

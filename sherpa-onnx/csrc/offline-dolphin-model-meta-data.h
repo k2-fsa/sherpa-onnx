@@ -10,7 +10,7 @@
 namespace sherpa_onnx {
 
 struct OfflineDolphinModelMetaData {
-  int32_t vocab_size;
+  int32_t vocab_size = 0;
   int32_t subsampling_factor = 4;
   std::vector<float> mean;
   std::vector<float> inv_stddev;
