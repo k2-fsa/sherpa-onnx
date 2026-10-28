@@ -113,6 +113,7 @@ class OfflineRecognizer(object):
         dither: float = 0.0,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
+        num_return_paths: int = 1,
         hotwords_file: str = "",
         hotwords_score: float = 1.5,
         blank_penalty: float = 0.0,
@@ -166,6 +167,13 @@ class OfflineRecognizer(object):
           max_active_paths:
             Maximum number of active paths to keep. Used only when
             decoding_method is modified_beam_search.
+          num_return_paths:
+            Number of hypotheses to return per utterance. Used only when
+            decoding_method is modified_beam_search. It is clamped to
+            max_active_paths. When greater than 1, each result exposes an
+            n-best list via result.hypotheses, ordered best first; the
+            top-level fields (text, tokens, timestamps) always describe the
+            1-best.
           hotwords_file:
             The file containing hotwords, one words/phrases per line, and for each
             phrase the bpe/cjkchar are separated by a space.
@@ -248,6 +256,7 @@ class OfflineRecognizer(object):
             lm_config=lm_config,
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
+            num_return_paths=num_return_paths,
             hotwords_file=hotwords_file,
             hotwords_score=hotwords_score,
             blank_penalty=blank_penalty,
