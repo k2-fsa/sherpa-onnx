@@ -104,6 +104,18 @@ function testWaveIO() {
         true);
     const three = sherpa_onnx.readWaveMultiChannel(filename, false);
     assert.strictEqual(three.samples.length, 3);
+
+    // A wave with an empty data chunk has no samples per channel.
+    assert.strictEqual(
+        sherpa_onnx.writeWave(
+            filename, {samples: new Float32Array(0), sampleRate: 16000}),
+        true);
+    for (const enableExternalBuffer of [true, false]) {
+      const empty =
+          sherpa_onnx.readWaveMultiChannel(filename, enableExternalBuffer);
+      assert.strictEqual(empty.samples.length, 1);
+      assert.strictEqual(empty.samples[0].length, 0);
+    }
   } finally {
     fs.unlinkSync(filename);
   }
@@ -125,6 +137,35 @@ function testWaveIO() {
         () => sherpa_onnx.writeWaveMultiChannel(
             filename, {samples, sampleRate: 16000}),
         TypeError);
+  }
+  for (const sampleRate of [0, -1, NaN, Infinity, 44100.5, 2 ** 31]) {
+    assert.throws(
+        () => sherpa_onnx.writeWaveMultiChannel(
+            filename, {samples: [left], sampleRate}),
+        RangeError);
+  }
+
+  // A channel getter may detach an earlier channel's ArrayBuffer; the saved
+  // pointers must not be read after any property getter has run.
+  {
+    const first = new Float32Array(10);
+    const channels = [first];
+    const {port1, port2} = new MessageChannel();
+    try {
+      Object.defineProperty(channels, 1, {
+        get() {
+          port1.postMessage(first.buffer, [first.buffer]);
+          return new Float32Array(10);
+        },
+      });
+      assert.throws(
+          () => sherpa_onnx.writeWaveMultiChannel(
+              filename, {samples: channels, sampleRate: 16000}),
+          RangeError);
+    } finally {
+      port1.close();
+      port2.close();
+    }
   }
   assert.throws(() => sherpa_onnx.readWaveMultiChannel(), TypeError);
   assert.throws(() => sherpa_onnx.readWaveMultiChannel(1), TypeError);

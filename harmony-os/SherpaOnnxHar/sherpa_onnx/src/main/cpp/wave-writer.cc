@@ -2,6 +2,8 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <cmath>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -134,8 +136,20 @@ static Napi::Boolean WriteWaveMultiChannelWrapper(
     return {};
   }
 
-  std::vector<const float *> channel_ptrs;
-  int32_t n = 0;
+  double sample_rate = obj.Get("sampleRate").As<Napi::Number>().DoubleValue();
+  if (!std::isfinite(sample_rate) || sample_rate <= 0 ||
+      sample_rate > std::numeric_limits<int32_t>::max() ||
+      sample_rate != std::floor(sample_rate)) {
+    Napi::RangeError::New(
+        env, "The object['sampleRate'] should be a positive integer")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  // Read pointers after all property getters have run: a later channel getter
+  // may detach an earlier channel's ArrayBuffer.
+  std::vector<Napi::Value> channel_values;
   for (uint32_t c = 0; c != num_channels; ++c) {
     Napi::Value value = channels.Get(c);
     if (!value.IsTypedArray() ||
@@ -145,7 +159,12 @@ static Napi::Boolean WriteWaveMultiChannelWrapper(
 
       return {};
     }
+    channel_values.push_back(value);
+  }
 
+  std::vector<const float *> channel_ptrs;
+  int32_t n = 0;
+  for (const auto &value : channel_values) {
     Napi::Float32Array samples = value.As<Napi::Float32Array>();
     int32_t length = samples.ElementLength();
 #if __OHOS__
@@ -161,10 +180,8 @@ static Napi::Boolean WriteWaveMultiChannelWrapper(
     channel_ptrs.push_back(samples.Data());
   }
 
-  int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
-
   int32_t ok = SherpaOnnxWriteWaveMultiChannel(
-      channel_ptrs.data(), n, sample_rate, num_channels,
+      channel_ptrs.data(), n, static_cast<int32_t>(sample_rate), num_channels,
       info[0].As<Napi::String>().Utf8Value().c_str());
 
   return Napi::Boolean::New(env, ok);

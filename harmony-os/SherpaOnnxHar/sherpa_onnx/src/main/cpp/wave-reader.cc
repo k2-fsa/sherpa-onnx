@@ -210,15 +210,21 @@ static Napi::Object ReadWaveMultiChannelWrapper(
   int32_t num_channels = wave->num_channels;
   int32_t num_samples = wave->num_samples;
   int32_t sample_rate = wave->sample_rate;
+  size_t total = static_cast<size_t>(num_channels) * num_samples;
 
   Napi::Array channels = Napi::Array::New(env, num_channels);
 
-  if (enable_external_buffer) {
+  if (num_samples <= 0) {
+    // An empty data chunk leaves no samples to share or copy.
+    SherpaOnnxFreeMultiChannelWave(wave);
+    for (int32_t c = 0; c != num_channels; ++c) {
+      channels.Set(c, Napi::Float32Array::New(env, 0));
+    }
+  } else if (enable_external_buffer) {
     // Samples of all channels live in one contiguous memory block; create one
     // ArrayBuffer for the block and a view for each channel.
     Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-        env, const_cast<float *>(wave->samples[0]),
-        sizeof(float) * num_channels * num_samples,
+        env, const_cast<float *>(wave->samples[0]), sizeof(float) * total,
         [](Napi::Env /*env*/, void * /*data*/,
            const SherpaOnnxMultiChannelWave *hint) {
           SherpaOnnxFreeMultiChannelWave(hint);
@@ -232,11 +238,11 @@ static Napi::Object ReadWaveMultiChannelWrapper(
   } else {
     // don't use external buffer
     Napi::ArrayBuffer arrayBuffer =
-        Napi::ArrayBuffer::New(env, sizeof(float) * num_channels * num_samples);
-    Napi::Float32Array float32Array = Napi::Float32Array::New(
-        env, num_channels * num_samples, arrayBuffer, 0);
+        Napi::ArrayBuffer::New(env, sizeof(float) * total);
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, total, arrayBuffer, 0);
 
-    std::copy(wave->samples[0], wave->samples[0] + num_channels * num_samples,
+    std::copy(wave->samples[0], wave->samples[0] + total,
               float32Array.Data());
 
     for (int32_t c = 0; c != num_channels; ++c) {
