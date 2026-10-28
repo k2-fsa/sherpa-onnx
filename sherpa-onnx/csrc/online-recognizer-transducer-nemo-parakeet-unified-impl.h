@@ -291,7 +291,9 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
         model_->Allocator(), length_shape.data(), length_shape.size());
     length.GetTensorMutableData<int64_t>()[0] = total_feature_frames;
 
-    auto encoder_outs = model_->RunEncoder(std::move(x), std::move(length));
+    auto encoder_outs = model_->RunEncoder(
+        std::move(x), std::move(length),
+        model_->GetLanguagePromptId(s->GetOption("language")));
     int32_t samples_per_frame = config_.feat_config.sampling_rate / 100;
     int32_t left_encoder_frames =
         (left_frames * samples_per_frame - start_sample_offset) /
