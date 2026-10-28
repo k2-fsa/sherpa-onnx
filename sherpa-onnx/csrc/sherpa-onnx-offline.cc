@@ -120,11 +120,12 @@ for a list of pre-trained models to download.
   sherpa_onnx::OfflineRecognizerConfig config;
   config.Register(&po);
 
-  float length_reward = 0;
+  std::string length_reward;
   po.Register("length-reward", &length_reward,
               "Per-token reward for modified_beam_search with NeMo TDT "
               "models. It is passed to each stream via "
-              "SetOption(\"length_reward\", ...). 0 disables it.");
+              "SetOption(\"length_reward\", ...) as given. "
+              "Empty (the default) leaves it unset.");
 
   po.Read(argc, argv);
   if (po.NumArgs() < 1) {
@@ -172,8 +173,8 @@ for a list of pre-trained models to download.
     duration += samples.size() / static_cast<float>(sampling_rate);
 
     auto s = recognizer.CreateStream();
-    if (length_reward != 0) {
-      s->SetOption("length_reward", std::to_string(length_reward));
+    if (!length_reward.empty()) {
+      s->SetOption("length_reward", length_reward);
     }
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
