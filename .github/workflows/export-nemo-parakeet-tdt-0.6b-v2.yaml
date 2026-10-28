@@ -63,6 +63,7 @@ jobs:
           mv -v *.onnx ../../..
           mv -v *.weights ../../..
           mv -v tokens.txt ../../..
+          mv -v bpe.vocab ../../..
           mv 2086-149220-0033.wav ../../../0.wav
 
       - name: Run ${{ matrix.version }}
@@ -76,6 +77,7 @@ jobs:
           mv -v *.onnx ../../..
           mv -v *.weights ../../..
           mv -v tokens.txt ../../..
+          mv -v bpe.vocab ../../..
           mv *.wav ../../../
 
       - name: Collect files (fp32)
@@ -89,6 +91,7 @@ jobs:
           cp -v decoder.onnx $d
           cp -v joiner.onnx $d
           cp -v tokens.txt $d
+          cp -v bpe.vocab $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
@@ -107,6 +110,7 @@ jobs:
           cp -v decoder.int8.onnx $d
           cp -v joiner.int8.onnx $d
           cp -v tokens.txt $d
+          cp -v bpe.vocab $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
