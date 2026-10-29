@@ -881,6 +881,35 @@ def get_lb_models():
     return ans
 
 
+# lithuanian
+def get_lt_models():
+    lt_LT = [
+        PiperModel(name="ingute", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in lt_LT:
+        m.lang = "lt_LT"
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+    ans = lt_LT
+
+    for m in ans:
+        m.text = "Įlinkdama fechtuotojo špaga sublykčiojusi pragręžė apvalų arbūzą."
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            wget -qq https://huggingface.co/RobertasTa/lt_LT-ingute-medium/resolve/main/LICENSE-VOICE
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # latvian
 def get_lv_models():
     lv_LV = [
@@ -2195,6 +2224,7 @@ def get_all_models():
     ans += get_ka_models()
     ans += get_kk_models()
     ans += get_lb_models()
+    ans += get_lt_models()
     ans += get_lv_models()
     ans += get_ml_models()
     ans += get_ne_models()

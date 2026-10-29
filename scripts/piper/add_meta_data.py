@@ -72,12 +72,20 @@ def load_config(filename):
 
 def generate_tokens(config):
     id_map = config["phoneme_id_map"]
+    is_lt = config.get("language", {}).get("code") == "lt_LT"
     with open("tokens.txt", "w", encoding="utf-8") as f:
         for s, i in id_map.items():
             if s == "\n":
                 continue
+            if len(s) > 1:
+                # piper1-gpl configs list diphthongs such as "aɪ";
+                # tokens.txt holds one code point per token
+                continue
             if isinstance(i, list):
                 i = i[0]
+            if is_lt and s == "ʂ":
+                # espeak-ng writes Lithuanian /s/ as ʂ; the voices were trained with s
+                i = id_map["s"][0]
             print(f"{s} {i}")
             f.write(f"{s} {i}\n")
     print("Generated tokens.txt")
