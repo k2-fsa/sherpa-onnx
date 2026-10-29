@@ -28,7 +28,8 @@ namespace sherpa_onnx {
 OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
                                const SymbolTable &sym_table,
                                float frame_shift_ms, int32_t subsampling_factor,
-                               int32_t segment, int32_t frames_since_start);
+                               int32_t segment, int32_t frames_since_start,
+                               int32_t remove_cjk_space);
 
 class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     : public OnlineRecognizerImpl {
@@ -92,9 +93,13 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
   OnlineRecognizerResult GetResult(OnlineStream *s) const override {
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = model_->SubsamplingFactor();
+    // Per-stream option "remove_cjk_space": use 1 or 0. 0 means disable,
+    // non-zero (default 1) means enable removing spaces between CJK
+    // characters of scripts without word spacing.
     auto r = Convert(s->GetResult(), symbol_table_, frame_shift_ms,
                      subsampling_factor, s->GetCurrentSegment(),
-                     s->GetNumFramesSinceStart());
+                     s->GetNumFramesSinceStart(),
+                     s->GetOptionInt("remove_cjk_space", 1));
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;

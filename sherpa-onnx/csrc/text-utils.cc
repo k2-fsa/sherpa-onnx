@@ -1194,6 +1194,13 @@ bool IsCJK(char32_t cp) {
          (cp >= 0x20000 && cp <= 0x2FFFF);
 }
 
+// Detect if a codepoint belongs to the Hangul script.
+bool IsHangul(char32_t cp) {
+  return (cp >= 0x1100 && cp <= 0x11FF) || (cp >= 0x3130 && cp <= 0x318F) ||
+         (cp >= 0xA960 && cp <= 0xA97F) || (cp >= 0xAC00 && cp <= 0xD7A3) ||
+         (cp >= 0xD7B0 && cp <= 0xD7FF) || (cp >= 0xFFA0 && cp <= 0xFFDC);
+}
+
 bool ContainsCJK(const std::string &text) {
   std::u32string utf32_text = Utf8ToUtf32(text);
   return ContainsCJK(utf32_text);
@@ -1245,6 +1252,13 @@ static bool IsPunct(char32_t cp) {
   return false;
 }
 
+// Detect if a codepoint belongs to a script that does not use spaces between
+// words: Han, Hiragana, Katakana, etc. Unlike IsCJK(), this excludes Hangul
+// since Korean writes spaces between words (eojeol).
+static bool IsCjkWithoutWordSpace(char32_t cp) {
+  return IsCJK(cp) && !IsHangul(cp);
+}
+
 std::string RemoveSpaceBetweenCjk(const std::string &text) {
   std::u32string u32 = Utf8ToUtf32(text);
   if (u32.size() < 2) {
@@ -1257,7 +1271,9 @@ std::string RemoveSpaceBetweenCjk(const std::string &text) {
 
   for (size_t i = 1; i < u32.size(); ++i) {
     if (u32[i] == U' ' && i + 1 < u32.size() &&
-        ((IsCJK(u32[i - 1]) && IsCJK(u32[i + 1])) || IsPunct(u32[i + 1]))) {
+        ((IsCjkWithoutWordSpace(u32[i - 1]) &&
+          IsCjkWithoutWordSpace(u32[i + 1])) ||
+         IsPunct(u32[i + 1]))) {
       continue;
     }
 
