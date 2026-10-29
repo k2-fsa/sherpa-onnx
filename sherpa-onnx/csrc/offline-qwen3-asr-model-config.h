@@ -27,8 +27,16 @@ struct OfflineQwen3ASRModelConfig {
   // Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. "foo,bar,baz".
   std::string hotwords;
 
-  // Maximum total sequence length (from model metadata or config)
-  int32_t max_total_len = 512;
+  // Maximum total sequence length (from model metadata or config).
+  // 1024 holds one full 30-second clip (~390 audio tokens at 13 tokens/s
+  // plus the prompt scaffold) plus generation headroom. The old default
+  // 512 left a 30-second clip only ~107 of the default 128 generation
+  // tokens (generation then stops silently mid-word) and truncated audio
+  // placeholders for clips longer than ~38s. Note the cost: on
+  // dynamic-dim exports (e.g. the official 0.6B int8) the KV cache is
+  // allocated at this size, roughly 110 MiB per 512 positions (float32,
+  // 28 layers), so 1024 doubles the per-recognizer transient versus 512.
+  int32_t max_total_len = 1024;
 
   // Maximum number of new tokens to generate
   int32_t max_new_tokens = 128;

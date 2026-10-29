@@ -1027,6 +1027,17 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   for (int32_t step = 1; step < max_new_tokens; ++step) {
     if (cur_len >= max_seq_len) {
+      // This break used to be silent, unlike the max_new_tokens one below:
+      // with the default max_total_len (512) a 30-second clip (~390 audio
+      // tokens at 13 tokens/s + a handful of prompt tokens) leaves room
+      // for only ~107 of the default 128 generation tokens, and the
+      // transcript just ends mid-word with no indication why.
+      SHERPA_ONNX_LOGE(
+          "Generation stopped at max_total_len %d before max_new_tokens %d "
+          "was reached (context was %d tokens); increase max_total_len to "
+          "give this audio enough generation budget",
+          max_seq_len, max_new_tokens, context_len);
+      Qwen3LogMaxTotalLenSuggestions(max_seq_len, model_max_len);
       break;
     }
 
