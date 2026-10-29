@@ -345,6 +345,11 @@ class BuildExtension(build_ext):
 
         binaries = get_binaries()
 
+        # setup.py creates this directory only when it also installs binaries,
+        # i.e., not when SHERPA_ONNX_ENABLE_BINARY=OFF. The DLLs below are
+        # copied regardless, so make sure the destination exists.
+        os.makedirs(out_bin_dir, exist_ok=True)
+
         for f in binaries:
             suffix = "" if ".dll" in f else suffix
             src_file = install_dir / "bin" / (f + suffix)
@@ -357,7 +362,7 @@ class BuildExtension(build_ext):
                 continue
 
             print(f"Copying {src_file} to {out_bin_dir}/")
-            shutil.copy(f"{src_file}", f"{out_bin_dir}/")
+            shutil.copy(f"{src_file}", f"{out_bin_dir}")
 
         if Path(f"{install_dir}/bin").is_dir():
             shutil.rmtree(f"{install_dir}/bin")
