@@ -139,11 +139,23 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
     } else {
       phrase = phrase.substr(1);
     }
+    // A phrase given as tokens from tokens.txt (starting with a word-start
+    // piece, e.g. "▁Het zn er") is used as is.
+    bool pretokenized = phrase.rfind("\xe2\x96\x81", 0) == 0;
+    {
+      std::istringstream tiss(phrase);
+      std::string w;
+      while (pretokenized && tiss >> w) {
+        pretokenized = symbol_table.Contains(w);
+      }
+    }
     std::istringstream piss(phrase);
     oss.clear();
     oss.str("");
     while (piss >> word) {
-      if (modeling_unit == "cjkchar") {
+      if (pretokenized) {
+        oss << " " << word;
+      } else if (modeling_unit == "cjkchar") {
         for (const auto &w : SplitUtf8(word)) {
           oss << " " << w;
         }
