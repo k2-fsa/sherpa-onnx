@@ -6,7 +6,6 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_WHISPER_IMPL_H_
 
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -19,6 +18,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
 #include "sherpa-onnx/csrc/offline-whisper-dtw.h"
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
+#include "sherpa-onnx/csrc/offline-whisper-lang-probs.h"
 #include "sherpa-onnx/csrc/offline-whisper-language-candidates.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -153,6 +153,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
           language_candidate_ids);
 
       auto r = Convert(results[0], symbol_table_);
+
+      ApplyTopKLangProbs(s->GetOption("top_k_langs"), &r.lang_probs);
+
       s->SetResult(r);
     } catch (const Ort::Exception &ex) {
       SHERPA_ONNX_LOGE(
@@ -209,6 +212,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
     r.text = text;
     r.lang = src.lang;
+    r.lang_probs = src.lang_probs;
 
     // Convert segments from segment timestamp mode to parallel vectors
     if (enable_segment_timestamps && !src.segments.empty()) {
