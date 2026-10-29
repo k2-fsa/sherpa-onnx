@@ -118,6 +118,7 @@ class OfflineRecognizerWhisperTplImpl : public OfflineRecognizerImpl {
 
     r.text = text;
     r.lang = src.lang;
+    r.lang_probs = src.lang_probs;
 
     return r;
   }

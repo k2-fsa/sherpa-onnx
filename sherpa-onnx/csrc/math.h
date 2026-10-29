@@ -99,6 +99,38 @@ void LogSoftmax(T *in, int32_t w, int32_t h) {
   }
 }
 
+template <class T>
+bool Softmax(T *input, int32_t input_len) {
+  if (input == nullptr || input_len <= 0) return false;
+
+  // Map the raw buffer as an Eigen vector for in-place softmax.
+  Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>> vec(input, input_len);
+
+  T m = vec.maxCoeff();
+  auto exp_vec = (vec.array() - m).exp();
+  vec = exp_vec / exp_vec.sum();
+  return true;
+}
+
+template <typename T>
+bool Softmax(T *in, int32_t w, int32_t h) {
+  if (in == nullptr || w <= 0 || h <= 0) return false;
+
+  // Map the row-major buffer as an h x w matrix and softmax each row.
+  Eigen::Map<
+      Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+      mat(in, h, w);
+
+  // Subtract per-row max for numerical stability, then exp.
+  Eigen::Matrix<T, Eigen::Dynamic, 1> row_max = mat.rowwise().maxCoeff();
+  mat = (mat.colwise() - row_max).array().exp().matrix();
+
+  // Normalize each row by its sum.
+  Eigen::Matrix<T, Eigen::Dynamic, 1> row_sum = mat.rowwise().sum();
+  mat = (mat.array().colwise() / row_sum.array()).matrix();
+  return true;
+}
+
 template <typename T>
 void SubtractBlank(T *in, int32_t w, int32_t h, int32_t blank_idx,
                    float blank_penalty) {

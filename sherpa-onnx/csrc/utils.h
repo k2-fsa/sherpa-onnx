@@ -5,12 +5,33 @@
 #define SHERPA_ONNX_CSRC_UTILS_H_
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "ssentencepiece/csrc/ssentencepiece.h"
 
 namespace sherpa_onnx {
+
+/* Return a copy of 'in' with duplicate elements removed.
+ *
+ * First occurrence of each element is kept.
+ *
+ * @param in The input vector to deduplicate. Must be hashable.
+ * @return A new vector containing the unique elements of 'in' in their
+ *         original order of first appearance.
+ */
+template <typename T>
+std::vector<T> Deduplicate(const std::vector<T> &in) {
+  std::vector<T> out;
+  out.reserve(in.size());
+  std::unordered_set<T> seen;
+  seen.reserve(in.size());
+  for (const auto &x : in) {
+    if (seen.insert(x).second) out.push_back(x);
+  }
+  return out;
+}
 
 /* Encode the hotwords in an input stream to be tokens ids.
  *

@@ -447,6 +447,22 @@ std::string OfflineRecognitionResult::AsJsonString() const {
      << ": ";
   os << QuoteJsonString(lang) << ", ";
 
+  os << "\"lang_probs\""
+     << ": ";
+  os << "[";
+  {
+    // lang probs already filtered by top_k_langs
+    std::string lp_sep = "";
+    for (const auto &lp : lang_probs) {
+      os << lp_sep << "{"
+         << "\"lang\": " << QuoteJsonString(lp.first) << ", "
+         << "\"prob\": " << std::fixed << std::setprecision(6) << lp.second
+         << "}";
+      lp_sep = ", ";
+    }
+  }
+  os << "], ";
+
   os << "\"emotion\""
      << ": ";
   os << QuoteJsonString(emotion) << ", ";
