@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_HARMONY_OS_SHERPAONNXHAR_SHERPA_ONNX_SRC_MAIN_CPP_SPEECH_DENOISER_H_
 
 #include <algorithm>
+#include <string>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
@@ -73,14 +74,7 @@ GetSpeechDenoiserModelConfig(Napi::Object obj) {
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 

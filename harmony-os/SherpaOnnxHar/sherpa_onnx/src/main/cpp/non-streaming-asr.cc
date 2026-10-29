@@ -1,8 +1,10 @@
 // scripts/node-addon-api/src/non-streaming-asr.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <algorithm>
 #include <memory>
 #include <sstream>
+#include <string>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
@@ -381,14 +383,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
