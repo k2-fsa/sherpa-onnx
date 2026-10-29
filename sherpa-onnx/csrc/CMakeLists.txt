@@ -896,6 +896,41 @@ foreach(s IN LISTS sources)
   list(APPEND srcs_to_check ${CMAKE_CURRENT_LIST_DIR}/${s})
 endforeach()
 
+# CI spreads clang-tidy across parallel jobs: configure with e.g.
+#   -DSHERPA_ONNX_TIDY_SHARD=2/6
+# to check only the 2nd of every 6 files (round-robin, so all shards cost
+# about the same). Without this variable every file is checked, as before.
+if(SHERPA_ONNX_TIDY_SHARD)
+  string(REPLACE "/" ";" _shard "${SHERPA_ONNX_TIDY_SHARD}")
+  list(LENGTH _shard _shard_len)
+  if(_shard_len LESS 2)
+    message(FATAL_ERROR
+      "SHERPA_ONNX_TIDY_SHARD must look like i/n with 1 <= i <= n, e.g. 2/6")
+  endif()
+  list(GET _shard 0 _shard_index)
+  list(GET _shard 1 _shard_count)
+  if(NOT _shard_index MATCHES "^[0-9]+$" OR
+     NOT _shard_count MATCHES "^[0-9]+$" OR _shard_count LESS 1 OR
+     _shard_index LESS 1 OR _shard_index GREATER _shard_count)
+    message(FATAL_ERROR
+      "SHERPA_ONNX_TIDY_SHARD must look like i/n with 1 <= i <= n, e.g. 2/6")
+  endif()
+  math(EXPR _shard_want "${_shard_index} - 1")
+  set(_sharded_srcs)
+  set(_i 0)
+  foreach(s IN LISTS srcs_to_check)
+    math(EXPR _rem "${_i} % ${_shard_count}")
+    if(_rem EQUAL ${_shard_want})
+      list(APPEND _sharded_srcs ${s})
+    endif()
+    math(EXPR _i "${_i} + 1")
+  endforeach()
+  set(srcs_to_check ${_sharded_srcs})
+  list(LENGTH srcs_to_check _shard_size)
+  message(STATUS
+    "clang-tidy shard ${SHERPA_ONNX_TIDY_SHARD}: checking ${_shard_size} files")
+endif()
+
 # For clang-tidy
 add_custom_target(
   clang-tidy-check

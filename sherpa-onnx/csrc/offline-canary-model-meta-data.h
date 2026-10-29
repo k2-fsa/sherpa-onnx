@@ -11,7 +11,7 @@
 namespace sherpa_onnx {
 
 struct OfflineCanaryModelMetaData {
-  int32_t vocab_size;
+  int32_t vocab_size = 0;
   int32_t subsampling_factor = 8;
   int32_t feat_dim = 120;
   int32_t num_decoder_layers = 6;

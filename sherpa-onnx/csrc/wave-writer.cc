@@ -77,7 +77,7 @@ bool WriteWave(const std::string &filename, int32_t sampling_rate,
 
 void WriteWave(char *buffer, int32_t sampling_rate, const float *samples_ch0,
                const float *samples_ch1, int32_t n) {
-  WaveHeader header{};
+  WaveHeader header = {};
   header.chunk_id = 0x46464952;      // FFIR
   header.format = 0x45564157;        // EVAW
   header.subchunk1_id = 0x20746d66;  // "fmt "
@@ -154,7 +154,7 @@ bool WriteWaveMultiChannel(const std::string &filename, int32_t sampling_rate,
 void WriteWaveMultiChannel(char *buffer, int32_t sampling_rate,
                            const float *const *samples, int32_t num_channels,
                            int32_t n) {
-  WaveHeader header{};
+  WaveHeader header = {};
   header.chunk_id = 0x46464952;      // FFIR
   header.format = 0x45564157;        // EVAW
   header.subchunk1_id = 0x20746d66;  // "fmt "

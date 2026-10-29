@@ -155,7 +155,7 @@ int32_t MaxElementIndex(const float *v, int32_t n) {
   // Map raw pointer to an Eigen vector (no copy)
   Eigen::Map<const Eigen::VectorXf> vec(v, n);
 
-  Eigen::Index maxIndex;
+  Eigen::Index maxIndex = 0;
   vec.maxCoeff(&maxIndex);
 
   return static_cast<int32_t>(maxIndex);

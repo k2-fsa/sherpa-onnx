@@ -15,7 +15,7 @@ namespace sherpa_onnx {
 
 struct DenoisedAudio {
   std::vector<float> samples;
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 struct OfflineSpeechDenoiserConfig {

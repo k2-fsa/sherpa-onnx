@@ -260,7 +260,9 @@ class Voidifier {
 #if !defined(SHERPA_ONNX_ENABLE_CHECK)
 template <typename T>
 const Voidifier &operator<<(const Voidifier &v, T &&) {
-  return v;
+  // glog-style Voidifier; the reference is only used within the same full
+  // expression, never stored.
+  return v;  // NOLINT(bugprone-return-const-ref-from-parameter)
 }
 #endif
 

@@ -41,7 +41,11 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
     std::istringstream iss(line);
     iss >> sym;
     if (iss.eof()) {
-      id = atoi(sym.c_str());
+      id = ToIntOrDefault(sym, -1);
+      if (id == -1) {
+        SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+        continue;
+      }
       sym = " ";
     } else {
       iss >> id;

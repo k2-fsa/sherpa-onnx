@@ -36,7 +36,7 @@ std::string QuoteJsonString(const std::string &text);
 template <class Int>
 bool ConvertStringToInteger(const std::string &str, Int *out) {
   // copied from kaldi/src/util/text-util.h
-  static_assert(std::is_integral<Int>::value, "");
+  static_assert(std::is_integral_v<Int>);
   const char *this_str = str.c_str();
   char *end = nullptr;
   errno = 0;
@@ -92,7 +92,7 @@ bool SplitStringToIntegers(const std::string &full, const char *delim,
                                                      // should probably be true
                                                      // if "delim" is spaces].
                            std::vector<I> *out) {
-  static_assert(std::is_integral<I>::value, "");
+  static_assert(std::is_integral_v<I>);
   if (*(full.c_str()) == '\0') {
     out->clear();
     return true;
@@ -102,7 +102,7 @@ bool SplitStringToIntegers(const std::string &full, const char *delim,
   out->resize(split.size());
   for (size_t i = 0; i < split.size(); i++) {
     const char *this_str = split[i].c_str();
-    char *end = NULL;
+    char *end = nullptr;
     int64_t j = 0;
     j = SHERPA_ONNX_STRTOLL(this_str, &end);
     if (end == this_str || *end != '\0') {
@@ -189,7 +189,6 @@ std::vector<LexiconPiece> SplitLexiconPieces(const std::u32string &core);
 std::vector<bool> AssignLexiconPieceBoundaries(
     const std::vector<bool> &needs_boundary, const std::vector<bool> &found);
 void ToLowerCase(std::string *in_out);
-
 
 std::string RemoveInvalidUtf8Sequences(const std::string &text,
                                        bool show_debug_msg = false);

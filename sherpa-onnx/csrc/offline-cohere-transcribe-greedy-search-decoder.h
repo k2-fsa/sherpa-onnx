@@ -15,7 +15,7 @@ namespace sherpa_onnx {
 class OfflineCohereTranscribeGreedySearchDecoder
     : public OfflineCohereTranscribeDecoder {
  public:
-  OfflineCohereTranscribeGreedySearchDecoder(
+  explicit OfflineCohereTranscribeGreedySearchDecoder(
       OfflineCohereTranscribeModel *model)
       : model_(model) {}
 

@@ -255,8 +255,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
   }
 
   if (config.find("EnableMemPattern") != config.end()) {
-    int32_t enable_mem_pattern =
-        ToIntOrDefault(config["EnableMemPattern"], 1);
+    int32_t enable_mem_pattern = ToIntOrDefault(config["EnableMemPattern"], 1);
     if (enable_mem_pattern == 0) {
       sess_opts.DisableMemPattern();
     }
@@ -423,9 +422,8 @@ Ort::SessionOptions GetSessionOptionsImpl(
         const std::unordered_map<std::string, std::string> kNoConfig;
         AppendCudaProviderV2(
             &sess_opts,
-            BuildCudaProviderOptions(
-                p == Provider::kCUDA ? std::move(config) : kNoConfig, device_id,
-                algo_search),
+            BuildCudaProviderOptions(p == Provider::kCUDA ? config : kNoConfig,
+                                     device_id, algo_search),
             os.str());
 #else
         OrtCUDAProviderOptions options;

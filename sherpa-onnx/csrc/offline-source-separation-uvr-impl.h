@@ -278,8 +278,8 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
 
     std::vector<float> ans;
 
-    for (int32_t i = 0; i != static_cast<int32_t>(stft_result.size()); ++i) {
-      auto samples = istft.Compute(stft_result[i]);
+    for (const auto &i : stft_result) {
+      auto samples = istft.Compute(i);
       int32_t num_samples = static_cast<int32_t>(samples.size());
 
       ans.insert(ans.end(), samples.begin() + trim,

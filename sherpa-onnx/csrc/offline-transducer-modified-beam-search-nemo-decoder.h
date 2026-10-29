@@ -27,10 +27,8 @@ class OfflineTransducerModifiedBeamSearchNeMoDecoder
         hotwords_score_(hotwords_score) {}
 
   std::vector<OfflineTransducerDecoderResult> Decode(
-      Ort::Value encoder_out,
-      Ort::Value encoder_out_length,
-      OfflineStream **ss = nullptr,
-      int32_t n = 0) override;
+      Ort::Value encoder_out, Ort::Value encoder_out_length,
+      OfflineStream **ss = nullptr, int32_t n = 0) override;
 
  private:
   OfflineTransducerNeMoModel *model_;  // Not owned

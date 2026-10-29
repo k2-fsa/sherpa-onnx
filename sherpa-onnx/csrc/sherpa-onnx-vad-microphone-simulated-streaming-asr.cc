@@ -36,7 +36,7 @@ static int32_t RecordCallback(const void *input_buffer,
                               const PaStreamCallbackTimeInfo * /*time_info*/,
                               PaStreamCallbackFlags /*status_flags*/,
                               void * /*user_data*/) {
-  std::lock_guard<std::mutex> lock(mutex);
+  std::scoped_lock lock(mutex);
   samples_queue.emplace(
       reinterpret_cast<const float *>(input_buffer),
       reinterpret_cast<const float *>(input_buffer) + frames_per_buffer);

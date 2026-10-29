@@ -155,7 +155,7 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
       }
       std::string &w = tokens[i];
       if (i > 0 && !(words_punct.back()[0] & 0x80) && !(w[0] & 0x80)) {
-        words_punct.push_back(" ");
+        words_punct.emplace_back(" ");
       }
       words_punct.push_back(std::move(w));
 

@@ -75,6 +75,8 @@ std::string QuoteJsonString(const std::string &text) {
   return ans;
 }
 
+namespace {
+
 // copied from kaldi/src/util/text-util.cc
 template <class T>
 class NumberIstream {
@@ -146,6 +148,8 @@ class NumberIstream {
     return *this;
   }
 };
+
+}  // namespace
 
 /// ConvertStringToReal converts a string into either float or double
 /// and returns false if there was any kind of problem (i.e. the string
@@ -1312,11 +1316,20 @@ bool IsPunct(const std::string &s) {
 int32_t ToIntOrDefault(const std::string &s, int32_t default_value) {
   if (s.empty()) return default_value;
 
-  std::string str = s;
+  std::string str = Trim(s);
 
   // Remove surrounding quotes if present
   if (str.size() >= 2 && str.front() == '"' && str.back() == '"') {
-    str = str.substr(1, str.size() - 2);
+    str = Trim(str.substr(1, str.size() - 2));
+  }
+
+  // std::from_chars rejects a leading '+', while atoi accepted it. A leading
+  // '-' needs no special handling. Reject a doubled sign like "+-8".
+  if (!str.empty() && str[0] == '+') {
+    str.erase(0, 1);
+    if (!str.empty() && (str[0] == '+' || str[0] == '-')) {
+      return default_value;
+    }
   }
 
   int32_t value = default_value;
@@ -1523,7 +1536,7 @@ std::vector<std::string> MergeShortSentences(
     }
 
     if (!buffer.empty() && NeedSpaceBetween(buffer, piece)) {
-      buffer += " ";
+      buffer += ' ';
     }
     buffer += piece;
 

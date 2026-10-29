@@ -11,13 +11,13 @@
 namespace sherpa_onnx {
 
 struct OfflineFireRedAsrModelMetaData {
-  int32_t sos_id;
-  int32_t eos_id;
-  int32_t max_len;
+  int32_t sos_id = 0;
+  int32_t eos_id = 0;
+  int32_t max_len = 0;
 
-  int32_t num_decoder_layers;
-  int32_t num_head;
-  int32_t head_dim;
+  int32_t num_decoder_layers = 0;
+  int32_t num_head = 0;
+  int32_t head_dim = 0;
 
   std::vector<float> mean;
   std::vector<float> inv_stddev;
