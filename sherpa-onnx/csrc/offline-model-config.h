@@ -53,6 +53,21 @@ struct OfflineModelConfig {
   bool debug = false;
   std::string provider = "cpu";
 
+  // The ONNX Runtime CPU memory arena keeps each inference's working set
+  // resident after decode() returns, so decoding several long recordings in
+  // one process retains several GB. Set to false to return that memory to the
+  // OS after each run at the cost of some speed.
+  //
+  // The same keys can also be passed via the provider config file (see
+  // session.cc); the file can only disable further, it cannot re-enable
+  // what is disabled here.
+  bool enable_cpu_mem_arena = true;
+
+  // The ONNX Runtime memory pattern plans memory reuse across runs of the
+  // same shape; a second decode with a different shape roughly doubles the
+  // retained working set. Set to false to disable pattern planning.
+  bool enable_mem_pattern = true;
+
   // With the help of this field, we only need to load the model once
   // instead of twice; and therefore it reduces initialization time.
   //
@@ -80,7 +95,8 @@ struct OfflineModelConfig {
                      const OfflineMoonshineModelConfig &moonshine,
                      const OfflineDolphinModelConfig &dolphin,
                      const OfflineCanaryModelConfig &canary,
-                     const OfflineCohereTranscribeModelConfig &cohere_transcribe,
+                     const OfflineCohereTranscribeModelConfig
+                         &cohere_transcribe,
                      const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
                      const OfflineFunASRNanoModelConfig &funasr_nano,
                      const OfflineMedAsrCtcModelConfig &medasr,
@@ -90,7 +106,9 @@ struct OfflineModelConfig {
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
                      const std::string &modeling_unit,
-                     const std::string &bpe_vocab)
+                     const std::string &bpe_vocab,
+                     bool enable_cpu_mem_arena = true,
+                     bool enable_mem_pattern = true)
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
@@ -116,7 +134,9 @@ struct OfflineModelConfig {
         provider(provider),
         model_type(model_type),
         modeling_unit(modeling_unit),
-        bpe_vocab(bpe_vocab) {}
+        bpe_vocab(bpe_vocab),
+        enable_cpu_mem_arena(enable_cpu_mem_arena),
+        enable_mem_pattern(enable_mem_pattern) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

@@ -510,6 +510,10 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   if (recognizer_config.model_config.provider.empty()) {
     recognizer_config.model_config.provider = "cpu";
   }
+  recognizer_config.model_config.enable_cpu_mem_arena =
+      !config->model_config.disable_cpu_mem_arena;
+  recognizer_config.model_config.enable_mem_pattern =
+      !config->model_config.disable_mem_pattern;
 
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");

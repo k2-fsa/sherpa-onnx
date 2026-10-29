@@ -9,6 +9,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "sherpa-onnx/csrc/offline-model-config.h"
+
 #if defined(_WIN32)
 #include <windows.h>
 #else
@@ -183,6 +185,62 @@ TEST(Provider, OpenVINOSessionOptionsDoNotThrow) {
   EXPECT_NO_THROW({
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "openvino-session-test");
     auto sess_opts = GetSessionOptionsImpl(1, "openvino");
+    (void)sess_opts;
+  });
+}
+
+TEST(OfflineModelConfigSessionOptions, DefaultsKeepArenaAndPatternEnabled) {
+  OfflineModelConfig config;
+  EXPECT_TRUE(config.enable_cpu_mem_arena);
+  EXPECT_TRUE(config.enable_mem_pattern);
+  EXPECT_NO_THROW({
+    auto sess_opts = GetSessionOptions(config);
+    (void)sess_opts;
+  });
+}
+
+TEST(OfflineModelConfigSessionOptions, DisablingArenaAndPatternIsAccepted) {
+  OfflineModelConfig config;
+  config.enable_cpu_mem_arena = false;
+  config.enable_mem_pattern = false;
+  EXPECT_NO_THROW({
+    auto sess_opts = GetSessionOptions(config);
+    (void)sess_opts;
+  });
+}
+
+TEST(OfflineModelConfigSessionOptions, ToStringListsSessionOptions) {
+  OfflineModelConfig config;
+  EXPECT_NE(config.ToString().find("enable_cpu_mem_arena=True"),
+            std::string::npos);
+  EXPECT_NE(config.ToString().find("enable_mem_pattern=True"),
+            std::string::npos);
+
+  config.enable_cpu_mem_arena = false;
+  config.enable_mem_pattern = false;
+  EXPECT_NE(config.ToString().find("enable_cpu_mem_arena=False"),
+            std::string::npos);
+  EXPECT_NE(config.ToString().find("enable_mem_pattern=False"),
+            std::string::npos);
+}
+
+TEST(OfflineModelConfigSessionOptions, ConfigFileCanOnlyDisableFurther) {
+  // ONNX Runtime exposes only the Disable* calls, so a config file key cannot
+  // re-enable an option disabled via the struct fields. Both paths disabling
+  // together, and neither disabling, must be accepted.
+  TempConfigFile disable_arena("EnableCpuMemArena=0\n");
+  ASSERT_TRUE(disable_arena.Ok());
+
+  EXPECT_NO_THROW({
+    // Struct keeps the arena on, the file disables it.
+    OfflineModelConfig config;
+    config.provider = "cpu:" + disable_arena.Path();
+    auto sess_opts = GetSessionOptions(config);
+    (void)sess_opts;
+
+    // Both disable it.
+    config.enable_cpu_mem_arena = false;
+    sess_opts = GetSessionOptions(config);
     (void)sess_opts;
   });
 }

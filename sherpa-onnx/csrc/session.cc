@@ -14,6 +14,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/provider.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #if defined(__APPLE__) && (ORT_API_VERSION >= 15) && \
@@ -208,7 +209,9 @@ static void AppendCudaProviderV2(
 
 Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
-    const ProviderConfig *provider_config /*= nullptr*/) {
+    const ProviderConfig *provider_config /*= nullptr*/,
+    bool enable_cpu_mem_arena /*= true*/,
+    bool enable_mem_pattern /*= true*/) {
   std::unordered_map<std::string, std::string> config;
   std::string new_provider_str;
 
@@ -220,6 +223,16 @@ Ort::SessionOptions GetSessionOptionsImpl(
   sess_opts.SetIntraOpNumThreads(num_threads);
 
   sess_opts.SetInterOpNumThreads(num_threads);
+
+  // ONNX Runtime exposes only Disable*, so a disabled arena or pattern cannot
+  // be re-enabled. Apply the caller's flags first; the provider config file
+  // keys below can only disable further, never re-enable.
+  if (!enable_cpu_mem_arena) {
+    sess_opts.DisableCpuMemArena();
+  }
+  if (!enable_mem_pattern) {
+    sess_opts.DisableMemPattern();
+  }
 
   std::vector<std::string> available_providers = Ort::GetAvailableProviders();
   std::ostringstream os;
@@ -635,6 +648,11 @@ Ort::SessionOptions GetSessionOptions(const OfflineLMConfig &config) {
   return GetSessionOptionsImpl(config.lm_num_threads, config.lm_provider);
 }
 
+Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config) {
+  return GetSessionOptionsImpl(config.num_threads, config.provider, nullptr,
+                               config.enable_cpu_mem_arena,
+                               config.enable_mem_pattern);
+}
 Ort::SessionOptions GetSessionOptions(const OnlineLMConfig &config) {
   return GetSessionOptionsImpl(config.lm_num_threads, config.lm_provider);
 }

@@ -45,6 +45,20 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   po->Register("provider", &provider,
                "Specify a provider to use: cpu, cuda, coreml");
 
+  po->Register(
+      "enable-cpu-mem-arena", &enable_cpu_mem_arena,
+      "true to keep the ONNX Runtime CPU memory arena enabled. The arena "
+      "retains each run's working set, so decoding several long recordings "
+      "in one process holds several GB after decode returns. Set to false "
+      "to return that memory to the OS after each run at some cost in "
+      "speed.");
+
+  po->Register("enable-mem-pattern", &enable_mem_pattern,
+               "true to let ONNX Runtime plan memory reuse across runs. A "
+               "second run with a different input shape roughly doubles the "
+               "retained working set. Set to false to disable pattern "
+               "planning.");
+
   po->Register("model-type", &model_type,
                "Specify it to reduce model initialization time. "
                "Valid values are: transducer, paraformer, nemo_ctc, whisper, "
@@ -210,12 +224,14 @@ bool OfflineModelConfig::Validate() const {
         "--provider=qnn requires QNN offline transducer artifacts (*.so or "
         "--transducer.qnn-context-binary). Given encoder: '%s', decoder: '%s', "
         "joiner: '%s'",
-        transducer.encoder_filename.c_str(), transducer.decoder_filename.c_str(),
+        transducer.encoder_filename.c_str(),
+        transducer.decoder_filename.c_str(),
         transducer.joiner_filename.c_str());
     return false;
   }
 
-  if (!transducer.encoder_filename.empty() || !transducer.decoder_filename.empty() ||
+  if (!transducer.encoder_filename.empty() ||
+      !transducer.decoder_filename.empty() ||
       !transducer.joiner_filename.empty() ||
       !transducer.qnn_config.context_binary.empty()) {
     return transducer.Validate();
@@ -251,6 +267,10 @@ std::string OfflineModelConfig::ToString() const {
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\", ";
+  os << "enable_cpu_mem_arena=" << (enable_cpu_mem_arena ? "True" : "False")
+     << ", ";
+  os << "enable_mem_pattern=" << (enable_mem_pattern ? "True" : "False")
+     << ", ";
   os << "model_type=\"" << model_type << "\", ";
   os << "modeling_unit=\"" << modeling_unit << "\", ";
   os << "bpe_vocab=\"" << bpe_vocab << "\")";

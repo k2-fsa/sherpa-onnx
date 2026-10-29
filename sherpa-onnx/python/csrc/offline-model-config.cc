@@ -91,6 +91,16 @@ Args:
     The modeling unit used by the model (e.g., ``cjkchar``, ``bpe``).
   bpe_vocab:
     Path to the BPE vocabulary file.
+  enable_cpu_mem_arena:
+    If True (default), keep the ONNX Runtime CPU memory arena enabled.
+    The arena retains each run's working set, so decoding several long
+    recordings in one process holds several GB after decode returns.
+    Set to False to return that memory to the OS after each run at
+    some cost in speed.
+  enable_mem_pattern:
+    If True (default), let ONNX Runtime plan memory reuse across runs.
+    A second run with a different input shape roughly doubles the
+    retained working set. Set to False to disable pattern planning.
 )doc";
 
 void PybindOfflineModelConfig(py::module *m) {
@@ -132,10 +142,10 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineFunASRNanoModelConfig &,
                     const OfflineMedAsrCtcModelConfig &,
                     const OfflineFireRedAsrCtcModelConfig &,
-                    const OfflineQwen3ASRModelConfig &, 
-                    const std::string &,const std::string &, int32_t, bool,
-                    const std::string &,const std::string &, 
-                    const std::string &,const std::string &>(),
+                    const OfflineQwen3ASRModelConfig &,
+                    const std::string &, const std::string &, int32_t, bool,
+                    const std::string &, const std::string &,
+                    const std::string &, const std::string &, bool, bool>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
            py::arg("nemo_ctc") = OfflineNemoEncDecCtcModelConfig(),
@@ -159,6 +169,8 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "",
            py::arg("modeling_unit") = "cjkchar", py::arg("bpe_vocab") = "",
+           py::arg("enable_cpu_mem_arena") = true,
+           py::arg("enable_mem_pattern") = true,
            kOfflineModelConfigInitDoc)
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
@@ -186,6 +198,8 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("model_type", &PyClass::model_type)
       .def_readwrite("modeling_unit", &PyClass::modeling_unit)
       .def_readwrite("bpe_vocab", &PyClass::bpe_vocab)
+      .def_readwrite("enable_cpu_mem_arena", &PyClass::enable_cpu_mem_arena)
+      .def_readwrite("enable_mem_pattern", &PyClass::enable_mem_pattern)
       .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }

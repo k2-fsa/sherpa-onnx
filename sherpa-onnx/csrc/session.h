@@ -25,12 +25,22 @@ std::unordered_map<std::string, std::string> BuildCudaProviderOptions(
     std::unordered_map<std::string, std::string> config, int32_t device_id,
     OrtCudnnConvAlgoSearch cudnn_conv_algo_search);
 
+// |enable_cpu_mem_arena| and |enable_mem_pattern| mirror the corresponding
+// ONNX Runtime session options. Both default to true, matching ONNX Runtime.
+// They are applied before any provider config file keys; since ONNX Runtime
+// exposes only the Disable* calls, a config file key can only disable
+// further, it cannot re-enable what is disabled here.
 Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
-    const ProviderConfig *provider_config = nullptr);
+    const ProviderConfig *provider_config = nullptr,
+    bool enable_cpu_mem_arena = true, bool enable_mem_pattern = true);
+
+struct OfflineModelConfig;
 
 Ort::SessionOptions GetSessionOptions(const OfflineLMConfig &config);
 Ort::SessionOptions GetSessionOptions(const OnlineLMConfig &config);
+
+Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config);
 
 Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config);
 
