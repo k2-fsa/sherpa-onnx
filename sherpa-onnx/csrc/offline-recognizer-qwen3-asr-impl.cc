@@ -208,6 +208,224 @@ Ort::Value TrimAudioFeatures(Ort::Value audio_features, OrtAllocator *allocator,
 
 namespace {
 
+// Matches is_cjk_char() in qwen3_forced_aligner.py: CJK Unified Ideographs
+// and extensions only. Deliberately narrower than IsCJK() in text-utils.h,
+// which also covers Hangul syllables and kana -- the reference keeps those
+// inside words.
+bool IsAlignerCJKChar(char32_t cp) {
+  return (cp >= 0x4E00 && cp <= 0x9FFF) || (cp >= 0x3400 && cp <= 0x4DBF) ||
+         (cp >= 0x20000 && cp <= 0x2A6DF) || (cp >= 0x2A700 && cp <= 0x2B73F) ||
+         (cp >= 0x2B740 && cp <= 0x2B81F) || (cp >= 0x2B820 && cp <= 0x2CEAF) ||
+         (cp >= 0xF900 && cp <= 0xFAFF);
+}
+
+// Whether |cp| is whitespace for the purpose of splitting aligner words.
+// Covers ASCII whitespace plus the Unicode space separators that Python's
+// str.split() treats as delimiters.
+bool IsAlignerSpaceChar(char32_t cp) {
+  return cp == U' ' || (cp >= 0x09 && cp <= 0x0D) || cp == 0x85 || cp == 0xA0 ||
+         cp == 0x1680 || (cp >= 0x2000 && cp <= 0x200A) || cp == 0x2028 ||
+         cp == 0x2029 || cp == 0x202F || cp == 0x205F || cp == 0x3000;
+}
+
+// Whether |cp| is kept in a forced-aligner word, mirroring is_kept_char()
+// in qwen3_forced_aligner.py: "'" plus Unicode letter (L*) and number (N*)
+// categories. Since C++ has no category table, this keeps everything except
+// known punctuation, symbol, separator, control and format ranges -- which
+// covers all scripts' letters and digits.
+bool IsAlignerKeptChar(char32_t cp) {
+  if (cp == U'\'') {
+    return true;
+  }
+
+  if (cp < 0x80) {
+    return std::isalnum(static_cast<unsigned char>(cp)) != 0;
+  }
+
+  if (IsAlignerSpaceChar(cp)) {
+    return false;
+  }
+
+  // Other format/control characters
+  if (cp == 0xAD || cp == 0x600 || cp == 0x601 || cp == 0x602 || cp == 0x603 ||
+      cp == 0x604 || cp == 0x605 || cp == 0x61C || cp == 0x6DD || cp == 0x70F ||
+      cp == 0x8E2 || cp == 0x180E || cp == 0x200B || cp == 0x200E ||
+      cp == 0x200F || cp == 0xFEFF) {
+    return false;
+  }
+
+  // Combining marks (M*): the reference drops them
+  if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1AB0 && cp <= 0x1AFF) ||
+      (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20F0) ||
+      (cp >= 0xFE20 && cp <= 0xFE2F)) {
+    return false;
+  }
+
+  // Punctuation blocks
+  if ((cp >= 0x2000 && cp <= 0x206F) || (cp >= 0x2E00 && cp <= 0x2E7F) ||
+      (cp >= 0x3000 && cp <= 0x303F) || (cp >= 0xFE10 && cp <= 0xFE1F) ||
+      (cp >= 0xFE30 && cp <= 0xFE4F) || (cp >= 0xFE50 && cp <= 0xFE6F) ||
+      (cp >= 0xFF01 && cp <= 0xFF0F) || (cp >= 0xFF1A && cp <= 0xFF20) ||
+      (cp >= 0xFF3B && cp <= 0xFF40) || (cp >= 0xFF5B && cp <= 0xFF65)) {
+    return false;
+  }
+
+  // Symbol blocks (currency, arrows, math, technical, geometric, emoji, ...)
+  if ((cp >= 0x20A0 && cp <= 0x20BF) || (cp >= 0x2100 && cp <= 0x214F) ||
+      (cp >= 0x2190 && cp <= 0x2BFF) || (cp >= 0x1F000 && cp <= 0x1FAFF) ||
+      (cp >= 0x1FB00 && cp <= 0x1FBFF) || cp == 0xA9 || cp == 0xAE ||
+      cp == 0xB0 || cp == 0xB1 || cp == 0xB4 || cp == 0xB5 || cp == 0xB6 ||
+      cp == 0xB7 || cp == 0xD7 || cp == 0xF7) {
+    return false;
+  }
+
+  return true;
+}
+
+}  // namespace
+
+std::vector<std::string> SplitQwen3AlignerWords(const std::string &text) {
+  std::u32string u32 = Utf8ToUtf32(text);
+
+  std::vector<std::string> words;
+  std::u32string buf;
+
+  // split_segment_with_chinese(): CJK ideographs become their own word;
+  // consecutive non-CJK chars form one word.
+  auto flush_buf = [&buf, &words]() {
+    if (!buf.empty()) {
+      words.push_back(Utf32ToUtf8(buf));
+      buf.clear();
+    }
+  };
+
+  size_t i = 0;
+  while (i < u32.size()) {
+    // tokenize_space_lang(): split on whitespace, clean each segment, then
+    // split CJK characters out of it.
+    while (i < u32.size() && IsAlignerSpaceChar(u32[i])) {
+      ++i;
+    }
+
+    std::u32string seg;
+    while (i < u32.size() && !IsAlignerSpaceChar(u32[i])) {
+      if (IsAlignerKeptChar(u32[i])) {
+        seg.push_back(u32[i]);
+      }
+      ++i;
+    }
+
+    for (char32_t cp : seg) {
+      if (IsAlignerCJKChar(cp)) {
+        flush_buf();
+        words.push_back(Utf32ToUtf8(std::u32string(1, cp)));
+      } else {
+        buf.push_back(cp);
+      }
+    }
+    flush_buf();
+  }
+
+  return words;
+}
+
+void FixQwen3AlignerTimestamps(std::vector<int64_t> *data) {
+  const int32_t n = static_cast<int32_t>(data->size());
+  if (n <= 1) {
+    return;
+  }
+
+  // Longest non-decreasing subsequence (O(n^2); n = 2 * num_words is small).
+  std::vector<int32_t> dp(n, 1);
+  std::vector<int32_t> parent(n, -1);
+  for (int32_t i = 1; i < n; ++i) {
+    for (int32_t j = 0; j < i; ++j) {
+      if ((*data)[j] <= (*data)[i] && dp[j] + 1 > dp[i]) {
+        dp[i] = dp[j] + 1;
+        parent[i] = j;
+      }
+    }
+  }
+
+  int32_t max_idx = 0;
+  for (int32_t i = 1; i < n; ++i) {
+    if (dp[i] > dp[max_idx]) {
+      max_idx = i;
+    }
+  }
+
+  std::vector<bool> is_normal(n, false);
+  for (int32_t idx = max_idx; idx != -1; idx = parent[idx]) {
+    is_normal[idx] = true;
+  }
+
+  std::vector<int64_t> &result = *data;
+  int32_t i = 0;
+  while (i < n) {
+    if (is_normal[i]) {
+      ++i;
+      continue;
+    }
+
+    int32_t j = i;
+    while (j < n && !is_normal[j]) {
+      ++j;
+    }
+    const int32_t anomaly_count = j - i;
+
+    bool has_left = false;
+    int64_t left_val = 0;
+    for (int32_t k = i - 1; k >= 0; --k) {
+      if (is_normal[k]) {
+        has_left = true;
+        left_val = result[k];
+        break;
+      }
+    }
+    bool has_right = false;
+    int64_t right_val = 0;
+    for (int32_t k = j; k < n; ++k) {
+      if (is_normal[k]) {
+        has_right = true;
+        right_val = result[k];
+        break;
+      }
+    }
+
+    if (anomaly_count <= 2) {
+      for (int32_t k = i; k < j; ++k) {
+        if (!has_left) {
+          result[k] = right_val;
+        } else if (!has_right) {
+          result[k] = left_val;
+        } else {
+          result[k] = (k - (i - 1)) <= (j - k) ? left_val : right_val;
+        }
+      }
+    } else {
+      if (has_left && has_right) {
+        const double step =
+            static_cast<double>(right_val - left_val) / (anomaly_count + 1);
+        for (int32_t k = i; k < j; ++k) {
+          result[k] = static_cast<int64_t>(left_val + step * (k - i + 1));
+        }
+      } else if (has_left) {
+        for (int32_t k = i; k < j; ++k) {
+          result[k] = left_val;
+        }
+      } else if (has_right) {
+        for (int32_t k = i; k < j; ++k) {
+          result[k] = right_val;
+        }
+      }
+    }
+
+    i = j;
+  }
+}
+
+namespace {
+
 Ort::Value TruncateAudioFeatures(Ort::Value audio_features, int32_t keep_frames,
                                  OrtAllocator *allocator) {
   if (keep_frames <= 0) {
@@ -410,6 +628,12 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
       tokenizer_(std::make_unique<QwenAsrTokenizer>(
           config.model_config.qwen3_asr.tokenizer)),
       rng_(config.model_config.qwen3_asr.seed) {
+  if (!config_.model_config.qwen3_asr.forced_aligner_decoder.empty()) {
+    aligner_model_ =
+        std::make_unique<OfflineQwen3ForcedAlignerModel>(config.model_config);
+    aligner_tokenizer_ = std::make_unique<QwenAsrTokenizer>(
+        config.model_config.qwen3_asr.forced_aligner_tokenizer);
+  }
   InitPromptTemplateIds();
 }
 
@@ -422,6 +646,12 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
       tokenizer_(std::make_unique<QwenAsrTokenizer>(
           mgr, config.model_config.qwen3_asr.tokenizer)),
       rng_(config.model_config.qwen3_asr.seed) {
+  if (!config_.model_config.qwen3_asr.forced_aligner_decoder.empty()) {
+    aligner_model_ = std::make_unique<OfflineQwen3ForcedAlignerModel>(
+        mgr, config.model_config);
+    aligner_tokenizer_ = std::make_unique<QwenAsrTokenizer>(
+        mgr, config.model_config.qwen3_asr.forced_aligner_tokenizer);
+  }
   InitPromptTemplateIds();
 }
 
@@ -453,6 +683,23 @@ void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
   if (asr_text_token_id_ < 0) {
     SHERPA_ONNX_LOGE("Failed to locate <asr_text> token id for qwen3-asr");
     SHERPA_ONNX_EXIT(-1);
+  }
+
+  if (aligner_model_) {
+    aligner_audio_start_token_id_ =
+        aligner_tokenizer_->GetTokenId("<|audio_start|>");
+    aligner_audio_end_token_id_ =
+        aligner_tokenizer_->GetTokenId("<|audio_end|>");
+    aligner_audio_pad_token_id_ =
+        aligner_tokenizer_->GetTokenId("<|audio_pad|>");
+    aligner_timestamp_token_id_ = aligner_tokenizer_->GetTokenId("<timestamp>");
+    if (aligner_audio_start_token_id_ < 0 || aligner_audio_end_token_id_ < 0 ||
+        aligner_audio_pad_token_id_ < 0 || aligner_timestamp_token_id_ < 0) {
+      SHERPA_ONNX_LOGE(
+          "Failed to locate <|audio_start|>/<|audio_end|>/<|audio_pad|>/"
+          "<timestamp> token ids in the qwen3 forced aligner tokenizer");
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 }
 
@@ -1117,9 +1364,15 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       std::string prefix_text = tokenizer_->Decode(prefix_ids);
       if (prefix_text.rfind("language ", 0) == 0 && prefix_text.size() >= 10 &&
           prefix_text.compare(prefix_text.size() - 10, 10, "<asr_text>") == 0) {
+        // "language Chinese<asr_text>" -> "Chinese"
+        result.lang = prefix_text.substr(9, prefix_text.size() - 9 - 10);
         cleaned_ids.assign(std::next(asr_text_it), generated_ids.end());
       }
     }
+  }
+
+  if (result.lang.empty() && !language.empty()) {
+    result.lang = language;
   }
 
   result.text = tokenizer_->Decode(cleaned_ids);
@@ -1144,6 +1397,201 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   }
 
   return result;
+}
+
+bool OfflineRecognizerQwen3ASRImpl::RunForcedAlignment(
+    const std::vector<float> &mel_features, int32_t feat_frames,
+    OfflineRecognitionResult *r) const {
+  if (!aligner_model_ || r->text.empty()) {
+    return false;
+  }
+
+  std::vector<std::string> split_words = SplitQwen3AlignerWords(r->text);
+  if (split_words.empty()) {
+    return false;
+  }
+
+  // Pre-encode so words that produce no tokens don't create orphaned
+  // timestamp slots.
+  std::vector<std::string> words;
+  std::vector<std::vector<int64_t>> word_ids;
+  for (auto &word : split_words) {
+    std::vector<int64_t> wids = aligner_tokenizer_->Encode(word);
+    if (!wids.empty()) {
+      words.push_back(std::move(word));
+      word_ids.push_back(std::move(wids));
+    }
+  }
+  if (words.empty()) {
+    return false;
+  }
+
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+  std::array<int64_t, 3> conv_input_shape{1, static_cast<int64_t>(feat_frames),
+                                          static_cast<int64_t>(kQwen3MelDim)};
+  Ort::Value conv_input = Ort::Value::CreateTensor<float>(
+      memory_info, const_cast<float *>(mel_features.data()),
+      static_cast<size_t>(feat_frames) * kQwen3MelDim, conv_input_shape.data(),
+      conv_input_shape.size());
+
+  Ort::Value conv_output =
+      aligner_model_->ForwardConvFrontend(std::move(conv_input));
+
+  auto conv_shape = conv_output.GetTensorTypeAndShapeInfo().GetShape();
+  if (conv_shape.size() < 3 || conv_shape[1] <= 0) {
+    return false;
+  }
+
+  const int32_t conv_num_frames = static_cast<int32_t>(conv_shape[1]);
+  const int32_t expected_audio_token_len =
+      FeatToAudioTokensLen(feat_frames, kQwen3ChunkSize);
+  const int32_t valid_frames =
+      std::min(expected_audio_token_len, conv_num_frames);
+  if (valid_frames <= 0) {
+    return false;
+  }
+
+  // The aligner classifies each timestamp slot into 5000 buckets of 80 ms,
+  // i.e. it cannot represent audio beyond ~400 s in a single pass.
+  if (valid_frames > 5000) {
+    SHERPA_ONNX_LOGE(
+        "qwen3-forced-aligner: audio is too long for a single alignment pass "
+        "(%d audio tokens > 5000); skipping timestamps",
+        valid_frames);
+    return false;
+  }
+
+  auto mask_buf =
+      std::make_unique<bool[]>(static_cast<size_t>(conv_num_frames));
+  std::fill_n(mask_buf.get(), static_cast<size_t>(valid_frames), true);
+
+  std::array<int64_t, 2> tok_mask_shape{1, conv_num_frames};
+  Ort::Value feature_attention_mask = Ort::Value::CreateTensor<bool>(
+      memory_info, mask_buf.get(), static_cast<size_t>(conv_num_frames),
+      tok_mask_shape.data(), tok_mask_shape.size());
+
+  Ort::Value audio_features = aligner_model_->ForwardEncoder(
+      std::move(conv_output), std::move(feature_attention_mask));
+
+  audio_features = TruncateAudioFeatures(
+      std::move(audio_features), valid_frames, aligner_model_->Allocator());
+
+  // Sequence layout (mirrors encode_timestamp() in qwen3_forced_aligner.py):
+  //   <|audio_start|> <|audio_pad|>*A <|audio_end|>
+  //   word_0 <timestamp> <timestamp> word_1 <timestamp> <timestamp> ...
+  // where word_i's start/end times are predicted by the pair of <timestamp>
+  // slots following its tokens.
+  std::vector<int64_t> ids;
+  ids.reserve(static_cast<size_t>(valid_frames) + 2 * words.size() + 16);
+  ids.push_back(aligner_audio_start_token_id_);
+  ids.insert(ids.end(), static_cast<size_t>(valid_frames),
+             aligner_audio_pad_token_id_);
+  ids.push_back(aligner_audio_end_token_id_);
+
+  for (const auto &wids : word_ids) {
+    ids.insert(ids.end(), wids.begin(), wids.end());
+    ids.push_back(aligner_timestamp_token_id_);
+    ids.push_back(aligner_timestamp_token_id_);
+  }
+
+  std::array<int64_t, 2> ids_shape{1, static_cast<int64_t>(ids.size())};
+  Ort::Value input_ids = Ort::Value::CreateTensor<int64_t>(
+      memory_info, ids.data(), ids.size(), ids_shape.data(), ids_shape.size());
+
+  std::vector<int64_t> mask_vec(ids.size(), 1);
+  Ort::Value attention_mask = Ort::Value::CreateTensor<int64_t>(
+      memory_info, mask_vec.data(), mask_vec.size(), ids_shape.data(),
+      ids_shape.size());
+
+  Ort::Value logits = aligner_model_->ForwardDecoder(std::move(input_ids),
+                                                     std::move(audio_features),
+                                                     std::move(attention_mask));
+
+  auto logits_info = logits.GetTensorTypeAndShapeInfo();
+  auto logits_shape = logits_info.GetShape();
+  if (logits_shape.size() != 3 || logits_shape[2] <= 0) {
+    SHERPA_ONNX_LOGE("qwen3-forced-aligner: unexpected logits rank %d",
+                     static_cast<int32_t>(logits_shape.size()));
+    return false;
+  }
+
+  auto logits_elem_type =
+      static_cast<ONNXTensorElementDataType>(logits_info.GetElementType());
+  if (!IsFloatOrHalfBitsTensorType(logits_elem_type)) {
+    SHERPA_ONNX_LOGE("qwen3-forced-aligner: unsupported logits element type %d",
+                     static_cast<int32_t>(logits_elem_type));
+    return false;
+  }
+
+  const int32_t seq_len = static_cast<int32_t>(logits_shape[1]);
+  const int32_t num_classes = static_cast<int32_t>(logits_shape[2]);
+  const float *logits_f32 = nullptr;
+  const uint16_t *logits_f16_bits = nullptr;
+  if (logits_elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+    logits_f32 = logits.GetTensorData<float>();
+  } else {
+    logits_f16_bits = logits.GetTensorData<uint16_t>();
+  }
+
+  std::vector<int64_t> raw_indices;
+  std::vector<int32_t> ts_positions;
+  for (int32_t i = 0; i < seq_len && i < static_cast<int32_t>(ids.size());
+       ++i) {
+    if (ids[i] != aligner_timestamp_token_id_) {
+      continue;
+    }
+    const int64_t row_offset = static_cast<int64_t>(i) * num_classes;
+    int32_t argmax = 0;
+    float best = ReadFloatOrHalfBitsValue(logits_f32, logits_f16_bits,
+                                          logits_elem_type, row_offset);
+    for (int32_t c = 1; c < num_classes; ++c) {
+      float v = ReadFloatOrHalfBitsValue(logits_f32, logits_f16_bits,
+                                         logits_elem_type, row_offset + c);
+      if (v > best) {
+        best = v;
+        argmax = c;
+      }
+    }
+    ts_positions.push_back(argmax);
+  }
+
+  if (ts_positions.size() != words.size() * 2) {
+    SHERPA_ONNX_LOGE(
+        "qwen3-forced-aligner: expected %d timestamp slots, got %d; "
+        "skipping timestamps",
+        static_cast<int32_t>(words.size() * 2),
+        static_cast<int32_t>(ts_positions.size()));
+    return false;
+  }
+
+  raw_indices.assign(ts_positions.begin(), ts_positions.end());
+  FixQwen3AlignerTimestamps(&raw_indices);
+
+  // Each index unit is 80 ms (timestamp_segment_time in the model config).
+  constexpr float kSecondsPerIndex = 0.08f;
+
+  std::vector<std::string> out_tokens;
+  std::vector<float> out_timestamps;
+  std::vector<float> out_durations;
+  out_tokens.reserve(words.size());
+  out_timestamps.reserve(words.size());
+  out_durations.reserve(words.size());
+
+  for (size_t i = 0; i < words.size(); ++i) {
+    const float start = raw_indices[2 * i] * kSecondsPerIndex;
+    const float end = raw_indices[2 * i + 1] * kSecondsPerIndex;
+    out_tokens.push_back(words[i]);
+    out_timestamps.push_back(start);
+    out_durations.push_back(std::max(0.0f, end - start));
+  }
+
+  r->tokens = std::move(out_tokens);
+  r->timestamps = std::move(out_timestamps);
+  r->durations = std::move(out_durations);
+
+  return true;
 }
 
 void OfflineRecognizerQwen3ASRImpl::DecodeStreams(OfflineStream **ss,
@@ -1231,6 +1679,10 @@ void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
       GenerateText(std::move(audio_features), valid_frames, stream);
 
   r.text = ApplyHomophoneReplacer(std::move(r.text));
+
+  if (aligner_model_ && !r.text.empty()) {
+    RunForcedAlignment(f, feat_frames, &r);
+  }
 
   stream->SetResult(r);
 }

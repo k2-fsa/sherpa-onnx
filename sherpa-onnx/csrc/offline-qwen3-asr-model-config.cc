@@ -43,6 +43,24 @@ void OfflineQwen3ASRModelConfig::Register(ParseOptions *po) {
                "Top-p (nucleus) sampling threshold for Qwen3-ASR");
 
   po->Register("qwen3-asr-seed", &seed, "Random seed for Qwen3-ASR");
+
+  po->Register("qwen3-asr-forced-aligner-conv-frontend",
+               &forced_aligner_conv_frontend,
+               "Optional. Path to conv_frontend.onnx for Qwen3-ForcedAligner. "
+               "Used together with --qwen3-asr-forced-aligner-encoder and "
+               "--qwen3-asr-forced-aligner-decoder to compute word-level "
+               "timestamps");
+
+  po->Register("qwen3-asr-forced-aligner-encoder", &forced_aligner_encoder,
+               "Optional. Path to encoder.onnx for Qwen3-ForcedAligner");
+
+  po->Register("qwen3-asr-forced-aligner-decoder", &forced_aligner_decoder,
+               "Optional. Path to decoder.onnx for Qwen3-ForcedAligner "
+               "(single forward pass, no KV cache)");
+
+  po->Register("qwen3-asr-forced-aligner-tokenizer", &forced_aligner_tokenizer,
+               "Optional. Path to tokenizer directory of "
+               "Qwen3-ForcedAligner (contains the <timestamp> token)");
 }
 
 bool OfflineQwen3ASRModelConfig::Validate() const {
@@ -130,6 +148,55 @@ bool OfflineQwen3ASRModelConfig::Validate() const {
     return false;
   }
 
+  const bool has_any_aligner = !forced_aligner_conv_frontend.empty() ||
+                               !forced_aligner_encoder.empty() ||
+                               !forced_aligner_decoder.empty() ||
+                               !forced_aligner_tokenizer.empty();
+  if (has_any_aligner) {
+    if (forced_aligner_conv_frontend.empty() ||
+        forced_aligner_encoder.empty() || forced_aligner_decoder.empty() ||
+        forced_aligner_tokenizer.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Please provide all of --qwen3-asr-forced-aligner-conv-frontend, "
+          "--qwen3-asr-forced-aligner-encoder, "
+          "--qwen3-asr-forced-aligner-decoder and "
+          "--qwen3-asr-forced-aligner-tokenizer, or none of them");
+      return false;
+    }
+
+    if (!FileExists(forced_aligner_conv_frontend)) {
+      SHERPA_ONNX_LOGE(
+          "--qwen3-asr-forced-aligner-conv-frontend: '%s' does not exist",
+          forced_aligner_conv_frontend.c_str());
+      return false;
+    }
+
+    if (!FileExists(forced_aligner_encoder)) {
+      SHERPA_ONNX_LOGE(
+          "--qwen3-asr-forced-aligner-encoder: '%s' does not exist",
+          forced_aligner_encoder.c_str());
+      return false;
+    }
+
+    if (!FileExists(forced_aligner_decoder)) {
+      SHERPA_ONNX_LOGE(
+          "--qwen3-asr-forced-aligner-decoder: '%s' does not exist",
+          forced_aligner_decoder.c_str());
+      return false;
+    }
+
+    if (!FileExists(forced_aligner_tokenizer + "/vocab.json") ||
+        !FileExists(forced_aligner_tokenizer + "/merges.txt") ||
+        !FileExists(forced_aligner_tokenizer + "/tokenizer_config.json")) {
+      SHERPA_ONNX_LOGE(
+          "'%s' is not a valid tokenizer directory (need vocab.json, "
+          "merges.txt and tokenizer_config.json). Please check "
+          "--qwen3-asr-forced-aligner-tokenizer",
+          forced_aligner_tokenizer.c_str());
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -146,7 +213,12 @@ std::string OfflineQwen3ASRModelConfig::ToString() const {
   os << "max_new_tokens=" << max_new_tokens << ", ";
   os << "temperature=" << temperature << ", ";
   os << "top_p=" << top_p << ", ";
-  os << "seed=" << seed << ")";
+  os << "seed=" << seed << ", ";
+  os << "forced_aligner_conv_frontend=\"" << forced_aligner_conv_frontend
+     << "\", ";
+  os << "forced_aligner_encoder=\"" << forced_aligner_encoder << "\", ";
+  os << "forced_aligner_decoder=\"" << forced_aligner_decoder << "\", ";
+  os << "forced_aligner_tokenizer=\"" << forced_aligner_tokenizer << "\")";
 
   return os.str();
 }

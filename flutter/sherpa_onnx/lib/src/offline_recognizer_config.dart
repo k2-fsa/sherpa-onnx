@@ -276,6 +276,10 @@ class OfflineQwen3AsrModelConfig {
     this.topP = 0.8,
     this.seed = 42,
     this.hotwords = '',
+    this.forcedAlignerConvFrontend = '',
+    this.forcedAlignerEncoder = '',
+    this.forcedAlignerDecoder = '',
+    this.forcedAlignerTokenizer = '',
   });
 
   factory OfflineQwen3AsrModelConfig.fromJson(Map<String, dynamic> json) {
@@ -290,12 +294,17 @@ class OfflineQwen3AsrModelConfig {
       topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
       seed: json['seed'] as int? ?? 42,
       hotwords: json['hotwords'] as String? ?? '',
+      forcedAlignerConvFrontend:
+          json['forcedAlignerConvFrontend'] as String? ?? '',
+      forcedAlignerEncoder: json['forcedAlignerEncoder'] as String? ?? '',
+      forcedAlignerDecoder: json['forcedAlignerDecoder'] as String? ?? '',
+      forcedAlignerTokenizer: json['forcedAlignerTokenizer'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed, hotwords: $hotwords)';
+    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed, hotwords: $hotwords, forcedAlignerConvFrontend: $forcedAlignerConvFrontend, forcedAlignerEncoder: $forcedAlignerEncoder, forcedAlignerDecoder: $forcedAlignerDecoder, forcedAlignerTokenizer: $forcedAlignerTokenizer)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -309,6 +318,10 @@ class OfflineQwen3AsrModelConfig {
     'topP': topP,
     'seed': seed,
     'hotwords': hotwords,
+    'forcedAlignerConvFrontend': forcedAlignerConvFrontend,
+    'forcedAlignerEncoder': forcedAlignerEncoder,
+    'forcedAlignerDecoder': forcedAlignerDecoder,
+    'forcedAlignerTokenizer': forcedAlignerTokenizer,
   };
 
   final String convFrontend;
@@ -321,6 +334,10 @@ class OfflineQwen3AsrModelConfig {
   final double topP;
   final int seed;
   final String hotwords;
+  final String forcedAlignerConvFrontend;
+  final String forcedAlignerEncoder;
+  final String forcedAlignerDecoder;
+  final String forcedAlignerTokenizer;
 }
 
 /// Model files and options for an offline Whisper recognizer.
