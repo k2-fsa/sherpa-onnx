@@ -12,6 +12,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 #define SHERPA_ONNX_ASSIGN_TTS_ATTR()                                  \
   do {                                                                 \
@@ -191,7 +192,7 @@ static SherpaOnnxGenerationConfig GetGenerationConfig(Napi::Object o) {
 
   if (o.Has("referenceAudio") && o.Get("referenceAudio").IsTypedArray()) {
     auto arr = o.Get("referenceAudio").As<Napi::Float32Array>();
-    int32_t n = arr.ElementLength();
+    int32_t n = GetFloat32ArrayElementLength(arr);
 
     if (n > 0) {
       float *buf = new float[n];

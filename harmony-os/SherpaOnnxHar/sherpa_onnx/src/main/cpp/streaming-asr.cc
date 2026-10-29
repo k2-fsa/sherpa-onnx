@@ -9,6 +9,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 /*
 {
   'featConfig': {
@@ -431,13 +432,8 @@ static void AcceptWaveformWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
 
-#if __OHOS__
   SherpaOnnxOnlineStreamAcceptWaveform(stream, sample_rate, samples.Data(),
-                                       samples.ElementLength() / sizeof(float));
-#else
-  SherpaOnnxOnlineStreamAcceptWaveform(stream, sample_rate, samples.Data(),
-                                       samples.ElementLength());
-#endif
+                                       GetFloat32ArrayElementLength(samples));
 }
 
 static void OnlineStreamSetOptionWrapper(const Napi::CallbackInfo &info) {

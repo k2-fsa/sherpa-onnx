@@ -12,6 +12,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 #if !__OHOS__
 static const napi_type_tag kSourceSeparationTypeTag = {0x9d3b5ef1f2264ad1,
@@ -278,10 +279,7 @@ static Napi::Object ProcessWrapper(const Napi::CallbackInfo &info) {
   size_t n = 0;
   for (const auto &channel : channel_values) {
     auto array = channel.As<Napi::Float32Array>();
-    size_t length = array.ElementLength();
-#if __OHOS__
-    length /= sizeof(float);
-#endif
+    size_t length = GetFloat32ArrayElementLength(array);
     if (length == 0 || length > std::numeric_limits<int32_t>::max() ||
         (!samples.empty() && length != n)) {
       Napi::RangeError::New(env,

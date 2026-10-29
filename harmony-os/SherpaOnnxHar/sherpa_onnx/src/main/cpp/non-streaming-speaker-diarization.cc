@@ -11,6 +11,7 @@
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 static SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig
 GetOfflineSpeakerSegmentationPyannoteModelConfig(Napi::Object obj) {
@@ -256,17 +257,9 @@ static Napi::Array OfflineSpeakerDiarizationProcessWrapper(
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
-#if __OHOS__
-  // Note(fangjun): For unknown reasons on HarmonyOS, we need to divide it by
-  // sizeof(float) here
   const SherpaOnnxOfflineSpeakerDiarizationResult *r =
       SherpaOnnxOfflineSpeakerDiarizationProcess(
-          sd, samples.Data(), samples.ElementLength() / sizeof(float));
-#else
-  const SherpaOnnxOfflineSpeakerDiarizationResult *r =
-      SherpaOnnxOfflineSpeakerDiarizationProcess(sd, samples.Data(),
-                                                 samples.ElementLength());
-#endif
+          sd, samples.Data(), GetFloat32ArrayElementLength(samples));
 
   int32_t num_segments =
       SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);
@@ -442,11 +435,7 @@ static Napi::Object OfflineSpeakerDiarizationProcessAsyncWrapper(
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
-#if __OHOS__
-  int32_t num_samples = samples.ElementLength() / sizeof(float);
-#else
-  int32_t num_samples = samples.ElementLength();
-#endif
+  int32_t num_samples = GetFloat32ArrayElementLength(samples);
   std::vector<float> v(num_samples);
   std::copy(samples.Data(), samples.Data() + num_samples, v.begin());
 
