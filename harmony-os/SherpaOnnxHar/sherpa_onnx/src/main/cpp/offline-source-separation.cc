@@ -7,6 +7,7 @@
 #include <exception>
 #include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "macros.h"  // NOLINT
@@ -61,13 +62,7 @@ static void GetModelConfig(Napi::Object obj,
     c.num_threads = static_cast<int32_t>(value);
   }
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
-  if (o.Has("debug")) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else if (o.Get("debug").IsNumber()) {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 }
 
 static void DeleteConfig(SherpaOnnxOfflineSourceSeparationConfig *c) {
