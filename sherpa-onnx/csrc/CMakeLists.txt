@@ -37,6 +37,7 @@ set(sources
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
   offline-ctc-model.cc
+  offline-dolphin-attention-model.cc
   offline-dolphin-model-config.cc
   offline-dolphin-model.cc
   offline-fire-red-asr-ctc-model-config.cc
@@ -830,6 +831,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     offline-recognizer-canary-impl-test.cc
     offline-recognizer-cohere-transcribe-impl-test.cc
     offline-recognizer-ctc-impl-test.cc
+    offline-recognizer-dolphin-impl-test.cc
     offline-recognizer-funasr-nano-impl-test.cc
     offline-recognizer-moonshine-v2-impl-test.cc
     offline-recognizer-qwen3-asr-impl-test.cc
