@@ -37,6 +37,30 @@ def text2token(
       Return the encoded texts, it is a list of a list of token ids if output_ids
       is True, or it is a list of list of tokens.
     """
+    encoded_texts = _text2token(
+        texts,
+        tokens=tokens,
+        tokens_type=tokens_type,
+        bpe_model=bpe_model,
+        lexicon=lexicon,
+        output_ids=output_ids,
+    )
+    return [text for text in encoded_texts if text is not None]
+
+
+def _text2token(
+    texts: List[str],
+    tokens: str,
+    tokens_type: str = "cjkchar",
+    bpe_model: Optional[str] = None,
+    lexicon: Optional[str] = None,
+    output_ids: bool = False,
+) -> List[Optional[List[Union[str, int]]]]:
+    """
+    Same as :func:`text2token`, except that a text that cannot be encoded
+    is represented by None instead of being dropped, so the i-th entry of the
+    returned list always corresponds to texts[i].
+    """
     try:
         import sentencepiece as spm
     except ImportError:
@@ -81,7 +105,7 @@ def text2token(
                 phones = toks[1:]
                 phone_table[word] = phones
 
-    texts_list: List[List[str]] = []
+    texts_list: List[Optional[List[str]]] = []
 
     def to_pinyin(txt: str, out_type: str) -> List[str]:
         assert out_type in ["ppinyin", "fpinyin"], f"given {out_type}"
@@ -130,8 +154,7 @@ def text2token(
                         break
                     else:
                         text_list += to_pinyin(w, "ppinyin")
-            if not skip_text:
-                texts_list.append(text_list)
+            texts_list.append(None if skip_text else text_list)
     else:
         assert (
             tokens_type == "cjkchar+bpe"
@@ -157,8 +180,11 @@ def text2token(
                     text_list += sp.encode_as_pieces(ch_or_w)
             texts_list.append(text_list)
 
-    result: List[List[Union[int, str]]] = []
+    result: List[Optional[List[Union[int, str]]]] = []
     for text in texts_list:
+        if text is None:
+            result.append(None)
+            continue
         text_list = []
         contain_oov = False
         for txt in text:
@@ -171,8 +197,5 @@ def text2token(
                 )
                 contain_oov = True
                 break
-        if contain_oov:
-            continue
-        else:
-            result.append(text_list)
+        result.append(None if contain_oov else text_list)
     return result

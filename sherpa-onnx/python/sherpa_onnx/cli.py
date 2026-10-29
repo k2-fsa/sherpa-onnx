@@ -11,7 +11,7 @@ except ImportError:
     raise
 
 from pathlib import Path
-from sherpa_onnx import text2token
+from sherpa_onnx.utils import _text2token
 
 
 @click.group()
@@ -120,7 +120,9 @@ def encode_text(
             texts.append(" ".join(text))
             extra_info.append(extra)
 
-    encoded_texts = text2token(
+    # A text that cannot be encoded is None here, so that encoded_texts[i]
+    # still matches extra_info[i].
+    encoded_texts = _text2token(
         texts,
         tokens=tokens,
         tokens_type=tokens_type,
@@ -128,6 +130,7 @@ def encode_text(
         lexicon=lexicon,
     )
     with open(output, "w", encoding="utf8") as f:
-        for i, txt in enumerate(encoded_texts):
-            txt += extra_info[i]
-            f.write(" ".join(txt) + "\n")
+        for txt, extra in zip(encoded_texts, extra_info):
+            if txt is None:
+                continue
+            f.write(" ".join(txt + extra) + "\n")
