@@ -248,6 +248,11 @@ bool IsAlphaOrPunct(int ch);
 // Detect if a codepoint is a CJK character
 bool IsCJK(char32_t cp);
 
+// Detect if a codepoint belongs to the Hangul script: Hangul Jamo, Hangul
+// Compatibility Jamo, Hangul Jamo Extended-A/B, Hangul Syllables, and
+// Halfwidth Hangul Jamo.
+bool IsHangul(char32_t cp);
+
 bool ContainsCJK(const std::string &text);
 
 bool ContainsCJK(const std::u32string &text);

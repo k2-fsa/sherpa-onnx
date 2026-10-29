@@ -32,12 +32,16 @@
 
 namespace sherpa_onnx {
 
+// remove_cjk_space: use 1 or 0. 0 means disable, non-zero means enable
+// removing spaces between CJK characters of scripts without word spacing.
+// See OnlineStream::SetOption("remove_cjk_space", ...).
 inline OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
                                       const SymbolTable &sym_table,
                                       float frame_shift_ms,
                                       int32_t subsampling_factor,
                                       int32_t segment,
-                                      int32_t frames_since_start) {
+                                      int32_t frames_since_start,
+                                      int32_t remove_cjk_space = 1) {
   OnlineRecognizerResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
@@ -68,7 +72,9 @@ inline OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
     text = sym_table.DecodeByteBpe(text);
   }
 
-  text = RemoveSpaceBetweenCjk(text);
+  if (remove_cjk_space != 0) {
+    text = RemoveSpaceBetweenCjk(text);
+  }
 
   r.text = std::move(text);
 
@@ -367,8 +373,12 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
+    // Per-stream option "remove_cjk_space": use 1 or 0. 0 means disable,
+    // non-zero (default 1) means enable removing spaces between CJK
+    // characters of scripts without word spacing.
     auto r = Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
-                     s->GetCurrentSegment(), s->GetNumFramesSinceStart());
+                     s->GetCurrentSegment(), s->GetNumFramesSinceStart(),
+                     s->GetOptionInt("remove_cjk_space", 1));
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;

@@ -32,7 +32,8 @@ namespace sherpa_onnx {
 OfflineRecognitionResult Convert(const OfflineTransducerDecoderResult &src,
                                  const SymbolTable &sym_table,
                                  int32_t frame_shift_ms,
-                                 int32_t subsampling_factor);
+                                 int32_t subsampling_factor,
+                                 int32_t remove_cjk_space);
 
 class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
  public:
@@ -207,8 +208,12 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
     int32_t frame_shift_ms = 10;
     for (int32_t i = 0; i != n; ++i) {
+      // Per-stream option "remove_cjk_space": use 1 or 0. 0 means disable,
+      // non-zero (default 1) means enable removing spaces between CJK
+      // characters of scripts without word spacing.
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
-                       model_->SubsamplingFactor());
+                       model_->SubsamplingFactor(),
+                       ss[i]->GetOptionInt("remove_cjk_space", 1));
 
       // Remove leading space from BPE tokenization
       if (!r.text.empty() && r.text.front() == ' ') {
