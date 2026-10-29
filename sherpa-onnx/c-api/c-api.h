@@ -1095,21 +1095,6 @@ typedef struct SherpaOnnxOfflineModelConfig {
   int32_t debug;
   /** Execution provider, for example "cpu" or "cuda". */
   const char *provider;
-  /**
-   * Non-zero to disable the ONNX Runtime CPU memory arena. The arena keeps
-   * each run's working set resident after decode returns, so decoding
-   * several long recordings in one process holds several GB even when
-   * idle. 0 (default) keeps the arena enabled; 1 returns that memory to
-   * the OS after each run at some cost in speed.
-   */
-  int32_t disable_cpu_mem_arena;
-  /**
-   * Non-zero to disable ONNX Runtime memory pattern planning. A second run
-   * with a different input shape roughly doubles the retained working set;
-   * disabling the pattern removes that doubling. 0 (default) keeps the
-   * pattern enabled.
-   */
-  int32_t disable_mem_pattern;
   /** Optional explicit model type override. */
   const char *model_type;
   /** Modeling unit, such as "cjkchar", "bpe", or "cjkchar+bpe". */
@@ -1144,6 +1129,23 @@ typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineQwen3ASRModelConfig qwen3_asr;
   /** Cohere Transcribe configuration. */
   SherpaOnnxOfflineCohereTranscribeModelConfig cohere_transcribe;
+  /**
+   * Non-zero to disable the ONNX Runtime CPU memory arena. The arena keeps
+   * each run's working set resident after decode returns, so decoding
+   * several long recordings in one process holds several GB even when
+   * idle. 0 (default) keeps the arena enabled; 1 returns that memory to
+   * the OS after each run at some cost in speed. Appended at the end of
+   * the struct so existing member offsets stay stable.
+   */
+  int32_t disable_cpu_mem_arena;
+  /**
+   * Non-zero to disable ONNX Runtime memory pattern planning. A second run
+   * with a different input shape roughly doubles the retained working set;
+   * disabling the pattern removes that doubling. 0 (default) keeps the
+   * pattern enabled. Appended at the end of the struct so existing member
+   * offsets stay stable.
+   */
+  int32_t disable_mem_pattern;
 } SherpaOnnxOfflineModelConfig;
 
 /**
