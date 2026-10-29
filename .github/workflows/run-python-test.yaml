@@ -8,22 +8,26 @@ on:
       - wheel-win-arm64
     paths:
       - '.github/workflows/run-python-test.yaml'
-      - '.github/scripts/test-python.sh'
-      - '.github/scripts/test-python-tts-frontends.sh'
+      - '.github/scripts/test-python*.sh'
       - '.github/scripts/test-speaker-recognition-python.sh'
+      - '.github/scripts/common.sh'
       - 'cmake/**'
+      - 'setup.py'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/python/**'
       - 'python-api-examples/**'
   pull_request:
     branches:
       - master
     paths:
       - '.github/workflows/run-python-test.yaml'
-      - '.github/scripts/test-python.sh'
-      - '.github/scripts/test-python-tts-frontends.sh'
+      - '.github/scripts/test-python*.sh'
       - '.github/scripts/test-speaker-recognition-python.sh'
+      - '.github/scripts/common.sh'
       - 'cmake/**'
+      - 'setup.py'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/python/**'
       - 'python-api-examples/**'
   workflow_dispatch:
 
@@ -37,9 +41,16 @@ permissions:
 env:
   PYTHONIOENCODING: utf-8
 
+# Each platform tests a single Python version, spread over the supported range
+# so both ends stay covered. The version is verified to exist on the matching
+# arch in actions/python-versions.
+#
+# The build matrix and the test matrix must agree on the version, since the
+# wheel produced by `build` is tagged for the interpreter it was built with.
+
 jobs:
-  run-python-test:
-    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+  build:
+    name: build ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -48,85 +59,32 @@ jobs:
           # Linux x64
           - os: ubuntu-latest
             python-version: "3.8"
-          - os: ubuntu-latest
-            python-version: "3.9"
-          - os: ubuntu-latest
-            python-version: "3.10"
-          - os: ubuntu-latest
-            python-version: "3.11"
-          - os: ubuntu-latest
-            python-version: "3.12"
-          - os: ubuntu-latest
-            python-version: "3.13"
-          - os: ubuntu-latest
-            python-version: "3.14"
-          - os: ubuntu-latest
-            python-version: "3.15"
+            arch: x64
 
           # Linux arm64
           - os: ubuntu-24.04-arm
-            python-version: "3.10"
-          - os: ubuntu-24.04-arm
-            python-version: "3.11"
-          - os: ubuntu-24.04-arm
-            python-version: "3.12"
-          - os: ubuntu-24.04-arm
-            python-version: "3.13"
-          - os: ubuntu-24.04-arm
-            python-version: "3.14"
-          - os: ubuntu-24.04-arm
-            python-version: "3.15"
+            python-version: "3.9"
+            arch: arm64
 
           # macOS x64
           - os: macos-15-intel
-            python-version: "3.8"
-          - os: macos-15-intel
-            python-version: "3.9"
+            python-version: "3.10"
+            arch: x64
 
           # macOS arm64
-          - os: macos-14
-            python-version: "3.10"
-          - os: macos-14
+          - os: macos-latest
             python-version: "3.11"
-          - os: macos-latest
-            python-version: "3.12"
-          - os: macos-latest
-            python-version: "3.13"
-          - os: macos-latest
-            python-version: "3.14"
-          - os: macos-latest
-            python-version: "3.15"
+            arch: arm64
 
           # Windows x64
           - os: windows-2022
-            python-version: "3.8"
-          - os: windows-2022
-            python-version: "3.9"
-          - os: windows-2022
-            python-version: "3.10"
-          - os: windows-2022
-            python-version: "3.11"
-          - os: windows-2022
-            python-version: "3.12"
-          - os: windows-2022
-            python-version: "3.13"
-          - os: windows-2022
             python-version: "3.14"
-          - os: windows-2022
-            python-version: "3.15"
+            arch: x64
 
           # Windows arm64
           - os: windows-11-arm
-            python-version: "3.11"
-          - os: windows-11-arm
-            python-version: "3.12"
-          - os: windows-11-arm
-            python-version: "3.13"
-          - os: windows-11-arm
-            python-version: "3.14"
-          - os: windows-11-arm
             python-version: "3.15"
-
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -165,29 +123,24 @@ jobs:
       - name: Set up MSVC
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          # Must match the runner arch. This action defaults to x64, which on
+          # windows-11-arm makes setuptools' get_platform() report win-amd64
+          # (it prefers VSCMD_ARG_TGT_ARCH over the real host), so the wheel
+          # gets tagged win_amd64 and pip rejects it on the arm64 runner.
+          arch: ${{ matrix.arch }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+          architecture: ${{ matrix.arch }}
 
-      - name: Install Python dependencies
+      - name: Install build dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin soundfile
+          python3 -m pip install --upgrade pip numpy
           python3 -m pip install wheel twine setuptools
-          # External phonemizers used by the test-offline-tts-*-phonemize.py
-          # examples. piper_phonemize ships espeak-ng inside the wheel; it is
-          # a pip dependency, not a build dependency of sherpa-onnx.
-          python3 -m pip install --upgrade 'misaki[zh]' kaldifst
-          python3 -m pip install --upgrade piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
-
-      - name: Install librosa (Linux/macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          python3 -m pip install --upgrade librosa
 
       - name: Install ninja (Linux)
         if: runner.os == 'Linux'
@@ -203,14 +156,6 @@ jobs:
           ninja --help || true
           which ninja
 
-      - name: Display site packages dir (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          python3 -c 'import site; print(site.getsitepackages())'
-          p=$(python3 -c 'import site; print(site.getsitepackages())')
-          echo "p: $p"
-
       - name: Install patchelf (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -223,10 +168,8 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          if [[ "${{ runner.os }}" != "Windows" ]]; then
-            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-            export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          fi
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
           export SHERPA_ONNX_CMAKE_ARGS="-G Ninja -DCMAKE_BUILD_TYPE=Release -DSHERPA_ONNX_ENABLE_BINARY=OFF"
           export SHERPA_ONNX_MAKE_ARGS="-j 6"
@@ -240,15 +183,7 @@ jobs:
           mkdir ./dist2
           sudo ./scripts/wheel/patch_wheel.py --in-dir ./dist --out-dir ./dist2
 
-      - name: Install sherpa-onnx (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          ls -lh dist2
-
-          python3 -m pip install ./dist2/*.whl
-
-      - name: Build and install sherpa-onnx (macOS)
+      - name: Build sherpa-onnx (macOS)
         if: runner.os == 'macOS'
         shell: bash
         run: |
@@ -257,9 +192,9 @@ jobs:
           cmake --version
           export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF"
 
-          python3 -m pip install .
+          python3 setup.py bdist_wheel
 
-      - name: Build and install sherpa-onnx (Windows)
+      - name: Build sherpa-onnx (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
@@ -269,19 +204,7 @@ jobs:
           fi
           export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF"
 
-          python3 -m pip install .
-
-      - uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux'
-        with:
-          name: ${{ matrix.os }}-${{ matrix.python-version }}-whl
-          path: ./dist
-
-      - uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux'
-        with:
-          name: ${{ matrix.os }}-${{ matrix.python-version }}-whl-patched
-          path: ./dist2
+          python3 setup.py bdist_wheel
 
       - name: Show dependencies (Linux)
         if: runner.os == 'Linux'
@@ -303,6 +226,127 @@ jobs:
           unzip ../*.whl
           readelf -d sherpa_onnx/lib/_sherpa_onnx*.so
 
+      # The wheel is consumed by the test jobs, so it must be the patched one
+      # on Linux (patchelf is what makes it self-contained there).
+      - name: Collect wheel
+        shell: bash
+        run: |
+          mkdir -p wheel
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            cp dist2/*.whl wheel/
+          else
+            cp dist/*.whl wheel/
+          fi
+          ls -lh wheel
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}
+          path: ./wheel
+
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: ${{ matrix.os }}-${{ matrix.python-version }}-whl
+          path: ./dist
+
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: ${{ matrix.os }}-${{ matrix.python-version }}-whl-patched
+          path: ./dist2
+
+  test:
+    name: test ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.group }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          - misc
+          - asr-offline
+          - asr-streaming
+          - tts
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-15-intel
+          - macos-latest
+          - windows-2022
+          - windows-11-arm
+        include:
+          # Keep these in sync with the build matrix above.
+          - os: ubuntu-latest
+            python-version: "3.8"
+            arch: x64
+          - os: ubuntu-24.04-arm
+            python-version: "3.9"
+            arch: arm64
+          - os: macos-15-intel
+            python-version: "3.10"
+            arch: x64
+          - os: macos-latest
+            python-version: "3.11"
+            arch: arm64
+          - os: windows-2022
+            python-version: "3.14"
+            arch: x64
+          - os: windows-11-arm
+            python-version: "3.15"
+            arch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.arch }}
+
+      - name: Install test dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip numpy pypinyin soundfile
+          # External phonemizers used by the test-offline-tts-*-phonemize.py
+          # examples. piper_phonemize ships espeak-ng inside the wheel; it is
+          # a pip dependency, not a build dependency of sherpa-onnx.
+          python3 -m pip install --upgrade 'misaki[zh]' kaldifst
+          python3 -m pip install --upgrade piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+
+      - name: Install librosa (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          # librosa -> numba -> llvmlite. Recent llvmlite releases no longer ship
+          # macOS x86_64 wheels (the newest with one for cp310 is 0.45.1), so pip
+          # falls back to building llvmlite from source and fails. Only
+          # offline-speaker-diarization.py needs librosa, and test-python-misc.sh
+          # already skips that test when librosa is absent, so treat this as
+          # best-effort instead of failing the job.
+          python3 -m pip install --upgrade librosa || \
+            echo "::warning::librosa could not be installed; offline-speaker-diarization.py will be skipped"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}
+          path: ./wheel
+
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          ls -lh ./wheel
+          python3 -m pip install ./wheel/*.whl
+
+      - name: Display site packages dir (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python3 -c 'import site; print(site.getsitepackages())'
+          p=$(python3 -c 'import site; print(site.getsitepackages())')
+          echo "p: $p"
+
       - name: Test sherpa-onnx (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -318,51 +362,49 @@ jobs:
           export LD_LIBRARY_PATH=$p:$LD_LIBRARY_PATH
           echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-          .github/scripts/test-python.sh
-          .github/scripts/test-python-tts-frontends.sh
-          .github/scripts/test-speaker-recognition-python.sh
+          .github/scripts/test-python-${{ matrix.group }}.sh
 
       - name: Test sherpa-onnx (macOS/Windows)
         if: runner.os != 'Linux'
         shell: bash
         run: |
           export OS=${{ matrix.os }}
-          .github/scripts/test-python.sh
-          .github/scripts/test-python-tts-frontends.sh
-          .github/scripts/test-speaker-recognition-python.sh
+          .github/scripts/test-python-${{ matrix.group }}.sh
 
       - uses: actions/upload-artifact@v4
+        if: matrix.group == 'misc'
         with:
           name: source-separation-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./source-separation
 
       - uses: actions/upload-artifact@v4
+        if: matrix.group == 'tts'
         with:
           name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.python-version }}
           path: tts
 
-      # The VoxLock examples run first in test-python.sh; use if: always() so
+      # The VoxLock examples run first in test-python-misc.sh; use if: always() so
       # their input/output wavs are uploaded even when a later test fails.
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.group == 'misc'
         with:
           name: offline-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.python-version }}
           path: offline-speech-enhancement-voxlock
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.group == 'misc'
         with:
           name: offline-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.python-version }}
           path: offline-speech-enhancement-voxlock-with-voice-sample
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.group == 'misc'
         with:
           name: online-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.python-version }}
           path: online-speech-enhancement-voxlock
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.group == 'misc'
         with:
           name: online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.python-version }}
           path: online-speech-enhancement-voxlock-with-voice-sample
