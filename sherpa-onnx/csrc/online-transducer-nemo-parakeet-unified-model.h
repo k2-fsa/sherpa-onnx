@@ -35,7 +35,10 @@ class OnlineTransducerNeMoParakeetUnifiedModel {
    *         (N, encoder_dim, T').
    */
   std::vector<Ort::Value> RunEncoder(Ort::Value features,
-                                     Ort::Value features_length) const;
+                                     Ort::Value features_length,
+                                     int64_t prompt_id) const;
+
+  int64_t GetLanguagePromptId(const std::string &language) const;
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
       Ort::Value targets, std::vector<Ort::Value> states) const;
