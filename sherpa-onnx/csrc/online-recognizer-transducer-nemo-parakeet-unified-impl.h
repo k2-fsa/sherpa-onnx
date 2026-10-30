@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-recognizer-transducer-nemo-parakeet-unified-impl.h
 //
 // Copyright (c)  2026  Milan Leonard
+// Copyright (c)  2026  Julian Pscheid
 
 #ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_PARAKEET_UNIFIED_IMPL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_PARAKEET_UNIFIED_IMPL_H_
@@ -79,14 +80,19 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     int32_t processed = s->GetNumProcessedFrames();
     int32_t ready = s->NumFramesReady();
 
-    if (processed + model_->ChunkFeatureFrames() +
-            model_->RightFeatureFrames() <=
-        ready) {
+    int32_t required =
+        model_->ChunkFeatureFrames() + model_->RightFeatureFrames();
+    if (model_->RightFeatureFrames() == 0) {
+      // Keep the boundary chunk until another complete hop or EOF. Otherwise
+      // pre-EOF decoding can strand a partial hop accepted after that chunk.
+      ++required;
+    }
+    if (ready - processed >= required) {
       return true;
     }
 
-    // Flush the final, possibly short, center chunk with zero-padded right
-    // context after InputFinished().
+    // Flush the final, possibly short, center and look-ahead after
+    // InputFinished().
     return ready > processed && s->IsLastFrame(ready - 1);
   }
 
@@ -128,7 +134,8 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     }
 
     s->SetResult({});
-    s->SetNeMoDecoderStates(model_->GetDecoderInitStates());
+    // Endpointing clears segment output without interrupting the buffered
+    // encoder and predictor context, as in continuous NeMo decoding.
     s->Reset();
   }
 
@@ -140,6 +147,7 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
 
   void InitOnlineStream(OnlineStream *stream) const {
     stream->SetNeMoDecoderStates(model_->GetDecoderInitStates());
+    stream->SetNeMoDecoderOut(Ort::Value{nullptr});
   }
 
  private:
@@ -162,6 +170,7 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     config_.feat_config.is_librosa = true;
     config_.feat_config.remove_dc_offset = false;
     config_.feat_config.window_type = "hann";
+    config_.feat_config.nemo_buffered_capacity = model_->TotalFeatureFrames();
     config_.feat_config.dither = 0;
     config_.feat_config.nemo_normalize_type = "";
 
@@ -190,34 +199,12 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     }
   }
 
-  std::vector<float> CopyWindowWithPadding(OnlineStream *s) const {
-    int32_t feature_dim = model_->FeatureDim();
-    int32_t total = model_->TotalFeatureFrames();
-    std::vector<float> features(total * feature_dim);
-
-    int32_t processed = s->GetNumProcessedFrames();
-    int32_t window_start = processed - model_->LeftFeatureFrames();
-    int32_t window_end = window_start + total;
-    int32_t read_start = std::max(0, window_start);
-    int32_t read_end = std::min(window_end, s->NumFramesReady());
-
-    if (read_end <= read_start) {
-      return features;
-    }
-
-    std::vector<float> frames = s->GetFrames(read_start, read_end - read_start);
-    float *copy_dst =
-        features.data() + (read_start - window_start) * feature_dim;
-    std::copy(frames.begin(), frames.end(), copy_dst);
-    return features;
-  }
-
-  Ort::Value SliceCenterEncoderOut(Ort::Value *encoder_out,
+  Ort::Value SliceCenterEncoderOut(Ort::Value *encoder_out, int32_t left_frames,
                                    int32_t center_frames) const {
     auto shape = encoder_out->GetTensorTypeAndShapeInfo().GetShape();
     int32_t num_rows = static_cast<int32_t>(shape[1]);
     int32_t num_cols = static_cast<int32_t>(shape[2]);
-    int32_t start = model_->LeftEncoderFrames();
+    int32_t start = left_frames;
     int32_t end = std::min(start + center_frames, num_rows);
 
     if (start >= end) {
@@ -240,32 +227,61 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
   void DecodeOneStream(OnlineStream *s) const {
     int32_t processed = s->GetNumProcessedFrames();
     int32_t ready = s->NumFramesReady();
+    bool is_last = s->IsLastFrame(ready - 1);
+    int32_t remaining = ready - processed;
+    int32_t complete_step_frames =
+        model_->ChunkFeatureFrames() + model_->RightFeatureFrames();
+    bool final_chunk =
+        is_last &&
+        (remaining < complete_step_frames ||
+         (remaining == complete_step_frames &&
+          (model_->RightFeatureFrames() == 0 || s->NumTrailingSamples() == 0)));
+    // NeMo consumes the final chunk and its look-ahead together.
     int32_t valid_center_frames =
-        std::min(model_->ChunkFeatureFrames(), ready - processed);
+        final_chunk ? remaining
+                    : std::min(model_->ChunkFeatureFrames(), remaining);
 
     if (valid_center_frames <= 0) {
       return;
     }
 
     int32_t feature_dim = model_->FeatureDim();
-    int32_t total_feature_frames = model_->TotalFeatureFrames();
-    std::vector<float> features = CopyWindowWithPadding(s);
+    // Keep the encoder's audio context across endpoint resets. The feature
+    // extractor survives Reset(), and GetFrames() uses segment-relative
+    // indices.
+    int32_t right_frames =
+        std::min(model_->RightFeatureFrames(), remaining - valid_center_frames);
+    // The last NeMo buffer keeps its total capacity: a short final read can
+    // leave more than LeftFeatureFrames() of history before the final center.
+    int32_t max_left = final_chunk
+                           ? model_->TotalFeatureFrames() - valid_center_frames
+                           : model_->LeftFeatureFrames();
+    int32_t left_frames =
+        std::min(max_left, processed + s->GetNumFramesSinceStart());
+    int32_t total_feature_frames =
+        left_frames + valid_center_frames + right_frames;
+    int32_t start_sample_offset = 0;
+    std::vector<float> features =
+        s->GetBufferedFeatures(processed - left_frames, total_feature_frames,
+                               final_chunk, &start_sample_offset);
 
     if (model_->FeatureNormalizationMethod() == "per_feature") {
       NemoNormalizePerFeature(features.data(), total_feature_frames,
-                              feature_dim);
+                              feature_dim, /*sample_variance=*/true);
     }
+
+    // NeMo's centered STFT produces one extra feature frame, masked to zero
+    // after normalization. It is encoder input padding, not CMVN context.
+    features.resize((total_feature_frames + 1) * feature_dim, 0.0f);
 
     int32_t valid_center_encoder_frames =
         (valid_center_frames + model_->SubsamplingFactor() - 1) /
         model_->SubsamplingFactor();
-    valid_center_encoder_frames =
-        std::min(valid_center_encoder_frames, model_->ChunkEncoderFrames());
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    std::array<int64_t, 3> x_shape{1, total_feature_frames, feature_dim};
+    std::array<int64_t, 3> x_shape{1, total_feature_frames + 1, feature_dim};
     Ort::Value x =
         Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
                                  x_shape.data(), x_shape.size());
@@ -276,9 +292,18 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     length.GetTensorMutableData<int64_t>()[0] = total_feature_frames;
 
     auto encoder_outs = model_->RunEncoder(std::move(x), std::move(length));
+    int32_t samples_per_frame = config_.feat_config.sampling_rate / 100;
+    int32_t left_encoder_frames =
+        (left_frames * samples_per_frame - start_sample_offset) /
+        (samples_per_frame * model_->SubsamplingFactor());
+    int64_t encoded_length = encoder_outs[1].GetTensorData<int64_t>()[0];
+    valid_center_encoder_frames =
+        final_chunk ? encoded_length - left_encoder_frames
+                    : std::min<int64_t>(valid_center_encoder_frames,
+                                        encoded_length - left_encoder_frames);
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &encoder_outs[0]);
-    Ort::Value center_encoder_out =
-        SliceCenterEncoderOut(&encoder_out, valid_center_encoder_frames);
+    Ort::Value center_encoder_out = SliceCenterEncoderOut(
+        &encoder_out, left_encoder_frames, valid_center_encoder_frames);
 
     s->GetNumProcessedFrames() += valid_center_frames;
 

@@ -839,6 +839,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
+    online-stream-test.cc
     online-recognizer-result-test.cc
     online-recognizer-transducer-impl-test.cc
     recognizer-result-json-test.cc
