@@ -10,7 +10,7 @@ import kaldifst
 
 
 def build(path):
-    boundary = set(b' \t\r\n.,!?;:()[]{}"')
+    boundary = set(b' \t\r\n.,!?;:()[]{}"-')
     symbols = {
         ord(c): (" " + name + " ").encode()
         for c, name in {
@@ -104,6 +104,8 @@ def build(path):
         ("AMBER", "AMBER"),
         ("xAM", "xAM"),
         ("AM PM!", "a m p m!"),
+        ("AM-PM", "a m-p m"),
+        ("PM-AM", "p m-a m"),
         ("AI in the US.", "AI in the US."),
         ("USA AIM", "USA AIM"),
         ("2+2=4", "2 plus 2 equals 4"),

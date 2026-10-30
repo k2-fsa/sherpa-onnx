@@ -138,5 +138,69 @@
   {
     "text": "09:09 AM",
     "expected": "nine o nine a m"
+  },
+  {
+    "text": "AM-PM",
+    "expected": "a m-p m"
+  },
+  {
+    "text": "PM-AM",
+    "expected": "p m-a m"
+  },
+  {
+    "text": "$10",
+    "expected": "ten dollars"
+  },
+  {
+    "text": "US$1",
+    "expected": "one us dollar"
+  },
+  {
+    "text": "US$10",
+    "expected": "ten us dollars"
+  },
+  {
+    "text": "US$10.00",
+    "expected": "ten us dollars"
+  },
+  {
+    "text": "US$12.50",
+    "expected": "twelve us dollars fifty cents"
+  },
+  {
+    "text": "café3.14",
+    "expected": "café3.14"
+  },
+  {
+    "text": "café3.14",
+    "expected": "café3.14"
+  },
+  {
+    "text": "中3.14",
+    "expected": "中3.14"
+  },
+  {
+    "text": "café 3.14",
+    "expected": "café three point one four"
+  },
+  {
+    "text": "The bin 1969 is full.",
+    "expected": "The bin one thousand nine hundred and sixty nine is full."
+  },
+  {
+    "text": "The midyear 1969 count.",
+    "expected": "The midyear one thousand nine hundred and sixty nine count."
+  },
+  {
+    "text": "They met in 1969.",
+    "expected": "They met in nineteen sixty nine."
+  },
+  {
+    "text": "caféin 1969",
+    "expected": "caféin one thousand nine hundred and sixty nine"
+  },
+  {
+    "text": "café—3.14",
+    "expected": "café—three point one four"
   }
 ]

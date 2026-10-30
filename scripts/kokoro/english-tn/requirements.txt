@@ -1,2 +1,10 @@
-pynini==2.1.6.post1
+pynini==2.1.7
 kaldifst==1.8.3
+regex==2026.9.29
+tqdm==4.70.1
+joblib==1.6.0
+sacremoses==0.2.0
+click==8.5.0
+editdistance==0.8.1
+cdifflib==1.2.9
+cloudpickle==3.1.2

@@ -5,6 +5,7 @@ import json
 import pathlib
 import sys
 import time
+import unicodedata
 
 parser = argparse.ArgumentParser(
     description="Build a sherpa-compatible English NeMo rule FST"
@@ -53,16 +54,24 @@ def main():
     money = (
         MT(c, d, deterministic=True).fst @ MV(dv, deterministic=True).fst
     ).optimize()
-    # NeMo admits equally weighted dollar/us-dollar synonyms even in deterministic mode.
+    # NeMo admits equally weighted dollar/us-dollar synonyms for bare "$".
+    # Restrict that preference by input so explicit "US$" retains its currency.
     sigma_money = byte.BYTE.star
+    bare_dollar = pynini.accep("$") + sigma_money
     money = (
-        money @ pynini.difference(sigma_money, sigma_money + "us dollar" + sigma_money)
+        (pynini.difference(sigma_money, bare_dollar) @ money)
+        | (
+            bare_dollar
+            @ money
+            @ pynini.difference(sigma_money, sigma_money + "us dollar" + sigma_money)
+        )
     ).optimize()
     # Direct tagger/verbalizer composition misses whole-currency and .00 forms.
     digits = pynini.closure(byte.DIGIT | ",", 1)
     whole_money = None
     for sym, singular, plural in [
         ("$", "dollar", "dollars"),
+        ("US$", "us dollar", "us dollars"),
         ("£", "pound", "pounds"),
         ("€", "euro", "euros"),
     ]:
@@ -74,7 +83,7 @@ def main():
         whole_money = whole if whole_money is None else whole_money | whole
     whole_money = whole_money.optimize()
     zero_cents = (
-        pynini.union("$", "£", "€") + digits + pynutil.delete(".00")
+        pynini.union("$", "US$", "£", "€") + digits + pynutil.delete(".00")
     ) @ whole_money
     # Prefer the complete .00 span over a whole-money prefix ending before the dot.
     money = (money | whole_money | pynutil.add_weight(zero_cents, -0.2)).optimize()
@@ -96,10 +105,22 @@ def main():
     alnum = pynini.union(
         *"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     ).optimize()
-    boundary = pynini.difference(byte.BYTE, alnum).optimize()
+    # Match complete separator characters, never an interior/final UTF-8 byte.
+    # Letters, numbers and combining marks are not separators; Unicode
+    # punctuation, symbols and spaces still separate numbers from words.
+    ascii_char = pynini.union(*(pynini.escape(chr(c)) for c in range(1, 128)))
+    unicode_separator = pynini.union(
+        *(
+            pynini.escape(chr(c))
+            for c in range(128, sys.maxunicode + 1)
+            if unicodedata.category(chr(c))[0] in "PSZ"
+        )
+    )
+    boundary = (pynini.difference(ascii_char, alnum) | unicode_separator).optimize()
     contextual_year = pynini.cdrewrite(
         year,
-        pynini.union("In ", "in ", "year ", "Year "),
+        pynini.union(boundary, "[BOS]")
+        + pynini.union("In ", "in ", "year ", "Year "),
         pynini.union(boundary, "[EOS]"),
         sigma,
     ).optimize()
@@ -172,6 +193,17 @@ def main():
         ("There are 42 items.", "There are forty two items."),
         ("The value is -3.14.", "The value is minus three point one four."),
         ("Pay $1.01 or $2.00.", "Pay one dollar one cent or two dollars."),
+        ("$10", "ten dollars"),
+        ("US$10", "ten us dollars"),
+        ("US$10.00", "ten us dollars"),
+        ("US$12.50", "twelve us dollars fifty cents"),
+        ("café3.14", "café3.14"),
+        ("café 3.14", "café three point one four"),
+        ("café—3.14", "café—three point one four"),
+        (
+            "The bin 1969 is full.",
+            "The bin one thousand nine hundred and sixty nine is full.",
+        ),
         ("The increase was 0.5%.", "The increase was zero point five percent."),
         ("This is the 21st item.", "This is the twenty first item."),
         (
@@ -209,6 +241,7 @@ def main():
         far_bytes=(out / "english_tn.far").stat().st_size,
         rows=rows,
         pynini=pynini.__version__,
+        unicode_data_version=unicodedata.unidata_version,
         format="OpenFst standard tropical byte labels",
         scope="NeMo composed cardinal/decimal/money/time/ordinal; custom percent wrapper and contextual year rule",
     )
