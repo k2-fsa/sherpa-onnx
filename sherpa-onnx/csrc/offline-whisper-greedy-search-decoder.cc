@@ -5,11 +5,13 @@
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
 
 #include <algorithm>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
+#include "sherpa-onnx/csrc/offline-whisper-lang-probs.h"
 #include "sherpa-onnx/csrc/offline-whisper-timestamp-rules.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -50,6 +52,12 @@ OfflineWhisperGreedySearchDecoder::Decode(
   // For non-multilingual models, initial_tokens contains [sot]
   std::vector<int64_t> initial_tokens = model_->GetInitialTokens();
 
+  // Populate the language-ID distribution. When config_.language is:
+  // - unset: filled by DetectLanguageWithProbs during detection.
+  // - set: filled from position 0 of the first decoder step's logits.
+  std::vector<std::pair<std::string, float>> detected_lang_probs;
+  bool need_lang_probs_from_initial_logits = false;
+
   if (model_->IsMultiLingual()) {
     if (!config_.language.empty()) {
       const auto &lang2id = model_->GetLang2ID();
@@ -63,9 +71,12 @@ OfflineWhisperGreedySearchDecoder::Decode(
 
       // 0: sot, 1: lang_id, 2: task, 3: no_timestamps
       initial_tokens[1] = lang_id;
+
+      // Language-id softmax is a free byproduct of the first decoder step.
+      need_lang_probs_from_initial_logits = true;
     } else {
-      int32_t lang_id =
-          model_->DetectLanguage(cross_k, cross_v, language_candidate_ids);
+      int32_t lang_id = model_->DetectLanguageWithProbs(
+          cross_k, cross_v, language_candidate_ids, &detected_lang_probs);
 
       // 0: sot, 1: lang_id, 2: task, 3: no_timestamps
       initial_tokens[1] = lang_id;
@@ -138,6 +149,14 @@ OfflineWhisperGreedySearchDecoder::Decode(
 
   int32_t n_text_ctx = model_->TextCtx();
   int32_t max_token_id = 0;
+
+  // When config_.language was specified, derive the language distribution
+  // from position 0 of the initial logits.
+  if (need_lang_probs_from_initial_logits) {
+    const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
+    ComputeWhisperLangProbs(p_logits, model_->GetAllLanguageIDs(),
+                            model_->GetID2Lang(), &detected_lang_probs);
+  }
 
   // Get initial logits
   {
@@ -278,6 +297,7 @@ OfflineWhisperGreedySearchDecoder::Decode(
   }
 
   ans[0].tokens = std::move(predicted_tokens);
+  ans[0].lang_probs = std::move(detected_lang_probs);
 
   // Parse timestamp tokens into segments if using segment timestamp mode
   if (enable_segment_timestamps) {
