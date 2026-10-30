@@ -1,0 +1,2 @@
+pynini==2.1.6.post1
+kaldifst==1.8.3
