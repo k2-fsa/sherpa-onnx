@@ -13,8 +13,12 @@ public class OfflineRecognizerResult {
     // The decoded word IDs. Empty for greedy search decoding, non-empty when
     // an HLG graph is used, i.e. when ctcFstDecoderConfig.graph is set.
     private final int[] words;
+    // ysLogProbs[i] is the log probability (confidence) of tokens[i].
+    // Non-empty only for transducer models, e.g., zipformer and NeMo
+    // transducer/TDT, with greedy_search or modified_beam_search.
+    private final float[] ysLogProbs;
 
-    public OfflineRecognizerResult(String text, String[] tokens, float[] timestamps, String lang, String emotion, String event, float[] durations, int[] words) {
+    public OfflineRecognizerResult(String text, String[] tokens, float[] timestamps, String lang, String emotion, String event, float[] durations, int[] words, float[] ysLogProbs) {
         this.text = text;
         this.tokens = tokens;
         this.timestamps = timestamps;
@@ -23,6 +27,7 @@ public class OfflineRecognizerResult {
         this.event = event;
         this.durations = durations;
         this.words = words;
+        this.ysLogProbs = ysLogProbs;
     }
 
     public String getText() {
@@ -55,5 +60,9 @@ public class OfflineRecognizerResult {
 
     public int[] getWords() {
         return words;
+    }
+
+    public float[] getYsLogProbs() {
+        return ysLogProbs;
     }
 }
