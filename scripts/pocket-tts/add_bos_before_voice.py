@@ -44,16 +44,25 @@ def main():
     output = graph.output[0]
     # (batch, frames, dim) for the encoder output and (1, 1, dim) for bos
     assert bos.ndim == 3 and bos.shape[:2] == (1, 1), bos.shape
+    dims = output.type.tensor_type.shape.dim
+    assert len(dims) == 3, f"expected a 3-D encoder output, got {len(dims)} dims"
+    if dims[2].HasField("dim_value") and dims[2].dim_value != bos.shape[2]:
+        raise ValueError(
+            f"bos has width {bos.shape[2]}, the encoder output {dims[2].dim_value}"
+        )
 
+    # Everything that used the encoder output so far keeps using it without bos;
+    # only the graph output gets the Concat.
     without_bos = output.name + "_without_bos"
     for node in graph.node:
         node.output[:] = [without_bos if o == output.name else o for o in node.output]
+        node.input[:] = [without_bos if i == output.name else i for i in node.input]
 
     graph.initializer.append(numpy_helper.from_array(bos, name="bos_before_voice"))
     graph.node.append(
         helper.make_node("Concat", ["bos_before_voice", without_bos], [output.name], axis=1)
     )
-    output.type.tensor_type.shape.dim[1].dim_param = "frames_with_bos"
+    dims[1].dim_param = "frames_with_bos"
 
     onnx.checker.check_model(model)
     onnx.save(model, args.output)
