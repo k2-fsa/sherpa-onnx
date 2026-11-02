@@ -132,17 +132,7 @@ class OnlineSpeechDenoiserVoxLockImpl : public OnlineSpeechDenoiserImpl {
   }
 
   void Reset() override {
-    resampler_.reset();
-    input_sample_rate_ = -1;
-    total_input_samples_ = 0;
-    total_output_samples_ = 0;
-
-    voiced_.clear();
-    energy_.clear();
-    rest_.clear();
-    recent_.clear();
-    after_.clear();
-    num_to_skip_ = 0;
+    ClearState();
 
     if (voice_sample_.empty()) {
       stream_.reset();
@@ -170,12 +160,30 @@ class OnlineSpeechDenoiserVoxLockImpl : public OnlineSpeechDenoiserImpl {
     if (prepared.empty()) {
       return false;
     }
+    auto stream = std::make_unique<SpeechDenoiserVoxLockStream>(
+        &model_, prepared.data(), prepared.size());
     voice_sample_ = std::move(prepared);
-    Reset();
+    ClearState();
+    stream_ = std::move(stream);
+    num_faded_ = fade_length_;
     return true;
   }
 
  private:
+  void ClearState() {
+    resampler_.reset();
+    input_sample_rate_ = -1;
+    total_input_samples_ = 0;
+    total_output_samples_ = 0;
+
+    voiced_.clear();
+    energy_.clear();
+    rest_.clear();
+    recent_.clear();
+    after_.clear();
+    num_to_skip_ = 0;
+  }
+
   void Init(const OnlineSpeechDenoiserConfig &config) {
     const auto &meta = model_.GetMetaData();
     const auto &filename = config.model.voxlock.voice_sample;
