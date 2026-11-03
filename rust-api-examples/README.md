@@ -100,6 +100,7 @@ in your own Cargo project, see
 | 57 | [offline_speech_enhancement_voxlock_with_voice_sample](#example-57-offline-speech-enhancement-with-voxlock-and-a-voice-sample) | Offline speech enhancement with VoxLock and a voice sample |
 | 58 | [streaming_speech_enhancement_voxlock](#example-58-streaming-speech-enhancement-with-voxlock) | Streaming speech enhancement with VoxLock (target-speaker voice isolation) |
 | 59 | [streaming_speech_enhancement_voxlock_with_voice_sample](#example-59-streaming-speech-enhancement-with-voxlock-and-a-voice-sample) | Streaming speech enhancement with VoxLock and a voice sample |
+| 60 | [streaming_paraformer](#example-60-asr-with-streaming-paraformer) | Streaming ASR with Paraformer (Chinese + English) |
 
 ## Run it
 
@@ -504,4 +505,10 @@ voices. The model is from https://github.com/arbazsiddiqui/voxlock
 
 ```bash
 ./run-streaming-speech-enhancement-voxlock-with-voice-sample.sh
+```
+
+### Example 60: ASR with streaming Paraformer
+
+```bash
+./run-streaming-paraformer.sh
 ```
