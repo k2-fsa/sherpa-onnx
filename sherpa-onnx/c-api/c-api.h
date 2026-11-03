@@ -4373,6 +4373,23 @@ SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeechDenoiserGetSampleRate(
     const SherpaOnnxOfflineSpeechDenoiser *sd);
 
 /**
+ * @brief Set a PCM voice sample for VoxLock.
+ *
+ * After resampling to the model rate, it keeps the loudest 3 seconds
+ * within the first 30 seconds. Returns -1 if the clip is shorter than
+ * 3 seconds after resampling; the previous voice sample is left unchanged.
+ *
+ * @param sd A pointer returned by SherpaOnnxCreateOfflineSpeechDenoiser().
+ * @param samples Input mono PCM samples normalized to [-1, 1].
+ * @param n Number of input samples.
+ * @param sample_rate Input sample rate in Hz.
+ * @return 0 on success, -1 on error.
+ */
+SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeechDenoiserSetVoiceSample(
+    const SherpaOnnxOfflineSpeechDenoiser *sd, const float *samples, int32_t n,
+    int32_t sample_rate);
+
+/**
  * @brief Denoised audio returned by offline or online speech enhancement APIs.
  *
  * Free this object with SherpaOnnxDestroyDenoisedAudio().
@@ -4510,6 +4527,22 @@ SherpaOnnxOnlineSpeechDenoiserFlush(const SherpaOnnxOnlineSpeechDenoiser *sd);
  */
 SHERPA_ONNX_API void SherpaOnnxOnlineSpeechDenoiserReset(
     const SherpaOnnxOnlineSpeechDenoiser *sd);
+
+/**
+ * @brief Set a PCM voice sample for VoxLock.
+ *
+ * See SherpaOnnxOfflineSpeechDenoiserSetVoiceSample(). On success the
+ * denoiser is reset so it uses the new clip.
+ *
+ * @param sd A pointer returned by SherpaOnnxCreateOnlineSpeechDenoiser().
+ * @param samples Input mono PCM samples normalized to [-1, 1].
+ * @param n Number of input samples.
+ * @param sample_rate Input sample rate in Hz.
+ * @return 0 on success, -1 on error.
+ */
+SHERPA_ONNX_API int32_t SherpaOnnxOnlineSpeechDenoiserSetVoiceSample(
+    const SherpaOnnxOnlineSpeechDenoiser *sd, const float *samples, int32_t n,
+    int32_t sample_rate);
 
 // =========================================================================
 // Source separation

@@ -52,6 +52,19 @@ class OfflineSpeechDenoiser {
    */
   int32_t GetSampleRate() const;
 
+  /*
+   * Set a PCM voice sample for VoxLock.
+   *
+   * @param samples 1-D array of audio samples. Each sample is in the
+   *                range [-1, 1].
+   * @param n Number of samples
+   * @param sample_rate Sample rate of the input samples
+   * @return Return true on success. Return false if this is not a VoxLock
+   *         denoiser or if the clip is shorter than 3 seconds after
+   *         resampling.
+   */
+  bool SetVoiceSample(const float *samples, int32_t n, int32_t sample_rate);
+
  private:
   std::unique_ptr<OfflineSpeechDenoiserImpl> impl_;
 };

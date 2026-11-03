@@ -876,6 +876,15 @@ int32_t OfflineSpeechDenoiser::GetSampleRate() const {
   return SherpaOnnxOfflineSpeechDenoiserGetSampleRate(p_);
 }
 
+bool OfflineSpeechDenoiser::SetVoiceSample(const float *samples, int32_t n,
+                                           int32_t sample_rate) const {
+  if (!p_) {
+    return false;
+  }
+  return SherpaOnnxOfflineSpeechDenoiserSetVoiceSample(p_, samples, n,
+                                                       sample_rate) == 0;
+}
+
 OnlineSpeechDenoiser OnlineSpeechDenoiser::Create(
     const OnlineSpeechDenoiserConfig &config) {
   struct SherpaOnnxOnlineSpeechDenoiserConfig c;
@@ -923,6 +932,15 @@ DenoisedAudio OnlineSpeechDenoiser::Flush() const {
 
 void OnlineSpeechDenoiser::Reset() const {
   SherpaOnnxOnlineSpeechDenoiserReset(p_);
+}
+
+bool OnlineSpeechDenoiser::SetVoiceSample(const float *samples, int32_t n,
+                                          int32_t sample_rate) const {
+  if (!p_) {
+    return false;
+  }
+  return SherpaOnnxOnlineSpeechDenoiserSetVoiceSample(p_, samples, n,
+                                                      sample_rate) == 0;
 }
 
 int32_t OnlineSpeechDenoiser::GetSampleRate() const {
