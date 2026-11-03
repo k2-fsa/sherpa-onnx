@@ -14,7 +14,10 @@ archive=$model.tar.bz2
 model_dir="$script_dir/$model"
 archive_path="$script_dir/$archive"
 
-if [ ! -d "$model_dir" ]; then
+if [ ! -f "$model_dir/encoder.int8.onnx" ] ||
+   [ ! -f "$model_dir/decoder.int8.onnx" ] ||
+   [ ! -f "$model_dir/tokens.txt" ] ||
+   [ ! -f "$model_dir/test_wavs/0.wav" ]; then
   if command -v curl >/dev/null 2>&1; then
     curl -L -o "$archive_path" "$repo_url/$archive"
   elif command -v wget >/dev/null 2>&1; then
