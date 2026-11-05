@@ -4,8 +4,11 @@
 
 #include "sherpa-onnx/csrc/wave-reader.h"
 
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -129,6 +132,151 @@ TEST(WaveReader, TestTruncatedWaveFile) {
   EXPECT_FALSE(is_ok);
   EXPECT_TRUE(samples.empty());
   EXPECT_EQ(sample_rate, -1);
+}
+
+namespace {
+
+void Put16(std::string *s, uint16_t v) {
+  s->push_back(static_cast<char>(v & 0xff));
+  s->push_back(static_cast<char>(v >> 8));
+}
+
+void Put32(std::string *s, uint32_t v) {
+  for (int32_t i = 0; i != 4; ++i) {
+    s->push_back(static_cast<char>((v >> (8 * i)) & 0xff));
+  }
+}
+
+std::string Chunk(const std::string &id, const std::string &data,
+                  uint32_t size) {
+  std::string s = id;
+  Put32(&s, size);
+  return s + data;
+}
+
+std::string Chunk(const std::string &id, const std::string &data) {
+  return Chunk(id, data, static_cast<uint32_t>(data.size()));
+}
+
+// A RIFF/WAVE file whose "fmt " chunk is followed by `chunks`
+std::string MakeWave(int16_t audio_format, int16_t num_channels,
+                     int32_t sample_rate, int16_t bits_per_sample,
+                     const std::string &chunks) {
+  std::string fmt;
+  Put16(&fmt, audio_format);
+  Put16(&fmt, num_channels);
+  Put32(&fmt, sample_rate);
+  Put32(&fmt, sample_rate * num_channels * bits_per_sample / 8);
+  Put16(&fmt, num_channels * bits_per_sample / 8);
+  Put16(&fmt, bits_per_sample);
+
+  std::string body = "WAVE" + Chunk("fmt ", fmt) + chunks;
+  std::string riff = "RIFF";
+  Put32(&riff, static_cast<uint32_t>(body.size()));
+  return riff + body;
+}
+
+std::vector<std::vector<float>> Read(const std::string &wave, bool *is_ok) {
+  std::istringstream is(wave);
+  int32_t sample_rate = -1;
+  return ReadWaveMultiChannel(is, &sample_rate, is_ok);
+}
+
+}  // namespace
+
+TEST(WaveReader, TestTrailingPartialFrameIsIgnored) {
+  std::string data;
+  for (int32_t i = 1; i <= 5; ++i) {
+    Put16(&data, static_cast<uint16_t>(i * 1024));
+  }
+  // 5 int16 samples in 2 channels: 2 whole frames plus half of one
+  bool is_ok = false;
+  auto channels = Read(MakeWave(1, 2, 16000, 16, Chunk("data", data)), &is_ok);
+
+  ASSERT_TRUE(is_ok);
+  ASSERT_EQ(channels.size(), 2);
+  EXPECT_EQ(channels[0], (std::vector<float>{1024 / 32768., 3072 / 32768.}));
+  EXPECT_EQ(channels[1], (std::vector<float>{2048 / 32768., 4096 / 32768.}));
+
+  // The same with 8-bit samples: 3 bytes in 2 channels
+  auto channels8 =
+      Read(MakeWave(1, 2, 8000, 8, Chunk("data", "\x80\xc0\x40")), &is_ok);
+
+  ASSERT_TRUE(is_ok);
+  ASSERT_EQ(channels8.size(), 2);
+  EXPECT_EQ(channels8[0], std::vector<float>{0});
+  EXPECT_EQ(channels8[1], std::vector<float>{0.5});
+}
+
+TEST(WaveReader, Test32BitDataSizeNotMultipleOf4) {
+  std::string int32_data;
+  Put32(&int32_data, 0x40000000);
+  int32_data += "\x01\x02";  // 2 stray bytes
+
+  bool is_ok = false;
+  auto int32_channels =
+      Read(MakeWave(1, 1, 16000, 32, Chunk("data", int32_data)), &is_ok);
+  ASSERT_TRUE(is_ok);
+  EXPECT_EQ(int32_channels[0], std::vector<float>{0.5});
+
+  float value = 0.25f;
+  uint32_t bits = 0;
+  std::memcpy(&bits, &value, sizeof(bits));
+  std::string float_data;
+  Put32(&float_data, bits);
+  float_data += "\x01\x02\x03";  // 3 stray bytes
+
+  auto float_channels =
+      Read(MakeWave(3, 1, 16000, 32, Chunk("data", float_data)), &is_ok);
+  ASSERT_TRUE(is_ok);
+  EXPECT_EQ(float_channels[0], std::vector<float>{0.25});
+}
+
+TEST(WaveReader, TestInt32SamplesKeepTheirSign) {
+  std::string data;
+  Put32(&data, 0x40000000);  // +2^30
+  Put32(&data, 0xc0000000);  // -2^30
+
+  bool is_ok = false;
+  auto channels = Read(MakeWave(1, 1, 16000, 32, Chunk("data", data)), &is_ok);
+
+  ASSERT_TRUE(is_ok);
+  EXPECT_EQ(channels[0], (std::vector<float>{0.5, -0.5}));
+}
+
+TEST(WaveReader, TestOddSizedChunkIsFollowedByAPadByte) {
+  std::string data;
+  Put16(&data, 16384);
+  // RIFF pads a chunk with an odd size to an even length
+  std::string list = Chunk("LIST", "abc") + std::string(1, '\0');
+
+  bool is_ok = false;
+  auto channels =
+      Read(MakeWave(1, 1, 16000, 16, list + Chunk("data", data)), &is_ok);
+
+  ASSERT_TRUE(is_ok);
+  EXPECT_EQ(channels[0], std::vector<float>{0.5});
+}
+
+TEST(WaveReader, TestNegativeChunkSizeIsRejected) {
+  std::string data;
+  Put16(&data, 16384);
+
+  bool is_ok = true;
+  // Skipping -8 bytes would land on this chunk again, forever
+  auto channels = Read(
+      MakeWave(1, 1, 16000, 16,
+               Chunk("junk", "", 0xfffffff8u) + Chunk("data", data)),  // -8
+      &is_ok);
+  EXPECT_FALSE(is_ok);
+  EXPECT_TRUE(channels.empty());
+
+  is_ok = true;
+  channels =
+      Read(MakeWave(1, 1, 8000, 8, Chunk("data", "", 0xfffffffeu)),  // -2
+           &is_ok);
+  EXPECT_FALSE(is_ok);
+  EXPECT_TRUE(channels.empty());
 }
 
 }  // namespace sherpa_onnx
