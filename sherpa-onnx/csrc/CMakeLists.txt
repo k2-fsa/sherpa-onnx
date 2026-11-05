@@ -281,6 +281,7 @@ list(APPEND sources
   funasr-nano-tokenizer.cc
   offline-qwen3-asr-model-config.cc
   offline-qwen3-asr-model.cc
+  offline-qwen3-forced-aligner-model.cc
   offline-recognizer-qwen3-asr-impl.cc
   qwen-asr-tokenizer.cc
 )

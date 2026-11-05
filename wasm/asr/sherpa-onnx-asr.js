@@ -975,12 +975,21 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
   const tokenizerLen = Module.lengthBytesUTF8(config.tokenizer || '') + 1;
   const hotwordsLen = Module.lengthBytesUTF8(config.hotwords || '') + 1;
+  const faConvFrontendLen =
+      Module.lengthBytesUTF8(config.forcedAlignerConvFrontend || '') + 1;
+  const faEncoderLen =
+      Module.lengthBytesUTF8(config.forcedAlignerEncoder || '') + 1;
+  const faDecoderLen =
+      Module.lengthBytesUTF8(config.forcedAlignerDecoder || '') + 1;
+  const faTokenizerLen =
+      Module.lengthBytesUTF8(config.forcedAlignerTokenizer || '') + 1;
 
   const n = convFrontendLen + encoderLen + decoderLen + tokenizerLen +
-      hotwordsLen;
+      hotwordsLen + faConvFrontendLen + faEncoderLen + faDecoderLen +
+      faTokenizerLen;
   const buffer = Module._malloc(n);
 
-  const len = 10 * 4;
+  const len = 14 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -999,6 +1008,23 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
 
   Module.stringToUTF8(config.hotwords || '', buffer + offset, hotwordsLen);
   offset += hotwordsLen;
+
+  Module.stringToUTF8(
+      config.forcedAlignerConvFrontend || '', buffer + offset,
+      faConvFrontendLen);
+  offset += faConvFrontendLen;
+
+  Module.stringToUTF8(
+      config.forcedAlignerEncoder || '', buffer + offset, faEncoderLen);
+  offset += faEncoderLen;
+
+  Module.stringToUTF8(
+      config.forcedAlignerDecoder || '', buffer + offset, faDecoderLen);
+  offset += faDecoderLen;
+
+  Module.stringToUTF8(
+      config.forcedAlignerTokenizer || '', buffer + offset, faTokenizerLen);
+  offset += faTokenizerLen;
 
   offset = 0;
   Module.setValue(ptr + 0 * 4, buffer + offset, 'i8*');
@@ -1020,6 +1046,18 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
   Module.setValue(ptr + 8 * 4, config.seed || 42, 'i32');
   Module.setValue(ptr + 9 * 4, buffer + offset, 'i8*');
   offset += hotwordsLen;
+
+  Module.setValue(ptr + 10 * 4, buffer + offset, 'i8*');
+  offset += faConvFrontendLen;
+
+  Module.setValue(ptr + 11 * 4, buffer + offset, 'i8*');
+  offset += faEncoderLen;
+
+  Module.setValue(ptr + 12 * 4, buffer + offset, 'i8*');
+  offset += faDecoderLen;
+
+  Module.setValue(ptr + 13 * 4, buffer + offset, 'i8*');
+  offset += faTokenizerLen;
 
   return {
     buffer: buffer,
