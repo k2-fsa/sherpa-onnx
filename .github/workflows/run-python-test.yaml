@@ -308,7 +308,7 @@ jobs:
       - name: Install test dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin soundfile onnx
           # External phonemizers used by the test-offline-tts-*-phonemize.py
           # examples. piper_phonemize ships espeak-ng inside the wheel; it is
           # a pip dependency, not a build dependency of sherpa-onnx.

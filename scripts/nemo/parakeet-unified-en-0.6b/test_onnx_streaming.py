@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 # Copyright      2026  Milan Leonard
+# Copyright      2026  Julian Pscheid
 """ONNX Runtime smoke test for buffered Parakeet Unified streaming."""
 
 import argparse
-import math
 from pathlib import Path
 
-import kaldi_native_fbank as knf
 import librosa
 import numpy as np
 import onnxruntime as ort
 import soundfile as sf
 import torch
 
-from buffered_streaming_helpers import normalize_per_feature, slice_feature_buffer
+from buffered_streaming_helpers import normalize_per_feature
 
 
 def get_args():
@@ -26,25 +25,20 @@ def get_args():
     return parser.parse_args()
 
 
-def create_fbank(num_bins: int):
-    opts = knf.FbankOptions()
-    opts.frame_opts.dither = 0
-    opts.frame_opts.remove_dc_offset = False
-    opts.frame_opts.window_type = "hann"
-    opts.mel_opts.low_freq = 0
-    opts.mel_opts.num_bins = num_bins
-    opts.mel_opts.is_librosa = True
-    return knf.OnlineFbank(opts)
-
-
-def compute_features(audio, fbank):
-    fbank.accept_waveform(16000, audio)
-    ans = []
-    processed = 0
-    while processed < fbank.num_frames_ready:
-        ans.append(np.array(fbank.get_frame(processed)))
-        processed += 1
-    return np.stack(ans).astype(np.float32)
+def compute_features(audio, mel_filters):
+    # NeMo uses whole-buffer preemphasis and centered, zero-padded STFT.
+    audio = np.concatenate([audio[:1], audio[1:] - 0.97 * audio[:-1]])
+    spectrum = librosa.stft(
+        audio,
+        n_fft=512,
+        hop_length=160,
+        win_length=400,
+        window=np.hanning(400),
+        center=True,
+        pad_mode="constant",
+    )
+    features = np.log(mel_filters @ (np.abs(spectrum) ** 2) + 2**-24)
+    return features[:, : len(audio) // 160].T.astype(np.float32)
 
 
 class OnnxModel:
@@ -54,9 +48,15 @@ class OnnxModel:
         opts.intra_op_num_threads = 1
         providers = ["CPUExecutionProvider"]
 
-        self.encoder = ort.InferenceSession(encoder, sess_options=opts, providers=providers)
-        self.decoder = ort.InferenceSession(decoder, sess_options=opts, providers=providers)
-        self.joiner = ort.InferenceSession(joiner, sess_options=opts, providers=providers)
+        self.encoder = ort.InferenceSession(
+            encoder, sess_options=opts, providers=providers
+        )
+        self.decoder = ort.InferenceSession(
+            decoder, sess_options=opts, providers=providers
+        )
+        self.joiner = ort.InferenceSession(
+            joiner, sess_options=opts, providers=providers
+        )
 
         meta = self.encoder.get_modelmeta().custom_metadata_map
         print("encoder meta:", meta)
@@ -83,9 +83,9 @@ class OnnxModel:
         s1 = np.zeros((self.pred_rnn_layers, 1, self.pred_hidden), dtype=np.float32)
         return s0, s1
 
-    def run_encoder(self, x: np.ndarray):
+    def run_encoder(self, x: np.ndarray, length: int):
         x = torch.from_numpy(x).t().unsqueeze(0).contiguous()
-        x_lens = np.array([x.shape[-1]], dtype=np.int64)
+        x_lens = np.array([length], dtype=np.int64)
         out = self.encoder.run(
             None,
             {
@@ -93,7 +93,7 @@ class OnnxModel:
                 self.encoder.get_inputs()[1].name: x_lens,
             },
         )
-        return out[0]
+        return out[0], int(out[1][0])
 
     def run_decoder(self, token, s0, s1):
         target = np.array([[token]], dtype=np.int32)
@@ -119,31 +119,46 @@ class OnnxModel:
         )[0]
 
 
-def decode_buffered(model: OnnxModel, features: np.ndarray, blank: int):
+def decode_buffered(model: OnnxModel, audio: np.ndarray, blank: int):
     ans = [blank]
     s0, s1 = model.get_decoder_state()
     dec_out, s0_next, s1_next = model.run_decoder(ans[-1], s0, s1)
     max_token_per_frame = 10
-
-    num_chunks = math.ceil(features.shape[0] / model.chunk_feature_frames)
-    for i in range(num_chunks):
-        center_start = i * model.chunk_feature_frames
-        window, valid_center_frames = slice_feature_buffer(
-            features,
-            center_start=center_start,
-            left=model.left_feature_frames,
-            chunk=model.chunk_feature_frames,
-            right=model.right_feature_frames,
-        )
+    mel_filters = librosa.filters.mel(sr=16000, n_fft=512, n_mels=model.feat_dim)
+    chunk = model.chunk_feature_frames * 160
+    right = model.right_feature_frames * 160
+    capacity = (model.left_feature_frames * 160) + chunk + right
+    buffer = np.zeros(0, dtype=np.float32)
+    left_samples = center_samples = right_samples = 0
+    lo, hi = 0, min(chunk + right, len(audio))
+    while lo < len(audio):
+        new = audio[lo:hi]
+        last = hi == len(audio)
+        buffer = np.concatenate([buffer, new])
+        left_samples += center_samples
+        center_samples = 0
+        right_samples += len(new)
+        if last:
+            center_samples, right_samples = right_samples, 0
+        elif right_samples > chunk:
+            center_samples = chunk
+            right_samples -= chunk
+        excess = max(len(buffer) - capacity, 0)
+        left_samples -= excess
+        buffer = buffer[excess:]
+        window = compute_features(buffer, mel_filters)
         if model.normalize_type == "per_feature":
             window = normalize_per_feature(window)
-
-        enc = model.run_encoder(window)
-        valid_center_encoder_frames = math.ceil(
-            valid_center_frames / model.subsampling_factor
+        length = len(window)
+        window = np.pad(window, ((0, 1), (0, 0)))
+        enc, encoded_length = model.run_encoder(window, length)
+        t_start = left_samples // (160 * model.subsampling_factor)
+        count = (
+            encoded_length - t_start
+            if last
+            else center_samples // (160 * model.subsampling_factor)
         )
-        t_start = model.left_encoder_frames
-        t_end = min(t_start + valid_center_encoder_frames, enc.shape[2])
+        t_end = min(t_start + count, encoded_length)
 
         for t in range(t_start, t_end):
             enc_t = enc[:, :, t : t + 1]
@@ -155,6 +170,9 @@ def decode_buffered(model: OnnxModel, features: np.ndarray, blank: int):
                 ans.append(idx)
                 s0, s1 = s0_next, s1_next
                 dec_out, s0_next, s1_next = model.run_decoder(ans[-1], s0, s1)
+
+        lo = hi
+        hi = min(hi + chunk, len(audio))
 
     return ans[1:]
 
@@ -172,16 +190,14 @@ def main():
             t, idx = line.split()
             id2token[int(idx)] = t
 
-    fbank = create_fbank(model.feat_dim)
     audio, sr = sf.read(args.wav, dtype="float32", always_2d=True)
     audio = audio[:, 0]
     if sr != 16000:
         audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
     audio = np.concatenate([audio, np.zeros(16000 * 2, dtype=np.float32)])
 
-    features = compute_features(audio, fbank)
     blank = len(id2token) - 1
-    token_ids = decode_buffered(model, features, blank)
+    token_ids = decode_buffered(model, audio, blank)
     text = "".join(id2token[i] for i in token_ids).replace("▁", " ").strip()
 
     print(args.wav)
