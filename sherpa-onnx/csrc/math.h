@@ -177,7 +177,9 @@ void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
 void NormalizeWhisperFeatures(float *features, int32_t num_frames,
                               int32_t feat_dim);
 
-void NemoNormalizePerFeature(float *p, int32_t num_frames, int32_t feature_dim);
+// sample_variance also uses NeMo's reference-centered mean reduction.
+void NemoNormalizePerFeature(float *p, int32_t num_frames, int32_t feature_dim,
+                             bool sample_variance = false);
 
 int32_t MaxElementIndex(const float *v, int32_t n);
 
