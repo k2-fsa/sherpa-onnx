@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   clang-tidy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version: [3.8]
