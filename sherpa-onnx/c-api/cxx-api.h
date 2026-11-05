@@ -602,7 +602,9 @@ struct OfflineQwen3ASRModelConfig {
   std::string encoder;
   /** Decoder ONNX model file (KV cache). */
   std::string decoder;
-  /** Tokenizer directory (e.g. containing `vocab.json`). */
+  /** Tokenizer directory (e.g. containing `vocab.json`); the
+   *  vocab.json file path is also accepted.
+   */
   std::string tokenizer;
   /** Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. @c
    * "foo,bar,baz". */
