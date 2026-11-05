@@ -20,10 +20,10 @@ concurrency:
 
 jobs:
   clang-tidy:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.10"]
         # Each job checks 1/n of the sources (round-robin) via the
         # SHERPA_ONNX_TIDY_SHARD logic in sherpa-onnx/csrc/CMakeLists.txt.
         # Keep the entries in sync with n.
