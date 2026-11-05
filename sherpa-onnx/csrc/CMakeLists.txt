@@ -827,6 +827,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     lfr-test.cc
     math-test.cc
+    offline-cuda-iobinding-test.cc
     offline-recognizer-canary-impl-test.cc
     offline-recognizer-cohere-transcribe-impl-test.cc
     offline-recognizer-ctc-impl-test.cc
