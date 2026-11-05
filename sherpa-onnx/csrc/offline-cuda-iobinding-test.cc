@@ -301,5 +301,192 @@ TEST_F(CudaAppendFallback, FireRedCachesStayOnCpu) {
 #endif
 }
 
+struct InterleavedState {
+  std::pair<Ort::Value, Ort::Value> cross;
+  std::pair<Ort::Value, Ort::Value> self;
+  Ort::Value offset;
+  std::vector<int64_t> tokens;
+};
+
+template <typename Model>
+InterleavedState MakeState(Model *model,
+                          std::pair<Ort::Value, Ort::Value> cross,
+                          std::vector<int64_t> tokens) {
+  return {std::move(cross), model->GetInitialSelfKVCache(),
+          Tensor<int64_t>(model->Allocator(), {1}, {0}), std::move(tokens)};
+}
+
+template <typename Model>
+void InterleavedStep(Model *model, InterleavedState *state, int32_t device) {
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(state->cross.first, "Cuda", device));
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(state->cross.second, "Cuda", device));
+  const int64_t count = state->tokens.size();
+  ASSERT_GT(count, 0);
+  auto token_tensor =
+      Tensor<int64_t>(model->Allocator(), {1, count}, state->tokens);
+  auto out = model->ForwardDecoder(
+      std::move(token_tensor), std::move(state->self.first),
+      std::move(state->self.second), std::move(state->cross.first),
+      std::move(state->cross.second), std::move(state->offset));
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(std::get<0>(out), "Cpu", 0));
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(std::get<1>(out), "Cuda", device));
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(std::get<2>(out), "Cuda", device));
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(std::get<3>(out), "Cuda", device));
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(std::get<4>(out), "Cuda", device));
+  ASSERT_NO_FATAL_FAILURE(CheckMemory(std::get<5>(out), "Cpu", 0));
+  if constexpr (std::tuple_size<decltype(out)>::value == 7) {
+    if (std::get<6>(out)) {
+      ASSERT_NO_FATAL_FAILURE(CheckMemory(std::get<6>(out), "Cpu", 0));
+    }
+  }
+  auto info = std::get<0>(out).GetTensorTypeAndShapeInfo();
+  ASSERT_EQ(info.GetElementType(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);
+  auto shape = info.GetShape();
+  ASSERT_EQ(shape.size(), 3);
+  ASSERT_GT(shape[2], 0);
+  ASSERT_GE(info.GetElementCount(), static_cast<size_t>(shape[2]));
+  const float *last = std::get<0>(out).template GetTensorData<float>() +
+                      info.GetElementCount() - shape[2];
+  state->tokens = {std::max_element(last, last + shape[2]) - last};
+  state->self = {std::move(std::get<1>(out)), std::move(std::get<2>(out))};
+  state->cross = {std::move(std::get<3>(out)), std::move(std::get<4>(out))};
+  state->offset = std::move(std::get<5>(out));
+  *state->offset.template GetTensorMutableData<int64_t>() += count;
+}
+
+// Enable separately: these tests require two simultaneously visible GPUs.
+bool RunMultiGpuTests() {
+  const char *enabled = std::getenv("SHERPA_ONNX_RUN_MULTI_GPU_IO_TESTS");
+  return enabled != nullptr && std::string(enabled) == "1";
+}
+
+using CudaDualDevice = ModelIoBindingTest;
+
+TEST_F(CudaDualDevice, WhisperInterleavedCaches) {
+  if (!RunMultiGpuTests()) {
+    GTEST_SKIP() << "Set SHERPA_ONNX_RUN_MULTI_GPU_IO_TESTS=1 for two GPUs";
+  }
+  ASSERT_TRUE(HasCuda());
+  TempConfigFile config0("device_id=0\n");
+  TempConfigFile config1("device_id=1\n");
+  ASSERT_TRUE(config0.Ok());
+  ASSERT_TRUE(config1.Ok());
+  OfflineModelConfig config;
+  config.num_threads = 1;
+  config.whisper.encoder =
+      RequiredModelPath("SHERPA_ONNX_CUDA_TEST_WHISPER_ENCODER");
+  config.whisper.decoder =
+      RequiredModelPath("SHERPA_ONNX_CUDA_TEST_WHISPER_DECODER");
+  std::array<std::unique_ptr<OfflineWhisperModel>, 2> models;
+  for (int32_t d = 0; d != 2; ++d) {
+    config.provider = d == 0 ? config0.Provider() : config1.Provider();
+    models[d] = std::make_unique<OfflineWhisperModel>(config);
+    ASSERT_GT(models[d]->FeatureDim(), 0);
+    ASSERT_LE(models[d]->FeatureDim(), 128);
+  }
+  auto state_for = [&](int32_t d) {
+    auto *model = models[d].get();
+    return MakeState(model, model->ForwardEncoder(Tensor<float>(
+        model->Allocator(), {1, model->FeatureDim(), 3000},
+        std::vector<float>(model->FeatureDim() * 3000))),
+        model->GetInitialTokens());
+  };
+  std::array<InterleavedState, 2> states{state_for(0), state_for(1)};
+  for (int32_t step = 0; step != 8; ++step) {
+    for (int32_t i = 0; i != 2; ++i) {
+      const int32_t d = (step + i) % 2;
+      SCOPED_TRACE("step=" + std::to_string(step) +
+                   " device=" + std::to_string(d));
+      ASSERT_NO_FATAL_FAILURE(InterleavedStep(models[d].get(), &states[d], d));
+    }
+  }
+}
+
+TEST_F(CudaDualDevice, FireRedInterleavedCaches) {
+  if (!RunMultiGpuTests()) {
+    GTEST_SKIP() << "Set SHERPA_ONNX_RUN_MULTI_GPU_IO_TESTS=1 for two GPUs";
+  }
+  ASSERT_TRUE(HasCuda());
+  TempConfigFile config0("device_id=0\n");
+  TempConfigFile config1("device_id=1\n");
+  ASSERT_TRUE(config0.Ok());
+  ASSERT_TRUE(config1.Ok());
+  OfflineModelConfig config;
+  config.num_threads = 1;
+  config.fire_red_asr.encoder =
+      RequiredModelPath("SHERPA_ONNX_CUDA_TEST_FIRERED_ENCODER");
+  config.fire_red_asr.decoder =
+      RequiredModelPath("SHERPA_ONNX_CUDA_TEST_FIRERED_DECODER");
+  std::array<std::unique_ptr<OfflineFireRedAsrModel>, 2> models;
+  for (int32_t d = 0; d != 2; ++d) {
+    config.provider = d == 0 ? config0.Provider() : config1.Provider();
+    models[d] = std::make_unique<OfflineFireRedAsrModel>(config);
+  }
+  auto state_for = [&](int32_t d) {
+    auto *model = models[d].get();
+    return MakeState(model, model->ForwardEncoder(
+        Tensor<float>(model->Allocator(), {1, 100, 80},
+                      std::vector<float>(8000)),
+        Tensor<int64_t>(model->Allocator(), {1}, {100})),
+        {model->GetModelMetadata().sos_id});
+  };
+  std::array<InterleavedState, 2> states{state_for(0), state_for(1)};
+  for (int32_t step = 0; step != 8; ++step) {
+    for (int32_t i = 0; i != 2; ++i) {
+      const int32_t d = (step + i) % 2;
+      SCOPED_TRACE("step=" + std::to_string(step) +
+                   " device=" + std::to_string(d));
+      ASSERT_NO_FATAL_FAILURE(InterleavedStep(models[d].get(), &states[d], d));
+    }
+  }
+}
+
+TEST_F(CudaDualDevice, WhisperLidInterleavedCaches) {
+  if (!RunMultiGpuTests()) {
+    GTEST_SKIP() << "Set SHERPA_ONNX_RUN_MULTI_GPU_IO_TESTS=1 for two GPUs";
+  }
+  ASSERT_TRUE(HasCuda());
+  TempConfigFile config0("device_id=0\n");
+  TempConfigFile config1("device_id=1\n");
+  ASSERT_TRUE(config0.Ok());
+  ASSERT_TRUE(config1.Ok());
+  SpokenLanguageIdentificationConfig config;
+  config.num_threads = 1;
+  config.whisper.encoder =
+      RequiredModelPath("SHERPA_ONNX_CUDA_TEST_WHISPER_ENCODER");
+  config.whisper.decoder =
+      RequiredModelPath("SHERPA_ONNX_CUDA_TEST_WHISPER_DECODER");
+  std::array<std::unique_ptr<OfflineWhisperModel>, 2> models;
+  for (int32_t d = 0; d != 2; ++d) {
+    config.provider = d == 0 ? config0.Provider() : config1.Provider();
+    models[d] = std::make_unique<OfflineWhisperModel>(config);
+    ASSERT_GT(models[d]->FeatureDim(), 0);
+    ASSERT_LE(models[d]->FeatureDim(), 128);
+    ASSERT_TRUE(models[d]->IsMultiLingual());
+  }
+  auto cross_for = [&](int32_t d) {
+    auto *model = models[d].get();
+    return model->ForwardEncoder(Tensor<float>(model->Allocator(),
+        {1, model->FeatureDim(), 3000},
+        std::vector<float>(model->FeatureDim() * 3000)));
+  };
+  std::array<std::pair<Ort::Value, Ort::Value>, 2> cross{
+      cross_for(0), cross_for(1)};
+  for (int32_t step = 0; step != 8; ++step) {
+    for (int32_t i = 0; i != 2; ++i) {
+      const int32_t d = (step + i) % 2;
+      SCOPED_TRACE("step=" + std::to_string(step) +
+                   " device=" + std::to_string(d));
+      ASSERT_NO_FATAL_FAILURE(CheckMemory(cross[d].first, "Cuda", d));
+      ASSERT_NO_FATAL_FAILURE(CheckMemory(cross[d].second, "Cuda", d));
+      int32_t lang =
+          models[d]->DetectLanguage(cross[d].first, cross[d].second, {});
+      ASSERT_EQ(models[d]->GetID2Lang().count(lang), 1);
+      ASSERT_NO_FATAL_FAILURE(CheckMemory(cross[d].first, "Cuda", d));
+      ASSERT_NO_FATAL_FAILURE(CheckMemory(cross[d].second, "Cuda", d));
+    }
+  }
+}
+
 }  // namespace
 }  // namespace sherpa_onnx

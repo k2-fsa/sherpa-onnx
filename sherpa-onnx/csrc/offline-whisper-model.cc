@@ -114,6 +114,9 @@ class OfflineWhisperModel::Impl {
     std::vector<Ort::Value> encoder_out;
 
     if (use_cuda_iobinding_) {
+      // BindInput can copy tensors before Run() selects the session's device.
+      Ort::ThrowOnError(
+          Ort::GetApi().SetCurrentGpuDeviceId(cuda_provider_info_.device_id));
       // Encoder outputs are n_layer_cross_k and n_layer_cross_v, which are used
       // multiple times in decoder steps. Keep them on GPU to avoid
       // device<->host copies.
@@ -151,6 +154,9 @@ class OfflineWhisperModel::Impl {
     std::vector<Ort::Value> decoder_out;
 
     if (use_cuda_iobinding_) {
+      // BindInput can copy tensors before Run() selects the session's device.
+      Ort::ThrowOnError(
+          Ort::GetApi().SetCurrentGpuDeviceId(cuda_provider_info_.device_id));
       // CPU-side sampling needs logits on CPU, while self KV cache should
       // remain on GPU to avoid large device<->host copies between decode steps.
       Ort::IoBinding binding(*decoder_sess_);
