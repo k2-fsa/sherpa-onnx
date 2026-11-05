@@ -166,8 +166,23 @@ std::unordered_map<std::string, std::string> BuildCudaProviderOptions(
   return config;
 }
 
+bool GetCudaDeviceId(
+    const std::unordered_map<std::string, std::string> &options,
+    int32_t *device_id) {
+  auto it = options.find("device_id");
+  int32_t parsed_device_id = 0;
+  if (it == options.end() ||
+      it->second.find('\0') != std::string::npos ||
+      !ConvertStringToInteger(it->second, &parsed_device_id) ||
+      parsed_device_id < 0) {
+    return false;
+  }
+  *device_id = parsed_device_id;
+  return true;
+}
+
 #if ORT_API_VERSION >= 12
-static void AppendCudaProviderV2(
+static bool AppendCudaProviderV2(
     Ort::SessionOptions *sess_opts,
     const std::unordered_map<std::string, std::string> &provider_options,
     const std::string &available_providers) {
@@ -193,6 +208,7 @@ static void AppendCudaProviderV2(
                                                                cuda_options);
   }
 
+  const bool success = status == nullptr;
   if (status != nullptr) {
     const char *msg = api.GetErrorMessage(status);
     SHERPA_ONNX_LOGE(
@@ -203,12 +219,24 @@ static void AppendCudaProviderV2(
   if (cuda_options != nullptr) {
     api.ReleaseCUDAProviderOptions(cuda_options);
   }
+  return success;
 }
 #endif
 
 Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
     const ProviderConfig *provider_config /*= nullptr*/) {
+  return GetSessionOptionsImpl(num_threads, provider_str, provider_config,
+                               nullptr);
+}
+
+Ort::SessionOptions GetSessionOptionsImpl(
+    int32_t num_threads, const std::string &provider_str,
+    const ProviderConfig *provider_config,
+    CudaProviderInfo *cuda_provider_info) {
+  if (cuda_provider_info != nullptr) {
+    *cuda_provider_info = {};
+  }
   std::unordered_map<std::string, std::string> config;
   std::string new_provider_str;
 
@@ -420,17 +448,24 @@ Ort::SessionOptions GetSessionOptionsImpl(
         // are meant for TensorRT; forwarding them would make ORT reject
         // unknown options and lose the GPU fallback entirely.
         const std::unordered_map<std::string, std::string> kNoConfig;
-        AppendCudaProviderV2(
-            &sess_opts,
-            BuildCudaProviderOptions(p == Provider::kCUDA ? config : kNoConfig,
-                                     device_id, algo_search),
-            os.str());
+        auto cuda_options = BuildCudaProviderOptions(
+            p == Provider::kCUDA ? config : kNoConfig, device_id, algo_search);
+        if (!GetCudaDeviceId(cuda_options, &device_id)) {
+          SHERPA_ONNX_LOGE("Invalid CUDA device_id. CUDA provider is disabled");
+          break;
+        }
+        if (!AppendCudaProviderV2(&sess_opts, cuda_options, os.str())) {
+          break;
+        }
 #else
         OrtCUDAProviderOptions options;
         options.device_id = device_id;
         options.cudnn_conv_algo_search = algo_search;
         sess_opts.AppendExecutionProvider_CUDA(options);
 #endif
+        if (cuda_provider_info != nullptr) {
+          *cuda_provider_info = {true, device_id};
+        }
       } else {
         SHERPA_ONNX_LOGE(
             "Please compile with -DSHERPA_ONNX_ENABLE_GPU=ON. Available "
