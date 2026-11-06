@@ -103,9 +103,18 @@ std::string RequiredModelPath(const char *variable) {
 
 void CheckMemory(const Ort::Value &value, const char *name, int32_t device_id) {
   ASSERT_TRUE(value.IsTensor());
-  auto info = value.GetTensorMemoryInfo();
-  ASSERT_EQ(info.GetAllocatorName(), name);
-  ASSERT_EQ(info.GetDeviceId(), device_id);
+  // Use the C API for older ORT versions without Value::GetTensorMemoryInfo.
+  // The returned memory info is borrowed from value and must not be freed.
+  const auto &api = Ort::GetApi();
+  const OrtMemoryInfo *info = nullptr;
+  Ort::ThrowOnError(api.GetTensorMemoryInfo(value, &info));
+  ASSERT_NE(info, nullptr);
+  const char *allocator_name = nullptr;
+  int actual_device_id = 0;
+  Ort::ThrowOnError(api.MemoryInfoGetName(info, &allocator_name));
+  Ort::ThrowOnError(api.MemoryInfoGetId(info, &actual_device_id));
+  ASSERT_STREQ(allocator_name, name);
+  ASSERT_EQ(actual_device_id, device_id);
 }
 
 template <typename T>
