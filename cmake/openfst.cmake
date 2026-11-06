@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 # Copyright (c)  2020  Xiaomi Corporation (author: Fangjun Kuang)
 
 function(download_openfst)
