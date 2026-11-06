@@ -11,10 +11,10 @@ log() {
 
 # Redux is a ternary v3: v3's .nemo supplies the architecture, Redux's
 # safetensors supply the packed weights, and ternary.json specifies the packing.
-curl -SL -O https://huggingface.co/moondream/parakeet-redux/resolve/main/model.safetensors
-curl -SL -O https://huggingface.co/moondream/parakeet-redux/resolve/main/tokenizer.json
-curl -SL -O https://huggingface.co/moondream/parakeet-redux/resolve/main/ternary.json
-curl -SL -O https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3/resolve/main/parakeet-tdt-0.6b-v3.nemo
+curl -SL -O https://huggingface.co/moondream/parakeet-redux/resolve/2bf128600aac4b16946f7ed8372e56117fe5e23b/model.safetensors
+curl -SL -O https://huggingface.co/moondream/parakeet-redux/resolve/2bf128600aac4b16946f7ed8372e56117fe5e23b/tokenizer.json
+curl -SL -O https://huggingface.co/moondream/parakeet-redux/resolve/2bf128600aac4b16946f7ed8372e56117fe5e23b/ternary.json
+curl -SL -O https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3/resolve/541d1f99c6b0c3cd0b11a95167540bb8edefd82b/parakeet-tdt-0.6b-v3.nemo
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/en.wav
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/de.wav

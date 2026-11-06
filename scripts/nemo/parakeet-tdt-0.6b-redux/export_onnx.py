@@ -39,6 +39,9 @@ from generate_bpe_vocab import generate_bpe_vocab_from_model
 
 REDUX = "moondream/parakeet-redux"
 V3 = "nvidia/parakeet-tdt-0.6b-v3"
+# Pinned so a re-run publishes the weights this script was tested with.
+REDUX_REVISION = "2bf128600aac4b16946f7ed8372e56117fe5e23b"
+V3_REVISION = "541d1f99c6b0c3cd0b11a95167540bb8edefd82b"
 # sherpa-onnx takes a model for a TDT one (its outputs include durations) only
 # if this metadata contains "tdt"; otherwise it loads it as a plain transducer.
 URL = f"https://huggingface.co/{REDUX} (ternary, trained from {V3})"
@@ -231,11 +234,13 @@ def check_vocabulary(model, tokenizer_json: Path) -> None:
     ids.update({a["id"]: a["content"] for a in tokenizer["added_tokens"]})
     v3 = dict(enumerate(model.joint.vocabulary))
     # The blank is the last id, named differently by each (`<blank>`, `<blk>`).
+    # tokens.txt writes it at len(v3), so it has to be there and nowhere else.
     differing = [i for i in range(len(v3)) if ids.get(i) != v3[i]]
-    if differing or len(ids) != len(v3) + 1:
+    if differing or len(ids) != len(v3) + 1 or len(v3) not in ids:
         raise SystemExit(
             f"vocabulary differs from v3's at {differing[:10]} "
-            f"({len(ids)} against {len(v3) + 1})"
+            f"({len(ids)} against {len(v3) + 1}); "
+            f"blank id {len(v3)} present: {len(v3) in ids}"
         )
     print(f"vocabulary: the same {len(v3)} tokens as v3, in the same order")
 
@@ -262,19 +267,25 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         onnx.save(model, filename)
 
 
-def local_or_download(local: str, repo: str, name: str) -> Path:
+def local_or_download(local: str, repo: str, name: str, revision: str) -> Path:
     path = Path(local)
-    return path if path.is_file() else Path(hf_hub_download(repo, name))
+    return path if path.is_file() else Path(hf_hub_download(repo, name, revision=revision))
 
 
 @torch.no_grad()
 def main():
     nemo_path = local_or_download(
-        "./parakeet-tdt-0.6b-v3.nemo", V3, "parakeet-tdt-0.6b-v3.nemo"
+        "./parakeet-tdt-0.6b-v3.nemo", V3, "parakeet-tdt-0.6b-v3.nemo", V3_REVISION
     )
-    weights_path = local_or_download("./model.safetensors", REDUX, "model.safetensors")
-    tokenizer_path = local_or_download("./tokenizer.json", REDUX, "tokenizer.json")
-    ternary_path = local_or_download("./ternary.json", REDUX, "ternary.json")
+    weights_path = local_or_download(
+        "./model.safetensors", REDUX, "model.safetensors", REDUX_REVISION
+    )
+    tokenizer_path = local_or_download(
+        "./tokenizer.json", REDUX, "tokenizer.json", REDUX_REVISION
+    )
+    ternary_path = local_or_download(
+        "./ternary.json", REDUX, "ternary.json", REDUX_REVISION
+    )
 
     asr_model = nemo_asr.models.ASRModel.restore_from(restore_path=str(nemo_path))
     check_vocabulary(asr_model, tokenizer_path)

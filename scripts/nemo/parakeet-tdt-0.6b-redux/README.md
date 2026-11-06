@@ -33,7 +33,6 @@ tags:
   - parakeet
   - tdt
   - onnx
-  - int8
   - nemo
   - sherpa-onnx
 ---
