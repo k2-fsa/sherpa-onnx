@@ -342,6 +342,12 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 > iOS app for reading EPUBs, PDFs, and documents aloud. It uses sherpa-onnx
 > to synthesize speech locally with Piper voices and can import books from OPDS catalogs.
 
+### [Murmur](https://www.murmurtts.com)
+
+> Offline text-to-speech app for Mac and Windows. On Intel Macs it uses sherpa-onnx
+> to run Kokoro (`kokoro-int8-multi-lang-v1_0`) locally, since MLX needs Apple Silicon.
+> It also offers voice cloning, multi-speaker projects and batch export. Closed source, with a free plan.
+
 ### [Sherpa Voice / @siteed/sherpa-onnx.rn](https://github.com/deeeed/audiolab)
 
 > React Native wrapper and demo app for validating sherpa-onnx on iOS,
