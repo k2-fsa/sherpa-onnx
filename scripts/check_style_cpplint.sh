@@ -75,7 +75,8 @@ function check_style() {
   if [[ $1 == mfc-example* ]]; then
     return
   fi
-  python3 $cpplint_src $1 || abort $1
+  # Silence vendored-cpplint DeprecationWarnings (sre_compile, codecs.open ...)
+  python3 -W ignore::DeprecationWarning $cpplint_src $1 || abort $1
 }
 
 function check_last_commit() {
