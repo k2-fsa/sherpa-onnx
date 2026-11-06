@@ -102,6 +102,7 @@ jobs:
           cp -v decoder.onnx $d
           cp -v joiner.onnx $d
           cp -v tokens.txt $d
+          cp -v scripts/nemo/parakeet-tdt-0.6b-$version/README.md $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
@@ -120,6 +121,7 @@ jobs:
           cp -v decoder.int8.onnx $d
           cp -v joiner.int8.onnx $d
           cp -v tokens.txt $d
+          cp -v scripts/nemo/parakeet-tdt-0.6b-$version/README.md $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
