@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
@@ -27,6 +28,11 @@ struct OfflineRecognitionResult {
   std::vector<std::string> tokens;
 
   std::string lang;
+
+  // Per-language probabilities from Whisper's language identification pass.
+  // Empty unless the per-stream option "top_k_langs" is set.
+  // Each pair is {language_code, probability}.
+  std::vector<std::pair<std::string, float>> lang_probs;
 
   // emotion target of the audio.
   std::string emotion;
