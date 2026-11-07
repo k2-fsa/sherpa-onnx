@@ -1,0 +1,5 @@
+The English number grammar uses NVIDIA/NeMo-text-processing,
+revision ddadfb2a38d2bc6b8cc6232c4f915eb60f500688 (Apache-2.0).
+The generator composes the classification and verbalization transducers and
+exports standard OpenFst byte-label rules for sherpa's existing normalizer.
+Retain NeMo's LICENSE with the generated FST pack.
