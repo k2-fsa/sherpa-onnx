@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
-        version: ["v2", "v3", "ultra"]
+        version: ["v2", "v3", "ultra", "redux"]
 
     steps:
       - uses: actions/checkout@v4
@@ -83,6 +83,19 @@ jobs:
         shell: bash
         run: |
           cd scripts/nemo/parakeet-tdt-0.6b-ultra
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v *.weights ../../..
+          mv -v tokens.txt ../../..
+          mv *.wav ../../../
+
+      - name: Run ${{ matrix.version }}
+        if: matrix.version == 'redux'
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-redux
           ./run.sh
 
           ls -lh *.onnx
