@@ -59,7 +59,7 @@ void ExpectResult(const OfflineRecognitionResult &result,
 }
 
 TEST(OfflineCtcConvert, FiltersSilenceTimestamps) {
-  SymbolTable symbols("<eps> 0\nSIL 1\nA 2\nB 3\n", false);
+  SymbolTable symbols(std::string("<eps> 0\nSIL 1\nA 2\nB 3\n"), false);
   auto decoded = Decode({1, 1, 2, 0, 1, 0, 3, 3}, 4);
   EXPECT_EQ(decoded.tokens, (std::vector<int64_t>{1, 2, 1, 3}));
   EXPECT_EQ(decoded.timestamps, (std::vector<int32_t>{0, 2, 4, 6}));
@@ -69,7 +69,7 @@ TEST(OfflineCtcConvert, FiltersSilenceTimestamps) {
 }
 
 TEST(OfflineCtcConvert, FiltersEndOfSentenceTimestamp) {
-  SymbolTable symbols("<blk> 0\nA 1\nB 2\n</s> 3\n", false);
+  SymbolTable symbols(std::string("<blk> 0\nA 1\nB 2\n</s> 3\n"), false);
   auto decoded = Decode({1, 1, 0, 2, 0, 3, 3}, 4);
   EXPECT_EQ(decoded.tokens, (std::vector<int64_t>{1, 2, 3}));
   EXPECT_EQ(decoded.timestamps, (std::vector<int32_t>{0, 3, 5}));
@@ -79,7 +79,7 @@ TEST(OfflineCtcConvert, FiltersEndOfSentenceTimestamp) {
 }
 
 TEST(OfflineCtcConvert, AllFilteredTokensHaveNoTimestamps) {
-  SymbolTable symbols("<eps> 0\nSIL 1\n</s> 2\n", false);
+  SymbolTable symbols(std::string("<eps> 0\nSIL 1\n</s> 2\n"), false);
   auto decoded = Decode({1, 1, 0, 2, 2}, 3);
   EXPECT_EQ(decoded.tokens, (std::vector<int64_t>{1, 2}));
   EXPECT_EQ(decoded.timestamps, (std::vector<int32_t>{0, 3}));
@@ -88,7 +88,7 @@ TEST(OfflineCtcConvert, AllFilteredTokensHaveNoTimestamps) {
 }
 
 TEST(OfflineCtcConvert, KeepsOrdinaryTokensAndTimestamps) {
-  SymbolTable symbols("<blk> 0\nA 1\nB 2\n", false);
+  SymbolTable symbols(std::string("<blk> 0\nA 1\nB 2\n"), false);
   auto decoded = Decode({0, 1, 1, 0, 2, 2, 0, 1}, 3);
   EXPECT_EQ(decoded.tokens, (std::vector<int64_t>{1, 2, 1}));
   EXPECT_EQ(decoded.timestamps, (std::vector<int32_t>{1, 4, 7}));
@@ -98,7 +98,7 @@ TEST(OfflineCtcConvert, KeepsOrdinaryTokensAndTimestamps) {
 }
 
 TEST(OfflineCtcConvert, PreservesFrameShiftAndSubsampling) {
-  SymbolTable symbols("<eps> 0\nSIL 1\nA 2\nB 3\n", false);
+  SymbolTable symbols(std::string("<eps> 0\nSIL 1\nA 2\nB 3\n"), false);
   auto decoded = Decode({1, 1, 2, 0, 1, 0, 3, 3}, 4);
 
   ExpectResult(Convert(decoded, symbols, 10, 4), {"A", "B"}, {0.08f, 0.24f},
@@ -108,7 +108,7 @@ TEST(OfflineCtcConvert, PreservesFrameShiftAndSubsampling) {
 }
 
 TEST(OfflineCtcConvert, BlankOnlyOutputStaysEmpty) {
-  SymbolTable symbols("<eps> 0\nSIL 1\nA 2\n", false);
+  SymbolTable symbols(std::string("<eps> 0\nSIL 1\nA 2\n"), false);
   auto decoded = Decode({0, 0, 0}, 3);
   EXPECT_TRUE(decoded.tokens.empty());
   EXPECT_TRUE(decoded.timestamps.empty());

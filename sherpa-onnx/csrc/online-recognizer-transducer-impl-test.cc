@@ -26,7 +26,7 @@ const char *kSymbols = R"(<blk> 0
 
 std::string Decode(const std::vector<int64_t> &tokens,
                    bool remove_cjk_space) {
-  SymbolTable symbols(kSymbols, false);
+  SymbolTable symbols(std::string(kSymbols), false);
   OnlineTransducerDecoderResult decoded;
   decoded.tokens = tokens;
   return Convert(decoded, symbols, 10, 4, 0, 0, remove_cjk_space).text;
@@ -46,7 +46,7 @@ TEST(OnlineTransducerConvert, RemoveCjkSpaceDisabled) {
 }
 
 TEST(OnlineTransducerConvert, RemoveCjkSpaceDefaultsToEnabled) {
-  SymbolTable symbols(kSymbols, false);
+  SymbolTable symbols(std::string(kSymbols), false);
   OnlineTransducerDecoderResult decoded;
   decoded.tokens = {2, 4, 3};
   EXPECT_EQ(Convert(decoded, symbols, 10, 4, 0, 0).text, "你好");

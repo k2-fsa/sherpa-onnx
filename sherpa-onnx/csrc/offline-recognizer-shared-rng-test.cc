@@ -84,7 +84,9 @@ class SharedRngSampler {
 // section at the same time.
 TEST(SharedRngThreadSafety, ConcurrentSamplingIsSerialized) {
   constexpr int32_t kNumThreads = 8;  // mirrors a --nj=8 decode run
-  constexpr int32_t kDrawsPerThread = 50;
+  // static: MSVC (C3493) otherwise wants it captured, while clang would
+  // warn that capturing it is unnecessary.
+  static constexpr int32_t kDrawsPerThread = 50;
 
   SharedRngSampler sampler(/*seed=*/42);
 
