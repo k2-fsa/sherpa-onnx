@@ -76,6 +76,20 @@ function(download_onnxruntime)
       message(FATAL_ERROR "Unsupported processor ${CMAKE_SYSTEM_PROCESSOR} for Darwin")
     endif()
   elseif(WIN32)
+    if(NOT CMAKE_VS_PLATFORM_NAME)
+      # Only Visual Studio generators set CMAKE_VS_PLATFORM_NAME. For others
+      # (e.g. Ninja from a VS developer prompt), derive it from the target so
+      # the per-platform onnxruntime-win-*.cmake files below still apply.
+      # This is function scope, so it does not leak into the rest of the build.
+      if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(CMAKE_VS_PLATFORM_NAME Win32)
+      elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM64|arm64|aarch64)$")
+        set(CMAKE_VS_PLATFORM_NAME ARM64)
+      else()
+        set(CMAKE_VS_PLATFORM_NAME x64)
+      endif()
+      message(STATUS "Non-VS generator: using onnxruntime for ${CMAKE_VS_PLATFORM_NAME}")
+    endif()
     message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
 
     if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32 OR CMAKE_VS_PLATFORM_NAME STREQUAL win32)
@@ -262,4 +276,20 @@ else()
   message(STATUS "Downloading pre-compiled onnxruntime")
 
   download_onnxruntime()
+
+  if(WIN32 AND NOT CMAKE_CONFIGURATION_TYPES AND TARGET onnxruntime)
+    # The onnxruntime-win-*.cmake files copy the DLLs to bin/<config>, which
+    # is where multi-config (Visual Studio) generators put executables.
+    # Single-config generators (Ninja) use CMAKE_RUNTIME_OUTPUT_DIRECTORY
+    # instead. Without a copy there, Windows silently loads the older
+    # C:\Windows\System32\onnxruntime.dll that ships with the OS, and the
+    # executables crash with access violations.
+    get_target_property(_sherpa_ort_location onnxruntime IMPORTED_LOCATION)
+    get_filename_component(_sherpa_ort_dir "${_sherpa_ort_location}" DIRECTORY)
+    file(GLOB _sherpa_ort_dlls "${_sherpa_ort_dir}/*.dll")
+    if(_sherpa_ort_dlls AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+      file(COPY ${_sherpa_ort_dlls} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+      message(STATUS "Copied onnxruntime DLLs to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+    endif()
+  endif()
 endif()
