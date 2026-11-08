@@ -75,7 +75,7 @@ def get_args():
     parser.add_argument(
         "--user-prompt",
         type=str,
-        default="语音转写:",
+        default="语音转写：",
         help="User prompt template for FunASR-nano",
     )
 

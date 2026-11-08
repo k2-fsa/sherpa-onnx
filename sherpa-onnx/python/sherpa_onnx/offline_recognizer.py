@@ -367,7 +367,9 @@ class OfflineRecognizer(object):
         debug: bool = False,
         provider: str = "cpu",
         system_prompt: str = "You are a helpful assistant.",
-        user_prompt: str = "语音转写:",
+        # Must match the training prompt (full-width colon); see
+        # OfflineFunASRNanoModelConfig::user_prompt in C++.
+        user_prompt: str = "语音转写：",
         max_new_tokens: int = 512,
         temperature: float = 1e-6,
         top_p: float = 0.8,
