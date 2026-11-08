@@ -36,7 +36,10 @@ fn main() {
     );
 
     let result = sd
-        .process(wave.samples())
+        .process_with_callback(wave.samples(), |num_processed_chunks, num_total_chunks| {
+            let progress = num_processed_chunks as f32 / num_total_chunks as f32 * 100.0;
+            println!("Progress: {progress:.3}%");
+        })
         .expect("Failed to do speaker diarization");
     println!("Number of speakers: {}", result.num_speakers());
     println!("Number of segments: {}", result.num_segments());

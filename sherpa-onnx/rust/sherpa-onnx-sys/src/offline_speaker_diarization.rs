@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-use std::os::raw::{c_char, c_float};
+use std::os::raw::{c_char, c_float, c_void};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -27,6 +27,13 @@ pub struct FastClusteringConfig {
     pub threshold: c_float,
     pub compute_confidence: i32,
 }
+
+pub type SherpaOnnxOfflineSpeakerDiarizationProgressCallback = Option<
+    unsafe extern "C" fn(num_processed_chunks: i32, num_total_chunks: i32, arg: *mut c_void) -> i32,
+>;
+
+pub type SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg =
+    Option<unsafe extern "C" fn(num_processed_chunks: i32, num_total_chunks: i32) -> i32>;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -93,6 +100,21 @@ extern "C" {
         sd: *const OfflineSpeakerDiarization,
         samples: *const c_float,
         n: i32,
+    ) -> *const OfflineSpeakerDiarizationResult;
+
+    pub fn SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
+        sd: *const OfflineSpeakerDiarization,
+        samples: *const c_float,
+        n: i32,
+        callback: SherpaOnnxOfflineSpeakerDiarizationProgressCallback,
+        arg: *mut c_void,
+    ) -> *const OfflineSpeakerDiarizationResult;
+
+    pub fn SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
+        sd: *const OfflineSpeakerDiarization,
+        samples: *const c_float,
+        n: i32,
+        callback: SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg,
     ) -> *const OfflineSpeakerDiarizationResult;
 
     pub fn SherpaOnnxOfflineSpeakerDiarizationDestroyResult(

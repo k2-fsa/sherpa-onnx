@@ -6,7 +6,11 @@
 use crate::{speaker_embedding::SpeakerEmbeddingExtractorConfig, utils::to_c_ptr};
 use sherpa_onnx_sys as sys;
 use std::ffi::CString;
+use std::os::raw::c_void;
 use std::slice;
+
+type ProgressCallback<'a> = dyn FnMut(i32, i32) + 'a;
+type BoxedProgressCallback<'a> = Box<ProgressCallback<'a>>;
 
 #[derive(Clone, Debug)]
 /// Pyannote segmentation model path.
@@ -196,6 +200,47 @@ impl OfflineSpeakerDiarization {
             Some(OfflineSpeakerDiarizationResult { ptr })
         }
     }
+
+    /// Same as [`process`](Self::process), but reports progress.
+    ///
+    /// `callback` receives `(num_processed_chunks, num_total_chunks)` after
+    /// each speaker embedding is computed. Segmentation before that step and
+    /// clustering after it report nothing. The C API ignores the callback's
+    /// return value, so the callback cannot stop processing early.
+    pub fn process_with_callback<F>(
+        &self,
+        samples: &[f32],
+        callback: F,
+    ) -> Option<OfflineSpeakerDiarizationResult>
+    where
+        F: FnMut(i32, i32),
+    {
+        let mut boxed: BoxedProgressCallback = Box::new(callback);
+        let ptr = unsafe {
+            sys::SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
+                self.ptr,
+                samples.as_ptr(),
+                samples.len() as i32,
+                Some(progress_callback_trampoline),
+                &mut boxed as *mut BoxedProgressCallback as *mut c_void,
+            )
+        };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(OfflineSpeakerDiarizationResult { ptr })
+        }
+    }
+}
+
+unsafe extern "C" fn progress_callback_trampoline(
+    num_processed_chunks: i32,
+    num_total_chunks: i32,
+    arg: *mut c_void,
+) -> i32 {
+    let cb = &mut *(arg as *mut BoxedProgressCallback);
+    cb(num_processed_chunks, num_total_chunks);
+    0
 }
 
 impl Drop for OfflineSpeakerDiarization {
