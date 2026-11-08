@@ -12,6 +12,7 @@
 #define SHERPA_ONNX_CSRC_FUNASR_NANO_TOKENIZER_H_
 
 #include <cstdint>
+#include <mutex>  // NOLINT
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -26,7 +27,8 @@ class FunASRNanoTokenizer {
   template <typename Manager>
   FunASRNanoTokenizer(Manager *mgr, const std::string &tokenizer_dir);
 
-  std::vector<int64_t> Encode(const std::string &text);
+  // Thread-safe: may be called concurrently on the same instance.
+  std::vector<int64_t> Encode(const std::string &text) const;
   std::string Decode(const std::vector<int64_t> &token_ids);
   std::string GetTokenStringStreaming(int64_t token_id,
                                       std::string *pending_bytes) const;
@@ -74,8 +76,10 @@ class FunASRNanoTokenizer {
   // merges ranks: "left\tright" -> rank
   std::unordered_map<std::string, int32_t> merges_rank_;
 
-  // BPE cache: bytelevel_word -> list of merged tokens
-  std::unordered_map<std::string, std::vector<std::string>> bpe_cache_;
+  // BPE cache: bytelevel_word -> list of merged tokens. Filled lazily by the
+  // const Encode(); guarded by bpe_cache_mutex_.
+  mutable std::unordered_map<std::string, std::vector<std::string>> bpe_cache_;
+  mutable std::mutex bpe_cache_mutex_;
 
   // bytes_to_unicode mapping (ByteLevel)
   std::string byte_to_unicode_[256];

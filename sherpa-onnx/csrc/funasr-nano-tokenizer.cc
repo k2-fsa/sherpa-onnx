@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <mutex>  // NOLINT
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -1297,23 +1298,20 @@ static inline std::string ByteLevelEncode(
 }
 
 // BPE encode (with cache): bytelevel_word to merged token strings.
+// The cache is shared between threads; it is only touched under
+// `cache_mutex`, while the merge loop itself runs unlocked.
 static std::vector<std::string> BpeEncodeWithCache(
     const std::string &word,
     const std::unordered_map<std::string, int32_t> &merges_rank,
-    std::unordered_map<std::string, std::vector<std::string>> *cache) {
-  if (!cache) return {};
-  auto it = cache->find(word);
-  if (it != cache->end()) return it->second;
+    std::unordered_map<std::string, std::vector<std::string>> *cache,
+    std::mutex *cache_mutex) {
+  {
+    std::lock_guard<std::mutex> lock(*cache_mutex);
+    auto it = cache->find(word);
+    if (it != cache->end()) return it->second;
+  }
 
   std::vector<std::string> symbols = SplitUtf8ToChars(word);
-  if (symbols.empty()) {
-    (*cache)[word] = {};
-    return {};
-  }
-  if (symbols.size() == 1) {
-    (*cache)[word] = symbols;
-    return symbols;
-  }
 
   while (symbols.size() > 1) {
     int32_t best_rank = std::numeric_limits<int32_t>::max();
@@ -1338,11 +1336,13 @@ static std::vector<std::string> BpeEncodeWithCache(
     symbols.erase(symbols.begin() + best_pos + 1);
   }
 
+  std::lock_guard<std::mutex> lock(*cache_mutex);
   (*cache)[word] = symbols;
   return symbols;
 }
 
-std::vector<int64_t> FunASRNanoTokenizer::Encode(const std::string &text) {
+std::vector<int64_t> FunASRNanoTokenizer::Encode(
+    const std::string &text) const {
   if (token2id_.empty()) {
     SHERPA_ONNX_LOGE("Tokenizer not initialized");
     SHERPA_ONNX_EXIT(-1);
@@ -1373,7 +1373,8 @@ std::vector<int64_t> FunASRNanoTokenizer::Encode(const std::string &text) {
         auto pieces = SplitByQwen3Pattern(seg);
         for (const auto &p : pieces) {
           std::string bl = ByteLevelEncode(p, byte_to_unicode_);
-          auto bpe_toks = BpeEncodeWithCache(bl, merges_rank_, &bpe_cache_);
+          auto bpe_toks = BpeEncodeWithCache(bl, merges_rank_, &bpe_cache_,
+                                             &bpe_cache_mutex_);
           for (const auto &bt : bpe_toks) {
             auto it = token2id_.find(bt);
             if (it == token2id_.end()) {
@@ -1400,7 +1401,8 @@ std::vector<int64_t> FunASRNanoTokenizer::Encode(const std::string &text) {
     auto pieces = SplitByQwen3Pattern(seg);
     for (const auto &p : pieces) {
       std::string bl = ByteLevelEncode(p, byte_to_unicode_);
-      auto bpe_toks = BpeEncodeWithCache(bl, merges_rank_, &bpe_cache_);
+      auto bpe_toks = BpeEncodeWithCache(bl, merges_rank_, &bpe_cache_,
+                                         &bpe_cache_mutex_);
       for (const auto &bt : bpe_toks) {
         auto it = token2id_.find(bt);
         if (it == token2id_.end()) continue;

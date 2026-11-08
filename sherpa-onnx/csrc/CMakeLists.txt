@@ -825,6 +825,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     cat-test.cc
     circular-buffer-test.cc
     context-graph-test.cc
+    funasr-nano-tokenizer-test.cc
     lfr-test.cc
     math-test.cc
     offline-recognizer-canary-impl-test.cc
