@@ -44,6 +44,11 @@ inline OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
       // Skip </s> for Google MedASR
       continue;
     }
+
+    if (sym_table.Contains("<sil>") && src.tokens[i] == sym_table["<sil>"]) {
+      // FireRedASR2-CTC emits <sil> between words; it is not text.
+      continue;
+    }
     auto sym = sym_table[src.tokens[i]];
     text.append(sym);
 

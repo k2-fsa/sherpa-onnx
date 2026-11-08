@@ -78,6 +78,19 @@ TEST(OfflineCtcConvert, FiltersEndOfSentenceTimestamp) {
                "AB");
 }
 
+TEST(OfflineCtcConvert, FiltersFireRedAsr2SilToken) {
+  // FireRedASR2-CTC emits <sil> between words; it must not reach the text.
+  // std::string: a bare literal is ambiguous with the Manager* overload on
+  // MSVC (C2666).
+  SymbolTable symbols(std::string("<blk> 0\nA 1\n<sil> 2\nB 3\n"), false);
+  auto decoded = Decode({1, 0, 2, 2, 0, 3}, 4);
+  EXPECT_EQ(decoded.tokens, (std::vector<int64_t>{1, 2, 3}));
+  EXPECT_EQ(decoded.timestamps, (std::vector<int32_t>{0, 2, 5}));
+
+  ExpectResult(Convert(decoded, symbols, 10, 4), {"A", "B"}, {0.0f, 0.2f},
+               "AB");
+}
+
 TEST(OfflineCtcConvert, AllFilteredTokensHaveNoTimestamps) {
   SymbolTable symbols("<eps> 0\nSIL 1\n</s> 2\n", false);
   auto decoded = Decode({1, 1, 0, 2, 2}, 3);
