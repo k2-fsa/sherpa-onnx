@@ -1104,32 +1104,13 @@ class OfflineFunASRNanoModel::Impl {
   }
 
   void InitLLM(const std::string &model_path) {
-    // For fp32 models: check for .data file by replacing .onnx with .data
-    // int8 and fp16 models don't have .data files, so no need to check
-    std::string data_path = model_path;
-    if (data_path.size() >= 5 &&
-        data_path.substr(data_path.size() - 5) == ".onnx") {
-      data_path = data_path.substr(0, data_path.size() - 5) + ".data";
-    } else {
-      data_path = model_path + ".data";
-    }
-    bool has_external_data = FileExists(data_path);
-
-    // Resolve absolute path for model file
+    // Always load from an absolute path instead of reading the whole model
+    // (~600MB) into a buffer first, which doubled peak memory. An absolute
+    // path also lets ONNX Runtime find external .data files (fp32 models)
+    // next to the model file.
     std::string abs_model_path = ResolveAbsolutePath(model_path);
-
-    if (has_external_data) {
-      // When external data exists, use absolute file path to create session.
-      // ONNX Runtime will automatically find .data file in the same directory
-      // as the model file when using absolute path.
-      llm_sess_ = std::make_unique<Ort::Session>(
-          env_, SHERPA_ONNX_TO_ORT_PATH(abs_model_path), sess_opts_llm_);
-    } else {
-      // No external data: load entire model into memory
-      std::vector<char> model_data = ReadFile(model_path);
-      llm_sess_ = std::make_unique<Ort::Session>(
-          env_, model_data.data(), model_data.size(), sess_opts_llm_);
-    }
+    llm_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(abs_model_path), sess_opts_llm_);
 
     SetupLlmFromSession();
   }
