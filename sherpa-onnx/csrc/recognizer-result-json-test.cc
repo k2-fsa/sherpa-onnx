@@ -15,8 +15,8 @@ namespace sherpa_onnx {
 namespace {
 
 std::vector<std::string> GetJsonStrings() {
-  std::vector<std::string> strings = {
-      "", "plain text", "\"quoted\" \\ path /", "你好世界 🌍"};
+  std::vector<std::string> strings = {"", "plain text", "\"quoted\" \\ path /",
+                                      "你好世界 🌍"};
   std::string all_controls;
   for (int32_t c = 0; c < 0x20; ++c) {
     strings.emplace_back(1, static_cast<char>(c));
@@ -91,7 +91,7 @@ TEST(RecognizerResultJson, OfflineByteTokens) {
     token += hex[c & 0xf];
     expected.push_back(token + ">");
   }
-  result.tokens.push_back("你好 🌍");
+  result.tokens.emplace_back("你好 🌍");
   expected.push_back(result.tokens.back());
   auto json = nlohmann::json::parse(result.AsJsonString(), nullptr, false);
   ASSERT_FALSE(json.is_discarded());

@@ -19,11 +19,11 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
-#include "sherpa-onnx/csrc/file-utils.h"
 
 namespace sherpa_onnx {
 
@@ -50,7 +50,7 @@ static Ort::Value CreateZeroTensorLike(Ort::Session &sess, int32_t input_index,
       break;
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:
       v = Ort::Value::CreateTensor<bool>(allocator, shape.data(), shape.size());
-      Fill<bool>(&v, 0);
+      Fill<bool>(&v, false);
       break;
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64:
       v = Ort::Value::CreateTensor<int64_t>(allocator, shape.data(),

@@ -22,25 +22,23 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
 // Helper structure to track hypothesis with decoder state
 struct NeMoHypothesis {
   std::vector<int32_t> ys;          // token sequence (excluding initial blank)
   std::vector<int32_t> timestamps;  // timestamps for each token
   std::vector<int32_t> durations;   // durations for TDT
   std::vector<float> ys_probs;      // log probability for each token
-  float log_prob;                   // accumulated log probability
-  std::vector<Ort::Value> decoder_states;  // RNN/LSTM states
-  const ContextState *context_state;       // context graph state
-  OrtAllocator *allocator;                 // allocator for cloning states
-  int32_t frame_offset;  // current frame position for this hypothesis
-  int32_t num_symbols;  // number of non-blank symbols emitted at current frame
+  float log_prob = 0.0f;            // accumulated log probability
+  std::vector<Ort::Value> decoder_states;       // RNN/LSTM states
+  const ContextState *context_state = nullptr;  // context graph state
+  OrtAllocator *allocator = nullptr;            // allocator for cloning states
+  int32_t frame_offset = 0;  // current frame position for this hypothesis
+  int32_t num_symbols =
+      0;  // number of non-blank symbols emitted at current frame
 
-  NeMoHypothesis()
-      : log_prob(0.0f),
-        context_state(nullptr),
-        allocator(nullptr),
-        frame_offset(0),
-        num_symbols(0) {}
+  NeMoHypothesis() = default;
 
   // Copy constructor - needed for hypothesis expansion
   NeMoHypothesis(const NeMoHypothesis &other)
@@ -84,6 +82,8 @@ struct NeMoHypothesis {
   NeMoHypothesis(NeMoHypothesis &&) = default;
   NeMoHypothesis &operator=(NeMoHypothesis &&) = default;
 };
+
+}  // namespace
 
 // Merge hypotheses with the same token sequence (log-add of their scores,
 // keeping the state of the better one) and keep the best max_active_paths.
@@ -446,8 +446,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           int32_t token = std::get<1>(pairs[k]);
           int32_t d = std::get<2>(pairs[k]);
 
-          float log_prob =
-              hyp.log_prob + token_logits[token] + length_reward;
+          float log_prob = hyp.log_prob + token_logits[token] + length_reward;
           if (!top_durations.empty()) {
             log_prob += duration_logits[d];
           }

@@ -32,6 +32,7 @@ data class OfflineParaformerModelConfig(
 
 data class OfflineNemoEncDecCtcModelConfig(
     var model: String = "",
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OfflineDolphinModelConfig(
@@ -96,6 +97,7 @@ data class OfflineWhisperModelConfig(
     var tailPaddings: Int = 1000, // Padding added at the end of the samples
     var enableTokenTimestamps: Boolean = false,
     var enableSegmentTimestamps: Boolean = false,
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OfflineCanaryModelConfig(
@@ -129,6 +131,7 @@ data class OfflineMoonshineModelConfig(
     var uncachedDecoder: String = "",
     var cachedDecoder: String = "",
     var mergedDecoder: String = "",
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OfflineSenseVoiceModelConfig(

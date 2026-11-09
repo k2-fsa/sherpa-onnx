@@ -31,7 +31,7 @@ struct LogAdd;
 template <>
 struct LogAdd<double> {
   double operator()(double x, double y) const {
-    double diff;
+    double diff = 0.0;
 
     if (x < y) {
       diff = x - y;
@@ -42,7 +42,7 @@ struct LogAdd<double> {
     // diff is negative.  x is now the larger one.
 
     if (diff >= SHERPA_ONNX_MIN_LOG_DIFF_DOUBLE) {
-      double res;
+      double res = 0.0;
       res = x + log1p(exp(diff));
       return res;
     }
@@ -54,7 +54,7 @@ struct LogAdd<double> {
 template <>
 struct LogAdd<float> {
   float operator()(float x, float y) const {
-    float diff;
+    float diff = 0.0f;
 
     if (x < y) {
       diff = x - y;
@@ -65,7 +65,7 @@ struct LogAdd<float> {
     // diff is negative.  x is now the larger one.
 
     if (diff >= SHERPA_ONNX_MIN_LOG_DIFF_DOUBLE) {
-      float res;
+      float res = 0.0f;
       res = x + log1pf(expf(diff));
       return res;
     }
@@ -82,10 +82,10 @@ void LogSoftmax(T *input, int32_t input_len) {
 
   T sum = 0.0;
   for (int32_t i = 0; i < input_len; i++) {
-    sum += exp(input[i] - m);
+    sum += std::exp(input[i] - m);
   }
 
-  T offset = m + log(sum);
+  T offset = m + std::log(sum);
   for (int32_t i = 0; i < input_len; i++) {
     input[i] -= offset;
   }

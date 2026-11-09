@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
@@ -31,9 +32,13 @@
 
 namespace sherpa_onnx {
 
+// remove_cjk_space: use 1 or 0. 0 means disable, non-zero means enable
+// removing spaces between CJK characters of scripts without word spacing.
+// See OfflineStream::SetOption("remove_cjk_space", ...).
 static OfflineRecognitionResult Convert(
     const OfflineTransducerDecoderResult &src, const SymbolTable &sym_table,
-    int32_t frame_shift_ms, int32_t subsampling_factor) {
+    int32_t frame_shift_ms, int32_t subsampling_factor,
+    int32_t remove_cjk_space = 1) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
@@ -60,7 +65,9 @@ static OfflineRecognitionResult Convert(
     text = sym_table.DecodeByteBpe(text);
   }
 
-  text = RemoveSpaceBetweenCjk(text);
+  if (remove_cjk_space != 0) {
+    text = RemoveSpaceBetweenCjk(text);
+  }
 
   r.text = std::move(text);
 
@@ -248,8 +255,12 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
     int32_t frame_shift_ms = 10;
     for (int32_t i = 0; i != n; ++i) {
+      // Per-stream option "remove_cjk_space": use 1 or 0. 0 means disable,
+      // non-zero (default 1) means enable removing spaces between CJK
+      // characters of scripts without word spacing.
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
-                       model_->SubsamplingFactor());
+                       model_->SubsamplingFactor(),
+                       ss[i]->GetOptionInt("remove_cjk_space", 1));
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       r.text = ApplyHomophoneReplacer(std::move(r.text));
 

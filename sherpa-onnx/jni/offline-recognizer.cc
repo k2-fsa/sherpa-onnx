@@ -119,6 +119,10 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
       ans.model_config.transducer.qnn_config.system_lib, systemLib,
       transducer_qnn_config_cls, transducer_qnn_config);
 
+  SHERPA_ONNX_JNI_READ_BOOL(
+      ans.model_config.transducer.qnn_config.htp_perf_mode, htpPerfMode,
+      transducer_qnn_config_cls, transducer_qnn_config);
+
   fid = env->GetFieldID(model_config_cls, "paraformer",
                         "Lcom/k2fsa/sherpa/onnx/OfflineParaformerModelConfig;");
   jobject paraformer_config = env->GetObjectField(model_config, fid);
@@ -142,6 +146,10 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.paraformer.qnn_config.system_lib,
                               systemLib, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(
+      ans.model_config.paraformer.qnn_config.htp_perf_mode, htpPerfMode,
+      qnn_config_cls, qnn_config);
 
   fid = env->GetFieldID(model_config_cls, "whisper",
                         "Lcom/k2fsa/sherpa/onnx/OfflineWhisperModelConfig;");
@@ -170,6 +178,24 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.whisper.enable_segment_timestamps,
                             enableSegmentTimestamps, whisper_config_cls,
                             whisper_config);
+
+  fid = env->GetFieldID(whisper_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+  qnn_config = env->GetObjectField(whisper_config, fid);
+  qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.whisper.qnn_config.backend_lib,
+                              backendLib, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.whisper.qnn_config.context_binary, contextBinary,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.whisper.qnn_config.system_lib,
+                              systemLib, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.whisper.qnn_config.htp_perf_mode,
+                            htpPerfMode, qnn_config_cls, qnn_config);
 
   fid = env->GetFieldID(model_config_cls, "fireRedAsr",
                         "Lcom/k2fsa/sherpa/onnx/OfflineFireRedAsrModelConfig;");
@@ -207,6 +233,24 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                               mergedDecoder, moonshine_config_cls,
                               moonshine_config);
 
+  fid = env->GetFieldID(moonshine_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+  qnn_config = env->GetObjectField(moonshine_config, fid);
+  qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.moonshine.qnn_config.backend_lib,
+                              backendLib, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.moonshine.qnn_config.context_binary, contextBinary,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.moonshine.qnn_config.system_lib,
+                              systemLib, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.moonshine.qnn_config.htp_perf_mode,
+                            htpPerfMode, qnn_config_cls, qnn_config);
+
   fid = env->GetFieldID(model_config_cls, "senseVoice",
                         "Lcom/k2fsa/sherpa/onnx/OfflineSenseVoiceModelConfig;");
   jobject sense_voice_config = env->GetObjectField(model_config, fid);
@@ -239,6 +283,10 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
       ans.model_config.sense_voice.qnn_config.system_lib, systemLib,
       qnn_config_cls, qnn_config);
 
+  SHERPA_ONNX_JNI_READ_BOOL(
+      ans.model_config.sense_voice.qnn_config.htp_perf_mode, htpPerfMode,
+      qnn_config_cls, qnn_config);
+
   // nemo
   fid = env->GetFieldID(
       model_config_cls, "nemo",
@@ -248,6 +296,24 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.nemo_ctc.model, model,
                               nemo_config_cls, nemo_config);
+
+  fid = env->GetFieldID(nemo_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+  qnn_config = env->GetObjectField(nemo_config, fid);
+  qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.nemo_ctc.qnn_config.backend_lib,
+                              backendLib, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.nemo_ctc.qnn_config.context_binary, contextBinary,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.nemo_ctc.qnn_config.system_lib,
+                              systemLib, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.nemo_ctc.qnn_config.htp_perf_mode,
+                            htpPerfMode, qnn_config_cls, qnn_config);
 
   // zipformer ctc
   fid =
@@ -275,6 +341,10 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(
       ans.model_config.zipformer_ctc.qnn_config.system_lib, systemLib,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(
+      ans.model_config.zipformer_ctc.qnn_config.htp_perf_mode, htpPerfMode,
       qnn_config_cls, qnn_config);
 
   // wenet ctc

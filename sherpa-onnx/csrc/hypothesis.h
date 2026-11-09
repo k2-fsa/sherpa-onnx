@@ -7,12 +7,12 @@
 #ifndef SHERPA_ONNX_CSRC_HYPOTHESIS_H_
 #define SHERPA_ONNX_CSRC_HYPOTHESIS_H_
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/context-graph.h"
@@ -76,7 +76,7 @@ struct Hypothesis {
   // the LODR states
   std::shared_ptr<LodrStateCost> lodr_state;
 
-  const ContextState *context_state;
+  const ContextState *context_state = nullptr;
 
   // TODO(fangjun): Make it configurable
   // the minimum of tokens in a chunk for streaming RNN LM

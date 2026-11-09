@@ -1360,6 +1360,10 @@ class SHERPA_ONNX_API OfflineSpeechDenoiser
   /** @brief Return the expected input sample rate. */
   int32_t GetSampleRate() const;
 
+  /** @brief Set a PCM voice sample for VoxLock. */
+  bool SetVoiceSample(const float *samples, int32_t n,
+                      int32_t sample_rate) const;
+
  private:
   explicit OfflineSpeechDenoiser(const SherpaOnnxOfflineSpeechDenoiser *p);
 };
@@ -1388,6 +1392,10 @@ class SHERPA_ONNX_API OnlineSpeechDenoiser
 
   /** @brief Reset the denoiser for a new stream. */
   void Reset() const;
+
+  /** @brief Set a PCM voice sample for VoxLock. */
+  bool SetVoiceSample(const float *samples, int32_t n,
+                      int32_t sample_rate) const;
 
   /** @brief Return the expected input sample rate. */
   int32_t GetSampleRate() const;

@@ -269,7 +269,7 @@ class HomophoneReplacer::Impl {
         if (p.back() > '4') {
           p.push_back('1');
         }
-        pron.append(std::move(p));
+        pron.append(p);
       }
 
       if (pron.empty()) {

@@ -433,7 +433,7 @@ class OfflineFunASRNanoModel::Impl {
     auto num_layers_value =
         LookupCustomModelMetaData(meta_data, "num_layers", allocator);
     if (!num_layers_value.empty()) {
-      num_layers_ = atoi(num_layers_value.c_str());
+      num_layers_ = ToIntOrDefault(num_layers_value, -1);
       if (num_layers_ <= 0) {
         SHERPA_ONNX_LOGE("Invalid num_layers=%d from metadata", num_layers_);
         SHERPA_ONNX_EXIT(-1);
@@ -451,12 +451,12 @@ class OfflineFunASRNanoModel::Impl {
     auto max_total_len_value =
         LookupCustomModelMetaData(meta_data, "max_total_len", allocator);
     if (!max_total_len_value.empty()) {
-      max_total_len_ = atoi(max_total_len_value.c_str());
+      max_total_len_ = ToIntOrDefault(max_total_len_value, -1);
     } else {
       auto attn_len_value =
           LookupCustomModelMetaData(meta_data, "attention_mask_len", allocator);
       if (!attn_len_value.empty())
-        max_total_len_ = atoi(attn_len_value.c_str());
+        max_total_len_ = ToIntOrDefault(attn_len_value, -1);
     }
     if (max_total_len_ <= 0) {
       // Fallback: use input[1] shape
@@ -694,7 +694,7 @@ class OfflineFunASRNanoModel::Impl {
     int64_t hd = tpl[3];
     std::vector<int64_t> key_shape = {
         batch, static_cast<int64_t>(max_total_len_), kv_h, hd};
-    std::vector<int64_t> value_shape = key_shape;
+    const std::vector<int64_t> &value_shape = key_shape;
 
     size_t key_numel = NumelFromShape(key_shape);
     size_t value_numel = NumelFromShape(value_shape);
@@ -880,7 +880,7 @@ class OfflineFunASRNanoModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    int32_t inferred_layers;
+    int32_t inferred_layers = 0;
     if (use_cpu_decode_buffers) {
       // For decode step with pre-allocated buffers, we know the number of
       // layers

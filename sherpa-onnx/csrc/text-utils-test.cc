@@ -933,4 +933,75 @@ TEST(NormalizeNfc, MatchesUnicodeReference) {
   }
 }
 
+TEST(IsHangul, HangulBlocks) {
+  // Hangul Jamo
+  EXPECT_TRUE(IsHangul(0x1100));
+  EXPECT_TRUE(IsHangul(0x11FF));
+  // Hangul Compatibility Jamo
+  EXPECT_TRUE(IsHangul(0x3130));
+  EXPECT_TRUE(IsHangul(0x318F));
+  // Hangul Jamo Extended-A
+  EXPECT_TRUE(IsHangul(0xA960));
+  EXPECT_TRUE(IsHangul(0xA97F));
+  // Hangul Syllables
+  EXPECT_TRUE(IsHangul(0xAC00));
+  EXPECT_TRUE(IsHangul(0xB294));  // 는
+  EXPECT_TRUE(IsHangul(0xD7A3));
+  // Hangul Jamo Extended-B
+  EXPECT_TRUE(IsHangul(0xD7B0));
+  EXPECT_TRUE(IsHangul(0xD7FF));
+  // Halfwidth Hangul Jamo
+  EXPECT_TRUE(IsHangul(0xFFA0));
+  EXPECT_TRUE(IsHangul(0xFFDC));
+}
+
+TEST(IsHangul, NonHangul) {
+  EXPECT_FALSE(IsHangul(0x10FF));  // just below Hangul Jamo
+  EXPECT_FALSE(IsHangul(0x1200));  // just above Hangul Jamo
+  EXPECT_FALSE(IsHangul(0x312F));  // just below Hangul Compatibility Jamo
+  EXPECT_FALSE(IsHangul(0x3190));  // just above Hangul Compatibility Jamo
+  EXPECT_FALSE(IsHangul(0x4F60));  // 你 Han
+  EXPECT_FALSE(IsHangul(0x3042));  // あ Hiragana
+  EXPECT_FALSE(IsHangul(0x30A2));  // ア Katakana
+  EXPECT_FALSE(IsHangul(U' '));
+}
+
+TEST(RemoveSpaceBetweenCjk, ChineseSpacesRemoved) {
+  EXPECT_EQ(RemoveSpaceBetweenCjk("你 好"), "你好");
+  EXPECT_EQ(RemoveSpaceBetweenCjk("你 好 世 界"), "你好世界");
+  EXPECT_EQ(RemoveSpaceBetweenCjk("你 好 。"), "你好。");
+}
+
+TEST(RemoveSpaceBetweenCjk, JapaneseSpacesRemoved) {
+  EXPECT_EQ(RemoveSpaceBetweenCjk("こ ん に ち は"), "こんにちは");
+  EXPECT_EQ(RemoveSpaceBetweenCjk("私 は 学生 です"), "私は学生です");
+}
+
+TEST(RemoveSpaceBetweenCjk, KoreanSpacesPreserved) {
+  EXPECT_EQ(RemoveSpaceBetweenCjk("그는 괜찮은 척 하려고"),
+            "그는 괜찮은 척 하려고");
+  EXPECT_EQ(RemoveSpaceBetweenCjk("한글 인식 결과"), "한글 인식 결과");
+}
+
+TEST(RemoveSpaceBetweenCjk, HangulJamoSpacesPreserved) {
+  // U+1100 U+1102: Hangul Jamo
+  EXPECT_EQ(RemoveSpaceBetweenCjk("\xe1\x84\x80 \xe1\x84\x82"),
+            "\xe1\x84\x80 \xe1\x84\x82");
+  // U+3131 U+3134: Hangul Compatibility Jamo
+  EXPECT_EQ(RemoveSpaceBetweenCjk("\xe3\x84\xb1 \xe3\x84\xb4"),
+            "\xe3\x84\xb1 \xe3\x84\xb4");
+  // U+FFA1 U+FFA2: Halfwidth Hangul Jamo
+  EXPECT_EQ(RemoveSpaceBetweenCjk("\xef\xbe\xa1 \xef\xbe\xa2"),
+            "\xef\xbe\xa1 \xef\xbe\xa2");
+}
+
+TEST(RemoveSpaceBetweenCjk, MixedHanHangulSpacePreserved) {
+  EXPECT_EQ(RemoveSpaceBetweenCjk("漢字 한글"), "漢字 한글");
+  EXPECT_EQ(RemoveSpaceBetweenCjk("한글 漢字"), "한글 漢字");
+}
+
+TEST(RemoveSpaceBetweenCjk, KoreanSpaceBeforePunctRemoved) {
+  EXPECT_EQ(RemoveSpaceBetweenCjk("그는 . 같았다"), "그는. 같았다");
+}
+
 }  // namespace sherpa_onnx

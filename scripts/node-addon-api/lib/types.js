@@ -101,6 +101,11 @@
  */
 
 /**
+ * @typedef {Object} OfflineSourceSeparationHandle
+ * @see src/offline-source-separation.cc
+ */
+
+/**
  * @typedef {Object} OnlineSpeechDenoiserHandle
  * @see src/online-speech-denoiser.cc
  */
@@ -416,6 +421,16 @@
  * @typedef {Object} WaveObject
  * @property {Float32Array} samples - 1-D float32 samples in [-1, 1].
  * @property {number} sampleRate - Sample rate as an integer (e.g., 16000).
+ * @see src/wave-reader.cc
+ */
+
+/**
+ * Multi-channel wave object returned by readWaveMultiChannel and used by
+ * writeWaveMultiChannel.
+ * @typedef {Object} MultiChannelWaveObject
+ * @property {Float32Array[]} samples - samples[c] holds channel c 1-D float32
+ *   samples in [-1, 1]. All channels have the same number of samples.
+ * @property {number} sampleRate - Sample rate as an integer (e.g., 44100).
  * @see src/wave-reader.cc
  */
 
@@ -837,6 +852,47 @@
 /**
  * @typedef {Object} DisplayObject
  * @property {DisplayHandle} handle
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationSpleeterModelConfig
+ * @property {string} vocals - Path to the vocals ONNX model.
+ * @property {string} accompaniment - Path to the accompaniment ONNX model.
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationUvrModelConfig
+ * @property {string} model - Path to the UVR (MDX-Net) ONNX model.
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationModelConfig
+ * @property {OfflineSourceSeparationSpleeterModelConfig} [spleeter]
+ * @property {OfflineSourceSeparationUvrModelConfig} [uvr]
+ * @property {number} [numThreads=1] - Positive int32 thread count.
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
+ */
+
+/**
+ * @typedef {Object} OfflineSourceSeparationConfig
+ * @property {OfflineSourceSeparationModelConfig} model
+ */
+
+/**
+ * @typedef {Object} SourceSeparationRequest
+ * @property {Float32Array[]} samples - One or two equal-length channels.
+ *   Mono input is duplicated to stereo internally by sherpa-onnx; you don't
+ *   need to duplicate it yourself. Values should be in [-1, 1].
+ * @property {number} sampleRate - Positive integer input sample rate in Hz,
+ *   no greater than 2147483647.
+ * @property {boolean} [enableExternalBuffer=true] - Set false for Electron.
+ */
+
+/**
+ * @typedef {Object} SourceSeparationOutput
+ * @property {Float32Array[][]} stems - Each stem contains separate channels.
+ * @property {number} sampleRate - Output sample rate in Hz.
  */
 
 // Export typedefs so they can be referenced by require('./types.js')

@@ -117,8 +117,12 @@ bash ./run-sense-voice.sh
 
 bash ./run-streaming-zipformer-en.sh
 bash ./run-streaming-zipformer-zh-en.sh
+bash ./run-streaming-paraformer.sh
+rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 bash ./run-streaming-zipformer-ctc-hlg.sh
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
+bash ./run-streaming-t-one-ctc.sh
+rm -rf sherpa-onnx-streaming-t-one-russian-2025-09-08
 
 bash ./run-offline-speech-enhancement-gtcrn.sh
 bash ./run-offline-speech-enhancement-dpdfnet.sh

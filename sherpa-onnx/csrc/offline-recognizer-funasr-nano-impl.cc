@@ -180,14 +180,14 @@ static std::string BuildUserPrompt(const std::vector<std::string> &hotwords,
 std::string FunASRNanoBuildUserPrompt(
     const OfflineFunASRNanoModelConfig &config, const OfflineStream &stream) {
   const auto &hotwords = stream.HasOption("hotwords")
-                            ? stream.GetOption("hotwords")
-                            : config.hotwords;
+                             ? stream.GetOption("hotwords")
+                             : config.hotwords;
   const auto &language = stream.HasOption("language")
-                            ? stream.GetOption("language")
-                            : config.language;
+                             ? stream.GetOption("language")
+                             : config.language;
   const auto &user_prompt = stream.HasOption("user_prompt")
-                               ? stream.GetOption("user_prompt")
-                               : config.user_prompt;
+                                ? stream.GetOption("user_prompt")
+                                : config.user_prompt;
   const bool itn = stream.GetOptionInt("itn", config.itn) != 0;
 
   return BuildUserPrompt(ParseHotwordsCsv(hotwords), &language, itn,
@@ -404,9 +404,9 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
 
   if (top_p >= 1.0f) {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    float sample;
+    float sample = 0.0f;
     {
-      std::lock_guard<std::mutex> lock(rng_mutex_);
+      std::scoped_lock lock(rng_mutex_);
       sample = dist(rng_);
     }
     float cumsum = 0.0f;
@@ -449,9 +449,9 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
   if (renorm_sum <= 0.0f) return 0;
 
   std::uniform_real_distribution<float> dist(0.0f, renorm_sum);
-  float sample;
+  float sample = 0.0f;
   {
-    std::lock_guard<std::mutex> lock(rng_mutex_);
+    std::scoped_lock lock(rng_mutex_);
     sample = dist(rng_);
   }
   float cumsum_sample = 0.0f;
@@ -818,7 +818,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
                      generated_ids.size(), result.text.c_str());
     std::string token_str;
     for (size_t i = 0; i < generated_ids.size() && i < 10; ++i) {
-      if (i > 0) token_str += ",";
+      if (i > 0) token_str += ',';
       token_str += std::to_string(generated_ids[i]);
     }
     SHERPA_ONNX_LOGE("GenerateText: token ids: %s%s", token_str.c_str(),

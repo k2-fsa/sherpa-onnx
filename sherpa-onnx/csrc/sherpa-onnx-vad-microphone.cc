@@ -30,7 +30,7 @@ static int32_t RecordCallback(const void *input_buffer,
                               const PaStreamCallbackTimeInfo * /*time_info*/,
                               PaStreamCallbackFlags /*status_flags*/,
                               void * /*user_data*/) {
-  std::lock_guard<std::mutex> lock(mutex);
+  std::scoped_lock lock(mutex);
   buffer.Push(reinterpret_cast<const float *>(input_buffer), frames_per_buffer);
 
   return stop ? paComplete : paContinue;
@@ -124,7 +124,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_v
   int32_t k = 0;
   while (!stop) {
     {
-      std::lock_guard<std::mutex> lock(mutex);
+      std::scoped_lock lock(mutex);
 
       while (buffer.Size() >= window_size) {
         std::vector<float> samples = buffer.Get(buffer.Head(), window_size);

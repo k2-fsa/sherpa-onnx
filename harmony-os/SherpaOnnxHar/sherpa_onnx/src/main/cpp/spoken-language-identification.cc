@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 
@@ -54,14 +55,7 @@ CreateSpokenLanguageIdentificationWrapper(const Napi::CallbackInfo &info) {
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   const SherpaOnnxSpokenLanguageIdentification *slid =

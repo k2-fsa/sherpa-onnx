@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
-        version: ["v2", "v3"]
+        version: ["v2", "v3", "ultra", "redux"]
 
     steps:
       - uses: actions/checkout@v4
@@ -78,6 +78,32 @@ jobs:
           mv -v tokens.txt ../../..
           mv *.wav ../../../
 
+      - name: Run ${{ matrix.version }}
+        if: matrix.version == 'ultra'
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-ultra
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v *.weights ../../..
+          mv -v tokens.txt ../../..
+          mv *.wav ../../../
+
+      - name: Run ${{ matrix.version }}
+        if: matrix.version == 'redux'
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-redux
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v *.weights ../../..
+          mv -v tokens.txt ../../..
+          mv *.wav ../../../
+
       - name: Collect files (fp32)
         shell: bash
         run: |
@@ -89,6 +115,7 @@ jobs:
           cp -v decoder.onnx $d
           cp -v joiner.onnx $d
           cp -v tokens.txt $d
+          cp -v scripts/nemo/parakeet-tdt-0.6b-$version/README.md $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
@@ -107,6 +134,7 @@ jobs:
           cp -v decoder.int8.onnx $d
           cp -v joiner.int8.onnx $d
           cp -v tokens.txt $d
+          cp -v scripts/nemo/parakeet-tdt-0.6b-$version/README.md $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs

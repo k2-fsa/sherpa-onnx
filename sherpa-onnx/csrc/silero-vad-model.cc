@@ -134,11 +134,11 @@ class SileroVadModel::Impl {
       return false;
     }
 
-    float neg_threshold;
+    float neg_threshold = 0.0f;
     if (config_.silero_vad.neg_threshold < 0) {
-        neg_threshold = std::max(threshold - 0.15f, 0.01f);
+      neg_threshold = std::max(threshold - 0.15f, 0.01f);
     } else {
-        neg_threshold = std::max(config_.silero_vad.neg_threshold, 0.01f);
+      neg_threshold = std::max(config_.silero_vad.neg_threshold, 0.01f);
     }
     if ((prob > neg_threshold) && triggered_) {
       // speaking
@@ -193,8 +193,8 @@ class SileroVadModel::Impl {
  private:
   void Init(void *model_data, size_t model_data_length) {
     if (model_data) {
-      sess_ = std::make_unique<Ort::Session>(
-          env_, model_data, model_data_length, sess_opts_);
+      sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                             model_data_length, sess_opts_);
     } else if (!sess_) {
       SHERPA_ONNX_LOGE(
           "Please pass model data or initialize the session outside of "

@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_PROVIDER_H_
 #define SHERPA_ONNX_CSRC_PROVIDER_H_
 
+#include <cstdint>
 #include <string>
 
 #include "sherpa-onnx/csrc/provider-config.h"
@@ -13,7 +14,7 @@ namespace sherpa_onnx {
 // Please refer to
 // https://github.com/microsoft/onnxruntime/blob/main/java/src/main/java/ai/onnxruntime/OrtProvider.java
 // for a list of available providers
-enum class Provider {
+enum class Provider : std::uint8_t {
   kCPU = 0,       // CPUExecutionProvider
   kCUDA = 1,      // CUDAExecutionProvider
   kCoreML = 2,    // CoreMLExecutionProvider

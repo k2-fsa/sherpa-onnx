@@ -4,6 +4,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_WHISPER_MODEL_CONFIG_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_WHISPER_MODEL_CONFIG_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -110,7 +111,7 @@ struct OfflineWhisperDecoderResult {
 };
 
 // used by ascend/rknn/qnn/axera, etc.
-enum class WhisperModelType {
+enum class WhisperModelType : std::uint8_t {
   Tiny,
   TinyEn,
   Base,

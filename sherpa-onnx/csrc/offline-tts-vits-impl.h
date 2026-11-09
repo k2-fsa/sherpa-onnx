@@ -77,7 +77,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     return model_->GetMetaData().num_speakers;
   }
 
-  std::string Lang() const override { return LastLang(model_->GetMetaData().voice); }
+  std::string Lang() const override {
+    return LastLang(model_->GetMetaData().voice);
+  }
 
   GeneratedAudio Generate(
       const std::string &_text, const GenerationConfig &gen_config,
@@ -468,11 +470,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           config_.model.vits.tokens, meta_data);
-    } else if (meta_data.jieba && meta_data.is_melo_tts) {
-      frontend_ = std::make_unique<MeloTtsLexicon>(
-          config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->GetMetaData(), config_.model.debug);
-    } else if (meta_data.is_melo_tts && meta_data.language == "English") {
+    } else if (meta_data.is_melo_tts &&
+               (meta_data.jieba || meta_data.language == "English")) {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
           model_->GetMetaData(), config_.model.debug);
@@ -508,7 +507,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           mgr, config_.model.vits.tokens, meta_data);
-    } else if (meta_data.jieba && meta_data.is_melo_tts) {
+    } else if (meta_data.is_melo_tts &&
+               (meta_data.jieba || meta_data.language == "English")) {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
           model_->GetMetaData(), config_.model.debug);
@@ -516,10 +516,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       frontend_ = std::make_unique<CharacterLexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
           config_.model.debug, meta_data.use_g2pw);
-    } else if (meta_data.is_melo_tts && meta_data.language == "English") {
-      frontend_ = std::make_unique<MeloTtsLexicon>(
-          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->GetMetaData(), config_.model.debug);
     } else if (meta_data.is_piper || meta_data.is_coqui ||
                meta_data.is_icefall || meta_data.is_inflect) {
       if (!config_.model.vits.lexicon.empty() &&
@@ -658,7 +654,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
             words.push_back(word);
             word.clear();
           }
-          words.push_back(std::string(1, c));
+          words.emplace_back(1, c);
         } else {
           word.push_back(c);
         }

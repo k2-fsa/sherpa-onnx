@@ -48,10 +48,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
   Ort::Value seq_len_tensor =
       Ort::Value::CreateTensor(memory_info, &seq_len, 1, &seq_len_shape, 1);
 
-  Ort::Value logits{nullptr};
-  std::vector<Ort::Value> states;
-
-  std::tie(logits, states) = model_->ForwardUnCachedDecoder(
+  auto [logits, states] = model_->ForwardUnCachedDecoder(
       std::move(token_tensor), std::move(seq_len_tensor), View(&encoder_out));
 
   int32_t vocab_size = logits.GetTensorTypeAndShapeInfo().GetShape()[2];

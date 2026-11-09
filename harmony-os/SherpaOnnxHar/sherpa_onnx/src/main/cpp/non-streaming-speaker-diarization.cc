@@ -5,12 +5,14 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 static SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig
 GetOfflineSpeakerSegmentationPyannoteModelConfig(Napi::Object obj) {
@@ -60,14 +62,7 @@ GetOfflineSpeakerSegmentationModelConfig(Napi::Object obj) {
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
@@ -88,14 +83,7 @@ GetSpeakerEmbeddingExtractorConfig(Napi::Object obj) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
@@ -274,17 +262,9 @@ static Napi::Array OfflineSpeakerDiarizationProcessWrapper(
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
-#if __OHOS__
-  // Note(fangjun): For unknown reasons on HarmonyOS, we need to divide it by
-  // sizeof(float) here
   const SherpaOnnxOfflineSpeakerDiarizationResult *r =
       SherpaOnnxOfflineSpeakerDiarizationProcess(
-          sd, samples.Data(), samples.ElementLength() / sizeof(float));
-#else
-  const SherpaOnnxOfflineSpeakerDiarizationResult *r =
-      SherpaOnnxOfflineSpeakerDiarizationProcess(sd, samples.Data(),
-                                                 samples.ElementLength());
-#endif
+          sd, samples.Data(), GetFloat32ArrayElementLength(samples));
 
   int32_t num_segments =
       SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);
@@ -460,11 +440,7 @@ static Napi::Object OfflineSpeakerDiarizationProcessAsyncWrapper(
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
-#if __OHOS__
-  int32_t num_samples = samples.ElementLength() / sizeof(float);
-#else
-  int32_t num_samples = samples.ElementLength();
-#endif
+  int32_t num_samples = GetFloat32ArrayElementLength(samples);
   std::vector<float> v(num_samples);
   std::copy(samples.Data(), samples.Data() + num_samples, v.begin());
 

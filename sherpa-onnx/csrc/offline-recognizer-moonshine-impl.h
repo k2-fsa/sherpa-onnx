@@ -24,8 +24,8 @@
 
 namespace sherpa_onnx {
 
-OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
-                                 const SymbolTable &sym_table) {
+inline OfflineRecognitionResult Convert(
+    const OfflineMoonshineDecoderResult &src, const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
 

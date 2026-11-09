@@ -635,7 +635,7 @@ void OfflineTtsSupertonicImpl::InitVoiceStyle(const std::vector<char> &buf) {
 
 OfflineTtsSupertonicImpl::StyleSliceView
 OfflineTtsSupertonicImpl::GetStyleSliceForSid(int64_t sid) const {
-  StyleSliceView out;
+  StyleSliceView out = {};
   int32_t s = 0;
   if (num_speakers_ != 1) {
     int64_t hi = static_cast<int64_t>(num_speakers_ - 1);

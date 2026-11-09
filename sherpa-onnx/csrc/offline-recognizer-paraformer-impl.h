@@ -25,8 +25,8 @@
 
 namespace sherpa_onnx {
 
-OfflineRecognitionResult Convert(const OfflineParaformerDecoderResult &src,
-                                 const SymbolTable &sym_table) {
+inline OfflineRecognitionResult Convert(
+    const OfflineParaformerDecoderResult &src, const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps = src.timestamps;

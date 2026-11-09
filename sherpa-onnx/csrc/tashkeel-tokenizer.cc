@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -58,66 +59,77 @@ constexpr char32_t kLamAlefCp = 0xFEFB;
 // Standard Buckwalter transliteration table
 // Arabic Unicode codepoint to Buckwalter ASCII character.
 // Source https://github.com/KentonMurray/Buckwalter/blob/master/buckwalter.py
-const std::unordered_map<char32_t, char> kAr2BwTable = {
-    {kHamzaCp, '\''},          // hamza
-    {kAlefMaddaCp, '|'},       // alef madda
-    {kAlefHamzaAboveCp, '>'},  // alef hamza above
-    {0x0624, '&'},             // waw hamza
-    {kAlefHamzaBelowCp, '<'},  // alef hamza below
-    {0x0626, '}'},             // yeh hamza
-    {kAlefCp, 'A'},            // alef
-    {0x0628, 'b'},             // beh
-    {0x0629, 'p'},             // teh marbuta
-    {0x062A, 't'},             // teh
-    {0x062B, 'v'},             // theh
-    {0x062C, 'j'},             // jeem
-    {0x062D, 'H'},             // hah
-    {0x062E, 'x'},             // khah
-    {0x062F, 'd'},             // dal
-    {0x0630, '*'},             // thal
-    {0x0631, 'r'},             // reh
-    {0x0632, 'z'},             // zain
-    {0x0633, 's'},             // seen
-    {0x0634, '$'},             // sheen
-    {0x0635, 'S'},             // sad
-    {0x0636, 'D'},             // dad
-    {0x0637, 'T'},             // tah
-    {0x0638, 'Z'},             // zah
-    {0x0639, 'E'},             // ain
-    {kGhainCp, 'g'},           // ghain
-    {kTatweelCp, '_'},         // tatweel
-    {kFehCp, 'f'},             // feh
-    {0x0642, 'q'},             // qaf
-    {0x0643, 'k'},             // kaf
-    {0x0644, 'l'},             // lam
-    {0x0645, 'm'},             // meem
-    {0x0646, 'n'},             // noon
-    {0x0647, 'h'},             // heh
-    {0x0648, 'w'},             // waw
-    {0x0649, 'Y'},             // alef maksura
-    {0x064A, 'y'},             // yeh
-    {kFathataCp, 'F'},         // fathata
-    {0x064C, 'N'},             // dammatan
-    {0x064D, 'K'},             // kasratan
-    {0x064E, 'a'},             // fatha
-    {0x064F, 'u'},             // damma
-    {0x0650, 'i'},             // kasra
-    {0x0651, '~'},             // shadda
-    {kSukunCp, 'o'},           // sukun
-    {kDaggerAlefCp, '`'},      // superscript alef (dagger alef)
-    {kWaslaCp, '{'},           // alef wasla
-};
+//
+// Function-local static so that map construction (which can throw) never runs
+// during static initialization.
+const std::unordered_map<char32_t, char> &GetAr2BwTable() {
+  static const std::unordered_map<char32_t, char> kAr2BwTable = {
+      {kHamzaCp, '\''},          // hamza
+      {kAlefMaddaCp, '|'},       // alef madda
+      {kAlefHamzaAboveCp, '>'},  // alef hamza above
+      {0x0624, '&'},             // waw hamza
+      {kAlefHamzaBelowCp, '<'},  // alef hamza below
+      {0x0626, '}'},             // yeh hamza
+      {kAlefCp, 'A'},            // alef
+      {0x0628, 'b'},             // beh
+      {0x0629, 'p'},             // teh marbuta
+      {0x062A, 't'},             // teh
+      {0x062B, 'v'},             // theh
+      {0x062C, 'j'},             // jeem
+      {0x062D, 'H'},             // hah
+      {0x062E, 'x'},             // khah
+      {0x062F, 'd'},             // dal
+      {0x0630, '*'},             // thal
+      {0x0631, 'r'},             // reh
+      {0x0632, 'z'},             // zain
+      {0x0633, 's'},             // seen
+      {0x0634, '$'},             // sheen
+      {0x0635, 'S'},             // sad
+      {0x0636, 'D'},             // dad
+      {0x0637, 'T'},             // tah
+      {0x0638, 'Z'},             // zah
+      {0x0639, 'E'},             // ain
+      {kGhainCp, 'g'},           // ghain
+      {kTatweelCp, '_'},         // tatweel
+      {kFehCp, 'f'},             // feh
+      {0x0642, 'q'},             // qaf
+      {0x0643, 'k'},             // kaf
+      {0x0644, 'l'},             // lam
+      {0x0645, 'm'},             // meem
+      {0x0646, 'n'},             // noon
+      {0x0647, 'h'},             // heh
+      {0x0648, 'w'},             // waw
+      {0x0649, 'Y'},             // alef maksura
+      {0x064A, 'y'},             // yeh
+      {kFathataCp, 'F'},         // fathata
+      {0x064C, 'N'},             // dammatan
+      {0x064D, 'K'},             // kasratan
+      {0x064E, 'a'},             // fatha
+      {0x064F, 'u'},             // damma
+      {0x0650, 'i'},             // kasra
+      {0x0651, '~'},             // shadda
+      {kSukunCp, 'o'},           // sukun
+      {kDaggerAlefCp, '`'},      // superscript alef (dagger alef)
+      {kWaslaCp, '{'},           // alef wasla
+  };
+  return kAr2BwTable;
+}
 
 std::unordered_map<char, char32_t> BuildBw2ArTable() {
   std::unordered_map<char, char32_t> m;
-  m.reserve(kAr2BwTable.size());
-  for (const auto &[cp, c] : kAr2BwTable) {
+  const auto &ar2bw = GetAr2BwTable();
+  m.reserve(ar2bw.size());
+  for (const auto &[cp, c] : ar2bw) {
     m.emplace(c, cp);
   }
   return m;
 }
 
-const std::unordered_map<char, char32_t> kBw2ArTable = BuildBw2ArTable();
+const std::unordered_map<char, char32_t> &GetBw2ArTable() {
+  static const std::unordered_map<char, char32_t> kBw2ArTable =
+      BuildBw2ArTable();
+  return kBw2ArTable;
+}
 
 bool IsSingleCharTashkeel(char c) {
   switch (c) {
@@ -229,8 +241,8 @@ std::string TashkeelTokenizer::Ar2Bw(const std::string &text) const {
   out.reserve(codepoints.size());
 
   for (char32_t cp : codepoints) {
-    auto it = kAr2BwTable.find(cp);
-    if (it != kAr2BwTable.end()) {
+    auto it = GetAr2BwTable().find(cp);
+    if (it != GetAr2BwTable().end()) {
       out.push_back(it->second);
     } else if (cp < 0x80) {
       // ASCII (space, punctuation) no need to change anything
@@ -248,8 +260,8 @@ std::string TashkeelTokenizer::Bw2Ar(const std::string &text) const {
   out_cp.reserve(text.size());
 
   for (char c : text) {
-    auto it = kBw2ArTable.find(c);
-    if (it != kBw2ArTable.end()) {
+    auto it = GetBw2ArTable().find(c);
+    if (it != GetBw2ArTable().end()) {
       out_cp.push_back(it->second);
     } else {
       // Non-Buckwalter char (space, punctuation, BOS/EOS, etc.).
@@ -292,6 +304,8 @@ std::string TashkeelTokenizer::CleanText(const std::string &text) const {
           filtered.push_back(kAlefHamzaBelowCp);
           break;
         case kLamAlefCp:
+        default:
+          // Fall back to lam + plain alef for any unexpected ligature.
           filtered.push_back(kAlefCp);
           break;
       }
@@ -440,7 +454,7 @@ TashkeelTokenizer::EncodeResult TashkeelTokenizer::Encode(
   std::string bw = Ar2Bw(cleaned);
 
   // Strip dagger alef (BW: '`')
-  bw.erase(std::remove(bw.begin(), bw.end(), kAr2BwTable.at(kDaggerAlefCp)),
+  bw.erase(std::remove(bw.begin(), bw.end(), GetAr2BwTable().at(kDaggerAlefCp)),
            bw.end());
 
   bw = UnifyShaddahPosition(bw);

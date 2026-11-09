@@ -68,7 +68,7 @@ in sherpa-onnx.
 std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
                                              int32_t *sampling_rate,
                                              bool *is_ok) {
-  WaveHeader header{};
+  WaveHeader header = {};
   is.read(reinterpret_cast<char *>(&header.chunk_id), sizeof(header.chunk_id));
 
   //                        F F I R

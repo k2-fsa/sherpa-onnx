@@ -47,7 +47,7 @@ class Lexicon : public OfflineTtsFrontend {
   void InitPunctuations(const std::string &punctuations);
 
  private:
-  enum class Language {
+  enum class Language : std::uint8_t {
     kNotChinese,
     kChinese,
     kUnknown,

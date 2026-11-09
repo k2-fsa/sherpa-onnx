@@ -17,8 +17,8 @@
 #include <vector>
 
 #include "portaudio.h"  // NOLINT
-#include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
@@ -58,7 +58,7 @@ static int32_t AudioGeneratedCallback(const float *s, int32_t n,
     Samples samples;
     samples.data = std::vector<float>{s, s + n};
 
-    std::lock_guard<std::mutex> lock(g_buffer.mutex);
+    std::scoped_lock lock(g_buffer.mutex);
     g_buffer.samples.push(std::move(samples));
     g_started = true;
   }
@@ -80,7 +80,7 @@ static int PlayCallback(const void * /*in*/, void *out,
   }
 
   float *pout = reinterpret_cast<float *>(out);
-  std::lock_guard<std::mutex> lock(g_buffer.mutex);
+  std::scoped_lock lock(g_buffer.mutex);
 
   if (g_buffer.samples.empty()) {
     if (g_stopped) {
@@ -388,8 +388,7 @@ or details.
 
     int32_t sample_rate;
     bool is_ok = false;
-    auto samples =
-        sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+    auto samples = sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
@@ -401,8 +400,7 @@ or details.
 
   if (is_zipvoice_tts) {
     if (reference_text.empty()) {
-      fprintf(stderr,
-              "You need to provide --reference-text for ZipVoice TTS");
+      fprintf(stderr, "You need to provide --reference-text for ZipVoice TTS");
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
     gen_config.reference_text = reference_text;

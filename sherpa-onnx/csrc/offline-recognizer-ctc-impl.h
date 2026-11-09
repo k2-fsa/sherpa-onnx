@@ -23,10 +23,10 @@
 
 namespace sherpa_onnx {
 
-OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
-                                 const SymbolTable &sym_table,
-                                 int32_t frame_shift_ms,
-                                 int32_t subsampling_factor) {
+inline OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
+                                        const SymbolTable &sym_table,
+                                        int32_t frame_shift_ms,
+                                        int32_t subsampling_factor) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
@@ -71,7 +71,7 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
 
   r.text = std::move(text);
 
-  r.words = std::move(src.words);
+  r.words = src.words;
 
   return r;
 }

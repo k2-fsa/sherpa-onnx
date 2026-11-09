@@ -57,7 +57,7 @@ OfflineSpeakerDiarizationSegment::Merge(
 
 std::string OfflineSpeakerDiarizationSegment::ToString(
     bool with_confidence /*= false*/) const {
-  std::array<char, 160> s{};
+  std::array<char, 160> s = {};
 
   if (!with_confidence) {
     snprintf(s.data(), s.size(), "%.3f -- %.3f speaker_%02d", start_, end_,

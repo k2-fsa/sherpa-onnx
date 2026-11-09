@@ -7,7 +7,6 @@
 
 #include <string>
 
-#include "sherpa-onnx/csrc/offline-source-separation-spleeter-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {

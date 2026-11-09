@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-decoder.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-model.h"
@@ -134,24 +134,24 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
 
     std::vector<std::string> prompt_str;
     prompt_str.reserve(9);
-    prompt_str.push_back("<|startofcontext|>");
-    prompt_str.push_back("<|startoftranscript|>");
-    prompt_str.push_back("<|emo:undefined|>");
+    prompt_str.emplace_back("<|startofcontext|>");
+    prompt_str.emplace_back("<|startoftranscript|>");
+    prompt_str.emplace_back("<|emo:undefined|>");
     prompt_str.push_back(std::string("<|") + language + "|>");
     prompt_str.push_back(std::string("<|") + language + "|>");
     if (use_punct) {
-      prompt_str.push_back("<|pnc|>");
+      prompt_str.emplace_back("<|pnc|>");
     } else {
-      prompt_str.push_back("<|nopnc|>");
+      prompt_str.emplace_back("<|nopnc|>");
     }
 
     if (use_itn) {
-      prompt_str.push_back("<|itn|>");
+      prompt_str.emplace_back("<|itn|>");
     } else {
-      prompt_str.push_back("<|noitn|>");
+      prompt_str.emplace_back("<|noitn|>");
     }
-    prompt_str.push_back("<|notimestamp|>");
-    prompt_str.push_back("<|nodiarize|>");
+    prompt_str.emplace_back("<|notimestamp|>");
+    prompt_str.emplace_back("<|nodiarize|>");
 
     std::vector<int64_t> prompt_ids;
     prompt_ids.reserve(prompt_str.size());

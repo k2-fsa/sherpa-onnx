@@ -5,10 +5,12 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include <string>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 static Napi::External<SherpaOnnxCircularBuffer> CreateCircularBufferWrapper(
     const Napi::CallbackInfo &info) {
@@ -70,15 +72,8 @@ static void CircularBufferPushWrapper(const Napi::CallbackInfo &info) {
 
   Napi::Float32Array data = info[1].As<Napi::Float32Array>();
 
-#if __OHOS__
-  // Note(fangjun): Normally, we don't need to divide it by sizeof(float).
-  // However, data.ElementLength() here returns number of bytes, not number of
-  // elements.
   SherpaOnnxCircularBufferPush(buf, data.Data(),
-                               data.ElementLength() / sizeof(float));
-#else
-  SherpaOnnxCircularBufferPush(buf, data.Data(), data.ElementLength());
-#endif
+                               GetFloat32ArrayElementLength(data));
 }
 
 // see https://github.com/nodejs/node-addon-api/blob/main/doc/typed_array.md
@@ -382,14 +377,7 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
 #if __OHOS__
   const SherpaOnnxVoiceActivityDetector *vad = nullptr;
@@ -453,15 +441,8 @@ static void VoiceActivityDetectorAcceptWaveformWrapper(
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
-#if __OHOS__
-  // Note(fangjun): For unknown reasons, we need to use `/sizeof(float)` here
-  // for Huawei
   SherpaOnnxVoiceActivityDetectorAcceptWaveform(
-      vad, samples.Data(), samples.ElementLength() / sizeof(float));
-#else
-  SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, samples.Data(),
-                                                samples.ElementLength());
-#endif
+      vad, samples.Data(), GetFloat32ArrayElementLength(samples));
 }
 
 static Napi::Boolean VoiceActivityDetectorEmptyWrapper(

@@ -22,7 +22,7 @@ class SherpaDisplay {
   void FinalizeCurrentSentence() {
     if (!current_text_.empty() &&
         (current_text_[0] != ' ' || current_text_.size() > 1)) {
-      sentences_.push_back({GetCurrentDateTime(), std::move(current_text_)});
+      sentences_.emplace_back(GetCurrentDateTime(), std::move(current_text_));
     }
   }
 

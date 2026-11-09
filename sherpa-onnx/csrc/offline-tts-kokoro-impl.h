@@ -4,6 +4,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_KOKORO_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_KOKORO_IMPL_H_
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -41,7 +42,11 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
         iss >> sym;
         if (sym.empty()) continue;
         if (iss.eof()) {
-          id = atoi(sym.c_str());
+          id = ToIntOrDefault(sym, -1);
+          if (id == -1) {
+            SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+            continue;
+          }
           sym = " ";
         } else {
           iss >> id;
@@ -85,7 +90,11 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
         iss >> sym;
         if (sym.empty()) continue;
         if (iss.eof()) {
-          id = atoi(sym.c_str());
+          id = ToIntOrDefault(sym, -1);
+          if (id == -1) {
+            SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+            continue;
+          }
           sym = " ";
         } else {
           iss >> id;
@@ -119,7 +128,9 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     return model_->GetMetaData().num_speakers;
   }
 
-  std::string Lang() const override { return LastLang(model_->GetMetaData().voice); }
+  std::string Lang() const override {
+    return LastLang(model_->GetMetaData().voice);
+  }
 
   /**
    *
@@ -604,23 +615,18 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
                 u32.substr(current_word_start, ci - current_word_start)));
             in_word = false;
           }
-          words.push_back(" ");
-        } else if (c == U',' || c == U'.' || c == U'!' || c == U'?' ||
-                   c == U';' || c == U':') {
-          if (in_word) {
-            words.push_back(Utf32ToUtf8(
-                u32.substr(current_word_start, ci - current_word_start)));
-            in_word = false;
-          }
-          words.push_back(Utf32ToUtf8(u32.substr(ci, 1)));
+          words.emplace_back(" ");
         } else if (CjkPunctToAscii(c)) {
+          // Note: must run before the branch below, which also accepts
+          // IsCJK() — IsCJK matches CJK punctuation like U+3001/U+3002.
           if (in_word) {
             words.push_back(Utf32ToUtf8(
                 u32.substr(current_word_start, ci - current_word_start)));
             in_word = false;
           }
-          words.push_back(CjkPunctToAscii(c));
-        } else if (IsCJK(c)) {
+          words.emplace_back(CjkPunctToAscii(c));
+        } else if (c == U',' || c == U'.' || c == U'!' || c == U'?' ||
+                   c == U';' || c == U':' || IsCJK(c)) {
           if (in_word) {
             words.push_back(Utf32ToUtf8(
                 u32.substr(current_word_start, ci - current_word_start)));
@@ -813,10 +819,10 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
   }
 
   static std::string ReplacePunctuations(const std::string &s) {
-    static const std::vector<std::pair<std::string, std::string>> replacements =
-        {
-            {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},  {":", ","},
-            {"。", "."}, {"？", "?"}, {"！", "!"}, {"…", "..."},
+    using Replacement = std::pair<std::string, std::string>;
+    static const std::vector<Replacement> replacements = {
+        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},  {":", ","},
+        {"。", "."}, {"？", "?"}, {"！", "!"}, {"…", "..."},
     };
     std::string result = s;
     for (const auto &p : replacements) {

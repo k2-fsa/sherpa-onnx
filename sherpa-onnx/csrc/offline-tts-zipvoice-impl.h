@@ -9,6 +9,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -35,7 +36,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       : config_(config),
         model_(std::make_unique<OfflineTtsZipvoiceModel>(config.model)),
         vocoder_(Vocoder::Create(config.model)) {
-    if (vocoder_ && vocoder_->SampleRate() != model_->GetMetaData().sample_rate) {
+    if (vocoder_ &&
+        vocoder_->SampleRate() != model_->GetMetaData().sample_rate) {
       SHERPA_ONNX_LOGE(
           "ERROR: Vocoder sample rate (%d Hz) does not match the ZipVoice "
           "model sample rate (%d Hz).",
@@ -78,7 +80,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       : config_(config),
         model_(std::make_unique<OfflineTtsZipvoiceModel>(mgr, config.model)),
         vocoder_(Vocoder::Create(mgr, config.model)) {
-    if (vocoder_ && vocoder_->SampleRate() != model_->GetMetaData().sample_rate) {
+    if (vocoder_ &&
+        vocoder_->SampleRate() != model_->GetMetaData().sample_rate) {
       SHERPA_ONNX_LOGE(
           "ERROR: Vocoder sample rate (%d Hz) does not match the ZipVoice "
           "model sample rate (%d Hz).",
@@ -131,14 +134,16 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
    *   - reference_sample_rate: Sample rate of reference_audio
    *   - reference_text: Transcript of reference_audio
    *   - tokens: Vector of sentences, each a vector of token strings.
-   *     tokens[0] is used for the reference text, tokens[1..] for generated text.
+   *     tokens[0] is used for the reference text, tokens[1..] for generated
+   * text.
    *
    * Supported extra parameters:
    *
    *  - debug, int, default from model config
    *  - min_words_in_sentence, int, default 5.
    *    Merge adjacent sentences if the number of words is less than this.
-   *    Each CJK character counts as one word; English words are space-separated.
+   *    Each CJK character counts as one word; English words are
+   * space-separated.
    *  - max_words_in_sentence, int, default 20.
    *    Split a sentence into chunks if the number of words exceeds this.
    *    Splits at punctuation or space boundaries.
@@ -296,8 +301,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       }
 
       // Merge short token sentences
-      int32_t min_words =
-          config.GetExtraInt("min_words_in_sentence", 5);
+      int32_t min_words = config.GetExtraInt("min_words_in_sentence", 5);
       std::vector<std::vector<std::string>> merged;
       std::vector<std::string> buffer;
       for (auto &ts : token_sentences) {
@@ -323,8 +327,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         SHERPA_ONNX_LOGE("Using tokens path: %{public}d sentence(s)",
                          static_cast<int32_t>(merged.size()));
 #else
-        SHERPA_ONNX_LOGE("Reference text: %s",
-                         config.reference_text.c_str());
+        SHERPA_ONNX_LOGE("Reference text: %s", config.reference_text.c_str());
         SHERPA_ONNX_LOGE("Using tokens path: %d sentence(s)",
                          static_cast<int32_t>(merged.size()));
 #endif
@@ -371,9 +374,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
           ++sentence_idx;
         }
 
-        GeneratedAudio cur = Process(tokens, prompt_tokens, prompt_features,
-                                     speed, num_steps, feat_scale, t_shift,
-                                     guidance_scale);
+        GeneratedAudio cur =
+            Process(tokens, prompt_tokens, prompt_features, speed, num_steps,
+                    feat_scale, t_shift, guidance_scale);
         if (cur.samples.empty()) continue;
         result.samples.insert(result.samples.end(), cur.samples.begin(),
                               cur.samples.end());
@@ -396,10 +399,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         return {};
       }
 
-      int32_t min_words =
-          config.GetExtraInt("min_words_in_sentence", 5);
-      int32_t max_words =
-          config.GetExtraInt("max_words_in_sentence", 20);
+      int32_t min_words = config.GetExtraInt("min_words_in_sentence", 5);
+      int32_t max_words = config.GetExtraInt("max_words_in_sentence", 20);
 
       sentences = MergeShortSentencesByWords(sentences, min_words);
 
@@ -415,8 +416,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         std::u32string u32 = Utf8ToUtf32(Trim(s));
         bool all_punct = !u32.empty();
         for (char32_t c : u32) {
-          if (c != U',' && c != U'.' && c != U'!' && c != U'?' &&
-              c != U';' && c != U':' && c != U' ') {
+          if (c != U',' && c != U'.' && c != U'!' && c != U'?' && c != U';' &&
+              c != U':' && c != U' ') {
             all_punct = false;
             break;
           }
@@ -455,25 +456,25 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 #endif
         }
 
-        GeneratedAudio cur = GenerateChunk(
-            sentences[i], prompt_tokens, prompt_features, speed, num_steps,
-            feat_scale, t_shift, guidance_scale);
+        GeneratedAudio cur =
+            GenerateChunk(sentences[i], prompt_tokens, prompt_features, speed,
+                          num_steps, feat_scale, t_shift, guidance_scale);
 
-      if (cur.samples.empty()) {
-        continue;
-      }
+        if (cur.samples.empty()) {
+          continue;
+        }
 
-      result.samples.insert(result.samples.end(), cur.samples.begin(),
-                            cur.samples.end());
+        result.samples.insert(result.samples.end(), cur.samples.begin(),
+                              cur.samples.end());
 
-      if (callback) {
-        if (!callback(cur.samples.data(),
-                      static_cast<int32_t>(cur.samples.size()),
-                      (i + 1) * 1.0f / total)) {
-          break;
+        if (callback) {
+          if (!callback(cur.samples.data(),
+                        static_cast<int32_t>(cur.samples.size()),
+                        (i + 1) * 1.0f / total)) {
+            break;
+          }
         }
       }
-    }
     }  // end else (text path)
 
     if (config.silence_scale != 1) {
@@ -510,14 +511,16 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     knf::FrameExtractionOptions frame_opts;
     frame_opts.samp_freq = sample_rate;
-    frame_opts.frame_length_ms = win_length * 1000 / sample_rate;
-    frame_opts.frame_shift_ms = hop_length * 1000 / sample_rate;
+    frame_opts.frame_length_ms =
+        win_length * 1000 / sample_rate;  // NOLINT(bugprone-integer-division)
+    frame_opts.frame_shift_ms =
+        hop_length * 1000 / sample_rate;  // NOLINT(bugprone-integer-division)
     frame_opts.window_type = "hanning";
 
     knf::MelBanksOptions mel_opts;
     mel_opts.num_bins = num_mels;
     mel_opts.low_freq = 0;
-    mel_opts.high_freq = sample_rate / 2;
+    mel_opts.high_freq = sample_rate / 2;  // NOLINT(bugprone-integer-division)
     mel_opts.is_librosa = true;
     mel_opts.use_slaney_mel_scale = false;
     mel_opts.norm = "";
@@ -727,8 +730,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     }
   }
 
-  std::vector<int64_t> TokenizeText(const std::string &text,
-                                    bool debug) const {
+  std::vector<int64_t> TokenizeText(const std::string &text, bool debug) const {
     std::vector<int64_t> ids;
     std::string normalized = NormalizeNfc(ReplacePunctuations(text));
 
@@ -769,7 +771,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         std::string phrase;
         for (int32_t j = i; j < i + len; ++j) {
           bool prev_cjk = !phrase.empty() && IsCJK(Utf8ToUtf32(phrase).back());
-          bool curr_cjk = !words[j].empty() && IsCJK(Utf8ToUtf32(words[j]).front());
+          bool curr_cjk =
+              !words[j].empty() && IsCJK(Utf8ToUtf32(words[j]).front());
           if (j > i && !(prev_cjk && curr_cjk)) phrase.push_back(' ');
           phrase += NormalizeLexiconKey(words[j]);
         }
@@ -874,7 +877,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
   static std::string ReplacePunctuations(const std::string &s) {
     static const std::vector<std::pair<std::string, std::string>> r = {
-        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","}, {":", ","},
+        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},  {":", ","},
         {"。", "."}, {"？", "?"}, {"！", "!"}, {"…", "..."},
     };
     std::string result = s;
