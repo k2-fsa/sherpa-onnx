@@ -205,7 +205,9 @@ impl OfflineSpeakerDiarization {
     ///
     /// `callback` receives `(num_processed_chunks, num_total_chunks)` after
     /// each speaker embedding is computed. Segmentation before that step and
-    /// clustering after it report nothing. The C API ignores the callback's
+    /// clustering after it report nothing. Audio that fits in one segmentation
+    /// chunk computes no embedding; the callback then receives `(1, 1)` once,
+    /// before the result is built. The C API ignores the callback's
     /// return value, so the callback cannot stop processing early.
     pub fn process_with_callback<F>(
         &self,
