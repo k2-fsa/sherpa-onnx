@@ -136,6 +136,28 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         onnx.save(model, filename)
 
 
+def float32_convs(filename: str) -> list:
+    """Encoder convolutions that stay float32 in the int8 model.
+
+    quantize_dynamic uses one uint8 scale per weight tensor. The 24 depthwise
+    convolutions carry a folded BatchNorm, whose per-channel scales are far
+    apart, so a single scale per tensor loses most of their precision; the 5
+    subsampling (pre_encode) convolutions are kept float32 too. All 29 are
+    small, so the int8 model keeps its size and speed.
+    """
+    model = onnx.load(filename, load_external_data=False)
+    names = [
+        n.name
+        for n in model.graph.node
+        if n.op_type == "Conv"
+        and ("/depthwise_conv/" in n.name or n.name.startswith("/pre_encode/"))
+    ]
+    # quantize_dynamic silently ignores names it does not find, so a renamed
+    # node would be quantized again without any error
+    assert len(names) == 29, names
+    return names
+
+
 def local_or_download(local: str, repo: str, name: str) -> Path:
     path = Path(local)
     return path if path.is_file() else Path(hf_hub_download(repo, name))
@@ -200,6 +222,7 @@ def main():
             model_input=f"./{m}.onnx",
             model_output=f"./{m}.int8.onnx",
             weight_type=QuantType.QUInt8 if m == "encoder" else QuantType.QInt8,
+            nodes_to_exclude=float32_convs(f"./{m}.onnx") if m == "encoder" else [],
         )
         os.system("ls -lh *.onnx")
 
