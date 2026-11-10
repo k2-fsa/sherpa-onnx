@@ -6,9 +6,11 @@ Pulsar2 expects a ``tar.gz`` archive of ``.npy`` files, each of them holding one
 calibration sample whose shape matches the model input, i.e.
 ``(1, 1, num_frames, 80)``.
 
-The samples are computed from real recordings with the same 80-dim fbank
-configuration that icefall uses at training time (25 ms window, 10 ms shift,
-dither=0, snip_edges=false, high_freq=-400).
+The samples are computed from real recordings with `kaldi-native-fbank` using the
+same 80-dim configuration that sherpa-onnx uses for non-streaming transducers
+(25 ms window, 10 ms shift, dither=0, snip_edges=false, high_freq=-400).
+
+Requires `pip install kaldi-native-fbank numpy`.
 
 Usage::
 
@@ -26,67 +28,36 @@ from pathlib import Path
 import numpy as np
 
 SAMPLE_RATE = 16000
-FRAME_LENGTH = 400    # 25 ms
 FRAME_SHIFT = 160     # 10 ms
 NUM_BINS = 80
 LOW_FREQ = 20.0
 HIGH_FREQ = -400.0
-PREEMPH = 0.97
 LOG_FLOOR = 1.1920929e-07   # float32 epsilon, same floor as sherpa-onnx
 
 
-def povey_window(size):
-    n = np.arange(size)
-    return np.power(0.5 - 0.5 * np.cos(2 * np.pi * n / (size - 1)), 0.85)
-
-
-def mel_filterbank(num_bins, sample_rate, padded_size, low_freq, high_freq):
-    if high_freq <= 0:
-        high_freq = sample_rate / 2 + high_freq
-    fft_bin_width = sample_rate / padded_size
-    mel = lambda f: 1127.0 * np.log(1.0 + np.asarray(f) / 700.0)  # noqa: E731
-    points = np.linspace(mel(low_freq), mel(high_freq), num_bins + 2)
-    bins = (700.0 * (np.exp(points / 1127.0) - 1.0)) / fft_bin_width
-    banks = np.zeros((num_bins, padded_size // 2 + 1), dtype=np.float64)
-    for b in range(num_bins):
-        left, center, right = bins[b], bins[b + 1], bins[b + 2]
-        for k in range(int(np.floor(left)), int(np.ceil(right)) + 1):
-            if k < 0 or k > padded_size // 2:
-                continue
-            if left <= k <= center:
-                banks[b, k] = (k - left) / (center - left)
-            elif center < k <= right:
-                banks[b, k] = (right - k) / (right - center)
-    return banks
-
-
-POVEY = povey_window(FRAME_LENGTH)
-BANKS = mel_filterbank(NUM_BINS, SAMPLE_RATE, 512, LOW_FREQ, HIGH_FREQ)
-
-
 def compute_fbank(samples):
-    """Compute log-Mel fbank features for 16 kHz audio."""
-    wave_data = np.asarray(samples, dtype=np.float64)
-    num_frames = (len(wave_data) + FRAME_SHIFT // 2) // FRAME_SHIFT
-    features = np.empty((num_frames, NUM_BINS), dtype=np.float64)
-    for f in range(num_frames):
-        start = f * FRAME_SHIFT + FRAME_SHIFT // 2 - FRAME_LENGTH // 2
-        idx = np.arange(start, start + FRAME_LENGTH)
-        if start >= 0 and start + FRAME_LENGTH <= len(wave_data):
-            frame = wave_data[start:start + FRAME_LENGTH].copy()
-        else:
-            period = 2 * (len(wave_data) - 1)
-            mirrored = np.mod(idx, period)
-            mirrored = np.where(mirrored >= len(wave_data), period - mirrored, mirrored)
-            frame = wave_data[np.clip(mirrored, 0, len(wave_data) - 1)].copy()
-        frame -= frame.mean()
-        frame[1:] -= PREEMPH * frame[:-1]
-        frame[0] -= PREEMPH * frame[0]
-        frame *= POVEY
-        spectrum = np.fft.rfft(frame, n=512)
-        power = spectrum.real ** 2 + spectrum.imag ** 2
-        features[f] = np.log(np.maximum(BANKS @ power, LOG_FLOOR))
-    return features.astype(np.float32)
+    """Compute 80-dim log-Mel fbank features with kaldi-native-fbank.
+
+    The options match the feature configuration used by sherpa-onnx for
+    non-streaming transducers: 25 ms frame, 10 ms shift, dither=0,
+    snip_edges=false, high_freq=-400.
+    """
+    import kaldi_native_fbank as knf
+
+    opts = knf.FbankOptions()
+    opts.frame_opts.dither = 0
+    opts.frame_opts.snip_edges = False
+    opts.frame_opts.samp_freq = SAMPLE_RATE
+    opts.frame_opts.window_type = "povey"
+    opts.mel_opts.num_bins = NUM_BINS
+    opts.mel_opts.low_freq = LOW_FREQ
+    opts.mel_opts.high_freq = HIGH_FREQ
+
+    fbank = knf.OnlineFbank(opts)
+    fbank.accept_waveform(SAMPLE_RATE, samples)
+    fbank.input_finished()
+    features = np.stack([fbank.get_frame(i) for i in range(fbank.num_frames_ready)])
+    return np.maximum(features, float(np.log(LOG_FLOOR))).astype(np.float32)
 
 
 def read_wav(path):
@@ -119,6 +90,9 @@ def main():
         raise SystemExit(f"No wav files found in {args.wav_dir}")
 
     work = Path(args.work_dir) if args.work_dir else Path(args.output).parent / "calib_x4d"
+    if work.exists():
+        for old in work.glob("*.npy"):
+            old.unlink()
     work.mkdir(parents=True, exist_ok=True)
 
     silence = float(np.log(LOG_FLOOR))

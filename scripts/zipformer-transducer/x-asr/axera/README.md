@@ -20,7 +20,7 @@ compile directly. Three rewrites are required (all implemented in
 |---|---|---|
 | 43 `If` nodes (causal / non-causal branches in `ConvModule`, `downsample`) | quantization pass aborts with `Op Execution Error: .../If` | evaluate the conditions once (they only depend on the static input length) and inline the taken branch |
 | 2477 dynamic shape tensors feeding `Reshape` (from `NonlinAttention`) | `Reshape, shapefn failed` | evaluate them and turn them into initializers |
-| 99 `Log(1 + Exp(-|x|))` patterns (the `SwooshL/SwooshR` activations) | Pulsar2 has no `Log`; the graph is split into 17 NPU + 16 ONNX subgraphs, which is slow to compile and slow at runtime | `log(1 + exp(z)) == softplus(z)`, so replace them by `Softplus` (which Pulsar2 supports) → a single NPU subgraph |
+| 99 `Log(1 + Exp(-abs(x)))` patterns (the `SwooshL/SwooshR` activations) | Pulsar2 has no `Log`; the graph is split into 17 NPU + 16 ONNX subgraphs, which is slow to compile and slow at runtime | `log(1 + exp(z)) == softplus(z)`, so replace them by `Softplus` (which Pulsar2 supports) → a single NPU subgraph |
 
 After the rewrites the prepared graph is numerically identical to the exported
 one (`cosine = 1.00000000` for the fixed input window).
@@ -45,13 +45,16 @@ Inside icefall (`egs/librispeech/ASR`), with the X-ASR checkpoint
 
 `--max-len 1000` fixes the input window to 10 s (1000 fbank frames at 16 kHz /
 10 ms). Longer audio has to be segmented with VAD, like any other non-streaming
-sherpa-onnx model.
+sherpa-onnx model. The exporter writes
+`$exp_dir/encoder-epoch-99-avg-1.onnx`; copy it next to this README (or pass its
+full path to the next step).
 
 ## Step 2. Prepare the graph for Pulsar2
 
 ```bash
+# run this from the directory that contains this README
 python3 prepare-encoder.py \
-  --src encoder-epoch-99-avg-1.onnx \
+  --src /path/to/exp/encoder-epoch-99-avg-1.onnx \
   --dst encoder-ax650.onnx \
   --num-frames 1000
 ```
@@ -69,6 +72,8 @@ output shape: [1, 248, 512]  cosine(prepared, original) = 1.00000000
 ## Step 3. Create the calibration dataset
 
 ```bash
+pip install kaldi-native-fbank numpy
+
 python3 make-calibration-set.py \
   --wav-dir /path/to/wavs \
   --output ./x4d.tar.gz \
@@ -93,16 +98,24 @@ The result is `output_encoder/encoder.axmodel` (about 165 MB for X-ASR).
 
 ## Step 5. Verify
 
-Compare the axmodel output with the ONNX output for the same input. With Pulsar2's
-simulator:
+`verify-with-simulator.py` takes one calibration sample, dumps it as the raw
+float32 input that `pulsar2 run` expects, runs both models and reports the
+cosine similarity:
 
 ```bash
-pulsar2 run --model output_encoder/encoder.axmodel \
-    --input_dir ./sim_input --output_dir ./sim_output
+python3 verify-with-simulator.py \
+    --onnx encoder-ax650.onnx \
+    --axmodel output_encoder/encoder.axmodel \
+    --sample calib_x4d/0000.npy
 ```
 
-`sim_input/x4d.bin` is a raw float32 dump of one calibration sample, and the
-comparison is done against the ONNX reference output.
+```
+cosine = 0.999012  MAE = 0.078663  shape = [1, 248, 512]
+```
+
+> `pulsar2 run` compares its output against any `<output>.bin` that already
+> exists in `--output_dir` and asserts bit-exact equality, so always use a fresh
+> directory (the script does that for you).
 
 Reference numbers obtained with this pipeline (AX650 simulation, 4 test wavs):
 
@@ -111,10 +124,6 @@ Reference numbers obtained with this pipeline (AX650 simulation, 4 test wavs):
 | cosine (mean / min) | 0.9981 / 0.9967 |
 | MAE | 0.08 – 0.14 |
 | greedy-search text | 1 of 4 utterances token-identical to fp32; the rest differ in a few English words |
-
-> Note: `pulsar2 run` compares its output against any `<output>.bin` that already
-> exists in `--output_dir` and asserts bit-exact equality. Use a fresh directory
-> for every sample.
 
 ## Deployment
 

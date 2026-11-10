@@ -54,6 +54,13 @@ def get_const(node_by_output, initializers, name):
     return None
 
 
+DTYPES = {
+    onnx.TensorProto.FLOAT: np.float32,
+    onnx.TensorProto.INT32: np.int32,
+    onnx.TensorProto.INT64: np.int64,
+}
+
+
 def make_feed(model, num_frames=None):
     """Build zero inputs for every static graph input (used for graph rewrites)."""
     feed = {}
@@ -61,7 +68,8 @@ def make_feed(model, num_frames=None):
         dims = [d.dim_value for d in i.type.tensor_type.shape.dim]
         if num_frames is not None and len(dims) == 3:
             dims = [1, num_frames, 80]
-        feed[i.name] = np.zeros(dims, dtype=np.float32)
+        dtype = DTYPES.get(i.type.tensor_type.elem_type, np.float32)
+        feed[i.name] = np.zeros(dims, dtype=dtype)
     return feed
 
 
