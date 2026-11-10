@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c)  2026  Xiaomi Corporation
 """Prepare an exported X-ASR zipformer2 encoder for AXERA (AX650) compilation.
 
 The encoder produced by

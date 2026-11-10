@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c)  2026  Xiaomi Corporation
 """Compare an axmodel with its ONNX reference using the Pulsar2 simulator.
 
 ``pulsar2 build`` only produces the axmodel; there is no built-in accuracy check.

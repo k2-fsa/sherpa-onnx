@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c)  2026  Xiaomi Corporation
 """Create the calibration dataset used by Pulsar2 when compiling an X-ASR encoder.
 
 Pulsar2 expects a ``tar.gz`` archive of ``.npy`` files, each of them holding one
