@@ -66,8 +66,17 @@ def main():
     print(" ".join(cmd))
     subprocess.run(cmd, check=True)
 
-    actual = np.fromfile(out_dir / f"{args.output_name}.bin", dtype=np.float32).reshape(
-        reference.shape)
+    out_file = out_dir / f"{args.output_name}.bin"
+    if not out_file.is_file():
+        raise SystemExit(
+            f"{out_file} was not produced by pulsar2 run. Check --output-name "
+            f"(current value: {args.output_name})")
+    flat = np.fromfile(out_file, dtype=np.float32)
+    if flat.size != reference.size:
+        raise SystemExit(
+            f"{out_file} has {flat.size} elements, but the ONNX output has "
+            f"{reference.size}. Check --output-name and the model pair.")
+    actual = flat.reshape(reference.shape)
     cosine = float(reference.ravel() @ actual.ravel() /
                    (np.linalg.norm(reference) * np.linalg.norm(actual)))
     mae = float(np.mean(np.abs(reference - actual)))

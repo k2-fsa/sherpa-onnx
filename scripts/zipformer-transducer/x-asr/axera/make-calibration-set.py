@@ -94,12 +94,17 @@ def main():
             old.unlink()
     work.mkdir(parents=True, exist_ok=True)
 
+    # Padding uses the same floor as the inference script, so that the frames
+    # seen during calibration match the frames seen at runtime for short clips.
     silence = float(np.log(LOG_FLOOR))
     count = 0
     for wav in wavs:
         if count >= args.num_samples:
             break
         features = compute_fbank(read_wav(wav))[: args.num_frames]
+        if features.ndim != 2 or features.shape[0] == 0:
+            # too short to produce a single frame: keep the shape consistent
+            features = np.empty((0, NUM_BINS), dtype=np.float32)
         if features.shape[0] < args.num_frames:
             pad = np.full((args.num_frames - features.shape[0], NUM_BINS),
                           silence, dtype=np.float32)
