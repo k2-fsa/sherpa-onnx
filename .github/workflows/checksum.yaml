@@ -14,7 +14,7 @@ jobs:
         tag: [null, asr-models, tts-models, kws-models, speaker-recongition-models, audio-tagging-models, punctuation-models, source-separation-models]
     steps:
       - name: Run checksum action
-        uses: thewh1teagle/checksum@v1
+        uses: XDcobra/checksum@v1
         with:
           tag: ${{ matrix.tag }}
         env:
