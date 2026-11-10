@@ -110,7 +110,7 @@ python3 verify-with-simulator.py \
 ```
 
 ```
-cosine = 0.999012  MAE = 0.078663  shape = [1, 248, 512]
+cosine = 0.999073  MAE = 0.076495  shape = [1, 248, 512]
 ```
 
 > `pulsar2 run` compares its output against any `<output>.bin` that already
