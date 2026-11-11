@@ -130,3 +130,66 @@ Reference numbers obtained with this pipeline (AX650 simulation, 4 test wavs):
 The prebuilt models are published on HuggingFace
 (<https://huggingface.co/yunyu1258/x-asr-axmodel>) together with a Python example
 (`run_asr.py`, uses `axengine` + `numpy` only).
+
+## Running this in CI / Docker
+
+The whole pipeline also runs on a GitHub Actions runner:
+`.github/workflows/export-x-asr-axera.yaml` (`workflow_dispatch`, ~1.5–2 h per run).
+Two pieces of it are worth knowing about if you script it yourself.
+
+### Which Pulsar2 version
+
+This conversion was developed and verified with **Pulsar2 8.0** (the current release on
+<https://huggingface.co/AXERA-TECH/Pulsar2>). Grab the *lite* package (830 MB, enough for
+`pulsar2 build` / `pulsar2 run`):
+
+```bash
+curl -SL -O https://huggingface.co/AXERA-TECH/Pulsar2/resolve/main/8.0/ax_pulsar2_8.0_lite_package.tar.gz
+tar xf ax_pulsar2_8.0_lite_package.tar.gz
+export PATH=$PWD/ax_pulsar2_8.0_lite_package/bin:$PATH
+```
+
+Image `ghcr.io/csukuangfj/axera-pulsar2:4.2` is Pulsar2 4.2, i.e. several major versions
+older than what was used here; if a container is preferred, build it from the 8.0 tarball
+(the package is self-contained, no GPU and no extra apt packages are needed):
+
+```dockerfile
+FROM ubuntu:22.04
+ADD ax_pulsar2_8.0_lite_package.tar.gz /opt/pulsar2
+ENV PATH=/opt/pulsar2/ax_pulsar2_8.0_lite_package/bin:$PATH
+```
+
+### Two bugs in the 8.0 launcher scripts
+
+The bundled wrappers have the wrong paths, so `pulsar2` fails with
+`can't open file .../pulsar2/axnn/axnn/yamain/main.py`. Patch them after extraction:
+
+```bash
+P=ax_pulsar2_8.0_lite_package
+# bin/pulsar2: axnn/axnn/yamain -> axnn/yamain
+sed -i 's#/pulsar2/axnn/axnn/yamain#/pulsar2/axnn/yamain#' "$P/bin/pulsar2"
+# bin/python3: the package ships ld-linux-x86-64.so.2, not ld-2.31.so
+sed -i 's#ld-2.31.so#ld-linux-x86-64.so.2#' "$P/bin/python3"
+pulsar2 version   # -> version: 8.0
+```
+
+(The license file is bundled and installed to `~/.hasplm` automatically by `bin/pulsar2`.)
+
+### Pipeline and expected timings
+
+| Step | Where | Time (4-core runner) |
+|---|---|---|
+| Export fp32 static ONNX (Step 1) | icefall CPU container | ~10 min |
+| `prepare-encoder.py` — If / shapes / Softplus | same container | ~5–10 min |
+| `make-calibration-set.py` | same container | < 1 min |
+| `pulsar2 build` (Step 4) | host, Pulsar2 8.0 | **40–90 min** |
+| `pulsar2 run` verification (Step 5) | host | ~2 min |
+
+Disk: ~15 GB free are needed (the icefall image ~7 GB can be pruned after the export step).
+As a sanity check of the toolchain itself, compiling the *joiner* takes ~17 s in the lite
+package, so `pulsar2 build` is known to work on a plain Ubuntu 22.04 machine as well.
+
+The calibration set in CI comes from the 4 test wavs used by
+`../export-non-streaming.sh`, i.e. 4 samples. The released axmodel in
+<https://huggingface.co/yunyu1258/x-asr-axmodel> used 8 real audio windows; passing more
+wavs via `--wav-dir` gives a slightly better calibrated model.
