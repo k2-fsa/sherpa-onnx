@@ -44,7 +44,13 @@ done
 popd
 
 pushd "$WORK/exp"
-curl -SL -O https://github.com/Gilgamesh-J/X-ASR/raw/refs/heads/main/X-ASR-zh-en/zipformer/checkpoint/pretrained.pt
+# Note: this is the training checkpoint from the model's HF repo (2.5 GB, contains
+# `model` and `model_avg`). The 639 MB `checkpoint/pretrained.pt` in the GitHub repo
+# holds the released/averaged weights instead, and the two are numerically different
+# (all 989 tensors differ). Quantizing the GitHub file with the settings below gives
+# cosine ~0.972 against its own fp32 ONNX, while this checkpoint gives 0.999, so the
+# axmodel pipeline uses this one to match the published axmodel.
+curl -SL -O https://huggingface.co/GilgameshWind/X-ASR-zh-en/resolve/main/streaming_exp/pretrained.pt
 ln -sf pretrained.pt epoch-99.pt
 curl -SL -O https://github.com/Gilgamesh-J/X-ASR/raw/refs/heads/main/X-ASR-zh-en/zipformer/data/lang_5000/tokens.txt
 popd
@@ -69,6 +75,9 @@ python3 ./zipformer/export-streaming-as-non-streaming-onnx.py \
   --chunk-size "-1" \
   --left-context-frames "-1"
 popd
+
+# the 2.5 GB checkpoint is no longer needed after the export
+rm -f "$WORK/exp/pretrained.pt"
 
 python3 -m pip install -q onnx onnxruntime kaldi-native-fbank
 
