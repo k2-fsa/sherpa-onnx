@@ -25,7 +25,7 @@ void OfflineWhisperGreedySearchDecoder::SetConfig(
 std::vector<OfflineWhisperDecoderResult>
 OfflineWhisperGreedySearchDecoder::Decode(
     Ort::Value cross_k, Ort::Value cross_v, int32_t num_feature_frames,
-    const std::vector<int32_t> &language_candidate_ids) {
+    const OfflineWhisperDecodeParams &params) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -59,15 +59,15 @@ OfflineWhisperGreedySearchDecoder::Decode(
   bool need_lang_probs_from_initial_logits = false;
 
   if (model_->IsMultiLingual()) {
-    if (!config_.language.empty()) {
+    if (!params.language.empty()) {
       const auto &lang2id = model_->GetLang2ID();
 
-      if (!lang2id.count(config_.language)) {
-        SHERPA_ONNX_LOGE("Invalid language: %s", config_.language.c_str());
+      if (!lang2id.count(params.language)) {
+        SHERPA_ONNX_LOGE("Invalid language: %s", params.language.c_str());
         SHERPA_ONNX_EXIT(-1);
       }
 
-      int32_t lang_id = lang2id.at(config_.language);
+      int32_t lang_id = lang2id.at(params.language);
 
       // 0: sot, 1: lang_id, 2: task, 3: no_timestamps
       initial_tokens[1] = lang_id;
@@ -76,7 +76,8 @@ OfflineWhisperGreedySearchDecoder::Decode(
       need_lang_probs_from_initial_logits = true;
     } else {
       int32_t lang_id = model_->DetectLanguageWithProbs(
-          cross_k, cross_v, language_candidate_ids, &detected_lang_probs);
+          cross_k, cross_v, params.language_candidate_ids,
+          &detected_lang_probs);
 
       // 0: sot, 1: lang_id, 2: task, 3: no_timestamps
       initial_tokens[1] = lang_id;
