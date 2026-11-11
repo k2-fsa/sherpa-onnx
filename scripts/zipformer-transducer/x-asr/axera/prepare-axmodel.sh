@@ -32,6 +32,17 @@ curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/3.
 curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/4.wav
 popd
 
+# The X-ASR test set is only five short clips. Add a few Chinese/English clips
+# from the sherpa-onnx streaming zipformer test set so that the calibration
+# features cover more speakers and levels (the MinMax ranges are sensitive to
+# this: a set of short clips alone gives a much worse INT8 model).
+pushd "$WORK/wavs"
+BASE=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/resolve/main/test_wavs
+for f in 0 1 2 3 4 5 6 7; do
+  curl -SL -o "extra-$f.wav" "$BASE/$f.wav"
+done
+popd
+
 pushd "$WORK/exp"
 curl -SL -O https://github.com/Gilgamesh-J/X-ASR/raw/refs/heads/main/X-ASR-zh-en/zipformer/checkpoint/pretrained.pt
 ln -sf pretrained.pt epoch-99.pt
