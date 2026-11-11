@@ -19,7 +19,6 @@ concurrency:
 
 jobs:
   export-axmodel:
-    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
     name: AX650 axmodel
     runs-on: ubuntu-22.04
     timeout-minutes: 300
