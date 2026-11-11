@@ -182,10 +182,12 @@ pulsar2 version   # -> version: 8.0
 | Export fp32 static ONNX (Step 1) | icefall CPU container | ~10 min |
 | `prepare-encoder.py` — If / shapes / Softplus | same container | ~5–10 min |
 | `make-calibration-set.py` | same container | < 1 min |
-| `pulsar2 build` (Step 4) | host, Pulsar2 8.0 | **40–90 min** |
+| `pulsar2 build` (Step 4) | host, Pulsar2 8.0 | **~35 min** (measured on a 4-core GitHub runner, peak RSS 9.3 GB) |
 | `pulsar2 run` verification (Step 5) | host | ~2 min |
 
 Disk: ~15 GB free are needed (the icefall image ~7 GB can be pruned after the export step).
+The measured run on `ubuntu-22.04` (4 cores, 16 GB RAM) took 10 min for export + rewrites and
+34 min 26 s for `pulsar2 build`, peak RSS 9.27 GB, producing the same 165 MB `encoder.axmodel`.
 As a sanity check of the toolchain itself, compiling the *joiner* takes ~17 s in the lite
 package, so `pulsar2 build` is known to work on a plain Ubuntu 22.04 machine as well.
 

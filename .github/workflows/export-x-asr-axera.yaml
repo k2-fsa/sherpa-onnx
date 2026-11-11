@@ -74,10 +74,10 @@ jobs:
           sed -i 's#/pulsar2/axnn/axnn/yamain#/pulsar2/axnn/yamain#' "$PULSAR2_DIR/bin/pulsar2"
           sed -i 's#ld-2.31.so#ld-linux-x86-64.so.2#' "$PULSAR2_DIR/bin/python3"
 
-          # $GITHUB_ENV only affects the following steps, so export it here too
-          export PATH="$PULSAR2_DIR/bin:$PATH"
-          echo "PATH=$PULSAR2_DIR/bin:$PATH" >> "$GITHUB_ENV"
-          pulsar2 version
+          # Do NOT prepend $PULSAR2_DIR/bin to PATH: the package ships its own
+          # python3, and shadowing the system one breaks `pip install` later on.
+          echo "PULSAR2_BIN=$PULSAR2_DIR/bin/pulsar2" >> "$GITHUB_ENV"
+          "$PULSAR2_DIR/bin/pulsar2" version
 
       - name: Compile the encoder
         shell: bash
@@ -87,7 +87,7 @@ jobs:
           # the config uses paths relative to the current directory:
           #   encoder-ax650.onnx, x4d.tar.gz, ./output_encoder
           cp "${{ github.workspace }}/scripts/zipformer-transducer/x-asr/axera/pulsar2-encoder.json" .
-          time pulsar2 build --config pulsar2-encoder.json
+          /usr/bin/time -v "$PULSAR2_BIN" build --config pulsar2-encoder.json 2>&1 | tee build.log
           ls -lh output_encoder/encoder.axmodel
 
       - name: Verify in the simulator
@@ -100,7 +100,7 @@ jobs:
             --onnx encoder-ax650.onnx \
             --axmodel output_encoder/encoder.axmodel \
             --sample calib_x4d/0000.npy \
-            --pulsar2 pulsar2
+            --pulsar2 "$PULSAR2_BIN"
 
       - name: Show results
         shell: bash
