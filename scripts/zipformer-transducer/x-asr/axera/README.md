@@ -175,6 +175,29 @@ pulsar2 version   # -> version: 8.0
 
 (The license file is bundled and installed to `~/.hasplm` automatically by `bin/pulsar2`.)
 
+### Measured result on GitHub Actions
+
+Run: <https://github.com/yuyun2000/x-asr-axmodel/actions/runs/43004485940>
+
+| Step | Time |
+|---|---|
+| export + graph rewrites + calibration (icefall container) | ~10 min |
+| `pulsar2 build` | 34 min 29 s, peak RSS 9.55 GB |
+| `pulsar2 run` verification | ~2 min |
+
+```
+cosine = 0.999132  MAE = 0.075091  shape = [1, 248, 512]
+```
+
+i.e. the CI-built axmodel matches the published one (cosine 0.999).
+
+One caveat about the checkpoint: the 639 MB `checkpoint/pretrained.pt` in the GitHub
+repo is numerically different from `streaming_exp/pretrained.pt` in the HF repo
+(all 989 tensors differ). Quantizing the GitHub file with the settings in
+`pulsar2-encoder.json` gives cosine ~0.972 (the text is still correct, but the
+tensor-level match is worse), while the HF checkpoint gives 0.999, so
+`prepare-axmodel.sh` downloads the HF one.
+
 ### Pipeline and expected timings
 
 | Step | Where | Time (4-core runner) |
