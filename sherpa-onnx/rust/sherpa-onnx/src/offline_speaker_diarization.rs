@@ -9,8 +9,8 @@ use std::ffi::CString;
 use std::os::raw::c_void;
 use std::slice;
 
-type ProgressCallback<'a> = dyn FnMut(i32, i32) + 'a;
-type BoxedProgressCallback<'a> = Box<ProgressCallback<'a>>;
+type ProgressCallback = dyn FnMut(i32, i32);
+type BoxedProgressCallback = Box<ProgressCallback>;
 
 #[derive(Clone, Debug)]
 /// Pyannote segmentation model path.
