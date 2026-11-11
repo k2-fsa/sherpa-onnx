@@ -87,6 +87,14 @@ final class SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig
   external double windowShiftRatio;
 }
 
+final class SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig
+    extends Struct {
+  external Pointer<Utf8> model;
+
+  @Float()
+  external double threshold;
+}
+
 final class SherpaOnnxOfflineSpeakerSegmentationModelConfig extends Struct {
   external SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig pyannote;
 
@@ -97,6 +105,8 @@ final class SherpaOnnxOfflineSpeakerSegmentationModelConfig extends Struct {
   external int debug;
 
   external Pointer<Utf8> provider;
+
+  external SherpaOnnxOfflineSpeakerSegmentationSortformerModelConfig sortformer;
 }
 
 final class SherpaOnnxFastClusteringConfig extends Struct {

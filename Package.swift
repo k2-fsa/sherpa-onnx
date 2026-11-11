@@ -59,6 +59,7 @@ let package = Package(
       ],
       path: "swift-api-examples",
       exclude: [
+        "tests",
         "SherpaOnnx-Bridging-Header.h",
         "add-punctuation-online.swift",
         "add-punctuations.swift",

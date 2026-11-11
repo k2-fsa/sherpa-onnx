@@ -13,11 +13,20 @@ export class OfflineSpeakerSegmentationPyannoteModelConfig {
   public windowShiftRatio: number = 0.1;
 }
 
+// Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
+// If model is set, pyannote, embedding and clustering are ignored.
+export class OfflineSpeakerSegmentationSortformerModelConfig {
+  public model: string = '';
+  public threshold: number = 0.5;
+}
+
 export class OfflineSpeakerSegmentationModelConfig {
   public pyannote: OfflineSpeakerSegmentationPyannoteModelConfig = new OfflineSpeakerSegmentationPyannoteModelConfig();
   public numThreads: number = 1;
   public debug: boolean = false;
   public provider: string = 'cpu';
+  public sortformer: OfflineSpeakerSegmentationSortformerModelConfig =
+    new OfflineSpeakerSegmentationSortformerModelConfig();
 }
 
 export class FastClusteringConfig {

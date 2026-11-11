@@ -17,12 +17,17 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-pyannote-impl.h"
+#include "sherpa-onnx/csrc/offline-speaker-diarization-sortformer-impl.h"
 
 namespace sherpa_onnx {
 
 std::unique_ptr<OfflineSpeakerDiarizationImpl>
 OfflineSpeakerDiarizationImpl::Create(
     const OfflineSpeakerDiarizationConfig &config) {
+  if (!config.segmentation.sortformer.model.empty()) {
+    return std::make_unique<OfflineSpeakerDiarizationSortformerImpl>(config);
+  }
+
   if (!config.segmentation.pyannote.model.empty()) {
     return std::make_unique<OfflineSpeakerDiarizationPyannoteImpl>(config);
   }
@@ -36,6 +41,11 @@ template <typename Manager>
 std::unique_ptr<OfflineSpeakerDiarizationImpl>
 OfflineSpeakerDiarizationImpl::Create(
     Manager *mgr, const OfflineSpeakerDiarizationConfig &config) {
+  if (!config.segmentation.sortformer.model.empty()) {
+    return std::make_unique<OfflineSpeakerDiarizationSortformerImpl>(mgr,
+                                                                     config);
+  }
+
   if (!config.segmentation.pyannote.model.empty()) {
     return std::make_unique<OfflineSpeakerDiarizationPyannoteImpl>(mgr, config);
   }

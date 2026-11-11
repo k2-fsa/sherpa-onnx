@@ -213,3 +213,7 @@ compile_commands.json
 
 # APK signing keystore — lives only as the ANDROID_KEYSTORE_B64 Actions secret
 .github/scripts/android/ci-apk.keystore
+
+# run.sh is ignored above; keep the ones that are part of the tree
+!scripts/nemo/nemotron-3-diarization/run.sh
+!go-api-examples/non-streaming-speaker-diarization-sortformer/run.sh

@@ -74,6 +74,38 @@ class OfflineSpeakerSegmentationPyannoteModelConfig {
   final double windowShiftRatio;
 }
 
+/// Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
+///
+/// If [model] is set, pyannote, embedding and clustering are ignored.
+class OfflineSpeakerSegmentationSortformerModelConfig {
+  const OfflineSpeakerSegmentationSortformerModelConfig({
+    this.model = '',
+    this.threshold = 0.5,
+  });
+
+  factory OfflineSpeakerSegmentationSortformerModelConfig.fromJson(
+      Map<String, dynamic> json) {
+    return OfflineSpeakerSegmentationSortformerModelConfig(
+      model: json['model'] as String? ?? '',
+      threshold: (json['threshold'] as num?)?.toDouble() ?? 0.5,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineSpeakerSegmentationSortformerModelConfig(model: $model, '
+        'threshold: $threshold)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'threshold': threshold,
+      };
+
+  final String model;
+  final double threshold;
+}
+
 /// Segmentation model configuration for speaker diarization.
 class OfflineSpeakerSegmentationModelConfig {
   const OfflineSpeakerSegmentationModelConfig({
@@ -81,6 +113,7 @@ class OfflineSpeakerSegmentationModelConfig {
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
+    this.sortformer = const OfflineSpeakerSegmentationSortformerModelConfig(),
   });
 
   factory OfflineSpeakerSegmentationModelConfig.fromJson(
@@ -93,12 +126,16 @@ class OfflineSpeakerSegmentationModelConfig {
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
       provider: json['provider'] as String? ?? 'cpu',
+      sortformer: json['sortformer'] != null
+          ? OfflineSpeakerSegmentationSortformerModelConfig.fromJson(
+              json['sortformer'] as Map<String, dynamic>)
+          : const OfflineSpeakerSegmentationSortformerModelConfig(),
     );
   }
 
   @override
   String toString() {
-    return 'OfflineSpeakerSegmentationModelConfig(pyannote: $pyannote, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineSpeakerSegmentationModelConfig(pyannote: $pyannote, numThreads: $numThreads, debug: $debug, provider: $provider, sortformer: $sortformer)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -106,6 +143,7 @@ class OfflineSpeakerSegmentationModelConfig {
         'numThreads': numThreads,
         'debug': debug,
         'provider': provider,
+        'sortformer': sortformer.toJson(),
       };
 
   final OfflineSpeakerSegmentationPyannoteModelConfig pyannote;
@@ -113,6 +151,7 @@ class OfflineSpeakerSegmentationModelConfig {
   final int numThreads;
   final bool debug;
   final String provider;
+  final OfflineSpeakerSegmentationSortformerModelConfig sortformer;
 }
 
 /// Clustering options used after segmentation and embedding extraction.

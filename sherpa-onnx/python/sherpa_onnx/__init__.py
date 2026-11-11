@@ -42,6 +42,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineSpeakerDiarizationSegment,
     OfflineSpeakerSegmentationModelConfig,
     OfflineSpeakerSegmentationPyannoteModelConfig,
+    OfflineSpeakerSegmentationSortformerModelConfig,
     OfflineSpeechDenoiser,
     OfflineSpeechDenoiserConfig,
     OfflineSpeechDenoiserDpdfNetModelConfig,

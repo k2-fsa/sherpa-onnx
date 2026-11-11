@@ -13,11 +13,19 @@ pub struct OfflineSpeakerSegmentationPyannoteModelConfig {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct OfflineSpeakerSegmentationSortformerModelConfig {
+    pub model: *const c_char,
+    pub threshold: c_float,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct OfflineSpeakerSegmentationModelConfig {
     pub pyannote: OfflineSpeakerSegmentationPyannoteModelConfig,
     pub num_threads: i32,
     pub debug: i32,
     pub provider: *const c_char,
+    pub sortformer: OfflineSpeakerSegmentationSortformerModelConfig,
 }
 
 #[repr(C)]

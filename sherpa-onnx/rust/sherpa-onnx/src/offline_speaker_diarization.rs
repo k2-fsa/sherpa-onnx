@@ -38,12 +38,45 @@ impl OfflineSpeakerSegmentationPyannoteModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Sortformer end-to-end diarization model, e.g., Nemotron-3-Diarization.
+///
+/// If `model` is set, pyannote, embedding and clustering are ignored.
+pub struct OfflineSpeakerSegmentationSortformerModelConfig {
+    pub model: Option<String>,
+    /// A frame is assigned to a speaker if the speaker's activity probability
+    /// is larger than this value.
+    pub threshold: f32,
+}
+
+impl Default for OfflineSpeakerSegmentationSortformerModelConfig {
+    fn default() -> Self {
+        Self {
+            model: None,
+            threshold: 0.5,
+        }
+    }
+}
+
+impl OfflineSpeakerSegmentationSortformerModelConfig {
+    fn to_sys(
+        &self,
+        cstrings: &mut Vec<CString>,
+    ) -> sys::OfflineSpeakerSegmentationSortformerModelConfig {
+        sys::OfflineSpeakerSegmentationSortformerModelConfig {
+            model: to_c_ptr(&self.model, cstrings),
+            threshold: self.threshold,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 /// Segmentation model configuration for diarization.
 pub struct OfflineSpeakerSegmentationModelConfig {
     pub pyannote: OfflineSpeakerSegmentationPyannoteModelConfig,
     pub num_threads: i32,
     pub debug: bool,
     pub provider: Option<String>,
+    pub sortformer: OfflineSpeakerSegmentationSortformerModelConfig,
 }
 
 impl Default for OfflineSpeakerSegmentationModelConfig {
@@ -53,6 +86,7 @@ impl Default for OfflineSpeakerSegmentationModelConfig {
             num_threads: 1,
             debug: false,
             provider: Some("cpu".to_string()),
+            sortformer: Default::default(),
         }
     }
 }
@@ -66,6 +100,7 @@ impl OfflineSpeakerSegmentationModelConfig {
             num_threads: self.num_threads,
             debug: self.debug as i32,
             provider: to_c_ptr(&self.provider, cstrings),
+            sortformer: self.sortformer.to_sys(cstrings),
         }
     }
 }

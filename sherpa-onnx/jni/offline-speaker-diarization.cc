@@ -46,6 +46,17 @@ static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
   SHERPA_ONNX_JNI_READ_STRING(ans.segmentation.provider, provider,
                               segmentation_config_cls, segmentation_config);
 
+  fid = env->GetFieldID(segmentation_config_cls, "sortformer",
+                        "Lcom/k2fsa/sherpa/onnx/"
+                        "OfflineSpeakerSegmentationSortformerModelConfig;");
+  jobject sortformer_config = env->GetObjectField(segmentation_config, fid);
+  jclass sortformer_config_cls = env->GetObjectClass(sortformer_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.segmentation.sortformer.model, model,
+                              sortformer_config_cls, sortformer_config);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.segmentation.sortformer.threshold, threshold,
+                             sortformer_config_cls, sortformer_config);
+
   //---------- embedding ----------
   fid = env->GetFieldID(
       cls, "embedding",

@@ -77,6 +77,7 @@ export { SpeakerEmbeddingExtractorConfig,
 } from './src/main/ets/components/SpeakerIdentification';
 
 export { OfflineSpeakerSegmentationPyannoteModelConfig,
+  OfflineSpeakerSegmentationSortformerModelConfig,
   OfflineSpeakerSegmentationModelConfig,
   OfflineSpeakerDiarizationConfig,
   OfflineSpeakerDiarizationSegment,
