@@ -86,6 +86,11 @@ def main():
                              "useful when only a few wavs are available")
     parser.add_argument("--shift-frames", type=int, default=100,
                         help="shift step in fbank frames (100 = 1 s)")
+    parser.add_argument("--pad", choices=["silence", "tile"], default="silence",
+                        help="how to fill a wav shorter than --num-frames; "
+                             "'tile' repeats the audio instead of adding silence "
+                             "(a short test set otherwise makes the calibration "
+                             "set mostly silence, which hurts the INT8 ranges)")
     parser.add_argument("--work-dir", default=None,
                         help="Where to store the .npy files (default: next to the archive)")
     args = parser.parse_args()
@@ -112,20 +117,20 @@ def main():
             # too short to produce a single frame: keep the shape consistent
             features = np.empty((0, NUM_BINS), dtype=np.float32)
         if features.shape[0] < args.num_frames:
-            pad = np.full((args.num_frames - features.shape[0], NUM_BINS),
-                          silence, dtype=np.float32)
-            features = np.concatenate([features, pad])
+            if args.pad == "tile" and features.shape[0] > 0:
+                reps = int(np.ceil(args.num_frames / features.shape[0]))
+                features = np.tile(features, (reps, 1))[: args.num_frames]
+            else:
+                pad = np.full((args.num_frames - features.shape[0], NUM_BINS),
+                              silence, dtype=np.float32)
+                features = np.concatenate([features, pad])
         for k in range(max(1, args.shifts)):
             if count >= args.num_samples:
                 break
-            shift = k * args.shift_frames
-            if shift:
-                shifted = np.empty_like(features)
-                shifted[: max(0, args.num_frames - shift)] = features[shift:]
-                shifted[max(0, args.num_frames - shift):] = silence
-                sample = shifted
-            else:
-                sample = features
+            # circular shift: keeps the frame statistics of the real audio
+            # instead of introducing more silence
+            shift = (k * args.shift_frames) % max(1, features.shape[0])
+            sample = np.roll(features, -shift, axis=0) if shift else features
             np.save(work / f"{count:04d}.npy", sample[None, None, ...].astype(np.float32))
             print(f"{wav.name}: shift={shift} frames, total {sample.shape[0]} frames")
             count += 1

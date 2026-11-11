@@ -18,7 +18,7 @@
         "tensor_name": "x4d",
         "calibration_dataset": "./x4d.tar.gz",
         "calibration_format": "Numpy",
-        "calibration_size": 8,
+        "calibration_size": 16,
         "calibration_mean": [],
         "calibration_std": []
       }
