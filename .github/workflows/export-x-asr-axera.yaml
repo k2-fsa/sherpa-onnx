@@ -74,6 +74,8 @@ jobs:
           sed -i 's#/pulsar2/axnn/axnn/yamain#/pulsar2/axnn/yamain#' "$PULSAR2_DIR/bin/pulsar2"
           sed -i 's#ld-2.31.so#ld-linux-x86-64.so.2#' "$PULSAR2_DIR/bin/python3"
 
+          # $GITHUB_ENV only affects the following steps, so export it here too
+          export PATH="$PULSAR2_DIR/bin:$PATH"
           echo "PATH=$PULSAR2_DIR/bin:$PATH" >> "$GITHUB_ENV"
           pulsar2 version
 
