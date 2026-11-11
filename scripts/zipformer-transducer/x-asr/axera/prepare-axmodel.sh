@@ -68,6 +68,7 @@ python3 "$SCRIPT_DIR/make-calibration-set.py" \
   --output "$WORK/x4d.tar.gz" \
   --num-frames 1000 \
   --num-samples 16 \
+  --shifts 4 \
   --work-dir "$WORK/calib_x4d"
 
 ls -lh "$WORK"/encoder-ax650.onnx "$WORK"/x4d.tar.gz

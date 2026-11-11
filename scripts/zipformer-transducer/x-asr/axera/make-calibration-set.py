@@ -79,7 +79,13 @@ def main():
                         help="Path to the output tar.gz archive")
     parser.add_argument("--num-frames", type=int, default=1000,
                         help="Number of fbank frames of the static window")
-    parser.add_argument("--num-samples", type=int, default=8)
+    parser.add_argument("--num-samples", type=int, default=8,
+                        help="max number of calibration samples")
+    parser.add_argument("--shifts", type=int, default=1,
+                        help="how many time-shifted copies of each wav to use; "
+                             "useful when only a few wavs are available")
+    parser.add_argument("--shift-frames", type=int, default=100,
+                        help="shift step in fbank frames (100 = 1 s)")
     parser.add_argument("--work-dir", default=None,
                         help="Where to store the .npy files (default: next to the archive)")
     args = parser.parse_args()
@@ -109,9 +115,20 @@ def main():
             pad = np.full((args.num_frames - features.shape[0], NUM_BINS),
                           silence, dtype=np.float32)
             features = np.concatenate([features, pad])
-        np.save(work / f"{count:04d}.npy", features[None, None, ...].astype(np.float32))
-        print(f"{wav.name}: {features.shape[0]} frames")
-        count += 1
+        for k in range(max(1, args.shifts)):
+            if count >= args.num_samples:
+                break
+            shift = k * args.shift_frames
+            if shift:
+                shifted = np.empty_like(features)
+                shifted[: max(0, args.num_frames - shift)] = features[shift:]
+                shifted[max(0, args.num_frames - shift):] = silence
+                sample = shifted
+            else:
+                sample = features
+            np.save(work / f"{count:04d}.npy", sample[None, None, ...].astype(np.float32))
+            print(f"{wav.name}: shift={shift} frames, total {sample.shape[0]} frames")
+            count += 1
 
     with tarfile.open(args.output, "w:gz") as tar:
         for npy in sorted(work.glob("*.npy")):
