@@ -1,4 +1,5 @@
 /** @typedef {import('./types').WaveObject} WaveObject */
+/** @typedef {import('./types').MultiChannelWaveObject} MultiChannelWaveObject */
 
 const os = require('os');
 const path = require('path');
@@ -94,5 +95,21 @@ if (!addon) {
  * @function module.exports.writeWave
  * @param {string} filename
  * @param {WaveObject} obj - { samples: Float32Array, sampleRate: number }
+ * @returns {boolean}
+ */
+
+/**
+ * Read a multi-channel wave file from disk.
+ * @function module.exports.readWaveMultiChannel
+ * @param {string} filename
+ * @param {boolean} [enableExternalBuffer=true]
+ * @returns {MultiChannelWaveObject}
+ */
+
+/**
+ * Write a multi-channel wave file to disk.
+ * @function module.exports.writeWaveMultiChannel
+ * @param {string} filename
+ * @param {MultiChannelWaveObject} obj - { samples: Float32Array[], sampleRate: number }
  * @returns {boolean}
  */

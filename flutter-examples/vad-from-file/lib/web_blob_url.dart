@@ -1,4 +1,4 @@
-// Web: create a blob URL from bytes for video_player.
+// Web: create a blob URL from bytes for media_kit.
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:typed_data';

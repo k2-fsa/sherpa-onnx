@@ -115,7 +115,7 @@ impl CircularBuffer {
     }
 
     /// Copy `n` samples starting at `start_index`.
-    pub fn get(&self, start_index: i32, n: i32) -> Vec<f32> {
+    pub fn get(&self, start_index: i64, n: i32) -> Vec<f32> {
         unsafe {
             let p = sys::SherpaOnnxCircularBufferGet(self.ptr, start_index, n);
             if p.is_null() {
@@ -139,7 +139,7 @@ impl CircularBuffer {
     }
 
     /// Return the logical head position.
-    pub fn head(&self) -> i32 {
+    pub fn head(&self) -> i64 {
         unsafe { sys::SherpaOnnxCircularBufferHead(self.ptr) }
     }
 
@@ -166,7 +166,7 @@ unsafe impl Sync for SpeechSegment {}
 
 impl SpeechSegment {
     /// Start index, in samples, relative to the input seen so far.
-    pub fn start(&self) -> i32 {
+    pub fn start(&self) -> i64 {
         unsafe { (*self.ptr).start }
     }
 

@@ -40,7 +40,10 @@ Note: `generate-asset-list.py` is a symlink to `../tts/generate-asset-list.py`.
 
   - For Linux
 
+Install `libmpv-dev` first (required by the `media_kit` audio/video player):
+
 ```bash
+sudo apt-get install -y libmpv-dev
 flutter build linux
 ```
 

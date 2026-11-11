@@ -37,7 +37,6 @@ to cmake (You need to make sure CUDA 12.6 is available on your board).
 set(v ${SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION})
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${v}/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2")
 
 if(v STREQUAL "1.11.0")
   set(onnxruntime_HASH "SHA256=36eded935551e23aead09d4173bdf0bd1e7b01fdec15d77f97d6e34029aa60d7")
@@ -45,11 +44,9 @@ elseif(v STREQUAL "1.16.0")
   set(onnxruntime_HASH "SHA256=4c09d5acf2c2682b4eab1dc2f1ad98fc1fde5f5f1960063e337983ba59379a4b")
 elseif(v STREQUAL "1.18.0")
   set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-1.18.0.tar.bz2")
-  set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-1.18.0.tar.bz2")
   set(onnxruntime_HASH "SHA256=da437a69be982fc28ca7d60d0c5ccce2f48d027fa888cc76458cdc05410f4e2d")
 elseif(v STREQUAL "1.18.1")
   set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.1/onnxruntime-linux-aarch64-gpu-cuda12-1.18.1.tar.bz2")
-  set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-cuda12-1.18.1.tar.bz2")
   set(onnxruntime_HASH "SHA256=1e91064ec13a6fabb6b670da8a2da4f369c1dbd50a5be77a879b2473e7afc0a6")
 else()
   message(FATAL_ERROR "Unuspported onnxruntime version ${v} for Linux aarch64")
@@ -83,7 +80,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -91,7 +87,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 

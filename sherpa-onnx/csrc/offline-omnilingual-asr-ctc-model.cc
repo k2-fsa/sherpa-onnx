@@ -89,7 +89,10 @@ class OfflineOmnilingualAsrCtcModel::Impl {
     // Map the single-row feature vector
     Eigen::Map<Eigen::ArrayXf> x(features, feat_dim);
     float mean = x.mean();
-    float var = (x.square().mean() - mean * mean);
+    // E[x^2] - E[x]^2 cancels catastrophically in float32 when a feature
+    // stays near a constant value, so compute the variance from centered
+    // values instead.
+    float var = (x - mean).square().mean();
     var = std::max(var, 0.0f);
     float inv_stddev = 1.0f / std::sqrt(var + 1e-5f);
 

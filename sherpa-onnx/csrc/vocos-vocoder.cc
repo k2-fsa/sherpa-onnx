@@ -27,15 +27,20 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
 struct VocosModelMetaData {
-  int32_t n_fft;
-  int32_t hop_length;
-  int32_t win_length;
-  int32_t center;
-  int32_t normalized;
+  int32_t n_fft = 0;
+  int32_t hop_length = 0;
+  int32_t win_length = 0;
+  int32_t center = 0;
+  int32_t normalized = 0;
+  int32_t sample_rate = 0;
   std::string window_type;
   std::string pad_mode;
 };
+
+}  // namespace
 
 class VocosVocoder::Impl {
  public:
@@ -124,11 +129,13 @@ class VocosVocoder::Impl {
     return istft.Compute(stft_result);
   }
 
+  int32_t SampleRate() const { return meta_.sample_rate; }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     if (model_data) {
-      sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                             sess_opts_);
+      sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                             model_data_length, sess_opts_);
     } else if (!sess_) {
       SHERPA_ONNX_LOGE(
           "Please pass model data or initialize the session outside of this "
@@ -179,6 +186,8 @@ class VocosVocoder::Impl {
                                                 "window_type", "hann");
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_.pad_mode, "pad_mode",
                                                 "reflect");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.sample_rate, "sample_rate",
+                                            22050);
   }
 
  private:
@@ -210,6 +219,8 @@ VocosVocoder::~VocosVocoder() = default;
 std::vector<float> VocosVocoder::Run(Ort::Value mel) const {
   return impl_->Run(std::move(mel));
 }
+
+int32_t VocosVocoder::SampleRate() const { return impl_->SampleRate(); }
 
 #if __ANDROID_API__ >= 9
 template VocosVocoder::VocosVocoder(AAssetManager *mgr,

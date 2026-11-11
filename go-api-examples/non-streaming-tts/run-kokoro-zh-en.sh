@@ -17,7 +17,6 @@ go build
   --kokoro-model=./kokoro-multi-lang-v1_0/model.onnx \
   --kokoro-voices=./kokoro-multi-lang-v1_0/voices.bin \
   --kokoro-tokens=./kokoro-multi-lang-v1_0/tokens.txt \
-  --kokoro-data-dir=./kokoro-multi-lang-v1_0/espeak-ng-data \
   --kokoro-lexicon=./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt \
   --debug=1 \
   --output-filename=./test-kokoro-zh-en.wav \

@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/math.h"
 
+#include <cmath>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -134,6 +135,39 @@ TEST(ComputeMeanAndInvStd, Case1) {
   for (int32_t i = 0; i < num_cols; ++i) {
     EXPECT_NEAR(mean[i], expected_mean[i], 1e-6f) << "at index " << i;
     EXPECT_NEAR(inv_std[i], expected_inv_std[i], 1e-6f) << "at index " << i;
+  }
+}
+
+TEST(NemoNormalizePerFeature, NearConstantFeatureStaysBounded) {
+  // A feature pinned at a constant log floor with one slightly-off frame,
+  // as produced by a mel bin with no energy. E[x^2] - E[x]^2 cancels to 0
+  // in float32 here, which used to normalize the off-floor frame to
+  // magnitudes in the thousands (7510 with these exact values).
+  int32_t num_frames = 1000;
+  int32_t feature_dim = 2;
+  std::vector<float> x(num_frames * feature_dim);
+  for (int32_t i = 0; i < num_frames; ++i) {
+    x[i * feature_dim] = -15.94f;
+    x[i * feature_dim + 1] = static_cast<float>(i % 7);
+  }
+  x[(num_frames / 2) * feature_dim] = -15.94f + 0.075f;
+
+  NemoNormalizePerFeature(x.data(), num_frames, feature_dim);
+
+  for (int32_t i = 0; i < num_frames; ++i) {
+    EXPECT_LE(std::fabs(x[i * feature_dim]), 100.0f) << "at frame " << i;
+  }
+}
+
+TEST(NemoNormalizePerFeature, ConstantFeatureNormalizesToZero) {
+  int32_t num_frames = 8;
+  int32_t feature_dim = 1;
+  std::vector<float> x(num_frames, 3.5f);
+
+  NemoNormalizePerFeature(x.data(), num_frames, feature_dim);
+
+  for (int32_t i = 0; i < num_frames; ++i) {
+    EXPECT_NEAR(x[i], 0.0f, 1e-6f) << "at frame " << i;
   }
 }
 

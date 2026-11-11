@@ -7,12 +7,12 @@
 #ifndef SHERPA_ONNX_CSRC_HYPOTHESIS_H_
 #define SHERPA_ONNX_CSRC_HYPOTHESIS_H_
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/context-graph.h"
@@ -63,10 +63,20 @@ struct Hypothesis {
   // the nn lm states
   std::vector<CopyableOrtValue> nn_lm_states;
 
+  // Decoder (prediction network) states of a stateful NeMo transducer.
+  // Used only by OnlineTransducerModifiedBeamSearchNeMoDecoder.
+  std::vector<CopyableOrtValue> nemo_decoder_states;
+
+  // Cached decoder (prediction network) output for the last token in `ys`.
+  // Unset while that token has not been consumed by the decoder yet; in that
+  // case `nemo_decoder_states` still precede it.
+  // Used only by OnlineTransducerModifiedBeamSearchNeMoDecoder.
+  CopyableOrtValue nemo_decoder_out;
+
   // the LODR states
   std::shared_ptr<LodrStateCost> lodr_state;
 
-  const ContextState *context_state;
+  const ContextState *context_state = nullptr;
 
   // TODO(fangjun): Make it configurable
   // the minimum of tokens in a chunk for streaming RNN LM

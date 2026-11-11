@@ -8,12 +8,11 @@
 #include <math.h>
 
 #include <algorithm>
+#include <chrono>  // NOLINT
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <chrono>  // NOLINT
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -34,8 +33,9 @@ class OnlinePunctuationCNNBiLSTMImpl : public OnlinePunctuationImpl {
   explicit OnlinePunctuationCNNBiLSTMImpl(const OnlinePunctuationConfig &config)
       : config_(config), model_(config.model) {
     if (!config_.model.bpe_vocab.empty()) {
-      bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
-          config_.model.bpe_vocab);
+      auto buf = ReadFile(config_.model.bpe_vocab);
+      std::istringstream iss(std::string(buf.begin(), buf.end()));
+      bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
     }
   }
 
@@ -167,7 +167,7 @@ class OnlinePunctuationCNNBiLSTMImpl : public OnlinePunctuationImpl {
       }
     }
 
-    if (tokens.size() > 0) {
+    if (!tokens.empty()) {
       tokens.push_back(2);  // hardcode 2 now, 2 - </s>
       valids.push_back(1);
 
@@ -220,15 +220,11 @@ class OnlinePunctuationCNNBiLSTMImpl : public OnlinePunctuationImpl {
           break;
         }
         case 3:  // mix case
-        {
+        default: {
           // TODO(frankyoujian):
           // Need to add a map containing supported mix case words so that we
           // can fetch the predicted word from the map e.g. mcdonald's ->
           // McDonald's
-          result_text += words[i];
-          break;
-        }
-        default: {
           result_text += words[i];
           break;
         }

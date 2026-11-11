@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:args/args.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
-import './init.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 Float32List computeEmbedding(
     {required sherpa_onnx.SpeakerEmbeddingExtractor extractor,
@@ -27,7 +27,7 @@ Float32List computeEmbedding(
 }
 
 void main(List<String> arguments) async {
-  await initSherpaOnnx();
+  await sherpa_onnx.initBindingsAsync();
 
   final parser = ArgParser()..addOption('model', help: 'Path to model.onnx');
 

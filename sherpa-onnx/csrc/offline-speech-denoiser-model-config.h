@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/offline-speech-denoiser-dpdfnet-model-config.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser-gtcrn-model-config.h"
+#include "sherpa-onnx/csrc/offline-speech-denoiser-voxlock-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
@@ -15,6 +16,7 @@ namespace sherpa_onnx {
 struct OfflineSpeechDenoiserModelConfig {
   OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
+  OfflineSpeechDenoiserVoxLockModelConfig voxlock;
 
   int32_t num_threads = 1;
   bool debug = false;

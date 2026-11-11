@@ -4,7 +4,7 @@ import (
 	"fmt"
 	iso639 "github.com/barbashov/iso639-3"
 	portaudio "github.com/csukuangfj/portaudio-go"
-	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
+	sherpa "github.com/k2-fsa/sherpa-onnx-go/v2/sherpa_onnx"
 	"log"
 )
 

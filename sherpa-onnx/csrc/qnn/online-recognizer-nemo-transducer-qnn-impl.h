@@ -68,6 +68,7 @@ inline OnlineRecognizerResult ConvertResult(
     r.timestamps.push_back(frame_shift_s * t);
   }
 
+  r.num_trailing_blanks = src.num_trailing_blanks;
   r.segment = segment;
   r.start_time = frames_since_start * frame_shift_ms / 1000.f;
 

@@ -1,5 +1,6 @@
 import {
   createOfflineTts,
+  getOfflineTtsLang,
   getOfflineTtsNumSpeakers,
   getOfflineTtsSampleRate,
   offlineTtsGenerate,
@@ -12,6 +13,9 @@ export class OfflineTtsVitsModelConfig {
   public model: string = '';
   public lexicon: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public dictDir: String = '';  // unused
   public noiseScale: number = 0.667;
@@ -24,6 +28,9 @@ export class OfflineTtsMatchaModelConfig {
   public vocoder: string = '';
   public lexicon: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public dictDir: String = '';  // unused
   public noiseScale: number = 0.667;
@@ -34,6 +41,9 @@ export class OfflineTtsKokoroModelConfig {
   public model: string = '';
   public voices: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public lengthScale: number = 1.0;
   public dictDir: string = '';  // unused
@@ -45,6 +55,9 @@ export class OfflineTtsKittenModelConfig {
   public model: string = '';
   public voices: string = '';
   public tokens: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public lengthScale: number = 1.0;
 }
@@ -54,6 +67,9 @@ export class OfflineTtsZipvoiceModelConfig {
   public encoder: string = '';
   public decoder: string = '';
   public vocoder: string = '';
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon, or GenerationConfig.phonemeCodepoints / tokens with an
+  // external phonemizer instead. The field is kept only for ABI stability.
   public dataDir: string = '';
   public lexicon: string = '';
   public featScale: number = 0.1;
@@ -123,6 +139,20 @@ export class TtsGenerationConfig {
   public referenceText: string = '';
   public numSteps: number = 5;
   public extra: object = new Object();
+
+  /**
+   * Pre-phonemized input as Unicode codepoints. Each inner array is one
+   * sentence. When set, it is used in place of the text argument; leave
+   * unset to use text with a lexicon. Mutually exclusive with `tokens`:
+   * if both are set, a warning is printed and generation fails.
+   */
+  public phonemeCodepoints?: Array<Array<number>>;
+
+  /**
+   * Pre-tokenized input, e.g. Chinese pinyin like "zhong1". Each inner
+   * array is one sentence. Mutually exclusive with `phonemeCodepoints`.
+   */
+  public tokens?: Array<Array<string>>;
 }
 
 export class TtsInput {
@@ -144,6 +174,8 @@ export class OfflineTts {
   public config: OfflineTtsConfig;
   public numSpeakers: number;
   public sampleRate: number;
+  // Language/voice of the model, e.g., "en-us". Empty if not available.
+  public lang: string;
   private handle: object;
 
   constructor(config: OfflineTtsConfig, mgr?: object) {
@@ -152,6 +184,7 @@ export class OfflineTts {
 
     this.numSpeakers = getOfflineTtsNumSpeakers(this.handle);
     this.sampleRate = getOfflineTtsSampleRate(this.handle);
+    this.lang = getOfflineTtsLang(this.handle);
   }
 
   /*

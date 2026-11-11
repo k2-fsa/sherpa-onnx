@@ -5,12 +5,14 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_FRONTEND_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_FRONTEND_H_
 #include <cstdint>
+#include <istream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts-kitten-model-meta-data.h"
+#include "sherpa-onnx/csrc/offline-tts-vits-model-meta-data.h"
 
 namespace sherpa_onnx {
 
@@ -44,7 +46,7 @@ class OfflineTtsFrontend {
    * @param text The input text.
    *             Example 1: "This is the first sample sentence; this is the
    *             second one." Example 2: "这是第一句。这是第二句。"
-   * @param voice Optional. It is for espeak-ng.
+   * @param voice Optional voice identifier.
    *
    * @return Return a vector-of-vector of token IDs. Each subvector contains
    *         a sentence that can be processed independently.
@@ -55,14 +57,28 @@ class OfflineTtsFrontend {
       const std::string &text, const std::string &voice = "") const = 0;
 };
 
-// implementation is in ./piper-phonemize-lexicon.cc
-void InitEspeak(const std::string &data_dir);
+// Tokenization utilities (no espeak-ng dependency)
 
-// implementation in ./piper-phonemize-lexicon.cc
-std::vector<TokenIDs> ConvertTextToTokenIdsKokoroOrKitten(
+std::unordered_map<char32_t, int32_t> ReadPiperTokens(std::istream &is);
+
+std::vector<int64_t> PiperPhonemesToIdsVits(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    int32_t max_token_len, const std::string &text,
-    const std::string &voice = "");
+    const std::vector<char32_t> &phonemes, bool is_inflect);
+
+std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const std::vector<char32_t> &phonemes, bool use_eos_bos,
+    int32_t max_token_len = 400);
+
+std::vector<std::vector<int64_t>> PiperPhonemesToIdsKitten(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const std::vector<char32_t> &phonemes,
+    const OfflineTtsKittenModelMetaData &meta_data);
+
+std::vector<int64_t> CoquiPhonemesToIds(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const std::vector<char32_t> &phonemes,
+    const OfflineTtsVitsModelMetaData &vits_meta_data);
 
 }  // namespace sherpa_onnx
 

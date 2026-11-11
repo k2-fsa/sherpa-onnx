@@ -17,6 +17,8 @@ on:
       - '.github/scripts/test-offline-tts.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
 
   workflow_dispatch:
 
@@ -25,14 +27,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          MATRIX=$(python3 .github/scripts/libs/windows_x64_cuda.py)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
   windows_x64_cuda:
-    name: Windows x64 CUDA ${{ matrix.onnxruntime_version }}
+    needs: [generate_matrix]
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.build_type }} ${{ matrix.onnxruntime_version }} cuda${{ matrix.cuda_version }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022]
-        onnxruntime_version: ["1.17.1", "1.24.4"]
+        ${{ fromJson(needs.generate_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -48,18 +62,17 @@ jobs:
       - name: Configure CMake
         shell: bash
         run: |
-          onnxruntime_version=${{ matrix.onnxruntime_version }}
-          curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v$onnxruntime_version/onnxruntime-win-x64-gpu-$onnxruntime_version.zip
-          unzip onnxruntime-win-x64-gpu-$onnxruntime_version.zip
+          curl -SL -O ${{ matrix.onnxruntime_url }}
+          unzip ${{ matrix.onnxruntime_dir_name }}.zip
 
-          export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/lib
-          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/include
+          export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/${{ matrix.onnxruntime_dir_name }}/lib
+          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/${{ matrix.onnxruntime_dir_name }}/include
 
           mkdir build
           cd build
           cmake \
           -A x64 \
-          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -D BUILD_SHARED_LIBS=ON \
           -D CMAKE_INSTALL_PREFIX=./install \
           -D SHERPA_ONNX_ENABLE_GPU=ON \
@@ -69,24 +82,17 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake --build . --config Release -- -m:2
-          cmake --build . --config Release --target install -- -m:2
+          cmake --build . --config ${{ matrix.build_type }} -- -m:2
+          cmake --build . --config ${{ matrix.build_type }} --target install -- -m:2
 
-          ls -lh ./bin/Release/sherpa-onnx.exe
-
-          onnxruntime_version=${{ matrix.onnxruntime_version }}
+          ls -lh ./bin/${{ matrix.build_type }}/sherpa-onnx.exe
 
       - name: Copy files
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-cuda
-
-          onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.24.4" ]]; then
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-win-x64-cuda
-          fi
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-${{ matrix.dst_suffix }}
 
           mkdir $dst
 
@@ -102,10 +108,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*cuda.tar.bz2
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.15
+          file: sherpa-onnx-*cuda*.tar.bz2
 
       - name: Release pre-compiled binaries and libs for windows x64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -113,13 +116,13 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*cuda.tar.bz2
+          file: sherpa-onnx-*cuda*.tar.bz2
 
       - name: Test offline Cohere Transcribe for windows x64
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-cohere-transcribe.sh
@@ -128,7 +131,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline-language-identification.exe
 
           .github/scripts/test-spoken-language-identification.sh
@@ -137,7 +140,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-ctc.sh
@@ -146,7 +149,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline-tts.exe
 
           .github/scripts/test-offline-tts.sh
@@ -155,7 +158,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-paraformer.sh
@@ -164,7 +167,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-whisper.sh
@@ -173,7 +176,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-ctc.sh
@@ -182,7 +185,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-transducer.sh
@@ -191,7 +194,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-transducer.sh
@@ -200,7 +203,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=decode-file-c-api.exe
 
           .github/scripts/test-online-transducer.sh

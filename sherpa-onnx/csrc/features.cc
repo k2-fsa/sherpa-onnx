@@ -84,7 +84,7 @@ class FeatureExtractor::Impl {
 
   void AcceptWaveformImpl(int32_t sampling_rate, const float *waveform,
                           int32_t n) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     if (resampler_) {
       if (sampling_rate != resampler_->GetInputSamplingRate()) {
@@ -131,7 +131,7 @@ class FeatureExtractor::Impl {
   }
 
   void InputFinished() const {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (fbank_) {
       fbank_->InputFinished();
       return;
@@ -166,7 +166,7 @@ class FeatureExtractor::Impl {
   }
 
   bool IsLastFrame(int32_t frame) const {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (fbank_) {
       return fbank_->IsLastFrame(frame);
     } else if (whisper_fbank_) {
@@ -183,7 +183,7 @@ class FeatureExtractor::Impl {
   }
 
   std::vector<float> GetFrames(int32_t frame_index, int32_t n) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (frame_index + n > NumFramesReady()) {
       SHERPA_ONNX_LOGE("%d + %d > %d\n", frame_index, n, NumFramesReady());
       SHERPA_ONNX_EXIT(-1);

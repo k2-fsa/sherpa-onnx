@@ -4,10 +4,8 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
-import './init.dart';
-
 void main(List<String> arguments) async {
-  await initSherpaOnnx();
+  await sherpa_onnx.initBindingsAsync();
 
   final parser = ArgParser()
     ..addOption('model', help: 'Path to the ONNX model')
@@ -51,7 +49,7 @@ void main(List<String> arguments) async {
   );
   final config = sherpa_onnx.OfflineTtsConfig(
     model: modelConfig,
-    maxNumSenetences: 1,
+    maxNumSentences: 1,
   );
 
   final tts = sherpa_onnx.OfflineTts(config);

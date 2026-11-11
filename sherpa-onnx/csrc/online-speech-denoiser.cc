@@ -62,6 +62,14 @@ int32_t OnlineSpeechDenoiser::GetFrameShiftInSamples() const {
   return impl_->GetFrameShiftInSamples();
 }
 
+bool OnlineSpeechDenoiser::SetVoiceSample(const float *samples, int32_t n,
+                                          int32_t sample_rate) {
+  if (!impl_) {
+    return false;
+  }
+  return impl_->SetVoiceSample(samples, n, sample_rate);
+}
+
 #if __ANDROID_API__ >= 9
 template OnlineSpeechDenoiser::OnlineSpeechDenoiser(
     AAssetManager *mgr, const OnlineSpeechDenoiserConfig &config);

@@ -18,7 +18,7 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/lazarus/generate-subtitles.html#download-a-speech-recognition-model
 for how to rename.
 
-The renamed file shoud put in current folder( ```/<repo>/wasm/vad-asr/assets```)
+The renamed file should be put in the current folder( ```/<repo>/wasm/vad-asr/assets```)
 Example after download sense-voice model
 ```
 tree ~/work/github/sherpa-onnx/wasm/vad-asr/assets

@@ -21,7 +21,9 @@ func run() {
   let numSpeakers = 4
   var config = sherpaOnnxOfflineSpeakerDiarizationConfig(
     segmentation: sherpaOnnxOfflineSpeakerSegmentationModelConfig(
-      pyannote: sherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(model: segmentationModel)),
+      pyannote: sherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
+        model: segmentationModel,
+        windowShiftRatio: 0.1)),
     embedding: sherpaOnnxSpeakerEmbeddingExtractorConfig(model: embeddingExtractorModel),
     clustering: sherpaOnnxFastClusteringConfig(numClusters: numSpeakers)
   )

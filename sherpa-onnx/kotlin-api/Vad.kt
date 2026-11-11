@@ -30,7 +30,7 @@ data class VadModelConfig(
     var debug: Boolean = false,
 )
 
-class SpeechSegment(val start: Int, val samples: FloatArray)
+class SpeechSegment(val start: Long, val samples: FloatArray)
 
 class Vad(
     assetManager: AssetManager? = null,
@@ -47,6 +47,7 @@ class Vad(
         require(ptr != 0L) {
             "Invalid VadConfig: failed to create native Vad"
         }
+    }
 
     protected fun finalize() {
         if (ptr != 0L) {

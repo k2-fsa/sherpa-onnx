@@ -12,6 +12,12 @@
 
 namespace sherpa_onnx {
 
+// Sentinel used for OfflineSpeakerDiarizationSegment::confidence when the
+// confidence value cannot be determined (e.g. compute_confidence was
+// disabled, only one cluster was formed, or no embedding interval overlapped
+// the segment). Kept outside the valid confidence range of [-1, 1].
+inline constexpr float kUnavailableConfidence = -2.0f;
+
 class OfflineSpeakerDiarizationSegment {
  public:
   OfflineSpeakerDiarizationSegment(float start, float end, int32_t speaker,
@@ -27,10 +33,14 @@ class OfflineSpeakerDiarizationSegment {
   int32_t Speaker() const { return speaker_; }
   const std::string &Text() const { return text_; }
   float Duration() const { return end_ - start_; }
+  float Confidence() const { return confidence_; }
 
   void SetText(const std::string &text) { text_ = text; }
+  void SetConfidence(float confidence) { confidence_ = confidence; }
 
-  std::string ToString() const;
+  // If with_confidence is true, we append the confidence value
+  // (printed as "n/a" when unavailable).
+  std::string ToString(bool with_confidence = false) const;
 
  private:
   float start_;       // in seconds
@@ -38,6 +48,10 @@ class OfflineSpeakerDiarizationSegment {
   int32_t speaker_;   // ID of the speaker, starting from 0
   std::string text_;  // If not empty, it contains the speech recognition result
                       // of this segment
+
+  // Confidence in [-1, 1]. See kUnavailableConfidence for the sentinel used
+  // when the value cannot be computed.
+  float confidence_ = kUnavailableConfidence;
 };
 
 class OfflineSpeakerDiarizationResult {

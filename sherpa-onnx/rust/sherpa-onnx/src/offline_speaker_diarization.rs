@@ -8,10 +8,21 @@ use sherpa_onnx_sys as sys;
 use std::ffi::CString;
 use std::slice;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 /// Pyannote segmentation model path.
 pub struct OfflineSpeakerSegmentationPyannoteModelConfig {
     pub model: Option<String>,
+    /// Sliding-window shift as a fraction of the model window size.
+    pub window_shift_ratio: f32,
+}
+
+impl Default for OfflineSpeakerSegmentationPyannoteModelConfig {
+    fn default() -> Self {
+        Self {
+            model: None,
+            window_shift_ratio: 0.1,
+        }
+    }
 }
 
 impl OfflineSpeakerSegmentationPyannoteModelConfig {
@@ -21,6 +32,7 @@ impl OfflineSpeakerSegmentationPyannoteModelConfig {
     ) -> sys::OfflineSpeakerSegmentationPyannoteModelConfig {
         sys::OfflineSpeakerSegmentationPyannoteModelConfig {
             model: to_c_ptr(&self.model, cstrings),
+            window_shift_ratio: self.window_shift_ratio,
         }
     }
 }
@@ -63,6 +75,7 @@ impl OfflineSpeakerSegmentationModelConfig {
 pub struct FastClusteringConfig {
     pub num_clusters: i32,
     pub threshold: f32,
+    pub compute_confidence: bool,
 }
 
 impl Default for FastClusteringConfig {
@@ -70,6 +83,7 @@ impl Default for FastClusteringConfig {
         Self {
             num_clusters: -1,
             threshold: 0.5,
+            compute_confidence: false,
         }
     }
 }
@@ -79,6 +93,7 @@ impl FastClusteringConfig {
         sys::FastClusteringConfig {
             num_clusters: self.num_clusters,
             threshold: self.threshold,
+            compute_confidence: self.compute_confidence as i32,
         }
     }
 }
@@ -129,6 +144,7 @@ pub struct OfflineSpeakerDiarizationSegment {
     pub start: f32,
     pub end: f32,
     pub speaker: i32,
+    pub confidence: f32,
 }
 
 /// Offline speaker diarizer.
@@ -234,6 +250,7 @@ impl OfflineSpeakerDiarizationResult {
                     start: s.start,
                     end: s.end,
                     speaker: s.speaker,
+                    confidence: s.confidence,
                 })
                 .collect::<Vec<_>>();
             sys::SherpaOnnxOfflineSpeakerDiarizationDestroySegment(p);

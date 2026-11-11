@@ -11,10 +11,11 @@ namespace SherpaOnnx
         public OfflineSpeakerSegmentationPyannoteModelConfig()
         {
             Model = "";
+            WindowShiftRatio = 0.1f;
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Model;
+        public float WindowShiftRatio;
     }
 }
-

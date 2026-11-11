@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
-import './init.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 void main(List<String> arguments) async {
-  await initSherpaOnnx();
+  await sherpa_onnx.initBindingsAsync();
 
   print('sherpa-onnx version: ${sherpa_onnx.getVersion()}');
   print('sherpa-onnx gitSha1: ${sherpa_onnx.getGitSha1()}');

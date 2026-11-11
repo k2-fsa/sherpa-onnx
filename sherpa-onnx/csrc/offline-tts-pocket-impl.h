@@ -293,7 +293,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     hash_combine(hash, n);
 
     for (size_t i = 0; i < n; ++i) {
-      uint32_t bits;
+      uint32_t bits = 0;
       std::memcpy(&bits, &p[i], sizeof(float));
       hash_combine(hash, bits);
     }
@@ -477,8 +477,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     std::vector<float> reference_audio;
 
-    const float *p_audio;
-    int32_t num_samples;
+    const float *p_audio = nullptr;
+    int32_t num_samples = 0;
     if (gen_config.reference_sample_rate != SampleRate()) {
       SHERPA_ONNX_LOGE(
           "Creating a resampler:\n"
@@ -691,7 +691,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
         : capacity_(cap) {}
 
     EmbeddingPtr Get(size_t key) {
-      std::lock_guard<std::mutex> lock(mutex_);
+      std::scoped_lock lock(mutex_);
 
       auto it = map_.find(key);
       if (it == map_.end()) {
@@ -707,7 +707,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     void Put(size_t key, std::vector<float> data, std::vector<int64_t> shape) {
-      std::lock_guard<std::mutex> lock(mutex_);
+      std::scoped_lock lock(mutex_);
 
       if (capacity_ == 0) {
         return;
@@ -749,7 +749,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
         SHERPA_ONNX_EXIT(-1);
       }
 
-      std::lock_guard<std::mutex> lock(mutex_);
+      std::scoped_lock lock(mutex_);
       capacity_ = cap;
 
       while (lru_list_.size() > capacity_) {
@@ -762,12 +762,12 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     size_t Size() const {
-      std::lock_guard<std::mutex> lock(mutex_);
+      std::scoped_lock lock(mutex_);
       return lru_list_.size();
     }
 
     void Clear() {
-      std::lock_guard<std::mutex> lock(mutex_);
+      std::scoped_lock lock(mutex_);
       map_.clear();
       lru_list_.clear();
     }

@@ -40,6 +40,7 @@ set(srcs
   src/non-streaming-speech-denoiser.cc
   src/non-streaming-tts.cc
   src/offline-punctuation.cc
+  src/offline-source-separation.cc
   src/online-punctuation.cc
   src/streaming-speech-denoiser.cc
   src/sherpa-onnx-node-addon-api.cc

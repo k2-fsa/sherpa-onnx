@@ -119,6 +119,10 @@ jobs:
             cp -v install/lib/*.dll ../pascal-api-examples/vad
             cp -v install/lib/*.dll ../pascal-api-examples/vad-with-non-streaming-asr
             cp -v install/lib/*.dll ../pascal-api-examples/version
+            cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-voxlock
+            cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-voxlock-with-voice-sample
+            cp -v install/lib/*.dll ../pascal-api-examples/streaming-speech-enhancement-voxlock
+            cp -v install/lib/*.dll ../pascal-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample
 
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/non-streaming-asr
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/read-wav
@@ -132,6 +136,10 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/version
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-voxlock
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-voxlock-with-voice-sample
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-speech-enhancement-voxlock
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample
           fi
 
       - name:  Run Pascal version test
@@ -143,6 +151,31 @@ jobs:
           ./run.sh
           popd
 
+      - name:  Run Speech Enhancement test (VoxLock)
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          pushd speech-enhancement-voxlock
+          ./run-voxlock.sh
+          ls -lh
+          popd
+
+          pushd speech-enhancement-voxlock-with-voice-sample
+          ./run-voxlock.sh
+          ls -lh
+          popd
+
+          pushd streaming-speech-enhancement-voxlock
+          ./run-voxlock.sh
+          ls -lh
+          popd
+
+          pushd streaming-speech-enhancement-voxlock-with-voice-sample
+          ./run-voxlock.sh
+          ls -lh
+          popd
+
       - name:  Run Pascal test (Cohere Transcribe)
         shell: bash
         run: |
@@ -151,6 +184,9 @@ jobs:
           pushd non-streaming-asr
           ./run-cohere-transcribe.sh
           rm -rf sherpa-onnx-cohere-transcribe-*
+          echo "---"
+          ./run-zipformer-ctc-hlg.sh
+          rm -rf sherpa-onnx-zipformer-ctc-*
           echo "---"
           popd
 
@@ -190,6 +226,7 @@ jobs:
 
           ./run-piper.sh
           rm -rf vits-piper-*
+          rm -f lexicon-en-us.txt
           rm piper
           ls -lh
           echo "---"
@@ -202,6 +239,7 @@ jobs:
 
           ./run-kokoro-en.sh
           rm -rf kokoro-en-*
+          rm -f lexicon-en-us.txt
           rm kokoro-en
           ls -lh
           echo "---"
@@ -214,6 +252,7 @@ jobs:
 
           ./run-matcha-en.sh
           rm -rf matcha-icefall-*
+          rm -f lexicon-en-us.txt
           rm matcha-en
           ls -lh
           echo "---"
@@ -227,6 +266,7 @@ jobs:
           ./run-zipvoice-zh-en.sh
           rm -rf sherpa-onnx-zipvoice-*
           rm -f vocos_24khz.onnx
+          rm -f lexicon-en-us.txt
           rm zipvoice-zh-en
           ls -lh
           echo "---"
@@ -435,3 +475,27 @@ jobs:
           echo "---"
           ls -lh
           popd
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-${{ matrix.os }}
+          path: pascal-api-examples/speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: pascal-api-examples/speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-${{ matrix.os }}
+          path: pascal-api-examples/streaming-speech-enhancement-voxlock/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: pascal-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn

@@ -1,10 +1,10 @@
 package com.k2fsa.sherpa.onnx
 
 fun main() {
-  testSpokenLanguageIdentifcation()
+  testSpokenLanguageIdentification()
 }
 
-fun testSpokenLanguageIdentifcation() {
+fun testSpokenLanguageIdentification() {
   val config = SpokenLanguageIdentificationConfig(
     whisper = SpokenLanguageIdentificationWhisperConfig(
       encoder = "./sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx",

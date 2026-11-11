@@ -12,8 +12,6 @@ export '../offline_speaker_diarization_config.dart';
 class OfflineSpeakerDiarization {
   OfflineSpeakerDiarization.fromPtr(
       {required this.ptr, required this.config, required this.sampleRate});
-  OfflineSpeakerDiarization._(
-      {required this.ptr, required this.config, required this.sampleRate});
 
   factory OfflineSpeakerDiarization(OfflineSpeakerDiarizationConfig config) {
     throw UnsupportedError(

@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                 val isEndpoint = recognizer.isEndpoint(stream)
                 var text = recognizer.getResult(stream).text
 
-                // For streaming parformer, we need to manually add some
+                // For streaming paraformer, we need to manually add some
                 // paddings so that it has enough right context to
                 // recognize the last word of this segment
                 if (isEndpoint && recognizer.config.modelConfig.paraformer.encoder.isNotBlank()) {

@@ -20,13 +20,13 @@ class ContextGraph;
 using ContextGraphPtr = std::shared_ptr<ContextGraph>;
 
 struct ContextState {
-  int32_t token;
-  float token_score;
-  float node_score;
-  float output_score;
-  int32_t level;
-  float ac_threshold;
-  bool is_end;
+  int32_t token = 0;
+  float token_score = 0.0f;
+  float node_score = 0.0f;
+  float output_score = 0.0f;
+  int32_t level = 0;
+  float ac_threshold = 0.0f;
+  bool is_end = false;
   std::string phrase;
   std::unordered_map<int32_t, std::unique_ptr<ContextState>> next;
   const ContextState *fail = nullptr;
@@ -78,8 +78,8 @@ class ContextGraph {
   const ContextState *Root() const { return root_.get(); }
 
  private:
-  float context_score_;
-  float ac_threshold_;
+  float context_score_ = 0.0f;
+  float ac_threshold_ = 0.0f;
   std::unique_ptr<ContextState> root_;
   void Build(const std::vector<std::vector<int32_t>> &token_ids,
              const std::vector<float> &scores,

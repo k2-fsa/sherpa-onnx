@@ -159,9 +159,9 @@ int32_t main() {
       const SherpaOnnxOfflineRecognizerResult *result =
           SherpaOnnxGetOfflineStreamResult(stream);
 
-      float start = segment->start / 16000.0f;
-      float duration = segment->n / 16000.0f;
-      float stop = start + duration;
+      double start = segment->start / 16000.0;
+      double duration = segment->n / 16000.0;
+      double stop = start + duration;
 
       fprintf(stderr, "%.3f -- %.3f: %s\n", start, stop, result->text);
 

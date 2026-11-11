@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'sherpa_onnx_macos'
-  s.version          = '1.13.4'
+  s.version          = '2.0.1'
   s.summary          = 'sherpa-onnx Flutter FFI plugin project.'
   s.description      = <<-DESC
 sherpa-onnx Flutter FFI plugin project.
@@ -19,10 +19,9 @@ sherpa-onnx Flutter FFI plugin project.
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
   s.dependency 'FlutterMacOS'
-  # The xcframework must be named SherpaOnnxC.xcframework (matching the framework
-  # inside it) because CocoaPods derives the linker flag -framework <name> from
-  # the xcframework filename.
-  s.vendored_frameworks = 'sherpa_onnx_macos/SherpaOnnxC.xcframework'
+  # The dylib lives inside the xcframework (single copy, no duplication).
+  # CocoaPods embeds it; SPM resolves it from the same xcframework.
+  s.vendored_libraries = 'sherpa_onnx_macos/sherpa-onnx.xcframework/macos-arm64_x86_64/libsherpa-onnx-c-api.dylib'
 
   s.platform = :osx, '10.15'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }

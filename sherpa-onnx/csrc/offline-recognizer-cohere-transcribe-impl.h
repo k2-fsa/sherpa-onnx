@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-decoder.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-model.h"
@@ -23,6 +23,31 @@
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
+
+// The decoder in this file happily transcribes silence into hallucinated
+// sentences for most languages (measured with
+// sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01: e.g. "Herr
+// Präsident, meine Damen und Herren!" for de, "Sous-titrage Société
+// Radio-Canada" for fr, "谢谢" for zh; only en returns an empty string), so
+// digitally silent clips must be detected and short-circuited before the
+// decoder runs.
+//
+// Silence is detected on the normalized fbank features returned by
+// OfflineStream::GetFrames(). Those features are scale invariant, so the
+// recording level does not matter. The fbank configuration is the same as
+// for Canary (see offline-recognizer-canary-impl.h), where digital silence
+// measures a max |feature| of about 0.09 while audio with content stays
+// above 4 regardless of its level.
+inline constexpr float kCohereSilenceFeatureAbsMax = 1.0f;
+
+inline bool CohereHasSignal(const float *features, int32_t n) {
+  float abs_max = 0;
+  for (int32_t i = 0; i != n; ++i) {
+    abs_max = std::max(abs_max, std::abs(features[i]));
+  }
+
+  return abs_max > kCohereSilenceFeatureAbsMax;
+}
 
 class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
  public:
@@ -109,24 +134,24 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
 
     std::vector<std::string> prompt_str;
     prompt_str.reserve(9);
-    prompt_str.push_back("<|startofcontext|>");
-    prompt_str.push_back("<|startoftranscript|>");
-    prompt_str.push_back("<|emo:undefined|>");
+    prompt_str.emplace_back("<|startofcontext|>");
+    prompt_str.emplace_back("<|startoftranscript|>");
+    prompt_str.emplace_back("<|emo:undefined|>");
     prompt_str.push_back(std::string("<|") + language + "|>");
     prompt_str.push_back(std::string("<|") + language + "|>");
     if (use_punct) {
-      prompt_str.push_back("<|pnc|>");
+      prompt_str.emplace_back("<|pnc|>");
     } else {
-      prompt_str.push_back("<|nopnc|>");
+      prompt_str.emplace_back("<|nopnc|>");
     }
 
     if (use_itn) {
-      prompt_str.push_back("<|itn|>");
+      prompt_str.emplace_back("<|itn|>");
     } else {
-      prompt_str.push_back("<|noitn|>");
+      prompt_str.emplace_back("<|noitn|>");
     }
-    prompt_str.push_back("<|notimestamp|>");
-    prompt_str.push_back("<|nodiarize|>");
+    prompt_str.emplace_back("<|notimestamp|>");
+    prompt_str.emplace_back("<|nodiarize|>");
 
     std::vector<int64_t> prompt_ids;
     prompt_ids.reserve(prompt_str.size());
@@ -142,6 +167,15 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
     int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
     int32_t num_frames = f.size() / feat_dim;
+
+    if (!CohereHasSignal(f.data(), static_cast<int32_t>(f.size()))) {
+      // The whole clip is silence. Return an empty result before the
+      // encoder/decoder run, so they cannot hallucinate text for silent
+      // audio.
+      OfflineRecognitionResult r;
+      s->SetResult(r);
+      return;
+    }
 
     f = Transpose(f.data(), num_frames, feat_dim);
     // now f is (1, feat_dim, num_frames)
@@ -181,13 +215,16 @@ class OfflineRecognizerCohereTranscribeImpl : public OfflineRecognizerImpl {
         continue;
       }
 
+      // See offline-recognizer-whisper-impl.h: ITN must run on the
+      // concatenated text, not on individual byte-level-BPE tokens.
       std::string s = sym_table[i];
-      s = ApplyInverseTextNormalization(s);
-      s = ApplyHomophoneReplacer(std::move(s));
 
       text += s;
       r.tokens.push_back(s);
     }
+
+    text = ApplyInverseTextNormalization(text);
+    text = ApplyHomophoneReplacer(std::move(text));
 
     r.text = text;
 

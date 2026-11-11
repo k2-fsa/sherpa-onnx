@@ -4,6 +4,7 @@ import android.content.res.AssetManager
 
 data class OfflineSpeakerSegmentationPyannoteModelConfig(
     var model: String = "",
+    var windowShiftRatio: Float = 0.1f,
 )
 
 data class OfflineSpeakerSegmentationModelConfig(
@@ -16,6 +17,7 @@ data class OfflineSpeakerSegmentationModelConfig(
 data class FastClusteringConfig(
     var numClusters: Int = -1,
     var threshold: Float = 0.5f,
+    var computeConfidence: Boolean = false,
 )
 
 data class OfflineSpeakerDiarizationConfig(
@@ -30,6 +32,7 @@ data class OfflineSpeakerDiarizationSegment(
     val start: Float, // in seconds
     val end: Float, // in seconds
     val speaker: Int, // ID of the speaker; count from 0
+    val confidence: Float, // confidence score in [-1, 1], or -2 if unavailable
 )
 
 class OfflineSpeakerDiarization(
@@ -47,6 +50,7 @@ class OfflineSpeakerDiarization(
         require(ptr != 0L) {
             "Invalid OfflineSpeakerDiarizationConfig: failed to create native OfflineSpeakerDiarization"
         }
+    }
 
     protected fun finalize() {
         if (ptr != 0L) {

@@ -39,8 +39,6 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.kokoro.model = "./kokoro-multi-lang-v1_0/model.onnx";
   config.model.kokoro.voices = "./kokoro-multi-lang-v1_0/voices.bin";
   config.model.kokoro.tokens = "./kokoro-multi-lang-v1_0/tokens.txt";
-  config.model.kokoro.data_dir = "./kokoro-multi-lang-v1_0/espeak-ng-data";
-  config.model.kokoro.dict_dir = "./kokoro-multi-lang-v1_0/dict";
   config.model.kokoro.lexicon =
       "./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/"
       "lexicon-zh.txt";

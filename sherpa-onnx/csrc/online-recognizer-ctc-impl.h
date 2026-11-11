@@ -27,10 +27,11 @@
 namespace sherpa_onnx {
 
 static OnlineRecognizerResult ConvertCtc(const OnlineCtcDecoderResult &src,
-                                  const SymbolTable &sym_table,
-                                  float frame_shift_ms,
-                                  int32_t subsampling_factor, int32_t segment,
-                                  int32_t frames_since_start) {
+                                         const SymbolTable &sym_table,
+                                         float frame_shift_ms,
+                                         int32_t subsampling_factor,
+                                         int32_t segment,
+                                         int32_t frames_since_start) {
   OnlineRecognizerResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
@@ -66,8 +67,9 @@ static OnlineRecognizerResult ConvertCtc(const OnlineCtcDecoderResult &src,
     r.timestamps.push_back(time);
   }
 
+  r.num_trailing_blanks = src.num_trailing_blanks;
   r.segment = segment;
-  r.words = std::move(src.words);
+  r.words = src.words;
   r.start_time = frames_since_start * frame_shift_ms / 1000.;
 
   return r;
@@ -205,6 +207,13 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     auto r =
         ConvertCtc(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                    s->GetCurrentSegment(), s->GetNumFramesSinceStart());
+    if (!config_.model_config.t_one_ctc.model.empty()) {
+      // GetNumFramesSinceStart() counts input frames, which are 300ms long
+      // for T-one, not 30ms
+      r.start_time = s->GetNumFramesSinceStart() *
+                     config_.feat_config.frame_shift_ms / 1000.;
+    }
+
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
@@ -222,6 +231,11 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     if (!config_.model_config.t_one_ctc.model.empty()) {
       frame_shift_in_seconds = 0.03;
       subsampling_factor = 1;
+
+      // num_processed_frames counts 300ms input frames, while
+      // frame_shift_in_seconds is for the 30ms output frames.
+      // Each input frame produces 10 output frames.
+      num_processed_frames *= 10;
     }
 
     int32_t trailing_silence_frames =
@@ -243,7 +257,15 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     s->SetCtcResult({});
 
     // clear states
-    s->SetStates(model_->GetInitStates());
+    //
+    // T-one needs some silence after starting from the initial states (that
+    // is why we add left paddings at the start of a stream). If we reset its
+    // states here in the middle of the audio, the first words of the next
+    // segment are decoded badly, e.g., spaces between words are lost. So we
+    // keep the states for T-one and only clear the decoding result.
+    if (config_.model_config.t_one_ctc.model.empty()) {
+      s->SetStates(model_->GetInitStates());
+    }
 
     s->GetFasterDecoderProcessedFrames() = 0;
 
@@ -258,6 +280,14 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false
       config_.feat_config.normalize_samples = false;
+    }
+
+    if (!config_.model_config.nemo_ctc.model.empty()) {
+      config_.feat_config.low_freq = 0;
+      config_.feat_config.high_freq = 0;
+      config_.feat_config.is_librosa = true;
+      config_.feat_config.remove_dc_offset = false;
+      config_.feat_config.window_type = "hann";
     }
 
     if (!config_.model_config.t_one_ctc.model.empty()) {

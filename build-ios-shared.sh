@@ -8,7 +8,7 @@ set -e
 dir=build-ios-shared
 mkdir -p $dir
 cd $dir
-onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.27.1}
+onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.28.2}
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
 CMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE:-OFF}
@@ -40,10 +40,6 @@ echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 if [[ ! -f build/simulator_x86_64/install/lib/libsherpa-onnx-c-api.dylib ]]; then
   cmake \
     -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
     -S .. -D CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE \
     -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
     -DPLATFORM=SIMULATOR64 \
@@ -73,10 +69,6 @@ echo "Building for simulator (arm64)"
 if [[ ! -f build/simulator_arm64/install/lib/libsherpa-onnx-c-api.dylib ]]; then
   cmake \
     -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
     -S .. -D CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE \
     -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
     -DPLATFORM=SIMULATORARM64 \
@@ -109,10 +101,6 @@ if [[ ! -f build/os64/install/lib/libsherpa-onnx-c-api.dylib ]]; then
 
   cmake \
     -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
     -S .. -D CMAKE_VERBOSE_MAKEFILE=$CMAKE_VERBOSE_MAKEFILE \
     -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
     -DPLATFORM=OS64 \
@@ -192,9 +180,9 @@ MEOF
   <key>CFBundleExecutable</key>
   <string>SherpaOnnxC</string>
   <key>CFBundleVersion</key>
-  <string>20260707</string>
+  <string>20261026</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.13.4</string>
+  <string>2.0.1</string>
   <key>MinimumOSVersion</key>
   <string>13.0</string>
   <key>CFBundleSupportedPlatforms</key>
@@ -207,6 +195,9 @@ PEOF
 
   # Fix dylib install name
   install_name_tool -id @rpath/SherpaOnnxC.framework/SherpaOnnxC $fw_dir/SherpaOnnxC
+
+  # Ad-hoc sign the framework binary so Xcode can embed and re-sign it
+  codesign --force --sign - $fw_dir/SherpaOnnxC
 }
 
 create_framework ios-arm64/libsherpa-onnx-c-api.dylib ios-arm64

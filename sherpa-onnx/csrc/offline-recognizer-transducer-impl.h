@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
@@ -31,10 +32,13 @@
 
 namespace sherpa_onnx {
 
+// remove_cjk_space: use 1 or 0. 0 means disable, non-zero means enable
+// removing spaces between CJK characters of scripts without word spacing.
+// See OfflineStream::SetOption("remove_cjk_space", ...).
 template <typename Source, typename Destination>
 static void ConvertTransducerHypothesis(
     const Source &src, const SymbolTable &sym_table, int32_t frame_shift_ms,
-    int32_t subsampling_factor, Destination *dest) {
+    int32_t subsampling_factor, int32_t remove_cjk_space, Destination *dest) {
   dest->tokens.reserve(src.tokens.size());
   dest->timestamps.reserve(src.timestamps.size());
   dest->durations.reserve(src.durations.size());
@@ -60,7 +64,11 @@ static void ConvertTransducerHypothesis(
     text = sym_table.DecodeByteBpe(text);
   }
 
-  dest->text = RemoveSpaceBetweenCjk(text);
+  if (remove_cjk_space != 0) {
+    text = RemoveSpaceBetweenCjk(text);
+  }
+
+  dest->text = std::move(text);
 
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
   for (auto t : src.timestamps) {
@@ -76,16 +84,17 @@ static void ConvertTransducerHypothesis(
 
 static OfflineRecognitionResult Convert(
     const OfflineTransducerDecoderResult &src, const SymbolTable &sym_table,
-    int32_t frame_shift_ms, int32_t subsampling_factor) {
+    int32_t frame_shift_ms, int32_t subsampling_factor,
+    int32_t remove_cjk_space = 1) {
   OfflineRecognitionResult r;
   ConvertTransducerHypothesis(src, sym_table, frame_shift_ms,
-                              subsampling_factor, &r);
+                              subsampling_factor, remove_cjk_space, &r);
 
   r.hypotheses.reserve(src.hypotheses.size());
   for (const auto &src_hyp : src.hypotheses) {
     OfflineRecognitionHypothesis hyp;
     ConvertTransducerHypothesis(src_hyp, sym_table, frame_shift_ms,
-                                subsampling_factor, &hyp);
+                                subsampling_factor, remove_cjk_space, &hyp);
     hyp.score = src_hyp.score;
     r.hypotheses.push_back(std::move(hyp));
   }
@@ -262,8 +271,12 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
     int32_t frame_shift_ms = 10;
     for (int32_t i = 0; i != n; ++i) {
+      // Per-stream option "remove_cjk_space": use 1 or 0. 0 means disable,
+      // non-zero (default 1) means enable removing spaces between CJK
+      // characters of scripts without word spacing.
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
-                       model_->SubsamplingFactor());
+                       model_->SubsamplingFactor(),
+                       ss[i]->GetOptionInt("remove_cjk_space", 1));
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       r.text = ApplyHomophoneReplacer(std::move(r.text));
       for (auto &hyp : r.hypotheses) {

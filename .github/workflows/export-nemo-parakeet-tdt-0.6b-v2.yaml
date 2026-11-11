@@ -22,8 +22,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["3.10"]
-        version: ["v2", "v3"]
+        # Not 3.10: on darwin-arm64 it resolves to 3.10.11, which lacks
+        # tarfile extract(filter=...) (PEP 706, backported in 3.10.12) and
+        # nemo_toolkit's restore_from() crashes on it.
+        python-version: ["3.11"]
+        version: ["v2", "v3", "ultra", "redux"]
 
     steps:
       - uses: actions/checkout@v4
@@ -78,6 +81,32 @@ jobs:
           mv -v tokens.txt ../../..
           mv *.wav ../../../
 
+      - name: Run ${{ matrix.version }}
+        if: matrix.version == 'ultra'
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-ultra
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v *.weights ../../..
+          mv -v tokens.txt ../../..
+          mv *.wav ../../../
+
+      - name: Run ${{ matrix.version }}
+        if: matrix.version == 'redux'
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-redux
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v *.weights ../../..
+          mv -v tokens.txt ../../..
+          mv *.wav ../../../
+
       - name: Collect files (fp32)
         shell: bash
         run: |
@@ -89,6 +118,7 @@ jobs:
           cp -v decoder.onnx $d
           cp -v joiner.onnx $d
           cp -v tokens.txt $d
+          cp -v scripts/nemo/parakeet-tdt-0.6b-$version/README.md $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
@@ -107,6 +137,7 @@ jobs:
           cp -v decoder.int8.onnx $d
           cp -v joiner.int8.onnx $d
           cp -v tokens.txt $d
+          cp -v scripts/nemo/parakeet-tdt-0.6b-$version/README.md $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
@@ -117,7 +148,7 @@ jobs:
 
       - name: Publish to huggingface
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20

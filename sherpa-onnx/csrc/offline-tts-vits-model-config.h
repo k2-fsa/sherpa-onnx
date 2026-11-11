@@ -16,8 +16,9 @@ struct OfflineTtsVitsModelConfig {
   std::string lexicon;
   std::string tokens;
 
-  // If data_dir is given, lexicon is ignored
-  // data_dir is for piper-phonemize, which uses espeak-ng
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon for text input, or GenerationConfig.phoneme_codepoints /
+  // GenerationConfig.tokens with an external phonemizer instead.
   std::string data_dir;
 
   // Used for Chinese TTS models using jieba

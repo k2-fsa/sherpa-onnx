@@ -6,27 +6,25 @@ import json
 from dataclasses import asdict, dataclass
 
 
-# image: ascendai/cann:latest
-# image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
-# see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
-# see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
-# and
-# https://quay.io/repository/ascend/cann?tab=tags
+# Images come from the official quay.io/ascend/cann registry (the gpustack/*
+# images on Docker Hub disappeared):
+#   https://quay.io/repository/ascend/cann?tab=tags
+#   https://github.com/Ascend/cann-container-image/blob/main/supported_tags.md
 def get_image(cann: str, soc_version: str):
     cann2image_910 = {
         "7.0": "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8",
-        "8.0": "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9",
-        "8.1": "gpustack/devel-ascendai-cann:8.1.rc1.beta1-910b-ubuntu20.04-v2",
-        "8.2": "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2",
+        "8.0": "quay.io/ascend/cann:8.0.0-910b-ubuntu22.04-py3.9",
+        "8.1": "quay.io/ascend/cann:8.1.rc1-910b-ubuntu22.04-py3.11",
+        "8.2": "quay.io/ascend/cann:8.2.rc1-910b-ubuntu22.04-py3.11",
         "8.3": "quay.io/ascend/cann:8.3.rc2-910b-ubuntu22.04-py3.11",
         "8.5": "quay.io/ascend/cann:8.5.0-910b-ubuntu22.04-py3.11",
     }
 
     cann2image_310 = {
         "7.0": "quay.io/ascend/cann:7.0.1-310p-ubuntu22.04-py3.9",
-        "8.0": "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2",
-        "8.1": "gpustack/devel-ascendai-cann:8.1.rc1.beta1-310p-ubuntu20.04-v2",
-        "8.2": "gpustack/devel-ascendai-cann:8.2.rc1-310p-ubuntu20.04-v2",
+        "8.0": "quay.io/ascend/cann:8.0.rc1-310p-ubuntu22.04-py3.9",
+        "8.1": "quay.io/ascend/cann:8.1.rc1-310p-ubuntu22.04-py3.11",
+        "8.2": "quay.io/ascend/cann:8.2.rc1-310p-ubuntu22.04-py3.11",
         "8.3": "quay.io/ascend/cann:8.3.rc2-310p-ubuntu22.04-py3.11",
         "8.5": "quay.io/ascend/cann:8.5.0-310p-ubuntu22.04-py3.11",
     }

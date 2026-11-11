@@ -1,6 +1,7 @@
 // scripts/node-addon-api/src/keyword-spotting.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>

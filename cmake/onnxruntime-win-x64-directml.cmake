@@ -24,7 +24,6 @@ if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
 else()
 
     set(onnxruntime_URL  "https://globalcdn.nuget.org/packages/microsoft.ml.onnxruntime.directml.1.14.1.nupkg")
-    set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/microsoft.ml.onnxruntime.directml.1.14.1.nupkg")
     set(onnxruntime_HASH "SHA256=c8ae7623385b19cd5de968d0df5383e13b97d1b3a6771c9177eac15b56013a5a")
 
     # If you don't have access to the Internet,
@@ -42,7 +41,6 @@ else()
         set(onnxruntime_URL  "${f}")
         file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
         message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-        set(onnxruntime_URL2)
         break()
       endif()
     endforeach()
@@ -50,7 +48,6 @@ else()
     FetchContent_Declare(onnxruntime
       URL
         ${onnxruntime_URL}
-        ${onnxruntime_URL2}
       URL_HASH          ${onnxruntime_HASH}
     )
 

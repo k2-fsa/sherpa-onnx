@@ -42,7 +42,7 @@ Usage:
 Note: It supports decoding multiple files in batches
 
 Default value for num_threads is 2.
-Valid values for provider: cpu (default), cuda, coreml.
+Valid values for provider: cpu (default), cuda, coreml, openvino.
 foo.wav should be of single channel, 16-bit PCM encoded wave file; its
 sampling rate can be arbitrary and does not need to be 16kHz.
 

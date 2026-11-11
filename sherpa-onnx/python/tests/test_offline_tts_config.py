@@ -22,18 +22,12 @@ def _create_kokoro_files(d: Path):
     _touch(d / "voices.bin")
     _touch(d / "tokens.txt")
 
-    data_dir = d / "espeak-ng-data"
-    data_dir.mkdir()
-    for name in ["phontab", "phonindex", "phondata", "intonations"]:
-        _touch(data_dir / name)
-
 
 def _make_kokoro_config(d: Path, **kwargs):
     args = {
         "model": str(d / "model.onnx"),
         "voices": str(d / "voices.bin"),
         "tokens": str(d / "tokens.txt"),
-        "data_dir": str(d / "espeak-ng-data"),
     }
     args.update(kwargs)
     return _sherpa_onnx.OfflineTtsKokoroModelConfig(**args)

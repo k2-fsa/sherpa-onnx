@@ -146,7 +146,7 @@ static inline bool Utf8Next(const std::string &s, size_t *i, uint32_t *cp,
   return false;
 }
 
-enum class Utf8ConsumeStatus {
+enum class Utf8ConsumeStatus : std::uint8_t {
   kOk = 0,
   kIncomplete = 1,
   kInvalid = 2,
@@ -154,7 +154,7 @@ enum class Utf8ConsumeStatus {
 
 struct Utf8ConsumeResult {
   std::string prefix;
-  Utf8ConsumeStatus status;
+  Utf8ConsumeStatus status = Utf8ConsumeStatus::kOk;
 };
 
 static Utf8ConsumeResult ConsumeValidUtf8Prefix(std::string *pending) {
@@ -348,7 +348,7 @@ static inline bool IsNumber(uint32_t cp) {
 
 class JsonReader {
  public:
-  explicit JsonReader(const std::string &s) : s_(s), p_(0) {}
+  explicit JsonReader(const std::string &s) : s_(s) {}
 
   bool SeekToKey(const std::string &key) {
     std::string needle = "\"" + key + "\"";
@@ -580,7 +580,7 @@ class JsonReader {
 
  private:
   const std::string &s_;
-  size_t p_;
+  size_t p_ = 0;
 };
 
 namespace {
@@ -1015,7 +1015,7 @@ static bool ParseAddedTokensFromTokenizerJson(
 }
 
 // Build trie for AddedTokens longest match (byte-wise).
-void BuildAddedTokensTrie(
+static void BuildAddedTokensTrie(
     const std::vector<FunASRNanoTokenizer::AddedToken> &tokens,
     std::vector<FunASRNanoTokenizer::TrieNode> *trie) {
   if (!trie) return;
@@ -1067,9 +1067,10 @@ static void MergeVocabAndAddedTokens(
   }
 }
 
-void BuildIdToToken(const std::unordered_map<std::string, int32_t> &vocab,
-                    const std::unordered_set<std::string> &added_contents,
-                    std::vector<std::string> *id2token) {
+static void BuildIdToToken(
+    const std::unordered_map<std::string, int32_t> &vocab,
+    const std::unordered_set<std::string> &added_contents,
+    std::vector<std::string> *id2token) {
   if (!id2token) return;
   int32_t max_id = -1;
   for (const auto &kv : vocab) {
@@ -1111,7 +1112,7 @@ void BuildIdToToken(const std::unordered_map<std::string, int32_t> &vocab,
 
 // Try to match an AddedToken at byte-position `pos`.
 // Returns (matched_len_bytes, token_index) or (0, -1) if no match.
-std::pair<int32_t, int32_t> MatchAddedToken(
+static std::pair<int32_t, int32_t> MatchAddedToken(
     const std::string &text, size_t pos,
     const std::vector<FunASRNanoTokenizer::TrieNode> &trie) {
   if (trie.empty()) return {0, -1};
@@ -1353,9 +1354,7 @@ std::vector<int64_t> FunASRNanoTokenizer::Encode(const std::string &text) {
   size_t pos = 0;
   size_t last = 0;
   while (pos < text.size()) {
-    auto m = MatchAddedToken(text, pos, trie_);
-    int32_t mlen = m.first;
-    int32_t tidx = m.second;
+    auto [mlen, tidx] = MatchAddedToken(text, pos, trie_);
 
     if (mlen > 0 && tidx >= 0) {
       const auto &tok = added_tokens_[static_cast<size_t>(tidx)];

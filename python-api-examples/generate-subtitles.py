@@ -135,18 +135,31 @@ Please replace --silero-vad-model with --ten-vad-model below to use ten-vad.
   --num-threads=2 \
   /path/to/test.mp4
 
+(11) For Qwen3 ASR models
+
+See https://k2-fsa.github.io/sherpa/onnx/qwen3-asr/pretrained.html#sherpa-onnx-qwen3-asr-0-6b-int8-2026-03-25
+
+./python-api-examples/generate-subtitles.py  \
+  --silero-vad-model=./silero_vad.onnx \
+  --qwen3-asr-conv-frontend=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx \
+  --qwen3-asr-encoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx \
+  --qwen3-asr-decoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx \
+  --qwen3-asr-tokenizer=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer \
+  --num-threads=2 \
+  /path/to/test.mp4
+
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/index.html
 to install sherpa-onnx and to download non-streaming pre-trained models
 used in this file.
 """
+
 import argparse
 import datetime as dt
 import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import timedelta
 from pathlib import Path
 
 import numpy as np
@@ -258,6 +271,34 @@ def get_args():
         default="",
         type=str,
         help="Path to FunASR Nano embedding.onnx",
+    )
+
+    parser.add_argument(
+        "--qwen3-asr-conv-frontend",
+        default="",
+        type=str,
+        help="Path to Qwen3 ASR conv_frontend.onnx",
+    )
+
+    parser.add_argument(
+        "--qwen3-asr-encoder",
+        default="",
+        type=str,
+        help="Path to Qwen3 ASR encoder.onnx",
+    )
+
+    parser.add_argument(
+        "--qwen3-asr-decoder",
+        default="",
+        type=str,
+        help="Path to Qwen3 ASR decoder.onnx",
+    )
+
+    parser.add_argument(
+        "--qwen3-asr-tokenizer",
+        default="",
+        type=str,
+        help="Path to Qwen3 ASR tokenizer directory",
     )
 
     parser.add_argument(
@@ -388,6 +429,14 @@ def get_args():
     )
 
     parser.add_argument(
+        "--max-duration-seconds",
+        type=float,
+        default=0,
+        help="""Only process the first N seconds of the input file. Use 0 to
+        process the whole file.""",
+    )
+
+    parser.add_argument(
         "sound_file",
         type=str,
         help="The input sound file to generate subtitles ",
@@ -414,13 +463,16 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
         assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
-        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+        assert (
+            len(args.funasr_nano_encoder_adaptor) == 0
+        ), args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
             len(args.moonshine_uncached_decoder) == 0
         ), args.moonshine_uncached_decoder
         assert len(args.moonshine_cached_decoder) == 0, args.moonshine_cached_decoder
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
 
         assert_file_exists(args.encoder)
         assert_file_exists(args.decoder)
@@ -446,13 +498,16 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
         assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
-        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+        assert (
+            len(args.funasr_nano_encoder_adaptor) == 0
+        ), args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
             len(args.moonshine_uncached_decoder) == 0
         ), args.moonshine_uncached_decoder
         assert len(args.moonshine_cached_decoder) == 0, args.moonshine_cached_decoder
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
 
         assert_file_exists(args.paraformer)
 
@@ -472,13 +527,16 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
         assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
-        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+        assert (
+            len(args.funasr_nano_encoder_adaptor) == 0
+        ), args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
             len(args.moonshine_uncached_decoder) == 0
         ), args.moonshine_uncached_decoder
         assert len(args.moonshine_cached_decoder) == 0, args.moonshine_cached_decoder
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
 
         assert_file_exists(args.sense_voice)
         recognizer = sherpa_onnx.OfflineRecognizer.from_sense_voice(
@@ -494,13 +552,16 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
         assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
-        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+        assert (
+            len(args.funasr_nano_encoder_adaptor) == 0
+        ), args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
             len(args.moonshine_uncached_decoder) == 0
         ), args.moonshine_uncached_decoder
         assert len(args.moonshine_cached_decoder) == 0, args.moonshine_cached_decoder
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
 
         assert_file_exists(args.wenet_ctc)
 
@@ -519,13 +580,16 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
         assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
-        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+        assert (
+            len(args.funasr_nano_encoder_adaptor) == 0
+        ), args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
             len(args.moonshine_uncached_decoder) == 0
         ), args.moonshine_uncached_decoder
         assert len(args.moonshine_cached_decoder) == 0, args.moonshine_cached_decoder
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
 
         recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
             encoder=args.whisper_encoder,
@@ -542,7 +606,10 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
         assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
-        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+        assert (
+            len(args.funasr_nano_encoder_adaptor) == 0
+        ), args.funasr_nano_encoder_adaptor
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
         assert_file_exists(args.moonshine_preprocessor)
         assert_file_exists(args.moonshine_encoder)
         assert_file_exists(args.moonshine_uncached_decoder)
@@ -559,6 +626,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             debug=args.debug,
         )
     elif args.fire_red_asr_encoder:
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
+
         recognizer = sherpa_onnx.OfflineRecognizer.from_fire_red_asr(
             encoder=args.fire_red_asr_encoder,
             decoder=args.fire_red_asr_decoder,
@@ -568,7 +637,10 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             debug=args.debug,
         )
     elif args.fire_red_asr_ctc:
-        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+        assert (
+            len(args.funasr_nano_encoder_adaptor) == 0
+        ), args.funasr_nano_encoder_adaptor
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
 
         assert_file_exists(args.fire_red_asr_ctc)
 
@@ -580,6 +652,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             debug=args.debug,
         )
     elif args.funasr_nano_encoder_adaptor:
+        assert len(args.qwen3_asr_conv_frontend) == 0, args.qwen3_asr_conv_frontend
+
         assert_file_exists(args.funasr_nano_encoder_adaptor)
         assert_file_exists(args.funasr_nano_llm)
         assert_file_exists(args.funasr_nano_tokenizer)
@@ -593,10 +667,33 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             num_threads=args.num_threads,
             debug=args.debug,
         )
+    elif args.qwen3_asr_conv_frontend:
+        assert_file_exists(args.qwen3_asr_conv_frontend)
+        assert_file_exists(args.qwen3_asr_encoder)
+        assert_file_exists(args.qwen3_asr_decoder)
+        assert_file_exists(args.qwen3_asr_tokenizer)
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_qwen3_asr(
+            conv_frontend=args.qwen3_asr_conv_frontend,
+            encoder=args.qwen3_asr_encoder,
+            decoder=args.qwen3_asr_decoder,
+            tokenizer=args.qwen3_asr_tokenizer,
+            num_threads=args.num_threads,
+            debug=args.debug,
+        )
     else:
         raise ValueError("Please specify at least one model")
 
     return recognizer
+
+
+def format_timestamp(seconds: float) -> str:
+    """Format seconds as an SRT timestamp, i.e., HH:MM:SS,mmm"""
+    ms = round(seconds * 1000)
+    hours, ms = divmod(ms, 3600 * 1000)
+    minutes, ms = divmod(ms, 60 * 1000)
+    seconds, ms = divmod(ms, 1000)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{ms:03d}"
 
 
 @dataclass
@@ -610,10 +707,9 @@ class Segment:
         return self.start + self.duration
 
     def __str__(self):
-        s = f"{timedelta(seconds=self.start)}"[:-3]
+        s = format_timestamp(self.start)
         s += " --> "
-        s += f"{timedelta(seconds=self.end)}"[:-3]
-        s = s.replace(".", ",")
+        s += format_timestamp(self.end)
         s += "\n"
         s += self.text
         return s
@@ -621,7 +717,7 @@ class Segment:
 
 def main():
     args = get_args()
-    if not args.funasr_nano_encoder_adaptor:
+    if not args.funasr_nano_encoder_adaptor and not args.qwen3_asr_conv_frontend:
         assert_file_exists(args.tokens)
     if args.silero_vad_model:
         assert_file_exists(args.silero_vad_model)
@@ -635,16 +731,38 @@ def main():
     if not Path(args.sound_file).is_file():
         raise ValueError(f"{args.sound_file} does not exist")
 
+    srt_filename = Path(args.sound_file).with_suffix(".srt")
+    txt_filename = Path(args.sound_file).with_suffix(".txt")
+
+    existing = [p for p in (srt_filename, txt_filename) if p.exists()]
+    if existing:
+        for p in existing:
+            print(f"warning: {p} exists!", file=sys.stderr)
+        sys.exit("Please delete or rename the file(s) above first!")
+
     assert (
         args.sample_rate == 16000
     ), f"Only sample rate 16000 is supported.Given: {args.sample_rate}"
 
     recognizer = create_recognizer(args)
 
+    max_duration = args.max_duration_seconds
+    if max_duration and max_duration > 0:
+        print(
+            f"Only the first {max_duration} seconds are processed! "
+            "Use --max-duration-seconds=0 for the whole file."
+        )
+    else:
+        max_duration = 0
+
     ffmpeg_cmd = [
         "ffmpeg",
         "-i",
         args.sound_file,
+    ]
+    if max_duration > 0:
+        ffmpeg_cmd += ["-t", f"{max_duration}"]
+    ffmpeg_cmd += [
         "-f",
         "s16le",
         "-acodec",
@@ -762,14 +880,23 @@ def main():
     duration = num_processed_samples / 16000
     rtf = elapsed_seconds / duration
 
-    srt_filename = Path(args.sound_file).with_suffix(".srt")
     with open(srt_filename, "w", encoding="utf-8") as f:
         for i, seg in enumerate(segment_list):
             print(i + 1, file=f)
             print(seg, file=f)
             print("", file=f)
 
+    with open(txt_filename, "w", encoding="utf-8") as f:
+        for seg in segment_list:
+            s = format_timestamp(seg.start)
+            s += " --> "
+            s += format_timestamp(seg.end)
+            s += "  "
+            s += seg.text
+            print(s, file=f)
+
     print(f"Saved to {srt_filename}")
+    print(f"Saved to {txt_filename}")
     print(f"Audio duration:\t{duration:.3f} s")
     print(f"Elapsed:\t{elapsed_seconds:.3f} s")
     print(f"RTF = {elapsed_seconds:.3f}/{duration:.3f} = {rtf:.3f}")

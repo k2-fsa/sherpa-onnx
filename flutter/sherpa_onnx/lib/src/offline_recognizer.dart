@@ -1,9 +1,11 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
+import '../sherpa_onnx.dart' show initBindings;
 import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
@@ -74,13 +76,15 @@ class OfflineRecognizer {
 
   /// Create a recognizer from [config].
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
-    final c = convertConfig(config);
-
     if (SherpaOnnxBindings.createOfflineRecognizer == null) {
       throw Exception("Please initialize sherpa-onnx first");
     }
 
+    final c = convertConfig(config);
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
+    // Free before any throw so a failed create does not leak the marshalled
+    // strings. The online factory does the same.
+    freeConfig(c);
 
     if (ptr == nullptr) {
       throw Exception(
@@ -88,9 +92,34 @@ class OfflineRecognizer {
       );
     }
 
-    freeConfig(c);
-
     return OfflineRecognizer._(ptr: ptr, config: config);
+  }
+
+  /// Create a recognizer from [config] without blocking the calling isolate.
+  ///
+  /// Loading a model can take seconds. This runs the native create call in a
+  /// short-lived isolate (see [Isolate.run]) and returns a recognizer that is
+  /// used from the calling isolate as usual, including [free].
+  ///
+  /// Throws the same exception as [OfflineRecognizer.new] if the config is
+  /// invalid.
+  static Future<OfflineRecognizer> createAsync(
+    OfflineRecognizerConfig config,
+  ) async {
+    if (SherpaOnnxBindings.createOfflineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    final address = await Isolate.run(() {
+      // Bindings are per isolate.
+      initBindings();
+      return OfflineRecognizer(config).ptr.address;
+    });
+
+    return OfflineRecognizer._(
+      ptr: Pointer.fromAddress(address),
+      config: config,
+    );
   }
 
   /// Replace the runtime configuration.
@@ -283,10 +312,15 @@ class OfflineRecognizer {
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
+    c.ref.ctcFstDecoderConfig.graph =
+        config.ctcFstDecoderConfig.graph.toNativeUtf8();
+    c.ref.ctcFstDecoderConfig.maxActive = config.ctcFstDecoderConfig.maxActive;
+
     return c;
   }
 
   static void freeConfig(Pointer<SherpaOnnxOfflineRecognizerConfig> c) {
+    calloc.free(c.ref.ctcFstDecoderConfig.graph);
     calloc.free(c.ref.hr.lexicon);
     calloc.free(c.ref.hr.ruleFsts);
     calloc.free(c.ref.ruleFars);

@@ -388,7 +388,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
             Text(this.title).fontSize(this.titleFontSize).fontWeight(FontWeight.Bold);
             TextArea({
               text: `
-Everyting is open-sourced.
+Everything is open-sourced.
 
 It runs locally, without accessing the network
 

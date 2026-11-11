@@ -37,10 +37,10 @@ type
   public
     procedure UpdateResult(
       Msg: AnsiString;
-      StartTime: Single;
-      StopTime: Single;
-      TotalDuration: Single);
-    procedure UpdateProgress(StopTime: Single; TotalDuration: Single);
+      StartTime: Double;
+      StopTime: Double;
+      TotalDuration: Double);
+    procedure UpdateProgress(StopTime: Double; TotalDuration: Double);
     procedure UpdateInitStatus(Status: AnsiString);
   public
     Vad: TSherpaOnnxVoiceActivityDetector;
@@ -146,7 +146,7 @@ begin
   FreeAndNil(OfflineRecognizer);
 end;
 
-procedure TForm1.UpdateProgress(StopTime: Single; TotalDuration: Single);
+procedure TForm1.UpdateProgress(StopTime: Double; TotalDuration: Double);
 var
   Percent: Single;
 begin
@@ -160,9 +160,9 @@ end;
 
 procedure TForm1.UpdateResult(
   Msg: AnsiString;
-  StartTime: Single;
-  StopTime: Single;
-  TotalDuration: Single);
+  StartTime: Double;
+  StopTime: Double;
+  TotalDuration: Double);
 var
   NewResult: AnsiString;
 begin

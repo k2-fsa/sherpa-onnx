@@ -367,7 +367,7 @@ Number of threads: ${this.numThreads}
           Column({space: 10}) {
             Text(this.title).fontSize(20).fontWeight(FontWeight.Bold);
             TextArea({text: `
-Everyting is open-sourced.
+Everything is open-sourced.
 
 It runs locally, without accessing the network
 

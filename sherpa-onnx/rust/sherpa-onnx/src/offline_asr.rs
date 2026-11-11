@@ -566,6 +566,33 @@ pub struct OfflineRecognizerConfig {
     pub rule_fars: Option<String>,
     pub blank_penalty: f32,
     pub hr: super::online_asr::HomophoneReplacerConfig,
+    pub ctc_fst_decoder_config: OfflineCtcFstDecoderConfig,
+}
+
+#[derive(Clone, Debug)]
+/// FST decoder options for CTC models.
+pub struct OfflineCtcFstDecoderConfig {
+    pub graph: Option<String>,
+    pub max_active: i32,
+}
+
+impl Default for OfflineCtcFstDecoderConfig {
+    fn default() -> Self {
+        Self {
+            graph: None,
+            max_active: 3000,
+        }
+    }
+}
+
+impl OfflineCtcFstDecoderConfig {
+    /// Convert to sys struct using `to_c_ptr()`
+    pub(crate) fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineCtcFstDecoderConfig {
+        sys::OfflineCtcFstDecoderConfig {
+            graph: to_c_ptr(&self.graph, cstrings),
+            max_active: self.max_active,
+        }
+    }
 }
 
 impl OfflineRecognizerConfig {
@@ -588,6 +615,7 @@ impl OfflineRecognizerConfig {
             hr: self
                 .hr
                 .to_sys(cstrings),
+            ctc_fst_decoder_config: self.ctc_fst_decoder_config.to_sys(cstrings),
         }
     }
 }
@@ -610,6 +638,7 @@ impl Default for OfflineRecognizerConfig {
             rule_fars: None,
             blank_penalty: 0.0,
             hr: super::online_asr::HomophoneReplacerConfig::default(),
+            ctc_fst_decoder_config: OfflineCtcFstDecoderConfig::default(),
         }
     }
 }

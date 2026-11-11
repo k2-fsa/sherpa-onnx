@@ -19,6 +19,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
 #include "sherpa-onnx/csrc/offline-whisper-dtw.h"
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
+#include "sherpa-onnx/csrc/offline-whisper-language-candidates.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
@@ -82,6 +83,21 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
  private:
   void DecodeStream(OfflineStream *s) const {
+    std::vector<int32_t> language_candidate_ids;
+    if (s->HasOption("language_candidates")) {
+      const auto &candidates = s->GetOption("language_candidates");
+      const auto &language = config_.model_config.whisper.language;
+      bool is_multilingual = model_->IsMultiLingual();
+      const auto &lang2id = model_->GetLang2ID();
+      bool is_ok = ResolveWhisperLanguageCandidates(
+          candidates, language, is_multilingual, lang2id,
+          &language_candidate_ids);
+      if (!is_ok) {
+        s->SetResult({});
+        return;
+      }
+    }
+
     decoder_->SetConfig(config_.model_config.whisper);
 
     int32_t max_num_frames = 3000;
@@ -132,8 +148,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     try {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
 
-      auto results = decoder_->Decode(std::move(cross_kv.first),
-                                      std::move(cross_kv.second), num_frames);
+      auto results = decoder_->Decode(
+          std::move(cross_kv.first), std::move(cross_kv.second), num_frames,
+          language_candidate_ids);
 
       auto r = Convert(results[0], symbol_table_);
       s->SetResult(r);
@@ -172,13 +189,23 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
         continue;
       }
 
+      // NOTE: We must not apply inverse text normalization (ITN) or the
+      // homophone replacer to individual tokens here. Tokens from
+      // byte-level-BPE vocabularies can split a single multi-byte UTF-8
+      // character across two token boundaries, so a token on its own may
+      // contain invalid UTF-8. ApplyInverseTextNormalization() always calls
+      // RemoveInvalidUtf8Sequences(), which would silently delete such
+      // dangling bytes and thus whole characters from the output text
+      // (seen with whisper + Hebrew). Concatenate first, then normalize
+      // the complete text once.
       std::string s = sym_table[i];
-      s = ApplyInverseTextNormalization(s);
-      s = ApplyHomophoneReplacer(std::move(s));
 
       text += s;
       r.tokens.push_back(s);
     }
+
+    text = ApplyInverseTextNormalization(text);
+    text = ApplyHomophoneReplacer(std::move(text));
 
     r.text = text;
     r.lang = src.lang;
@@ -202,16 +229,16 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
         duration = std::max(0.0f, duration);
         r.segment_durations.push_back(duration);
 
-        // Convert token IDs to text
+        // Convert token IDs to text; ITN runs on the complete segment for
+        // the same byte-level-BPE reason as above.
         std::string seg_text;
         for (int32_t tok_id : seg.token_ids) {
           if (sym_table.Contains(tok_id)) {
-            std::string s = sym_table[tok_id];
-            s = ApplyInverseTextNormalization(s);
-            s = ApplyHomophoneReplacer(std::move(s));
-            seg_text += s;
+            seg_text += sym_table[tok_id];
           }
         }
+        seg_text = ApplyInverseTextNormalization(seg_text);
+        seg_text = ApplyHomophoneReplacer(std::move(seg_text));
         r.segment_texts.push_back(std::move(seg_text));
       }
     }

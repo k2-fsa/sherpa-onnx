@@ -23,14 +23,14 @@
 //! In other words, the default setup for most users is simply:
 //!
 //! ```toml
-//! sherpa-onnx = "1.13.4"
+//! sherpa-onnx = "2.0.1"
 //! ```
 //!
 //! If you want shared libraries instead, disable the default feature and enable
 //! `shared`:
 //!
 //! ```toml
-//! sherpa-onnx = { version = "1.13.4", default-features = false, features = ["shared"] }
+//! sherpa-onnx = { version = "2.0.1", default-features = false, features = ["shared"] }
 //! ```
 //!
 //! For advanced use cases, set `SHERPA_ONNX_LIB_DIR` to a directory that already
@@ -41,6 +41,16 @@
 //! ```
 //!
 //! That override works for both static and shared builds.
+//!
+//! Alternatively, set `SHERPA_ONNX_ARCHIVE_DIR` to a directory that contains
+//! pre-downloaded archive files (`.tar.bz2` or `.xcframework.zip`). The build
+//! script copies the archive from this directory instead of downloading it from
+//! the internet. The archive must have the same filename that would normally be
+//! downloaded (e.g. `sherpa-onnx-v2.0.1-linux-x64-shared-lib.tar.bz2`).
+//!
+//! ```bash
+//! export SHERPA_ONNX_ARCHIVE_DIR=/path/to/downloaded/archives
+//! ```
 //!
 //! Shared mode is also intended to work out of the box for normal users:
 //!
@@ -53,33 +63,39 @@
 //! So most users do not need to manually set `LD_LIBRARY_PATH` or
 //! `DYLD_LIBRARY_PATH`.
 //!
-//! Example `v1.13.4` archives used by the build script:
+//! Example `v2.0.1` archives used by the build script:
 //!
 //! Default static archives:
 //!
 //! - Linux x86_64:
-//!   [sherpa-onnx-v1.13.4-linux-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-linux-x64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-linux-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-x64-static-lib.tar.bz2)
 //! - Linux aarch64:
-//!   [sherpa-onnx-v1.13.4-linux-aarch64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-linux-aarch64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-linux-aarch64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-aarch64-static-lib.tar.bz2)
 //! - macOS x86_64:
-//!   [sherpa-onnx-v1.13.4-osx-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-osx-x64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-osx-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-x64-static-lib.tar.bz2)
 //! - macOS arm64:
-//!   [sherpa-onnx-v1.13.4-osx-arm64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-osx-arm64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-osx-arm64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-arm64-static-lib.tar.bz2)
 //! - Windows x64:
-//!   [sherpa-onnx-v1.13.4-win-x64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-win-x64-static-MT-Release-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2)
+//! - Windows arm64:
+//!   [sherpa-onnx-v2.0.1-win-arm64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-arm64-static-MT-Release-lib.tar.bz2)
 //!
 //! Optional shared archives:
 //!
 //! - Linux x86_64:
-//!   [sherpa-onnx-v1.13.4-linux-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-linux-x64-shared-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-linux-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-x64-shared-lib.tar.bz2)
 //! - Linux aarch64:
-//!   [sherpa-onnx-v1.13.4-linux-aarch64-shared-cpu-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-linux-aarch64-shared-cpu-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-linux-aarch64-shared-cpu-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-linux-aarch64-shared-cpu-lib.tar.bz2)
 //! - macOS x86_64:
-//!   [sherpa-onnx-v1.13.4-osx-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-osx-x64-shared-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-osx-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-x64-shared-lib.tar.bz2)
 //! - macOS arm64:
-//!   [sherpa-onnx-v1.13.4-osx-arm64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-osx-arm64-shared-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-osx-arm64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-osx-arm64-shared-lib.tar.bz2)
 //! - Windows x64:
-//!   [sherpa-onnx-v1.13.4-win-x64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.4/sherpa-onnx-v1.13.4-win-x64-shared-MT-Release-lib.tar.bz2)
+//!   [sherpa-onnx-v2.0.1-win-x64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-x64-shared-MT-Release-lib.tar.bz2)
+//! - Windows arm64:
+//!   [sherpa-onnx-v2.0.1-win-arm64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-arm64-shared-MT-Release-lib.tar.bz2)
+//! - iOS arm64 (shared xcframework, onnxruntime statically linked in):
+//!   [sherpa-onnx-v2.0.1-ios-shared-onnxruntime-static.xcframework.zip](https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v2.0.1-ios-shared-onnxruntime-static.xcframework.zip)
 //!
 //! # How the Rust API is organized
 //!
@@ -97,19 +113,79 @@
 //!
 //! The repository contains end-to-end Rust examples under
 //! [`rust-api-examples/examples/`](https://github.com/k2-fsa/sherpa-onnx/tree/master/rust-api-examples/examples).
-//! Good entry points are:
 //!
-//! - [`sense_voice.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/sense_voice.rs)
+//! ## ASR
+//!
+//! - [`cohere_transcribe.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/cohere_transcribe.rs)
+//! - [`fire_red_asr_ctc.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/fire_red_asr_ctc.rs)
+//! - [`funasr_nano.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/funasr_nano.rs)
+//! - [`moonshine_v2.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/moonshine_v2.rs)
 //! - [`nemo_parakeet.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/nemo_parakeet.rs)
+//! - [`paraformer.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/paraformer.rs)
+//! - [`qwen3_asr.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/qwen3_asr.rs)
+//! - [`sense_voice.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/sense_voice.rs)
+//! - [`whisper.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/whisper.rs)
+//! - [`zipformer.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/zipformer.rs)
 //! - [`streaming_zipformer.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/streaming_zipformer.rs)
+//! - [`fire_red_asr_ctc_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/fire_red_asr_ctc_simulate_streaming_microphone.rs)
+//! - [`parakeet_tdt_ctc_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/parakeet_tdt_ctc_simulate_streaming_microphone.rs)
+//! - [`parakeet_tdt_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/parakeet_tdt_simulate_streaming_microphone.rs)
+//! - [`qwen3_asr_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/qwen3_asr_simulate_streaming_microphone.rs)
+//! - [`sense_voice_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/sense_voice_simulate_streaming_microphone.rs)
+//! - [`streaming_zipformer_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/streaming_zipformer_microphone.rs)
+//! - [`wenet_ctc_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/wenet_ctc_simulate_streaming_microphone.rs)
+//! - [`zipformer_ctc_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/zipformer_ctc_simulate_streaming_microphone.rs)
+//! - [`zipformer_transducer_simulate_streaming_microphone.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/zipformer_transducer_simulate_streaming_microphone.rs)
+//!
+//! ## TTS
+//!
+//! - [`kitten_tts_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kitten_tts_en_lexicon.rs)
+//! - [`kitten_tts_en_phonemize.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kitten_tts_en_phonemize.rs)
+//! - [`kokoro_tts_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kokoro_tts_en_lexicon.rs)
+//! - [`kokoro_tts_en_phonemize.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kokoro_tts_en_phonemize.rs)
+//! - [`kokoro_tts_zh_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/kokoro_tts_zh_en_lexicon.rs)
+//! - [`matcha_tts_en_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/matcha_tts_en_lexicon.rs)
+//! - [`matcha_tts_en_phonemize.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/matcha_tts_en_phonemize.rs)
+//! - [`matcha_tts_zh_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/matcha_tts_zh_lexicon.rs)
 //! - [`pocket_tts.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/pocket_tts.rs)
+//! - [`supertonic_tts.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/supertonic_tts.rs)
+//! - [`vits_tts_de_phonemize.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/vits_tts_de_phonemize.rs)
+//! - [`vits_tts_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/vits_tts_lexicon.rs)
+//! - [`vits_tts_phonemize.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/vits_tts_phonemize.rs)
+//! - [`zipvoice_tts_lexicon.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/zipvoice_tts_lexicon.rs)
+//!
+//! ## Audio tagging
+//!
+//! - [`audio_tagging_ced.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/audio_tagging_ced.rs)
+//! - [`audio_tagging_zipformer.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/audio_tagging_zipformer.rs)
+//!
+//! ## Speaker / diarization
+//!
+//! - [`speaker_embedding_cosine_similarity.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/speaker_embedding_cosine_similarity.rs)
+//! - [`speaker_embedding_extractor.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/speaker_embedding_extractor.rs)
+//! - [`speaker_embedding_manager.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/speaker_embedding_manager.rs)
+//! - [`offline_speaker_diarization.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/offline_speaker_diarization.rs)
+//! - [`spoken_language_identification.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/spoken_language_identification.rs)
+//!
+//! ## VAD / punctuation / enhancement / keyword spotting
+//!
 //! - [`silero_vad_remove_silence.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/silero_vad_remove_silence.rs)
+//! - [`ten_vad_remove_silence.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/ten_vad_remove_silence.rs)
 //! - [`online_punctuation.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/online_punctuation.rs)
 //! - [`offline_punctuation.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/offline_punctuation.rs)
+//! - [`offline_speech_enhancement_gtcrn.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/offline_speech_enhancement_gtcrn.rs)
+//! - [`offline_speech_enhancement_dpdfnet.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/offline_speech_enhancement_dpdfnet.rs)
+//! - [`offline_speech_enhancement_voxlock.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/offline_speech_enhancement_voxlock.rs)
+//! - [`offline_speech_enhancement_voxlock_with_voice_sample.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/offline_speech_enhancement_voxlock_with_voice_sample.rs)
+//! - [`streaming_speech_enhancement_gtcrn.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/streaming_speech_enhancement_gtcrn.rs)
+//! - [`streaming_speech_enhancement_dpdfnet.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/streaming_speech_enhancement_dpdfnet.rs)
+//! - [`streaming_speech_enhancement_voxlock.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/streaming_speech_enhancement_voxlock.rs)
+//! - [`streaming_speech_enhancement_voxlock_with_voice_sample.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/streaming_speech_enhancement_voxlock_with_voice_sample.rs)
 //! - [`keyword_spotter.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/keyword_spotter.rs)
-//! - [`spoken_language_identification.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/spoken_language_identification.rs)
-//! - [`offline_speaker_diarization.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/offline_speaker_diarization.rs)
-//! - [`speaker_embedding_manager.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/speaker_embedding_manager.rs)
+//!
+//! ## Misc
+//!
+//! - [`version.rs`](https://github.com/k2-fsa/sherpa-onnx/blob/master/rust-api-examples/examples/version.rs)
 //!
 //! # Offline recognition example
 //!

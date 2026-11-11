@@ -6,10 +6,12 @@
 #define SHERPA_ONNX_HARMONY_OS_SHERPAONNXHAR_SHERPA_ONNX_SRC_MAIN_CPP_SPEECH_DENOISER_H_
 
 #include <algorithm>
+#include <string>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 static inline SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig
 GetSpeechDenoiserGtcrnModelConfig(Napi::Object obj) {
@@ -40,6 +42,22 @@ GetSpeechDenoiserDpdfNetModelConfig(Napi::Object obj) {
   return c;
 }
 
+static inline SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig
+GetSpeechDenoiserVoxLockModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("voxlock") || !obj.Get("voxlock").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("voxlock").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(enroll_model, enrollModel);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(chunk_model, chunkModel);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(voice_sample, voiceSample);
+  return c;
+}
+
 static inline SherpaOnnxOfflineSpeechDenoiserModelConfig
 GetSpeechDenoiserModelConfig(Napi::Object obj) {
   SherpaOnnxOfflineSpeechDenoiserModelConfig c;
@@ -52,17 +70,11 @@ GetSpeechDenoiserModelConfig(Napi::Object obj) {
   Napi::Object o = obj.Get("model").As<Napi::Object>();
   c.gtcrn = GetSpeechDenoiserGtcrnModelConfig(o);
   c.dpdfnet = GetSpeechDenoiserDpdfNetModelConfig(o);
+  c.voxlock = GetSpeechDenoiserVoxLockModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
@@ -74,6 +86,9 @@ static inline void DeleteSpeechDenoiserModelConfig(
   SHERPA_ONNX_DELETE_C_STR(c.gtcrn.model);
   SHERPA_ONNX_DELETE_C_STR(c.provider);
   SHERPA_ONNX_DELETE_C_STR(c.dpdfnet.model);
+  SHERPA_ONNX_DELETE_C_STR(c.voxlock.enroll_model);
+  SHERPA_ONNX_DELETE_C_STR(c.voxlock.chunk_model);
+  SHERPA_ONNX_DELETE_C_STR(c.voxlock.voice_sample);
 }
 
 static inline bool GetEnableExternalBuffer(Napi::Object obj) {
@@ -83,14 +98,6 @@ static inline bool GetEnableExternalBuffer(Napi::Object obj) {
   }
 
   return true;
-}
-
-static inline int32_t GetFloat32ArrayElementLength(Napi::Float32Array samples) {
-#if __OHOS__
-  return samples.ElementLength() / sizeof(float);
-#else
-  return samples.ElementLength();
-#endif
 }
 
 static inline Napi::Object CreateDenoisedAudioObject(

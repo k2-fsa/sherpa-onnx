@@ -12,7 +12,6 @@ export '../online_speech_denoiser_config.dart';
 /// Streaming speech denoiser.
 class OnlineSpeechDenoiser {
   OnlineSpeechDenoiser.fromPtr({required this.ptr, required this.config});
-  OnlineSpeechDenoiser._({required this.ptr, required this.config});
 
   factory OnlineSpeechDenoiser(OnlineSpeechDenoiserConfig config) {
     throw UnsupportedError(

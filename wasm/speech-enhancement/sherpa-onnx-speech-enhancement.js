@@ -15,6 +15,10 @@ function freeConfig(config, Module) {
     freeConfig(config.dpdfnet, Module)
   }
 
+  if ('voxlock' in config) {
+    freeConfig(config.voxlock, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -69,6 +73,43 @@ function initSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig(config, Module) {
+  const enrollModelLen = Module.lengthBytesUTF8(config.enrollModel || '') + 1;
+  const chunkModelLen = Module.lengthBytesUTF8(config.chunkModel || '') + 1;
+  const voiceSampleLen = Module.lengthBytesUTF8(config.voiceSample || '') + 1;
+
+  const n = enrollModelLen + chunkModelLen + voiceSampleLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 3 * 4;  // 3 pointers
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(config.enrollModel || '', buffer + offset, enrollModelLen);
+  offset += enrollModelLen;
+
+  Module.stringToUTF8(config.chunkModel || '', buffer + offset, chunkModelLen);
+  offset += chunkModelLen;
+
+  Module.stringToUTF8(config.voiceSample || '', buffer + offset, voiceSampleLen);
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += enrollModelLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += chunkModelLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineSpeechDenoiserModelConfig(config, Module) {
   if (!('gtcrn' in config)) {
     config.gtcrn = {model: ''};
@@ -78,13 +119,20 @@ function initSherpaOnnxOfflineSpeechDenoiserModelConfig(config, Module) {
     config.dpdfnet = {model: ''};
   }
 
+  if (!('voxlock' in config)) {
+    config.voxlock = {enrollModel: '', chunkModel: '', voiceSample: ''};
+  }
+
   const gtcrn =
       initSherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(config.gtcrn, Module);
   const dpdfnet =
       initSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(
           config.dpdfnet, Module);
+  const voxlock =
+      initSherpaOnnxOfflineSpeechDenoiserVoxLockModelConfig(
+          config.voxlock, Module);
 
-  const len = gtcrn.len + 3 * 4 + dpdfnet.len;
+  const len = gtcrn.len + 3 * 4 + dpdfnet.len + voxlock.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -106,12 +154,16 @@ function initSherpaOnnxOfflineSpeechDenoiserModelConfig(config, Module) {
   Module._CopyHeap(dpdfnet.ptr, dpdfnet.len, ptr + offset);
   offset += dpdfnet.len;
 
+  Module._CopyHeap(voxlock.ptr, voxlock.len, ptr + offset);
+  offset += voxlock.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
     len: len,
     gtcrn: gtcrn,
     dpdfnet: dpdfnet,
+    voxlock: voxlock,
   };
 }
 
@@ -120,6 +172,7 @@ function initSherpaOnnxOfflineSpeechDenoiserConfig(config, Module) {
     config.model = {
       gtcrn: {model: ''},
       dpdfnet: {model: ''},
+      voxlock: {enrollModel: '', chunkModel: '', voiceSample: ''},
       provider: 'cpu',
       debug: 1,
       numThreads: 1,
@@ -147,6 +200,7 @@ function initSherpaOnnxOnlineSpeechDenoiserConfig(config, Module) {
     config.model = {
       gtcrn: {model: ''},
       dpdfnet: {model: ''},
+      voxlock: {enrollModel: '', chunkModel: '', voiceSample: ''},
       provider: 'cpu',
       debug: 1,
       numThreads: 1,

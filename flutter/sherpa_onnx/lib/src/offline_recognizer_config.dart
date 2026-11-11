@@ -805,6 +805,30 @@ class OfflineModelConfig {
 /// This combines feature extraction, the selected model family, optional
 /// language model settings, hotwords, grammar resources, and optional
 /// homophone replacement resources.
+class OfflineCtcFstDecoderConfig {
+  const OfflineCtcFstDecoderConfig({this.graph = '', this.maxActive = 3000});
+
+  factory OfflineCtcFstDecoderConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineCtcFstDecoderConfig(
+      graph: json['graph'] as String? ?? '',
+      maxActive: json['maxActive'] as int? ?? 3000,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineCtcFstDecoderConfig(graph: $graph, maxActive: $maxActive)';
+  }
+
+  Map<String, dynamic> toJson() => {
+    'graph': graph,
+    'maxActive': maxActive,
+  };
+
+  final String graph;
+  final int maxActive;
+}
+
 class OfflineRecognizerConfig {
   const OfflineRecognizerConfig({
     this.feat = const FeatureConfig(),
@@ -818,6 +842,7 @@ class OfflineRecognizerConfig {
     this.ruleFars = '',
     this.blankPenalty = 0.0,
     this.hr = const HomophoneReplacerConfig(),
+    this.ctcFstDecoderConfig = const OfflineCtcFstDecoderConfig(),
   });
 
   factory OfflineRecognizerConfig.fromJson(Map<String, dynamic> json) {
@@ -839,12 +864,16 @@ class OfflineRecognizerConfig {
       hr: json['hr'] != null
           ? HomophoneReplacerConfig.fromJson(json['hr'] as Map<String, dynamic>)
           : const HomophoneReplacerConfig(),
+      ctcFstDecoderConfig: json['ctcFstDecoderConfig'] != null
+          ? OfflineCtcFstDecoderConfig.fromJson(
+              json['ctcFstDecoderConfig'] as Map<String, dynamic>)
+          : const OfflineCtcFstDecoderConfig(),
     );
   }
 
   @override
   String toString() {
-    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty, hr: $hr)';
+    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty, hr: $hr, ctcFstDecoderConfig: $ctcFstDecoderConfig)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -859,6 +888,7 @@ class OfflineRecognizerConfig {
     'ruleFars': ruleFars,
     'blankPenalty': blankPenalty,
     'hr': hr.toJson(),
+    'ctcFstDecoderConfig': ctcFstDecoderConfig.toJson(),
   };
 
   final FeatureConfig feat;
@@ -877,6 +907,7 @@ class OfflineRecognizerConfig {
 
   final double blankPenalty;
   final HomophoneReplacerConfig hr;
+  final OfflineCtcFstDecoderConfig ctcFstDecoderConfig;
 }
 
 /// Recognition result returned by [OfflineRecognizer.getResult].

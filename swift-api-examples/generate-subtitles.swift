@@ -70,11 +70,11 @@ extension String {
 
 class SpeechSegment: CustomStringConvertible {
 
-  let start: Float
-  let end: Float
+  let start: Double
+  let end: Double
   let text: String
 
-  init(start: Float, duration: Float, text: String) {
+  init(start: Double, duration: Double, text: String) {
     self.start = start
     self.end = start + duration
     self.text = text
@@ -209,8 +209,8 @@ func run() {
 
     segments.append(
       SpeechSegment(
-        start: Float(s.start) / Float(sampleRate),
-        duration: Float(s.samples.count) / Float(sampleRate),
+        start: Double(s.start) / Double(sampleRate),
+        duration: Double(s.samples.count) / Double(sampleRate),
         text: result.text))
 
     print(segments.last!)

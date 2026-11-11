@@ -1,13 +1,16 @@
 // scripts/node-addon-api/src/streaming-asr.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 /*
 {
   'featConfig': {
@@ -144,14 +147,7 @@ SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
   SHERPA_ONNX_ASSIGN_ATTR_STR(modeling_unit, modelingUnit);
@@ -430,13 +426,118 @@ static void AcceptWaveformWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
 
-#if __OHOS__
   SherpaOnnxOnlineStreamAcceptWaveform(stream, sample_rate, samples.Data(),
-                                       samples.ElementLength() / sizeof(float));
-#else
-  SherpaOnnxOnlineStreamAcceptWaveform(stream, sample_rate, samples.Data(),
-                                       samples.ElementLength());
-#endif
+                                       GetFloat32ArrayElementLength(samples));
+}
+
+static void OnlineStreamSetOptionWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 3) {
+    std::ostringstream os;
+    os << "Expect 3 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsString() || !info[2].IsString()) {
+    Napi::TypeError::New(env, "Arguments 1 and 2 should be strings.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  const SherpaOnnxOnlineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  std::string key = info[1].As<Napi::String>().Utf8Value();
+  std::string value = info[2].As<Napi::String>().Utf8Value();
+  SherpaOnnxOnlineStreamSetOption(stream, key.c_str(), value.c_str());
+}
+
+static Napi::String OnlineStreamGetOptionWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsString()) {
+    Napi::TypeError::New(env, "Argument 1 should be a string.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  const SherpaOnnxOnlineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  std::string key = info[1].As<Napi::String>().Utf8Value();
+
+  // The returned pointer is owned by the stream and is an empty string if the
+  // option has not been set, so copy it into a JS string right away.
+  const char *value = SherpaOnnxOnlineStreamGetOption(stream, key.c_str());
+
+  return Napi::String::New(env, value ? value : "");
+}
+
+static Napi::Boolean OnlineStreamHasOptionWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsString()) {
+    Napi::TypeError::New(env, "Argument 1 should be a string.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  const SherpaOnnxOnlineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  std::string key = info[1].As<Napi::String>().Utf8Value();
+
+  int32_t has_option = SherpaOnnxOnlineStreamHasOption(stream, key.c_str());
+
+  return Napi::Boolean::New(env, has_option);
 }
 
 static Napi::Boolean IsOnlineStreamReadyWrapper(
@@ -510,6 +611,64 @@ static void DecodeOnlineStreamWrapper(const Napi::CallbackInfo &info) {
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   SherpaOnnxDecodeOnlineStream(recognizer, stream);
+}
+
+static void DecodeMultipleOnlineStreamsWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be an online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsArray()) {
+    Napi::TypeError::New(
+        env, "Argument 1 should be an array of online stream pointers.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  const SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  Napi::Array arr = info[1].As<Napi::Array>();
+
+  std::vector<const SherpaOnnxOnlineStream *> streams;
+  streams.reserve(arr.Length());
+
+  for (uint32_t i = 0; i != arr.Length(); ++i) {
+    Napi::Value v = arr.Get(i);
+    if (!v.IsExternal()) {
+      std::ostringstream os;
+      os << "Element " << i << " should be an online stream pointer.";
+
+      Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+      return;
+    }
+
+    streams.push_back(v.As<Napi::External<SherpaOnnxOnlineStream>>().Data());
+  }
+
+  if (streams.empty()) {
+    return;
+  }
+
+  SherpaOnnxDecodeMultipleOnlineStreams(recognizer, streams.data(),
+                                        static_cast<int32_t>(streams.size()));
 }
 
 static Napi::String GetOnlineStreamResultAsJsonWrapper(
@@ -732,11 +891,23 @@ void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "acceptWaveformOnline"),
               Napi::Function::New(env, AcceptWaveformWrapper));
 
+  exports.Set(Napi::String::New(env, "onlineStreamSetOption"),
+              Napi::Function::New(env, OnlineStreamSetOptionWrapper));
+
+  exports.Set(Napi::String::New(env, "onlineStreamGetOption"),
+              Napi::Function::New(env, OnlineStreamGetOptionWrapper));
+
+  exports.Set(Napi::String::New(env, "onlineStreamHasOption"),
+              Napi::Function::New(env, OnlineStreamHasOptionWrapper));
+
   exports.Set(Napi::String::New(env, "isOnlineStreamReady"),
               Napi::Function::New(env, IsOnlineStreamReadyWrapper));
 
   exports.Set(Napi::String::New(env, "decodeOnlineStream"),
               Napi::Function::New(env, DecodeOnlineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "decodeMultipleOnlineStreams"),
+              Napi::Function::New(env, DecodeMultipleOnlineStreamsWrapper));
 
   exports.Set(Napi::String::New(env, "getOnlineStreamResultAsJson"),
               Napi::Function::New(env, GetOnlineStreamResultAsJsonWrapper));

@@ -7,6 +7,7 @@ public class OfflineTtsKittenModelConfig {
     private final String tokens;
     private final String dataDir;
     private final float lengthScale;
+    private final String lexicon;
 
     private OfflineTtsKittenModelConfig(Builder builder) {
         this.model = builder.model;
@@ -14,6 +15,7 @@ public class OfflineTtsKittenModelConfig {
         this.tokens = builder.tokens;
         this.dataDir = builder.dataDir;
         this.lengthScale = builder.lengthScale;
+        this.lexicon = builder.lexicon;
     }
 
     public static Builder builder() {
@@ -32,12 +34,21 @@ public class OfflineTtsKittenModelConfig {
         return tokens;
     }
 
+    /**
+     * @deprecated Deprecated. Ignored since v2.0.0. Use lexicon or
+     * phonemeCodepoints instead.
+     */
+    @Deprecated
     public String getDataDir() {
         return dataDir;
     }
 
     public float getLengthScale() {
         return lengthScale;
+    }
+
+    public String getLexicon() {
+        return lexicon;
     }
 
 
@@ -47,6 +58,7 @@ public class OfflineTtsKittenModelConfig {
         private String tokens = "";
         private String dataDir = "";
         private float lengthScale = 1.0f;
+        private String lexicon = "";
 
         public OfflineTtsKittenModelConfig build() {
             return new OfflineTtsKittenModelConfig(this);
@@ -67,6 +79,11 @@ public class OfflineTtsKittenModelConfig {
             return this;
         }
 
+        /**
+         * @deprecated Deprecated. Ignored since v2.0.0. Use lexicon or
+         * phonemeCodepoints instead.
+         */
+        @Deprecated
         public Builder setDataDir(String dataDir) {
             this.dataDir = dataDir;
             return this;
@@ -74,6 +91,11 @@ public class OfflineTtsKittenModelConfig {
 
         public Builder setLengthScale(float lengthScale) {
             this.lengthScale = lengthScale;
+            return this;
+        }
+
+        public Builder setLexicon(String lexicon) {
+            this.lexicon = lexicon;
             return this;
         }
     }

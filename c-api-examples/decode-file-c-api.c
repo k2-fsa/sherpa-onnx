@@ -4,103 +4,53 @@
 
 // This file shows how to use sherpa-onnx C API
 // to decode a file.
+//
+// clang-format off
+/*
+Usage
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+tar xf sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+rm sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+
+./decode-file-c-api
+
+ */
+// clang-format on
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "cargs.h"
 #include "sherpa-onnx/c-api/c-api.h"
 
-static struct cag_option options[] = {
-    {.identifier = 'h',
-     .access_letters = "h",
-     .access_name = "help",
-     .description = "Show help"},
-    {.identifier = 't',
-     .access_letters = NULL,
-     .access_name = "tokens",
-     .value_name = "tokens",
-     .description = "Tokens file"},
-    {.identifier = 'e',
-     .access_letters = NULL,
-     .access_name = "encoder",
-     .value_name = "encoder",
-     .description = "Encoder ONNX file"},
-    {.identifier = 'd',
-     .access_letters = NULL,
-     .access_name = "decoder",
-     .value_name = "decoder",
-     .description = "Decoder ONNX file"},
-    {.identifier = 'j',
-     .access_letters = NULL,
-     .access_name = "joiner",
-     .value_name = "joiner",
-     .description = "Joiner ONNX file"},
-    {.identifier = 'n',
-     .access_letters = NULL,
-     .access_name = "num-threads",
-     .value_name = "num-threads",
-     .description = "Number of threads"},
-    {.identifier = 'p',
-     .access_letters = NULL,
-     .access_name = "provider",
-     .value_name = "provider",
-     .description = "Provider: cpu (default), cuda, coreml"},
-    {.identifier = 'm',
-     .access_letters = NULL,
-     .access_name = "decoding-method",
-     .value_name = "decoding-method",
-     .description =
-         "Decoding method: greedy_search (default), modified_beam_search"},
-    {.identifier = 'f',
-     .access_letters = NULL,
-     .access_name = "hotwords-file",
-     .value_name = "hotwords-file",
-     .description = "The file containing hotwords, one words/phrases per line, "
-                    "and for each phrase the bpe/cjkchar are separated by a "
-                    "space. For example: ▁HE LL O ▁WORLD, 你 好 世 界"},
-    {.identifier = 's',
-     .access_letters = NULL,
-     .access_name = "hotwords-score",
-     .value_name = "hotwords-score",
-     .description = "The bonus score for each token in hotwords. Used only "
-                    "when decoding_method is modified_beam_search"},
-};
-
-const char *kUsage =
-    "\n"
-    "Usage:\n "
-    "  ./bin/decode-file-c-api \\\n"
-    "    --tokens=/path/to/tokens.txt \\\n"
-    "    --encoder=/path/to/encoder.onnx \\\n"
-    "    --decoder=/path/to/decoder.onnx \\\n"
-    "    --joiner=/path/to/joiner.onnx \\\n"
-    "    --provider=cpu \\\n"
-    "    /path/to/foo.wav\n"
-    "\n\n"
-    "Default num_threads is 1.\n"
-    "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
-    "Valid provider: cpu (default), cuda, coreml\n\n"
-    "Please refer to \n"
-    "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/"
-    "index.html\n"
-    "for a list of pre-trained models to download.\n"
-    "\n"
-    "Note that this file supports only streaming transducer models.\n";
-
-int32_t main(int32_t argc, char *argv[]) {
-  if (argc < 6) {
-    fprintf(stderr, "%s\n", kUsage);
-    exit(0);
-  }
+int32_t main() {
+  const char* wav_filename =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "test_wavs/0.wav";
+  const char* tokens =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "tokens.txt";
+  const char* encoder =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "encoder.onnx";
+  const char* decoder =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "decoder.onnx";
+  const char* joiner =
+      "./sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms/"
+      "joiner.onnx";
 
   SherpaOnnxOnlineRecognizerConfig config;
   memset(&config, 0, sizeof(config));
 
   config.model_config.debug = 0;
-  config.model_config.num_threads = 1;
+  config.model_config.num_threads = 2;
   config.model_config.provider = "cpu";
+  config.model_config.tokens = tokens;
+  config.model_config.transducer.encoder = encoder;
+  config.model_config.transducer.decoder = decoder;
+  config.model_config.transducer.joiner = joiner;
 
   config.decoding_method = "greedy_search";
 
@@ -114,69 +64,19 @@ int32_t main(int32_t argc, char *argv[]) {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
-  cag_option_context context;
-  char identifier;
-  const char *value;
-
-  cag_option_prepare(&context, options, CAG_ARRAY_SIZE(options), argc, argv);
-
-  while (cag_option_fetch(&context)) {
-    identifier = cag_option_get(&context);
-    value = cag_option_get_value(&context);
-    switch (identifier) {
-      case 't':
-        config.model_config.tokens = value;
-        break;
-      case 'e':
-        config.model_config.transducer.encoder = value;
-        break;
-      case 'd':
-        config.model_config.transducer.decoder = value;
-        break;
-      case 'j':
-        config.model_config.transducer.joiner = value;
-        break;
-      case 'n':
-        config.model_config.num_threads = atoi(value);
-        break;
-      case 'p':
-        config.model_config.provider = value;
-        break;
-      case 'm':
-        config.decoding_method = value;
-        break;
-      case 'f':
-        config.hotwords_file = value;
-        break;
-      case 's':
-        config.hotwords_score = atof(value);
-        break;
-      case 'h': {
-        fprintf(stderr, "%s\n", kUsage);
-        exit(0);
-        break;
-      }
-      default:
-        // do nothing as config already has valid default values
-        break;
-    }
-  }
-
-  const SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer* recognizer =
       SherpaOnnxCreateOnlineRecognizer(&config);
-  const SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream* stream =
       SherpaOnnxCreateOnlineStream(recognizer);
 
-  const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
+  const SherpaOnnxDisplay* display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 
-  const char *wav_filename = argv[context.index];
-  const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
+  const SherpaOnnxWave* wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
-  // simulate streaming
 
 #define N 3200  // 0.2 s. Sample rate is fixed to 16 kHz
 
@@ -197,7 +97,7 @@ int32_t main(int32_t argc, char *argv[]) {
       SherpaOnnxDecodeOnlineStream(recognizer, stream);
     }
 
-    const SherpaOnnxOnlineRecognizerResult *r =
+    const SherpaOnnxOnlineRecognizerResult* r =
         SherpaOnnxGetOnlineStreamResult(recognizer, stream);
 
     if (strlen(r->text)) {
@@ -226,7 +126,7 @@ int32_t main(int32_t argc, char *argv[]) {
     SherpaOnnxDecodeOnlineStream(recognizer, stream);
   }
 
-  const SherpaOnnxOnlineRecognizerResult *r =
+  const SherpaOnnxOnlineRecognizerResult* r =
       SherpaOnnxGetOnlineStreamResult(recognizer, stream);
 
   if (strlen(r->text)) {

@@ -47,6 +47,11 @@ public class OfflineTtsZipVoiceModelConfig {
         return vocoder;
     }
 
+    /**
+     * @deprecated Deprecated. Ignored since v2.0.0. Use lexicon or
+     * phonemeCodepoints instead.
+     */
+    @Deprecated
     public String getDataDir() {
         return dataDir;
     }
@@ -107,6 +112,11 @@ public class OfflineTtsZipVoiceModelConfig {
             return this;
         }
 
+        /**
+         * @deprecated Deprecated. Ignored since v2.0.0. Use lexicon or
+         * phonemeCodepoints instead.
+         */
+        @Deprecated
         public Builder setDataDir(String dataDir) {
             this.dataDir = dataDir;
             return this;

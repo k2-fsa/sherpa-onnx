@@ -13,6 +13,7 @@ namespace SherpaOnnx
             Voices = "";
             Tokens = "";
             DataDir = "";
+            Lexicon = "";
 
             LengthScale = 1.0F;
         }
@@ -25,9 +26,16 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string Tokens;
 
+        /// <summary>
+        /// Deprecated. Ignored since v2.0.0. Use Lexicon or
+        /// OfflineTtsGenerationConfig.PhonemeCodepoints instead.
+        /// </summary>
         [MarshalAs(UnmanagedType.LPStr)]
         public string DataDir;
 
         public float LengthScale;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Lexicon;
     }
 }

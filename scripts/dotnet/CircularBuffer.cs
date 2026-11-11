@@ -18,7 +18,7 @@ namespace SherpaOnnx
             SherpaOnnxCircularBufferPush(_handle.Handle, data, data.Length);
         }
 
-        public float[] Get(int startIndex, int n)
+        public float[] Get(long startIndex, int n)
         {
             IntPtr p = SherpaOnnxCircularBufferGet(_handle.Handle, startIndex, n);
 
@@ -43,7 +43,7 @@ namespace SherpaOnnx
           }
         }
 
-        public int Head
+        public long Head
         {
           get
           {
@@ -89,7 +89,7 @@ namespace SherpaOnnx
         private static extern void SherpaOnnxCircularBufferPush(IntPtr handle, float[] p, int n);
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr SherpaOnnxCircularBufferGet(IntPtr handle, int startIndex, int n);
+        private static extern IntPtr SherpaOnnxCircularBufferGet(IntPtr handle, long startIndex, int n);
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxCircularBufferFree(IntPtr p);
@@ -101,7 +101,7 @@ namespace SherpaOnnx
         private static extern int SherpaOnnxCircularBufferSize(IntPtr handle);
 
         [DllImport(Dll.Filename)]
-        private static extern int SherpaOnnxCircularBufferHead(IntPtr handle);
+        private static extern long SherpaOnnxCircularBufferHead(IntPtr handle);
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxCircularBufferReset(IntPtr handle);

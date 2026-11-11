@@ -120,26 +120,17 @@ class CharacterLexicon::Impl {
 
     // remove spaces after punctuations
     std::vector<std::string> words2 = std::move(words);
-    words.reserve(words2.size());
+    // words is moved-from but valid; we refill it below with the filtered
+    // words.
+    words.reserve(words2.size());  // NOLINT(bugprone-use-after-move)
 
     for (int32_t i = 0; i < words2.size(); ++i) {
-      if (i == 0) {
-        words.push_back(std::move(words2[i]));
-      } else if (words2[i] == " ") {
-        if (words.back() == " " || IsPunct(words.back())) {
-          continue;
-        } else {
-          words.push_back(std::move(words2[i]));
-        }
-      } else if (IsPunct(words2[i])) {
-        if (words.back() == " " || IsPunct(words.back())) {
-          continue;
-        } else {
-          words.push_back(std::move(words2[i]));
-        }
-      } else {
-        words.push_back(std::move(words2[i]));
+      // remove spaces/punctuations that follow spaces/punctuations
+      if (i != 0 && (words2[i] == " " || IsPunct(words2[i])) &&
+          (words.back() == " " || IsPunct(words.back()))) {
+        continue;
       }
+      words.push_back(std::move(words2[i]));
     }
 
     if (debug_) {

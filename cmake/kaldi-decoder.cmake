@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 function(download_kaldi_decoder)
   include(FetchContent)
 

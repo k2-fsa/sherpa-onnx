@@ -56,7 +56,7 @@ std::string VecToString<std::string>(const std::vector<std::string> &vec,
   oss << "[";
   std::string sep = "";
   for (const auto &item : vec) {
-    oss << sep << std::quoted(item);
+    oss << sep << QuoteJsonString(item);
     sep = ", ";
   }
   oss << "]";
@@ -68,7 +68,7 @@ std::string VecToString<std::string>(const std::vector<std::string> &vec,
 std::string OnlineRecognizerResult::AsJsonString() const {
   std::ostringstream os;
   os << "{ ";
-  os << "\"text\": " << std::quoted(text) << ", ";
+  os << "\"text\": " << QuoteJsonString(text) << ", ";
   os << "\"tokens\": " << VecToString(tokens) << ", ";
   os << "\"timestamps\": " << VecToString(timestamps, 2) << ", ";
   os << "\"ys_probs\": " << VecToString(ys_probs, 6) << ", ";
@@ -76,6 +76,7 @@ std::string OnlineRecognizerResult::AsJsonString() const {
   os << "\"context_scores\": " << VecToString(context_scores, 6) << ", ";
   os << "\"segment\": " << segment << ", ";
   os << "\"words\": " << VecToString(words, 0) << ", ";
+  os << "\"num_trailing_blanks\": " << num_trailing_blanks << ", ";
   os << "\"start_time\": " << std::fixed << std::setprecision(2) << start_time
      << ", ";
   os << "\"is_final\": " << (is_final ? "true" : "false") << ", ";
@@ -254,7 +255,52 @@ void OnlineRecognizer::DecodeStreams(OnlineStream **ss, int32_t n) const {
 OnlineRecognizerResult OnlineRecognizer::GetResult(OnlineStream *s) const {
   auto r = impl_->GetResult(s);
   r.text = RemoveLeadingSpaces(r.text);
+  RemoveLeadingPunct(&r);
   return r;
+}
+
+void RemoveLeadingPunct(OnlineRecognizerResult *r) {
+  std::string text = RemoveLeadingPunct(r->text);
+  if (text.size() == r->text.size()) {
+    return;
+  }
+
+  std::string punct = r->text.substr(0, r->text.size() - text.size());
+  r->text = std::move(text);
+
+  // The first token with visible content must start with the removed
+  // punctuation. Otherwise, e.g., for byte fallback or byte-level BPE
+  // tokens, leave tokens alone.
+  auto &tokens = r->tokens;
+  for (size_t i = 0; i != tokens.size(); ++i) {
+    size_t start = tokens[i].find_first_not_of(' ');
+    if (start == std::string::npos) {
+      continue;
+    }
+
+    if (tokens[i].compare(start, punct.size(), punct) != 0) {
+      return;
+    }
+
+    if (start + punct.size() < tokens[i].size()) {
+      tokens[i].erase(start, punct.size());
+      return;
+    }
+
+    int32_t n = static_cast<int32_t>(tokens.size());
+    auto erase = [i, n](auto *v) {
+      if (static_cast<int32_t>(v->size()) == n) {
+        v->erase(v->begin() + i);
+      }
+    };
+
+    erase(&r->timestamps);
+    erase(&r->ys_probs);
+    erase(&r->lm_probs);
+    erase(&r->context_scores);
+    tokens.erase(tokens.begin() + i);
+    return;
+  }
 }
 
 bool OnlineRecognizer::IsEndpoint(OnlineStream *s) const {

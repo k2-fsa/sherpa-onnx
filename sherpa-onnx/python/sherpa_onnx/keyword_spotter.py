@@ -204,11 +204,17 @@ class KeywordSpotter(object):
             keywords from the keywords file provided to the constructor.
         Returns:
           A new ``OnlineStream`` object.
+        Raises:
+          ValueError: If ``keywords`` cannot be encoded, e.g. it contains a
+            token that is not in the tokens file.
         """
         if keywords is None:
             return self.keyword_spotter.create_stream()
-        else:
-            return self.keyword_spotter.create_stream(keywords)
+
+        stream = self.keyword_spotter.create_stream(keywords)
+        if stream is None:
+            raise ValueError(f"Failed to encode keywords: {keywords!r}")
+        return stream
 
     def decode_stream(self, s: OnlineStream):
         """Decode one step for the given stream.

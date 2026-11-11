@@ -18,6 +18,9 @@ struct OfflineTtsZipvoiceModelConfig {
   std::string decoder;
   std::string vocoder;
 
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon for text input, or GenerationConfig.phoneme_codepoints /
+  // GenerationConfig.tokens with an external phonemizer instead.
   std::string data_dir;
   std::string lexicon;
 

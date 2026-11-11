@@ -128,7 +128,7 @@ class TestFastClustering(unittest.TestCase):
             debug=0,
         )
         if not extractor_config.validate():
-            raise ValueError(f"Invalid extractor config. {config}")
+            raise ValueError(f"Invalid extractor config. {extractor_config}")
 
         extractor = sherpa_onnx.SpeakerEmbeddingExtractor(extractor_config)
 

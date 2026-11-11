@@ -212,7 +212,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_Vad_front(JNIEnv *env,
     return nullptr;
   }
 
-  jmethodID ctor = env->GetMethodID(cls, "<init>", "(I[F)V");
+  jmethodID ctor = env->GetMethodID(cls, "<init>", "(J[F)V");
   if (!ctor) {
     SHERPA_ONNX_LOGE("failed to get constructor");
 
@@ -222,7 +222,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_Vad_front(JNIEnv *env,
   }
 
   jobject speechSegment =
-      env->NewObject(cls, ctor, static_cast<jint>(front.start), samples_arr);
+      env->NewObject(cls, ctor, static_cast<jlong>(front.start), samples_arr);
 
   env->DeleteLocalRef(samples_arr);
   env->DeleteLocalRef(cls);

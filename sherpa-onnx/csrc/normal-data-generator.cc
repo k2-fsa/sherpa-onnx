@@ -30,11 +30,13 @@ struct RNGHolder {
 NormalDataGenerator::NormalDataGenerator(float mean /* = 0.0f*/,
                                          float stddev /* = 1.0f*/,
                                          int32_t seed /* = -1*/)
-    : mean_(mean), stddev_(stddev), seed_(seed) {
-  if (seed_ >= 0) {
-    rng_.seed(static_cast<unsigned>(seed_));
-  }
-}
+    : mean_(mean),
+      stddev_(stddev),
+      seed_(seed),
+      // Seed explicitly so the engine is never left in the predictable
+      // default-seeded state.
+      rng_(seed >= 0 ? std::mt19937(static_cast<unsigned>(seed))
+                     : std::mt19937(std::random_device()())) {}
 
 void NormalDataGenerator::Fill(float *data, std::size_t size) const {
   if (seed_ >= 0) {

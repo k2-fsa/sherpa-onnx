@@ -20,6 +20,7 @@ const config = {
   segmentation: {
     pyannote: {
       model: './sherpa-onnx-pyannote-segmentation-3-0/model.onnx',
+      windowShiftRatio: 0.1,
       debug: 1,
     },
   },

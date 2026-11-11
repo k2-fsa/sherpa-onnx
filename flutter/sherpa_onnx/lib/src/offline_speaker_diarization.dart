@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
-import './speaker_identification.dart';
 import './offline_speaker_diarization_config.dart';
 
 export './offline_speaker_diarization_config.dart';
@@ -41,6 +40,8 @@ class OfflineSpeakerDiarization {
 
     c.ref.segmentation.pyannote.model =
         config.segmentation.pyannote.model.toNativeUtf8();
+    c.ref.segmentation.pyannote.windowShiftRatio =
+        config.segmentation.pyannote.windowShiftRatio;
     c.ref.segmentation.numThreads = config.segmentation.numThreads;
     c.ref.segmentation.debug = config.segmentation.debug ? 1 : 0;
     c.ref.segmentation.provider = config.segmentation.provider.toNativeUtf8();
@@ -52,6 +53,8 @@ class OfflineSpeakerDiarization {
 
     c.ref.clustering.numClusters = config.clustering.numClusters;
     c.ref.clustering.threshold = config.clustering.threshold;
+    c.ref.clustering.computeConfidence =
+        config.clustering.computeConfidence ? 1 : 0;
 
     c.ref.minDurationOn = config.minDurationOn;
     c.ref.minDurationOff = config.minDurationOff;
@@ -182,7 +185,10 @@ class OfflineSpeakerDiarization {
       final s = segments + i;
 
       final tmp = OfflineSpeakerDiarizationSegment(
-          start: s.ref.start, end: s.ref.end, speaker: s.ref.speaker);
+          start: s.ref.start,
+          end: s.ref.end,
+          speaker: s.ref.speaker,
+          confidence: s.ref.confidence);
       ans.add(tmp);
     }
 

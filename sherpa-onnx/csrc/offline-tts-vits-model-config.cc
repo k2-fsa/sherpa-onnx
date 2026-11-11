@@ -17,8 +17,9 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
   po->Register("vits-lexicon", &lexicon, "Path to lexicon.txt for VITS models");
   po->Register("vits-tokens", &tokens, "Path to tokens.txt for VITS models");
   po->Register("vits-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng. If it is "
-               "given, --vits-lexicon is ignored.");
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --vits-lexicon or "
+               "GenerationConfig.phoneme_codepoints instead.");
   po->Register("vits-dict-dir", &dict_dir,
                "Not used. You don't need to provide a value for it");
   po->Register("vits-noise-scale", &noise_scale, "noise_scale for VITS models");
@@ -49,34 +50,17 @@ bool OfflineTtsVitsModelConfig::Validate() const {
     return false;
   }
 
+  if (!lexicon.empty() && !FileExists(lexicon)) {
+    SHERPA_ONNX_LOGE("--vits-lexicon: '%s' does not exist", lexicon.c_str());
+    return false;
+  }
+
   if (!data_dir.empty()) {
-    if (!FileExists(data_dir + "/phontab")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/phontab' does not exist. Please check --vits-data-dir",
-          data_dir.c_str());
-      return false;
-    }
-
-    if (!FileExists(data_dir + "/phonindex")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/phonindex' does not exist. Please check --vits-data-dir",
-          data_dir.c_str());
-      return false;
-    }
-
-    if (!FileExists(data_dir + "/phondata")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/phondata' does not exist. Please check --vits-data-dir",
-          data_dir.c_str());
-      return false;
-    }
-
-    if (!FileExists(data_dir + "/intonations")) {
-      SHERPA_ONNX_LOGE(
-          "'%s/intonations' does not exist. Please check --vits-data-dir",
-          data_dir.c_str());
-      return false;
-    }
+    SHERPA_ONNX_LOGE(
+        "WARNING: --vits-data-dir is deprecated and ignored in "
+        "sherpa-onnx >= v2.0.0. Please use GenerationConfig.phoneme_codepoints "
+        "with an external phonemizer (e.g. piper_phonemize) instead. "
+        "See python-api-examples/test-offline-tts-piper-phonemize.py");
   }
 
   if (!dict_dir.empty()) {
@@ -95,7 +79,6 @@ std::string OfflineTtsVitsModelConfig::ToString() const {
   os << "model=\"" << model << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
   os << "tokens=\"" << tokens << "\", ";
-  os << "data_dir=\"" << data_dir << "\", ";
   os << "noise_scale=" << noise_scale << ", ";
   os << "noise_scale_w=" << noise_scale_w << ", ";
   os << "length_scale=" << length_scale << ")";

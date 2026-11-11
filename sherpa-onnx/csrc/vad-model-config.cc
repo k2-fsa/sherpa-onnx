@@ -24,7 +24,7 @@ void VadModelConfig::Register(ParseOptions *po) {
 
   po->Register("vad-provider", &provider,
                "Specify a provider to run the VAD model. Supported values: "
-               "cpu, cuda, coreml");
+               "cpu, cuda, coreml, openvino");
 
   po->Register("vad-debug", &debug,
                "true to display debug information when loading vad models");

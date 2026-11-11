@@ -29,7 +29,7 @@ function initSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
   const n = modelLen;
   const buffer = Module._malloc(n);
 
-  const len = 1 * 4;
+  const len = 2 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -38,6 +38,10 @@ function initSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
 
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, config.windowShiftRatio ?? 0, 'float');
 
   return {
     buffer: buffer,
@@ -50,6 +54,7 @@ function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
   if (!('pyannote' in config)) {
     config.pyannote = {
       model: '',
+      windowShiftRatio: 0.1,
     };
   }
 
@@ -119,7 +124,7 @@ function initSherpaOnnxSpeakerEmbeddingExtractorConfig(config, Module) {
 }
 
 function initSherpaOnnxFastClusteringConfig(config, Module) {
-  const len = 2 * 4;
+  const len = 3 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -127,6 +132,9 @@ function initSherpaOnnxFastClusteringConfig(config, Module) {
   offset += 4;
 
   Module.setValue(ptr + offset, config.threshold || 0.5, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.computeConfidence ? 1 : 0, 'i32');
   offset += 4;
 
   return {
@@ -138,7 +146,7 @@ function initSherpaOnnxFastClusteringConfig(config, Module) {
 function initSherpaOnnxOfflineSpeakerDiarizationConfig(config, Module) {
   if (!('segmentation' in config)) {
     config.segmentation = {
-      pyannote: {model: ''},
+      pyannote: {model: '', windowShiftRatio: 0.1},
       numThreads: 1,
       debug: 0,
       provider: 'cpu',
@@ -256,15 +264,16 @@ class OfflineSpeakerDiarization {
 
     let ans = [];
 
-    let sizeOfSegment = 3 * 4;
+    let sizeOfSegment = 4 * 4;
     for (let i = 0; i < numSegments; ++i) {
       let p = segments + i * sizeOfSegment
 
       let start = this.Module.HEAPF32[p / 4 + 0];
       let end = this.Module.HEAPF32[p / 4 + 1];
       let speaker = this.Module.HEAP32[p / 4 + 2];
+      let confidence = this.Module.HEAPF32[p / 4 + 3];
 
-      ans.push({start: start, end: end, speaker: speaker});
+      ans.push({start: start, end: end, speaker: speaker, confidence: confidence});
     }
 
     this.Module._SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
@@ -277,7 +286,7 @@ class OfflineSpeakerDiarization {
 function createOfflineSpeakerDiarization(Module, myConfig) {
   let config = {
     segmentation: {
-      pyannote: {model: './segmentation.onnx'},
+      pyannote: {model: './segmentation.onnx', windowShiftRatio: 0.1},
       debug: 1,
     },
     embedding: {

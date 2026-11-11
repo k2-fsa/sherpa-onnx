@@ -1,4 +1,4 @@
-/// Shared config/data classes for online punctuation -- no FFI, works on all platforms.
+// Shared config/data classes for online punctuation -- no FFI, works on all platforms.
 
 /// Online punctuation restoration.
 ///

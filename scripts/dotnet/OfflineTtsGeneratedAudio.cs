@@ -14,6 +14,10 @@ namespace SherpaOnnx
 
         public bool SaveToWaveFile(String filename)
         {
+            // A NULL handle means generation failed (the C API reports errors by
+            // returning no audio). Report empty audio instead of dereferencing
+            // IntPtr.Zero below.
+            if (Handle == IntPtr.Zero) return false;
             Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
             byte[] utf8Filename = Encoding.UTF8.GetBytes(filename);
             byte[] utf8FilenameWithNull = new byte[utf8Filename.Length + 1]; // +1 for null terminator
@@ -38,7 +42,10 @@ namespace SherpaOnnx
 
         private void Cleanup()
         {
-            SherpaOnnxDestroyOfflineTtsGeneratedAudio(Handle);
+            if (Handle != IntPtr.Zero)
+            {
+                SherpaOnnxDestroyOfflineTtsGeneratedAudio(Handle);
+            }
 
             // Don't permit the handle to be used again.
             _handle = new HandleRef(this, IntPtr.Zero);
@@ -59,6 +66,7 @@ namespace SherpaOnnx
         {
             get
             {
+                if (Handle == IntPtr.Zero) return 0;
                 Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
                 return impl.NumSamples;
             }
@@ -68,6 +76,7 @@ namespace SherpaOnnx
         {
             get
             {
+                if (Handle == IntPtr.Zero) return 0;
                 Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
                 return impl.SampleRate;
             }
@@ -77,6 +86,7 @@ namespace SherpaOnnx
         {
             get
             {
+                if (Handle == IntPtr.Zero) return new float[0];
                 Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
 
                 float[] samples = new float[impl.NumSamples];

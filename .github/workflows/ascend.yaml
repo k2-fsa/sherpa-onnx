@@ -19,17 +19,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
-          #   name: "8.0.0-10b"
-          - image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
-            name: "8.0.0-310p"
+          # - image: "quay.io/ascend/cann:8.0.0-910b-ubuntu22.04-py3.9"
+          #   name: "8.0.0-910b"
+          # ubuntu22.04 (GCC 11): the prebuilt libonnxruntime.a needs a newer
+          # libstdc++ than the ubuntu20.04 image's GCC 9 provides — linking
+          # fails with "undefined reference to std::__throw_bad_array_new_length".
+          - image: "quay.io/ascend/cann:8.0.rc1-310p-ubuntu22.04-py3.9"
+            name: "8.0.rc1-310p"
     container:
-      # image: ascendai/cann:latest
-      # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
-      # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
-      # see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
-      # and
-      # https://quay.io/repository/ascend/cann?tab=tags
+      # The gpustack/* images on Docker Hub are gone ("the image is not on
+      # docker now"); use the official quay.io/ascend/cann images instead.
+      # Tags: https://quay.io/repository/ascend/cann?tab=tags
+      #        https://github.com/Ascend/cann-container-image/blob/main/supported_tags.md
       image: ${{ matrix.image }}
 
     steps:
@@ -45,7 +46,14 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          apt-get update && apt-get install -y git curl cmake gcc g++
+          # Non-interactive: without a TTY, tzdata's timezone prompt blocks
+          # the job forever ("debconf: falling back to frontend: Readline").
+          export DEBIAN_FRONTEND=noninteractive
+          export TZ=Etc/UTC
+          ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
+          echo $TZ > /etc/timezone
+          apt-get update
+          apt-get install -y git curl cmake gcc g++
 
       - name: Show GCC version
         shell: bash
@@ -62,10 +70,21 @@ jobs:
           find /usr/local/Ascend -name "libascend*.so" 2>/dev/null
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+          # The toolkit's libruntime.so needs the driver stubs (drv*/hal*
+          # symbols) that live in devlib — LD_LIBRARY_PATH only helps the
+          # runtime loader, the linker needs the same directory on its path.
+          export LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LIBRARY_PATH
+          export LDFLAGS="-L/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64 $LDFLAGS"
 
           mkdir build
           cd build
-          cmake -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON ..
+          # The drv*/hal* symbols referenced by the toolkit's shared libraries
+          # (libruntime.so) come from the host's Ascend kernel driver, which
+          # does not exist in CI. They are resolved at runtime on real
+          # hardware, so ignore unresolved symbols from shared libraries at
+          # link time — the binaries here are only built (see "Show results").
+          cmake -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON \
+            -DCMAKE_EXE_LINKER_FLAGS="-Wl,--unresolved-symbols=ignore-in-shared-libs" ..
 
           make -j2
 

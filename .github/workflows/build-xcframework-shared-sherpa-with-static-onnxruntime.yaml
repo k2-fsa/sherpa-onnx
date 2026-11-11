@@ -3,10 +3,8 @@ name: build-xcframework-shared-sherpa-with-static-onnxruntime
 on:
   push:
     branches:
-      - master
-      - xcframework-2
-    tags:
-      - 'release-v[0-9]+.[0-9]+.[0-9]+*'
+      # - 'release-v[0-9]+.[0-9]+.[0-9]+*'
+      - xcframework
 
   workflow_dispatch:
 
@@ -67,18 +65,18 @@ jobs:
           unzip -o $GITHUB_WORKSPACE/build-macos-shared-sherpa-with-static-onnxruntime/*.xcframework.zip -d .
           ls -lh sherpa-onnx.xcframework/
 
-          # Find the framework bundle
-          fw_path=$(find sherpa-onnx.xcframework -name "SherpaOnnxC.framework" -type d | head -1)
-          echo "fw_path: $fw_path"
+          # Find the xcframework architecture directory
+          arch_dir=$(find sherpa-onnx.xcframework -path "*macos*" -type d -not -name "*.xcframework" | head -1)
+          echo "arch_dir: $arch_dir"
 
-          test -f "$fw_path/Versions/A/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
-          test -f "$fw_path/Versions/A/Modules/module.modulemap" || { echo "Modulemap not found"; exit 1; }
+          test -f "$arch_dir/libsherpa-onnx-c-api.dylib" || { echo "Binary not found"; exit 1; }
+          test -f "$arch_dir/Headers/sherpa-onnx/c-api/c-api.h" || { echo "Header not found"; exit 1; }
+          test -f "$arch_dir/Headers/module.modulemap" || { echo "Modulemap not found"; exit 1; }
 
           # Verify onnxruntime is NOT a dynamic dependency
           echo "Checking dynamic dependencies:"
-          otool -L "$fw_path/Versions/A/SherpaOnnxC"
-          if otool -L "$fw_path/Versions/A/SherpaOnnxC" | grep -q libonnxruntime; then
+          otool -L "$arch_dir/libsherpa-onnx-c-api.dylib"
+          if otool -L "$arch_dir/libsherpa-onnx-c-api.dylib" | grep -q libonnxruntime; then
             echo "ERROR: libonnxruntime is still a dynamic dependency!"
             exit 1
           fi
@@ -86,12 +84,12 @@ jobs:
 
           # Test compilation
           clang -o version-c-api $GITHUB_WORKSPACE/c-api-examples/version-c-api.c \
-            -I "$fw_path/Headers" \
-            "$fw_path/Versions/A/SherpaOnnxC" \
+            -I "$arch_dir/Headers" \
+            "$arch_dir/libsherpa-onnx-c-api.dylib" \
             -framework CoreFoundation \
             -framework Foundation \
             -lc++ \
-            -Wl,-rpath,"$(dirname $fw_path)"
+            -Wl,-rpath,"$arch_dir"
 
           ./version-c-api
 
@@ -135,7 +133,7 @@ jobs:
         shell: bash
         run: |
           ls -lh build-ios-shared-sherpa-with-static-onnxruntime/
-          cd build-ios-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          cd build-ios-shared-sherpa-with-static-onnxruntime/SherpaOnnxC.xcframework
           du -h -d1 .
           tree .
 
@@ -150,10 +148,10 @@ jobs:
           mkdir -p /tmp/test-xcframework
           cd /tmp/test-xcframework
           unzip -o $GITHUB_WORKSPACE/build-ios-shared-sherpa-with-static-onnxruntime/*.xcframework.zip -d .
-          ls -lh sherpa-onnx.xcframework/
+          ls -lh SherpaOnnxC.xcframework/
 
           # Verify xcframework structure (framework bundle)
-          fw_path=$(find sherpa-onnx.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
+          fw_path=$(find SherpaOnnxC.xcframework -path "*simulator*" -name "SherpaOnnxC.framework" -type d | head -1)
           echo "fw_path: $fw_path"
 
           test -f "$fw_path/SherpaOnnxC" || { echo "Binary not found"; exit 1; }
@@ -183,7 +181,6 @@ jobs:
     needs:
       - build_macos_shared_onnxruntime_static
       - build_ios_shared_onnxruntime_static
-    # if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
@@ -206,7 +203,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          overwrite: true
+          overwrite: false
           file: artifacts/**/*.xcframework.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}

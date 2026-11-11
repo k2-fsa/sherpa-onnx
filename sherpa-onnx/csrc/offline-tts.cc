@@ -26,10 +26,14 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
 struct SilenceInterval {
   int32_t start;
   int32_t end;
 };
+
+}  // namespace
 
 // Supported range for --tts-silence-scale. The lower bound keeps a pause from
 // collapsing to nothing; the upper bound is a sanity limit, far below the
@@ -60,7 +64,7 @@ GeneratedAudio GeneratedAudio::ScaleSilence(float scale) const {
   int32_t num_samples = static_cast<int32_t>(samples.size());
 
   int32_t last = -1;
-  int32_t i;
+  int32_t i = 0;
   for (i = 0; i != num_samples; ++i) {
     if (fabs(samples[i]) <= 0.01) {
       if (last == -1) {
@@ -172,6 +176,15 @@ std::string GenerationConfig::ToString() const {
       sep = ", ";
     }
     os << "}";
+  }
+
+  if (!phoneme_codepoints.empty()) {
+    os << ", phoneme_codepoints=[" << phoneme_codepoints.size()
+       << " sentences]";
+  }
+
+  if (!tokens.empty()) {
+    os << ", tokens=[" << tokens.size() << " sentences]";
   }
 
   os << ")";
@@ -336,6 +349,24 @@ GeneratedAudio OfflineTts::Generate(
 GeneratedAudio OfflineTts::Generate(
     const std::string &text, const GenerationConfig &config,
     GeneratedAudioCallback callback /*= nullptr*/) const {
+  // phoneme_codepoints and tokens are mutually exclusive.
+  //
+  // This overload is the funnel for every caller that passes a
+  // GenerationConfig: C++, Python and JNI call it directly, and the C API
+  // calls tts->impl->Generate where impl is a std::unique_ptr<OfflineTts>, so
+  // it lands here as well. The C API additionally pre-checks in
+  // SherpaOnnxOfflineTtsGenerateInternal and returns nullptr (its own failure
+  // convention), so C callers normally never reach this line. The deprecated
+  // overloads above call impl_->Generate and skip this funnel, but they build
+  // their own GenerationConfig with both fields empty and cannot trigger it.
+  if (!config.phoneme_codepoints.empty() && !config.tokens.empty()) {
+    SHERPA_ONNX_LOGE(
+        "Both GenerationConfig.phoneme_codepoints and GenerationConfig.tokens "
+        "are given. They are mutually exclusive; please set only one of them. "
+        "Return an empty result.");
+    return GeneratedAudio{{}, 0};
+  }
+
 #if !defined(_WIN32)
   return impl_->Generate(text, config, std::move(callback));
 #else
@@ -362,6 +393,8 @@ GeneratedAudio OfflineTts::Generate(
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
 
 int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
+
+std::string OfflineTts::Lang() const { return impl_->Lang(); }
 
 #if __ANDROID_API__ >= 9
 template OfflineTts::OfflineTts(AAssetManager *mgr,

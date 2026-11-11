@@ -38,6 +38,12 @@ function freeConfig(config, Module) {
 }
 
 // The user should free the returned pointers
+//
+// Note on `dataDir` (all model configs below, vits/matcha/kokoro/kitten/
+// zipvoice): deprecated and ignored since v2.0.0. espeak-ng is no longer used
+// by sherpa-onnx. The slot is still marshalled for ABI stability, but the C
+// side discards it. Use `lexicon` for plain text, or pass pre-phonemized
+// input via `phonemeCodepoints` / `tokens` in the generation config.
 function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
@@ -237,12 +243,13 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
   const voicesLen = Module.lengthBytesUTF8(config.voices) + 1;
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
+  const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
 
-  const n = modelLen + voicesLen + tokensLen + dataDirLen;
+  const n = modelLen + voicesLen + tokensLen + dataDirLen + lexiconLen;
 
   const buffer = Module._malloc(n);
 
-  const len = 5 * 4;
+  const len = 6 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -258,6 +265,9 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
   Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
   offset += dataDirLen;
 
+  Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
+  offset += lexiconLen;
+
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
   offset += modelLen;
@@ -272,6 +282,8 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
   offset += dataDirLen;
 
   Module.setValue(ptr + 16, config.lengthScale || 1.0, 'float');
+
+  Module.setValue(ptr + 20, buffer + offset, 'i8*');
 
   return {
     buffer: buffer,
@@ -690,10 +702,6 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
   if ('model' in config && !('offlineTtsModelConfig' in config)) {
     config.offlineTtsModelConfig = config.model;
   }
-  // Support typo in Dart config class.
-  if ('maxNumSenetences' in config && !('maxNumSentences' in config)) {
-    config.maxNumSentences = config.maxNumSenetences;
-  }
 
   const modelConfig =
       initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig, Module);
@@ -745,9 +753,44 @@ const genConfig = {
 
  */
 
+// Validate a nested-array field (phonemeCodepoints: number[][], tokens:
+// string[][]) before anything is allocated. Anything else is a caller bug,
+// so throw a TypeError naming the offending element.
+function validateNestedArray(name, value, elementType) {
+  if (!Array.isArray(value)) {
+    throw new TypeError(`${name} must be an array of arrays`);
+  }
+  for (let i = 0; i < value.length; ++i) {
+    const inner = value[i];
+    if (!Array.isArray(inner)) {
+      throw new TypeError(`${name}[${i}] must be an array`);
+    }
+    if (inner.length === 0) {
+      throw new TypeError(`${name}[${i}] must be a non-empty array`);
+    }
+    for (let j = 0; j < inner.length; ++j) {
+      const item = inner[j];
+      const ok = elementType === 'number' ? typeof item === 'number' :
+          typeof item === 'string';
+      if (!ok) {
+        throw new TypeError(`${name}[${i}][${j}] must be a ${elementType}`);
+      }
+    }
+  }
+}
+
+
 // Allocate a SherpaOnnxGenerationConfig in WASM
 function initSherpaOnnxGenerationConfig(config, Module) {
-  const len = 9 * 4;
+  // Validate before allocating anything.
+  if (config.phonemeCodepoints !== undefined) {
+    validateNestedArray('phonemeCodepoints', config.phonemeCodepoints, 'number');
+  }
+  if (config.tokens !== undefined) {
+    validateNestedArray('tokens', config.tokens, 'string');
+  }
+
+  const len = 15 * 4;
   const ptr = Module._malloc(len);
 
   // float silence_scale
@@ -807,11 +850,75 @@ function initSherpaOnnxGenerationConfig(config, Module) {
 
   Module.setValue(ptr + 8 * 4, extraPtr, 'i8*');
 
+  // const int32_t* phoneme_codepoints + lens + num_sentences
+  let phonemeCodepointsPtr = 0;
+  let phonemeCodepointsLensPtr = 0;
+  if (config.phonemeCodepoints && config.phonemeCodepoints.length > 0) {
+    const numSentences = config.phonemeCodepoints.length;
+    let total = 0;
+    for (const inner of config.phonemeCodepoints) total += inner.length;
+
+    phonemeCodepointsPtr = Module._malloc(total * 4);
+    phonemeCodepointsLensPtr = Module._malloc(numSentences * 4);
+
+    const flat = new Int32Array(total);
+    const lens = new Int32Array(numSentences);
+    let offset = 0;
+    for (let i = 0; i < numSentences; ++i) {
+      flat.set(config.phonemeCodepoints[i], offset);
+      lens[i] = config.phonemeCodepoints[i].length;
+      offset += config.phonemeCodepoints[i].length;
+    }
+    Module.HEAP32.set(flat, phonemeCodepointsPtr / 4);
+    Module.HEAP32.set(lens, phonemeCodepointsLensPtr / 4);
+  }
+  Module.setValue(ptr + 9 * 4, phonemeCodepointsPtr, 'i8*');
+  Module.setValue(ptr + 10 * 4, phonemeCodepointsLensPtr, 'i8*');
+  Module.setValue(ptr + 11 * 4,
+      config.phonemeCodepoints ? config.phonemeCodepoints.length : 0, 'i32');
+
+  // const char* const* tokens + lens + num_sentences
+  let tokensPtr = 0;
+  let tokensLensPtr = 0;
+  const tokenStringPtrs = [];
+  if (config.tokens && config.tokens.length > 0) {
+    const numSentences = config.tokens.length;
+    let total = 0;
+    for (const inner of config.tokens) total += inner.length;
+
+    tokensPtr = Module._malloc(Math.max(total, 1) * 4);
+    tokensLensPtr = Module._malloc(numSentences * 4);
+
+    const lens = new Int32Array(numSentences);
+    let offset = 0;
+    for (let i = 0; i < numSentences; ++i) {
+      lens[i] = config.tokens[i].length;
+      for (const token of config.tokens[i]) {
+        const n = Module.lengthBytesUTF8(token) + 1;
+        const p = Module._malloc(n);
+        Module.stringToUTF8(token, p, n);
+        tokenStringPtrs.push(p);
+        Module.setValue(tokensPtr + offset * 4, p, 'i8*');
+        offset += 1;
+      }
+    }
+    Module.HEAP32.set(lens, tokensLensPtr / 4);
+  }
+  Module.setValue(ptr + 12 * 4, tokensPtr, 'i8*');
+  Module.setValue(ptr + 13 * 4, tokensLensPtr, 'i8*');
+  Module.setValue(ptr + 14 * 4, config.tokens ? config.tokens.length : 0,
+      'i32');
+
   return {
     ptr,
     referenceAudioPtr,
     referenceTextPtr,
     extraPtr,
+    phonemeCodepointsPtr,
+    phonemeCodepointsLensPtr,
+    tokensPtr,
+    tokensLensPtr,
+    tokenStringPtrs,
   };
 }
 
@@ -823,6 +930,11 @@ function freeSherpaOnnxGenerationConfig(cfg, Module) {
   if (cfg.referenceAudioPtr) Module._free(cfg.referenceAudioPtr);
   if (cfg.referenceTextPtr) Module._free(cfg.referenceTextPtr);
   if (cfg.extraPtr) Module._free(cfg.extraPtr);
+  if (cfg.phonemeCodepointsPtr) Module._free(cfg.phonemeCodepointsPtr);
+  if (cfg.phonemeCodepointsLensPtr) Module._free(cfg.phonemeCodepointsLensPtr);
+  if (cfg.tokensPtr) Module._free(cfg.tokensPtr);
+  if (cfg.tokensLensPtr) Module._free(cfg.tokensLensPtr);
+  for (const p of (cfg.tokenStringPtrs || [])) Module._free(p);
   if (cfg.ptr) Module._free(cfg.ptr);
 }
 
@@ -837,6 +949,11 @@ class OfflineTts {
     this.handle = handle;
     this.sampleRate = Module._SherpaOnnxOfflineTtsSampleRate(this.handle);
     this.numSpeakers = Module._SherpaOnnxOfflineTtsNumSpeakers(this.handle);
+    {
+      const p = Module._SherpaOnnxOfflineTtsLang(this.handle);
+      this.lang = p ? Module.UTF8ToString(p) : '';
+      Module._SherpaOnnxDestroyOfflineTtsLang(p);
+    }
     this.Module = Module
   }
 
@@ -930,7 +1047,10 @@ class OfflineTts {
     }
 
     if (!audioPtr) {
-      throw new Error('Failed to generate audio');
+      // Generation failed. The C API already logged the reason (for instance
+      // phonemeCodepoints and tokens are mutually exclusive). Return empty
+      // audio instead of throwing, matching C++/C/Python/Rust/Go/Java.
+      return {samples: new Float32Array(0), sampleRate: 0};
     }
 
     const base = audioPtr / 4;
@@ -966,8 +1086,37 @@ class OfflineTts {
 
 let modelType = 0;
 
+// Choose exactly one of the two text frontends below (not both):
+//
+// usePhonemize = true // option 1 (default): phonemize the text with piper-phonemize; no extra files needed
+// lexicon = './lexicon-en-us.txt' // option 2: lexicon file next to the model files.
+//   Download it from https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+//
+// Neither option uses the espeak-ng-data directory shipped in the model
+// package; you can leave it out to keep the download small.
+//
+// Option 1 loads the piper-phonemize wasm bundle from ./piper-phonemize/
+// (see assets/README.md for how to get it).
+//
+// The demo UI can flip this at runtime (the TTS instance is recreated with
+// the chosen frontend).
+let usePhonemize = true;
+
+function setUsePhonemize(value) {
+  usePhonemize = value;
+}
+
+// The frontend the selected model actually uses. Models that bring their own
+// lexicon (Chinese/multi-lingual/zipvoice) always use it; the German model is
+// phonemize-only because there is no German lexicon.
+let modelUsesPhonemize = false;
+
 function getDefaultOfflineTtsModelType() {
   return modelType;
+}
+
+function getDefaultUsePhonemize() {
+  return modelUsesPhonemize;
 }
 
 function createOfflineTts(Module, myConfig) {
@@ -975,7 +1124,7 @@ function createOfflineTts(Module, myConfig) {
     model: '',
     lexicon: '',
     tokens: '',
-    dataDir: '',
+    dataDir: '',  // deprecated, ignored; use lexicon or phonemeCodepoints
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
@@ -986,7 +1135,7 @@ function createOfflineTts(Module, myConfig) {
     vocoder: '',
     lexicon: '',
     tokens: '',
-    dataDir: '',
+    dataDir: '',  // deprecated, ignored; use lexicon or phonemeCodepoints
     noiseScale: 0.667,
     lengthScale: 1.0,
   };
@@ -995,7 +1144,7 @@ function createOfflineTts(Module, myConfig) {
     model: '',
     voices: '',
     tokens: '',
-    dataDir: '',
+    dataDir: '',  // deprecated, ignored; use lexicon or phonemeCodepoints
     lengthScale: 1.0,
     lexicon: '',
     lang: '',
@@ -1005,8 +1154,9 @@ function createOfflineTts(Module, myConfig) {
     model: '',
     voices: '',
     tokens: '',
-    dataDir: '',
+    dataDir: '',  // deprecated, ignored; use lexicon or phonemeCodepoints
     lengthScale: 1.0,
+    lexicon: '',
   };
 
   const offlineTtsZipVoiceModelConfig = {
@@ -1014,7 +1164,7 @@ function createOfflineTts(Module, myConfig) {
     encoder: '',
     decoder: '',
     vocoder: '',
-    dataDir: '',
+    dataDir: '',  // deprecated, ignored; use lexicon or phonemeCodepoints
     lexicon: '',
     featScale: 0.1,
     tShift: 0.5,
@@ -1033,6 +1183,16 @@ function createOfflineTts(Module, myConfig) {
     voiceEmbeddingCacheCapacity: 50,
   };
 
+  const offlineTtsSupertonicModelConfig = {
+    durationPredictor: '',
+    textEncoder: '',
+    vectorEstimator: '',
+    vocoder: '',
+    ttsJson: '',
+    unicodeIndexer: '',
+    voiceStyle: '',
+  };
+
   let ruleFsts = '';
 
   switch (modelType) {
@@ -1040,7 +1200,12 @@ function createOfflineTts(Module, myConfig) {
       // vits
       vits.model = './model.onnx';
       vits.tokens = './tokens.txt';
-      vits.dataDir = './espeak-ng-data';
+      // Record the frontend actually configured: the ready message reports
+      // this back and the UI keeps the picker in sync with it.
+      modelUsesPhonemize = usePhonemize;
+      if (!usePhonemize) {
+        vits.lexicon = './lexicon-en-us.txt';
+      }
       break;
     case 1:
       // matcha zh-en
@@ -1049,7 +1214,6 @@ function createOfflineTts(Module, myConfig) {
       matcha.vocoder = './vocos-16khz-univ.onnx';
       matcha.lexicon = './lexicon.txt';
       matcha.tokens = './tokens.txt';
-      matcha.dataDir = './espeak-ng-data';
       ruleFsts = './phone-zh.fst,./date-zh.fst,./number-zh.fst';
       break;
     case 2:
@@ -1067,7 +1231,10 @@ function createOfflineTts(Module, myConfig) {
       matcha.acousticModel = './model-steps-3.onnx';
       matcha.vocoder = './vocos-22khz-univ.onnx';
       matcha.tokens = './tokens.txt';
-      matcha.dataDir = './espeak-ng-data';
+      modelUsesPhonemize = usePhonemize;
+      if (!usePhonemize) {
+        matcha.lexicon = './lexicon-en-us.txt';
+      }
       break;
     case 4:
       // zipvoice zh-en
@@ -1076,7 +1243,6 @@ function createOfflineTts(Module, myConfig) {
       offlineTtsZipVoiceModelConfig.encoder = './encoder.int8.onnx';
       offlineTtsZipVoiceModelConfig.decoder = './decoder.int8.onnx';
       offlineTtsZipVoiceModelConfig.vocoder = './vocos_24khz.onnx';
-      offlineTtsZipVoiceModelConfig.dataDir = './espeak-ng-data';
       offlineTtsZipVoiceModelConfig.lexicon = './lexicon.txt';
       break;
     case 5:
@@ -1095,7 +1261,37 @@ function createOfflineTts(Module, myConfig) {
       offlineTtsKittenModelConfig.model = './model.onnx';
       offlineTtsKittenModelConfig.voices = './voices.bin';
       offlineTtsKittenModelConfig.tokens = './tokens.txt';
-      offlineTtsKittenModelConfig.dataDir = './espeak-ng-data';
+      modelUsesPhonemize = usePhonemize;
+      if (!usePhonemize) {
+        offlineTtsKittenModelConfig.lexicon = './lexicon-en-us.txt';
+      }
+      break;
+    case 7:
+      // SupertonicTTS (multilingual)
+      // https://k2-fsa.github.io/sherpa/onnx/tts/supertonic.html
+      offlineTtsSupertonicModelConfig.durationPredictor =
+          './duration_predictor.int8.onnx';
+      offlineTtsSupertonicModelConfig.textEncoder = './text_encoder.int8.onnx';
+      offlineTtsSupertonicModelConfig.vectorEstimator =
+          './vector_estimator.int8.onnx';
+      offlineTtsSupertonicModelConfig.vocoder = './vocoder.int8.onnx';
+      offlineTtsSupertonicModelConfig.ttsJson = './tts.json';
+      offlineTtsSupertonicModelConfig.unicodeIndexer =
+          './unicode_indexer.bin';
+      offlineTtsSupertonicModelConfig.voiceStyle = './voice.bin';
+      // Own text frontend (unicode indexer); not the phonemize/lexicon picker.
+      modelUsesPhonemize = false;
+      break;
+    case 8:
+      // kokoro-multi-lang-v1_0
+      // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/kokoro-multi-lang-v1_0.html
+      // Note: case 8, not 7. 7 is Supertonic's id and must stay unique.
+      offlineTtsKokoroModelConfig.model = './model.onnx';
+      offlineTtsKokoroModelConfig.voices = './voices.bin';
+      offlineTtsKokoroModelConfig.tokens = './tokens.txt';
+      // data_dir is ignored since v2.0.0; the lexicon below is the frontend.
+      offlineTtsKokoroModelConfig.lexicon = './lexicon-us-en.txt,./lexicon-zh.txt';
+      ruleFsts = './phone-zh.fst,./date-zh.fst,./number-zh.fst';
       break;
   }
 
@@ -1106,6 +1302,7 @@ function createOfflineTts(Module, myConfig) {
     offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
     offlineTtsZipVoiceModelConfig: offlineTtsZipVoiceModelConfig,
     offlineTtsPocketModelConfig: offlineTtsPocketModelConfig,
+    offlineTtsSupertonicModelConfig: offlineTtsSupertonicModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',

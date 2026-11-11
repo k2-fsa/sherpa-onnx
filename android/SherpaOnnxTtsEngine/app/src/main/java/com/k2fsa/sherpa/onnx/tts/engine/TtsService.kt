@@ -158,9 +158,19 @@ class TtsService : TextToSpeechService() {
         }
 
         Log.i(TAG, "text: $text")
+        val genConfig = GenerationConfig(sid = TtsEngine.speakerId, speed = engineSpeed)
+        var genText = text
+        if (TtsEngine.usePhonemize) {
+            // Phonemize outside of sherpa-onnx with piper-phonemize and pass
+            // the phoneme codepoints. The espeak-ng voice is taken from the
+            // model metadata.
+            genConfig.phonemeCodepoints = TtsEngine.phonemize(text)
+            // The text has already been phonemized; pass an empty string.
+            genText = ""
+        }
         tts.generateWithConfigAndCallback(
-            text = text,
-            config = GenerationConfig(sid = TtsEngine.speakerId, speed = engineSpeed),
+            text = genText,
+            config = genConfig,
             callback = ttsCallback,
         )
 

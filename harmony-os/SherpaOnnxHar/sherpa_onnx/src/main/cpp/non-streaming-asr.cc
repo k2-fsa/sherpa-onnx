@@ -1,12 +1,15 @@
 // scripts/node-addon-api/src/non-streaming-asr.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <algorithm>
 #include <memory>
 #include <sstream>
+#include <string>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
+#include "typed-array.h"  // NOLINT
 
 // defined in ./streaming-asr.cc
 SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj);
@@ -380,14 +383,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_BOOL(debug, debug);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
@@ -414,6 +410,24 @@ static SherpaOnnxOfflineLMConfig GetOfflineLMConfig(Napi::Object obj) {
   return c;
 }
 
+static SherpaOnnxOfflineCtcFstDecoderConfig GetOfflineCtcFstDecoderConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineCtcFstDecoderConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("ctcFstDecoderConfig") ||
+      !obj.Get("ctcFstDecoderConfig").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("ctcFstDecoderConfig").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(graph, graph);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active, maxActive);
+
+  return c;
+}
+
 static SherpaOnnxOfflineRecognizerConfig ParseConfig(Napi::Object o) {
   SherpaOnnxOfflineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
@@ -421,6 +435,7 @@ static SherpaOnnxOfflineRecognizerConfig ParseConfig(Napi::Object o) {
   c.model_config = GetOfflineModelConfig(o);
   c.lm_config = GetOfflineLMConfig(o);
   c.hr = GetHomophoneReplacerConfig(o);
+  c.ctc_fst_decoder_config = GetOfflineCtcFstDecoderConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(decoding_method, decodingMethod);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
@@ -509,6 +524,7 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
   SHERPA_ONNX_DELETE_C_STR(c.hr.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.hr.rule_fsts);
+  SHERPA_ONNX_DELETE_C_STR(c.ctc_fst_decoder_config.graph);
 }
 
 static Napi::External<SherpaOnnxOfflineRecognizer>
@@ -767,15 +783,8 @@ static void AcceptWaveformOfflineWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
 
-#if __OHOS__
-  // Note(fangjun): For unknown reasons on HarmonyOS, we need to divide it by
-  // sizeof(float) here
   SherpaOnnxAcceptWaveformOffline(stream, sample_rate, samples.Data(),
-                                  samples.ElementLength() / sizeof(float));
-#else
-  SherpaOnnxAcceptWaveformOffline(stream, sample_rate, samples.Data(),
-                                  samples.ElementLength());
-#endif
+                                  GetFloat32ArrayElementLength(samples));
 }
 
 static void OfflineStreamSetOptionWrapper(const Napi::CallbackInfo &info) {

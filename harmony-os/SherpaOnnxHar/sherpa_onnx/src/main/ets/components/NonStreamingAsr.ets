@@ -179,18 +179,24 @@ export class OfflineLMConfig {
   public scale: number = 1.0;
 }
 
+export class OfflineCtcFstDecoderConfig {
+  public graph: string = '';
+  public maxActive: number = 3000;
+}
+
 export class OfflineRecognizerConfig {
   public featConfig: FeatureConfig = new FeatureConfig();
   public modelConfig: OfflineModelConfig = new OfflineModelConfig();
   public lmConfig: OfflineLMConfig = new OfflineLMConfig();
   public decodingMethod: string = "greedy_search";
   public maxActivePaths: number = 4;
-  public hotwordsFfile: string = '';
+  public hotwordsFile: string = '';
   public hotwordsScore: number = 1.5;
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public blankPenalty: number = 0;
   public hr: HomophoneReplacerConfig = new HomophoneReplacerConfig();
+  public ctcFstDecoderConfig: OfflineCtcFstDecoderConfig = new OfflineCtcFstDecoderConfig();
 }
 
 export class OfflineRecognizerResult {

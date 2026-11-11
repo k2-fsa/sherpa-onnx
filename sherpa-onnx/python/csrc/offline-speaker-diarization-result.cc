@@ -15,6 +15,7 @@ static void PybindOfflineSpeakerDiarizationSegment(py::module *m) {
       .def_property_readonly("end", &PyClass::End)
       .def_property_readonly("duration", &PyClass::Duration)
       .def_property_readonly("speaker", &PyClass::Speaker)
+      .def_property_readonly("confidence", &PyClass::Confidence)
       .def_property("text", &PyClass::Text, &PyClass::SetText)
       .def("__str__", &PyClass::ToString);
 }

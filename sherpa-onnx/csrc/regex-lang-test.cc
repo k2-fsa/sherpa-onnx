@@ -22,7 +22,7 @@ static void TestLang(const std::string &expr, const std::string &text,
   auto end = std::wsregex_iterator();
   int32_t k = 0;
   for (std::wsregex_iterator i = begin; i != end; ++i) {
-    std::wsmatch match = *i;
+    const std::wsmatch &match = *i;
     std::wstring match_str = match.str();
     auto ms = ToString(match_str);
     std::cout << ms << "\n";

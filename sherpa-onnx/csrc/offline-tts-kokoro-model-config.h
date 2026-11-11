@@ -20,6 +20,9 @@ struct OfflineTtsKokoroModelConfig {
   // Example: lexicon = "./lexicon-gb-en.txt,./lexicon-zh.txt";
   std::string lexicon;
 
+  // Deprecated. Ignored since v2.0.0: espeak-ng is no longer used.
+  // Use lexicon for text input, or GenerationConfig.phoneme_codepoints /
+  // GenerationConfig.tokens with an external phonemizer instead.
   std::string data_dir;
 
   std::string dict_dir;

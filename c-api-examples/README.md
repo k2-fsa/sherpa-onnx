@@ -34,4 +34,19 @@ for details.
   DPDFNet models. Use `dpdfnet_baseline.onnx`, `dpdfnet2.onnx`,
   `dpdfnet4.onnx`, or `dpdfnet8.onnx` for 16 kHz output.
 
+- [speech-enhancement-voxlock-c-api.c](./speech-enhancement-voxlock-c-api.c)
+  This file shows how to use the C API for target-speaker voice isolation with
+  VoxLock.
+
+- [speech-enhancement-voxlock-with-voice-sample-c-api.c](./speech-enhancement-voxlock-with-voice-sample-c-api.c)
+  This file shows how to use the C API for VoxLock with a voice sample of the
+  speaker to keep.
+
+- [online-speech-enhancement-voxlock-c-api.c](./online-speech-enhancement-voxlock-c-api.c)
+  This file shows how to use the C API for online target-speaker voice
+  isolation with VoxLock.
+
+- [online-speech-enhancement-voxlock-with-voice-sample-c-api.c](./online-speech-enhancement-voxlock-with-voice-sample-c-api.c)
+  This file shows how to use the C API for online VoxLock with a voice sample.
+
 [sherpa-onnx]: https://github.com/k2-fsa/sherpa-onnx

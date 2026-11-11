@@ -8,6 +8,9 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
+
 echo "EXE is $EXE"
 echo "PATH: $PATH"
 
@@ -22,8 +25,7 @@ log "Start testing ${repo_url}"
 repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
 log "Download pretrained model and test-data from $repo_url"
-curl -SL -O $repo_url
-tar jxvf ${repo}.tar.bz
+download_and_extract "$repo_url"
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -36,7 +38,6 @@ time $EXE \
   $repo/test_wavs/3.wav $repo/test_wavs/4.wav $repo/test_wavs/5.wav $repo/test_wavs/6.wav
 
 rm -rf $repo
-rm -rf ${repo}.tar.bz
 
 log "------------------------------------------------------------"
 log "Run English keyword spotting (Gigaspeech）"
@@ -47,8 +48,7 @@ log "Start testing ${repo_url}"
 repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
 
 log "Download pretrained model and test-data from $repo_url"
-curl -SL -O $repo_url
-tar jxvf ${repo}.tar.bz
+download_and_extract "$repo_url"
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -61,4 +61,3 @@ time $EXE \
   $repo/test_wavs/0.wav $repo/test_wavs/1.wav
 
 rm -rf $repo
-rm -rf ${repo}.tar.bz

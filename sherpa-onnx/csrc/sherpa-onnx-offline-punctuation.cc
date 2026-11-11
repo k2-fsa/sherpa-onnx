@@ -24,7 +24,7 @@ rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
 ./bin/sherpa-onnx-offline-punctuation \
   --ct-transformer=./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.onnx
-  "你好吗how are you Fantasitic 谢谢我很好你怎么样呢"
+  "你好吗how are you Fantastic 谢谢我很好你怎么样呢"
 
 The output text should look like below:
 )usage";

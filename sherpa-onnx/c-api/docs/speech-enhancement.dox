@@ -2,7 +2,7 @@
 @page speech_enhancement Speech Enhancement / Denoising
 
 sherpa-onnx supports both offline and online speech enhancement with
-two model families: GTCRN and DPDFNet.
+three model families: GTCRN, DPDFNet and VoxLock.
 
 @see SherpaOnnxCreateOfflineSpeechDenoiser, SherpaOnnxCreateOnlineSpeechDenoiser
 
@@ -55,6 +55,42 @@ Model file: `dpdfnet_baseline.onnx` (also: `dpdfnet2.onnx`, `dpdfnet4.onnx`,
 
 Example source: [speech-enhancement-dpdfnet-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/speech-enhancement-dpdfnet-c-api.c)
 
+@section se_offline_voxlock Offline VoxLock
+
+VoxLock is a target-speaker voice isolation model: it keeps the voice of one
+speaker (the caller) and removes the other voices. The model is from
+https://github.com/arbazsiddiqui/voxlock
+
+@code
+SherpaOnnxOfflineSpeechDenoiserConfig config;
+memset(&config, 0, sizeof(config));
+config.model.voxlock.enroll_model = "./sherpa-onnx-voxlock-int8/enroll.onnx";
+config.model.voxlock.chunk_model = "./sherpa-onnx-voxlock-int8/chunk_int8.onnx";
+config.model.voxlock.voice_sample =
+    "./sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav"; /* optional */
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOfflineSpeechDenoiser *sd =
+    SherpaOnnxCreateOfflineSpeechDenoiser(&config);
+// ... use sd ...
+SherpaOnnxDestroyOfflineSpeechDenoiser(sd);
+@endcode
+
+Model files: `enroll.onnx` and `chunk.onnx` (or `chunk_int8.onnx`) from
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+
+`voice_sample` is optional: a wave file with at least 3 seconds of the
+caller's voice. From a longer file, the loudest 3 seconds within its first 30
+seconds are used; a file that is shorter or cannot be read is ignored. If it
+is empty or ignored, the offline denoiser uses the loudest 3 seconds in the
+first 15 seconds of the input, and the online denoiser passes the audio
+through unchanged until 3 seconds of speech have been heard, then uses that
+speech.
+
+Example source: [speech-enhancement-voxlock-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/speech-enhancement-voxlock-c-api.c),
+[speech-enhancement-voxlock-with-voice-sample-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/speech-enhancement-voxlock-with-voice-sample-c-api.c)
+
 @section se_online_gtcrn Online GTCRN
 
 @code
@@ -99,4 +135,27 @@ Model files: `dpdfnet_baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`,
 8 kHz; and `dpdfnet2_48khz_hr.onnx`, `dpdfnet8_48khz_hr.onnx` for 48 kHz.
 
 Example source: [online-speech-enhancement-dpdfnet-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/online-speech-enhancement-dpdfnet-c-api.c)
+
+@section se_online_voxlock Online VoxLock
+
+@code
+SherpaOnnxOnlineSpeechDenoiserConfig config;
+memset(&config, 0, sizeof(config));
+config.model.voxlock.enroll_model = "./sherpa-onnx-voxlock-int8/enroll.onnx";
+config.model.voxlock.chunk_model = "./sherpa-onnx-voxlock-int8/chunk_int8.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOnlineSpeechDenoiser *sd =
+    SherpaOnnxCreateOnlineSpeechDenoiser(&config);
+// ... feed audio in frame_shift chunks, then flush ...
+SherpaOnnxDestroyOnlineSpeechDenoiser(sd);
+@endcode
+
+Model files: `enroll.onnx` and `chunk.onnx` (or `chunk_int8.onnx`); see
+se_offline_voxlock for the optional `voice_sample` and for links to the
+models.
+
+Example source: [online-speech-enhancement-voxlock-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/online-speech-enhancement-voxlock-c-api.c),
+[online-speech-enhancement-voxlock-with-voice-sample-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/online-speech-enhancement-voxlock-with-voice-sample-c-api.c)
 */

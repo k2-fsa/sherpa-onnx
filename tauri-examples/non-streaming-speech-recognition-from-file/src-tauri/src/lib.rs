@@ -43,8 +43,8 @@ impl Default for VadSettings {
 
 #[derive(Serialize, Clone)]
 struct SegmentResult {
-    start: f32,
-    end: f32,
+    start: f64,
+    end: f64,
     text: String,
 }
 
@@ -128,12 +128,12 @@ fn recognize_segment(
     segments: &Arc<Mutex<Vec<SegmentResult>>>,
 ) {
     let samples = segment.samples();
-    let duration = samples.len() as f32 / 16000.0;
+    let duration = samples.len() as f64 / 16000.0;
     if duration < 0.1 {
         return;
     }
 
-    let start_time = segment.start() as f32 / 16000.0;
+    let start_time = segment.start() as f64 / 16000.0;
     let end_time = start_time + duration;
 
     let stream = recognizer.create_stream();
@@ -421,7 +421,7 @@ fn cancel_recognition(state: tauri::State<'_, AppState>) {
     state.cancelled.store(true, Ordering::Relaxed);
 }
 
-fn format_srt_time(seconds: f32) -> String {
+fn format_srt_time(seconds: f64) -> String {
     let total_ms = (seconds * 1000.0) as u64;
     let h = total_ms / 3_600_000;
     let m = (total_ms % 3_600_000) / 60_000;
@@ -490,7 +490,7 @@ fn write_wav(path: &str, samples: &[f32]) -> Result<(), String> {
 
 /// Decode audio from the file for a specific time range (in seconds at 16 kHz).
 /// Only decodes up to `end`, avoiding loading the entire file.
-fn decode_time_range(path: &str, start: f32, end: f32) -> Result<Vec<f32>, String> {
+fn decode_time_range(path: &str, start: f64, end: f64) -> Result<Vec<f32>, String> {
     let (mut format_reader, mut decoder, track_id, num_channels, native_rate) =
         open_audio_file(path)?;
 
@@ -577,8 +577,8 @@ fn decode_time_range(path: &str, start: f32, end: f32) -> Result<Vec<f32>, Strin
 #[tauri::command]
 fn save_segment_as_wav(
     path: String,
-    start: f32,
-    end: f32,
+    start: f64,
+    end: f64,
     state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
     let audio_path = state.audio_path.lock().map_err(|e| e.to_string())?;

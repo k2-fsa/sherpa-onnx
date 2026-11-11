@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -24,7 +25,7 @@ constexpr float kNegInf = -std::numeric_limits<float>::infinity();
 // Mutually exclusive decoding states
 // The expected token pattern is:
 //   <|0.00|> text text <|6.60|><|6.60|> text text <|12.00|> EOT
-enum class TimestampDecodingState {
+enum class TimestampDecodingState : std::uint8_t {
   kStart,           // num_sampled == 0: first token must be timestamp
   kAfterOpeningTs,  // last=TS, penult=TS: after opening or double TS, force
                     // text
@@ -44,7 +45,7 @@ struct TokenSequenceInfo {
 TokenSequenceInfo ExtractTokenSequenceInfo(const std::vector<int64_t> &tokens,
                                            int32_t sample_begin,
                                            int32_t timestamp_begin) {
-  TokenSequenceInfo info;
+  TokenSequenceInfo info = {};
   info.num_sampled = static_cast<int32_t>(tokens.size()) - sample_begin;
   info.last_was_timestamp =
       info.num_sampled >= 1 && tokens.back() >= timestamp_begin;
@@ -99,11 +100,11 @@ TimestampDecision DecideTimestampAction(TimestampDecodingState state,
                                         int32_t timestamp_begin,
                                         int32_t max_initial_timestamp_index) {
   // Declare all decision variables - must be set by every case
-  bool suppress_text;
-  bool suppress_timestamps;
-  bool suppress_eot;
-  int32_t max_timestamp;
-  bool check_probability_rule;
+  bool suppress_text = false;
+  bool suppress_timestamps = false;
+  bool suppress_eot = false;
+  int32_t max_timestamp = 0;
+  bool check_probability_rule = false;
 
   // Compute monotonicity constraint (cross-cutting concern, used by all cases)
   int32_t min_timestamp = -1;
@@ -291,9 +292,7 @@ std::vector<OfflineWhisperSegment> ParseTimestampTokens(
   OfflineWhisperSegment current_segment;
   bool in_segment = false;
 
-  for (size_t i = 0; i < tokens.size(); ++i) {
-    int32_t token = tokens[i];
-
+  for (int token : tokens) {
     if (token == eot) {
       // End of transcript - close any open segment
       if (in_segment && !current_segment.token_ids.empty()) {

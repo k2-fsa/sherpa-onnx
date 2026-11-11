@@ -51,8 +51,10 @@ static void PybindOfflineSpeakerSegmentationPyannoteModelConfig(py::module *m) {
   using PyClass = OfflineSpeakerSegmentationPyannoteModelConfig;
   py::class_<PyClass>(*m, "OfflineSpeakerSegmentationPyannoteModelConfig")
       .def(py::init<>())
-      .def(py::init<const std::string &>(), py::arg("model"))
+      .def(py::init<const std::string &, float>(), py::arg("model"),
+           py::arg("window_shift_ratio") = 0.1f)
       .def_readwrite("model", &PyClass::model)
+      .def_readwrite("window_shift_ratio", &PyClass::window_shift_ratio)
       .def("__str__", &PyClass::ToString)
       .def("validate", &PyClass::Validate);
 }

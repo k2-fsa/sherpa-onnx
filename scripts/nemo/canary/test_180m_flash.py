@@ -276,7 +276,7 @@ def main():
     eos = token2id["<|endoftext|>"]
 
     for i in range(1, 200):
-        decoder_input_ids = [tokens[-1], i]
+        decoder_input_ids = [tokens[-1], pos + i]
         logits, decoder_mems_list = model.run_decoder(
             np.array([decoder_input_ids], dtype=np.int32),
             decoder_mems_list,

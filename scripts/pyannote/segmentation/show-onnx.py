@@ -32,6 +32,9 @@ def show(filename):
     for i in sess.get_outputs():
         print(i)
 
+    meta = sess.get_modelmeta().custom_metadata_map
+    print(meta)
+
 
 def main():
     args = get_args()

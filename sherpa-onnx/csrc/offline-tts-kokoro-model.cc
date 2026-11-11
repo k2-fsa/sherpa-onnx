@@ -149,7 +149,10 @@ class OfflineTtsKokoroModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
+    // has_espeak is legacy metadata and is unused: espeak-ng is no longer
+    // used. Read optionally so models without the key still load.
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.has_espeak, "has_espeak",
+                                            1);
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
                                                 "en-us");
 

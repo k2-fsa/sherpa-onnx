@@ -24,7 +24,7 @@
 
 namespace sherpa_onnx {
 
-OfflineRecognitionResult ConvertSenseVoiceResult(
+inline OfflineRecognitionResult ConvertSenseVoiceResult(
     const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
     int32_t frame_shift_ms, int32_t subsampling_factor,
     bool is_funasr_nano = false) {
@@ -52,7 +52,7 @@ OfflineRecognitionResult ConvertSenseVoiceResult(
     r.timestamps.push_back(time);
   }
 
-  r.words = std::move(src.words);
+  r.words = src.words;
 
   if (!is_funasr_nano) {
     // parse lang, emotion and event from tokens.

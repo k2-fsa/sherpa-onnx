@@ -33,6 +33,10 @@ void QnnConfig::Register(ParseOptions *po) {
   po->Register("qnn-system-lib", &system_lib,
                "Required and used only when --qnn-context-binary is not empty "
                "and exists. You can leave it empty if you don't use qnn.");
+
+  po->Register("qnn-htp-perf-mode", &htp_perf_mode,
+               "True to pin the Qualcomm HTP to max clocks (DCVS v3 and RPC "
+               "polling). Off by default. Used only when provider is qnn.");
 }
 
 bool QnnConfig::Validate() const {
@@ -70,7 +74,8 @@ std::string QnnConfig::ToString() const {
   os << "QnnConfig(";
   os << "backend_lib=\"" << backend_lib << "\", ";
   os << "context_binary=\"" << context_binary << "\", ";
-  os << "system_lib=\"" << system_lib << "\")";
+  os << "system_lib=\"" << system_lib << "\", ";
+  os << "htp_perf_mode=" << (htp_perf_mode ? "True" : "False") << ")";
 
   return os.str();
 }

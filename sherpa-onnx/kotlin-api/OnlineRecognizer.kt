@@ -103,6 +103,7 @@ class OnlineRecognizer(
         require(ptr != 0L) {
             "Invalid OnlineRecognizerConfig: failed to create native OnlineRecognizer"
         }
+    }
 
     protected fun finalize() {
         if (ptr != 0L) {

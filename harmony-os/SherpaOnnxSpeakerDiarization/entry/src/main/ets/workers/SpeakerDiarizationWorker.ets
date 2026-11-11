@@ -32,6 +32,7 @@ function initOfflineSpeakerDiarization(context: Context): OfflineSpeakerDiarizat
   //
   // Also, please delete unused files to reduce the size of the app
   config.segmentation.pyannote.model = 'sherpa-onnx-pyannote-segmentation-3-0/model.int8.onnx';
+  config.segmentation.pyannote.windowShiftRatio = 0.1;
   config.segmentation.numThreads = 2;
   config.segmentation.debug = true;
 

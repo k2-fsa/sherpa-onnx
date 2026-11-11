@@ -9,6 +9,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -16,8 +17,10 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
   po->Register("zipvoice-tokens", &tokens,
                "Path to tokens.txt for ZipVoice models");
   po->Register("zipvoice-data-dir", &data_dir,
-               "Path to the directory containing dict for espeak-ng.");
-  po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt for Chinese");
+               "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. "
+               "Use --zipvoice-lexicon or "
+               "GenerationConfig.phoneme_codepoints instead.");
+  po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt");
   po->Register("zipvoice-encoder", &encoder, "Path to zipvoice text model");
   po->Register("zipvoice-decoder", &decoder,
                "Path to zipvoice flow-matching decoder model");
@@ -77,17 +80,21 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
   }
 
   if (!data_dir.empty()) {
-    std::vector<std::string> required_files = {
-        "phontab",
-        "phonindex",
-        "phondata",
-        "intonations",
-    };
-    for (const auto &f : required_files) {
-      if (!FileExists(data_dir + "/" + f)) {
+    SHERPA_ONNX_LOGE(
+        "WARNING: --zipvoice-data-dir is deprecated and ignored in "
+        "sherpa-onnx >= v2.0.0. Please use --zipvoice-lexicon or "
+        "GenerationConfig.phoneme_codepoints with an external "
+        "phonemizer (e.g. piper_phonemize) instead.");
+  }
+
+  if (!lexicon.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
         SHERPA_ONNX_LOGE(
-            "'%s/%s' does not exist. Please check zipvoice-data-dir",
-            data_dir.c_str(), f.c_str());
+            "lexicon '%s' does not exist. Please check --zipvoice-lexicon",
+            f.c_str());
         return false;
       }
     }

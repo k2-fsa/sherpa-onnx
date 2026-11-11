@@ -3,7 +3,6 @@
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/symbol-table.h"
-#include "sherpa-onnx/csrc/macros.h"
 
 #include <algorithm>
 #include <cassert>
@@ -13,6 +12,8 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+#include "sherpa-onnx/csrc/macros.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -120,7 +121,11 @@ std::unordered_map<std::string, int32_t> ReadTokens(
     std::istringstream iss(line);
     iss >> sym;
     if (iss.eof()) {
-      id = atoi(sym.c_str());
+      id = ToIntOrDefault(sym, -1);
+      if (id == -1) {
+        SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+        continue;
+      }
       sym = " ";
     } else {
       iss >> id;

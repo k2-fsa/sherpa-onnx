@@ -45,9 +45,8 @@ constexpr int64_t kDefaultAutoPromptId = 101;
 
 std::string StripQuotes(std::string s) {
   s = Trim(s);
-  if (s.size() >= 2 &&
-      ((s.front() == '"' && s.back() == '"') ||
-       (s.front() == '\'' && s.back() == '\''))) {
+  if (s.size() >= 2 && ((s.front() == '"' && s.back() == '"') ||
+                        (s.front() == '\'' && s.back() == '\''))) {
     return s.substr(1, s.size() - 2);
   }
   return s;
@@ -75,7 +74,7 @@ void AddLanguagePromptId(
   }
 
   if (language_prompt_ids->emplace(normalized, prompt_id).second) {
-    ordered_prompt_ids->push_back({normalized, prompt_id});
+    ordered_prompt_ids->emplace_back(normalized, prompt_id);
   }
 }
 
@@ -517,8 +516,8 @@ class OnlineTransducerNeMoModel::Impl {
 
   void InitLanguagePromptIds(const Ort::ModelMetadata &meta_data,
                              OrtAllocator *allocator) {
-    auto dict = LookupCustomModelMetaData(meta_data, "prompt_dictionary",
-                                          allocator);
+    auto dict =
+        LookupCustomModelMetaData(meta_data, "prompt_dictionary", allocator);
     if (!dict.empty()) {
       ParseLanguagePromptDictionary(dict, &language_prompt_ids_,
                                     &ordered_prompt_ids_);
@@ -552,8 +551,7 @@ class OnlineTransducerNeMoModel::Impl {
   }
 
   void InitEncoderStates() {
-    std::array<int64_t, 4> cache_last_channel_shape{1,
-                                                    cache_last_channel_dim1_,
+    std::array<int64_t, 4> cache_last_channel_shape{1, cache_last_channel_dim1_,
                                                     cache_last_channel_dim2_,
                                                     cache_last_channel_dim3_};
 

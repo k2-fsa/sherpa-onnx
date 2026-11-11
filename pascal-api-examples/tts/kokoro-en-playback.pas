@@ -118,7 +118,7 @@ begin
   Config.Model.Kokoro.Model := './kokoro-en-v0_19/model.onnx';
   Config.Model.Kokoro.Voices := './kokoro-en-v0_19/voices.bin';
   Config.Model.Kokoro.Tokens := './kokoro-en-v0_19/tokens.txt';
-  Config.Model.Kokoro.DataDir := './kokoro-en-v0_19/espeak-ng-data';
+  Config.Model.Kokoro.Lexicon := './lexicon-en-us.txt';
   Config.Model.NumThreads := 2;
   Config.Model.Debug := False;
   Config.MaxNumSentences := 1;

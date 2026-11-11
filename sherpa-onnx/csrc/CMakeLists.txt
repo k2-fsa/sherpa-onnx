@@ -120,6 +120,7 @@ set(sources
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
+  online-transducer-modified-beam-search-nemo-decoder.cc
   online-transducer-nemo-parakeet-unified-model.cc
   online-transducer-nemo-model.cc
   online-wenet-ctc-model-config.cc
@@ -288,9 +289,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     character-lexicon.cc
     hifigan-vocoder.cc
-    kokoro-multi-lang-lexicon.cc
     lexicon.cc
-    matcha-tts-lexicon.cc
     melo-tts-lexicon.cc
     offline-tts-character-frontend.cc
     offline-tts-frontend.cc
@@ -313,8 +312,8 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-zipvoice-model-config.cc
     offline-tts-zipvoice-model.cc
     offline-tts.cc
-    piper-phonemize-lexicon.cc
     sentence-piece-tokenizer.cc
+    tts-text-normalizer.cc
     vocoder.cc
     vocos-vocoder.cc
   )
@@ -327,6 +326,8 @@ list(APPEND sources
   offline-speech-denoiser-gtcrn-model.cc
   offline-speech-denoiser-impl.cc
   offline-speech-denoiser-model-config.cc
+  offline-speech-denoiser-voxlock-model-config.cc
+  offline-speech-denoiser-voxlock-model.cc
   offline-speech-denoiser.cc
   online-speech-denoiser-impl.cc
   online-speech-denoiser.cc
@@ -384,12 +385,13 @@ if(APPLE)
   )
 endif()
 
-if(ANDROID_NDK)
+if(ANDROID)
   target_link_libraries(sherpa-onnx-core android log)
 endif()
 
 target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
+  utf8proc
   kaldi-decoder-core
   ssentencepiece_core
 )
@@ -475,11 +477,6 @@ if(NOT BUILD_SHARED_LIBS AND APPLE)
 endif()
 
 target_link_libraries(sherpa-onnx-core fstfar fst)
-
-if(SHERPA_ONNX_ENABLE_TTS)
-  target_link_libraries(sherpa-onnx-core
-    piper_phonemize)
-endif()
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
@@ -830,10 +827,22 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     lfr-test.cc
     math-test.cc
+    offline-recognizer-canary-impl-test.cc
+    offline-recognizer-cohere-transcribe-impl-test.cc
+    offline-recognizer-ctc-impl-test.cc
+    offline-recognizer-funasr-nano-impl-test.cc
+    offline-recognizer-moonshine-v2-impl-test.cc
+    offline-recognizer-qwen3-asr-impl-test.cc
+    offline-recognizer-shared-rng-test.cc
+    offline-recognizer-transducer-impl-test.cc
     offline-stream-test.cc
+    offline-whisper-language-candidates-test.cc
     offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
+    online-recognizer-result-test.cc
+    online-recognizer-transducer-impl-test.cc
+    recognizer-result-json-test.cc
     regex-lang-test.cc
     session-test.cc
     slice-test.cc
@@ -848,7 +857,6 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
       sentence-piece-tokenizer-test.cc
-      piper-phonemize-test.cc
       offline-tts-supertonic-unicode-processor-test.cc
     )
   endif()
@@ -890,6 +898,41 @@ set(srcs_to_check)
 foreach(s IN LISTS sources)
   list(APPEND srcs_to_check ${CMAKE_CURRENT_LIST_DIR}/${s})
 endforeach()
+
+# CI spreads clang-tidy across parallel jobs: configure with e.g.
+#   -DSHERPA_ONNX_TIDY_SHARD=2/6
+# to check only the 2nd of every 6 files (round-robin, so all shards cost
+# about the same). Without this variable every file is checked, as before.
+if(SHERPA_ONNX_TIDY_SHARD)
+  string(REPLACE "/" ";" _shard "${SHERPA_ONNX_TIDY_SHARD}")
+  list(LENGTH _shard _shard_len)
+  if(_shard_len LESS 2)
+    message(FATAL_ERROR
+      "SHERPA_ONNX_TIDY_SHARD must look like i/n with 1 <= i <= n, e.g. 2/6")
+  endif()
+  list(GET _shard 0 _shard_index)
+  list(GET _shard 1 _shard_count)
+  if(NOT _shard_index MATCHES "^[0-9]+$" OR
+     NOT _shard_count MATCHES "^[0-9]+$" OR _shard_count LESS 1 OR
+     _shard_index LESS 1 OR _shard_index GREATER _shard_count)
+    message(FATAL_ERROR
+      "SHERPA_ONNX_TIDY_SHARD must look like i/n with 1 <= i <= n, e.g. 2/6")
+  endif()
+  math(EXPR _shard_want "${_shard_index} - 1")
+  set(_sharded_srcs)
+  set(_i 0)
+  foreach(s IN LISTS srcs_to_check)
+    math(EXPR _rem "${_i} % ${_shard_count}")
+    if(_rem EQUAL ${_shard_want})
+      list(APPEND _sharded_srcs ${s})
+    endif()
+    math(EXPR _i "${_i} + 1")
+  endforeach()
+  set(srcs_to_check ${_sharded_srcs})
+  list(LENGTH srcs_to_check _shard_size)
+  message(STATUS
+    "clang-tidy shard ${SHERPA_ONNX_TIDY_SHARD}: checking ${_shard_size} files")
+endif()
 
 # For clang-tidy
 add_custom_target(

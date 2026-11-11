@@ -6,7 +6,7 @@
 
 #include "sherpa-onnx/c-api/cxx-api.h"
 
-auto main() -> int {
+int32_t main() {
   std::cout << "sherpa-onnx version : " << sherpa_onnx::cxx::GetVersionStr()
             << "\n";
   std::cout << "sherpa-onnx Git SHA1: " << sherpa_onnx::cxx::GetGitSha1()

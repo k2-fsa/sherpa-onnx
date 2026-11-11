@@ -42,13 +42,18 @@ def is_arm64():
     return platform.machine() in ["arm64", "aarch64"]
 
 
+def is_arm32():
+    # armv8l is a 32-bit armv7 userland running on an aarch64 kernel
+    return platform.machine() in ["arm", "armv7l", "armv8l"]
+
+
 def is_x86():
     return platform.machine() in ["i386", "i686", "x86_64"]
 
 
 def enable_alsa():
     build_alsa = os.environ.get("SHERPA_ONNX_ENABLE_ALSA", None)
-    return build_alsa and is_linux() and (is_arm64() or is_x86())
+    return build_alsa and is_linux() and (is_arm64() or is_arm32() or is_x86())
 
 
 def get_binaries():
@@ -154,10 +159,6 @@ class BuildExtension(build_ext):
         if not need_split_package():
             extra_cmake_args += f" -DCMAKE_INSTALL_PREFIX={install_dir} "
         extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
-        extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_EXE=OFF "
-        extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_TESTS=OFF "
-        extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "
-        extra_cmake_args += " -DBUILD_ESPEAK_NG_TESTS=OFF "
 
         if not need_split_package():
             extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=ON "
@@ -344,6 +345,11 @@ class BuildExtension(build_ext):
 
         binaries = get_binaries()
 
+        # setup.py creates this directory only when it also installs binaries,
+        # i.e., not when SHERPA_ONNX_ENABLE_BINARY=OFF. The DLLs below are
+        # copied regardless, so make sure the destination exists.
+        os.makedirs(out_bin_dir, exist_ok=True)
+
         for f in binaries:
             suffix = "" if ".dll" in f else suffix
             src_file = install_dir / "bin" / (f + suffix)
@@ -356,7 +362,7 @@ class BuildExtension(build_ext):
                 continue
 
             print(f"Copying {src_file} to {out_bin_dir}/")
-            shutil.copy(f"{src_file}", f"{out_bin_dir}/")
+            shutil.copy(f"{src_file}", f"{out_bin_dir}")
 
         if Path(f"{install_dir}/bin").is_dir():
             shutil.rmtree(f"{install_dir}/bin")

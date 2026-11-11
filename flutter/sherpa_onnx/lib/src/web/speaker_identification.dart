@@ -15,7 +15,6 @@ export '../speaker_identification_config.dart';
 /// dimensional embedding suitable for search or verification.
 class SpeakerEmbeddingExtractor {
   SpeakerEmbeddingExtractor.fromPtr({required this.ptr, required this.dim});
-  SpeakerEmbeddingExtractor._({required this.ptr, required this.dim});
 
   factory SpeakerEmbeddingExtractor(
       {required SpeakerEmbeddingExtractorConfig config}) {
@@ -41,7 +40,6 @@ class SpeakerEmbeddingExtractor {
 /// identity.
 class SpeakerEmbeddingManager {
   SpeakerEmbeddingManager.fromPtr({required this.ptr, required this.dim});
-  SpeakerEmbeddingManager._({required this.ptr, required this.dim});
 
   factory SpeakerEmbeddingManager(int dim) {
     throw UnsupportedError(

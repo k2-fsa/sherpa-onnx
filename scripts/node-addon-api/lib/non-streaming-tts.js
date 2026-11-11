@@ -44,6 +44,7 @@ class OfflineTts {
     // Common initialization
     this.numSpeakers = addon.getOfflineTtsNumSpeakers(this.handle);
     this.sampleRate = addon.getOfflineTtsSampleRate(this.handle);
+    this.lang = addon.getOfflineTtsLang(this.handle);
   }
 
   /**

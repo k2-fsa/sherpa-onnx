@@ -26,28 +26,28 @@ public class DecoderThreadHandler extends Thread {
   // the mapping between websocket and connection data
   private ConcurrentHashMap<WebSocket, ConnectionData> connMap;
 
-  private OnlineRecognizer rcgOjb = null; // recgnizer object
+  private OnlineRecognizer rcgObj = null; // recognizer object
 
   // connection data list for this thread to decode in parallel
   private List<ConnectionData> connDataList = new ArrayList<ConnectionData>();
 
   private int parallelDecoderNum = 10; // parallel decoding number
-  private int deocderTimeIdle = 10; // idle time(ms) when no job
-  private int deocderTimeOut = 3000; // if it is timeout(ms), the connection data will be removed
+  private int decoderTimeIdle = 10; // idle time(ms) when no job
+  private int decoderTimeOut = 3000; // if it is timeout(ms), the connection data will be removed
 
   public DecoderThreadHandler(
       LinkedBlockingQueue<WebSocket> decoderQueue,
       ConcurrentHashMap<WebSocket, ConnectionData> connMap,
-      OnlineRecognizer rcgOjb,
-      int deocderTimeIdle,
+      OnlineRecognizer rcgObj,
+      int decoderTimeIdle,
       int parallelDecoderNum,
-      int deocderTimeOut) {
+      int decoderTimeOut) {
     this.decoderQueue = decoderQueue;
     this.connMap = connMap;
-    this.rcgOjb = rcgOjb;
-    this.deocderTimeIdle = deocderTimeIdle;
+    this.rcgObj = rcgObj;
+    this.decoderTimeIdle = decoderTimeIdle;
     this.parallelDecoderNum = parallelDecoderNum;
-    this.deocderTimeOut = deocderTimeOut;
+    this.decoderTimeOut = decoderTimeOut;
   }
 
   public void run() {
@@ -55,10 +55,10 @@ public class DecoderThreadHandler extends Thread {
       try {
         // time(ms) idle  if there is no job
 
-        Thread.sleep(deocderTimeIdle);
+        Thread.sleep(decoderTimeIdle);
         // clear data list for this threads
         connDataList.clear();
-        if (rcgOjb == null) continue;
+        if (rcgObj == null) continue;
 
         // loop for total decoder Queue
         while (!decoderQueue.isEmpty()) {
@@ -75,7 +75,7 @@ public class DecoderThreadHandler extends Thread {
 
           // put to decoder list if 1) stream is ready; 2) and
           // size not > parallelDecoderNum
-          if ((rcgOjb.isReady(stream) && connDataList.size() < parallelDecoderNum)) {
+          if ((rcgObj.isReady(stream) && connDataList.size() < parallelDecoderNum)) {
 
             // add to this thread's decoder list
             connDataList.add(connData);
@@ -99,7 +99,7 @@ public class DecoderThreadHandler extends Thread {
           }
 
           // parallel decoding
-          rcgOjb.decodeStreams(arr);
+          rcgObj.decodeStreams(arr);
         }
 
         // get result for each connection
@@ -108,12 +108,12 @@ public class DecoderThreadHandler extends Thread {
           OnlineStream stream = connData.getStream();
           WebSocket webSocket = connData.getWebSocket();
 
-          String txtResult = rcgOjb.getResult(stream);
+          String txtResult = rcgObj.getResult(stream);
 
           // decode text in utf-8
           byte[] utf8Data = txtResult.getBytes(StandardCharsets.UTF_8);
 
-          boolean isEof = (connData.getEof() == true && !rcgOjb.isReady(stream));
+          boolean isEof = (connData.getEof() == true && !rcgObj.isReady(stream));
           // result
           if (utf8Data.length > 0) {
 
@@ -135,7 +135,7 @@ public class DecoderThreadHandler extends Thread {
           OnlineStream stream = connData.getStream();
           WebSocket webSocket = connData.getWebSocket();
           // if the stream is still ready, put it to decoder Queue again for next decoding
-          if (rcgOjb.isReady(stream)) {
+          if (rcgObj.isReady(stream)) {
             decoderQueue.put(webSocket);
           }
           // the duration between last handled time and now
@@ -145,9 +145,9 @@ public class DecoderThreadHandler extends Thread {
           // 3) or
           // connection is closed
           if ((connData.getEof() == true
-                  && !rcgOjb.isReady(stream)
+                  && !rcgObj.isReady(stream)
                   && connData.getQueueSamples().isEmpty())
-              || duration.toMillis() > deocderTimeOut
+              || duration.toMillis() > decoderTimeOut
               || !connData.getWebSocket().isOpen()) {
 
             logger.info("close websocket!!!");

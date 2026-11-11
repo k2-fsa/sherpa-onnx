@@ -13,6 +13,8 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-pip
 tar xf vits-piper-en_US-lessac-medium.tar.bz2
 rm vits-piper-en_US-lessac-medium.tar.bz2
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 ./offline-tts-piper-cxx-api
 
  */
@@ -39,8 +41,7 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.vits.model =
       "./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx";
   config.model.vits.tokens = "./vits-piper-en_US-lessac-medium/tokens.txt";
-  config.model.vits.data_dir =
-      "./vits-piper-en_US-lessac-medium/espeak-ng-data";
+  config.model.vits.lexicon = "./lexicon-en-us.txt";
 
   config.model.num_threads = 1;
 

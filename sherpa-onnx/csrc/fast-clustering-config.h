@@ -24,10 +24,17 @@ struct FastClusteringConfig {
   // The larger, the fewer clusters it will generate.
   float threshold = 0.5;
 
+  // When true, we compute the confidence value for every clustered
+  // embedding and surface it on each returned diarization segment.
+  bool compute_confidence = false;
+
   FastClusteringConfig() = default;
 
-  FastClusteringConfig(int32_t num_clusters, float threshold)
-      : num_clusters(num_clusters), threshold(threshold) {}
+  FastClusteringConfig(int32_t num_clusters, float threshold,
+                       bool compute_confidence = false)
+      : num_clusters(num_clusters),
+        threshold(threshold),
+        compute_confidence(compute_confidence) {}
 
   std::string ToString() const;
 

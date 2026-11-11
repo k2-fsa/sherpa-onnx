@@ -11,7 +11,6 @@ export '../offline_speech_denoiser_config.dart';
 /// Offline speech denoiser.
 class OfflineSpeechDenoiser {
   OfflineSpeechDenoiser.fromPtr({required this.ptr, required this.config});
-  OfflineSpeechDenoiser._({required this.ptr, required this.config});
 
   factory OfflineSpeechDenoiser(OfflineSpeechDenoiserConfig config) {
     throw UnsupportedError(

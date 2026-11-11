@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - vad-flutter
 
   workflow_dispatch:
 
@@ -51,7 +50,17 @@ jobs:
           dart --version
           flutter doctor
 
+      - name: Cache xcframework
+        id: cache-xcframework
+        uses: actions/cache@v4
+        with:
+          path: build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework
+          key: macos-xcframework-${{ hashFiles('build-macos-shared-sherpa-with-static-onnxruntime.sh', 'CMakeLists.txt') }}
+          restore-keys: |
+            macos-xcframework-
+
       - name: Build xcframework from source
+        if: steps.cache-xcframework.outputs.cache-hit != 'true'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -61,14 +70,14 @@ jobs:
       - name: Copy xcframework
         shell: bash
         run: |
-          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework
-          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/SherpaOnnxC.xcframework/
+          cp -av build-macos-shared-sherpa-with-static-onnxruntime/sherpa-onnx.xcframework flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa-onnx.xcframework
+          ls -lh flutter/sherpa_onnx_macos/macos/sherpa_onnx_macos/sherpa-onnx.xcframework/
 
       - name: Use local sherpa_onnx_macos
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_macos: ^1.13.4|  # sherpa_onnx_macos: ^1.13.4\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_macos: 2.0.1|  # sherpa_onnx_macos: 2.0.1\n  sherpa_onnx_macos:\n    path: ../sherpa_onnx_macos|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -76,7 +85,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4|' pubspec.yaml
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: 2.0.1|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
       - name: Copy LICENSE for sherpa_onnx_macos podspec
@@ -99,19 +108,17 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}
 
-          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter config --no-enable-swift-package-manager
           flutter pub get
           cd macos && pod install && cd ..
-
-      - name: Build Flutter app
-        shell: bash
-        run: |
-          cd flutter-examples/${{ matrix.demo }}
-          export CODE_SIGNING_ALLOWED=NO
+          if [ "${{ matrix.demo }}" = "vad-from-file" ]; then
+            # Disable code signing for vad-from-file (CI has no dev certificate, ffmpeg frameworks are unsigned)
+            sed -i.bak 's/CODE_SIGN_IDENTITY = "-";/CODE_SIGN_IDENTITY = "-";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;/' macos/Runner.xcodeproj/project.pbxproj
+            rm -f macos/Runner.xcodeproj/project.pbxproj.bak
+          fi
           flutter build macos
 
           ls -lh build/macos/Build/Products/Release/
@@ -120,15 +127,22 @@ jobs:
         shell: bash
         run: |
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          codesign --force --deep -s - flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
-          xattr -cr flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          app_path=flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/${app_name}.app
+          .github/scripts/flutter/sign_macos_app.sh "$app_path"
+
+      - name: Setup tmate session
+        # if: true
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
 
       - name: Zip app
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/macos/Build/Products/Release/
           app_name=$(echo ${{ matrix.demo }} | tr '-' '_')
-          zip -r flutter-${{ matrix.demo }}-macos.zip ${app_name}.app/
+          # Rename the bundle so the extracted app carries the demo name.
+          mv ${app_name}.app ${{ matrix.demo }}.app
+          zip -r -y flutter-${{ matrix.demo }}-macos.zip ${{ matrix.demo }}.app/
           ls -lh flutter-${{ matrix.demo }}-macos.zip
 
       - name: Release 
@@ -203,7 +217,6 @@ jobs:
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-            -DBUILD_ESPEAK_NG_EXE=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
@@ -224,7 +237,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_linux: ^1.13.4|  # sherpa_onnx_linux: ^1.13.4\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_linux: 2.0.1|  # sherpa_onnx_linux: 2.0.1\n  sherpa_onnx_linux:\n    path: ../sherpa_onnx_linux|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -232,7 +245,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4|' pubspec.yaml
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: 2.0.1|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
       - name: Download model
@@ -245,13 +258,18 @@ jobs:
           cd ..
           ./generate-asset-list.py
 
+      - name: Install libmpv (Linux)
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmpv-dev
+
       - name: Build Flutter app
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}
 
-          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -263,7 +281,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/linux/*/release/
-          zip -r flutter-${{ matrix.demo }}-linux-x64.zip bundle/
+          # Rename the bundle dir so the extracted folder carries the demo name.
+          mv bundle ${{ matrix.demo }}
+          zip -r -y flutter-${{ matrix.demo }}-linux-x64.zip ${{ matrix.demo }}/
           ls -lh flutter-${{ matrix.demo }}-linux-x64.zip
 
       - name: Release
@@ -325,7 +345,6 @@ jobs:
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-            -DBUILD_ESPEAK_NG_EXE=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
@@ -334,14 +353,14 @@ jobs:
       - name: Copy libs
         shell: bash
         run: |
-          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/
-          ls -lh ./flutter/sherpa_onnx_windows/windows/
+          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_windows/windows/x64/
+          ls -lh ./flutter/sherpa_onnx_windows/windows/x64/
 
       - name: Use local sherpa_onnx_windows
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  sherpa_onnx_windows: ^1.13.4|  # sherpa_onnx_windows: ^1.13.4\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
+          sed -i.bak 's|  sherpa_onnx_windows: 2.0.1|  # sherpa_onnx_windows: 2.0.1\n  sherpa_onnx_windows:\n    path: ../sherpa_onnx_windows|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -349,7 +368,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4|' pubspec.yaml
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: 2.0.1|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
       - name: Download model
@@ -367,8 +386,7 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}
 
-          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -380,7 +398,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/windows/x64/runner/
-          powershell -Command "Compress-Archive -Path Release -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip"
+          # Rename the folder so the extracted app carries the demo name.
+          mv Release ${{ matrix.demo }}
+          powershell -Command "Compress-Archive -Path ${{ matrix.demo }} -DestinationPath flutter-${{ matrix.demo }}-win-x64.zip"
           ls -lh flutter-${{ matrix.demo }}-win-x64.zip
 
       - name: Release
@@ -484,7 +504,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|  ${{ matrix.plugin_key }}: ^1.13.4|  # ${{ matrix.plugin_key }}: ^1.13.4\n  ${{ matrix.plugin_key }}:\n    path: ../${{ matrix.plugin }}|' pubspec.yaml
+          sed -i.bak 's|  ${{ matrix.plugin_key }}: 2.0.1|  # ${{ matrix.plugin_key }}: 2.0.1\n  ${{ matrix.plugin_key }}:\n    path: ../${{ matrix.plugin }}|' pubspec.yaml
           rm -f pubspec.yaml.bak
           cat pubspec.yaml
 
@@ -503,8 +523,7 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}
 
-          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -598,8 +617,7 @@ jobs:
         shell: bash
         run: |
           cd flutter/sherpa_onnx
-          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: ^1.13.4\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx_web: 1.13.4$|sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
+          sed -i.bak 's|^  sherpa_onnx_web:.*|  # sherpa_onnx_web: 2.0.1\n  sherpa_onnx_web:\n    path: ../sherpa_onnx_web|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
       - name: Build Flutter web app
@@ -607,8 +625,7 @@ jobs:
         run: |
           cd flutter-examples/${{ matrix.demo }}
 
-          sed -i.bak 's|sherpa_onnx: ^1.13.4|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
-          sed -i.bak 's|sherpa_onnx: 1.13.4$|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
+          sed -i.bak 's|sherpa_onnx: 2.0.1|sherpa_onnx:\n    path: ../../flutter/sherpa_onnx|' pubspec.yaml
           rm -f pubspec.yaml.bak
 
           flutter pub get
@@ -620,9 +637,9 @@ jobs:
         shell: bash
         run: |
           cd flutter-examples/${{ matrix.demo }}/build/
-          mv web flutter-${{ matrix.demo }}
-          zip -r flutter-${{ matrix.demo }}.zip flutter-${{ matrix.demo }}/
-          ls -lh flutter-${{ matrix.demo }}.zip
+          mv web flutter-${{ matrix.demo }}-web
+          zip -r -y flutter-${{ matrix.demo }}-web.zip flutter-${{ matrix.demo }}-web/
+          ls -lh flutter-${{ matrix.demo }}-web.zip
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -630,7 +647,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}.zip
+          file: ./flutter-examples/${{ matrix.demo }}/build/flutter-${{ matrix.demo }}-web.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: flutter

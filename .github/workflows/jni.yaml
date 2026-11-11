@@ -78,3 +78,29 @@ jobs:
         with:
           name: tts-files-${{ matrix.os }}
           path: kotlin-api-examples/test-*.wav
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-denoiser-voxlock-${{ matrix.os }}
+          # run.sh keeps the input and output wavs of each test in a folder
+          # named after the test file
+          path: kotlin-api-examples/test_offline_speech_denoiser_voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-denoiser-voxlock-with-voice-sample-${{ matrix.os }}
+          path: kotlin-api-examples/test_offline_speech_denoiser_voxlock_with_voice_sample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-denoiser-voxlock-${{ matrix.os }}
+          path: kotlin-api-examples/test_online_speech_denoiser_voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-denoiser-voxlock-with-voice-sample-${{ matrix.os }}
+          path: kotlin-api-examples/test_online_speech_denoiser_voxlock_with_voice_sample
+          if-no-files-found: warn

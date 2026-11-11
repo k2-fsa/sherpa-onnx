@@ -20,8 +20,8 @@ var
   WindowSize: Integer;
   SpeechSegment: TSherpaOnnxSpeechSegment;
 
-  Start: Single;
-  Duration: Single;
+  Start: Double;
+  Duration: Double;
   SampleRate: Integer;
 
   AllSpeechSegment: array of TSherpaOnnxSpeechSegment;

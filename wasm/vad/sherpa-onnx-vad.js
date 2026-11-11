@@ -216,8 +216,10 @@ class CircularBuffer {
   }
 
   get(startIndex, n) {
-    const p =
-        this.Module._SherpaOnnxCircularBufferGet(this.handle, startIndex, n);
+    // start_index is int64_t in the C API. The wasm build uses
+    // -sWASM_BIGINT=1, so it must be passed as a BigInt.
+    const p = this.Module._SherpaOnnxCircularBufferGet(
+        this.handle, BigInt(startIndex), n);
 
     const samplesPtr = p / 4;
     const samples = new Float32Array(n);
@@ -239,7 +241,8 @@ class CircularBuffer {
   }
 
   head() {
-    return this.Module._SherpaOnnxCircularBufferHead(this.handle);
+    // int64_t return value; BigInt under -sWASM_BIGINT=1.
+    return Number(this.Module._SherpaOnnxCircularBufferHead(this.handle));
   }
 
   reset() {
@@ -294,15 +297,27 @@ class Vad {
   /*
 {
   samples: a 1-d float32 array,
-  start: an int32
+  start: a number (int64 sample index; exact up to 2^53)
 }
    */
   front() {
     const h = this.Module._SherpaOnnxVoiceActivityDetectorFront(this.handle);
 
-    const start = this.Module.HEAP32[h / 4];
-    const samplesPtr = this.Module.HEAP32[h / 4 + 1] / 4;
-    const numSamples = this.Module.HEAP32[h / 4 + 2];
+    // SherpaOnnxSpeechSegment layout (wasm32):
+    //   int64_t start  at byte 0   (HEAP32 words 0 and 1)
+    //   float  *samples at byte 8  (HEAP32 word 2)
+    //   int32_t n      at byte 12  (HEAP32 word 3)
+    //
+    // Rebuild the 64-bit `start` from its two little-endian 32-bit heap halves:
+    //   value = high * 2^32 + low, where 2^32 = 4294967296 = 0x100000000.
+    // `>>> 0` reads the low half unsigned (HEAP32 is signed).
+    // A JS Number is an IEEE754 double and holds integers exactly up to 2^53,
+    // i.e. ~17,800 years of 16 kHz samples, so no BigInt is needed here.
+    const startLo = this.Module.HEAP32[h / 4] >>> 0;
+    const startHi = this.Module.HEAP32[h / 4 + 1];
+    const start = startHi * 4294967296 /* 2^32 */ + startLo;
+    const samplesPtr = this.Module.HEAP32[h / 4 + 2] / 4;
+    const numSamples = this.Module.HEAP32[h / 4 + 3];
 
     const samples = new Float32Array(numSamples);
     for (let i = 0; i < numSamples; i++) {

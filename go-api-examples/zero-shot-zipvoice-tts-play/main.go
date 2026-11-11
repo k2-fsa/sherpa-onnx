@@ -13,7 +13,7 @@ import (
 	"time"
 
 	oto "github.com/ebitengine/oto/v3"
-	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
+	sherpa "github.com/k2-fsa/sherpa-onnx-go/v2/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 )
 
@@ -110,10 +110,8 @@ func main() {
 		"./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx"
 	config.Model.Zipvoice.Decoder =
 		"./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx"
-	config.Model.Zipvoice.DataDir =
-		"./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data"
 	config.Model.Zipvoice.Lexicon =
-		"./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt"
+		"./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt,./lexicon-en-us.txt"
 	config.Model.Zipvoice.Tokens =
 		"./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt"
 	config.Model.Zipvoice.Vocoder = "./vocos_24khz.onnx"

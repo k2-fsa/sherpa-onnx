@@ -31,7 +31,7 @@ int32_t main() {
     return -1;
   }
 
-  std::string text = "你好吗how are you Fantasitic 谢谢我很好你怎么样呢";
+  std::string text = "你好吗how are you Fantastic 谢谢我很好你怎么样呢";
   std::string text_with_punct = punct.AddPunctuation(text);
   std::cout << "Original text: " << text << std::endl;
   std::cout << "With punctuation: " << text_with_punct << std::endl;

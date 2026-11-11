@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.k2-fsa:sherpa-onnx:refactor-jar-SNAPSHOT'
+    implementation 'com.github.k2-fsa:sherpa-onnx:v2.0.1'
 }
 ```
 
@@ -40,10 +40,10 @@ repositories {
 
 dependencies {
     // 1. JVM core API
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:refactor-jar-SNAPSHOT'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v2.0.1'
 
     // 2. Platform native lib — pick ONE for your target platform
-    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:refactor-jar-SNAPSHOT'
+    implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-osx-aarch64:v2.0.1'
 }
 ```
 

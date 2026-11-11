@@ -57,8 +57,20 @@ class OfflineTtsImpl {
   // If it supports only a single speaker, then it return 0 or 1.
   virtual int32_t NumSpeakers() const { return 1; }
 
+  // Language/voice of the model, e.g., "en-us". Empty if not available.
+  virtual std::string Lang() const { return ""; }
+
   std::vector<int64_t> AddBlank(const std::vector<int64_t> &x,
                                 int32_t blank_id = 0) const;
+
+ protected:
+  // The model metadata `voice` may contain several space-separated languages,
+  // e.g. "zh en-us" for a bilingual model. The phonemizer needs a single voice,
+  // so return only the last one (e.g. "en-us").
+  static std::string LastLang(const std::string &voice) {
+    auto pos = voice.rfind(' ');
+    return (pos == std::string::npos) ? voice : voice.substr(pos + 1);
+  }
 };
 
 }  // namespace sherpa_onnx

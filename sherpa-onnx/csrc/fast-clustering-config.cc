@@ -15,7 +15,8 @@ std::string FastClusteringConfig::ToString() const {
 
   os << "FastClusteringConfig(";
   os << "num_clusters=" << num_clusters << ", ";
-  os << "threshold=" << threshold << ")";
+  os << "threshold=" << threshold << ", ";
+  os << "compute_confidence=" << (compute_confidence ? "True" : "False") << ")";
 
   return os.str();
 }
@@ -31,6 +32,10 @@ void FastClusteringConfig::Register(ParseOptions *po) {
                "If num_clusters is not specified, then it specifies the "
                "distance threshold for clustering. smaller value -> more "
                "clusters. larger value -> fewer clusters");
+
+  po->Register("compute-confidence", &compute_confidence,
+               "True to compute confidence value for each clustered "
+               "embedding and surface for every diarization segment.");
 }
 
 bool FastClusteringConfig::Validate() const {

@@ -95,6 +95,7 @@ class TtsWorker {
     Float32List? referenceAudio,
     int referenceSampleRate = 0,
     int numSteps = 5,
+    List<List<int>>? phonemeCodepoints,
   }) {
     _pendingLabel = GeneratedAudioItem.makeLabel(text);
     final msg = JSObject();
@@ -108,6 +109,15 @@ class TtsWorker {
     if (referenceAudio != null && referenceAudio.isNotEmpty) {
       msg['referenceAudio'] = referenceAudio.buffer.toJS;
       msg['referenceSampleRate'] = referenceSampleRate.toJS;
+    }
+
+    if (phonemeCodepoints != null && phonemeCodepoints.isNotEmpty) {
+      // number[][] via the host JSON.parse (structured clone keeps it as a
+      // plain JS array for the worker).
+      final json = globalContext.getProperty('JSON'.toJS) as JSObject;
+      final parse = json.getProperty('parse'.toJS) as JSFunction;
+      msg['phonemeCodepoints'] =
+          parse.callAsFunction(null, jsonEncode(phonemeCodepoints).toJS);
     }
     _worker?.postMessage(msg);
   }

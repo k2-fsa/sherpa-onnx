@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-      - rust-api
-      - rust
   workflow_dispatch:
 
 concurrency:
@@ -14,17 +12,17 @@ concurrency:
 
 jobs:
   test-rust:
-    name: Test ${{ matrix.os }} (${{ matrix.link_mode }})
+    name: Test ${{ matrix.os }} (${{ matrix.link_mode }}, ${{ matrix.lib_setup }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm]
+        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest, windows-11-arm]
         link_mode: [shared, static]
+        lib_setup: [lib_dir, archive_dir]
         exclude:
+          # Static linking on x86_64 Linux crashes with "free(): invalid pointer"
           - os: ubuntu-latest
-            link_mode: static
-          - os: ubuntu-22.04-arm
             link_mode: static
 
     steps:
@@ -35,11 +33,22 @@ jobs:
         with:
           key: ${{ matrix.os }}-rust-${{ matrix.link_mode }}
 
+      # NOTE: caching build/install is disabled on purpose. The old cache key
+      # only hashed CMakeLists.txt, so a struct/ABI change in c-api.h could
+      # restore prebuilt libs that disagree with the Rust FFI structs and
+      # crash at runtime. The libs are rebuilt from source every run.
+
       - name: Update version
         shell: bash
         run: |
           ./new-release.sh
           git diff .
+
+      - name: Set up MSVC
+        if: startsWith(matrix.os, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.os == 'windows-11-arm' && 'amd64_arm64' || 'x64' }}
 
       - name: Configure sherpa-onnx
         shell: bash
@@ -57,11 +66,31 @@ jobs:
             build_shared_libs=OFF
           fi
 
-          cmake \
-            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            -D BUILD_SHARED_LIBS=$build_shared_libs \
-            -D CMAKE_INSTALL_PREFIX=./install \
-            ..
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cmake \
+              -A x64 \
+              -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+              -D BUILD_SHARED_LIBS=$build_shared_libs \
+              -D SHERPA_ONNX_USE_STATIC_CRT=ON \
+              -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -D CMAKE_INSTALL_PREFIX=./install \
+              ..
+          elif [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            cmake \
+              -A ARM64 \
+              -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+              -D BUILD_SHARED_LIBS=$build_shared_libs \
+              -D SHERPA_ONNX_USE_STATIC_CRT=ON \
+              -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -D CMAKE_INSTALL_PREFIX=./install \
+              ..
+          else
+            cmake \
+              -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+              -D BUILD_SHARED_LIBS=$build_shared_libs \
+              -D CMAKE_INSTALL_PREFIX=./install \
+              ..
+          fi
 
       - name: Build sherpa-onnx
         shell: bash
@@ -71,30 +100,115 @@ jobs:
           cmake --version
 
           cd build
-          make -j2
-          make install
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
+            cmake --build . --config Release -- -m:2
+            cmake --build . --config Release --target install -- -m:2
+          else
+            make -j2
+            make install
+          fi
           ls -lh install/lib
 
-          echo "SHERPA_ONNX_LIB_DIR=$PWD/install/lib" >> "$GITHUB_ENV"
+      - name: Set library paths
+        shell: bash
+        run: |
+          if [[ "${{ matrix.lib_setup }}" == "lib_dir" ]]; then
+            echo "SHERPA_ONNX_LIB_DIR=$PWD/build/install/lib" >> "$GITHUB_ENV"
+          elif [[ "${{ matrix.lib_setup }}" == "archive_dir" ]]; then
+            # Create an archive with the exact name and structure build.rs expects
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
+            mkdir -p /tmp/sherpa-onnx-archive
+            cd build/install
+
+            # Determine the correct archive name based on OS, architecture, and link_mode
+            # These names must match exactly what build.rs expects
+            if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ matrix.link_mode }}" == "shared" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-linux-x64-shared-lib"
+            elif [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ matrix.link_mode }}" == "static" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-linux-x64-static-lib"
+            elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" && "${{ matrix.link_mode }}" == "shared" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-linux-aarch64-shared-cpu-lib"
+            elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" && "${{ matrix.link_mode }}" == "static" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-linux-aarch64-static-lib"
+            elif [[ "${{ matrix.os }}" == "macos-latest" && "${{ matrix.link_mode }}" == "shared" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-osx-arm64-shared-lib"
+            elif [[ "${{ matrix.os }}" == "macos-latest" && "${{ matrix.link_mode }}" == "static" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-osx-arm64-static-lib"
+            elif [[ "${{ matrix.os }}" == "macos-15-intel" && "${{ matrix.link_mode }}" == "shared" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-osx-x64-shared-lib"
+            elif [[ "${{ matrix.os }}" == "macos-15-intel" && "${{ matrix.link_mode }}" == "static" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-osx-x64-static-lib"
+            elif [[ "${{ matrix.os }}" == "windows-latest" && "${{ matrix.link_mode }}" == "shared" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-win-x64-shared-MT-Release-lib"
+            elif [[ "${{ matrix.os }}" == "windows-latest" && "${{ matrix.link_mode }}" == "static" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-win-x64-static-MT-Release-lib"
+            elif [[ "${{ matrix.os }}" == "windows-11-arm" && "${{ matrix.link_mode }}" == "shared" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-win-arm64-shared-MT-Release-lib"
+            elif [[ "${{ matrix.os }}" == "windows-11-arm" && "${{ matrix.link_mode }}" == "static" ]]; then
+              archive_name="sherpa-onnx-v${SHERPA_ONNX_VERSION}-win-arm64-static-MT-Release-lib"
+            fi
+
+            # Create archive with the directory structure build.rs expects:
+            # archive_name.tar.bz2 -> archive_name/lib/...
+            mkdir -p /tmp/archive-staging/$archive_name
+            cp -r lib /tmp/archive-staging/$archive_name/
+            cd /tmp/archive-staging
+            tar cjf /tmp/sherpa-onnx-archive/${archive_name}.tar.bz2 $archive_name/
+            cd -
+            cd ../../
+            rm -rf /tmp/archive-staging
+            echo "SHERPA_ONNX_ARCHIVE_DIR=/tmp/sherpa-onnx-archive" >> "$GITHUB_ENV"
+          fi
 
           if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
             if [[ "${{ matrix.os }}" == ubuntu-* ]]; then
-              echo "LD_LIBRARY_PATH=$PWD/install/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "LD_LIBRARY_PATH=$PWD/build/install/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
             elif [[ "${{ matrix.os }}" == macos-* ]]; then
-              echo "DYLD_LIBRARY_PATH=$PWD/install/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "DYLD_LIBRARY_PATH=$PWD/build/install/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+            elif [[ "${{ matrix.os }}" == windows-* ]]; then
+              # Copy DLLs next to the test binary so the linker can find them
+              cp -v build/install/bin/*.dll build/install/lib/ 2>/dev/null || true
             fi
           fi
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.os == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
+
+      - name: Select MSVC linker
+        if: startsWith(matrix.os, 'windows')
+        shell: pwsh
+        run: |
+          if ("${{ matrix.os }}" -eq "windows-11-arm") {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\ARM64\link.exe'
+            $env_var = "CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER"
+          } else {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+            $env_var = "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
+          }
+          if (-not (Test-Path $linker)) {
+            throw "MSVC linker not found: $linker"
+          }
+          "$env_var=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Using linker: $linker"
+          & where.exe link
 
       - name: Show libs
         shell: bash
         run: |
           echo "link_mode: ${{ matrix.link_mode }}"
-          echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
-          ls -lh "$SHERPA_ONNX_LIB_DIR"
+          echo "lib_setup: ${{ matrix.lib_setup }}"
+
+          if [[ -n "${SHERPA_ONNX_LIB_DIR:-}" ]]; then
+            echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
+            ls -lh "$SHERPA_ONNX_LIB_DIR"
+          fi
+
+          if [[ -n "${SHERPA_ONNX_ARCHIVE_DIR:-}" ]]; then
+            echo "SHERPA_ONNX_ARCHIVE_DIR: $SHERPA_ONNX_ARCHIVE_DIR"
+            ls -lh "$SHERPA_ONNX_ARCHIVE_DIR"
+          fi
 
           if [[ -n "${LD_LIBRARY_PATH:-}" ]]; then
             echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
@@ -143,3 +257,249 @@ jobs:
           else
             ./.github/scripts/test-rust-static.sh
           fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.link_mode }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.link_mode }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.link_mode }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.link_mode }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.link_mode }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+
+  termux:
+    name: Termux ${{ matrix.arch }} (${{ matrix.lib_setup }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: lib_dir
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: archive_dir
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: lib_dir
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: archive_dir
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: lib_dir
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: archive_dir
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: lib_dir
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: archive_dir
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Free disk space
+        if: matrix.runner == 'ubuntu-latest'
+        shell: bash
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h
+
+      - name: Make workspace writable and create build dir
+        shell: bash
+        run: |
+          chmod -R 777 ${{ github.workspace }}
+          mkdir -p ${{ github.workspace }}/build
+          chmod 777 ${{ github.workspace }}/build
+
+      - name: Build sherpa-onnx (shared)
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+            termux/termux-docker:${{ matrix.arch }} \
+          bash -c '
+            set -e
+
+            apt update -y
+            apt install -y cmake make git libc++ clang
+            apt install -y android-liblog || true
+            apt install -y libandroid-dev || true
+            apt install -y android-libandroid || true
+
+            cd /k2-fsa/sherpa-onnx
+            cd build
+
+            cmake \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DBUILD_SHARED_LIBS=ON \
+              -DCMAKE_INSTALL_PREFIX=./install \
+              -DSHERPA_ONNX_ENABLE_TTS=ON \
+              -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON \
+              -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+              -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+              -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+              -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+              -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+              -DSHERPA_ONNX_ENABLE_JNI=OFF \
+              -DSHERPA_ONNX_ENABLE_C_API=ON \
+              -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
+              ..
+
+            make -j$(nproc) install
+
+            echo "=== lib ==="
+            ls -lh install/lib/
+
+            echo "=== readelf -d install/lib/libsherpa-onnx-c-api.so ==="
+            readelf -d install/lib/libsherpa-onnx-c-api.so
+          '
+
+      - name: Patch Cargo.toml to use local crates
+        shell: bash
+        run: |
+          mkdir -p rust-api-examples/.cargo
+          echo '[patch.crates-io]' > rust-api-examples/.cargo/config.toml
+          echo 'sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }' >> rust-api-examples/.cargo/config.toml
+          echo 'sherpa-onnx-sys = { path = "../sherpa-onnx/rust/sherpa-onnx-sys" }' >> rust-api-examples/.cargo/config.toml
+
+      - name: Prepare directories and stage libs (host)
+        shell: bash
+        env:
+          LIB_SETUP: ${{ matrix.lib_setup }}
+        run: |
+          # Do all directory creation and file staging on the HOST:
+          #  * the Termux container cannot always create directories (read-only
+          #    bits of the filesystem / different uid than the build container);
+          #  * files created by the build container may not be writable by the
+          #    test container, hence chmod -R 777.
+          # The container then only *detects* what the host prepared (see the
+          # "Detecting library setup" comment in the Run Rust tests step).
+          #
+          # sudo is required: build/ was written by the build container under a
+          # different uid, so the runner user cannot chmod it or create
+          # directories inside it ("Operation not permitted"/"Permission denied").
+          sudo chmod -R 777 "${{ github.workspace }}" || true
+          mkdir -p "${{ github.workspace }}/rust-api-examples/target"
+          chmod -R 777 "${{ github.workspace }}/rust-api-examples/target" || true
+
+          if [[ "$LIB_SETUP" == "archive_dir" ]]; then
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
+            # build.rs expects the archive to contain jniLibs/{abi}/ at its root
+            sudo mkdir -p build/install/jniLibs/arm64-v8a
+            sudo cp -v build/install/lib/*.so build/install/jniLibs/arm64-v8a/
+            sudo chmod -R 777 build/install/jniLibs
+            mkdir -p /tmp/sherpa-onnx-archive
+            rm -f /tmp/sherpa-onnx-archive/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+            tar cjf /tmp/sherpa-onnx-archive/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2 -C build/install jniLibs
+            chmod -R 777 /tmp/sherpa-onnx-archive
+            ls -lh /tmp/sherpa-onnx-archive/
+          fi
+
+      - name: Run Rust tests in Termux
+        shell: bash
+        env:
+          LIB_SETUP: ${{ matrix.lib_setup }}
+        run: |
+          # NOTE: the termux/termux-docker image does NOT pass -e environment
+          # variables into the container (verified: both -e LIB_SETUP and
+          # -e SHERPA_ONNX_LIB_DIR arrived unset). So the library location is
+          # detected by path *inside* the container instead.
+          #
+          # This matters because sherpa-onnx-sys's build.rs silently falls
+          # back to downloading the *released* prebuilt libraries from GitHub
+          # when SHERPA_ONNX_LIB_DIR/SHERPA_ONNX_ARCHIVE_DIR are unset. Those
+          # prebuilt libs have older C struct layouts than this checkout, so
+          # the examples crash with a wild-pointer SIGSEGV. See the
+          # "[build.rs]" cargo:warning lines in the log to confirm which
+          # library directory was picked up.
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+            --volume /tmp/sherpa-onnx-archive:/tmp/sherpa-onnx-archive \
+            termux/termux-docker:${{ matrix.arch }} \
+          bash -c '
+            set -ex
+
+            apt update -y
+            apt install -y libc++ clang git
+
+            # Install Rust via Termux package manager (bypasses rustup file locking issues)
+            apt install -y rust
+            rustc --version
+            cargo --version
+
+            # Set library path for the built libraries
+            export LD_LIBRARY_PATH=/k2-fsa/sherpa-onnx/build/install/lib:/data/data/com.termux/files/usr/lib:$LD_LIBRARY_PATH
+
+            cd /k2-fsa/sherpa-onnx
+
+            # Set the library location by detecting which one the host prepared
+            if [ -d /k2-fsa/sherpa-onnx/build/install/lib ]; then
+              export SHERPA_ONNX_LIB_DIR=/k2-fsa/sherpa-onnx/build/install/lib
+            elif ls /tmp/sherpa-onnx-archive/*.tar.bz2 >/dev/null 2>&1; then
+              export SHERPA_ONNX_ARCHIVE_DIR=/tmp/sherpa-onnx-archive
+            fi
+            echo "SHERPA_ONNX_LIB_DIR=${SHERPA_ONNX_LIB_DIR:-unset}"
+            echo "SHERPA_ONNX_ARCHIVE_DIR=${SHERPA_ONNX_ARCHIVE_DIR:-unset}"
+
+            # Run all tests (Android only supports shared linking)
+            bash .github/scripts/test-rust-shared.sh
+          '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock_with_voice_sample-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock_with_voice_sample-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn

@@ -41,6 +41,7 @@ class AudioTagging(
         require(ptr != 0L) {
             "Invalid AudioTaggingConfig: failed to create native AudioTagging"
         }
+    }
 
     protected fun finalize() {
         if (ptr != 0L) {

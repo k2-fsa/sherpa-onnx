@@ -154,8 +154,8 @@ class SubtitleViewModel: ObservableObject {
 
                     segments.append(
                         SpeechSegment(
-                            start: Float(s.start) / Float(sampleRate),
-                            duration: Float(s.samples.count) / Float(sampleRate),
+                            start: Double(s.start) / Double(sampleRate),
+                            duration: Double(s.samples.count) / Double(sampleRate),
                             text: result.text
                         ))
 

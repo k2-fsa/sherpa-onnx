@@ -249,7 +249,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314", "cp315"]
 
     steps:
       - uses: actions/checkout@v4
@@ -262,8 +262,24 @@ jobs:
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
-      - name: Build wheels (cibuildwheel)
+      #
+      # CPython 3.8 is EOL and has been dropped upstream and cibuildwheel 4.0
+      # dropped support for building it; cp315 needs cibuildwheel 4.x, so cp38
+      # builds on 3.x and the rest build on 4.x.
+      - name: Build wheels (cibuildwheel, cp38)
+        if: matrix.python-version == 'cp38'
         uses: pypa/cibuildwheel@v3.1.4
+        env:
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_SKIP: "*-win_amd64"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT: >
+            SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+            SHERPA_ONNX_CMAKE_ARGS="-A Win32 -DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF"
+
+      - name: Build wheels (cibuildwheel)
+        if: matrix.python-version != 'cp38'
+        uses: pypa/cibuildwheel@v4.3.2
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "*-win_amd64"

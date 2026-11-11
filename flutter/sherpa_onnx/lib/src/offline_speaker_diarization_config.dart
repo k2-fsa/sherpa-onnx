@@ -13,6 +13,7 @@ class OfflineSpeakerDiarizationSegment {
     required this.start,
     required this.end,
     required this.speaker,
+    this.confidence = -2.0,
   });
 
   factory OfflineSpeakerDiarizationSegment.fromJson(Map<String, dynamic> json) {
@@ -20,48 +21,57 @@ class OfflineSpeakerDiarizationSegment {
       start: (json['start'] as num).toDouble(),
       end: (json['end'] as num).toDouble(),
       speaker: json['speaker'] as int,
+      confidence: (json['confidence'] as num?)?.toDouble() ?? -2.0,
     );
   }
 
   @override
   String toString() {
-    return 'OfflineSpeakerDiarizationSegment(start: $start, end: $end, speaker: $speaker)';
+    return 'OfflineSpeakerDiarizationSegment(start: $start, end: $end, speaker: $speaker, confidence: $confidence)';
   }
 
   Map<String, dynamic> toJson() => {
         'start': start,
         'end': end,
         'speaker': speaker,
+        'confidence': confidence,
       };
 
   final double start;
   final double end;
   final int speaker;
+  final double confidence;
 }
 
 /// Pyannote segmentation model path.
 class OfflineSpeakerSegmentationPyannoteModelConfig {
   const OfflineSpeakerSegmentationPyannoteModelConfig({
     this.model = '',
+    this.windowShiftRatio = 0.1,
   });
 
   factory OfflineSpeakerSegmentationPyannoteModelConfig.fromJson(
       Map<String, dynamic> json) {
     return OfflineSpeakerSegmentationPyannoteModelConfig(
       model: json['model'] as String? ?? '',
+      windowShiftRatio:
+          (json['windowShiftRatio'] as num?)?.toDouble() ?? 0.1,
     );
   }
 
   @override
   String toString() {
-    return 'OfflineSpeakerSegmentationPyannoteModelConfig(model: $model)';
+    return 'OfflineSpeakerSegmentationPyannoteModelConfig(model: $model, '
+        'windowShiftRatio: $windowShiftRatio)';
   }
 
   Map<String, dynamic> toJson() => {
         'model': model,
+        'windowShiftRatio': windowShiftRatio,
       };
 
   final String model;
+  final double windowShiftRatio;
 }
 
 /// Segmentation model configuration for speaker diarization.
@@ -110,27 +120,31 @@ class FastClusteringConfig {
   const FastClusteringConfig({
     this.numClusters = -1,
     this.threshold = 0.5,
+    this.computeConfidence = false,
   });
 
   factory FastClusteringConfig.fromJson(Map<String, dynamic> json) {
     return FastClusteringConfig(
       numClusters: json['numClusters'] as int? ?? -1,
       threshold: (json['threshold'] as num?)?.toDouble() ?? 0.5,
+      computeConfidence: json['computeConfidence'] as bool? ?? false,
     );
   }
 
   @override
   String toString() {
-    return 'FastClusteringConfig(numClusters: $numClusters, threshold: $threshold)';
+    return 'FastClusteringConfig(numClusters: $numClusters, threshold: $threshold, computeConfidence: $computeConfidence)';
   }
 
   Map<String, dynamic> toJson() => {
         'numClusters': numClusters,
         'threshold': threshold,
+        'computeConfidence': computeConfidence,
       };
 
   final int numClusters;
   final double threshold;
+  final bool computeConfidence;
 }
 
 /// Top-level configuration for [OfflineSpeakerDiarization].

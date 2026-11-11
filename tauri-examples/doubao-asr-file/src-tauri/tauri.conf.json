@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "doubao-asr-file",
+  "version": "2.0.1",
+  "identifier": "com.k2fsa.sherpa.onnx.doubao.asr.file",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "录音文件识别 (Doubao ASR)",
+        "width": 1000,
+        "height": 760
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "icon": ["icons/icon.png", "icons/icon.ico"],
+    "iOS": {
+      "frameworks": ["sherpa-onnx.xcframework"]
+    }
+  }
+}

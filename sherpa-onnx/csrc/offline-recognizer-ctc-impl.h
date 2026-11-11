@@ -23,15 +23,16 @@
 
 namespace sherpa_onnx {
 
-OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
-                                 const SymbolTable &sym_table,
-                                 int32_t frame_shift_ms,
-                                 int32_t subsampling_factor) {
+inline OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
+                                        const SymbolTable &sym_table,
+                                        int32_t frame_shift_ms,
+                                        int32_t subsampling_factor) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
 
   std::string text;
+  float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
 
   for (int32_t i = 0; i != src.tokens.size(); ++i) {
     if (sym_table.Contains("SIL") && src.tokens[i] == sym_table["SIL"]) {
@@ -57,6 +58,7 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     }
 
     r.tokens.push_back(std::move(sym));
+    r.timestamps.push_back(frame_shift_s * src.timestamps[i]);
   }
 
   if (sym_table.IsByteBpe()) {
@@ -69,13 +71,7 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
 
   r.text = std::move(text);
 
-  float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
-  for (auto t : src.timestamps) {
-    float time = frame_shift_s * t;
-    r.timestamps.push_back(time);
-  }
-
-  r.words = std::move(src.words);
+  r.words = src.words;
 
   return r;
 }
@@ -301,6 +297,23 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 
     int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
+
+    // The convolutional feature extractor of omnilingual ASR models needs
+    // at least 400 samples (25 ms at 16 kHz); onnxruntime throws for shorter
+    // input. Empty input would also make feat_dim 0 below.
+    constexpr size_t kOmnilingualMinNumSamples = 400;
+    if (!config_.model_config.omnilingual.model.empty() &&
+        f.size() < kOmnilingualMinNumSamples) {
+      SHERPA_ONNX_LOGE(
+          "Input audio is too short for omnilingual ASR model: %d samples "
+          "(minimum required: %d samples, %.1f ms at 16 kHz)",
+          static_cast<int>(f.size()),
+          static_cast<int>(kOmnilingualMinNumSamples),
+          kOmnilingualMinNumSamples / 16.0);
+      OfflineRecognitionResult r;
+      s->SetResult(r);
+      return;
+    }
 
     int32_t num_frames = f.size() / feat_dim;
 

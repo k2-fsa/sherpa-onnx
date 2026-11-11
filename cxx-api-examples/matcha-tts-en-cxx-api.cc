@@ -15,6 +15,8 @@ rm matcha-icefall-en_US-ljspeech.tar.bz2
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 ./matcha-tts-en-cxx-api
 
  */
@@ -45,8 +47,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
   config.model.matcha.tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt";
 
-  config.model.matcha.data_dir =
-      "./matcha-icefall-en_US-ljspeech/espeak-ng-data";
+  config.model.matcha.lexicon = "./lexicon-en-us.txt";
 
   config.model.num_threads = 1;
 

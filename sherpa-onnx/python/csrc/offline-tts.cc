@@ -39,6 +39,8 @@ static void PybindGenerationConfig(py::module *m) {
       .def_readwrite("reference_text", &PyClass::reference_text)
       .def_readwrite("num_steps", &PyClass::num_steps)
       .def_readwrite("extra", &PyClass::extra)
+      .def_readwrite("phoneme_codepoints", &PyClass::phoneme_codepoints)
+      .def_readwrite("tokens", &PyClass::tokens)
       .def("__str__", &PyClass::ToString);
 }
 
@@ -83,7 +85,7 @@ Args:
   callback:
     If not None, it is called during speech generation with
     ``(samples: np.ndarray, progress: float) -> int``.
-    Return a non-zero value to stop generation early.
+    Return 1 to keep generating, or 0 to stop generation early.
 
 Returns:
   A ``GeneratedAudio`` object containing the audio samples and sample rate.
@@ -95,6 +97,12 @@ Return the sample rate of the generated audio.
 
 static constexpr const char *kNumSpeakersDoc = R"doc(
 Return the number of speakers supported by the model.
+)doc";
+
+static constexpr const char *kLangDoc = R"doc(
+Return the language/voice of the model, e.g., "en-us".
+
+Returns an empty string if such information is not available.
 )doc";
 
 void PybindOfflineTts(py::module *m) {
@@ -110,6 +118,7 @@ void PybindOfflineTts(py::module *m) {
                              kSampleRateDoc)
       .def_property_readonly("num_speakers", &PyClass::NumSpeakers,
                              kNumSpeakersDoc)
+      .def_property_readonly("lang", &PyClass::Lang, kLangDoc)
       .def(
           "generate",
           [](const PyClass &self, const std::string &text, int64_t sid,

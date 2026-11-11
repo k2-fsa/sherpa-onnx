@@ -147,4 +147,122 @@ TEST(CircularBuffer, PushAndPop) {
   EXPECT_EQ(c[1], 4000);
 }
 
+// Regression test for
+// https://github.com/k2-fsa/sherpa-onnx/issues/3635
+//
+// head_/tail_ used to be int32_t and overflowed to negative after 2^31
+// samples (~37h at 16 kHz). tail_ % capacity then became negative and
+// std::copy() wrote to an invalid iterator. Verify the counters survive the
+// old 32-bit boundary.
+TEST(CircularBuffer, PushAndGetAcrossInt32Boundary) {
+  // Start just below the old overflow horizon: 2^31 - 10.
+  const int64_t initial_position = (1LL << 31) - 10;
+  CircularBuffer buffer(16, initial_position);
+
+  EXPECT_EQ(buffer.Size(), 0);
+  EXPECT_EQ(buffer.Head(), initial_position);
+  EXPECT_EQ(buffer.Tail(), initial_position);
+
+  // 20 samples straddle 2^31: a[i] lives at position initial_position + i.
+  std::vector<float> a(20);
+  for (int32_t i = 0; i != 20; ++i) {
+    a[i] = static_cast<float>(i);
+  }
+  buffer.Push(a.data(), a.size());
+
+  EXPECT_EQ(buffer.Size(), 20);
+  EXPECT_EQ(buffer.Head(), initial_position);
+  EXPECT_EQ(buffer.Tail(), initial_position + 20);
+
+  // Read a window that spans the old boundary.
+  int64_t before_boundary = (1LL << 31) - 2;  // a[8]
+  auto c = buffer.Get(before_boundary, 6);
+  ASSERT_EQ(c.size(), 6u);
+  for (int32_t i = 0; i != 6; ++i) {
+    EXPECT_EQ(c[i], static_cast<float>(before_boundary - initial_position + i));
+  }
+
+  // Pop across the boundary and keep reading.
+  buffer.Pop(15);
+  EXPECT_EQ(buffer.Head(), initial_position + 15);
+
+  c = buffer.Get(buffer.Head(), 5);
+  ASSERT_EQ(c.size(), 5u);
+  for (int32_t i = 0; i != 5; ++i) {
+    EXPECT_EQ(c[i], static_cast<float>(15 + i));
+  }
+}
+
+// Same idea at a much larger position to prove 64-bit head_/tail_.
+TEST(CircularBuffer, PushAndGetAtLargePosition) {
+  const int64_t initial_position = 1LL << 40;
+  CircularBuffer buffer(8, initial_position);
+
+  std::vector<float> a = {1, 2, 3, 4, 5};
+  buffer.Push(a.data(), a.size());
+
+  EXPECT_EQ(buffer.Head(), initial_position);
+  EXPECT_EQ(buffer.Tail(), initial_position + 5);
+
+  auto c = buffer.Get(initial_position + 2, 3);
+  ASSERT_EQ(c.size(), 3u);
+  EXPECT_EQ(c[0], 3);
+  EXPECT_EQ(c[1], 4);
+  EXPECT_EQ(c[2], 5);
+}
+
+// Ring wrap-around combined with positions across the old 32-bit boundary.
+TEST(CircularBuffer, RingWrapAcrossInt32Boundary) {
+  const int64_t initial_position = (1LL << 31) - 4;
+  CircularBuffer buffer(8, initial_position);
+
+  std::vector<float> a = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  buffer.Push(a.data(), 6);  // wraps around inside the ring
+  buffer.Pop(3);
+  buffer.Push(a.data() + 6, 4);
+
+  auto c = buffer.Get(buffer.Head(), buffer.Size());
+  ASSERT_EQ(c.size(), 7u);
+  const float expected[7] = {4, 5, 6, 7, 8, 9, 10};
+  for (int32_t i = 0; i != 7; ++i) {
+    EXPECT_EQ(c[i], expected[i]);
+  }
+  EXPECT_EQ(buffer.Head(), initial_position + 3);
+  EXPECT_EQ(buffer.Tail(), initial_position + 10);
+}
+
+// Get() must reject a start_index that has already been popped.
+TEST(CircularBuffer, GetRejectsPoppedIndex) {
+  const int64_t initial_position = (1LL << 31) - 4;
+  CircularBuffer buffer(8, initial_position);
+
+  std::vector<float> a = {1, 2, 3, 4, 5};
+  buffer.Push(a.data(), a.size());
+  buffer.Pop(2);
+
+  EXPECT_TRUE(buffer.Get(initial_position, 1).empty());
+}
+
+// Resize() of a non-empty buffer must also work at large head_/tail_.
+TEST(CircularBuffer, ResizeAtLargePosition) {
+  const int64_t initial_position = (1LL << 31) - 4;
+  CircularBuffer buffer(8, initial_position);
+
+  std::vector<float> a = {1, 2, 3, 4, 5, 6};
+  buffer.Push(a.data(), 6);  // 6 <= 8, no resize
+  std::vector<float> b = {7, 8, 9, 10, 11, 12};
+  buffer.Push(b.data(), 6);  // 12 > 8, resizes 8 -> 16
+
+  EXPECT_EQ(buffer.Size(), 12);
+  EXPECT_EQ(buffer.Head(), initial_position);
+  EXPECT_EQ(buffer.Tail(), initial_position + 12);
+
+  auto c = buffer.Get(buffer.Head(), buffer.Size());
+  ASSERT_EQ(c.size(), 12u);
+  const float expected[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  for (int32_t i = 0; i != 12; ++i) {
+    EXPECT_EQ(c[i], expected[i]) << "i = " << i;
+  }
+}
+
 }  // namespace sherpa_onnx

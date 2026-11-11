@@ -23,7 +23,7 @@ begin
   Config.Model.Matcha.AcousticModel := './matcha-icefall-en_US-ljspeech/model-steps-3.onnx';
   Config.Model.Matcha.Vocoder := './vocos-22khz-univ.onnx';
   Config.Model.Matcha.Tokens := './matcha-icefall-en_US-ljspeech/tokens.txt';
-  Config.Model.Matcha.DataDir := './matcha-icefall-en_US-ljspeech/espeak-ng-data';
+  Config.Model.Matcha.Lexicon := './lexicon-en-us.txt';
   Config.Model.NumThreads := 1;
   Config.Model.Debug := False;
   Config.MaxNumSentences := 1;

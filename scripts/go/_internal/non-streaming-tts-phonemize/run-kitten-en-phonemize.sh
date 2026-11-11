@@ -1,0 +1,1 @@
+../../../../go-api-examples/non-streaming-tts-phonemize/run-kitten-en-phonemize.sh

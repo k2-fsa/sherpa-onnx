@@ -21,6 +21,7 @@ namespace SherpaOnnx
             RuleFars = "";
             BlankPenalty = 0.0F;
             Hr = new HomophoneReplacerConfig();
+            CtcFstDecoderConfig = new OfflineCtcFstDecoderConfig();
         }
         public FeatureConfig FeatConfig;
         public OfflineModelConfig ModelConfig;
@@ -45,5 +46,7 @@ namespace SherpaOnnx
         public float BlankPenalty;
 
         public HomophoneReplacerConfig Hr;
+
+        public OfflineCtcFstDecoderConfig CtcFstDecoderConfig;
     }
 }

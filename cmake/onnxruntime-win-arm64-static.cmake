@@ -16,16 +16,16 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 # Hashes for static CRT (/MT)
-set(ONNXRUNTIME_HASH_MT_Release "SHA256=f06d31316230095656a68f42db20aba81ece0edb1d437881efad9479ee5f5d82")
-set(ONNXRUNTIME_HASH_MT_Debug "SHA256=8ef5f2af576505e0edeba3fc7bddb7298e4db09bdb1a38d9699d5f3d17fe0093")
-set(ONNXRUNTIME_HASH_MT_RelWithDebInfo "SHA256=40a67c34a22a9761ea076402a78acfe019503a623a77b4dc918f61121a7d07dd")
-set(ONNXRUNTIME_HASH_MT_MinSizeRel "SHA256=8142133abcc34d07bbff22004dc457b2feba55ff5bbad452424cb2942765fb02")
+set(ONNXRUNTIME_HASH_MT_Release "SHA256=27d2895e9b2cad58570413a5a8a0455a33ad6b30199d306b8c7d79dae58ae2ac")
+set(ONNXRUNTIME_HASH_MT_Debug "SHA256=5b78b36c2efd0c4fdc91df08fc28515c8aa029e28bad2f8a965cba2768dfaebb")
+set(ONNXRUNTIME_HASH_MT_RelWithDebInfo "SHA256=8ab055590366c7d9dae27f9580fa5aa82e429781fc75dd9c8a35fb29c484018e")
+set(ONNXRUNTIME_HASH_MT_MinSizeRel "SHA256=544b3d6fa3d21571a7b1744c3cc32cdf4438416e39f713eb75183a62f8d8fe21")
 
 # Hashes for dynamic CRT (/MD)
-set(ONNXRUNTIME_HASH_MD_Release "SHA256=985c088ff0771c8397ed8464ceed2f8037fca537345d3b0a1dd67ebda58a3e8e")
-set(ONNXRUNTIME_HASH_MD_Debug "SHA256=e7c95cc511a4d459d82059ff59c58890e363046dd4b0e043114e5a77d60c8a9b")
-set(ONNXRUNTIME_HASH_MD_RelWithDebInfo "SHA256=1f4752659a0baf906ef3094ae4f0f1b0967697af43699ce5d965cc61cd6889d8")
-set(ONNXRUNTIME_HASH_MD_MinSizeRel "SHA256=459cf4a92d16080a4a87d5a993b25adc3fc34b86bfa909779139c0be4901c78b")
+set(ONNXRUNTIME_HASH_MD_Release "SHA256=11d848daaa69d4cbbd0253d05e62f39096721806f3a1b7fd4be0c54f0120399b")
+set(ONNXRUNTIME_HASH_MD_Debug "SHA256=29c41eab7be33c460059d584d2de2bf9acfb4b0494d2f3795daf64c0583cddad")
+set(ONNXRUNTIME_HASH_MD_RelWithDebInfo "SHA256=330a6df71e9d13f04c83e1ea6ed248d32a1bc0b21802180549808eb312cd863c")
+set(ONNXRUNTIME_HASH_MD_MinSizeRel "SHA256=36d4ba2c6db47aa6ae143c704e451f17838582ff2ccf72dc29d6c97087630add")
 
 if(NOT CMAKE_BUILD_TYPE MATCHES "^(Release|Debug|RelWithDebInfo|MinSizeRel)$")
   message(FATAL_ERROR "Supported CMAKE_BUILD_TYPE values are: Release, Debug, RelWithDebInfo, MinSizeRel. Given ${CMAKE_BUILD_TYPE}")
@@ -40,8 +40,8 @@ endif()
 message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
 
 set(onnxruntime_HASH "${ONNXRUNTIME_HASH_${onnxruntime_crt}_${CMAKE_BUILD_TYPE}}")
-set(onnxruntime_filename "onnxruntime-win-arm64-static_lib-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.27.0.tar.bz2")
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.0/${onnxruntime_filename}")
+set(onnxruntime_filename "onnxruntime-win-arm64-static_lib-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.28.2.tar.bz2")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/${onnxruntime_filename}")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.

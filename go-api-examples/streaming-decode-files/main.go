@@ -4,16 +4,11 @@ import (
 	"log"
 	"strings"
 
-	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
+	sherpa "github.com/k2-fsa/sherpa-onnx-go/v2/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 )
 
 func main() {
-	log.Printf("sherpa-onnx version: %v\n", sherpa.GetVersion())
-	log.Printf("sherpa-onnx gitSha1: %v\n", sherpa.GetGitSha1())
-	log.Printf("sherpa-onnx gitDate: %v\n", sherpa.GetGitDate())
-	log.Printf("onnxruntime version: %v\n", sherpa.GetOnnxruntimeVersion())
-
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
 	config := sherpa.OnlineRecognizerConfig{}

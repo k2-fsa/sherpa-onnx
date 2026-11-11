@@ -24,7 +24,6 @@ cmake \
 
 make -j4
 make install
-rm -fv ./install/include/cargs.h
 
 # Create a framework bundle (like onnxruntime does) so SPM can resolve the module
 FRAMEWORK_DIR=SherpaOnnxC.framework
@@ -63,9 +62,9 @@ cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
   <key>CFBundleExecutable</key>
   <string>SherpaOnnxC</string>
   <key>CFBundleVersion</key>
-  <string>20260707</string>
+  <string>20261026</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.13.4</string>
+  <string>2.0.1</string>
 </dict>
 </plist>
 EOF
@@ -82,6 +81,9 @@ ln -sf Versions/Current/Resources $FRAMEWORK_DIR/Resources
 
 # Fix dylib install name to use framework-relative path
 install_name_tool -id @rpath/SherpaOnnxC.framework/Versions/A/SherpaOnnxC $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
+
+# Ad-hoc sign the framework binary so Xcode can embed and re-sign it
+codesign --force --sign - $FRAMEWORK_DIR/Versions/A/SherpaOnnxC
 
 rm -rf sherpa-onnx.xcframework
 

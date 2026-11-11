@@ -111,6 +111,72 @@ static GenerationConfig GetGenerationConfig(JNIEnv *env, jobject config_obj) {
     }
   }
 
+  // phonemeCodepoints: int[][], one inner array per sentence. Optional; a
+  // missing field (older managed class) is ignored.
+  fid = env->GetFieldID(cls, "phonemeCodepoints", "[[I");
+  if (fid == nullptr || env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
+      env->ExceptionClear();
+    }
+  } else {
+    jobjectArray outer = (jobjectArray)env->GetObjectField(config_obj, fid);
+    if (outer != nullptr) {
+      jsize num_sentences = env->GetArrayLength(outer);
+      ans.phoneme_codepoints.reserve(num_sentences);
+      for (jsize i = 0; i < num_sentences; ++i) {
+        jintArray inner = (jintArray)env->GetObjectArrayElement(outer, i);
+        if (inner == nullptr) {
+          ans.phoneme_codepoints.emplace_back();
+          continue;
+        }
+        jsize len = env->GetArrayLength(inner);
+        std::vector<int32_t> sentence(len);
+        if (len > 0) {
+          env->GetIntArrayRegion(inner, 0, len, sentence.data());
+        }
+        ans.phoneme_codepoints.push_back(std::move(sentence));
+        env->DeleteLocalRef(inner);
+      }
+      env->DeleteLocalRef(outer);
+    }
+  }
+
+  // tokens: String[][], one inner array per sentence. Optional.
+  fid = env->GetFieldID(cls, "tokens", "[[Ljava/lang/String;");
+  if (fid == nullptr || env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
+      env->ExceptionClear();
+    }
+  } else {
+    jobjectArray outer = (jobjectArray)env->GetObjectField(config_obj, fid);
+    if (outer != nullptr) {
+      jsize num_sentences = env->GetArrayLength(outer);
+      ans.tokens.reserve(num_sentences);
+      for (jsize i = 0; i < num_sentences; ++i) {
+        jobjectArray inner = (jobjectArray)env->GetObjectArrayElement(outer, i);
+        if (inner == nullptr) {
+          ans.tokens.emplace_back();
+          continue;
+        }
+        jsize len = env->GetArrayLength(inner);
+        std::vector<std::string> sentence;
+        sentence.reserve(len);
+        for (jsize j = 0; j < len; ++j) {
+          jstring s = (jstring)env->GetObjectArrayElement(inner, j);
+          if (s != nullptr) {
+            const char *p = env->GetStringUTFChars(s, nullptr);
+            sentence.emplace_back(p);
+            env->ReleaseStringUTFChars(s, p);
+            env->DeleteLocalRef(s);
+          }
+        }
+        ans.tokens.push_back(std::move(sentence));
+        env->DeleteLocalRef(inner);
+      }
+      env->DeleteLocalRef(outer);
+    }
+  }
+
   env->DeleteLocalRef(cls);
   return ans;
 }
@@ -202,9 +268,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
                              kokoro_cls, kokoro);
 
   // zipvoice
-  fid = env->GetFieldID(
-      model_config_cls, "zipvoice",
-      "Lcom/k2fsa/sherpa/onnx/OfflineTtsZipVoiceModelConfig;");
+  fid =
+      env->GetFieldID(model_config_cls, "zipvoice",
+                      "Lcom/k2fsa/sherpa/onnx/OfflineTtsZipVoiceModelConfig;");
   jobject zipvoice = env->GetObjectField(model, fid);
   jclass zipvoice_cls = env->GetObjectClass(zipvoice);
 
@@ -220,8 +286,8 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.vocoder, vocoder, zipvoice_cls,
                               zipvoice);
 
-  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.data_dir, dataDir, zipvoice_cls,
-                              zipvoice);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.data_dir, dataDir,
+                              zipvoice_cls, zipvoice);
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.lexicon, lexicon, zipvoice_cls,
                               zipvoice);
@@ -258,6 +324,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.kitten.length_scale, lengthScale,
                              kitten_cls, kitten);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kitten.lexicon, lexicon, kitten_cls,
+                              kitten);
 
   // pocket
   fid = env->GetFieldID(model_config_cls, "pocket",
@@ -510,19 +579,26 @@ JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getNumSpeakers(
 }
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getLang(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  std::string lang = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Lang();
+  return env->NewStringUTF(lang.c_str());
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed) {
-  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  // `text` may be null when the caller supplies phonemeCodepoints or
+  // tokens instead. JStringToUtf8 returns an empty string for null.
+  std::string s_text = JStringToUtf8(env, text);
 
   sherpa_onnx::GenerationConfig config;
   config.sid = sid;
   config.speed = speed;
 
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      p_text, config);
-
-  env->ReleaseStringUTFChars(text, p_text);
+      s_text, config);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
@@ -532,7 +608,9 @@ JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed, jobject callback) {
-  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  // `text` may be null when the caller supplies phonemeCodepoints or
+  // tokens instead. JStringToUtf8 returns an empty string for null.
+  std::string s_text = JStringToUtf8(env, text);
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
@@ -552,12 +630,10 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, config, callback_wrapper);
+    audio = tts->Generate(s_text, config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, config, nullptr);
+    audio = tts->Generate(s_text, config, nullptr);
   }
-
-  env->ReleaseStringUTFChars(text, p_text);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
@@ -567,7 +643,9 @@ JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jobject _gen_config,
     jobject callback) {
-  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  // `text` may be null when the caller supplies phonemeCodepoints or
+  // tokens instead. JStringToUtf8 returns an empty string for null.
+  std::string s_text = JStringToUtf8(env, text);
   auto gen_config = sherpa_onnx::GetGenerationConfig(env, _gen_config);
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
@@ -583,12 +661,10 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, gen_config, callback_wrapper);
+    audio = tts->Generate(s_text, gen_config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, gen_config, nullptr);
+    audio = tts->Generate(s_text, gen_config, nullptr);
   }
-
-  env->ReleaseStringUTFChars(text, p_text);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }

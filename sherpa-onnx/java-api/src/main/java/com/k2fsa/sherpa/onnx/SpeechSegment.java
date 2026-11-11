@@ -2,15 +2,15 @@ package com.k2fsa.sherpa.onnx;
 
 public class SpeechSegment {
 
-    private final int start;
+    private final long start;
     private final float[] samples;
 
-    public SpeechSegment(int start, float[] samples) {
+    public SpeechSegment(long start, float[] samples) {
         this.start = start;
         this.samples = samples;
     }
 
-    public int getStart() {
+    public long getStart() {
         return start;
     }
 

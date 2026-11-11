@@ -9,20 +9,23 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
 
 namespace sherpa_onnx {
 
 class OnlineStream;
 
-class OnlineTransducerGreedySearchNeMoDecoder {
+class OnlineTransducerGreedySearchNeMoDecoder
+    : public OnlineTransducerNeMoDecoder {
  public:
   OnlineTransducerGreedySearchNeMoDecoder(OnlineTransducerNeMoModel *model,
                                           float blank_penalty)
       : model_(model), blank_penalty_(blank_penalty) {}
 
   // @param n number of elements in ss
-  void Decode(Ort::Value encoder_out, OnlineStream **ss, int32_t n) const;
+  void Decode(Ort::Value encoder_out, OnlineStream **ss,
+              int32_t n) const override;
 
  private:
   OnlineTransducerNeMoModel *model_;  // Not owned

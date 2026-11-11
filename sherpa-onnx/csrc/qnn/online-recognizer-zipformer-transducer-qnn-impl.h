@@ -93,6 +93,7 @@ inline OnlineRecognizerResult ConvertQnnResult(
     r.timestamps.push_back(frame_shift_s * t);
   }
 
+  r.num_trailing_blanks = src.num_trailing_blanks;
   r.segment = segment;
   r.start_time = frames_since_start * frame_shift_ms / 1000.f;
 
@@ -235,7 +236,8 @@ class OnlineRecognizerZipformerTransducerQnnImpl
         blank_id_(0),
         greedy_decoder_(blank_id_),
         modified_beam_search_decoder_(
-            blank_id_, model_->VocabSize(), std::max(1, config.max_active_paths)) {
+            blank_id_, model_->VocabSize(),
+            std::max(1, config.max_active_paths)) {
     if (!config.model_config.tokens_buf.empty()) {
       sym_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
@@ -256,7 +258,8 @@ class OnlineRecognizerZipformerTransducerQnnImpl
         blank_id_(0),
         greedy_decoder_(blank_id_),
         modified_beam_search_decoder_(
-            blank_id_, model_->VocabSize(), std::max(1, config.max_active_paths)) {
+            blank_id_, model_->VocabSize(),
+            std::max(1, config.max_active_paths)) {
     if (!config.model_config.tokens_buf.empty()) {
       sym_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
@@ -390,8 +393,8 @@ class OnlineRecognizerZipformerTransducerQnnImpl
       SHERPA_ONNX_EXIT(-1);
     }
 
-    r.decoder_out =
-        model_->RunDecoder(qnn_impl::GetQnnContext(r.tokens, model_->ContextSize()));
+    r.decoder_out = model_->RunDecoder(
+        qnn_impl::GetQnnContext(r.tokens, model_->ContextSize()));
     return r;
   }
 

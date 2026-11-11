@@ -31,6 +31,7 @@ int32_t main() {
   OfflineSpeakerDiarizationConfig config;
   config.segmentation.pyannote.model =
       "./sherpa-onnx-pyannote-segmentation-3-0/model.onnx";
+  config.segmentation.pyannote.window_shift_ratio = 0.1f;
   config.embedding.model =
       "./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx";
   config.clustering.num_clusters = 4;

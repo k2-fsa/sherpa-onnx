@@ -94,6 +94,12 @@ namespace SherpaOnnx
             }
         }
 
+        // This struct mirrors SherpaOnnxOfflineRecognizerResult in c-api.h.
+        // Field order and types must match the C layout exactly; a
+        // Marshal.PtrToStructure on this struct reads raw memory from the C
+        // side, so any deviation silently reads the wrong offsets. Note that
+        // Durations sits near the end (after tokens_arr/json/lang/emotion/event),
+        // not right after Tokens.
         [StructLayout(LayoutKind.Sequential)]
         struct Impl
         {
@@ -101,7 +107,18 @@ namespace SherpaOnnx
             public IntPtr Timestamps;
             public int Count;
             public IntPtr Tokens;
+            public IntPtr TokensArr;
+            public IntPtr Json;
+            public IntPtr Lang;
+            public IntPtr Emotion;
+            public IntPtr Event;
             public IntPtr Durations;
+            public IntPtr YsLogProbs;
+            public IntPtr SegmentTimestamps;
+            public IntPtr SegmentDurations;
+            public IntPtr SegmentTexts;
+            public IntPtr SegmentTextsArr;
+            public int SegmentCount;
         }
 
         private String _text;

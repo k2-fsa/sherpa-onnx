@@ -45,6 +45,9 @@ OnlineModelConfig GetOnlineModelConfig(JNIEnv *env, jclass model_config_cls,
   SHERPA_ONNX_JNI_READ_STRING(ans.transducer.qnn_config.system_lib, systemLib,
                               qnn_config_cls, qnn_config);
 
+  SHERPA_ONNX_JNI_READ_BOOL(ans.transducer.qnn_config.htp_perf_mode,
+                            htpPerfMode, qnn_config_cls, qnn_config);
+
   fid = env->GetFieldID(model_config_cls, "paraformer",
                         "Lcom/k2fsa/sherpa/onnx/OnlineParaformerModelConfig;");
   jobject paraformer_config = env->GetObjectField(model_config, fid);
@@ -273,11 +276,17 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
 #endif
   }
 
-  auto recognizer = new sherpa_onnx::OnlineRecognizer(
+  sherpa_onnx::OnlineRecognizer *recognizer = nullptr;
+  try {
+    recognizer = new sherpa_onnx::OnlineRecognizer(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e, "Failed to create OnlineRecognizer");
+    return 0;
+  }
 
   return (jlong)recognizer;
 }
@@ -309,7 +318,13 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromFile(
     return 0;
   }
 
-  auto recognizer = new sherpa_onnx::OnlineRecognizer(config);
+  sherpa_onnx::OnlineRecognizer *recognizer = nullptr;
+  try {
+    recognizer = new sherpa_onnx::OnlineRecognizer(config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e, "Failed to create OnlineRecognizer");
+    return 0;
+  }
 
   return (jlong)recognizer;
 }

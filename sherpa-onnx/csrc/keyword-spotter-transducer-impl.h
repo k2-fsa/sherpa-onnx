@@ -8,8 +8,8 @@
 #include <algorithm>
 #include <memory>
 #include <regex>  // NOLINT
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -24,9 +24,10 @@
 
 namespace sherpa_onnx {
 
-KeywordResult Convert(const TransducerKeywordResult &src,
-                      const SymbolTable &sym_table, float frame_shift_ms,
-                      int32_t subsampling_factor, int32_t frames_since_start) {
+inline KeywordResult Convert(const TransducerKeywordResult &src,
+                             const SymbolTable &sym_table, float frame_shift_ms,
+                             int32_t subsampling_factor,
+                             int32_t frames_since_start) {
   KeywordResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
@@ -40,7 +41,7 @@ KeywordResult Convert(const TransducerKeywordResult &src,
     }
     r.tokens.push_back(std::move(sym));
   }
-  if (from_tokens && r.keyword.size()) {
+  if (from_tokens && !r.keyword.empty()) {
     r.keyword = r.keyword.substr(1);
   }
 

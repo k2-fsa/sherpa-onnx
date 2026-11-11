@@ -41,6 +41,7 @@ class OfflineSpeakerDiarizationDemo
   {
     var config = new OfflineSpeakerDiarizationConfig();
     config.Segmentation.Pyannote.Model = "./sherpa-onnx-pyannote-segmentation-3-0/model.onnx";
+    config.Segmentation.Pyannote.WindowShiftRatio = 0.1f;
     config.Embedding.Model = "./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx";
 
     // the test wave ./0-four-speakers-zh.wav has 4 speakers, so

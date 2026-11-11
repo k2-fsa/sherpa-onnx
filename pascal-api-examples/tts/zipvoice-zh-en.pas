@@ -34,8 +34,7 @@ begin
   Config.Model.ZipVoice.Encoder := './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx';
   Config.Model.ZipVoice.Decoder := './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx';
   Config.Model.ZipVoice.Vocoder := './vocos_24khz.onnx';
-  Config.Model.ZipVoice.DataDir := './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data';
-  Config.Model.ZipVoice.Lexicon := './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt';
+  Config.Model.ZipVoice.Lexicon := './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt,./lexicon-en-us.txt';
   Config.Model.ZipVoice.FeatScale := 0.1;
   Config.Model.ZipVoice.Tshift := 0.5;
   Config.Model.ZipVoice.TargetRms := 0.1;

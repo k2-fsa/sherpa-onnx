@@ -37,7 +37,7 @@ pub struct CircularBuffer {
 
 #[repr(C)]
 pub struct SpeechSegment {
-    pub start: i32,
+    pub start: i64,
     pub samples: *mut f32,
     pub n: i32,
 }
@@ -53,13 +53,13 @@ extern "C" {
     pub fn SherpaOnnxCircularBufferPush(buffer: *const CircularBuffer, p: *const f32, n: i32);
     pub fn SherpaOnnxCircularBufferGet(
         buffer: *const CircularBuffer,
-        start_index: i32,
+        start_index: i64,
         n: i32,
     ) -> *const f32;
     pub fn SherpaOnnxCircularBufferFree(p: *const f32);
     pub fn SherpaOnnxCircularBufferPop(buffer: *const CircularBuffer, n: i32);
     pub fn SherpaOnnxCircularBufferSize(buffer: *const CircularBuffer) -> i32;
-    pub fn SherpaOnnxCircularBufferHead(buffer: *const CircularBuffer) -> i32;
+    pub fn SherpaOnnxCircularBufferHead(buffer: *const CircularBuffer) -> i64;
     pub fn SherpaOnnxCircularBufferReset(buffer: *const CircularBuffer);
 
     pub fn SherpaOnnxCreateVoiceActivityDetector(

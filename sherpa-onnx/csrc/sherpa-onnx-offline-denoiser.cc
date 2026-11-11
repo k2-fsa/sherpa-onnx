@@ -56,6 +56,27 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
   --output-wav=output_48k.wav
 
 # For the highest-quality 48 kHz model, use dpdfnet8_48khz_hr.onnx.
+
+(3) Use VoxLock models
+
+VoxLock keeps the voice of one speaker, e.g., the caller in a phone call,
+and removes the other voices. Download the models from
+https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models
+
+wget https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_enroll.onnx
+wget https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_chunk_int8.onnx
+wget https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_test_call.wav
+
+./bin/sherpa-onnx-offline-denoiser \
+  --speech-denoiser-voxlock-enroll-model=voxlock_enroll.onnx \
+  --speech-denoiser-voxlock-chunk-model=voxlock_chunk_int8.onnx \
+  --input-wav=voxlock_test_call.wav \
+  --output-wav=output_16k.wav
+
+# It keeps the voice in the loudest 3 seconds of the first 15 seconds.
+# To choose the voice yourself, pass at least 3 seconds of it with
+#   --speech-denoiser-voxlock-voice-sample=voxlock_test_voice_sample.wav
+# Use voxlock_chunk.onnx for the float32 model.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);

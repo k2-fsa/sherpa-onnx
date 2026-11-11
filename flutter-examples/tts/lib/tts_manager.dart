@@ -67,10 +67,12 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:piper_phonemize/piper_phonemize.dart' as piper;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import './generated_audio.dart';
 import './model.dart' if (dart.library.js_interop) './model_web.dart' as m;
+import './model_config.dart' as cfg;
 import './utils.dart' if (dart.library.js_interop) './utils_web.dart' as u;
 import './web_audio.dart' if (dart.library.io) './web_audio_stub.dart'
     as web_audio;
@@ -92,8 +94,12 @@ class _GenerateRequest extends _ToWorker {
   final Float32List? referenceAudio;
   final int referenceSampleRate;
   final int numSteps;
+  final List<List<int>>? phonemeCodepoints;
   _GenerateRequest(this.text, this.sid, this.speed, this.generationId,
-      {this.referenceAudio, this.referenceSampleRate = 0, this.numSteps = 5});
+      {this.referenceAudio,
+      this.referenceSampleRate = 0,
+      this.numSteps = 5,
+      this.phonemeCodepoints});
 }
 
 class _DisposeRequest extends _ToWorker {}
@@ -186,6 +192,18 @@ class TtsManager {
     if (_state != TtsState.uninitialized) return;
     _state = TtsState.initializing;
 
+    if (cfg.selectedModelUsesPhonemize) {
+      // The phonemizer runs on this isolate; on web its espeak-ng-data is
+      // embedded in the WASM bundle, on native it comes from the package
+      // assets (extracted once, cached).
+      await piper.initBindingsAsync();
+      final dataDir = kIsWeb ? '' : await piper.extractEspeakNgData();
+      final ret = piper.PiperPhonemize.initialize(dataDir);
+      if (ret < 0) {
+        _logController.add('Error: failed to initialize the piper phonemizer');
+      }
+    }
+
     if (kIsWeb) {
       await _initWeb();
     } else {
@@ -214,19 +232,32 @@ class TtsManager {
 
     final id = _nextId++;
 
+    // Phonemize on this isolate (that is where the piper package is
+    // initialized); the background isolate/worker only receives the resulting
+    // codepoints. piper may emit empty sentences (e.g. a trailing segment
+    // after punctuation) — the C API requires every sentence to be non-empty.
+    List<List<int>>? codepoints;
+    var outText = text;
+    if (cfg.selectedModelUsesPhonemize) {
+      codepoints = piper.PiperPhonemize.phonemize(text, voice: 'en-us')
+          .where((sentence) => sentence.isNotEmpty)
+          .toList();
+      outText = '';
+    }
+
     if (kIsWeb) {
       _worker?.generate(
-        text: text, sid: sid, speed: speed, generationId: generationId,
+        text: outText, sid: sid, speed: speed, generationId: generationId,
         referenceAudio: referenceAudio, referenceSampleRate: referenceSampleRate,
-        numSteps: numSteps,
+        numSteps: numSteps, phonemeCodepoints: codepoints,
       );
     } else {
       _pending[id] = _PendingGenerate(
         text: text, sid: sid, speed: speed, generationId: generationId,
       );
-      _sendPort!.send(_GenerateRequest(text, sid, speed, generationId,
+      _sendPort!.send(_GenerateRequest(outText, sid, speed, generationId,
         referenceAudio: referenceAudio, referenceSampleRate: referenceSampleRate,
-        numSteps: numSteps,
+        numSteps: numSteps, phonemeCodepoints: codepoints,
       ));
     }
 
@@ -420,6 +451,7 @@ class TtsManager {
         referenceAudio: req.referenceAudio,
         referenceSampleRate: req.referenceSampleRate,
         numSteps: req.numSteps,
+        phonemeCodepoints: req.phonemeCodepoints,
       );
 
       final sampleRate = tts.sampleRate;

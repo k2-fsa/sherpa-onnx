@@ -1,11 +1,14 @@
 // Copyright (c)  2026  Xiaomi Corporation
 import 'package:flutter/material.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import 'package:url_launcher/url_launcher.dart';
 
 import './vad_screen.dart';
-import './model_config.dart' show modelFile, modelUrl, modelDocUrl;
+import './model_config.dart' show modelFile, modelUrl, modelDocUrl, modelName;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await sherpa_onnx.initBindingsAsync();
   runApp(const MyApp());
 }
 
@@ -68,11 +71,42 @@ class InfoScreen extends StatelessWidget {
       fontSize: 13,
     );
 
+    final version = sherpa_onnx.getVersion();
+    final gitSha1 = sherpa_onnx.getGitSha1();
+    final gitDate = sherpa_onnx.getGitDate();
+    final onnxruntimeVersion = sherpa_onnx.getOnnxruntimeVersion();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Info')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Version',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Divider(),
+                  _InfoRow('sherpa-onnx', version),
+                  _InfoRow('Git SHA1', gitSha1),
+                  _InfoRow('Git date', gitDate),
+                  _InfoRow('onnxruntime', onnxruntimeVersion),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -139,10 +173,37 @@ class InfoScreen extends StatelessWidget {
                     style: linkStyle,
                   ),
                   _LinkRow(
-                    icon: Icons.mic,
-                    label: 'All VAD Models',
-                    url:
-                        'https://k2-fsa.github.io/sherpa/onnx/vad/silero-vad.html',
+                    icon: Icons.cloud_download,
+                    label: 'Model Releases',
+                    url: 'https://github.com/k2-fsa/sherpa-onnx/releases',
+                    style: linkStyle,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.group, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Community',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Divider(),
+                  _InfoRow('QQ Group', '744602236'),
+                  _LinkRow(
+                    icon: Icons.chat,
+                    label: 'WeChat Groups',
+                    url: 'https://k2-fsa.github.io/sherpa/social-groups.html',
                     style: linkStyle,
                   ),
                 ],
@@ -171,6 +232,32 @@ class InfoScreen extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoRow(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label,
+                style: const TextStyle(fontSize: 13, color: Colors.grey)),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 13)),
           ),
         ],
       ),

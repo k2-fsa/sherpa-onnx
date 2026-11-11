@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -74,10 +75,15 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
 
       int32_t y = MaxElementIndex(p_logit, vocab_size);
 
+      // Apply LogSoftmax and get log probability for selected token
+      LogSoftmax(p_logit, vocab_size);
+      float log_prob = p_logit[y];
+
       if (y != blank_id) {
         emitted = true;
         r.tokens.push_back(y);
         r.timestamps.push_back(t + r.frame_offset);
+        r.ys_probs.push_back(log_prob);
         r.num_trailing_blanks = 0;
 
         decoder_input = BuildDecoderInput(y, model->Allocator());

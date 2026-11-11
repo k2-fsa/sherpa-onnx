@@ -5,7 +5,7 @@ description: >
 
 publish_to: 'none'
 
-version: 1.13.4
+version: 2.0.1
 
 topics:
   - speech-recognition
@@ -15,7 +15,7 @@ issue_tracker: https://github.com/k2-fsa/sherpa-onnx/issues
 repository: https://github.com/k2-fsa/sherpa-onnx/tree/master/sherpa-onnx/flutter
 
 environment:
-  sdk: ">=2.17.0 <4.0.0"
+  sdk: ">=3.2.0 <4.0.0"
   flutter: ">=2.8.1"
 
 dependencies:
@@ -31,7 +31,7 @@ dependencies:
   record: 6.0.0
   url_launcher: ^6.2.6
 
-  sherpa_onnx: ^1.13.4
+  sherpa_onnx: 2.0.1
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
 

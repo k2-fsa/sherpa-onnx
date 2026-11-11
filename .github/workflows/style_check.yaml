@@ -21,8 +21,12 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/style_check.yaml'
-      - 'sherpa-onnx/**'
+      - 'sherpa-onnx/csrc/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'sherpa-onnx/csrc/**'
 
   workflow_dispatch:
 
@@ -35,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.10"]
       fail-fast: false
 
     steps:

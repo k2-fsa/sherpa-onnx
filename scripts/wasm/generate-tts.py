@@ -42,7 +42,14 @@ def get_models():
 
             mv -v *.onnx ../
             mv -v tokens.txt ../
-            mv -v espeak-ng-data ../
+            popd
+
+            pushd ..
+            rm -rf piper-phonemize
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.9-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.9-wasm-browser.zip
+            mv browser piper-phonemize
+            rm piper-phonemize-v1.5.9-wasm-browser.zip
             popd
 
 
@@ -61,7 +68,14 @@ def get_models():
 
             mv -v *.onnx ../
             mv -v tokens.txt ../
-            mv -v espeak-ng-data ../
+            popd
+
+            pushd ..
+            rm -rf piper-phonemize
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.9-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.9-wasm-browser.zip
+            mv browser piper-phonemize
+            rm piper-phonemize-v1.5.9-wasm-browser.zip
             popd
 
 
@@ -82,7 +96,6 @@ def get_models():
             mv -v *.onnx ../
             mv -v tokens.txt ../
             mv -v lexicon.txt ../
-            mv -v espeak-ng-data ../
             popd
 
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-16khz-univ.onnx
@@ -126,7 +139,14 @@ def get_models():
 
             mv -v *.onnx ../
             mv -v tokens.txt ../
-            mv -v espeak-ng-data ../
+            popd
+
+            pushd ..
+            rm -rf piper-phonemize
+            curl -SL -O https://github.com/csukuangfj/piper-phonemize/releases/download/wasm/piper-phonemize-v1.5.9-wasm-browser.zip
+            unzip -q piper-phonemize-v1.5.9-wasm-browser.zip
+            mv browser piper-phonemize
+            rm piper-phonemize-v1.5.9-wasm-browser.zip
             popd
 
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
@@ -150,13 +170,37 @@ def get_models():
             mv -v decoder.int8.onnx ../
             mv -v tokens.txt ../
             mv -v lexicon.txt ../
-            mv -v espeak-ng-data ../
             popd
 
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
             git checkout .
             sed -i.bak 's/let modelType = 0/let modelType = 4/g' ../sherpa-onnx-tts.js
+            rm -rf $model_name
+            git diff
+            """,
+        ),
+        Model(
+            model_name="kokoro-multi-lang-v1_0",
+            hf="k2-fsa/web-assembly-tts-sherpa-onnx-zh-en-kokoro",
+            ms="csukuangfj/web-assembly-tts-sherpa-onnx-zh-en-kokoro",
+            cmd="""
+            pushd $model_name
+
+            mv -v model.onnx ../
+            mv -v voices.bin ../
+            mv -v tokens.txt ../
+            mv -v lexicon-us-en.txt ../
+            mv -v lexicon-zh.txt ../
+            mv -v *.fst ../
+            popd
+
+            git checkout .
+
+            # modelType 8: kokoro-multi-lang. Do not use 7 here, that is
+            # Supertonic's id in sherpa-onnx-tts.js.
+            sed -i.bak 's/let modelType = 0/let modelType = 8/g' ../sherpa-onnx-tts.js
+
             rm -rf $model_name
             git diff
             """,
@@ -179,6 +223,28 @@ def get_models():
 
             git checkout .
             sed -i.bak 's/let modelType = 0/let modelType = 5/g' ../sherpa-onnx-tts.js
+            rm -rf $model_name
+            git diff
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-supertonic-3-tts-int8-2026-05-11",
+            hf="k2-fsa/web-assembly-multilingual-tts-supertonic",
+            ms="csukuangfj/web-assembly-multilingual-tts-supertonic",
+            cmd="""
+            pushd $model_name
+
+            mv -v duration_predictor.int8.onnx ../
+            mv -v text_encoder.int8.onnx ../
+            mv -v vector_estimator.int8.onnx ../
+            mv -v vocoder.int8.onnx ../
+            mv -v tts.json ../
+            mv -v unicode_indexer.bin ../
+            mv -v voice.bin ../
+            popd
+
+            git checkout .
+            sed -i.bak 's/let modelType = 0/let modelType = 7/g' ../sherpa-onnx-tts.js
             rm -rf $model_name
             git diff
             """,

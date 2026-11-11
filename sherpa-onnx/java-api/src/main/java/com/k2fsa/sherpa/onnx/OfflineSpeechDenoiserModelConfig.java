@@ -4,6 +4,7 @@ package com.k2fsa.sherpa.onnx;
 public class OfflineSpeechDenoiserModelConfig {
     private final OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
     private final OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
+    private final OfflineSpeechDenoiserVoxLockModelConfig voxlock;
     private final int numThreads;
     private final boolean debug;
     private final String provider;
@@ -11,6 +12,7 @@ public class OfflineSpeechDenoiserModelConfig {
     private OfflineSpeechDenoiserModelConfig(Builder builder) {
         this.gtcrn = builder.gtcrn;
         this.dpdfnet = builder.dpdfnet;
+        this.voxlock = builder.voxlock;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
         this.provider = builder.provider;
@@ -23,6 +25,7 @@ public class OfflineSpeechDenoiserModelConfig {
     public static class Builder {
         private OfflineSpeechDenoiserGtcrnModelConfig gtcrn = OfflineSpeechDenoiserGtcrnModelConfig.builder().build();
         private OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet = OfflineSpeechDenoiserDpdfNetModelConfig.builder().build();
+        private OfflineSpeechDenoiserVoxLockModelConfig voxlock = OfflineSpeechDenoiserVoxLockModelConfig.builder().build();
         private int numThreads = 1;
         private boolean debug = true;
         private String provider = "cpu";
@@ -38,6 +41,11 @@ public class OfflineSpeechDenoiserModelConfig {
 
         public Builder setDpdfnet(OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet) {
             this.dpdfnet = dpdfnet;
+            return this;
+        }
+
+        public Builder setVoxlock(OfflineSpeechDenoiserVoxLockModelConfig voxlock) {
+            this.voxlock = voxlock;
             return this;
         }
 

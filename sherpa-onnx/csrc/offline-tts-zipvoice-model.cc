@@ -85,6 +85,16 @@ class OfflineTtsZipvoiceModel::Impl {
         text_condition.GetTensorTypeAndShapeInfo().GetShape();
     int64_t num_frames = text_cond_shape[1];
 
+    if (num_frames <= prompt_feat_len) {
+      SHERPA_ONNX_LOGE(
+          "num_frames (%d) <= prompt_feat_len (%d) with speed %.3f. The text "
+          "is too short for this speed. Please use a smaller speed or a "
+          "shorter reference audio and text.",
+          static_cast<int32_t>(num_frames),
+          static_cast<int32_t>(prompt_feat_len), speed);
+      return Ort::Value{nullptr};
+    }
+
     int64_t feat_dim = meta_data_.feat_dim;
 
     std::vector<float> x_data(batch_size * num_frames * feat_dim);

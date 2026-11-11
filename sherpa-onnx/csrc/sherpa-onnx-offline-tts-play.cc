@@ -17,8 +17,8 @@
 #include <vector>
 
 #include "portaudio.h"  // NOLINT
-#include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
@@ -58,7 +58,7 @@ static int32_t AudioGeneratedCallback(const float *s, int32_t n,
     Samples samples;
     samples.data = std::vector<float>{s, s + n};
 
-    std::lock_guard<std::mutex> lock(g_buffer.mutex);
+    std::scoped_lock lock(g_buffer.mutex);
     g_buffer.samples.push(std::move(samples));
     g_started = true;
   }
@@ -80,7 +80,7 @@ static int PlayCallback(const void * /*in*/, void *out,
   }
 
   float *pout = reinterpret_cast<float *>(out);
-  std::lock_guard<std::mutex> lock(g_buffer.mutex);
+  std::scoped_lock lock(g_buffer.mutex);
 
   if (g_buffer.samples.empty()) {
     if (g_stopped) {
@@ -201,10 +201,12 @@ Usage examples:
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xf vits-piper-en_US-amy-low.tar.bz2
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 ./bin/sherpa-onnx-offline-tts-play \
  --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
  --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
- --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
+ --vits-lexicon=./lexicon-en-us.txt \
  --output-filename=./generated.wav \
   "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
@@ -246,12 +248,12 @@ ZipVoice TTS:
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
 tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
 
 ./bin/sherpa-onnx-offline-tts-play \
  --zipvoice-encoder=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx \
  --zipvoice-decoder=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx \
- --zipvoice-data-dir=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data \
- --zipvoice-lexicon=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt \
+ --zipvoice-lexicon=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt,./lexicon-en-us.txt \
  --zipvoice-tokens=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt \
  --zipvoice-vocoder=./vocos_24khz.onnx \
  --reference-audio=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/test_wavs/leijun-1.wav \
@@ -386,8 +388,7 @@ or details.
 
     int32_t sample_rate;
     bool is_ok = false;
-    auto samples =
-        sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+    auto samples = sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
@@ -399,8 +400,7 @@ or details.
 
   if (is_zipvoice_tts) {
     if (reference_text.empty()) {
-      fprintf(stderr,
-              "You need to provide --reference-text for ZipVoice TTS");
+      fprintf(stderr, "You need to provide --reference-text for ZipVoice TTS");
       SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
     gen_config.reference_text = reference_text;

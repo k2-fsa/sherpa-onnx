@@ -112,6 +112,11 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
       meta_data_.window_shift = static_cast<int32_t>(window_shift);
     }
 
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Pyannote window shift: %d samples",
+                       meta_data_.window_shift);
+    }
+
     SHERPA_ONNX_READ_META_DATA(meta_data_.receptive_field_size,
                                "receptive_field_size");
     SHERPA_ONNX_READ_META_DATA(meta_data_.receptive_field_shift,

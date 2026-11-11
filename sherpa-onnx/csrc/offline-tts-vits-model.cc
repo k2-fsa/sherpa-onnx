@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -227,6 +226,8 @@ class OfflineTtsVitsModel::Impl {
 
     if (comment.find("Inflect") != std::string::npos) {
       meta_data_.is_inflect = true;
+      // ignore its add_blank from the meta data
+      meta_data_.add_blank = 0;
     }
   }
 
@@ -375,8 +376,8 @@ class OfflineTtsVitsModel::Impl {
     Ort::Value sid_tensor =
         Ort::Value::CreateTensor(memory_info, &sid, 1, &scale_shape, 1);
 
-    Ort::Value emotion_tensor = Ort::Value::CreateTensor(
-        memory_info, &emotion_id, 1, &scale_shape, 1);
+    Ort::Value emotion_tensor =
+        Ort::Value::CreateTensor(memory_info, &emotion_id, 1, &scale_shape, 1);
 
     std::vector<Ort::Value> inputs;
     inputs.reserve(7);

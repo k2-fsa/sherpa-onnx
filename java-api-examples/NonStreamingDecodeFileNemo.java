@@ -1,6 +1,6 @@
 // Copyright 2024 Xiaomi Corporation
 
-// This file shows how to use an offline NeMo CTC model, i.e., non-streaming NeMo CTC model,,
+// This file shows how to use an offline NeMo CTC model, i.e., non-streaming NeMo CTC model,
 // to decode files.
 import com.k2fsa.sherpa.onnx.*;
 

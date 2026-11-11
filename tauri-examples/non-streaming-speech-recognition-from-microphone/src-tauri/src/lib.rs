@@ -44,8 +44,8 @@ impl Default for VadSettings {
 
 #[derive(Serialize, Clone)]
 struct SegmentResult {
-    start: f32,
-    end: f32,
+    start: f64,
+    end: f64,
     wall_start: String,
     wall_end: String,
     text: String,
@@ -185,13 +185,13 @@ fn recognize_segment(
     audio_offset_samples: usize,
 ) {
     let samples = segment.samples();
-    let duration = samples.len() as f32 / 16000.0;
+    let duration = samples.len() as f64 / 16000.0;
     if duration < 0.1 {
         return;
     }
 
-    let vad_start = segment.start() as f32 / 16000.0;
-    let offset_secs = audio_offset_samples as f32 / 16000.0;
+    let vad_start = segment.start() as f64 / 16000.0;
+    let offset_secs = audio_offset_samples as f64 / 16000.0;
     let rel_start = offset_secs + vad_start;
     let rel_end = rel_start + duration;
 
@@ -515,8 +515,8 @@ fn get_recording_state(state: tauri::State<'_, AppState>) -> Result<RecordingSta
 #[tauri::command]
 fn save_segment_as_wav(
     path: String,
-    start: f32,
-    end: f32,
+    start: f64,
+    end: f64,
     state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
     let audio = state.recorded_audio.lock().map_err(|e| e.to_string())?;
@@ -559,7 +559,7 @@ fn get_recorded_audio_path(state: tauri::State<'_, AppState>) -> Result<String, 
     Ok(tmp_str)
 }
 
-fn format_srt_time(seconds: f32) -> String {
+fn format_srt_time(seconds: f64) -> String {
     let total_ms = (seconds * 1000.0) as u64;
     let h = total_ms / 3_600_000;
     let m = (total_ms % 3_600_000) / 60_000;

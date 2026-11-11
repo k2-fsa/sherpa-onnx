@@ -45,7 +45,7 @@ static void DetectKeyPress() {
         SHERPA_ONNX_LOGE("Start recording. Press Enter to stop recording");
         state = State::kRecording;
         {
-          std::lock_guard<std::mutex> lock(samples_mutex);
+          std::scoped_lock lock(samples_mutex);
           samples.clear();
         }
         break;
@@ -65,7 +65,7 @@ static int32_t RecordCallback(const void *input_buffer,
                               const PaStreamCallbackTimeInfo * /*time_info*/,
                               PaStreamCallbackFlags /*status_flags*/,
                               void * /*user_data*/) {
-  std::lock_guard<std::mutex> lock(samples_mutex);
+  std::scoped_lock lock(samples_mutex);
 
   auto p = reinterpret_cast<const float *>(input_buffer);
   samples.insert(samples.end(), p, p + frames_per_buffer);
@@ -177,7 +177,7 @@ for a list of pre-trained models to download.
       case State::kDecoding: {
         std::vector<float> buf;
         {
-          std::lock_guard<std::mutex> lock(samples_mutex);
+          std::scoped_lock lock(samples_mutex);
           buf = std::move(samples);
         }
 

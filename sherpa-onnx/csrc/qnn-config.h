@@ -30,6 +30,12 @@ struct QnnConfig {
   // Example value: /some/path/to/libQnnSystem.so
   std::string system_lib;
 
+  // If true, pin the Qualcomm HTP (NPU DSP) to its max clocks via DCVS v3 and
+  // RPC polling (enable only for latency-critical, autoregressive
+  // decoders where the default DCVS policy introduces per-step wake-up
+  // overhead).
+  bool htp_perf_mode = false;
+
   std::string ToString() const;
 
   void Register(ParseOptions *po);

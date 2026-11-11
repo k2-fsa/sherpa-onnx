@@ -23,12 +23,15 @@ class OfflineWhisperDecoder {
    *                              (n_text_layer, N, n_audio_ctx, n_text_state).
    * @param n_layer_cross_v       A 4-D tensor of shape
    *                              (n_text_layer, N, n_audio_ctx, n_text_state).
+   * @param language_candidate_ids Ordered metadata language IDs for automatic
+   *                               detection; empty means unrestricted.
    *
    * @return Return a vector of size `N` containing the decoded results.
    */
   virtual std::vector<OfflineWhisperDecoderResult> Decode(
       Ort::Value n_layer_cross_k, Ort::Value n_layer_cross_v,
-      int32_t num_feature_frames) = 0;
+      int32_t num_feature_frames,
+      const std::vector<int32_t> &language_candidate_ids) = 0;
 
   virtual void SetConfig(const OfflineWhisperModelConfig &config) = 0;
 };

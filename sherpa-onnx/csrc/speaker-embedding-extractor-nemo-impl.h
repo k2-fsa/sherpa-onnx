@@ -130,8 +130,10 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
         p, num_frames, feat_dim);
 
     auto EX = m.colwise().mean();
-    auto EX2 = m.array().pow(2).colwise().sum() / num_frames;
-    auto variance = (EX2 - EX.array().pow(2)).max(1e-5f);
+    // E[x^2] - E[x]^2 cancels catastrophically in float32 when a feature
+    // stays near a constant value, so compute the variance from centered
+    // values instead.
+    auto variance = (m.rowwise() - EX).array().square().colwise().mean();
 
     auto stddev = variance.array().sqrt();
 

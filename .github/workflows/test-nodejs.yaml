@@ -113,9 +113,43 @@ jobs:
           pushd $d
           npm install
           npm install wav
+          npm install piper-phonemize
           popd
 
           ./.github/scripts/test-nodejs-npm.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}
+          # The examples are copied into scripts/nodejs and run from there
+          # (export d=scripts/nodejs), so their wavs land in scripts/nodejs,
+          # not in nodejs-examples.
+          path: scripts/nodejs/test-*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-${{ matrix.os }}
+          # the examples run from scripts/nodejs, see the comment above
+          path: scripts/nodejs/test-offline-speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-offline-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: scripts/nodejs/test-offline-speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-${{ matrix.os }}
+          path: scripts/nodejs/test-online-speech-enhancement-voxlock
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}
+          path: scripts/nodejs/test-online-speech-enhancement-voxlock-with-voice-sample
+          if-no-files-found: warn
 
       - name: Setup tmate session
         if: false

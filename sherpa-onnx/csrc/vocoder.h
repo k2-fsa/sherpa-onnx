@@ -28,6 +28,9 @@ class Vocoder {
    *  @return Return a float32 vector containing audio samples..
    */
   virtual std::vector<float> Run(Ort::Value mel) const = 0;
+
+  /** @return Return the sample rate of the vocoder. */
+  virtual int32_t SampleRate() const = 0;
 };
 
 }  // namespace sherpa_onnx

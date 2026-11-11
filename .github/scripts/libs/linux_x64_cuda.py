@@ -30,8 +30,8 @@ class OnnxruntimeConfig:
 
 # To add a new onnxruntime version, just add entries here.
 onnxruntime_configs = [
-    OnnxruntimeConfig("1.27.1", "12"),
-    OnnxruntimeConfig("1.27.1", "13"),
+    OnnxruntimeConfig("1.28.2", "12"),
+    OnnxruntimeConfig("1.28.2", "13"),
 ]
 
 build_types = ["Release"]

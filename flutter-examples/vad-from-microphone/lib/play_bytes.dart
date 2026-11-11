@@ -7,6 +7,9 @@ import 'package:path_provider/path_provider.dart';
 
 Future<void> playWavBytes(AudioPlayer player, Uint8List wavBytes) async {
   final dir = await getTemporaryDirectory();
+  if (!await dir.exists()) {
+    await dir.create(recursive: true);
+  }
   final file =
       File('${dir.path}/tts_chunk_${DateTime.now().microsecondsSinceEpoch}.wav');
   await file.writeAsBytes(wavBytes);

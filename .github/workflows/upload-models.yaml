@@ -24,6 +24,92 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: VoxLock fp32
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-voxlock
+          mkdir -p $d
+          pushd $d
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_enroll.onnx
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_chunk.onnx
+
+          mv -v voxlock_enroll.onnx enroll.onnx
+          mv -v voxlock_chunk.onnx chunk.onnx
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models
+
+          The author is https://github.com/arbazsiddiqui
+
+          See also https://github.com/k2-fsa/sherpa-onnx/pull/4085
+          EOF
+
+          mkdir test_wavs
+
+          cd test_wavs
+
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_test_call.wav
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_test_voice_sample.wav
+
+          mv voxlock_test_call.wav en-combined.wav
+          mv voxlock_test_voice_sample.wav en-voice-sample-f.wav
+
+          curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/voxlock-test-wav/zh-combined.wav
+          curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/voxlock-test-wav/zh-voice-sample-f.wav
+          curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/voxlock-test-wav/zh-voice-sample-m.wav
+          cd ..
+
+          popd
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
+      - name: VoxLock int8
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-voxlock-int8
+          mkdir -p $d
+          pushd $d
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_enroll.onnx
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_chunk_int8.onnx
+
+          mv -v voxlock_enroll.onnx enroll.onnx
+          mv -v voxlock_chunk_int8.onnx chunk_int8.onnx
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://github.com/arbazsiddiqui/voxlock/releases/tag/sherpa-onnx-models
+
+          The author is https://github.com/arbazsiddiqui
+
+          See also https://github.com/k2-fsa/sherpa-onnx/pull/4085
+          EOF
+
+          mkdir test_wavs
+
+          cd test_wavs
+
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_test_call.wav
+          curl -SL -O https://github.com/arbazsiddiqui/voxlock/releases/download/sherpa-onnx-models/voxlock_test_voice_sample.wav
+
+          mv voxlock_test_call.wav en-combined.wav
+          mv voxlock_test_voice_sample.wav en-voice-sample-f.wav
+
+          curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/voxlock-test-wav/zh-combined.wav
+          curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/voxlock-test-wav/zh-voice-sample-f.wav
+          curl -SL -O https://huggingface.co/csukuangfj/tmp-2026-09-07/resolve/main/voxlock-test-wav/zh-voice-sample-m.wav
+          cd ..
+
+          popd
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
       - name: X-ASR non-stremaing zipformer transducer
         if: false
         shell: bash
@@ -1265,7 +1351,7 @@ jobs:
           done
 
       - name: Release
-        if: true
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -1386,7 +1472,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.onnx
+          file: ./*.tar.bz2
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}

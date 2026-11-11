@@ -92,9 +92,9 @@ input.wav should be 16kHz.
 
     while (!vad->Empty()) {
       const auto &segment = vad->Front();
-      float start_time = segment.start / static_cast<float>(sampling_rate);
-      float end_time = start_time + segment.samples.size() /
-                                        static_cast<float>(sampling_rate);
+      double start_time = segment.start / static_cast<double>(sampling_rate);
+      double end_time = start_time + segment.samples.size() /
+                                         static_cast<double>(sampling_rate);
 
       fprintf(stderr, "%.3f -- %.3f\n", start_time, end_time);
       samples_without_silence.insert(samples_without_silence.end(),

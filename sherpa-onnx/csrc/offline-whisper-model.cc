@@ -25,6 +25,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
+#include "sherpa-onnx/csrc/offline-whisper-language-candidates.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -208,8 +209,9 @@ class OfflineWhisperModel::Impl {
 
   int32_t NumAlignmentHeads() const { return n_alignment_heads_; }
 
-  int32_t DetectLanguage(Ort::Value &cross_k,    // NOLINT
-                         Ort::Value &cross_v) {  // NOLINT
+  int32_t DetectLanguage(
+      Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
+      const std::vector<int32_t> &language_candidate_ids) {
     int64_t token_val = SOT();
     std::array<int64_t, 2> token_shape{1, 1};
 
@@ -235,20 +237,9 @@ class OfflineWhisperModel::Impl {
     cross_v = std::move(std::get<4>(decoder_out));
 
     const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
-    const auto &all_language_ids = GetAllLanguageIDs();
-
-    int32_t lang_id = all_language_ids[0];
-    float this_logit = p_logits[lang_id];
-
-    for (int32_t i = 1; i != all_language_ids.size(); ++i) {
-      int32_t id = all_language_ids[i];
-      float p = p_logits[id];
-
-      if (p > this_logit) {
-        this_logit = p;
-        lang_id = id;
-      }
-    }
+    const auto &ids = language_candidate_ids.empty() ? GetAllLanguageIDs()
+                                                    : language_candidate_ids;
+    int32_t lang_id = SelectWhisperLanguage(p_logits, ids);
 
     if (config_.debug) {
       SHERPA_ONNX_LOGE("Detected language: %s",
@@ -535,9 +526,10 @@ OfflineWhisperModel::ForwardDecoder(Ort::Value tokens,
       std::move(n_layer_cross_v), std::move(offset));
 }
 
-int32_t OfflineWhisperModel::DetectLanguage(Ort::Value &cross_k,    // NOLINT
-                                            Ort::Value &cross_v) {  // NOLINT
-  return impl_->DetectLanguage(cross_k, cross_v);
+int32_t OfflineWhisperModel::DetectLanguage(
+    Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
+    const std::vector<int32_t> &language_candidate_ids) {
+  return impl_->DetectLanguage(cross_k, cross_v, language_candidate_ids);
 }
 
 std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::GetInitialSelfKVCache()

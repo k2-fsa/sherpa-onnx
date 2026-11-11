@@ -15,6 +15,8 @@ rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 python3 ./python-api-examples/zipvoice-tts.py
 
 You can find more models at
@@ -40,8 +42,7 @@ def create_tts():
                 tokens="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt",
                 encoder="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx",
                 decoder="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx",
-                data_dir="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data",
-                lexicon="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt",
+                lexicon="./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt,./lexicon-en-us.txt",
                 vocoder="./vocos_24khz.onnx",
             ),
             debug=False,

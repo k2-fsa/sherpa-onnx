@@ -13,7 +13,7 @@ import (
 	"time"
 
 	oto "github.com/ebitengine/oto/v3"
-	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
+	sherpa "github.com/k2-fsa/sherpa-onnx-go/v2/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 )
 

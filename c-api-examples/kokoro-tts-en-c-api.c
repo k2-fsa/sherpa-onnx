@@ -14,6 +14,8 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-e
 tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
 ./kokoro-tts-en-c-api
 
  */
@@ -39,7 +41,7 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.kokoro.model = "./kokoro-en-v0_19/model.onnx";
   config.model.kokoro.voices = "./kokoro-en-v0_19/voices.bin";
   config.model.kokoro.tokens = "./kokoro-en-v0_19/tokens.txt";
-  config.model.kokoro.data_dir = "./kokoro-en-v0_19/espeak-ng-data";
+  config.model.kokoro.lexicon = "./lexicon-en-us.txt";
 
   config.model.num_threads = 2;
 

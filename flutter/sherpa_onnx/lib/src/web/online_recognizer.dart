@@ -13,7 +13,6 @@ export '../online_recognizer_config.dart';
 /// [OnlineStream] and call [decode] while [isReady] is true.
 class OnlineRecognizer {
   OnlineRecognizer.fromPtr({required this.ptr, required this.config});
-  OnlineRecognizer._({required this.ptr, required this.config});
 
   factory OnlineRecognizer(OnlineRecognizerConfig config) {
     throw UnsupportedError('OnlineRecognizer is not yet supported on web');

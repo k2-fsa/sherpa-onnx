@@ -8,6 +8,7 @@ use std::os::raw::{c_char, c_float};
 #[derive(Debug, Copy, Clone)]
 pub struct OfflineSpeakerSegmentationPyannoteModelConfig {
     pub model: *const c_char,
+    pub window_shift_ratio: c_float,
 }
 
 #[repr(C)]
@@ -24,6 +25,7 @@ pub struct OfflineSpeakerSegmentationModelConfig {
 pub struct FastClusteringConfig {
     pub num_clusters: i32,
     pub threshold: c_float,
+    pub compute_confidence: i32,
 }
 
 #[repr(C)]
@@ -52,6 +54,7 @@ pub struct OfflineSpeakerDiarizationSegment {
     pub start: c_float,
     pub end: c_float,
     pub speaker: i32,
+    pub confidence: c_float,
 }
 
 extern "C" {

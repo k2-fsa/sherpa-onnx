@@ -12,6 +12,9 @@ target_link_libraries(streaming-nemotron-cxx-api sherpa-onnx-cxx-api)
 add_executable(streaming-zipformer-with-hr-cxx-api ./streaming-zipformer-with-hr-cxx-api.cc)
 target_link_libraries(streaming-zipformer-with-hr-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(zipformer-ctc-hlg-cxx-api ./zipformer-ctc-hlg-cxx-api.cc)
+target_link_libraries(zipformer-ctc-hlg-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(speech-enhancement-gtcrn-cxx-api ./speech-enhancement-gtcrn-cxx-api.cc)
 target_link_libraries(speech-enhancement-gtcrn-cxx-api sherpa-onnx-cxx-api)
 
@@ -32,6 +35,25 @@ target_link_libraries(online-speech-enhancement-gtcrn-cxx-api
 add_executable(online-speech-enhancement-dpdfnet-cxx-api
                ./online-speech-enhancement-dpdfnet-cxx-api.cc)
 target_link_libraries(online-speech-enhancement-dpdfnet-cxx-api
+                      sherpa-onnx-cxx-api)
+
+add_executable(speech-enhancement-voxlock-cxx-api
+               ./speech-enhancement-voxlock-cxx-api.cc)
+target_link_libraries(speech-enhancement-voxlock-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(speech-enhancement-voxlock-with-voice-sample-cxx-api
+               ./speech-enhancement-voxlock-with-voice-sample-cxx-api.cc)
+target_link_libraries(speech-enhancement-voxlock-with-voice-sample-cxx-api
+                      sherpa-onnx-cxx-api)
+
+add_executable(online-speech-enhancement-voxlock-cxx-api
+               ./online-speech-enhancement-voxlock-cxx-api.cc)
+target_link_libraries(online-speech-enhancement-voxlock-cxx-api
+                      sherpa-onnx-cxx-api)
+
+add_executable(online-speech-enhancement-voxlock-with-voice-sample-cxx-api
+               ./online-speech-enhancement-voxlock-with-voice-sample-cxx-api.cc)
+target_link_libraries(online-speech-enhancement-voxlock-with-voice-sample-cxx-api
                       sherpa-onnx-cxx-api)
 
 add_executable(kws-cxx-api ./kws-cxx-api.cc)

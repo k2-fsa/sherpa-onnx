@@ -24,6 +24,7 @@ class TtsWorker {
     Float32List? referenceAudio,
     int referenceSampleRate = 0,
     int numSteps = 5,
+    List<List<int>>? phonemeCodepoints,
   }) {}
   void cancel() {}
   void dispose() {}

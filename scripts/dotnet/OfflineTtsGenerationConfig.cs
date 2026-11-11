@@ -19,6 +19,8 @@ namespace SherpaOnnx
             ReferenceText = "";
             NumSteps = 5;
             Extra = new Hashtable();
+            PhonemeCodepoints = null;
+            Tokens = null;
         }
 
         public float SilenceScale;
@@ -36,21 +38,35 @@ namespace SherpaOnnx
         public Hashtable Extra;
 
         /// <summary>
+        /// Pre-phonemized input as Unicode codepoints. Each inner array is one
+        /// sentence. When set, it is used in place of the text argument;
+        /// leave empty to use text with a lexicon. Mutually exclusive with
+        /// Tokens.
+        /// </summary>
+        public int[][] PhonemeCodepoints;
+
+        /// <summary>
+        /// Pre-tokenized input, e.g. Chinese pinyin like "zhong1". Each inner
+        /// array is one sentence. Mutually exclusive with PhonemeCodepoints.
+        /// </summary>
+        public string[][] Tokens;
+
+        /// <summary>
         /// Convert to native struct for P/Invoke
         /// </summary>
-        internal NativeStruct ToNative(out GCHandle? audioHandle)
+        internal NativeStruct ToNative(out NativeResources resources)
         {
+            resources = new NativeResources();
             NativeStruct native = new NativeStruct();
             native.SilenceScale = SilenceScale;
             native.Speed = Speed;
             native.Sid = Sid;
 
             // Handle ReferenceAudio
-            audioHandle = null;
             if (ReferenceAudio != null && ReferenceAudio.Length > 0)
             {
-                audioHandle = GCHandle.Alloc(ReferenceAudio, GCHandleType.Pinned);
-                native.ReferenceAudio = audioHandle.Value.AddrOfPinnedObject();
+                resources.AudioHandle = GCHandle.Alloc(ReferenceAudio, GCHandleType.Pinned);
+                native.ReferenceAudio = resources.AudioHandle.Value.AddrOfPinnedObject();
                 native.ReferenceAudioLen = ReferenceAudio.Length;
             }
             else
@@ -94,6 +110,78 @@ namespace SherpaOnnx
                 json.Append("}");
                 native.Extra = json.ToString();
             }
+            // Flatten PhonemeCodepoints; the C API takes a flat array plus
+            // the length of each sentence.
+            if (PhonemeCodepoints != null && PhonemeCodepoints.Length > 0)
+            {
+                int total = 0;
+                foreach (int[] sentence in PhonemeCodepoints)
+                {
+                    if (sentence != null)
+                        total += sentence.Length;
+                }
+
+                if (total > 0)
+                {
+                    int[] flat = new int[total];
+                    int[] lens = new int[PhonemeCodepoints.Length];
+                    int k = 0;
+                    for (int i = 0; i < PhonemeCodepoints.Length; i++)
+                    {
+                        int[] sentence = PhonemeCodepoints[i];
+                        if (sentence == null)
+                            continue;
+                        lens[i] = sentence.Length;
+                        Array.Copy(sentence, 0, flat, k, sentence.Length);
+                        k += sentence.Length;
+                    }
+
+                    resources.CodepointsHandle = GCHandle.Alloc(flat, GCHandleType.Pinned);
+                    resources.CodepointsLensHandle = GCHandle.Alloc(lens, GCHandleType.Pinned);
+                    native.PhonemeCodepoints = resources.CodepointsHandle.AddrOfPinnedObject();
+                    native.PhonemeCodepointsLens = resources.CodepointsLensHandle.AddrOfPinnedObject();
+                    native.PhonemeCodepointsNumSentences = PhonemeCodepoints.Length;
+                }
+            }
+
+            // Flatten Tokens the same way. Each token string becomes a C
+            // string; the char** array is pinned.
+            if (Tokens != null && Tokens.Length > 0)
+            {
+                int total = 0;
+                foreach (string[] sentence in Tokens)
+                {
+                    if (sentence != null)
+                        total += sentence.Length;
+                }
+
+                if (total > 0)
+                {
+                    IntPtr[] flat = new IntPtr[total];
+                    int[] lens = new int[Tokens.Length];
+                    int k = 0;
+                    for (int i = 0; i < Tokens.Length; i++)
+                    {
+                        string[] sentence = Tokens[i];
+                        if (sentence == null)
+                            continue;
+                        lens[i] = sentence.Length;
+                        for (int j = 0; j < sentence.Length; j++)
+                        {
+                            IntPtr p = Marshal.StringToHGlobalAnsi(sentence[j] ?? "");
+                            resources.TokenStrings.Add(p);
+                            flat[k++] = p;
+                        }
+                    }
+
+                    resources.TokensHandle = GCHandle.Alloc(flat, GCHandleType.Pinned);
+                    resources.TokensLensHandle = GCHandle.Alloc(lens, GCHandleType.Pinned);
+                    native.Tokens = resources.TokensHandle.AddrOfPinnedObject();
+                    native.TokensLens = resources.TokensLensHandle.AddrOfPinnedObject();
+                    native.TokensNumSentences = Tokens.Length;
+                }
+            }
+
             return native;
         }
 
@@ -147,6 +235,14 @@ namespace SherpaOnnx
 
             [MarshalAs(UnmanagedType.LPStr)]
             public string Extra;
+
+            public IntPtr PhonemeCodepoints;
+            public IntPtr PhonemeCodepointsLens;
+            public int PhonemeCodepointsNumSentences;
+
+            public IntPtr Tokens;
+            public IntPtr TokensLens;
+            public int TokensNumSentences;
         }
     }
 }

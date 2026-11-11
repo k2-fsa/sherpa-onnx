@@ -168,4 +168,21 @@ jobs:
           cp -v scripts/node-addon-api/lib/*.js $d/
           cp -v ./build/install/lib/lib*  $d/
 
+          # piper-phonemize-node (and the other example deps) come from npm
+          (cd $d && npm install)
+
+          # ...but the tests must run against the addon we just built: npm
+          # install also brings in sherpa-onnx-node with a prebuilt
+          # sherpa-onnx-<platform> binary, and addon.js looks in
+          # node_modules/ before ./sherpa-onnx.node. Drop those so the
+          # freshly built ./sherpa-onnx.node copied above is used.
+          rm -rf $d/node_modules/sherpa-onnx-*
+
           .github/scripts/test-nodejs-addon-npm.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
+          path: |
+            nodejs-addon-examples/test-*-lexicon.wav
+            nodejs-addon-examples/test-*-phonemize.wav
+          if-no-files-found: warn

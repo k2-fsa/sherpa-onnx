@@ -40,13 +40,13 @@ struct MultiChannelSamples {
 struct OfflineSourceSeparationInput {
   MultiChannelSamples samples;
 
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 struct OfflineSourceSeparationOutput {
   std::vector<MultiChannelSamples> stems;
 
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 class OfflineSourceSeparationImpl;

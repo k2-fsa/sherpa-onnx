@@ -6,11 +6,13 @@ public class QnnConfig {
     private final String backendLib;
     private final String contextBinary;
     private final String systemLib;
+    private final boolean htpPerfMode;
 
     private QnnConfig(Builder builder) {
         this.backendLib = builder.backendLib;
         this.contextBinary = builder.contextBinary;
         this.systemLib = builder.systemLib;
+        this.htpPerfMode = builder.htpPerfMode;
     }
 
     public static Builder builder() {
@@ -29,10 +31,15 @@ public class QnnConfig {
         return systemLib;
     }
 
+    public boolean getHtpPerfMode() {
+        return htpPerfMode;
+    }
+
     public static class Builder {
         private String backendLib = "";
         private String contextBinary = "";
         private String systemLib = "";
+        private boolean htpPerfMode = false;
 
         public QnnConfig build() {
             return new QnnConfig(this);
@@ -50,6 +57,11 @@ public class QnnConfig {
 
         public Builder setSystemLib(String systemLib) {
             this.systemLib = systemLib;
+            return this;
+        }
+
+        public Builder setHtpPerfMode(boolean htpPerfMode) {
+            this.htpPerfMode = htpPerfMode;
             return this;
         }
     }

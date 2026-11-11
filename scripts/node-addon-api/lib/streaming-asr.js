@@ -53,6 +53,40 @@ class OnlineStream {
   inputFinished() {
     addon.inputFinished(this.handle)
   }
+
+  /**
+   * Set a string option on the underlying online stream.
+   *
+   * For example, multilingual streaming Nemotron models read the option
+   * 'language' (e.g. 'en', 'de') from each stream on every decode call;
+   * leaving it unset selects automatic language detection.
+   * @param {string} key
+   * @param {string} value
+   */
+  setOption(key, value) {
+    addon.onlineStreamSetOption(this.handle, key, value);
+  }
+
+  /**
+   * Get a string option of the underlying online stream.
+   *
+   * Returns an empty string if the option has not been set; use hasOption()
+   * to distinguish an unset option from an empty value.
+   * @param {string} key
+   * @returns {string}
+   */
+  getOption(key) {
+    return addon.onlineStreamGetOption(this.handle, key);
+  }
+
+  /**
+   * Check whether an option has been set on the underlying online stream.
+   * @param {string} key
+   * @returns {boolean}
+   */
+  hasOption(key) {
+    return addon.onlineStreamHasOption(this.handle, key);
+  }
 }
 
 /**
@@ -91,6 +125,23 @@ class OnlineRecognizer {
    */
   decode(stream) {
     addon.decodeOnlineStream(this.handle, stream.handle);
+  }
+
+  /**
+   * Decode multiple streams of this recognizer in parallel.
+   *
+   * The caller must ensure every stream in the array is ready for decoding,
+   * i.e. isReady() returns true for each of them.
+   * @param {OnlineStream[]} streams
+   */
+  decodeStreams(streams) {
+    const handles = streams.map((stream) => {
+      if (!(stream instanceof OnlineStream)) {
+        throw new TypeError('Every element should be an OnlineStream');
+      }
+      return stream.handle;
+    });
+    addon.decodeMultipleOnlineStreams(this.handle, handles);
   }
 
   /**

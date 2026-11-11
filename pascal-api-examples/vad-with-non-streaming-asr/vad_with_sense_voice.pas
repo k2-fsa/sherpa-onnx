@@ -68,8 +68,8 @@ var
   WindowSize: Integer;
   SpeechSegment: TSherpaOnnxSpeechSegment;
 
-  Start: Single;
-  Duration: Single;
+  Start: Double;
+  Duration: Double;
 
   Stream: TSherpaOnnxOfflineStream;
   RecognitionResult: TSherpaOnnxOfflineRecognizerResult;

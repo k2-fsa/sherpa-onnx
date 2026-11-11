@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest]
-        lib_setup: [explicit, auto]
+        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest, windows-11-arm]
+        lib_setup: [explicit_lib, explicit_archive, auto]
 
     steps:
       - uses: actions/checkout@v4
@@ -26,20 +26,29 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.os == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
 
       - name: Set up MSVC
-        if: matrix.os == 'windows-latest'
+        if: startsWith(matrix.os, 'windows')
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.os == 'windows-11-arm' && 'amd64_arm64' || 'x64' }}
 
       - name: Select MSVC linker
-        if: matrix.os == 'windows-latest'
+        if: startsWith(matrix.os, 'windows')
         shell: pwsh
         run: |
-          $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+          if ("${{ matrix.os }}" -eq "windows-11-arm") {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\ARM64\link.exe'
+            $env_var = "CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER"
+          } else {
+            $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+            $env_var = "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
+          }
           if (-not (Test-Path $linker)) {
             throw "MSVC linker not found: $linker"
           }
-          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "$env_var=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Write-Host "Using linker: $linker"
           & where.exe link
 
@@ -54,11 +63,11 @@ jobs:
           sherpa-onnx-sys = { path = "../sherpa-onnx/rust/sherpa-onnx-sys" }
           PATCH
 
-      - name: Download shared libraries for explicit SHERPA_ONNX_LIB_DIR
-        if: matrix.lib_setup == 'explicit'
+      - name: Download shared libraries for explicit_lib
+        if: matrix.lib_setup == 'explicit_lib'
         shell: bash
         run: |
-          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
 
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-shared-lib
@@ -70,6 +79,8 @@ jobs:
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-shared-cpu-lib
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-shared-MT-Release-lib
+          elif [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-arm64-shared-MT-Release-lib
           else
             echo "Unknown ${{ matrix.os }}"
             exit 1
@@ -84,6 +95,34 @@ jobs:
           elif [[ "${{ matrix.os }}" == macos-* ]]; then
             echo "DYLD_LIBRARY_PATH=$PWD/$d/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
           fi
+
+      - name: Download shared libraries for explicit_archive
+        if: matrix.lib_setup == 'explicit_archive'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
+
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-shared-lib
+          elif [[ "${{ matrix.os }}" == "macos-15-intel" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-x64-shared-lib
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-shared-lib
+          elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-shared-cpu-lib
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-shared-MT-Release-lib
+          elif [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-arm64-shared-MT-Release-lib
+          else
+            echo "Unknown ${{ matrix.os }}"
+            exit 1
+          fi
+
+          curl -SsL -O "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/$d.tar.bz2"
+          mkdir -p /tmp/sherpa-onnx-archive
+          mv "$d.tar.bz2" /tmp/sherpa-onnx-archive/
+          echo "SHERPA_ONNX_ARCHIVE_DIR=/tmp/sherpa-onnx-archive" >> "$GITHUB_ENV"
 
       - name: Show library setup
         shell: bash
@@ -108,7 +147,247 @@ jobs:
             echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER: $CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
           fi
 
+          if [[ "${{ matrix.os }}" == "windows-11-arm" ]]; then
+            echo "CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER: $CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER"
+          fi
+
       - name: Run shared tests
         shell: bash
         run: |
           ./.github/scripts/test-rust-shared.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock_with_voice_sample-${{ matrix.os }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+
+  termux:
+    name: Termux ${{ matrix.arch }} (${{ matrix.lib_setup }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_lib
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_archive
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            lib_setup: auto
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_lib
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: explicit_archive
+          - arch: arm
+            runner: ubuntu-24.04-arm
+            lib_setup: auto
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: explicit_lib
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: explicit_archive
+          - arch: x86_64
+            runner: ubuntu-latest
+            lib_setup: auto
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: explicit_lib
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: explicit_archive
+          - arch: i686
+            runner: ubuntu-latest
+            lib_setup: auto
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Free disk space
+        if: matrix.runner == 'ubuntu-latest'
+        shell: bash
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h
+
+      - name: Download shared libraries for explicit modes
+        if: matrix.lib_setup == 'explicit_lib' || matrix.lib_setup == 'explicit_archive'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d "\"" -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION"
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v${SHERPA_ONNX_VERSION}/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+          ls -lh sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+
+          # Extract on host for explicit_lib mode
+          if [[ "${{ matrix.lib_setup }}" == "explicit_lib" ]]; then
+            mkdir -p /tmp/sherpa-onnx-android-lib
+            cd /tmp/sherpa-onnx-android-lib
+            tar -xvf ${{ github.workspace }}/sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2
+            cd ${{ github.workspace }}
+          fi
+
+          # Move archive for explicit_archive mode
+          mkdir -p /tmp/sherpa-onnx-android-archive
+          mv sherpa-onnx-v${SHERPA_ONNX_VERSION}-android.tar.bz2 /tmp/sherpa-onnx-android-archive/
+
+      - name: Make workspace writable
+        shell: bash
+        run: |
+          chmod -R 777 ${{ github.workspace }}
+
+      - name: Run Rust tests in Termux
+        shell: bash
+        env:
+          LIB_SETUP: ${{ matrix.lib_setup }}
+        run: |
+          # Set environment variables based on lib_setup mode before Docker
+          if [[ "$LIB_SETUP" == "explicit_lib" ]]; then
+            export SHERPA_ONNX_LIB_DIR=/lib/jniLibs/arm64-v8a
+          elif [[ "$LIB_SETUP" == "explicit_archive" ]]; then
+            export SHERPA_ONNX_ARCHIVE_DIR=/archive
+          fi
+
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+            --volume /tmp/sherpa-onnx-android-archive:/archive \
+            --volume /tmp/sherpa-onnx-android-lib:/lib \
+            -e SHERPA_ONNX_LIB_DIR \
+            -e SHERPA_ONNX_ARCHIVE_DIR \
+            termux/termux-docker:${{ matrix.arch }} \
+          bash -c '
+            set -e
+
+            apt update -y
+            apt install -y libc++ clang git
+
+            # Install Rust via Termux package manager (bypasses rustup file locking issues)
+            apt install -y rust
+            rustc --version
+            cargo --version
+
+            # Set library path for Android libraries
+            export LD_LIBRARY_PATH=/data/data/com.termux/files/usr/lib:$LD_LIBRARY_PATH
+
+
+            cd /k2-fsa/sherpa-onnx
+
+            # Detect and set library paths based on available directories.
+            #
+            # NOTE: the termux/termux-docker image does NOT pass -e environment
+            # variables into the container (verified: they arrive unset), so we
+            # must detect the library location by path here instead of
+            # receiving it from the host.
+            #
+            # This matters because sherpa-onnx-sys's build.rs silently falls
+            # back to downloading the *released* prebuilt libraries from GitHub
+            # when SHERPA_ONNX_LIB_DIR/SHERPA_ONNX_ARCHIVE_DIR are unset. For
+            # branches under test those prebuilt libs have older C struct
+            # layouts than the local checkout, so the examples crash with a
+            # wild-pointer SIGSEGV. Watch the "[build.rs]" cargo:warning lines
+            # in the log to confirm which library directory was picked up.
+            echo "=== Detecting library setup ==="
+            ARCH=$(uname -m)
+            case "$ARCH" in
+              aarch64|arm64) ABI="arm64-v8a" ;;
+              armv7*|armv8l) ABI="armeabi-v7a" ;;
+              x86_64) ABI="x86_64" ;;
+              i*86) ABI="x86" ;;
+              *) ABI="arm64-v8a" ;;
+            esac
+            echo "Detected architecture: $ARCH -> ABI: $ABI"
+
+            if [ -d "/lib/jniLibs/$ABI" ]; then
+              echo "Found pre-extracted libs at /lib/jniLibs/$ABI"
+              export SHERPA_ONNX_LIB_DIR=/lib/jniLibs/$ABI
+            fi
+            if ls /archive/*.tar.bz2 >/dev/null 2>&1; then
+              echo "Found archive at /archive"
+              export SHERPA_ONNX_ARCHIVE_DIR=/archive
+            fi
+
+            echo "SHERPA_ONNX_LIB_DIR=${SHERPA_ONNX_LIB_DIR:-unset}"
+            echo "SHERPA_ONNX_ARCHIVE_DIR=${SHERPA_ONNX_ARCHIVE_DIR:-unset}"
+
+            if [ -n "$SHERPA_ONNX_LIB_DIR" ]; then
+              export LD_LIBRARY_PATH=$SHERPA_ONNX_LIB_DIR:$LD_LIBRARY_PATH
+            fi
+
+
+            echo ""
+            echo "=== Environment Variables ==="
+            echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
+            echo "SHERPA_ONNX_ARCHIVE_DIR: $SHERPA_ONNX_ARCHIVE_DIR"
+            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+            echo ""
+            echo "=== Checking directories ==="
+            if [ -n "$SHERPA_ONNX_LIB_DIR" ]; then
+              echo "SHERPA_ONNX_LIB_DIR contents:"
+              ls -lh "$SHERPA_ONNX_LIB_DIR"
+            fi
+            if [ -n "$SHERPA_ONNX_ARCHIVE_DIR" ]; then
+              echo "SHERPA_ONNX_ARCHIVE_DIR contents:"
+              ls -lh "$SHERPA_ONNX_ARCHIVE_DIR"
+            fi
+            echo ""
+
+            # Run all tests (Android only supports shared linking)
+            bash .github/scripts/test-rust-shared.sh
+          '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/generated-*-rust.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline_speech_enhancement_voxlock_with_voice_sample-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/offline_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: streaming_speech_enhancement_voxlock_with_voice_sample-termux-${{ matrix.arch }}-${{ matrix.lib_setup }}
+          path: rust-api-examples/streaming_speech_enhancement_voxlock_with_voice_sample
+          if-no-files-found: warn

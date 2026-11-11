@@ -4,10 +4,10 @@ import 'dart:typed_data';
 import 'dart:ffi';
 
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
-import './init.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 void main(List<String> arguments) async {
-  await initSherpaOnnx();
+  await sherpa_onnx.initBindingsAsync();
 
   /* Please use the following commands to download files used in this file
     Step 1: Download a speaker segmentation model
@@ -46,7 +46,7 @@ void main(List<String> arguments) async {
 
   final segmentationConfig = sherpa_onnx.OfflineSpeakerSegmentationModelConfig(
     pyannote: sherpa_onnx.OfflineSpeakerSegmentationPyannoteModelConfig(
-        model: segmentationModel),
+        model: segmentationModel, windowShiftRatio: 0.1),
   );
 
   final embeddingConfig =

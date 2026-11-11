@@ -229,16 +229,15 @@ jobs:
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
         with:
-          channel: master
-          version: 3.24.0
+          channel: stable
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_linux.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_linux.zip to_be_published
           ls -lh /tmp/sherpa_onnx_linux.zip
 
       - uses: actions/upload-artifact@v4
@@ -250,9 +249,29 @@ jobs:
         shell: bash
         run: |
           cd /tmp/to_be_published
+          du -h -d1 .
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx_macos:
     # if: false
@@ -312,16 +331,13 @@ jobs:
           unzip sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
           rm sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-shared-onnxruntime-static.xcframework.zip
 
-          mv sherpa-onnx.xcframework sherpa_onnx_macos/SherpaOnnxC.xcframework
+          mv sherpa-onnx.xcframework sherpa_onnx_macos/sherpa-onnx.xcframework
 
-          ls -lh sherpa_onnx_macos/SherpaOnnxC.xcframework/
+          ls -lh sherpa_onnx_macos/sherpa-onnx.xcframework/
 
       - name: Prepare for publish
         shell: bash
         run: |
-          rm -f flutter/sherpa_onnx_macos/macos/libsherpa-onnx-c-api.dylib
-          rm -f flutter/sherpa_onnx_macos/macos/libonnxruntime.dylib
-
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
           ls -lh /tmp/to_be_published/macos
@@ -330,15 +346,14 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_macos.zip to_be_published
+          zip -r -y -y /tmp/sherpa_onnx_macos.zip to_be_published
           ls -lh /tmp/sherpa_onnx_macos.zip
 
       - uses: actions/upload-artifact@v4
@@ -351,12 +366,122 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
+
+  # ---- Windows: build x64 and arm64 in parallel, then collect and publish ----
+
+  build_windows_libs_x64:
+    # if: false
+    name: build_windows_libs_x64
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -D SHERPA_ONNX_ENABLE_TTS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_JNI=OFF \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target install --config Release -- -m:2
+
+          ls -lh install/lib/*.dll
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: build/install/lib/*.dll
+
+  build_windows_libs_arm64:
+    # if: false
+    name: build_windows_libs_arm64
+    runs-on: windows-11-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -A ARM64 \
+            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -D SHERPA_ONNX_ENABLE_TTS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_JNI=OFF \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target install --config Release -- -m:2
+
+          ls -lh install/lib/*.dll
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-arm64
+          path: build/install/lib/*.dll
 
   sherpa_onnx_windows:
     # if: false
+    needs: [build_windows_libs_x64, build_windows_libs_arm64]
     permissions:
       id-token: write # Required for authentication using OIDC
     name: sherpa_onnx_windows
@@ -398,64 +523,65 @@ jobs:
 
           git status
 
-      - name: Configure CMake
+      - name: Download x64 libs
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64
+          path: flutter/sherpa_onnx_windows/windows/x64
+
+      - name: Download arm64 libs
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-arm64
+          path: flutter/sherpa_onnx_windows/windows/arm64
+
+      - name: Collect libs
         shell: bash
         run: |
-          mkdir build
-          cd build
-          cmake \
-            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-            -D SHERPA_ONNX_ENABLE_TTS=ON \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_INSTALL_PREFIX=./install \
-            -D SHERPA_ONNX_ENABLE_JNI=OFF \
-            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            ..
-
-      - name: Build sherpa-onnx
-        shell: bash
-        run: |
-          cd build
-          cmake --build . --target install --config Release -- -m:2
-
-          ls -lh install/lib/*.dll
-
-      - name: Copy pre-built libs
-        shell: bash
-        run: |
-          cp -v build/install/lib/*.dll flutter/sherpa_onnx_windows/windows/
           mv -v flutter/sherpa_onnx_windows /tmp/to_be_published
 
-          ls -lh /tmp/to_be_published/windows
+          ls -lh /tmp/to_be_published/windows/x64
+          ls -lh /tmp/to_be_published/windows/arm64
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
-
-      - name: Zip package for inspection
-        shell: bash
-        run: |
-          cd /tmp
-          zip -r /tmp/sherpa_onnx_windows.zip to_be_published
-          ls -lh /tmp/sherpa_onnx_windows.zip
 
       - uses: actions/upload-artifact@v4
         with:
           name: package-sherpa_onnx_windows
-          path: /tmp/sherpa_onnx_windows.zip
+          path: /tmp/to_be_published
 
       - name: Release
         shell: bash
         run: |
           cd /tmp/to_be_published
+          du -h -d1 .
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx_android_arm64:
     # if: false
@@ -541,15 +667,14 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_arm64.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_arm64.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_arm64.zip
 
       - uses: actions/upload-artifact@v4
@@ -562,10 +687,28 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
-
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx_android_armeabi:
     # if: false
@@ -651,15 +794,14 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_armeabi.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_armeabi.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_armeabi.zip
 
       - uses: actions/upload-artifact@v4
@@ -672,10 +814,28 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
-
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx_android_x86:
     # if: false
@@ -761,15 +921,14 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_x86.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_x86.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_x86.zip
 
       - uses: actions/upload-artifact@v4
@@ -782,10 +941,28 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
-
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx_android_x86_64:
     # if: false
@@ -871,15 +1048,14 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_android_x86_64.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_android_x86_64.zip to_be_published
           ls -lh /tmp/sherpa_onnx_android_x86_64.zip
 
       - uses: actions/upload-artifact@v4
@@ -892,10 +1068,28 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
-
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx_ios:
     # if: false
@@ -955,7 +1149,7 @@ jobs:
           unzip sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
           rm sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-shared-onnxruntime-static.xcframework.zip
 
-          mv sherpa-onnx.xcframework sherpa_onnx_ios/SherpaOnnxC.xcframework
+          mv SherpaOnnxC.xcframework sherpa_onnx_ios/SherpaOnnxC.xcframework
 
           ls -lh sherpa_onnx_ios/SherpaOnnxC.xcframework/
 
@@ -970,15 +1164,14 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_ios.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_ios.zip to_be_published
           ls -lh /tmp/sherpa_onnx_ios.zip
 
       - uses: actions/upload-artifact@v4
@@ -991,9 +1184,28 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx_web:
     # if: false
@@ -1085,15 +1297,14 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Zip package for inspection
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx_web.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx_web.zip to_be_published
           ls -lh /tmp/sherpa_onnx_web.zip
 
       - uses: actions/upload-artifact@v4
@@ -1106,9 +1317,28 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+
 
   sherpa_onnx:
     needs: [sherpa_onnx_linux, sherpa_onnx_macos, sherpa_onnx_windows, sherpa_onnx_android_arm64, sherpa_onnx_android_armeabi, sherpa_onnx_android_x86, sherpa_onnx_android_x86_64, sherpa_onnx_ios, sherpa_onnx_web]
@@ -1131,9 +1361,8 @@ jobs:
         uses: flutter-actions/setup-flutter@v3
         with:
           channel: stable
-          version: latest
+          version: 3.44.5
 
-      - uses: dart-lang/setup-dart@v1
 
       - name: Fix version
         shell: bash
@@ -1169,7 +1398,7 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          zip -r /tmp/sherpa_onnx.zip to_be_published
+          zip -r -y /tmp/sherpa_onnx.zip to_be_published
           ls -lh /tmp/sherpa_onnx.zip
 
       - uses: actions/upload-artifact@v4
@@ -1182,7 +1411,25 @@ jobs:
         run: |
           cd /tmp/to_be_published
           du -h -d1 .
-
+          # Fix flutter_tools broken test dependency
+          FLUTTER_TOOLS="$(dirname $(which flutter))/../packages/flutter_tools"
+          if [ -f "$FLUTTER_TOOLS/pubspec.yaml" ]; then
+            sed -i.bak 's/test: 1.31.0/test: ^1.31.0/' "$FLUTTER_TOOLS/pubspec.yaml"
+            rm -f "$FLUTTER_TOOLS/pubspec.lock"
+          fi
           flutter pub get
-          flutter pub publish --dry-run
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish
+        shell: bash
+        env:
+          PUB_CACHE: ${{ runner.temp }}/pub-cache
+        run: |
+          cd /tmp/to_be_published
+          # Configure OIDC token in Flutter's credential store
+          "$(dirname $(which flutter))/cache/dart-sdk/bin/dart" pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub publish --force
+

@@ -171,6 +171,24 @@ class TestKeywordSpotter(unittest.TestCase):
                 print(f"{wave_filename}\n{result[0:-1]}")
                 print("-" * 10)
 
+    def test_create_stream_with_invalid_keywords(self):
+        model_dir = f"{d}/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
+        encoder = f"{model_dir}/encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
+        if not Path(encoder).is_file():
+            print("skipping test_create_stream_with_invalid_keywords()")
+            return
+        keyword_spotter = sherpa_onnx.KeywordSpotter(
+            encoder=encoder,
+            decoder=f"{model_dir}/decoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+            joiner=f"{model_dir}/joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+            tokens=f"{model_dir}/tokens.txt",
+            keywords_file=f"{model_dir}/test_wavs/test_keywords.txt",
+            num_threads=1,
+        )
+        self.assertIsNotNone(keyword_spotter.create_stream("▁HE LL O ▁WORLD"))
+        with self.assertRaises(ValueError):
+            keyword_spotter.create_stream("▁NOT_A_TOKEN @x")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        version: ["0.19", "1.0", "1.1-zh"]
+        version: ["0.19", "1.0", "1.1-zh", "nabra"]
         python-version: ["3.10"]
 
     steps:
@@ -38,7 +38,7 @@ jobs:
 
       - name: Run
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         shell: bash
         run: |
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
@@ -47,6 +47,7 @@ jobs:
           cp -a ./espeak-ng-data ./scripts/kokoro/v0.19
           cp -a ./espeak-ng-data ./scripts/kokoro/v1.0
           cp -a ./espeak-ng-data ./scripts/kokoro/v1.1-zh
+          cp -a ./espeak-ng-data ./scripts/kokoro/nabra
 
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
@@ -61,6 +62,28 @@ jobs:
               # generate samples
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
               mkdir -p hf/kokoro/v0.19/mp3
+              ./generate_samples.py
+              pushd hf
+              git pull
+              git add .
+              git commit -m 'add kokoro samples for v0.19'
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+              popd
+              rm -rf hf
+            fi
+
+          elif [[ $v = "nabra" ]]; then
+            cd nabra
+
+            wget https://huggingface.co/marwanelamami/nabra-82m-sherpa-onnx/resolve/main/README.md
+            wget https://huggingface.co/marwanelamami/nabra-82m-sherpa-onnx/resolve/main/tokens.txt
+            wget https://huggingface.co/marwanelamami/nabra-82m-sherpa-onnx/resolve/main/voices.bin
+            wget https://huggingface.co/marwanelamami/nabra-82m-sherpa-onnx/resolve/main/model.int8.onnx
+
+            if false; then
+              # generate samples
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+              mkdir -p hf/kokoro/nabra/mp3
               ./generate_samples.py
               pushd hf
               git pull
@@ -126,6 +149,25 @@ jobs:
             echo "Unknown version $v"
             exit 1
           fi
+
+      - name: Collect results nabra
+        if: matrix.version == 'nabra'
+        shell: bash
+        run: |
+          src=scripts/kokoro/nabra
+
+          d=nabra-82m-arabic-int8
+
+          mkdir $d
+          cp -a espeak-ng-data $d/
+          cp -v $src/model.int8.onnx $d/model.int8.onnx
+          cp -v $src/voices.bin $d/
+          cp -v $src/tokens.txt $d/
+          cp -v $src/README.md $d/README.md
+          ls -lh $d/
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d.tar.bz2
 
       - name: Collect results 0.19
         if: matrix.version == '0.19'
@@ -296,10 +338,10 @@ jobs:
           overwrite: true
           tag: tts-models
 
-      - name: Publish to huggingface 0.19
-        if: matrix.version == '0.19'
+      - name: Publish to huggingface 
+        if: matrix.version == '0.19' || matrix.version == 'nabra'
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
@@ -311,15 +353,19 @@ jobs:
 
             dirs=(
               kokoro-en-v0_19
-              # kokoro-int8-en-v0_19
+              kokoro-int8-en-v0_19
+              nabra-82m-arabic-int8
             )
 
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
             for d in ${dirs[@]}; do
+              if [ ! -d $d ]; then
+                continue
+              fi
               rm -rf huggingface
 
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
               cd huggingface
               rm -rf ./*
 
@@ -340,13 +386,13 @@ jobs:
               git status
 
               git commit -m "add models"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 main || true
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main || true
             done
 
       - name: Publish to huggingface 1.0 float32
         if: matrix.version == '1.0'
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
@@ -397,7 +443,7 @@ jobs:
       - name: Publish to huggingface 1.0 int8
         if: matrix.version == '1.0'
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
@@ -460,7 +506,7 @@ jobs:
       - name: Publish to huggingface 1.1-zh
         if: matrix.version == '1.1-zh'
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
@@ -510,7 +556,7 @@ jobs:
       - name: Publish to huggingface 1.1-zh-int8
         if: matrix.version == '1.1-zh'
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
