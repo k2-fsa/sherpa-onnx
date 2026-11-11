@@ -236,6 +236,11 @@ extern "C" {
         config: *const OfflineRecognizerConfig,
     ) -> *const OfflineRecognizer;
 
+    pub fn SherpaOnnxOfflineRecognizerSetConfig(
+        recognizer: *const OfflineRecognizer,
+        config: *const OfflineRecognizerConfig,
+    );
+
     pub fn SherpaOnnxDestroyOfflineRecognizer(recognizer: *const OfflineRecognizer);
 
     pub fn SherpaOnnxCreateOfflineStream(

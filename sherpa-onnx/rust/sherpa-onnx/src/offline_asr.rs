@@ -698,6 +698,17 @@ impl OfflineRecognizer {
         }
     }
 
+    /// Update the recognizer's configuration in place.
+    ///
+    /// Only a subset of fields is honored, and that subset is recognizer-
+    /// specific. Fields that drive objects built at construction time
+    /// e.g. model paths, decoding method) are NOT rebuilt
+    pub fn set_config(&mut self, config: &OfflineRecognizerConfig) {
+        let mut cstrings = Vec::new();
+        let sys_config = config.to_sys(&mut cstrings);
+        unsafe { sys::SherpaOnnxOfflineRecognizerSetConfig(self.ptr, &sys_config) }
+    }
+
     /// Create an empty offline stream.
     pub fn create_stream(&self) -> OfflineStream {
         let ptr = unsafe { sys::SherpaOnnxCreateOfflineStream(self.ptr) };
