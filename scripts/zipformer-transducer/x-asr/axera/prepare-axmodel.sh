@@ -28,6 +28,8 @@ curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/0.
 curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/1.wav
 curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/2.wav
 curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/3.wav
+# 4.wav is ~17 s, so it also covers the 10 s window without any padding
+curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/4.wav
 popd
 
 pushd "$WORK/exp"
