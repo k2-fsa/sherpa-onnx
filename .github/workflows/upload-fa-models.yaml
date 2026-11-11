@@ -1,0 +1,58 @@
+name: upload-fa-models
+
+on:
+  push:
+    branches:
+      - cpp-fa-2
+  workflow_dispatch:
+
+concurrency:
+  group: upload-fa-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload-fa-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: upload fa models
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install python dependencies
+        run: |
+          python3 -m pip install pypinyin pinyin_to_ipa
+
+      # Each package step downloads the upstream model, keeps only the files
+      # required by sherpa-onnx-fa, adds lexicon.txt and a provenance
+      # README.md into the model directory, and creates <name>.tar.bz2.
+      - name: Package aishell3_pinyin
+        run: |
+          ./scripts/mfa/zh/lars76/package-fa-model.sh aishell3_pinyin
+
+      - name: Package biaobei_pinyin
+        run: |
+          ./scripts/mfa/zh/lars76/package-fa-model.sh biaobei_pinyin
+
+      - name: Package large_pinyin
+        run: |
+          ./scripts/mfa/zh/lars76/package-fa-model.sh large_pinyin
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: scripts/mfa/zh/lars76/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: fa-models

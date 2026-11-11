@@ -9,6 +9,8 @@
         sherpa-onnx-portaudio_static.lib;
         sherpa-onnx-c-api.lib;
         sherpa-onnx-core.lib;
+        kaldi-hmm-gmm-core.lib;
+        kaldi-native-io-core.lib;
         kaldi-decoder-core.lib;
         sherpa-onnx-kaldifst-core.lib;
         sherpa-onnx-fstfar.lib;

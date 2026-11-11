@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
+#include "sherpa-onnx/csrc/fa-feature-extractor.h"
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -91,6 +92,8 @@ class OfflineStream {
   explicit OfflineStream(CEDTag tag);
   explicit OfflineStream(MoonshineTag tag);
   explicit OfflineStream(OmnilingualAsrTag tag);
+  explicit OfflineStream(const FaFeatureConfig &config);
+
   ~OfflineStream();
 
   /**

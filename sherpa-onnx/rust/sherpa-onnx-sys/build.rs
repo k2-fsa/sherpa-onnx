@@ -16,6 +16,8 @@ const XCFRAMEWORK_RELEASE_URL: &str =
 const SHERPA_ONNX_STATIC_LIBS: &[&str] = &[
     "sherpa-onnx-c-api",
     "sherpa-onnx-core",
+    "kaldi-hmm-gmm-core",
+    "kaldi-native-io-core",
     "kaldi-decoder-core",
     "sherpa-onnx-kaldifst-core",
     "sherpa-onnx-fstfar",
