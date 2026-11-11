@@ -25,7 +25,9 @@
     ],
     "calibration_method": "MinMax",
     "precision_analysis": false,
-    "highest_mix_precision": false
+    "highest_mix_precision": false,
+    "conv_bias_data_type": "FP32",
+    "disable_auto_refine_scale": true
   },
   "input_processors": [
     {
