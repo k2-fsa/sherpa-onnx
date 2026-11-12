@@ -92,6 +92,7 @@ set(sources
   offline-wenet-ctc-model.cc
   offline-whisper-dtw.cc
   offline-whisper-greedy-search-decoder.cc
+  offline-whisper-lang-probs.cc
   offline-whisper-model-config.cc
   offline-whisper-model.cc
   offline-whisper-timestamp-rules.cc
@@ -844,6 +845,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     offline-recognizer-qwen3-asr-impl-test.cc
     offline-recognizer-shared-rng-test.cc
     offline-recognizer-transducer-impl-test.cc
+    offline-whisper-lang-probs-test.cc
     offline-whisper-language-candidates-test.cc
     offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
