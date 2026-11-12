@@ -172,6 +172,14 @@ class OfflineRecognizer(object):
           hotwords_score:
             The hotword score of each token for biasing word/phrase. Used only if
             hotwords_file is given with modified_beam_search as decoding method.
+            For offline NeMo transducers, a large score can prune the natural
+            continuation of an unfinished hotword. To preserve extra fallback
+            paths, call ``stream.set_option("hotword_fallback_paths", "4")``
+            before decoding. The value defaults to 0 and must be between 0 and
+            max_active_paths. It retains up to that many additional hypotheses
+            and token/duration candidates, increasing decoding work. Set it to
+            max_active_paths to preserve a full fallback beam. Completed
+            hotwords still receive their boost and can cause substitutions.
           blank_penalty:
             The penalty applied on blank symbol during decoding.
           modeling_unit:
