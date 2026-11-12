@@ -95,6 +95,9 @@ bash ./run-fire-red-asr-ctc.sh
 bash ./run-paraformer.sh
 rm -rf sherpa-onnx-paraformer-zh-small-2024-03-09
 
+bash ./run-medasr-ctc.sh
+rm -rf sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+
 bash ./run-silero-vad-remove-silence.sh
 
 bash ./run-ten-vad-remove-silence.sh
