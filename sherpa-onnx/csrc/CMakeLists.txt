@@ -17,8 +17,12 @@ set(sources
   circular-buffer.cc
   context-graph.cc
   endpoint.cc
+  fa-feature-extractor.cc
+  fa-lexicon.cc
   features.cc
   file-utils.cc
+  forced-aligner-impl.cc
+  forced-aligner.cc
   fst-utils.cc
   homophone-replacer.cc
   hypothesis.cc
@@ -393,6 +397,7 @@ target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
   utf8proc
   kaldi-decoder-core
+  kaldi-hmm-gmm-core
   ssentencepiece_core
 )
 if(DEFINED OHOS AND x${OHOS} STREQUAL xOHOS)
@@ -502,6 +507,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx sherpa-onnx.cc)
   add_executable(sherpa-onnx-keyword-spotter sherpa-onnx-keyword-spotter.cc)
+  add_executable(sherpa-onnx-fa sherpa-onnx-fa.cc)
   add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
   add_executable(sherpa-onnx-offline-audio-tagging sherpa-onnx-offline-audio-tagging.cc)
   add_executable(sherpa-onnx-offline-denoiser sherpa-onnx-offline-denoiser.cc)
@@ -529,6 +535,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   set(main_exes
     sherpa-onnx
     sherpa-onnx-keyword-spotter
+    sherpa-onnx-fa
     sherpa-onnx-offline
     sherpa-onnx-offline-audio-tagging
     sherpa-onnx-offline-denoiser
@@ -825,6 +832,8 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     cat-test.cc
     circular-buffer-test.cc
     context-graph-test.cc
+    fa-lexicon-test.cc
+    forced-aligner-test.cc
     lfr-test.cc
     math-test.cc
     offline-recognizer-canary-impl-test.cc
