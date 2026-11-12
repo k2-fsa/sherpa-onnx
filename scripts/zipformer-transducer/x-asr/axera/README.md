@@ -218,3 +218,105 @@ The calibration set in CI comes from the 4 test wavs used by
 `../export-non-streaming.sh`, i.e. 4 samples. The released axmodel in
 <https://huggingface.co/yunyu1258/x-asr-axmodel> used 8 real audio windows; passing more
 wavs via `--wav-dir` gives a slightly better calibrated model.
+
+---
+
+# Streaming encoder (960 ms chunk)
+
+The same pipeline also converts the *streaming* encoder (the 160/480/960/1920 ms
+models of the same checkpoint). It is a different graph from the offline one:
+
+| | offline | streaming (960 ms) |
+|---|---|---|
+| inputs | 1 (`x4d`) | **116** — `x [1,109,80]` + 115 cache tensors |
+| outputs | 1 | **116** — `encoder_out [1,24,512]` + 115 `new_cached_*` |
+| step | one 10 s window | 24 frames per call (= 960 ms of audio) |
+| ONNX size | 570 MB | 564 MB |
+| axmodel size | 165 MB | **157 MB** |
+
+The feature window is `chunk*2 + 13 = 109` frames and the model advances by
+`chunk*2 = 96` frames per call (icefall's `export-onnx-streaming.py` convention).
+The caches are threaded back by name: `new_cached_key_0` → `cached_key_0`.
+
+## Why the streamed export needs extra work
+
+`export-onnx-streaming.py` writes a graph with a **dynamic batch** dimension, and
+the attention mask is computed at run time from the `processed_lens` input. Pulsar2
+rejects both (`Slice, shapefn failed`). `prepare-streaming-encoder.py` fixes this by
+
+1. setting every dynamic dimension to 1,
+2. freezing the `Shape -> Gather -> Concat -> Slice` chains (1658 tensors),
+3. constant-folding the mask chain (344 nodes) after `processed_lens` is frozen to
+   a constant,
+4. rewriting the 99 `Log(1 + Exp(z))` nodes to `Softplus`,
+5. dropping constant outputs such as `new_processed_lens`,
+6. writing back the real cache output shapes.
+
+With `--freeze-input processed_lens=256` the mask always treats the left context as
+valid. That is correct from the second chunk on; on a 10 s utterance and on 30 s of
+Cantonese the transcription is identical to the dynamic-mask version (one test clip
+differs by a single character).
+
+## Steps
+
+```bash
+# 1. export a streaming ONNX with a static batch
+WORK=$PWD/streaming-work bash export-streaming-onnx.sh
+
+# 2. make it compile-able
+python3 prepare-streaming-encoder.py \
+  --src streaming-work/exp/encoder-epoch-99-avg-1-chunk-48-left-256.onnx \
+  --dst streaming-work/encoder-streaming-ax650.onnx \
+  --freeze-input processed_lens=256 --drop-output new_processed_lens
+
+# 3. calibration set: run the fp32 encoder over the wavs and record (x, all caches)
+python3 make-streaming-calibration-set.py \
+  --encoder streaming-work/encoder-epoch-99-avg-1-chunk-48-left-256.onnx \
+  --wav-dir streaming-work/wavs --output streaming-work/calib \
+  --num-frames 109 --hop 96 --num-samples 16
+
+# 4. generate the Pulsar2 config (one entry per input) and compile
+python3 make-streaming-config.py \
+  --onnx streaming-work/encoder-streaming-ax650.onnx \
+  --calib-dir streaming-work/calib \
+  --output streaming-work/pulsar2-streaming-encoder.json \
+  --output-dir streaming-work/out --work-dir streaming-work/out/work
+pulsar2 build --config streaming-work/pulsar2-streaming-encoder.json
+
+# 5. verify all 116 outputs against the fp32 ONNX
+python3 verify-streaming-encoder.py \
+  --onnx streaming-work/encoder-streaming-ax650.onnx \
+  --axmodel streaming-work/out/encoder_streaming.axmodel \
+  --calib-dir streaming-work/calib
+```
+
+`pulsar2 build` takes about 20 min for this graph (single NPU subgraph).
+
+## Measured result
+
+Simulator on the converted graph:
+
+```
+outputs: 116/116 | mean cosine=0.984142  min=0.943674
+encoder_out cosine = 0.974784     # with real cache values in the calibration set
+encoder_out cosine = 0.998479     # with all-zero caches (first chunk only)
+```
+
+On an AX650-class board (`192.168.10.105`):
+
+| | |
+|---|---|
+| latency per 960 ms chunk | **≈ 80 ms** |
+| 10.56 s utterance, end to end | **≈ 760 ms** (encoder 304 ms + decoder/joiner 456 ms) |
+| RTF | **0.072** |
+| transcription (10 s test clip) | identical to the offline model |
+
+Two practical notes:
+
+* the streaming encoder needs the matching `decoder`/`joiner` from the same
+  checkpoint (the ones in the offline directory come from a different weight file
+  and produce garbage if mixed),
+* on the board the AX runtime does not allow two `axmodel`s in one process
+  (loading a second one segfaults), so the streaming service has to run in its own
+  process — the reference deployment in this project splits them and proxies
+  `/api/stream/*`.
