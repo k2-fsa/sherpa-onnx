@@ -440,7 +440,13 @@ def main():
     with open(out_path, "w", encoding="utf-8", newline="\n") as f:
         for key in sorted(entries):
             for groups in entries[key]:
-                f.write(key + " " + " || ".join(" ".join(g) for g in groups) + "\n")
+                if len(groups) == 1:
+                    f.write(key + " " + " ".join(groups[0]) + "\n")
+                else:
+                    f.write(
+                        key + " || " + " || ".join(" ".join(g) for g in groups)
+                        + "\n"
+                    )
                 n_lines += 1
 
     n_phones = len(

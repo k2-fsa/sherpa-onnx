@@ -103,17 +103,26 @@ int32_t main(int32_t argc, char *argv[]) {
     return 1;
   }
 
-  const auto begin_init = std::chrono::steady_clock::now();
-  sherpa_onnx::ForcedAligner aligner(config);
-  auto stream = aligner.CreateStream();
-  const auto end_init = std::chrono::steady_clock::now();
+  sherpa_onnx::ForcedAlignmentResult result;
+  std::chrono::steady_clock::time_point begin_init;
+  std::chrono::steady_clock::time_point end_init;
+  std::chrono::steady_clock::time_point begin;
+  std::chrono::steady_clock::time_point end;
+  try {
+    begin_init = std::chrono::steady_clock::now();
+    sherpa_onnx::ForcedAligner aligner(config);
+    auto stream = aligner.CreateStream();
+    end_init = std::chrono::steady_clock::now();
 
-  stream->AcceptWaveform(sampling_rate, samples.data(), samples.size());
+    stream->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-  const auto begin = std::chrono::steady_clock::now();
-  sherpa_onnx::ForcedAlignmentResult result =
-      aligner.Compute(stream.get(), text);
-  const auto end = std::chrono::steady_clock::now();
+    begin = std::chrono::steady_clock::now();
+    result = aligner.Compute(stream.get(), text);
+    end = std::chrono::steady_clock::now();
+  } catch (const std::exception &e) {
+    fprintf(stderr, "Error: %s\n", e.what());
+    return 1;
+  }
 
   if (result.tiers.empty()) {
     fprintf(stderr,

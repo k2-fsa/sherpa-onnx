@@ -111,6 +111,8 @@ the license terms.
 EOF
 
 # 4. create the tarball next to this script
+ls -lh "$stage"
+
 (cd fa-model && tar cjf "$script_dir/$pkg.tar.bz2" "$pkg")
 rm -rf fa-model
 echo "wrote $script_dir/$pkg.tar.bz2"

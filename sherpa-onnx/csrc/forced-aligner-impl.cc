@@ -363,13 +363,43 @@ void ForcedAligner::Impl::LoadPhoneTable() {
       }
     }
   } else {
+    // Older models ship no phones.txt. The ids then follow the kaldi
+    // convention of these models: <eps>=0, sil=1, spn=2, then the lexical
+    // phones of meta.json from 3.
     SHERPA_ONNX_LOGE(
-        "phones.txt not found in '%s'; falling back to the phones list in "
-        "meta.json",
+        "phones.txt not found in '%s'; falling back to meta.json",
         config_.model_dir.c_str());
+    phone2id_["sil"] = 1;
+    phone2id_["spn"] = 2;
+    id2phone_[1] = "sil";
+    id2phone_[2] = "spn";
     for (size_t i = 0; i < meta_.phones.size(); ++i) {
-      phone2id_[meta_.phones[i]] = static_cast<int32_t>(i) + 1;
-      id2phone_[static_cast<int32_t>(i) + 1] = meta_.phones[i];
+      int32_t id = static_cast<int32_t>(i) + 3;
+      phone2id_[meta_.phones[i]] = id;
+      id2phone_[id] = meta_.phones[i];
+    }
+
+    // The convention holds only when meta.json lists the model's complete
+    // phone set. MFA 2.0.x models (e.g. english_mfa v2.0.0) break it: they
+    // ship no phones.txt and their model has more phones than meta.json
+    // lists, so every phone would silently get a wrong pdf and the
+    // alignment would be garbage. Refuse them; v2.2.1 and newer satisfy
+    // the convention.
+    const std::vector<int32_t> &model_phones = trans_model_.GetPhones();
+    bool consistent = model_phones.size() == phone2id_.size();
+    for (int32_t p : model_phones) {
+      consistent = consistent && id2phone_.count(p) != 0;
+    }
+    if (!consistent) {
+      throw std::runtime_error(
+          "ForcedAligner: the model has no phones.txt, and the implicit "
+          "phone table (" +
+          std::to_string(phone2id_.size()) +
+          " phones) does not match the " +
+          std::to_string(model_phones.size()) +
+          " phones of the model. MFA 2.0.x models (e.g. english_mfa "
+          "v2.0.0) are known to be in this state and are not supported; "
+          "use v2.2.1 or newer");
     }
   }
   if (phone2id_.empty()) {

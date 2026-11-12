@@ -58,7 +58,7 @@ jobs:
         include:
           # Linux x64
           - os: ubuntu-latest
-            python-version: "3.8"
+            python-version: "3.12"
             arch: x64
 
           # Linux arm64
