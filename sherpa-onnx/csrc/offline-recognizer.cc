@@ -41,11 +41,6 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
   po->Register("max-active-paths", &max_active_paths,
                "Used only when decoding_method is modified_beam_search");
 
-  po->Register(
-      "num-return-paths", &num_return_paths,
-      "Number of final hypotheses to return. Used only when decoding_method "
-      "is modified_beam_search");
-
   po->Register("blank-penalty", &blank_penalty,
                "The penalty applied on blank symbol during decoding. "
                "Note: It is a positive value. "
@@ -75,30 +70,15 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineRecognizerConfig::Validate() const {
-  if (decoding_method == "modified_beam_search") {
+  if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
     if (max_active_paths <= 0) {
-      SHERPA_ONNX_LOGE("max_active_paths must be greater than 0! Given: %d",
+      SHERPA_ONNX_LOGE("max_active_paths is less than 0! Given: %d",
                        max_active_paths);
       return false;
     }
-
-    if (num_return_paths <= 0 || num_return_paths > max_active_paths) {
-      SHERPA_ONNX_LOGE(
-          "num_return_paths must be in the range [1, max_active_paths]. "
-          "Given: %d. max_active_paths: %d",
-          num_return_paths, max_active_paths);
+    if (!lm_config.Validate()) {
       return false;
     }
-
-    if (!lm_config.model.empty() && !lm_config.Validate()) {
-      return false;
-    }
-  } else if (num_return_paths != 1) {
-    SHERPA_ONNX_LOGE(
-        "num_return_paths is supported only when decoding_method is "
-        "modified_beam_search. Given decoding_method: '%s'",
-        decoding_method.c_str());
-    return false;
   }
 
   if (!hotwords_file.empty() && decoding_method != "modified_beam_search") {
@@ -161,7 +141,6 @@ std::string OfflineRecognizerConfig::ToString() const {
 
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "num_return_paths=" << num_return_paths << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "blank_penalty=" << blank_penalty << ", ";

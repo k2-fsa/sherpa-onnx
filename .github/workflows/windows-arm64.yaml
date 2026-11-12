@@ -303,6 +303,20 @@ jobs:
           echo "Disk space after cleanup:"
           df -h .
 
+      - name: Test fa
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+
+          .github/scripts/test-fa.sh
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: fa-textgrids-shared-${{ matrix.shared_lib }}-tts-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
+          path: ./*.TextGrid
+
       - name: Test offline Cohere Transcribe for windows arm64
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash

@@ -64,29 +64,6 @@ class TestOfflineRecognizer(unittest.TestCase):
                 "hotwords.txt",
             )
 
-    def test_num_return_paths_validation(self):
-        kwargs = {
-            "encoder": "encoder.onnx",
-            "decoder": "decoder.onnx",
-            "joiner": "joiner.onnx",
-            "tokens": "tokens.txt",
-        }
-
-        with self.assertRaisesRegex(ValueError, "range"):
-            sherpa_onnx.OfflineRecognizer.from_transducer(
-                **kwargs,
-                decoding_method="modified_beam_search",
-                max_active_paths=4,
-                num_return_paths=5,
-            )
-
-        with self.assertRaisesRegex(ValueError, "modified_beam_search"):
-            sherpa_onnx.OfflineRecognizer.from_transducer(
-                **kwargs,
-                decoding_method="greedy_search",
-                num_return_paths=2,
-            )
-
     def test_transducer_modified_beam_search_nbest(self):
         model_dir = Path(d) / "sherpa-onnx-zipformer-en-2023-04-01"
         encoder = model_dir / "encoder-epoch-99-avg-1.int8.onnx"
@@ -94,6 +71,7 @@ class TestOfflineRecognizer(unittest.TestCase):
         joiner = model_dir / "joiner-epoch-99-avg-1.int8.onnx"
         tokens = model_dir / "tokens.txt"
         wave0 = model_dir / "test_wavs" / "0.wav"
+        wave1 = model_dir / "test_wavs" / "1.wav"
 
         if not encoder.is_file():
             print("skipping test_transducer_modified_beam_search_nbest()")
@@ -107,26 +85,66 @@ class TestOfflineRecognizer(unittest.TestCase):
             num_threads=1,
             decoding_method="modified_beam_search",
             max_active_paths=8,
-            num_return_paths=3,
             provider="cpu",
         )
 
-        stream = recognizer.create_stream()
-        samples, sample_rate = read_wave(str(wave0))
-        stream.accept_waveform(sample_rate, samples)
-        recognizer.decode_stream(stream)
+        short_samples, sample_rate = read_wave(str(wave0))
+        long_samples, long_sample_rate = read_wave(str(wave1))
+        self.assertEqual(sample_rate, long_sample_rate)
+        # Deliberately mix lengths and options: the decoder sorts streams by
+        # length internally, but each result must use its original option.
+        cases = [
+            (short_samples, "3", 3),
+            (long_samples, None, 1),
+            (short_samples[: len(short_samples) // 2], "8", 8),
+            (short_samples, "0", 1),
+            (short_samples, "99", 8),
+            (short_samples, "invalid", 1),
+        ]
 
-        hypotheses = stream.result.hypotheses
-        self.assertGreaterEqual(len(hypotheses), 1)
-        self.assertLessEqual(len(hypotheses), 3)
-        self.assertEqual(stream.result.text, hypotheses[0].text)
-        self.assertEqual(stream.result.tokens, hypotheses[0].tokens)
+        def create_stream(samples, option):
+            stream = recognizer.create_stream()
+            if option is not None:
+                stream.set_option("num_return_paths", option)
+            stream.accept_waveform(sample_rate, samples)
+            return stream
+
+        streams = [create_stream(samples, option) for samples, option, _ in cases]
+        recognizer.decode_streams(streams)
+        defaults = [create_stream(samples, None) for samples, _, _ in cases]
+        recognizer.decode_streams(defaults)
         self.assertTrue(
-            all(
-                hypotheses[i - 1].score >= hypotheses[i].score
-                for i in range(1, len(hypotheses))
+            any(
+                len(streams[i].result.hypotheses) > 1
+                for i, (_, _, limit) in enumerate(cases)
+                if limit > 1
             )
         )
+
+        fields = ("text", "tokens", "timestamps", "durations", "ys_log_probs")
+        for i, (_, _, limit) in enumerate(cases):
+            result = streams[i].result
+            hypotheses = result.hypotheses
+            self.assertGreaterEqual(len(hypotheses), 1)
+            self.assertLessEqual(len(hypotheses), limit)
+            self.assertTrue(
+                all(
+                    hypotheses[j - 1].score >= hypotheses[j].score
+                    for j in range(1, len(hypotheses))
+                )
+            )
+
+            # Keep the batch shape unchanged so quantized model numerics do
+            # not confound the check that returning more paths preserves top-1.
+            default = defaults[i].result
+            self.assertEqual(len(default.hypotheses), 1)
+            for field in fields:
+                self.assertEqual(
+                    getattr(result, field), getattr(hypotheses[0], field)
+                )
+                self.assertEqual(
+                    getattr(result, field), getattr(default, field)
+                )
 
     def test_transducer_single_file(self):
         for use_int8 in [True, False]:

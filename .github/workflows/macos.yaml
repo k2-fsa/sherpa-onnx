@@ -239,6 +239,20 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
 
+      - name: Test fa
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+
+          .github/scripts/test-fa.sh
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: fa-textgrids-${{ matrix.build_type }}-${{ matrix.lib_type }}-tts-${{ matrix.with_tts }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: ./*.TextGrid
+
       - name: Test offline Cohere Transcribe
         if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash

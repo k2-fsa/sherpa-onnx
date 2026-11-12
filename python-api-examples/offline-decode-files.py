@@ -438,7 +438,6 @@ def main():
             lodr_scale=args.lodr_scale,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
-            num_return_paths=args.num_return_paths,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
             modeling_unit=args.modeling_unit,
@@ -540,6 +539,7 @@ def main():
         duration = len(samples) / sample_rate
         total_duration += duration
         s = recognizer.create_stream()
+        s.set_option("num_return_paths", str(args.num_return_paths))
         s.accept_waveform(sample_rate, samples)
 
         streams.append(s)

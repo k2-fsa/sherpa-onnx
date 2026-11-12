@@ -4,9 +4,12 @@
 
 #include "sherpa-onnx/csrc/offline-stream.h"
 
+#include <cstdint>
 #include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
+#include "nlohmann/json.hpp"
 
 namespace sherpa_onnx {
 
@@ -43,6 +46,31 @@ TEST(OfflineRecognitionResult, SerializesEmptyHypothesisList) {
   OfflineRecognitionResult result;
   std::string json = result.AsJsonString();
   EXPECT_NE(json.find("\"hypotheses\": []"), std::string::npos);
+}
+
+TEST(OfflineRecognitionResult, EscapesNBestTextAndTokens) {
+  std::string text = "\"quoted\" \\ path / 你好 🌍";
+  for (int32_t c = 0; c < 0x20; ++c) {
+    text.push_back(static_cast<char>(c));
+  }
+  text += "after controls";
+
+  OfflineRecognitionHypothesis hypothesis;
+  hypothesis.text = text;
+  hypothesis.tokens = {"first", text, "last"};
+  for (int32_t c = 0; c < 0x20; ++c) {
+    hypothesis.tokens.emplace_back(1, static_cast<char>(c));
+  }
+
+  OfflineRecognitionResult result;
+  result.hypotheses = {hypothesis};
+
+  auto json = nlohmann::json::parse(result.AsJsonString(), nullptr, false);
+  ASSERT_FALSE(json.is_discarded());
+  ASSERT_EQ(json["hypotheses"].size(), 1);
+  EXPECT_EQ(json["hypotheses"][0]["text"].get<std::string>(), text);
+  EXPECT_EQ(json["hypotheses"][0]["tokens"].get<std::vector<std::string>>(),
+            hypothesis.tokens);
 }
 
 }  // namespace sherpa_onnx

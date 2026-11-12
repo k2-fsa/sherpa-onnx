@@ -46,6 +46,10 @@ then decode the stream with the recognizer to obtain the result.
 static constexpr const char *kSetOptionDoc = R"doc(
 Set a per-stream option.
 
+For transducer modified beam search, use ``num_return_paths`` to request
+ranked hypotheses, for example ``stream.set_option("num_return_paths", "3")``.
+The default is 1, and the value is clamped to [1, max_active_paths].
+
 Args:
   key:
     The option name.

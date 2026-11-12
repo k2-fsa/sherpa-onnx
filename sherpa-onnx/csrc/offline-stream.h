@@ -8,9 +8,11 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
+#include "sherpa-onnx/csrc/fa-feature-extractor.h"
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -44,6 +46,11 @@ struct OfflineRecognitionResult {
   std::vector<std::string> tokens;
 
   std::string lang;
+
+  // Per-language probabilities from Whisper's language identification pass.
+  // Empty unless the per-stream option "top_k_langs" is set.
+  // Each pair is {language_code, probability}.
+  std::vector<std::pair<std::string, float>> lang_probs;
 
   // emotion target of the audio.
   std::string emotion;
@@ -112,6 +119,8 @@ class OfflineStream {
   explicit OfflineStream(CEDTag tag);
   explicit OfflineStream(MoonshineTag tag);
   explicit OfflineStream(OmnilingualAsrTag tag);
+  explicit OfflineStream(const FaFeatureConfig &config);
+
   ~OfflineStream();
 
   /**
@@ -148,6 +157,9 @@ class OfflineStream {
   const ContextGraphPtr &GetContextGraph() const;
 
   // Generic per-stream option mechanism (key-value string pairs).
+  // For transducer modified beam search, "num_return_paths" controls how many
+  // ranked hypotheses to return (default 1). It is clamped to the range
+  // [1, max_active_paths]. For example, SetOption("num_return_paths", "3").
   void SetOption(const std::string &key, const std::string &value);
   bool HasOption(const std::string &key) const;
 

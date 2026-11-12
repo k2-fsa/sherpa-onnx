@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-decoder.h"
 
+#include <algorithm>
 #include <deque>
 #include <utility>
 #include <vector>
@@ -183,9 +184,16 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
 
   std::vector<OfflineTransducerDecoderResult> unsorted_ans(batch_size);
   for (int32_t i = 0; i != batch_size; ++i) {
-    auto hyps = cur[i].GetTopK(num_return_paths_, true);
+    int32_t stream_index = packed_encoder_out.sorted_indexes[i];
+    int32_t num_return_paths = 1;
+    if (ss != nullptr) {
+      num_return_paths = ss[stream_index]->GetOptionInt("num_return_paths", 1);
+    }
+    num_return_paths =
+        std::max(1, std::min(num_return_paths, max_active_paths_));
+    auto hyps = cur[i].GetTopK(num_return_paths, true);
 
-    auto &r = unsorted_ans[packed_encoder_out.sorted_indexes[i]];
+    auto &r = unsorted_ans[stream_index];
     r.hypotheses.reserve(hyps.size());
 
     for (auto &hyp : hyps) {

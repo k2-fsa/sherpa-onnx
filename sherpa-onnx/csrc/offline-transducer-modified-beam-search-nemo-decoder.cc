@@ -498,6 +498,13 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
                 return a.log_prob > b.log_prob;
               });
 
+    int32_t num_return_paths = 1;
+    if (ss != nullptr) {
+      num_return_paths = ss[b]->GetOptionInt("num_return_paths", 1);
+    }
+    num_return_paths =
+        std::max(1, std::min(num_return_paths, max_active_paths_));
+
     std::set<std::vector<int32_t>> seen;
     for (const auto &hyp : cur_hyps) {
       if (!seen.insert(hyp.ys).second) {
@@ -516,7 +523,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
       results[b].hypotheses.push_back(std::move(h));
 
       if (static_cast<int32_t>(results[b].hypotheses.size()) ==
-          num_return_paths_) {
+          num_return_paths) {
         break;
       }
     }

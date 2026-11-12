@@ -72,6 +72,13 @@ function(download_openfst)
 
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
   set_target_properties(fstfar PROPERTIES OUTPUT_NAME "sherpa-onnx-fstfar")
+
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS
+      fst
+      fstfar
+    DESTINATION lib)
+  endif()
 endfunction()
 
 download_openfst()
