@@ -291,7 +291,19 @@ python3 verify-streaming-encoder.py \
   --calib-dir streaming-work/calib
 ```
 
-`pulsar2 build` takes about 20 min for this graph (single NPU subgraph).
+`pulsar2 build` takes about 12 min for this graph on a 4-core runner (single NPU
+subgraph, 6.3 GB peak RSS).
+
+The same pipeline runs as the second job of `.github/workflows/export-x-asr-axera.yaml`
+(`export-streaming-axmodel`). Measured on GitHub Actions:
+
+```
+collected 83 chunks, kept 16, wrote 116 tars
+116 inputs -> pulsar2-streaming-encoder.json
+build: 11 min 53 s, peak RSS 6.26 GB
+outputs: 116/116 | mean cosine=0.981222  min=0.933873
+encoder_out cosine = 0.999477
+```
 
 ## Measured result
 
