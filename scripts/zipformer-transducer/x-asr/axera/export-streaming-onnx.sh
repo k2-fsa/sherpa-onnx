@@ -42,5 +42,17 @@ python3 ./zipformer/export-onnx-streaming.py \
   --enable-int8-quantization 0
 popd
 
+# A few wavs for the calibration set (the X-ASR test clips + extra Chinese/English)
+mkdir -p "$WORK/wavs"
+pushd "$WORK/wavs"
+for i in 0 1 2 3 4; do
+  curl -SL -O "https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/$i.wav"
+done
+BASE=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/resolve/main/test_wavs
+for i in 0 1 2 3; do
+  curl -SL -o "extra-$i.wav" "$BASE/$i.wav"
+done
+popd
+
 rm -f "$WORK/exp/pretrained.pt"
 ls -lh "$WORK/exp"/*.onnx

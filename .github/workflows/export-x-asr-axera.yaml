@@ -37,7 +37,7 @@ jobs:
       - name: Export ONNX + prepare graph + calibration set
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/${{ github.repository_owner }}/icefall:cpu-py3.10-torch2.6.0-v20250630
+          image: ghcr.io/csukuangfj/icefall:cpu-py3.10-torch2.6.0-v20250630
           options: |
             --volume ${{ github.workspace }}/icefall:/icefall
             --volume ${{ github.workspace }}/:/sherpa-onnx
@@ -116,4 +116,104 @@ jobs:
           path: |
             axmodel-work/output_encoder/encoder.axmodel
             axmodel-work/pulsar2-encoder.json
+          compression-level: 0
+
+  export-streaming-axmodel:
+    name: AX650 streaming axmodel
+    runs-on: ubuntu-22.04
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone icefall
+        shell: bash
+        run: git clone --depth 1 https://github.com/k2-fsa/icefall
+
+      - name: Show disk space (the runner has ~14 GB)
+        shell: bash
+        run: df -h
+
+      - name: Export streaming ONNX + prepare graph + calibration set
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ghcr.io/csukuangfj/icefall:cpu-py3.10-torch2.6.0-v20250630
+          options: |
+            --volume ${{ github.workspace }}/icefall:/icefall
+            --volume ${{ github.workspace }}/:/sherpa-onnx
+          shell: bash
+          run: |
+            export PYTHONPATH=/icefall:$PYTHONPATH
+            cd /icefall
+            git config --global --add safe.directory /icefall
+            WORK=/sherpa-onnx/axmodel-work-streaming \
+              bash /sherpa-onnx/scripts/zipformer-transducer/x-asr/axera/prepare-streaming-axmodel.sh
+            chown -R "$(stat -c %u:%g /sherpa-onnx)" /sherpa-onnx/axmodel-work-streaming
+
+      - name: Free the disk (the icefall image is ~7 GB)
+        shell: bash
+        run: |
+          docker image prune -af || true
+          df -h
+
+      - name: Download Pulsar2 8.0 and fix the bundled launchers
+        shell: bash
+        run: |
+          set -ex
+          mkdir -p "$RUNNER_TEMP/pulsar2" && cd "$RUNNER_TEMP/pulsar2"
+          curl -SL -o pulsar2.tar.gz \
+            https://huggingface.co/AXERA-TECH/Pulsar2/resolve/main/8.0/ax_pulsar2_8.0_lite_package.tar.gz
+          tar xf pulsar2.tar.gz
+          PULSAR2_DIR="$RUNNER_TEMP/pulsar2/ax_pulsar2_8.0_lite_package"
+
+          # two bugs in the 8.0 package launchers
+          sed -i 's#/pulsar2/axnn/axnn/yamain#/pulsar2/axnn/yamain#' "$PULSAR2_DIR/bin/pulsar2"
+          sed -i 's#ld-2.31.so#ld-linux-x86-64.so.2#' "$PULSAR2_DIR/bin/python3"
+
+          echo "PULSAR2_BIN=$PULSAR2_DIR/bin/pulsar2" >> "$GITHUB_ENV"
+          "$PULSAR2_DIR/bin/pulsar2" version
+
+      - name: Generate the Pulsar2 config and compile
+        shell: bash
+        working-directory: ${{ github.workspace }}/axmodel-work-streaming
+        run: |
+          set -ex
+          python3 -m pip install -q onnx numpy
+          python3 "${{ github.workspace }}/scripts/zipformer-transducer/x-asr/axera/make-streaming-config.py" \
+            --onnx encoder-streaming-ax650.onnx \
+            --calib-dir calib \
+            --output pulsar2-streaming-encoder.json \
+            --output-dir out --work-dir out/work
+          /usr/bin/time -v "$PULSAR2_BIN" build --config pulsar2-streaming-encoder.json 2>&1 | tee build.log
+          ls -lh out/encoder_streaming.axmodel
+
+      - name: Verify in the simulator
+        shell: bash
+        working-directory: ${{ github.workspace }}/axmodel-work-streaming
+        run: |
+          set -ex
+          python3 -m pip install -q onnxruntime numpy
+          python3 "${{ github.workspace }}/scripts/zipformer-transducer/x-asr/axera/verify-streaming-encoder.py" \
+            --onnx encoder-streaming-ax650.onnx \
+            --axmodel out/encoder_streaming.axmodel \
+            --calib-dir calib \
+            --pulsar2 "$PULSAR2_BIN" | tee verify.log
+
+      - name: Show results
+        shell: bash
+        run: |
+          set -ex
+          cd axmodel-work-streaming
+          ls -lh encoder-streaming-ax650.onnx out/encoder_streaming.axmodel
+          sha256sum out/encoder_streaming.axmodel
+          grep -E "Maximum resident|Elapsed|cosine" build.log verify.log || true
+
+      - name: Upload the streaming axmodel
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-asr-encoder-streaming-ax650-axmodel
+          path: |
+            axmodel-work-streaming/out/encoder_streaming.axmodel
+            axmodel-work-streaming/pulsar2-streaming-encoder.json
+            axmodel-work-streaming/verify.log
           compression-level: 0
