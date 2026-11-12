@@ -3,8 +3,8 @@ include_guard(GLOBAL)
 function(download_kaldi_native_fbank)
   include(FetchContent)
 
-  set(kaldi_native_fbank_URL   "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.23.0.tar.gz")
-  set(kaldi_native_fbank_HASH "SHA256=97e75ad01f486c45d6b0169a305e1e057f660fe84eb65db1aab773b732335062")
+  set(kaldi_native_fbank_URL   "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.23.1.tar.gz")
+  set(kaldi_native_fbank_HASH "SHA256=c9722d55bf791d591baf6f79c8db8c66b7eeacf3bec59a4ac37864eacf2e8f37")
 
   set(KALDI_NATIVE_FBANK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   set(KALDI_NATIVE_FBANK_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
@@ -13,11 +13,11 @@ function(download_kaldi_native_fbank)
   # If you don't have access to the Internet,
   # please pre-download kaldi-native-fbank
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldi-native-fbank-1.23.0.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldi-native-fbank-1.23.0.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldi-native-fbank-1.23.0.tar.gz
-    /tmp/kaldi-native-fbank-1.23.0.tar.gz
-    /star-fj/fangjun/download/github/kaldi-native-fbank-1.23.0.tar.gz
+    $ENV{HOME}/Downloads/kaldi-native-fbank-1.23.1.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldi-native-fbank-1.23.1.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldi-native-fbank-1.23.1.tar.gz
+    /tmp/kaldi-native-fbank-1.23.1.tar.gz
+    /star-fj/fangjun/download/github/kaldi-native-fbank-1.23.1.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

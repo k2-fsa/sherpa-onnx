@@ -140,7 +140,6 @@ set(sources
   phrase-matcher.cc
   provider-config.cc
   provider.cc
-  resample.cc
   session.cc
   silero-vad-model-config.cc
   silero-vad-model.cc
