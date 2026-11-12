@@ -673,6 +673,14 @@ llama-server.
 
 - [Credits, where sherpa-onnx is listed](https://outmake.app/credits)
 
+### [BAXY](https://github.com/REDSOULTM/BAXY)
+
+> A voice and text assistant that operates a Windows PC locally, in English and Spanish.
+> It uses sherpa-onnx for speech recognition with Parakeet and for its Supertonic voice.
+
+- [Website](https://baxy.app)
+- [Releases](https://github.com/REDSOULTM/BAXY/releases)
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
