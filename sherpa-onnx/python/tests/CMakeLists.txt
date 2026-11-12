@@ -21,6 +21,7 @@ endfunction()
 set(py_test_files
   test_fast_clustering.py
   test_feature_extractor_config.py
+  test_generic_hotword_fallback.py
   test_keyword_spotter.py
   test_nemo_hotword_finalization.py
   test_offline_recognizer.py

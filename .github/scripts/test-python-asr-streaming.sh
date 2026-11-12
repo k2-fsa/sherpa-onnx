@@ -13,6 +13,9 @@ source "$SCRIPT_DIR/common.sh"
 
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
+log "test generic RNN-T hotword prefix fallback"
+python3 sherpa-onnx/python/tests/test_generic_hotword_fallback.py --verbose
+
 log "test NeMo hotword prefix fallback"
 python3 sherpa-onnx/python/tests/test_nemo_hotword_finalization.py --verbose
 
