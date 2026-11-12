@@ -64,6 +64,20 @@ TEST(ForcedAlignerTest, ToTextGridFormat) {
   EXPECT_EQ(r.ToTextGrid(), expected);
 }
 
+TEST(ForcedAlignerTest, ToTextGridEscapesQuotes) {
+  ForcedAlignmentResult r;
+  r.duration = 1.0f;
+
+  AlignmentTier words;
+  words.name = "words";
+  words.intervals.push_back({0.0f, 1.0f, "a\"b"});
+  r.tiers = {words};
+
+  // A double quote inside a label is written as two double quotes.
+  std::string textgrid = r.ToTextGrid();
+  EXPECT_NE(textgrid.find("text = \"a\"\"b\""), std::string::npos);
+}
+
 TEST(ForcedAlignerTest, MissingFilesThrow) {
   {
     // empty model_dir

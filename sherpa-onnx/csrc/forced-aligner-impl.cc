@@ -698,10 +698,20 @@ ForcedAlignmentResult ForcedAligner::Impl::BuildResult(
   }
   AlignmentTier word_tier;
   word_tier.name = "words";
+  float word_t = 0.0f;
   for (size_t i = 0; i < spans.size(); ++i) {
-    word_tier.intervals.push_back({segs[spans[i].first].t0,
-                                   segs[spans[i].second].t1,
-                                   resolved.labels[aligned_words[i] - 1]});
+    float t0 = segs[spans[i].first].t0;
+    float t1 = segs[spans[i].second].t1;
+    if (t0 > word_t) {
+      // Silence gaps; Praat interval tiers must tile the full time range.
+      word_tier.intervals.push_back({word_t, t0, ""});
+    }
+    word_tier.intervals.push_back(
+        {t0, t1, resolved.labels[aligned_words[i] - 1]});
+    word_t = t1;
+  }
+  if (result.duration > word_t) {
+    word_tier.intervals.push_back({word_t, result.duration, ""});
   }
   result.tiers.push_back(std::move(word_tier));
   return result;

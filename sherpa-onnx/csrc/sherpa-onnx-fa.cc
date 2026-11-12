@@ -131,6 +131,11 @@ int32_t main(int32_t argc, char *argv[]) {
       return 1;
     }
     os << textgrid;
+    os.close();
+    if (!os) {
+      fprintf(stderr, "Error: failed to write '%s'\n", out.c_str());
+      return 1;
+    }
     fprintf(stderr, "TextGrid written to '%s'\n", out.c_str());
   }
 

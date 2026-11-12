@@ -96,6 +96,20 @@ std::string ForcedAlignerConfig::ToString() const {
   return os.str();
 }
 
+// Inside a Praat text tier, a double quote is written as two double quotes.
+static std::string EscapeTextGridText(const std::string &s) {
+  std::string out;
+  out.reserve(s.size());
+  for (char c : s) {
+    if (c == '"') {
+      out += "\"\"";
+    } else {
+      out += c;
+    }
+  }
+  return out;
+}
+
 std::string ForcedAlignmentResult::ToTextGrid() const {
   std::ostringstream os;
   os << std::fixed << std::setprecision(4);
@@ -113,7 +127,7 @@ std::string ForcedAlignmentResult::ToTextGrid() const {
     const auto &tier = tiers[i];
     os << "    item [" << i + 1 << "]:\n";
     os << "        class = \"IntervalTier\"\n";
-    os << "        name = \"" << tier.name << "\"\n";
+    os << "        name = \"" << EscapeTextGridText(tier.name) << "\"\n";
     os << "        xmin = 0\n";
     os << "        xmax = " << duration << "\n";
     os << "        intervals: size = " << tier.intervals.size() << "\n";
@@ -122,7 +136,7 @@ std::string ForcedAlignmentResult::ToTextGrid() const {
       os << "        intervals [" << j + 1 << "]:\n";
       os << "            xmin = " << iv.start << "\n";
       os << "            xmax = " << iv.end << "\n";
-      os << "            text = \"" << iv.text << "\"\n";
+      os << "            text = \"" << EscapeTextGridText(iv.text) << "\"\n";
     }
   }
   return os.str();

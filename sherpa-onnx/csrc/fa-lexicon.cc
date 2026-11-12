@@ -84,9 +84,14 @@ FaLexicon FaLexicon::Load(const std::string &filename) {
 
     auto &bucket = lexicon.entries[key];
     bool duplicate = false;
-    for (const auto &e : bucket) {
+    for (auto &e : bucket) {
       if (e.phones == pron.phones) {
         duplicate = true;
+        // Same pronunciation: keep the form with more per-character groups
+        // so the key stays usable as a pronunciation context.
+        if (pron.groups.size() > e.groups.size()) {
+          e = std::move(pron);
+        }
         break;
       }
     }
@@ -222,15 +227,16 @@ std::vector<std::vector<std::vector<std::string>>> ResolveFaPronunciations(
   std::vector<std::vector<std::vector<std::string>>> result(n);
   for (size_t i = 0; i < n; ++i) {
     const auto &base = lexicon.Get(words[i]);
-    if (base.empty()) {
-      continue;  // out of vocabulary
-    }
     if (allowed[i].empty()) {
+      if (base.empty()) {
+        continue;  // out of vocabulary
+      }
       for (const auto &p : base) {
         result[i].push_back(p.phones);
       }
     } else {
-      // The context groups are valid readings of the token by construction.
+      // The context groups are valid readings of the token by construction;
+      // they also cover tokens without a standalone entry.
       for (const auto &g : allowed[i]) {
         result[i].push_back(g);
       }

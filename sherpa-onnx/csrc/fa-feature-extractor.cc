@@ -59,7 +59,11 @@ class FaFeatureExtractor::Impl {
   }
 
   int32_t FeatureDim() const { return feature_dim_; }
+
   int32_t NumFrames() const {
+    if (feature_dim_ == 0) {
+      return 0;
+    }
     return static_cast<int32_t>(frames_.size() / feature_dim_);
   }
   const std::vector<float> &GetFrames() const { return frames_; }

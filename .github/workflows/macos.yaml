@@ -127,7 +127,6 @@ jobs:
 
           file ./bin/sherpa-onnx
           rm -rfv ./install/lib/pkgconfig
-          rm -rfv ./install/lib/lib*.a
 
       - name: Display dependencies of sherpa-onnx for macos
         shell: bash
@@ -179,6 +178,8 @@ jobs:
           if [[ ${{ matrix.lib_type }} == shared ]]; then
             mkdir $dst/lib
             cp -a build/install/lib/*.dylib* $dst/lib/
+          else
+            cp -a build/install/lib $dst/
           fi
           cp -a build/install/include $dst/
 
@@ -192,6 +193,8 @@ jobs:
           mkdir -p ${lib_dst}/lib
           if [[ ${{ matrix.lib_type }} == shared ]]; then
             cp -av build/install/lib/lib*.dylib* ${lib_dst}/lib/
+          else
+            cp -av build/install/lib/lib*.a ${lib_dst}/lib/
           fi
           tree ${lib_dst}
           sign_macos_tree "$lib_dst"

@@ -4,14 +4,13 @@
 
 #include "sherpa-onnx/csrc/fa-lexicon.h"
 
-#include "sherpa-onnx/csrc/file-utils.h"
-
 #include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 
 namespace sherpa_onnx {
 
@@ -73,6 +72,8 @@ TEST(FaLexiconTest, ParseGroupsAndDeduplication) {
       "字 i ||\n"  // same phones, same single group -> deduplicated
       "词 t s || ɻ\n"
       "词 t s ɻ\n"      // same phones, different grouping -> deduplicated
+      "甲乙 a b\n"
+      "甲乙 a || b\n"  // grouped form wins when it comes second
       "句 tɕ y ||\n");  // trailing empty group is dropped
   FaLexicon lexicon = FaLexicon::Load(path);
 
@@ -80,9 +81,17 @@ TEST(FaLexiconTest, ParseGroupsAndDeduplication) {
   EXPECT_EQ(zi.size(), 1u);
   EXPECT_EQ(zi[0].groups.size(), 1u);
 
+  // The grouped form is kept regardless of the order of the lines.
   const auto &ci = lexicon.Get("词");
   EXPECT_EQ(ci.size(), 1u);
   EXPECT_EQ(ci[0].phones, (std::vector<std::string>{"t", "s", "ɻ"}));
+  EXPECT_EQ(ci[0].groups.size(), 2u);
+
+  const auto &jiayi = lexicon.Get("甲乙");
+  EXPECT_EQ(jiayi.size(), 1u);
+  ASSERT_EQ(jiayi[0].groups.size(), 2u);
+  EXPECT_EQ(jiayi[0].groups[0], (std::vector<std::string>{"a"}));
+  EXPECT_EQ(jiayi[0].groups[1], (std::vector<std::string>{"b"}));
 
   const auto &ju = lexicon.Get("句");
   ASSERT_EQ(ju[0].groups.size(), 1u);
@@ -183,6 +192,18 @@ TEST(FaLexiconTest, ResolveIgnoresContextsWithoutGroups) {
   ASSERT_EQ(resolved.size(), 2u);
   EXPECT_EQ(resolved[0].size(), 2u);
   EXPECT_EQ(resolved[1].size(), 2u);
+}
+
+TEST(FaLexiconTest, ResolveContextWithoutStandaloneEntry) {
+  // The phrase has per-character groups but its characters have no
+  // standalone entries; the context groups become their pronunciations.
+  FaLexicon lexicon;
+  lexicon.entries["甲乙"] = {MakePron({{"a"}, {"b"}})};
+
+  auto resolved = ResolveFaPronunciations({"甲", "乙"}, lexicon);
+  ASSERT_EQ(resolved.size(), 2u);
+  EXPECT_EQ(resolved[0], (std::vector<std::vector<std::string>>{{"a"}}));
+  EXPECT_EQ(resolved[1], (std::vector<std::vector<std::string>>{{"b"}}));
 }
 
 TEST(FaLexiconTest, ResolveOovYieldsEmpty) {
