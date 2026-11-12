@@ -270,8 +270,9 @@ python3 prepare-streaming-encoder.py \
   --freeze-input processed_lens=256 --drop-output new_processed_lens
 
 # 3. calibration set: run the fp32 encoder over the wavs and record (x, all caches)
+#    use the *prepared* graph so the caches match what will be compiled
 python3 make-streaming-calibration-set.py \
-  --encoder streaming-work/encoder-epoch-99-avg-1-chunk-48-left-256.onnx \
+  --encoder streaming-work/encoder-streaming-ax650.onnx \
   --wav-dir streaming-work/wavs --output streaming-work/calib \
   --num-frames 109 --hop 96 --num-samples 16
 
