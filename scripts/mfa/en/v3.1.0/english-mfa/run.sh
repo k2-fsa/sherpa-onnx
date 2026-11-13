@@ -30,6 +30,9 @@ if [ ! -f download/.model_extracted ]; then
   touch download/.model_extracted
 fi
 
+# test wav shipped with the package (transcript in the usage example below)
+download_file https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/en.wav download/en.wav
+
 python3 generate_lexicon.py
 
 # ---- package: only the files required by sherpa-onnx-fa, plus lexicon.txt
@@ -45,6 +48,7 @@ if [ -f "$model_dir/phones.txt" ]; then
   cp "$model_dir/phones.txt" "$stage/"
 fi
 cp lexicon.txt "$stage/"
+cp download/en.wav "$stage/"
 
 cat > "$stage/README.md" <<EOF
 # english-mfa-v3.1.0 - forced-alignment acoustic model
@@ -83,6 +87,7 @@ phone_lm.fst, graphemes.txt, phone_pdf.counts, are dropped).
                  included and the aligner reports them as out-of-vocabulary
                  at runtime. Multi-word phrases keep their combined
                  readings; " || " separates their per-word phone groups.
+- en.wav        test wav (its transcript is the --text below)
 
 ## License
 
@@ -93,11 +98,15 @@ the license terms.
 
 ## Usage
 
-  sherpa-onnx-fa \
-    --model-dir=$pkg \
-    --lexicon=$pkg/lexicon.txt \
-    --wav=input.wav \
-    --text="..." \
+The test wav en.wav is included so the package works out of the box.
+sherpa-onnx-fa is only a demo: the same model can be used through the
+APIs of all languages supported by sherpa-onnx.
+
+  sherpa-onnx-fa \\
+    --model-dir=$pkg \\
+    --lexicon=$pkg/lexicon.txt \\
+    --wav=$pkg/en.wav \\
+    --text="ask not what your country can do for you, ask what you can do for your country." \\
     --out=output.TextGrid
 EOF
 

@@ -13,10 +13,9 @@ log "------------------------------------------------------------"
 log "Test sherpa-onnx-fa (forced alignment)                      "
 log "------------------------------------------------------------"
 
-download https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/zh.wav
-download https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/en.wav
-
 # Models: https://github.com/k2-fsa/sherpa-onnx/releases/tag/fa-models
+# Each model package ships its own test wav (zh.wav / en.wav) whose
+# transcript is documented in the README.md of the package.
 for model in zh-aishell3-pinyin zh-biaobei-pinyin zh-large-pinyin; do
   log "Test $model"
   download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/${model}.tar.bz2
@@ -26,7 +25,7 @@ for model in zh-aishell3-pinyin zh-biaobei-pinyin zh-large-pinyin; do
   sherpa-onnx-fa \
     --model-dir=$model \
     --lexicon=$model/lexicon.txt \
-    --wav=zh.wav \
+    --wav=$model/zh.wav \
     --text="不要问你的国家能为你做什么，而要问你能为你的国家做什么。" \
     --out=${model}.TextGrid
 
@@ -34,6 +33,7 @@ for model in zh-aishell3-pinyin zh-biaobei-pinyin zh-large-pinyin; do
   grep -q 'name = "phones"' ${model}.TextGrid
   grep -q 'name = "words"' ${model}.TextGrid
 
+  cp $model/zh.wav ./zh.wav  # keep the wav for the artifact upload
   rm -rf $model
 done
 
@@ -46,7 +46,7 @@ for model in english-mfa-v2.2.1 english-mfa-v3.0.0 english-mfa-v3.1.0; do
   sherpa-onnx-fa \
     --model-dir=$model \
     --lexicon=$model/lexicon.txt \
-    --wav=en.wav \
+    --wav=$model/en.wav \
     --text="ask not what your country can do for you, ask what you can do for your country." \
     --out=${model}.TextGrid
 
@@ -54,6 +54,7 @@ for model in english-mfa-v2.2.1 english-mfa-v3.0.0 english-mfa-v3.1.0; do
   grep -q 'name = "phones"' ${model}.TextGrid
   grep -q 'name = "words"' ${model}.TextGrid
 
+  cp $model/en.wav ./en.wav  # keep the wav for the artifact upload
   rm -rf $model
 done
 

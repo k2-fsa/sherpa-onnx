@@ -113,7 +113,10 @@ Each package is a single model directory holding only the files required by
 <name>/lda.mat        LDA transform of the feature chain
 <name>/phones.txt     phone table (when the upstream model ships one)
 <name>/lexicon.txt    pronunciation dictionary (generated here)
-<name>/README.md      model provenance (where the model comes from)
+<name>/en.wav         test wav (en.wav for English models, zh.wav for
+                      Chinese ones; its transcript is in README.md)
+<name>/README.md      model provenance (where the model comes from) and
+                      a usage example that runs as-is on the test wav
 ```
 
 Extra files of the upstream bundles (`final.mdl`, `phone_lm.fst`,
@@ -163,6 +166,10 @@ sherpa-onnx-fa \
 The output is a Praat TextGrid with a phone tier and a word tier. For hanzi
 text the words tier is one word per character (multi-character keys provide
 pronunciation context); otherwise whitespace tokenization is used.
+
+Each package contains a test wav (`en.wav` for English models, `zh.wav` for
+Chinese ones) whose transcript is written out in the model's own `README.md`
+— its usage example runs as-is on the extracted package.
 
 ## How the packages are built
 
