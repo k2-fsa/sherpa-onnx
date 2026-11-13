@@ -34,6 +34,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflinePunctuation,
     OfflinePunctuationConfig,
     OfflinePunctuationModelConfig,
+    OfflineAudio8AsrModelConfig,
     OfflineQwen3ASRModelConfig,
     OfflineRecognizerConfig,
     OfflineSenseVoiceModelConfig,

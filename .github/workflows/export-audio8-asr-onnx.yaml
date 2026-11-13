@@ -1,0 +1,101 @@
+# Export Audio8-ASR-0.1B to ONNX and verify it.
+#
+# Audio8-ASR-0.1B is a Whisper-style audio encoder followed by a small Qwen2
+# decoder. The export needs torch + transformers (CPU is enough), so this job
+# runs on a normal runner; no NPU toolchain is involved.
+name: export-audio8-asr-onnx
+
+on:
+  workflow_dispatch:
+    inputs:
+      int8:
+        description: "Also produce dynamic-int8 graphs"
+        type: boolean
+        default: true
+      upload_to_hf:
+        description: "Push the models to HuggingFace (needs HF_TOKEN)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: export-audio8-asr-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export:
+    name: Export ONNX
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -ex
+          python3 -m pip install --upgrade pip
+          python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python3 -m pip install transformers onnx onnxruntime numpy soundfile huggingface_hub
+
+      - name: Download the checkpoint
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          python3 -c "from huggingface_hub import snapshot_download; snapshot_download('Edge0/Audio8-ASR-0.1B', local_dir='Audio8-ASR-0.1B', allow_patterns=['*.json', '*.py', '*.jinja', '*.txt', 'model.safetensors'])"
+          ls -lh Audio8-ASR-0.1B
+
+      - name: Export the ONNX graphs
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          python3 export-onnx.py --out-dir ./exported ${{ inputs.int8 && '--int8' || '' }}
+          ls -lh exported
+
+      - name: Download the test wavs and verify
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          mkdir -p wavs
+          base=https://huggingface.co/yunyu1258/audio8-asr-onnx/resolve/main/test_wavs
+          for f in 0 1 3; do
+            curl -SL -o wavs/$f.wav $base/$f.wav
+          done
+          python3 run-onnx.py wavs/0.wav wavs/1.wav wavs/3.wav | tee verify.log
+          grep -q "Monday" verify.log
+
+      - name: Show the results
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          ls -lh exported
+          sha256sum exported/*.onnx || true
+          cat exported/metadata.json
+
+      - name: Upload the ONNX models
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio8-asr-onnx
+          path: |
+            scripts/audio8-asr/exported
+            scripts/audio8-asr/verify.log
+          compression-level: 1
+
+      - name: Push to HuggingFace
+        if: inputs.upload_to_hf
+        shell: bash
+        working-directory: scripts/audio8-asr
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -ex
+          python3 -m pip install -q "huggingface_hub[cli]"
+          huggingface-cli upload yunyu1258/audio8-asr-onnx ./exported . --repo-type model

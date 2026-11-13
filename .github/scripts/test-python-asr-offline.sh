@@ -31,6 +31,30 @@ python3 ./python-api-examples/offline-qwen3-asr-decode-files.py \
 
 rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 
+log "test Audio8 ASR"
+
+# Audio8-ASR-0.1B is hosted on HuggingFace for now.
+audio8_base=https://huggingface.co/yunyu1258/audio8-asr-onnx/resolve/main
+audio8_dir=sherpa-onnx-audio8-asr-0.1B
+mkdir -p "$audio8_dir/tokenizer" "$audio8_dir/test_wavs"
+for f in encoder.int8.onnx decoder.int8.onnx; do
+  curl -fSL -o "$audio8_dir/${f%.int8.onnx}.onnx" "$audio8_base/$f"
+done
+for f in vocab.json merges.txt tokenizer_config.json added_tokens.json; do
+  curl -fSL -o "$audio8_dir/tokenizer/$f" "$audio8_base/tokenizer/$f"
+done
+curl -fSL -o "$audio8_dir/test_wavs/0.wav" "$audio8_base/test_wavs/0.wav"
+
+python3 ./python-api-examples/offline-audio8-asr-decode-files.py \
+  --encoder="$audio8_dir/encoder.onnx" \
+  --decoder="$audio8_dir/decoder.onnx" \
+  --tokenizer="$audio8_dir/tokenizer" \
+  --max-new-tokens=128 \
+  --num-threads=2 \
+  "$audio8_dir/test_wavs/0.wav"
+
+rm -rf "$audio8_dir"
+
 log "test Moonshine v2"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2

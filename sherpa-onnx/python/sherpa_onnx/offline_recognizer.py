@@ -6,6 +6,7 @@ from typing import List, Optional
 from sherpa_onnx.lib._sherpa_onnx import (
     FeatureExtractorConfig,
     HomophoneReplacerConfig,
+    OfflineAudio8AsrModelConfig,
     OfflineCanaryModelConfig,
     OfflineCohereTranscribeModelConfig,
     OfflineFunASRNanoModelConfig,
@@ -475,6 +476,79 @@ class OfflineRecognizer(object):
         return self
 
     @classmethod
+    def from_audio8_asr(
+        cls,
+        encoder: str,
+        decoder: str,
+        tokenizer: str,
+        num_threads: int = 1,
+        sample_rate: int = 16000,
+        feature_dim: int = 128,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        max_total_len: int = 512,
+        max_new_tokens: int = 128,
+    ):
+        """
+        Create an offline recognizer for Audio8-ASR-0.1B (Whisper-style log-mel
+        encoder + a small Qwen2 decoder with a KV cache).
+
+        Args:
+          encoder:
+            Path to ``encoder.onnx``.
+          decoder:
+            Path to ``decoder.onnx`` (KV cache decoder).
+          tokenizer:
+            Path to the tokenizer directory (``vocab.json``, ``merges.txt``,
+            ``tokenizer_config.json``).
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the input audio.
+          feature_dim:
+            Mel feature dimension; Audio8-ASR uses 128.
+          decoding_method:
+            Valid values: greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution provider, e.g. cpu.
+          max_total_len:
+            Number of KV cache slots in the decoder graph.
+          max_new_tokens:
+            Maximum number of generated tokens per utterance.
+        """
+        self = cls.__new__(cls)
+        audio8 = OfflineAudio8AsrModelConfig(
+            encoder=encoder,
+            decoder=decoder,
+            tokenizer=tokenizer,
+            max_total_len=max_total_len,
+            max_new_tokens=max_new_tokens,
+        )
+
+        model_config = OfflineModelConfig(
+            audio8_asr=audio8,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
     def from_qwen3_asr(
         cls,
         conv_frontend: str,

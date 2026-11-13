@@ -296,6 +296,42 @@ jobs:
           rm -rf sherpa-onnx-funasr-*
           rm -v ./$name
 
+      - name: Test Audio8 ASR
+        shell: bash
+        run: |
+          name=audio8-asr-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          # The models are also mirrored on HuggingFace; switch `base` to the
+          # k2-fsa release once the artifact is uploaded there.
+          dir=sherpa-onnx-audio8-asr-0.1B
+          mkdir -p $dir/tokenizer $dir/test_wavs
+          base=https://huggingface.co/yunyu1258/audio8-asr-onnx/resolve/main
+          fetch() {
+            curl -fSL -o "$2" "$base/$1" || \
+              curl -fSL -o "$2" "https://hf-mirror.com/yunyu1258/audio8-asr-onnx/resolve/main/$1"
+          }
+          fetch encoder.int8.onnx $dir/encoder.onnx
+          fetch decoder.int8.onnx $dir/decoder.onnx
+          for f in vocab.json merges.txt tokenizer_config.json added_tokens.json; do
+            fetch tokenizer/$f $dir/tokenizer/$f
+          done
+          fetch test_wavs/0.wav $dir/test_wavs/0.wav
+
+          echo "---"
+
+          ./$name
+
+          rm -rf sherpa-onnx-audio8-*
+          rm -v ./$name
+
       - name: Test MedASR CTC
         shell: bash
         run: |
