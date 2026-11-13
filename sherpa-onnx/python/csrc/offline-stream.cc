@@ -19,7 +19,8 @@ Args:
     expected by the model, we will do resampling inside.
   waveform:
     A 1-D float32 tensor containing audio samples. It must be normalized
-    to the range [-1, 1].
+    to the range [-1, 1], i.e., normalized samples: raw int16 samples
+    divided by 32768.
 )doc";
 
 static constexpr const char *kOfflineRecognitionResultDoc = R"doc(

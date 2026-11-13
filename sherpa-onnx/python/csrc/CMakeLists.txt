@@ -7,6 +7,7 @@ set(srcs
   display.cc
   endpoint.cc
   features.cc
+  forced-aligner.cc
   homophone-replacer.cc
   keyword-spotter.cc
   offline-canary-model-config.cc

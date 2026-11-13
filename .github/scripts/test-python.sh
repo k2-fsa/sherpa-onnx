@@ -6,12 +6,12 @@
 # .github/workflows/run-python-test.yaml). Use this script to run the full
 # suite in one go, e.g. to reproduce a CI failure locally.
 
-set -ex
+set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
-for group in misc asr-offline asr-streaming tts; do
+for group in misc asr-offline asr-streaming tts fa; do
   log "================================================================"
   log "test group: $group"
   log "================================================================"

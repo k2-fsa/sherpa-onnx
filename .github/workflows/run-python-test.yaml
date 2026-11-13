@@ -268,6 +268,7 @@ jobs:
           - asr-offline
           - asr-streaming
           - tts
+          - fa
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
@@ -370,6 +371,30 @@ jobs:
         run: |
           export OS=${{ matrix.os }}
           .github/scripts/test-python-${{ matrix.group }}.sh
+
+      - name: Show fa result english-mfa-v3.1.0
+        if: matrix.group == 'fa'
+        shell: bash
+        run: cat en.TextGrid
+
+      - name: Show fa result zh-aishell3-pinyin
+        if: matrix.group == 'fa'
+        shell: bash
+        run: cat zh.TextGrid
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.group == 'fa'
+        with:
+          name: fa-textgrids-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./*.TextGrid
+
+      - name: Clean up fa files
+        if: matrix.group == 'fa'
+        shell: bash
+        run: |
+          rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+          rm -rf word-clips-en word-clips-zh
+          rm -f ./*.TextGrid
 
       - uses: actions/upload-artifact@v4
         if: matrix.group == 'misc'

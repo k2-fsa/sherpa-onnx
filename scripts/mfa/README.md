@@ -146,6 +146,8 @@ the lexicon and reported as out-of-vocabulary at runtime.
 
 ## Usage
 
+### Pre-built binary
+
 `sherpa-onnx-fa`, the command line tool shown below, is only a demo. The
 models are not tied to it: forced alignment is part of the sherpa-onnx
 libraries and the same models work through the APIs of all supported
@@ -163,13 +165,40 @@ sherpa-onnx-fa \
   --out=output.TextGrid
 ```
 
-The output is a Praat TextGrid with a phone tier and a word tier. For hanzi
-text the words tier is one word per character (multi-character keys provide
-pronunciation context); otherwise whitespace tokenization is used.
+The output is a Praat TextGrid with a phone tier and a word tier. Open it
+with [Praat](https://www.fon.hum.uva.nl/praat/) to visualize the phone and
+word alignments of the utterance. For hanzi text the words tier is one word
+per character (multi-character keys provide pronunciation context);
+otherwise whitespace tokenization is used.
 
 Each package contains a test wav (`en.wav` for English models, `zh.wav` for
 Chinese ones) whose transcript is written out in the model's own `README.md`
 — its usage example runs as-is on the extracted package.
+
+### Python API
+
+The same models work through the sherpa-onnx Python API (see `help()` on
+the classes for the full documentation):
+
+```python
+import sherpa_onnx
+
+config = sherpa_onnx.ForcedAlignerConfig()
+config.model_dir = "english-mfa-v3.1.0"
+config.lexicon = "english-mfa-v3.1.0/lexicon.txt"
+
+aligner = sherpa_onnx.ForcedAligner(config)
+s = aligner.create_stream()
+s.accept_waveform(sample_rate, samples)  # float32, normalized to [-1, 1]
+result = aligner.compute(s, text)
+print(result.to_textgrid())
+```
+
+Complete runnable examples (with the download commands in their headers)
+are in
+[python-api-examples](../../python-api-examples): `forced-alignment-english.py`,
+`forced-alignment-chinese.py` and `textgrid-to-word-wavs.py` (cutting the
+segment of each word).
 
 ## How the packages are built
 
