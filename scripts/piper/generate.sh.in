@@ -56,6 +56,7 @@ mv -v MODEL_CARD $dst/ || true
 mv -v README $dst/ || true
 mv -v README.md $dst/ || true
 mv -v LICENSE.txt $dst/ || true
+mv -v LICENSE-VOICE $dst/ || true
 mv -v *.json  $dst/
 if [[ ! $model_name =~ zh_CN-(xiao_ya|chaowen)-medium ]]; then
   cp -a ./espeak-ng-data $dst/
