@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.8"]
+        python-version: ["3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -84,7 +84,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.8"]
+        python-version: ["3.12"]
 
     steps:
       - name: Check space

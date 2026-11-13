@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.8"]
+        python-version: ["3.12"]
         total: ["2"]
         index: ["0", "1"]
 
