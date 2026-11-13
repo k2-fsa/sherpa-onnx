@@ -1,0 +1,131 @@
+name: export-kokoro-english-tn
+
+on:
+  push:
+    branches:
+      - export-kokoro-english-tn
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/export-kokoro-english-tn.yaml'
+      - 'scripts/kokoro/english-tn/**'
+      - 'python-api-examples/test-offline-tts-kokoro-en-rule-fsts.py'
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-kokoro-english-tn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-kokoro-english-tn:
+    name: export kokoro english tn
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install -r scripts/kokoro/english-tn/requirements.txt
+          pip check
+          pip install sherpa-onnx soundfile
+
+      - name: Build
+        shell: bash
+        run: |
+          cd scripts/kokoro/english-tn
+
+          rev=$(python3 -c "import json; print(json.load(open('manifest.json'))['nemo']['revision'])")
+          sha=$(python3 -c "import json; print(json.load(open('manifest.json'))['nemo']['archive_sha256'])")
+
+          curl -SL -o nemo.tar.gz https://github.com/NVIDIA/NeMo-text-processing/archive/$rev.tar.gz
+          echo "$sha  nemo.tar.gz" | sha256sum -c -
+          tar xf nemo.tar.gz
+          rm nemo.tar.gz
+          mv NeMo-text-processing-$rev NeMo-text-processing
+
+          python3 ./build.py --nemo-source ./NeMo-text-processing --output ./english-tn
+          python3 ./build_symbols.py ./english-tn/english_symbols.fst
+
+          # package.py checks the size and sha256 of each FST against manifest.json
+          python3 ./package.py --bundle ./english-tn --output $GITHUB_WORKSPACE/english-tn.tar.bz2
+
+          ls -lh ./english-tn $GITHUB_WORKSPACE/english-tn.tar.bz2
+
+      - name: Test
+        shell: bash
+        run: |
+          python3 scripts/kokoro/english-tn/test_package.py
+
+          # Test the files from the release archive, not the build directory
+          mkdir test
+          tar xf english-tn.tar.bz2 -C test
+          ls -lh test/english-tn
+
+          python3 scripts/kokoro/english-tn/test_runtime.py \
+            --bundle ./test/english-tn \
+            --output ./normalization-results.json
+
+          python3 scripts/kokoro/english-tn/test_clock.py \
+            --nemo-source ./scripts/kokoro/english-tn/NeMo-text-processing \
+            --bundle ./test/english-tn \
+            --output ./clock-results.json
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+          tar xf kokoro-en-v0_19.tar.bz2
+          rm kokoro-en-v0_19.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+
+          python3 ./python-api-examples/test-offline-tts-kokoro-en-rule-fsts.py \
+            --model-dir ./kokoro-en-v0_19 \
+            --lexicon ./lexicon-en-us.txt \
+            --rules-dir ./test/english-tn \
+            --text 'The price is $12.50 and the increase is 15%. We meet at 9:30 AM.' \
+            --output ./kokoro-english-tn.wav
+
+          ls -lh kokoro-english-tn.wav
+
+          rm -rf test kokoro-en-v0_19 lexicon-en-us.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kokoro-english-tn
+          path: |
+            ./english-tn.tar.bz2
+            ./normalization-results.json
+            ./clock-results.json
+            ./kokoro-english-tn.wav
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && github.event_name != 'pull_request'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && github.event_name != 'pull_request'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: tts-models
