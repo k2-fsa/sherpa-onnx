@@ -103,6 +103,7 @@ in your own Cargo project, see
 | 60 | [streaming_paraformer](#example-60-asr-with-streaming-paraformer) | Streaming ASR with Paraformer (Chinese + English) |
 | 61 | [streaming_t_one_ctc](#example-61-asr-with-streaming-t-one-ctc-russian) | Streaming ASR with T-one CTC (Russian) |
 | 62 | [medasr_ctc](#example-62-asr-with-non-streaming-medasr-ctc-english) | Non-streaming ASR with MedASR CTC (English) |
+| 63 | [telespeech_ctc](#example-63-asr-with-non-streaming-telespeech-ctc-chinese) | Non-streaming ASR with TeleSpeech CTC (Chinese) |
 
 ## Run it
 
@@ -525,4 +526,10 @@ voices. The model is from https://github.com/arbazsiddiqui/voxlock
 
 ```bash
 ./run-medasr-ctc.sh
+```
+
+### Example 63: ASR with non-streaming TeleSpeech CTC (Chinese)
+
+```bash
+./run-telespeech-ctc.sh
 ```
