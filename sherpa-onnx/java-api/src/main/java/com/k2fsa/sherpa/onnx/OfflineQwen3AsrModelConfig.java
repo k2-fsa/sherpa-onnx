@@ -6,6 +6,7 @@ public class OfflineQwen3AsrModelConfig {
     private final String decoder;
     private final String tokenizer;
     private final String hotwords;
+    // Use filesystem paths for MFA. Extract packaged assets first.
     private final String forcedAlignerModelDir;
     private final String forcedAlignerLexicon;
     private final int maxTotalLen;

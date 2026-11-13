@@ -1052,7 +1052,9 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   const char *hotwords;
   /** Optional MFA acoustic-model directory. Set together with
    * forced_aligner_lexicon to return word-level tokens and timestamps.
-   * The model and lexicon must match the recognized language. */
+   * The model and lexicon must match the recognized language. Both paths must
+   * be filesystem paths, including on Android and HarmonyOS. Extract packaged
+   * resources before setting these paths. */
   const char *forced_aligner_model_dir;
   /** Pronunciation lexicon matching the MFA acoustic model. */
   const char *forced_aligner_lexicon;

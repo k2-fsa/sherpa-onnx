@@ -584,11 +584,17 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromAsset(JNIEnv *env,
 #endif
   }
 
-  auto model = new sherpa_onnx::OfflineRecognizer(
+  sherpa_onnx::OfflineRecognizer *model = nullptr;
+  try {
+    model = new sherpa_onnx::OfflineRecognizer(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e, "Failed to create OfflineRecognizer");
+    return 0;
+  }
 
   return (jlong)model;
 }

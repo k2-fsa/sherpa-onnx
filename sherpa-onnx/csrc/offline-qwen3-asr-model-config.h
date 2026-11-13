@@ -28,6 +28,8 @@ struct OfflineQwen3ASRModelConfig {
   std::string hotwords;
 
   // Optional MFA acoustic model and matching pronunciation lexicon.
+  // Both paths must be filesystem paths, even with a resource manager.
+  // Extract packaged resources before setting these paths.
   std::string forced_aligner_model_dir;
   std::string forced_aligner_lexicon;
 
