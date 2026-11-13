@@ -27,7 +27,7 @@ This is the easiest way — one dependency pulls in everything:
 <dependency>
     <groupId>com.github.k2-fsa</groupId>
     <artifactId>sherpa-onnx</artifactId>
-    <version>2.0.1</version>
+    <version>v2.0.1</version>
 </dependency>
 ```
 
@@ -48,14 +48,14 @@ so you only ship the platform you need, keeping the final jar lightweight:
 <dependency>
     <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
     <artifactId>sherpa-onnx-jvm</artifactId>
-    <version>2.0.1</version>
+    <version>v2.0.1</version>
 </dependency>
 
 <!-- 2. Platform native lib — pick ONE for your target platform -->
 <dependency>
     <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
     <artifactId>sherpa-onnx-native-lib-osx-aarch64</artifactId>
-    <version>2.0.1</version>
+    <version>v2.0.1</version>
 </dependency>
 ```
 

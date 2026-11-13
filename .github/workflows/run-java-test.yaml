@@ -699,7 +699,7 @@ jobs:
                   <dependency>
                       <groupId>com.github.k2-fsa</groupId>
                       <artifactId>sherpa-onnx</artifactId>
-                      <version>2.0.1</version>
+                      <version>v2.0.1</version>
                   </dependency>
               </dependencies>
 
@@ -971,7 +971,7 @@ jobs:
           }
 
           dependencies {
-              implementation 'com.github.k2-fsa:sherpa-onnx:2.0.1'
+              implementation 'com.github.k2-fsa:sherpa-onnx:v2.0.1'
           }
 
           java {
