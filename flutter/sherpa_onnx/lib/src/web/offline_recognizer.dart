@@ -257,6 +257,10 @@ JSObject _buildModelConfig(OfflineModelConfig model) {
   qwen3Asr['topP'] = model.qwen3Asr.topP.toJS;
   qwen3Asr['seed'] = model.qwen3Asr.seed.toJS;
   qwen3Asr['hotwords'] = model.qwen3Asr.hotwords.toJS;
+  qwen3Asr['forcedAlignerModelDir'] =
+      model.qwen3Asr.forcedAlignerModelDir.toJS;
+  qwen3Asr['forcedAlignerLexicon'] =
+      model.qwen3Asr.forcedAlignerLexicon.toJS;
   jsModel['qwen3Asr'] = qwen3Asr;
 
   // Cohere Transcribe.

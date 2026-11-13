@@ -276,6 +276,8 @@ class OfflineQwen3AsrModelConfig {
     this.topP = 0.8,
     this.seed = 42,
     this.hotwords = '',
+    this.forcedAlignerModelDir = '',
+    this.forcedAlignerLexicon = '',
   });
 
   factory OfflineQwen3AsrModelConfig.fromJson(Map<String, dynamic> json) {
@@ -290,12 +292,15 @@ class OfflineQwen3AsrModelConfig {
       topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
       seed: json['seed'] as int? ?? 42,
       hotwords: json['hotwords'] as String? ?? '',
+      forcedAlignerModelDir:
+          json['forcedAlignerModelDir'] as String? ?? '',
+      forcedAlignerLexicon: json['forcedAlignerLexicon'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed, hotwords: $hotwords)';
+    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed, hotwords: $hotwords, forcedAlignerModelDir: $forcedAlignerModelDir, forcedAlignerLexicon: $forcedAlignerLexicon)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -309,6 +314,8 @@ class OfflineQwen3AsrModelConfig {
     'topP': topP,
     'seed': seed,
     'hotwords': hotwords,
+    'forcedAlignerModelDir': forcedAlignerModelDir,
+    'forcedAlignerLexicon': forcedAlignerLexicon,
   };
 
   final String convFrontend;
@@ -321,6 +328,8 @@ class OfflineQwen3AsrModelConfig {
   final double topP;
   final int seed;
   final String hotwords;
+  final String forcedAlignerModelDir;
+  final String forcedAlignerLexicon;
 }
 
 /// Model files and options for an offline Whisper recognizer.

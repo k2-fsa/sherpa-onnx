@@ -264,6 +264,10 @@ class OfflineRecognizer {
     c.ref.model.qwen3Asr.seed = config.model.qwen3Asr.seed;
     c.ref.model.qwen3Asr.hotwords = config.model.qwen3Asr.hotwords
         .toNativeUtf8();
+    c.ref.model.qwen3Asr.forcedAlignerModelDir =
+        config.model.qwen3Asr.forcedAlignerModelDir.toNativeUtf8();
+    c.ref.model.qwen3Asr.forcedAlignerLexicon =
+        config.model.qwen3Asr.forcedAlignerLexicon.toNativeUtf8();
 
     c.ref.model.cohereTranscribe.encoder = config
         .model
@@ -334,6 +338,8 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.qwen3Asr.forcedAlignerLexicon);
+    calloc.free(c.ref.model.qwen3Asr.forcedAlignerModelDir);
     calloc.free(c.ref.model.qwen3Asr.hotwords);
     calloc.free(c.ref.model.qwen3Asr.tokenizer);
     calloc.free(c.ref.model.qwen3Asr.decoder);

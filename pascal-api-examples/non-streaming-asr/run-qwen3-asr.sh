@@ -41,4 +41,4 @@ fpc \
 export LD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/install/lib:$LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/install/lib:$DYLD_LIBRARY_PATH
 
-./qwen3_asr
+./qwen3_asr "$@"

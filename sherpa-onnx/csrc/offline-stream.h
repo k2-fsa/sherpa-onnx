@@ -46,7 +46,7 @@ struct OfflineRecognitionResult {
   std::vector<float> timestamps;
 
   /// durations[i] contains the duration (in seconds) for tokens[i] (TDT models
-  /// only)
+  /// or word-level forced alignment)
   std::vector<float> durations;
 
   /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
@@ -78,6 +78,9 @@ struct WhisperTag {
   // itself) keep the historical behavior; Qwen3-ASR is sensitive to it
   // (see k2-fsa/sherpa-onnx#3535), so its recognizer opts in.
   bool align_to_stft_center = false;
+
+  // Retain the 16 kHz waveform for optional forced alignment.
+  bool keep_waveform = false;
 };
 
 struct CEDTag {};
@@ -125,6 +128,9 @@ class OfflineStream {
   // Get all the feature frames of this stream in a 1-D array, which is
   // flattened from a 2-D array of shape (num_frames, feat_dim).
   std::vector<float> GetFrames() const;
+
+  // WhisperTag streams retain 16 kHz samples when keep_waveform is set.
+  const std::vector<float> &GetWaveform() const;
 
   /** Set the recognition result for this stream. */
   void SetResult(const OfflineRecognitionResult &r);

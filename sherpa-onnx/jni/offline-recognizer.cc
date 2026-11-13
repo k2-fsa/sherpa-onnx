@@ -443,6 +443,12 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                               qwen3_asr_config_cls, qwen3_asr_config);
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.hotwords, hotwords,
                               qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.qwen3_asr.forced_aligner_model_dir,
+      forcedAlignerModelDir, qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.forced_aligner_lexicon,
+                              forcedAlignerLexicon, qwen3_asr_config_cls,
+                              qwen3_asr_config);
   SHERPA_ONNX_JNI_READ_INT(ans.model_config.qwen3_asr.max_total_len,
                            maxTotalLen, qwen3_asr_config_cls, qwen3_asr_config);
   SHERPA_ONNX_JNI_READ_INT(ans.model_config.qwen3_asr.max_new_tokens,
@@ -578,11 +584,17 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromAsset(JNIEnv *env,
 #endif
   }
 
-  auto model = new sherpa_onnx::OfflineRecognizer(
+  sherpa_onnx::OfflineRecognizer *model = nullptr;
+  try {
+    model = new sherpa_onnx::OfflineRecognizer(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e, "Failed to create OfflineRecognizer");
+    return 0;
+  }
 
   return (jlong)model;
 }

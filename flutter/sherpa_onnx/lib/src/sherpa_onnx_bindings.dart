@@ -472,6 +472,10 @@ final class SherpaOnnxOfflineQwen3AsrModelConfig extends Struct {
   external int seed;
 
   external Pointer<Utf8> hotwords;
+
+  external Pointer<Utf8> forcedAlignerModelDir;
+
+  external Pointer<Utf8> forcedAlignerLexicon;
 }
 
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {

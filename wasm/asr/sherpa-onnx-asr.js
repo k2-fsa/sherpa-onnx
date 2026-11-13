@@ -975,12 +975,16 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
   const tokenizerLen = Module.lengthBytesUTF8(config.tokenizer || '') + 1;
   const hotwordsLen = Module.lengthBytesUTF8(config.hotwords || '') + 1;
+  const faModelDirLen =
+      Module.lengthBytesUTF8(config.forcedAlignerModelDir || '') + 1;
+  const faLexiconLen =
+      Module.lengthBytesUTF8(config.forcedAlignerLexicon || '') + 1;
 
   const n = convFrontendLen + encoderLen + decoderLen + tokenizerLen +
-      hotwordsLen;
+      hotwordsLen + faModelDirLen + faLexiconLen;
   const buffer = Module._malloc(n);
 
-  const len = 10 * 4;
+  const len = 12 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -999,6 +1003,15 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
 
   Module.stringToUTF8(config.hotwords || '', buffer + offset, hotwordsLen);
   offset += hotwordsLen;
+
+  Module.stringToUTF8(
+      config.forcedAlignerModelDir || '', buffer + offset,
+      faModelDirLen);
+  offset += faModelDirLen;
+
+  Module.stringToUTF8(
+      config.forcedAlignerLexicon || '', buffer + offset, faLexiconLen);
+  offset += faLexiconLen;
 
   offset = 0;
   Module.setValue(ptr + 0 * 4, buffer + offset, 'i8*');
@@ -1020,6 +1033,12 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
   Module.setValue(ptr + 8 * 4, config.seed || 42, 'i32');
   Module.setValue(ptr + 9 * 4, buffer + offset, 'i8*');
   offset += hotwordsLen;
+
+  Module.setValue(ptr + 10 * 4, buffer + offset, 'i8*');
+  offset += faModelDirLen;
+
+  Module.setValue(ptr + 11 * 4, buffer + offset, 'i8*');
+  offset += faLexiconLen;
 
   return {
     buffer: buffer,

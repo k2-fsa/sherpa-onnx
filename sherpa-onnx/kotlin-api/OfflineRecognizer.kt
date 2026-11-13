@@ -87,6 +87,9 @@ data class OfflineQwen3AsrModelConfig(
     var topP: Float = 0.8f,
     var seed: Int = 42,
     var hotwords: String = "",
+    // Use filesystem paths for MFA. Extract packaged assets first.
+    var forcedAlignerModelDir: String = "",
+    var forcedAlignerLexicon: String = "",
 )
 
 data class OfflineWhisperModelConfig(
