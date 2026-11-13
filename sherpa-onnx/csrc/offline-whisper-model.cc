@@ -25,6 +25,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
+#include "sherpa-onnx/csrc/offline-whisper-lang-probs.h"
 #include "sherpa-onnx/csrc/offline-whisper-language-candidates.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -212,41 +213,15 @@ class OfflineWhisperModel::Impl {
   int32_t DetectLanguage(
       Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
       const std::vector<int32_t> &language_candidate_ids) {
-    int64_t token_val = SOT();
-    std::array<int64_t, 2> token_shape{1, 1};
+    return DetectLanguageImpl(cross_k, cross_v, language_candidate_ids,
+                              /*probs=*/nullptr);
+  }
 
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
-    Ort::Value tokens = Ort::Value::CreateTensor(
-        memory_info, &token_val, 1, token_shape.data(), token_shape.size());
-
-    auto self_kv_cache = GetInitialSelfKVCache();
-
-    std::array<int64_t, 1> offset_shape{1};
-    Ort::Value offset = Ort::Value::CreateTensor<int64_t>(
-        Allocator(), offset_shape.data(), offset_shape.size());
-    *(offset.GetTensorMutableData<int64_t>()) = 0;
-
-    auto decoder_out =
-        ForwardDecoder(std::move(tokens), std::move(self_kv_cache.first),
-                       std::move(self_kv_cache.second), std::move(cross_k),
-                       std::move(cross_v), std::move(offset));
-
-    cross_k = std::move(std::get<3>(decoder_out));
-    cross_v = std::move(std::get<4>(decoder_out));
-
-    const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
-    const auto &ids = language_candidate_ids.empty() ? GetAllLanguageIDs()
-                                                    : language_candidate_ids;
-    int32_t lang_id = SelectWhisperLanguage(p_logits, ids);
-
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("Detected language: %s",
-                       GetID2Lang().at(lang_id).c_str());
-    }
-
-    return lang_id;
+  int32_t DetectLanguageWithProbs(
+      Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
+      const std::vector<int32_t> &language_candidate_ids,
+      std::vector<std::pair<std::string, float>> *probs) {
+    return DetectLanguageImpl(cross_k, cross_v, language_candidate_ids, probs);
   }
 
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache() {
@@ -312,6 +287,52 @@ class OfflineWhisperModel::Impl {
   bool IsMultiLingual() const { return is_multilingual_; }
 
  private:
+  int32_t DetectLanguageImpl(
+      Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
+      const std::vector<int32_t> &language_candidate_ids,
+      std::vector<std::pair<std::string, float>> *probs) {
+    int64_t token_val = SOT();
+    std::array<int64_t, 2> token_shape{1, 1};
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    Ort::Value tokens = Ort::Value::CreateTensor(
+        memory_info, &token_val, 1, token_shape.data(), token_shape.size());
+
+    auto self_kv_cache = GetInitialSelfKVCache();
+
+    std::array<int64_t, 1> offset_shape{1};
+    Ort::Value offset = Ort::Value::CreateTensor<int64_t>(
+        Allocator(), offset_shape.data(), offset_shape.size());
+    *(offset.GetTensorMutableData<int64_t>()) = 0;
+
+    auto decoder_out =
+        ForwardDecoder(std::move(tokens), std::move(self_kv_cache.first),
+                       std::move(self_kv_cache.second), std::move(cross_k),
+                       std::move(cross_v), std::move(offset));
+
+    cross_k = std::move(std::get<3>(decoder_out));
+    cross_v = std::move(std::get<4>(decoder_out));
+
+    const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
+    const auto &ids = language_candidate_ids.empty() ? GetAllLanguageIDs()
+                                                     : language_candidate_ids;
+    int32_t lang_id = SelectWhisperLanguage(p_logits, ids);
+
+    if (probs != nullptr) {
+      ComputeWhisperLangProbs(p_logits, GetAllLanguageIDs(), GetID2Lang(),
+                              probs);
+    }
+
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Detected language: %s",
+                       GetID2Lang().at(lang_id).c_str());
+    }
+
+    return lang_id;
+  }
+
   void InitEncoder(void *model_data, size_t model_data_length) {
     if (model_data) {
       encoder_sess_ = std::make_unique<Ort::Session>(
@@ -530,6 +551,14 @@ int32_t OfflineWhisperModel::DetectLanguage(
     Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
     const std::vector<int32_t> &language_candidate_ids) {
   return impl_->DetectLanguage(cross_k, cross_v, language_candidate_ids);
+}
+
+int32_t OfflineWhisperModel::DetectLanguageWithProbs(
+    Ort::Value &cross_k, Ort::Value &cross_v,  // NOLINT
+    const std::vector<int32_t> &language_candidate_ids,
+    std::vector<std::pair<std::string, float>> *probs) {
+  return impl_->DetectLanguageWithProbs(cross_k, cross_v,
+                                        language_candidate_ids, probs);
 }
 
 std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::GetInitialSelfKVCache()

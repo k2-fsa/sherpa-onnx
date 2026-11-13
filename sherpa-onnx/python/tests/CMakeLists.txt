@@ -29,6 +29,7 @@ set(py_test_files
   test_online_unified_recognizer.py
   test_speaker_recognition.py
   test_text2token.py
+  test_vad.py
 )
 
 foreach(source IN LISTS py_test_files)

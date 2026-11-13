@@ -3078,6 +3078,24 @@ int32_t SherpaOnnxOfflineSpeechDenoiserGetSampleRate(
   return sd->impl->GetSampleRate();
 }
 
+int32_t SherpaOnnxOfflineSpeechDenoiserSetVoiceSample(
+    const SherpaOnnxOfflineSpeechDenoiser *sd, const float *samples, int32_t n,
+    int32_t sample_rate) {
+  if (sd == nullptr || sd->impl == nullptr) {
+    return -1;
+  }
+  if (samples == nullptr && n > 0) {
+    return -1;
+  }
+
+  try {
+    return sd->impl->SetVoiceSample(samples, n, sample_rate) ? 0 : -1;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to set voice sample: %s", e.what());
+    return -1;
+  }
+}
+
 const SherpaOnnxDenoisedAudio *SherpaOnnxOfflineSpeechDenoiserRun(
     const SherpaOnnxOfflineSpeechDenoiser *sd, const float *samples, int32_t n,
     int32_t sample_rate) {
@@ -3350,6 +3368,24 @@ void SherpaOnnxOnlineSpeechDenoiserReset(
   }
 
   sd->impl->Reset();
+}
+
+int32_t SherpaOnnxOnlineSpeechDenoiserSetVoiceSample(
+    const SherpaOnnxOnlineSpeechDenoiser *sd, const float *samples, int32_t n,
+    int32_t sample_rate) {
+  if (sd == nullptr || sd->impl == nullptr) {
+    return -1;
+  }
+  if (samples == nullptr && n > 0) {
+    return -1;
+  }
+
+  try {
+    return sd->impl->SetVoiceSample(samples, n, sample_rate) ? 0 : -1;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to set voice sample: %s", e.what());
+    return -1;
+  }
 }
 
 #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1

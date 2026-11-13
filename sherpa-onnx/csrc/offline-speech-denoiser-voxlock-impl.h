@@ -88,6 +88,18 @@ class OfflineSpeechDenoiserVoxLockImpl : public OfflineSpeechDenoiserImpl {
     return model_.GetMetaData().sample_rate;
   }
 
+  bool SetVoiceSample(const float *samples, int32_t n,
+                      int32_t sample_rate) override {
+    const auto &meta = model_.GetMetaData();
+    auto prepared = PrepareVoxLockVoiceSampleFromPcm(
+        samples, n, sample_rate, meta.sample_rate, meta.voice_sample_seconds);
+    if (prepared.empty()) {
+      return false;
+    }
+    voice_sample_ = std::move(prepared);
+    return true;
+  }
+
  private:
   void Init(const OfflineSpeechDenoiserConfig &config) {
     const auto &meta = model_.GetMetaData();

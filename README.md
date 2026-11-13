@@ -664,6 +664,23 @@ llama-server.
 - [Website](https://voltip.firlab.app)
 - [Releases](https://github.com/sunerpy/voltip/releases)
 
+### [Outmake](https://outmake.app)
+
+> A free Mac app (Apple silicon, macOS 26) for running open models on the Mac itself.
+> Its Kokoro, Kitten, Piper and Supertonic voices run on sherpa-onnx: the app downloads
+> the osx-arm64 shared build and speaks through `sherpa-onnx-offline-tts`, so those
+> voices need no Python.
+
+- [Credits, where sherpa-onnx is listed](https://outmake.app/credits)
+
+### [BAXY](https://github.com/REDSOULTM/BAXY)
+
+> A voice and text assistant that operates a Windows PC locally, in English and Spanish.
+> It uses sherpa-onnx for speech recognition with Parakeet and for its Supertonic voice.
+
+- [Website](https://baxy.app)
+- [Releases](https://github.com/REDSOULTM/BAXY/releases)
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
@@ -673,22 +690,22 @@ llama-server.
 [旭日X3派]: https://developer.horizon.ai/api/v1/fileData/documents_pi/index.html
 [爱芯派]: https://wiki.sipeed.com/hardware/zh/maixIII/ax-pi/axpi.html
 [hf-space-speaker-diarization]: https://huggingface.co/spaces/k2-fsa/speaker-diarization
-[hf-space-speaker-diarization-cn]: https://hf.qhduan.com/spaces/k2-fsa/speaker-diarization
+[hf-space-speaker-diarization-cn]: https://hf-mirror.com/spaces/k2-fsa/speaker-diarization
 [hf-space-asr]: https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition
-[hf-space-asr-cn]: https://hf.qhduan.com/spaces/k2-fsa/automatic-speech-recognition
+[hf-space-asr-cn]: https://hf-mirror.com/spaces/k2-fsa/automatic-speech-recognition
 [Whisper]: https://github.com/openai/whisper
 [hf-space-asr-whisper]: https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition-with-whisper
-[hf-space-asr-whisper-cn]: https://hf.qhduan.com/spaces/k2-fsa/automatic-speech-recognition-with-whisper
+[hf-space-asr-whisper-cn]: https://hf-mirror.com/spaces/k2-fsa/automatic-speech-recognition-with-whisper
 [hf-space-tts]: https://huggingface.co/spaces/k2-fsa/text-to-speech
-[hf-space-tts-cn]: https://hf.qhduan.com/spaces/k2-fsa/text-to-speech
+[hf-space-tts-cn]: https://hf-mirror.com/spaces/k2-fsa/text-to-speech
 [hf-space-subtitle]: https://huggingface.co/spaces/k2-fsa/generate-subtitles-for-videos
-[hf-space-subtitle-cn]: https://hf.qhduan.com/spaces/k2-fsa/generate-subtitles-for-videos
+[hf-space-subtitle-cn]: https://hf-mirror.com/spaces/k2-fsa/generate-subtitles-for-videos
 [hf-space-audio-tagging]: https://huggingface.co/spaces/k2-fsa/audio-tagging
-[hf-space-audio-tagging-cn]: https://hf.qhduan.com/spaces/k2-fsa/audio-tagging
+[hf-space-audio-tagging-cn]: https://hf-mirror.com/spaces/k2-fsa/audio-tagging
 [hf-space-source-separation]: https://huggingface.co/spaces/k2-fsa/source-separation
-[hf-space-source-separation-cn]: https://hf.qhduan.com/spaces/k2-fsa/source-separation
+[hf-space-source-separation-cn]: https://hf-mirror.com/spaces/k2-fsa/source-separation
 [hf-space-slid-whisper]: https://huggingface.co/spaces/k2-fsa/spoken-language-identification
-[hf-space-slid-whisper-cn]: https://hf.qhduan.com/spaces/k2-fsa/spoken-language-identification
+[hf-space-slid-whisper-cn]: https://hf-mirror.com/spaces/k2-fsa/spoken-language-identification
 [wasm-hf-vad]: https://huggingface.co/spaces/k2-fsa/web-assembly-vad-sherpa-onnx
 [wasm-ms-vad]: https://modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx
 [wasm-hf-streaming-asr-zh-en-zipformer]: https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en

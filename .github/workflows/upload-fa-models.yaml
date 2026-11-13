@@ -1,0 +1,108 @@
+name: upload-fa-models
+
+on:
+  push:
+    branches:
+      - fa-en-2
+  workflow_dispatch:
+
+concurrency:
+  group: upload-fa-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload-fa-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: upload fa models
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install python dependencies
+        run: |
+          python3 -m pip install pypinyin pinyin_to_ipa
+
+      # Each package step downloads the upstream model, keeps only the files
+      # required by sherpa-onnx-fa, adds lexicon.txt and a provenance
+      # README.md into the model directory, and creates <name>.tar.bz2.
+      - name: Package aishell3_pinyin
+        run: |
+          ./scripts/mfa/zh/lars76/package-fa-model.sh aishell3_pinyin
+
+      - name: Package biaobei_pinyin
+        run: |
+          ./scripts/mfa/zh/lars76/package-fa-model.sh biaobei_pinyin
+
+      - name: Package large_pinyin
+        run: |
+          ./scripts/mfa/zh/lars76/package-fa-model.sh large_pinyin
+
+      # The English run.sh downloads the upstream model, generates
+      # lexicon.txt and packs english-mfa-<version>.tar.bz2 in place.
+      - name: Package english-mfa v2.2.1
+        run: |
+          ./scripts/mfa/en/v2.2.1/english-mfa/run.sh
+
+      - name: Package english-mfa v3.0.0
+        run: |
+          ./scripts/mfa/en/v3.0.0/english-mfa/run.sh
+
+      - name: Package english-mfa v3.1.0
+        run: |
+          ./scripts/mfa/en/v3.1.0/english-mfa/run.sh
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/fa-models huggingface
+            cp -av scripts/mfa/zh/lars76/*.tar.bz2 huggingface || true
+            cp -av scripts/mfa/en/*/english-mfa/*.tar.bz2 huggingface || true
+            cd huggingface
+            git lfs track "*.tar.bz2"
+            git status
+            git add .
+            git status
+            git commit -m "add fa models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/fa-models main
+
+      - name: Release zh models
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: scripts/mfa/zh/lars76/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: fa-models
+
+      - name: Release en models
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: scripts/mfa/en/*/english-mfa/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: fa-models

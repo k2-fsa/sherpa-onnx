@@ -6,7 +6,6 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_WHISPER_IMPL_H_
 
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -19,6 +18,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
 #include "sherpa-onnx/csrc/offline-whisper-dtw.h"
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
+#include "sherpa-onnx/csrc/offline-whisper-lang-probs.h"
 #include "sherpa-onnx/csrc/offline-whisper-language-candidates.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -83,14 +83,32 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
  private:
   void DecodeStream(OfflineStream *s) const {
+    // Per-stream 'language' overrides the configured one. Setting the option
+    // to an empty string explicitly switches this decode to auto-detect.
+    std::string effective_language = config_.model_config.whisper.language;
+    if (s->HasOption("language")) {
+      effective_language = s->GetOption("language");
+
+      if (!model_->IsMultiLingual()) {
+        SHERPA_ONNX_LOGE(
+            "Warning: per-stream language is ignored by non-multilingual "
+            "Whisper models");
+      } else if (!effective_language.empty() &&
+                 !model_->GetLang2ID().count(effective_language)) {
+        // Clear stream result and warn on bad 'language' code override
+        SHERPA_ONNX_LOGE("Invalid language: '%s'", effective_language.c_str());
+        s->SetResult({});
+        return;
+      }
+    }
+
     std::vector<int32_t> language_candidate_ids;
     if (s->HasOption("language_candidates")) {
       const auto &candidates = s->GetOption("language_candidates");
-      const auto &language = config_.model_config.whisper.language;
       bool is_multilingual = model_->IsMultiLingual();
       const auto &lang2id = model_->GetLang2ID();
       bool is_ok = ResolveWhisperLanguageCandidates(
-          candidates, language, is_multilingual, lang2id,
+          candidates, effective_language, is_multilingual, lang2id,
           &language_candidate_ids);
       if (!is_ok) {
         s->SetResult({});
@@ -148,11 +166,16 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     try {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
 
+      OfflineWhisperDecodeParams params{std::move(effective_language),
+                                        std::move(language_candidate_ids)};
       auto results = decoder_->Decode(
           std::move(cross_kv.first), std::move(cross_kv.second), num_frames,
-          language_candidate_ids);
+          params);
 
       auto r = Convert(results[0], symbol_table_);
+
+      ApplyTopKLangProbs(s->GetOptionInt("top_k_langs", 0), &r.lang_probs);
+
       s->SetResult(r);
     } catch (const Ort::Exception &ex) {
       SHERPA_ONNX_LOGE(
@@ -209,6 +232,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
     r.text = text;
     r.lang = src.lang;
+    r.lang_probs = src.lang_probs;
 
     // Convert segments from segment timestamp mode to parallel vectors
     if (enable_segment_timestamps && !src.segments.empty()) {

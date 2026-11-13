@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -86,6 +87,10 @@ struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
   std::string lang;
+
+  /// Per-language probabilities from Whisper's language-identification pass.
+  /// Populated for multilingual models, empty for monolingual models.
+  std::vector<std::pair<std::string, float>> lang_probs;
 
   /// Cross-attention weights for token-level timestamps (if enabled)
   /// Shape: (n_heads, n_tokens, n_audio_frames), flattened to 1D

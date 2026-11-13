@@ -53,6 +53,14 @@ int32_t OfflineSpeechDenoiser::GetSampleRate() const {
   return impl_->GetSampleRate();
 }
 
+bool OfflineSpeechDenoiser::SetVoiceSample(const float *samples, int32_t n,
+                                           int32_t sample_rate) {
+  if (!impl_) {
+    return false;
+  }
+  return impl_->SetVoiceSample(samples, n, sample_rate);
+}
+
 #if __ANDROID_API__ >= 9
 template OfflineSpeechDenoiser::OfflineSpeechDenoiser(
     AAssetManager *mgr, const OfflineSpeechDenoiserConfig &config);

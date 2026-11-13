@@ -177,6 +177,10 @@ class VoiceActivityDetector::Impl {
       return;
     }
 
+    // These samples are waiting for a full window and belong to this segment
+    buffer_.Push(last_.data(), static_cast<int32_t>(last_.size()));
+    last_.clear();
+
     int64_t end = buffer_.Tail();
     if (end <= start_) {
       return;

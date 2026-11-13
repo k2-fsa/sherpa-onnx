@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 # Write ${content} to ${path} only when it differs from what is on disk.
 # The patches below run on every configure; a plain file(WRITE) would update
 # the header's mtime each time and make/ssentencepiece (plus every dependent
@@ -18,7 +20,6 @@ function(download_simple_sentencepiece)
   include(FetchContent)
 
   set(simple-sentencepiece_URL  "https://github.com/pkufool/simple-sentencepiece/archive/refs/tags/v0.7.tar.gz")
-  set(simple-sentencepiece_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/simple-sentencepiece-0.7.tar.gz")
   set(simple-sentencepiece_HASH "SHA256=1748a822060a35baa9f6609f84efc8eb54dc0e74b9ece3d82367b7119fdc75af")
 
   # If you don't have access to the Internet,
@@ -36,7 +37,6 @@ function(download_simple_sentencepiece)
       set(simple-sentencepiece_URL  "${f}")
       file(TO_CMAKE_PATH "${simple-sentencepiece_URL}" simple-sentencepiece_URL)
       message(STATUS "Found local downloaded simple-sentencepiece: ${simple-sentencepiece_URL}")
-      set(simple-sentencepiece_URL2)
       break()
     endif()
   endforeach()
@@ -47,7 +47,6 @@ function(download_simple_sentencepiece)
   FetchContent_Declare(simple-sentencepiece
     URL
       ${simple-sentencepiece_URL}
-      ${simple-sentencepiece_URL2}
     URL_HASH
       ${simple-sentencepiece_HASH}
   )

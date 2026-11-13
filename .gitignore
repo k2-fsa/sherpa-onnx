@@ -213,3 +213,14 @@ compile_commands.json
 
 # APK signing keystore — lives only as the ANDROID_KEYSTORE_B64 Actions secret
 .github/scripts/android/ci-apk.keystore
+todo*.md
+plan*.md
+sherpa-onnx-voxlock
+sherpa-onnx-voxlock-int8
+*.TextGrid
+path.sh
+notes.md
+download
+word-clips-*
+zh-aishell3-pinyin
+english-mfa-v3.1.0

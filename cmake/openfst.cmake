@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 # Copyright (c)  2020  Xiaomi Corporation (author: Fangjun Kuang)
 
 function(download_openfst)
@@ -56,6 +58,13 @@ function(download_openfst)
 
   add_subdirectory(${openfst_SOURCE_DIR} ${openfst_BINARY_DIR} EXCLUDE_FROM_ALL)
 
+  if(TARGET fst AND MSVC)
+    # C4291: no matching operator delete for the placement operator new of
+    # the pool allocators. That is intentional in openfst (pool-managed
+    # memory), so silence it for its own target.
+    target_compile_options(fst PRIVATE /wd4291)
+  endif()
+
   if(_build_shared_libs_bak)
     set_target_properties(fst fstfar
       PROPERTIES
@@ -70,6 +79,13 @@ function(download_openfst)
 
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
   set_target_properties(fstfar PROPERTIES OUTPUT_NAME "sherpa-onnx-fstfar")
+
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS
+      fst
+      fstfar
+    DESTINATION lib)
+  endif()
 endfunction()
 
 download_openfst()

@@ -1,4 +1,6 @@
 from sherpa_onnx.lib._sherpa_onnx import (
+    AlignmentInterval,
+    AlignmentTier,
     Alsa,
     AudioEvent,
     AudioTagging,
@@ -9,6 +11,10 @@ from sherpa_onnx.lib._sherpa_onnx import (
     FastClustering,
     FastClusteringConfig,
     FeatureExtractorConfig,
+    ForcedAligner,
+    ForcedAlignerConfig,
+    ForcedAlignmentOptions,
+    ForcedAlignmentResult,
     GenerationConfig,
     HomophoneReplacerConfig,
     OfflineCanaryModelConfig,

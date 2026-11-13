@@ -5,7 +5,6 @@ set -ex
 
 pip install \
   "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@main" \
-  "numpy<2" \
   ipython \
   kaldi-native-fbank \
   librosa \
