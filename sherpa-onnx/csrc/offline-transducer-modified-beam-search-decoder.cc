@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-decoder.h"
 
+#include <algorithm>
 #include <deque>
 #include <utility>
 #include <vector>
@@ -11,6 +12,7 @@
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/packed-sequence.h"
 #include "sherpa-onnx/csrc/slice.h"
@@ -40,14 +42,25 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
   std::vector<Hypothesis> prev;
 
   std::vector<ContextGraphPtr> context_graphs(batch_size, nullptr);
+  std::vector<int32_t> fallback_paths(batch_size, 0);
 
   for (int32_t i = 0; i < batch_size; ++i) {
     const ContextState *context_state = nullptr;
     if (ss != nullptr) {
       context_graphs[i] =
           ss[packed_encoder_out.sorted_indexes[i]]->GetContextGraph();
-      if (context_graphs[i] != nullptr)
+      if (context_graphs[i] != nullptr) {
         context_state = context_graphs[i]->Root();
+        int32_t paths = ss[packed_encoder_out.sorted_indexes[i]]->GetOptionInt(
+            "hotword_fallback_paths", 0);
+        if (paths < 0 || paths > max_active_paths_) {
+          SHERPA_ONNX_LOGE(
+              "hotword_fallback_paths must be in [0, %d]. Given: %d. Using 0",
+              max_active_paths_, paths);
+        } else {
+          fallback_paths[i] = paths;
+        }
+      }
     }
     Hypotheses blank_hyp({{blanks, 0, context_state}});
     cur.emplace_back(std::move(blank_hyp));
@@ -55,6 +68,7 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
 
   int32_t start = 0;
   int32_t t = 0;
+  std::vector<float> fallback_log_probs;
   for (auto n : packed_encoder_out.batch_sizes) {
     Ort::Value cur_encoder_out = packed_encoder_out.Get(start, n);
     start += n;
@@ -122,6 +136,29 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
       int32_t end = hyps_row_splits[i + 1];
       auto topk =
           TopkIndex(p_logprob, vocab_size * (end - start), max_active_paths_);
+
+      if (fallback_paths[i] > 0) {
+        // A blank path keeps an unfinished hotword's provisional score,
+        // while a natural continuation may refund it. Preserve candidates
+        // ranked without that provisional credit as well as the biased beam.
+        fallback_log_probs.resize(vocab_size * (end - start));
+        for (int32_t h = start; h < end; ++h) {
+          const auto *state = prev[h].context_state;
+          float pending = state ? state->node_score : 0.0f;
+          int32_t offset = (h - start) * vocab_size;
+          for (int32_t token = 0; token < vocab_size; ++token) {
+            fallback_log_probs[offset + token] =
+                p_logprob[offset + token] - pending;
+          }
+        }
+        for (auto k : TopkIndex(fallback_log_probs.data(),
+                               static_cast<int32_t>(fallback_log_probs.size()),
+                               fallback_paths[i])) {
+          if (std::find(topk.begin(), topk.end(), k) == topk.end()) {
+            topk.push_back(k);
+          }
+        }
+      }
 
       Hypotheses hyps;
       for (auto k : topk) {

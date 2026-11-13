@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <deque>
+#include <set>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -86,9 +87,11 @@ struct NeMoHypothesis {
 }  // namespace
 
 // Merge hypotheses with the same token sequence (log-add of their scores,
-// keeping the state of the better one) and keep the best max_active_paths.
+// keeping the state of the better one). Retain the best max_active_paths,
+// optionally adding up to fallback_paths after refunding incomplete prefixes.
 static void MergeAndPrune(std::vector<NeMoHypothesis> *hyps,
-                          int32_t max_active_paths) {
+                          int32_t max_active_paths,
+                          int32_t fallback_paths = 0) {
   std::vector<NeMoHypothesis> merged;
   merged.reserve(hyps->size());
   LogAdd<float> log_add;
@@ -109,12 +112,43 @@ static void MergeAndPrune(std::vector<NeMoHypothesis> *hyps,
 
   int32_t keep =
       std::min(max_active_paths, static_cast<int32_t>(merged.size()));
+  // Preserve paths that are competitive after refunding an unfinished
+  // hotword prefix as well as the usual lookahead-biased beam.
+  std::set<std::vector<int32_t>> fallback;
+  if (fallback_paths > 0) {
+    int32_t num_fallback =
+        std::min(fallback_paths, static_cast<int32_t>(merged.size()));
+    auto score = [](const NeMoHypothesis &h) {
+      float pending = h.context_state ? h.context_state->node_score : 0.0f;
+      return h.log_prob - pending;
+    };
+    std::partial_sort(merged.begin(), merged.begin() + num_fallback,
+                      merged.end(),
+                      [&](const NeMoHypothesis &a, const NeMoHypothesis &b) {
+                        return score(a) > score(b);
+                      });
+    for (int32_t i = 0; i < num_fallback; ++i) {
+      fallback.insert(merged[i].ys);
+    }
+  }
   std::partial_sort(merged.begin(), merged.begin() + keep, merged.end(),
                     [](const NeMoHypothesis &a, const NeMoHypothesis &b) {
                       return a.log_prob > b.log_prob;
                     });
-  merged.resize(keep);
-  *hyps = std::move(merged);
+  if (fallback.empty()) {
+    merged.resize(keep);
+    *hyps = std::move(merged);
+    return;
+  }
+
+  std::vector<NeMoHypothesis> retained;
+  retained.reserve(keep + fallback.size());
+  for (int32_t i = 0; i < static_cast<int32_t>(merged.size()); ++i) {
+    if (i < keep || fallback.count(merged[i].ys)) {
+      retained.push_back(std::move(merged[i]));
+    }
+  }
+  *hyps = std::move(retained);
 }
 
 std::vector<OfflineTransducerDecoderResult>
@@ -167,10 +201,18 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     // beam search from dropping speech after a pause. Set per stream with
     // stream.SetOption("length_reward", "0.5").
     float length_reward = 0.0f;
+    int32_t fallback_paths = 0;
     if (ss != nullptr) {
       context_graphs[b] = ss[b]->GetContextGraph();
       if (context_graphs[b] != nullptr) {
         context_state = context_graphs[b]->Root();
+        fallback_paths = ss[b]->GetOptionInt("hotword_fallback_paths", 0);
+        if (fallback_paths < 0 || fallback_paths > max_active_paths_) {
+          SHERPA_ONNX_LOGE(
+              "hotword_fallback_paths must be in [0, %d]. Given: %d. Using 0",
+              max_active_paths_, fallback_paths);
+          fallback_paths = 0;
+        }
       }
       length_reward = ss[b]->GetOptionFloat("length_reward", 0.0f);
       if (!std::isfinite(length_reward)) {
@@ -234,7 +276,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
       // and are expanded again in the next iteration.
       cur_hyps = std::move(pending[t]);
       pending[t].clear();
-      MergeAndPrune(&cur_hyps, max_active_paths_);
+      MergeAndPrune(&cur_hyps, max_active_paths_, fallback_paths);
 
       // A token extension adds a log-prob (<= 0) plus length_reward and
       // the context-graph score, so the early stop below is safe only when
@@ -422,8 +464,18 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
         // blank_id is the last token, so TopkIndex over the first blank_id
         // entries excludes it.
         std::vector<std::tuple<float, int32_t, int32_t>> pairs;
-        for (int32_t token :
-             TopkIndex(selection, blank_id, max_active_paths_)) {
+        auto candidate_tokens =
+            TopkIndex(selection, blank_id, max_active_paths_);
+        if (fallback_paths > 0) {
+          for (int32_t token :
+               TopkIndex(token_logits, blank_id, fallback_paths)) {
+            if (std::find(candidate_tokens.begin(), candidate_tokens.end(),
+                          token) == candidate_tokens.end()) {
+              candidate_tokens.push_back(token);
+            }
+          }
+        }
+        for (int32_t token : candidate_tokens) {
           if (token == unk_id_) {
             continue;
           }
@@ -441,6 +493,39 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
                           [](const auto &a, const auto &b) {
                             return std::get<0>(a) > std::get<0>(b);
                           });
+
+        if (fallback_paths > 0) {
+          // A fallback hypothesis also needs its acoustic token/duration
+          // candidates: a large hotword boost can otherwise exclude them here.
+          std::set<std::pair<int32_t, int32_t>> selected;
+          for (int32_t k = 0; k < num_pairs; ++k) {
+            selected.emplace(std::get<1>(pairs[k]), std::get<2>(pairs[k]));
+          }
+          int32_t num_fallback =
+              std::min(fallback_paths, static_cast<int32_t>(pairs.size()));
+          auto acoustic_score = [&](const auto &p) {
+            float score = token_logits[std::get<1>(p)];
+            return top_durations.empty()
+                       ? score
+                       : score + duration_logits[std::get<2>(p)];
+          };
+          std::partial_sort(pairs.begin(), pairs.begin() + num_fallback,
+                            pairs.end(), [&](const auto &a, const auto &b) {
+                              return acoustic_score(a) > acoustic_score(b);
+                            });
+          for (int32_t k = 0; k < num_fallback; ++k) {
+            selected.emplace(std::get<1>(pairs[k]), std::get<2>(pairs[k]));
+          }
+          std::vector<std::tuple<float, int32_t, int32_t>> retained;
+          retained.reserve(selected.size());
+          for (const auto &p : pairs) {
+            if (selected.count({std::get<1>(p), std::get<2>(p)})) {
+              retained.push_back(p);
+            }
+          }
+          pairs = std::move(retained);
+          num_pairs = static_cast<int32_t>(pairs.size());
+        }
 
         for (int32_t k = 0; k < num_pairs; ++k) {
           int32_t token = std::get<1>(pairs[k]);
@@ -481,15 +566,22 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     }
 
     cur_hyps = std::move(finished);
-    MergeAndPrune(&cur_hyps, max_active_paths_);
+    if (fallback_paths == 0) {
+      MergeAndPrune(&cur_hyps, max_active_paths_);
+    }
 
-    // Finalize context biasing
+    // With fallback enabled, refund unfinished prefixes before the final
+    // prune so temporary scores cannot displace a better complete path.
     for (auto &hyp : cur_hyps) {
       if (context_graphs[b] != nullptr) {
         auto context_res = context_graphs[b]->Finalize(hyp.context_state);
         hyp.log_prob += context_res.first;
         hyp.context_state = context_res.second;
       }
+    }
+
+    if (fallback_paths > 0) {
+      MergeAndPrune(&cur_hyps, max_active_paths_);
     }
 
     // Find best hypothesis
