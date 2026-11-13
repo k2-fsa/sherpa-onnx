@@ -116,16 +116,21 @@ TEST(Qwen3ASRWaveform, RetentionDoesNotChangeFeatures) {
 }
 
 TEST(Qwen3ASRWaveform, RetainsResampledAudioWithoutCenterPadding) {
-  std::vector<float> samples(8000, 0.1f);
+  std::vector<float> samples(24000);
+  for (size_t i = 0; i != samples.size(); ++i) {
+    samples[i] = static_cast<float>(i) / samples.size();
+  }
   WhisperTag tag;
   tag.dim = 128;
   tag.align_to_stft_center = true;
   tag.keep_waveform = true;
   OfflineStream retained(tag);
-  retained.AcceptWaveform(8000, samples.data(), samples.size());
+  retained.AcceptWaveform(24000, samples.data(), samples.size());
   const auto &waveform = retained.GetWaveform();
   ASSERT_EQ(waveform.size(), 16000u);
-  EXPECT_NEAR(waveform[waveform.size() / 2], 0.1f, 1e-5f);
+  for (size_t i = 160; i + 160 < waveform.size(); i += 160) {
+    EXPECT_NEAR(waveform[i], static_cast<float>(i) / 16000, 1e-3f);
+  }
 }
 
 }  // namespace sherpa_onnx
