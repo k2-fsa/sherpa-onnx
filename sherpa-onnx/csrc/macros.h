@@ -80,11 +80,12 @@
     if (value.empty()) {                                                     \
       dst = default_value;                                                   \
     } else {                                                                 \
-      dst = ToIntOrDefault(value, -1);                                       \
-      if (dst < 0) {                                                         \
-        SHERPA_ONNX_LOGE("Invalid value %d for '%s'", dst, src_key);         \
+      auto ivalue = ToIntOrDefault(value, -1);                               \
+      if (ivalue < 0) {                                                      \
+        SHERPA_ONNX_LOGE("Invalid value %d for '%s'", ivalue, src_key);      \
         SHERPA_ONNX_EXIT(-1);                                                \
       }                                                                      \
+      dst = ivalue;                                                          \
     }                                                                        \
   } while (0)
 
