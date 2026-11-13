@@ -52,6 +52,9 @@ struct FaLexicon {
   // per-character phone groups. Throws std::runtime_error if the file cannot
   // be read or contains no valid entry.
   static FaLexicon Load(const std::string &filename);
+
+  // Parses a lexicon from its contents, e.g. one read from Android assets.
+  static FaLexicon LoadFromString(const std::string &contents);
 };
 
 // Tokenization for ForcedAligner::Compute() (no tokenize parameter):

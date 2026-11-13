@@ -100,6 +100,11 @@ struct ForcedAlignerConfig {
 class ForcedAligner {
  public:
   explicit ForcedAligner(const ForcedAlignerConfig &config);
+
+  // model_dir and lexicon are paths relative to the asset root.
+  template <typename Manager>
+  ForcedAligner(Manager *mgr, const ForcedAlignerConfig &config);
+
   ~ForcedAligner();
 
   // Alignment options can be overridden per stream via SetOption(); when

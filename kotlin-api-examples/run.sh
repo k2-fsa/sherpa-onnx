@@ -1032,7 +1032,69 @@ function testOnlineSpeechDenoiserVoxLockWithVoiceSample() {
   cp sherpa-onnx-voxlock-int8/test_wavs/en-combined.wav sherpa-onnx-voxlock-int8/test_wavs/en-voice-sample-f.wav test_online_speech_denoiser_voxlock_with_voice_sample/
 }
 
+function testForcedAlignmentEnglish() {
+  if [ ! -d ./english-mfa-v3.1.0 ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2
+    tar xvf english-mfa-v3.1.0.tar.bz2
+    rm english-mfa-v3.1.0.tar.bz2
+  fi
+
+  out_filename=test_forced_alignment_english.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    ForcedAlignmentEnglish.kt \
+    AlignmentInterval.kt \
+    AlignmentTier.kt \
+    ForcedAligner.kt \
+    ForcedAlignerConfig.kt \
+    ForcedAlignmentOptions.kt \
+    ForcedAlignmentResult.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  mkdir -p test_forced_alignment_english
+  mv en.TextGrid test_forced_alignment_english/
+  cp english-mfa-v3.1.0/en.wav test_forced_alignment_english/
+}
+
+function testForcedAlignmentChinese() {
+  if [ ! -d ./zh-aishell3-pinyin ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2
+    tar xvf zh-aishell3-pinyin.tar.bz2
+    rm zh-aishell3-pinyin.tar.bz2
+  fi
+
+  out_filename=test_forced_alignment_chinese.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    ForcedAlignmentChinese.kt \
+    AlignmentInterval.kt \
+    AlignmentTier.kt \
+    ForcedAligner.kt \
+    ForcedAlignerConfig.kt \
+    ForcedAlignmentOptions.kt \
+    ForcedAlignmentResult.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  mkdir -p test_forced_alignment_chinese
+  mv zh.TextGrid test_forced_alignment_chinese/
+  cp zh-aishell3-pinyin/zh.wav test_forced_alignment_chinese/
+}
+
 testVersion
+testForcedAlignmentEnglish
+testForcedAlignmentChinese
 testOfflineSpeechDenoiserVoxLock
 testOfflineSpeechDenoiserVoxLockWithVoiceSample
 testOnlineSpeechDenoiserVoxLock

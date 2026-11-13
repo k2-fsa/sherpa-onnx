@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <istream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -48,6 +49,10 @@ struct FaModelMeta {
 class ForcedAligner::Impl {
  public:
   explicit Impl(const ForcedAlignerConfig &config);
+
+  template <typename Manager>
+  Impl(Manager *mgr, const ForcedAlignerConfig &config);
+
   ~Impl();
 
   std::unique_ptr<OfflineStream> CreateStream() const;
@@ -55,6 +60,10 @@ class ForcedAligner::Impl {
                                 const std::string &text) const;
 
  private:
+  void ValidateConfig() const;
+
+  void FinishLoad();
+
   // Word/pronunciation resolution of one utterance. The same token can get
   // different pronunciations in different contexts, so graph words are keyed
   // by (token, pronunciations): ids are 1..N over the distinct pairs.
@@ -69,13 +78,15 @@ class ForcedAligner::Impl {
 
   void CheckModelFiles() const;
 
-  void LoadLdaTransform();
+  void LoadLdaTransform(const std::string &filename, std::istream &is);
 
-  void LoadAcousticModel();
+  void LoadAcousticModel(const std::string &filename, std::istream &is);
 
-  void LoadContextTree();
+  void LoadContextTree(const std::string &filename, std::istream &is);
 
-  void LoadPhoneTable();
+  void LoadPhoneTable(std::istream &is);
+
+  void LoadPhoneTableFromMeta();
 
   void PrintDebugInfo() const;
 

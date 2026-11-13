@@ -158,6 +158,61 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run java test (forced alignment)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-forced-alignment-english.sh
+          ./run-forced-alignment-chinese.sh
+
+      - name: Show fa result english-mfa-v3.1.0
+        shell: bash
+        run: cat java-api-examples/ForcedAlignmentEnglish/en.TextGrid
+
+      - name: Show fa result zh-aishell3-pinyin
+        shell: bash
+        run: cat java-api-examples/ForcedAlignmentChinese/zh.TextGrid
+
+      - name: Extract word wavs from the TextGrids
+        shell: bash
+        run: |
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav java-api-examples/ForcedAlignmentEnglish/en.wav \
+            --textgrid java-api-examples/ForcedAlignmentEnglish/en.TextGrid \
+            --out-dir word-clips-en
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav java-api-examples/ForcedAlignmentChinese/zh.wav \
+            --textgrid java-api-examples/ForcedAlignmentChinese/zh.TextGrid \
+            --out-dir word-clips-zh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-english-mfa-v3.1.0-${{ matrix.os }}
+          path: java-api-examples/ForcedAlignmentEnglish/en.TextGrid
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-zh-aishell3-pinyin-${{ matrix.os }}
+          path: java-api-examples/ForcedAlignmentChinese/zh.TextGrid
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-english-mfa-v3.1.0-${{ matrix.os }}
+          path: ./word-clips-en
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-zh-aishell3-pinyin-${{ matrix.os }}
+          path: ./word-clips-zh
+
+      - name: Clean up fa files
+        shell: bash
+        run: |
+          rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+          rm -rf word-clips-en word-clips-zh
+          rm -rf java-api-examples/ForcedAlignmentEnglish
+          rm -rf java-api-examples/ForcedAlignmentChinese
+
       - name:  Run speech enhancement (VoxLock)
         shell: bash
         run: |
