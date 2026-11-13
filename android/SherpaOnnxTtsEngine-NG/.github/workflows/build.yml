@@ -1,0 +1,38 @@
+name: Android CI (Test)
+
+on:
+  push:
+    branches:
+      - "master"
+    paths-ignore:
+      - "**.md"
+      - "images/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Build
+      run: |
+        chmod +x *.sh
+        ./install-solib.sh
+        
+        chmod +x gradlew  
+        ./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
+
+    - name: Upload apk
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: "${{ github.workspace }}/app/build/outputs/apk/release/*.apk"
