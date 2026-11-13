@@ -33,17 +33,12 @@ rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 
 log "test Audio8 ASR"
 
-# Audio8-ASR-0.1B is hosted on HuggingFace for now.
-audio8_base=https://huggingface.co/yunyu1258/audio8-asr-onnx/resolve/main
-audio8_dir=sherpa-onnx-audio8-asr-0.1B
-mkdir -p "$audio8_dir/tokenizer" "$audio8_dir/test_wavs"
-for f in encoder.int8.onnx decoder.int8.onnx; do
-  curl -fSL -o "$audio8_dir/${f%.int8.onnx}.onnx" "$audio8_base/$f"
-done
-for f in vocab.json merges.txt tokenizer_config.json added_tokens.json; do
-  curl -fSL -o "$audio8_dir/tokenizer/$f" "$audio8_base/tokenizer/$f"
-done
-curl -fSL -o "$audio8_dir/test_wavs/0.wav" "$audio8_base/test_wavs/0.wav"
+# Prebuilt models are published as a release artifact.
+audio8_dir=sherpa-onnx-audio8-asr-0.1b-int8
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$audio8_dir.tar.bz2
+curl -fSL -O "$url" && tar xf "$audio8_dir.tar.bz2" && rm "$audio8_dir.tar.bz2"
+cp "$audio8_dir/encoder.int8.onnx" "$audio8_dir/encoder.onnx"
+cp "$audio8_dir/decoder.int8.onnx" "$audio8_dir/decoder.onnx"
 
 python3 ./python-api-examples/offline-audio8-asr-decode-files.py \
   --encoder="$audio8_dir/encoder.onnx" \

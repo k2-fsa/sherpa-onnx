@@ -5,9 +5,11 @@
 // This file demonstrates how to use Audio8-ASR-0.1B with sherpa-onnx's C++ API.
 // clang-format off
 /*
-wget https://github.com/yuyun2000/sherpa-onnx/releases/download/asr-models/sherpa-onnx-audio8-asr-0.1B.tar.bz2
-tar xvf sherpa-onnx-audio8-asr-0.1B.tar.bz2
-rm sherpa-onnx-audio8-asr-0.1B.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-audio8-asr-0.1b-int8.tar.bz2
+tar xvf sherpa-onnx-audio8-asr-0.1b-int8.tar.bz2
+rm sherpa-onnx-audio8-asr-0.1b-int8.tar.bz2
+cp sherpa-onnx-audio8-asr-0.1b-int8/encoder.int8.onnx sherpa-onnx-audio8-asr-0.1b-int8/encoder.onnx
+cp sherpa-onnx-audio8-asr-0.1b-int8/decoder.int8.onnx sherpa-onnx-audio8-asr-0.1b-int8/decoder.onnx
 */
 //
 // clang-format on
@@ -24,7 +26,7 @@ int32_t main() {
   OfflineRecognizerConfig config;
 
   // clang-format off
-  const std::string dir = "./sherpa-onnx-audio8-asr-0.1B";
+  const std::string dir = "./sherpa-onnx-audio8-asr-0.1b-int8";
   config.model_config.audio8_asr.encoder = dir + "/encoder.onnx";
   config.model_config.audio8_asr.decoder = dir + "/decoder.onnx";
   config.model_config.audio8_asr.tokenizer = dir + "/tokenizer";

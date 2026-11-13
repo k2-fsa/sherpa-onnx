@@ -54,7 +54,11 @@ dependent `split()`, which cannot be traced. The exported graph always processes
 
 ```bash
 # 0) dependencies
-pip install torch transformers onnxruntime onnx numpy soundfile
+#    export-onnx.py needs torch + transformers; run-onnx.py only needs
+#    onnxruntime, kaldi-native-fbank and tokenizers (the same feature/tokenizer
+#    stack as the C++ runtime, no transformers)
+pip install torch transformers onnx onnxruntime numpy soundfile \
+    kaldi-native-fbank tokenizers
 
 # 1) download the checkpoint (the tokenizer files are needed as well)
 huggingface-cli download Edge0/Audio8-ASR-0.1B --local-dir ./Audio8-ASR-0.1B
@@ -93,6 +97,31 @@ Tensor-level checks: encoder cosine ≈ 1.0, decoder prefill logits cosine ≈ 1
    checkpoint). Recompute the sinusoid table, otherwise the audio encoder silently
    loses positional information and the output degrades to short fragments.
    `export-onnx.py` restores it before tracing.
+
+## Released model directories
+
+The GitHub Actions job (`workflow_dispatch`) does not only export the graphs, it
+also assembles two ready-to-use directories and publishes them:
+
+```
+sherpa-onnx-audio8-asr-0.1b/
+  encoder.onnx  decoder.onnx  LICENSE  README.md
+  tokenizer/    test_wavs/
+sherpa-onnx-audio8-asr-0.1b-int8/
+  encoder.int8.onnx  decoder.int8.onnx  LICENSE  README.md
+  tokenizer/         test_wavs/
+```
+
+`test_wavs/` holds one clip for each supported language (`en`, `zh`, `fr`, `de`,
+`ja`, `ko`, `cantonese`). Both directories are packed into `.tar.bz2` files,
+attached to the `asr-models` release and pushed to
+<https://huggingface.co/csukuangfj/audio8-asr-0.1b> and
+<https://huggingface.co/csukuangfj/audio8-asr-0.1b-int8> (the push steps are
+`continue-on-error` so the job still passes without an `HF_TOKEN0` secret).
+
+`encoder.onnx` / `decoder.onnx` (and the int8 copies) carry metadata describing
+the model (`model_type`, `url`, `license`, `version`, `maintainer`, plus the
+tensor dimensions), so tools can identify them without a side-car file.
 
 ## Running with sherpa-onnx
 

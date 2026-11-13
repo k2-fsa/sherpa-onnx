@@ -6,9 +6,13 @@
 // This file demonstrates how to use Audio8-ASR-0.1B with sherpa-onnx's C API.
 // clang-format off
 /*
-wget https://github.com/yuyun2000/sherpa-onnx/releases/download/asr-models/sherpa-onnx-audio8-asr-0.1B.tar.bz2
-tar xvf sherpa-onnx-audio8-asr-0.1B.tar.bz2
-rm sherpa-onnx-audio8-asr-0.1B.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-audio8-asr-0.1b-int8.tar.bz2
+tar xvf sherpa-onnx-audio8-asr-0.1b-int8.tar.bz2
+rm sherpa-onnx-audio8-asr-0.1b-int8.tar.bz2
+cd sherpa-onnx-audio8-asr-0.1b-int8
+cp encoder.int8.onnx encoder.onnx
+cp decoder.int8.onnx decoder.onnx
+cd -
 */
 //
 // clang-format on
@@ -21,10 +25,15 @@ rm sherpa-onnx-audio8-asr-0.1B.tar.bz2
 
 int32_t main() {
   // clang-format off
-  const char *wav_filename = "./sherpa-onnx-audio8-asr-0.1B/test_wavs/0.wav";
-  const char *encoder_filename = "./sherpa-onnx-audio8-asr-0.1B/encoder.onnx";
-  const char *decoder_filename = "./sherpa-onnx-audio8-asr-0.1B/decoder.onnx";
-  const char *tokenizer_dir = "./sherpa-onnx-audio8-asr-0.1B/tokenizer";
+  const char *dir = "./sherpa-onnx-audio8-asr-0.1b-int8";
+  char wav_filename[256];
+  char encoder_filename[256];
+  char decoder_filename[256];
+  char tokenizer_dir[256];
+  snprintf(wav_filename, sizeof(wav_filename), "%s/test_wavs/0.wav", dir);
+  snprintf(encoder_filename, sizeof(encoder_filename), "%s/encoder.onnx", dir);
+  snprintf(decoder_filename, sizeof(decoder_filename), "%s/decoder.onnx", dir);
+  snprintf(tokenizer_dir, sizeof(tokenizer_dir), "%s/tokenizer", dir);
   // clang-format on
 
   const char *provider = "cpu";

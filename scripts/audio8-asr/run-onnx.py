@@ -1,8 +1,14 @@
-"""Reference ONNX runtime for the exported Audio8 graphs (Python, mirrors the C++).
+#!/usr/bin/env python3
+"""Run the exported Audio8-ASR ONNX graphs and print the transcript.
 
-Pipeline:
-  wav -> Whisper log-mel (128, 3000) -> encoder.onnx -> 390 x 1024
-      -> adaptive average pool to N audio tokens -> decoder.onnx (prefill + greedy)
+This is the small reference implementation used to sanity check the export. It
+only needs `onnxruntime`, `kaldi-native-fbank`, `numpy`, `soundfile` (optional)
+and `tokenizers` — the same feature extraction / tokenizer stack that the C++
+runtime uses, not `transformers`.
+
+Usage::
+
+    python3 run-onnx.py wavs/0.wav [more.wav ...]
 """
 
 from __future__ import annotations
@@ -10,66 +16,110 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import os
-import time
 from pathlib import Path
 
 import numpy as np
 import onnxruntime as ort
-from transformers import AutoProcessor
 
 ROOT = Path(__file__).resolve().parent
-EXPORTED = Path(os.environ.get("AUDIO8_ONNX_DIR", str(ROOT / "exported")))
-HF_DIR = Path(os.environ.get("AUDIO8_HF_DIR", str(ROOT / "Audio8-ASR-0.1B")))
+FRAMES = 3000                       # 30 s of 10 ms mel frames
+MAX_SAMPLES = FRAMES * 160
+MEL_DIM = 128
 
-AUDIO_TOKEN_ID = 151646
-USER, BOS_AUDIO, EOS_AUDIO, ASSISTANT = 151647, 151648, 151649, 151650
-EOS_IDS = {151645}
-PAD_ID = 151643
-FRAMES = 3000
-MAX_SAMPLES = FRAMES * 160        # the model is trained on 30 s windows
-
-
-def audio_token_count(num_samples: int, hop: int = 160, merge: int = 4) -> int:
-    mel = num_samples // hop
-    return max(1, ((mel + 1) // 2) // merge)
+# tokens of the arkasr prompt (see scripts/audio8-asr/README.md)
+USER, BEGIN_OF_AUDIO, AUDIO = 151647, 151648, 151646
+END_OF_AUDIO, ASSISTANT = 151649, 151650
+EOS_ID, PAD_ID = 151645, 151643
+PROMPT_TEXT = "Please transcribe this audio."
 
 
-def load_wav(path: str) -> np.ndarray:
-    """Read a wav file as 16 kHz mono float32, truncated to the 30 s window."""
+# --------------------------------------------------------------------------- #
+# audio
+# --------------------------------------------------------------------------- #
+def read_wav(path: str) -> np.ndarray:
+    """Return mono float32 samples at 16 kHz, truncated to the 30 s window."""
     try:
         import soundfile as sf
 
-        pcm, rate = sf.read(path, dtype="float32", always_2d=True)
-        pcm = pcm.mean(axis=1)
-    except Exception:
+        samples, rate = sf.read(path, dtype="float32", always_2d=True)
+        samples = samples.mean(axis=1)
+    except ImportError:
         import wave
 
         with wave.open(path, "rb") as f:
             if f.getsampwidth() != 2:
-                raise SystemExit(f"{path}: only 16-bit PCM wav files are supported")
+                raise SystemExit(f"{path}: only 16-bit PCM wavs are supported")
             rate = f.getframerate()
             channels = f.getnchannels()
-            pcm = np.frombuffer(f.readframes(f.getnframes()),
-                                dtype=np.int16).astype(np.float32) / 32768.0
+            data = np.frombuffer(f.readframes(f.getnframes()), dtype=np.int16)
+            samples = data.astype(np.float32) / 32768.0
             if channels > 1:
-                pcm = pcm.reshape(-1, channels).mean(axis=1)
+                samples = samples.reshape(-1, channels).mean(axis=1)
 
     if rate != 16000:
-        n = int(round(len(pcm) * 16000 / rate))
-        pcm = np.interp(
-            np.linspace(0, len(pcm) - 1, n, dtype=np.float64),
-            np.arange(len(pcm)), pcm).astype(np.float32)
-        print(f"[warn] {path}: resampled {rate} Hz -> 16000 Hz", flush=True)
+        n = int(round(len(samples) * 16000 / rate))
+        samples = np.interp(np.linspace(0, len(samples) - 1, n, dtype=np.float64),
+                            np.arange(len(samples)), samples).astype(np.float32)
+        print(f"[warn] {path}: resampled {rate} Hz -> 16000 Hz")
 
-    if len(pcm) > MAX_SAMPLES:
-        print(f"[warn] {path}: truncated to {MAX_SAMPLES / 16000:.0f} s", flush=True)
-        pcm = pcm[:MAX_SAMPLES]
-    return pcm.astype(np.float32)
+    if len(samples) > MAX_SAMPLES:
+        print(f"[warn] {path}: truncated to 30 s")
+        samples = samples[:MAX_SAMPLES]
+    return samples.astype(np.float32)
+
+
+def log_mel(samples: np.ndarray) -> np.ndarray:
+    """Whisper log-mel, [1, 128, 3000], zero padded (same as the C++ runtime)."""
+    import kaldi_native_fbank as knf
+
+    opts = knf.WhisperFeatureOptions()
+    opts.dim = MEL_DIM
+    # the C++ runtime uses the defaults of sherpa-onnx's FeatureExtractorConfig:
+    # dither off, and the whisper code path ignores the other frame options
+    opts.frame_opts.dither = 0.0
+    fbank = knf.OnlineWhisperFbank(opts)
+    # sherpa-onnx prepends half a frame shift of silence so that the window
+    # midpoints follow the centered STFT convention of the reference extractor,
+    # and then keeps floor(num_samples / 160) frames (see OfflineStream with
+    # WhisperTag + align_to_stft_center).
+    half_shift = np.zeros(80, dtype=np.float32)
+    padded = np.concatenate([half_shift, samples])
+    fbank.accept_waveform(16000, padded)
+    fbank.input_finished()
+
+    num_frames = min(fbank.num_frames_ready, len(samples) // 160, FRAMES)
+    mel = np.stack([fbank.get_frame(i) for i in range(num_frames)]).astype(np.float32)
+
+    # whisper normalisation: log10(max(x, 1e-10)), clamp to max-8, (x + 4) / 4
+    mel = np.log10(np.maximum(mel, 1e-10))
+    mel = np.maximum(mel, mel.max() - 8.0) if mel.size else mel
+    mel = (mel + 4.0) / 4.0
+
+    if num_frames < FRAMES:
+        mel = np.pad(mel, ((0, FRAMES - num_frames), (0, 0)))
+    return mel.T[None]                                              # [1, 128, 3000]
+
+
+def num_mel_frames(samples: np.ndarray) -> int:
+    return max(1, len(samples) // 160)
+
+
+def encoder_rows(mel_frames: int) -> int:
+    """Rows the encoder produces: 13 per 100 frames + partial chunk."""
+    def after_cnn(x: int) -> int:
+        x = (x - 1) // 2 + 1
+        x = (x - 1) // 2 + 1
+        return (x - 1) // 2 + 1
+
+    full, rem = divmod(mel_frames, 100)
+    return 13 * full + (after_cnn(rem) if rem else 0)
+
+
+def audio_tokens(mel_frames: int) -> int:
+    return max(1, ((mel_frames + 1) // 2) // 4)
 
 
 def adaptive_avg_pool(x: np.ndarray, out_len: int) -> np.ndarray:
-    """x: [n, d] -> [out_len, d], same semantics as F.adaptive_avg_pool1d."""
     n = x.shape[0]
     if n == out_len:
         return x
@@ -81,125 +131,99 @@ def adaptive_avg_pool(x: np.ndarray, out_len: int) -> np.ndarray:
     return out
 
 
-def after_cnn(x: int) -> int:
-    """Output frames of the three stride-2 convolutions for x input frames."""
-    if x <= 0:
-        return 0
-    x = (x - 1) // 2 + 1
-    x = (x - 1) // 2 + 1
-    return (x - 1) // 2 + 1
+# --------------------------------------------------------------------------- #
+# text
+# --------------------------------------------------------------------------- #
+class Tokenizer:
+    def __init__(self, tokenizer_dir: Path):
+        from tokenizers import Tokenizer as HFTokenizer
+
+        self.tok = HFTokenizer.from_file(str(tokenizer_dir / "tokenizer.json"))
+
+    def encode(self, text: str) -> list[int]:
+        return self.tok.encode(text, add_special_tokens=False).ids
+
+    def decode(self, ids: list[int]) -> str:
+        return self.tok.decode(ids, skip_special_tokens=True).strip()
 
 
-def encoder_rows(num_mel_frames: int) -> int:
-    """Number of rows the encoder produces for `num_mel_frames` (13 per 100)."""
-    full, rem = divmod(num_mel_frames, 100)
-    return 13 * full + (after_cnn(rem) if rem else 0)
-
-
-class Audio8Onnx:
-    def __init__(self, exported: Path = EXPORTED, threads: int = 4):
+# --------------------------------------------------------------------------- #
+# runtime
+# --------------------------------------------------------------------------- #
+class Audio8Asr:
+    def __init__(self, exported: Path, tokenizer_dir: Path, threads: int = 4):
         so = ort.SessionOptions()
         so.intra_op_num_threads = threads
         so.inter_op_num_threads = 1
-        so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         self.encoder = ort.InferenceSession(str(exported / "encoder.onnx"), so,
                                             providers=["CPUExecutionProvider"])
         self.decoder = ort.InferenceSession(str(exported / "decoder.onnx"), so,
                                             providers=["CPUExecutionProvider"])
         self.meta = json.loads((exported / "metadata.json").read_text())
-        self.processor = AutoProcessor.from_pretrained(str(HF_DIR), trust_remote_code=True)
-        self.fe = self.processor.feature_extractor
-        self.tokenizer = self.processor.tokenizer
+        self.tok = Tokenizer(tokenizer_dir)
+        self.max_total_len = int(self.meta["max_total_len"])
 
-    # ------------------------------------------------------------------ audio
-    def mel(self, pcm: np.ndarray) -> np.ndarray:
-        feat = self.fe([pcm], sampling_rate=16000, return_tensors="np",
-                       return_attention_mask=False, padding="longest")["input_features"]
-        feat = feat.astype(np.float32)
-        if feat.shape[-1] < FRAMES:
-            feat = np.pad(feat, ((0, 0), (0, 0), (0, FRAMES - feat.shape[-1])))
-        return feat[:, :, :FRAMES]
-
-    def audio_tokens_from_hidden(self, hidden: np.ndarray, n_tokens: int) -> np.ndarray:
-        return adaptive_avg_pool(hidden, n_tokens)[None]
-
-    def audio_features(self, pcm: np.ndarray) -> np.ndarray:
-        pcm = pcm[:MAX_SAMPLES]
-        num_mel = math.ceil(len(pcm) / 160)
-        n_tokens = audio_token_count(len(pcm))
-        keep_rows = min(encoder_rows(num_mel), FRAMES // 100 * 13)
-        hidden = self.encoder.run(None, {"audios": self.mel(pcm),
-                                         "num_rows": np.array([keep_rows], np.int64)})[0][0]
-        # Block-diagonal attention means the rows of a chunk do not depend on the
-        # other chunks, so we only keep the rows the real audio length produces
-        # (everything past that is padding).
-        return self.audio_tokens_from_hidden(hidden[:keep_rows], n_tokens)
-
-    # ------------------------------------------------------------------ text
     def prompt_ids(self, n_audio: int) -> list[int]:
-        text = "Please transcribe this audio."
-        suffix = self.tokenizer(text, add_special_tokens=False)["input_ids"]
-        return [USER, BOS_AUDIO] + [AUDIO_TOKEN_ID] * n_audio + [EOS_AUDIO] + suffix + [ASSISTANT]
+        return ([USER, BEGIN_OF_AUDIO] + [AUDIO] * n_audio + [END_OF_AUDIO]
+                + self.tok.encode(PROMPT_TEXT) + [ASSISTANT])
 
-    def decode_ids(self, ids: list[int]) -> str:
-        return self.tokenizer.decode(ids, skip_special_tokens=True).strip()
+    def audio_features(self, samples: np.ndarray) -> np.ndarray:
+        mel_frames = min(num_mel_frames(samples), FRAMES)
+        n_tokens = audio_tokens(mel_frames)
+        keep = min(encoder_rows(mel_frames), FRAMES // 100 * 13)
+        hidden = self.encoder.run(
+            None,
+            {"audios": log_mel(samples),
+             "num_rows": np.array([keep], dtype=np.int64)})[0][0]
+        return adaptive_avg_pool(hidden[:keep], n_tokens)[None]      # [1, N, 1024]
 
-    # ------------------------------------------------------------------ run
-    def transcribe(self, wav: str, max_new_tokens: int = 128) -> dict:
-        t0 = time.perf_counter()
-        pcm = load_wav(wav)
-        n_audio = audio_token_count(len(pcm))
-        audio = self.audio_features(pcm)
+    def transcribe(self, path: str, max_new_tokens: int = 128) -> str:
+        samples = read_wav(path)
+        n_audio = audio_tokens(min(num_mel_frames(samples), FRAMES))
+        audio = self.audio_features(samples)
         ids = self.prompt_ids(n_audio)
-        tokens = self.greedy(ids, audio, max_new_tokens)
-        return {"wav": Path(wav).name, "text": self.decode_ids(tokens),
-                "tokens": tokens, "audio_tokens": n_audio, "prompt_len": len(ids),
-                "seconds": round(time.perf_counter() - t0, 3)}
 
-    def greedy(self, ids: list[int], audio: np.ndarray,
-               max_new_tokens: int = 128) -> list[int]:
-        max_total_len = int(self.meta["max_total_len"])
-        if len(ids) + 1 > max_total_len:
+        if len(ids) + 1 > self.max_total_len:
             raise SystemExit(
-                f"prompt ({len(ids)}) does not fit the {max_total_len}-slot cache; "
-                "use shorter audio or export with a larger --max-total-len")
-        max_new_tokens = min(max_new_tokens, max_total_len - len(ids) - 1)
-        n_layers = self.meta["num_layers"]
-        n_kv = self.meta["num_kv_heads"]
-        head_dim = self.meta["head_dim"]
+                f"prompt ({len(ids)}) does not fit the {self.max_total_len}-slot "
+                "cache; use shorter audio or re-export with a larger --max-total-len")
+        max_new_tokens = min(max_new_tokens, self.max_total_len - len(ids) - 1)
+
+        n_layers = int(self.meta["num_layers"])
+        n_kv = int(self.meta["num_kv_heads"])
+        head_dim = int(self.meta["head_dim"])
         caches = []
         for _ in range(n_layers):
-            caches.append(np.zeros((1, n_kv, max_total_len, head_dim),
+            caches.append(np.zeros((1, n_kv, self.max_total_len, head_dim),
                                    dtype=np.float32))
-            caches.append(np.zeros((1, n_kv, max_total_len, head_dim),
+            caches.append(np.zeros((1, n_kv, self.max_total_len, head_dim),
                                    dtype=np.float32))
 
-        t_prompt = len(ids)
-        attn = np.zeros((1, max_total_len), dtype=np.int64)
-        attn[0, :t_prompt] = 1
+        attn = np.zeros((1, self.max_total_len), dtype=np.int64)
+        attn[0, : len(ids)] = 1
         feeds = {"input_ids": np.array([ids], dtype=np.int64), "audio_hidden": audio,
                  "attention_mask": attn,
-                 "cache_position": np.arange(t_prompt, dtype=np.int64)}
+                 "cache_position": np.arange(len(ids), dtype=np.int64)}
         for i in range(n_layers):
             feeds[f"cache_key_{i}"] = caches[2 * i]
             feeds[f"cache_value_{i}"] = caches[2 * i + 1]
         outs = self.decoder.run(None, feeds)
         logits = outs[0][0, -1, :]
         for i in range(n_layers):
-            caches[2 * i][:, :, :t_prompt, :] = outs[1 + 2 * i]
-            caches[2 * i + 1][:, :, :t_prompt, :] = outs[2 + 2 * i]
+            caches[2 * i][:, :, : len(ids), :] = outs[1 + 2 * i]
+            caches[2 * i + 1][:, :, : len(ids), :] = outs[2 + 2 * i]
 
         generated: list[int] = []
-        pos = t_prompt
+        pos = len(ids)
         for _ in range(max_new_tokens):
             nxt = int(np.argmax(logits))
-            if nxt in EOS_IDS or nxt == PAD_ID:
+            if nxt == EOS_ID or nxt == PAD_ID:
                 break
             generated.append(nxt)
-            attn = np.zeros((1, max_total_len), dtype=np.int64)
+            attn = np.zeros((1, self.max_total_len), dtype=np.int64)
             attn[0, : pos + 1] = 1
-            feeds = {"input_ids": np.array([[nxt]], dtype=np.int64), "audio_hidden": audio,
-                     "attention_mask": attn,
+            feeds = {"input_ids": np.array([[nxt]], dtype=np.int64),
+                     "audio_hidden": audio, "attention_mask": attn,
                      "cache_position": np.array([pos], dtype=np.int64)}
             for i in range(n_layers):
                 feeds[f"cache_key_{i}"] = caches[2 * i]
@@ -207,30 +231,28 @@ class Audio8Onnx:
             outs = self.decoder.run(None, feeds)
             logits = outs[0][0, -1, :]
             for i in range(n_layers):
-                caches[2 * i][:, :, pos : pos + 1, :] = outs[1 + 2 * i]
-                caches[2 * i + 1][:, :, pos : pos + 1, :] = outs[2 + 2 * i]
+                caches[2 * i][:, :, pos: pos + 1, :] = outs[1 + 2 * i]
+                caches[2 * i + 1][:, :, pos: pos + 1, :] = outs[2 + 2 * i]
             pos += 1
-        return generated
+
+        return self.tok.decode(generated)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("wavs", nargs="*")
-    ap.add_argument("--out", default=str(ROOT / "reports/onnx-reference.json"))
+    ap.add_argument("wavs", nargs="+")
+    ap.add_argument("--onnx-dir", default=str(ROOT / "exported"))
+    ap.add_argument("--tokenizer", default=None,
+                    help="Tokenizer directory; defaults to --model-dir")
+    ap.add_argument("--model-dir", default=str(ROOT / "Audio8-ASR-0.1B"))
+    ap.add_argument("--num-threads", type=int, default=4)
+    ap.add_argument("--max-new-tokens", type=int, default=128)
     args = ap.parse_args()
-    wavs = args.wavs
-    if not wavs:
-        raise SystemExit("please pass at least one wav file")
-    asr = Audio8Onnx()
-    results = []
-    for w in wavs:
-        r = asr.transcribe(w)
-        print(json.dumps({k: r[k] for k in ("wav", "text", "audio_tokens", "prompt_len",
-                                           "seconds")}, ensure_ascii=False), flush=True)
-        results.append(r)
-    out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(results, ensure_ascii=False, indent=1))
+
+    tokenizer_dir = Path(args.tokenizer or args.model_dir)
+    asr = Audio8Asr(Path(args.onnx_dir), tokenizer_dir, args.num_threads)
+    for wav in args.wavs:
+        print(f"{wav}: {asr.transcribe(wav, args.max_new_tokens)}")
 
 
 if __name__ == "__main__":

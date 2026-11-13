@@ -39,6 +39,36 @@ import torch.nn.functional as F
 from torch import nn
 
 ROOT = Path(__file__).resolve().parent
+
+
+def add_meta_data(filename, meta_data):
+    """Add meta data to an ONNX model. It is changed in-place.
+
+    Supports models whose weights live in an external .onnx.data file.
+    """
+    import onnx
+
+    data_file = Path(str(filename) + ".data") if str(filename).endswith(".onnx") else Path(str(filename) + ".data")
+    # do not drop the weights when they live in an external data file
+    model = onnx.load(str(filename), load_external_data=data_file.exists())
+
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
+    for key, value in meta_data.items():
+        meta = model.metadata_props.add()
+        meta.key = key
+        meta.value = str(value)
+
+    if data_file.exists():
+        onnx.save(model, str(filename),
+                  save_as_external_data=True,
+                  all_tensors_to_one_file=True,
+                  location=data_file.name,
+                  size_threshold=1024)
+    else:
+        onnx.save(model, str(filename))
+
 MODEL_DIR = os.environ.get("AUDIO8_HF_DIR", str(ROOT / "Audio8-ASR-0.1B"))
 
 FRAMES = 3000          # 30 s of 10 ms mel frames
@@ -332,6 +362,38 @@ def main() -> None:
     )
     print("decoder.onnx written", flush=True)
 
+    encoder_meta = {
+        "model_type": "audio8-asr",
+        "version": "1",
+        "maintainer": "k2-fsa",
+        "url": "https://huggingface.co/Edge0/Audio8-ASR-0.1B",
+        "license": "Creative Commons Attribution Non Commercial 4.0",
+        "sample_rate": 16000,
+        "feature_dim": 128,
+        "frames": FRAMES,
+        "encoder_tokens": ENC_TOKENS,
+        "encoder_hidden_size": 1024,
+        "audio_token_id": AUDIO_TOKEN_ID,
+    }
+    decoder_meta = {
+        "model_type": "audio8-asr",
+        "version": "1",
+        "maintainer": "k2-fsa",
+        "url": "https://huggingface.co/Edge0/Audio8-ASR-0.1B",
+        "license": "Creative Commons Attribution Non Commercial 4.0",
+        "num_layers": dec.num_layers,
+        "num_attention_heads": dec.num_heads,
+        "num_key_value_heads": dec.num_kv_heads,
+        "head_dim": dec.head_dim,
+        "hidden_size": dec.hidden_size,
+        "max_total_len": args.max_total_len,
+        "audio_token_id": AUDIO_TOKEN_ID,
+        "vocab_size": int(lm.config.vocab_size),
+    }
+    add_meta_data(out / "encoder.onnx", encoder_meta)
+    add_meta_data(out / "decoder.onnx", decoder_meta)
+    print("meta data added to encoder.onnx / decoder.onnx", flush=True)
+
     if args.int8:
         from onnxruntime.quantization import QuantType, quantize_dynamic
 
@@ -341,6 +403,7 @@ def main() -> None:
             quantize_dynamic(str(src), str(dst), weight_type=QuantType.QUInt8,
                              per_channel=True,
                              extra_options={"EnableSubgraph": False})
+            add_meta_data(dst, encoder_meta if name == "encoder" else decoder_meta)
             print(f"{name}.int8.onnx written", flush=True)
 
     meta = {

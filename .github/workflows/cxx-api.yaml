@@ -309,21 +309,13 @@ jobs:
 
           ls -lh $name
 
-          # The models are also mirrored on HuggingFace; switch `base` to the
-          # k2-fsa release once the artifact is uploaded there.
-          dir=sherpa-onnx-audio8-asr-0.1B
-          mkdir -p $dir/tokenizer $dir/test_wavs
-          base=https://huggingface.co/yunyu1258/audio8-asr-onnx/resolve/main
-          fetch() {
-            curl -fSL -o "$2" "$base/$1" || \
-              curl -fSL -o "$2" "https://hf-mirror.com/yunyu1258/audio8-asr-onnx/resolve/main/$1"
-          }
-          fetch encoder.int8.onnx $dir/encoder.onnx
-          fetch decoder.int8.onnx $dir/decoder.onnx
-          for f in vocab.json merges.txt tokenizer_config.json added_tokens.json; do
-            fetch tokenizer/$f $dir/tokenizer/$f
-          done
-          fetch test_wavs/0.wav $dir/test_wavs/0.wav
+          # Prebuilt models are published as a release artifact; the int8
+          # folder keeps the ".int8" suffix, the example uses the plain names.
+          dir=sherpa-onnx-audio8-asr-0.1b-int8
+          url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$dir.tar.bz2
+          curl -fSL -O $url && tar xf $dir.tar.bz2 && rm $dir.tar.bz2
+          cp $dir/encoder.int8.onnx $dir/encoder.onnx
+          cp $dir/decoder.int8.onnx $dir/decoder.onnx
 
           echo "---"
 
