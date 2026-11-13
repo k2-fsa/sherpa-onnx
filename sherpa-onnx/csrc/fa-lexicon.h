@@ -19,7 +19,7 @@ namespace sherpa_onnx {
 //
 // Lexicon lines are written as "key [probability columns ...] phones", where
 // the phones of a multi-character key are split into one group per character
-// with " || " (e.g. "研究 i n ɛ n || tɕ i o u"). Single-character keys and
+// with " || " (e.g. "研究 || i n ɛ n || tɕ i o u"). Single-character keys and
 // plain (group-less) dictionaries have exactly one group.
 struct FaPronunciation {
   // One phone group per character of the key.

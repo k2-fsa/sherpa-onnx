@@ -49,25 +49,54 @@ FaLexicon FaLexicon::Load(const std::string &filename) {
   std::string line;
   while (std::getline(is, line)) {
     std::istringstream iss(line);
-    std::string key;
-    if (!(iss >> key)) {
-      continue;
-    }
-    // " || " separates the per-character phone groups; a line without "||"
-    // is a single group.
-    FaPronunciation pron;
-    pron.groups.resize(1);
+    std::vector<std::string> tokens;
     std::string tok;
     while (iss >> tok) {
       // Skip optional probability columns between the key and the phones.
       if (IsNumericToken(tok)) {
         continue;
       }
-      if (tok == "||") {
-        pron.groups.emplace_back();
+      tokens.push_back(tok);
+    }
+    if (tokens.size() < 2) {
+      continue;
+    }
+
+    // "key [key2 ...] || phones || phones || ...": everything before the
+    // first "||" is the key (it may contain spaces), and the rest is split
+    // into one phone group per character/word of the key. A line without
+    // "||" is "key phones" with a single group (external dictionaries).
+    size_t bar = tokens.size();
+    for (size_t i = 0; i != tokens.size(); ++i) {
+      if (tokens[i] == "||") {
+        bar = i;
+        break;
+      }
+    }
+
+    std::string key;
+    FaPronunciation pron;
+    if (bar == tokens.size()) {
+      key = tokens[0];
+      pron.groups.emplace_back(tokens.begin() + 1, tokens.end());
+    } else {
+      if (bar == 0) {
         continue;
       }
-      pron.groups.back().push_back(std::move(tok));
+      for (size_t i = 0; i != bar; ++i) {
+        if (i) {
+          key += " ";
+        }
+        key += tokens[i];
+      }
+      pron.groups.emplace_back();
+      for (size_t i = bar + 1; i != tokens.size(); ++i) {
+        if (tokens[i] == "||") {
+          pron.groups.emplace_back();
+          continue;
+        }
+        pron.groups.back().push_back(tokens[i]);
+      }
     }
     // Drop empty groups (e.g. a trailing "||").
     for (size_t i = pron.groups.size(); i > 0; --i) {
@@ -206,19 +235,27 @@ std::vector<std::vector<std::vector<std::string>>> ResolveFaPronunciations(
     size_t max_j = std::min(n, i + max_key_len);
     for (size_t j = i + 2; j <= max_j; ++j) {
       std::string key;
+      std::string spaced;
       for (size_t k = i; k < j; ++k) {
         key += words[k];
+        if (k != i) {
+          spaced += " ";
+        }
+        spaced += words[k];
       }
       const auto &prons = lexicon.Get(key);
-      if (prons.empty()) {
+      const auto &spaced_prons = lexicon.Get(spaced);
+      if (prons.empty() && spaced_prons.empty()) {
         continue;
       }
-      for (const auto &pron : prons) {
-        if (pron.groups.size() != j - i) {
-          continue;  // not split per character; unusable as a context
-        }
-        for (size_t k = 0; k < pron.groups.size(); ++k) {
-          allowed[i + k].insert(pron.groups[k]);
+      for (const auto *set : {&prons, &spaced_prons}) {
+        for (const auto &pron : *set) {
+          if (pron.groups.size() != j - i) {
+            continue;  // not split per token; unusable as a context
+          }
+          for (size_t k = 0; k < pron.groups.size(); ++k) {
+            allowed[i + k].insert(pron.groups[k]);
+          }
         }
       }
     }

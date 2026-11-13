@@ -39,7 +39,8 @@ TEST(FaLexiconTest, ParseMultiPronunciation) {
                     "行 x a ŋ\n"
                     "行 h a ŋ\n"
                     "行 x a ŋ\n"  // duplicate pronunciation, deduplicated
-                    "研究 i n ɛ n || tɕ i o u\n"  // per-character phone groups
+                    // " || " separates per-character phone groups
+                    "研究 || i n ɛ n || tɕ i o u\n"
                     "儿 ɚ\n");
   FaLexicon lexicon = FaLexicon::Load(path);
   EXPECT_TRUE(lexicon.Contains("行"));
@@ -69,12 +70,12 @@ TEST(FaLexiconTest, ParseGroupsAndDeduplication) {
   std::string path = WriteTempFile(
       "fa-lexicon-parse2.dict",
       "字 i\n"
-      "字 i ||\n"  // same phones, same single group -> deduplicated
-      "词 t s || ɻ\n"
+      "字 || i ||\n"  // same phones, same single group -> deduplicated
+      "词 || t s || ɻ\n"
       "词 t s ɻ\n"      // same phones, different grouping -> deduplicated
       "甲乙 a b\n"
-      "甲乙 a || b\n"  // grouped form wins when it comes second
-      "句 tɕ y ||\n");  // trailing empty group is dropped
+      "甲乙 || a || b\n"  // grouped form wins when it comes second
+      "句 || tɕ y ||\n");  // trailing empty group is dropped
   FaLexicon lexicon = FaLexicon::Load(path);
 
   const auto &zi = lexicon.Get("字");
