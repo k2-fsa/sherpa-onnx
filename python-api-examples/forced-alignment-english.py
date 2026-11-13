@@ -27,6 +27,7 @@ Output:
 See also forced-alignment-chinese.py and textgrid-to-word-wavs.py.
 """
 
+import sys
 import time
 
 import sherpa_onnx
@@ -34,6 +35,10 @@ import soundfile as sf
 
 
 def main():
+    # Print UTF-8 regardless of the console encoding (Windows
+    # defaults to a legacy codepage and cannot print hanzi).
+    sys.stdout.reconfigure(encoding="utf-8")
+
     model_dir = "./english-mfa-v3.1.0"
     wav = f"{model_dir}/en.wav"
     text = (

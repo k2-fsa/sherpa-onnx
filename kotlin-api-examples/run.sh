@@ -1055,7 +1055,8 @@ function testForcedAlignmentEnglish() {
 
   ls -lh $out_filename
 
-  java -Djava.library.path=../build/lib -jar $out_filename
+  java -Djava.library.path=../build/lib -Dstdout.encoding=UTF-8 \
+    -Dstderr.encoding=UTF-8 -jar $out_filename
 
   mkdir -p test_forced_alignment_english
   mv en.TextGrid test_forced_alignment_english/
@@ -1085,7 +1086,8 @@ function testForcedAlignmentChinese() {
 
   ls -lh $out_filename
 
-  java -Djava.library.path=../build/lib -jar $out_filename
+  java -Djava.library.path=../build/lib -Dstdout.encoding=UTF-8 \
+    -Dstderr.encoding=UTF-8 -jar $out_filename
 
   mkdir -p test_forced_alignment_chinese
   mv zh.TextGrid test_forced_alignment_chinese/

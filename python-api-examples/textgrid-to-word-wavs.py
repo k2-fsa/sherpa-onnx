@@ -43,6 +43,7 @@ Output (in the --out-dir directory, word-clips-en/ in the example above):
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 
@@ -91,6 +92,10 @@ def read_words_tier(textgrid_path):
 
 
 def main():
+    # Print UTF-8 regardless of the console encoding (Windows
+    # defaults to a legacy codepage and cannot print hanzi).
+    sys.stdout.reconfigure(encoding="utf-8")
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--wav", required=True,
                     help="input wav (only the first channel is used)")

@@ -12,6 +12,7 @@ fi
 
 java \
   -Dsherpa_onnx.native.path=$PWD/../build/lib \
+  -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 \
   -cp ../sherpa-onnx/java-api/target/sherpa-onnx-jvm-*.jar \
   ForcedAlignmentChinese.java
 
