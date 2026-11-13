@@ -36,8 +36,6 @@ jobs:
 
           - os: macos-latest
 
-          - os: macos-14
-
           - os: windows-2022
             arch: x64
 
