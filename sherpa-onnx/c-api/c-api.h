@@ -1052,6 +1052,20 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   const char *hotwords;
 } SherpaOnnxOfflineQwen3ASRModelConfig;
 
+/**
+ * Audio8-ASR-0.1B: a Whisper-style audio encoder plus a small Qwen2 decoder.
+ */
+typedef struct SherpaOnnxOfflineAudio8AsrModelConfig {
+  /** Path to the encoder ONNX model. */
+  const char *encoder;
+  /** Path to the decoder ONNX model (with KV cache). */
+  const char *decoder;
+  /** Path to the tokenizer directory (with `vocab.json`, `merges.txt`). */
+  const char *tokenizer;
+  /** Maximum number of new tokens to generate. */
+  int32_t max_new_tokens;
+} SherpaOnnxOfflineAudio8AsrModelConfig;
+
 /** @brief Configuration for a MedASR CTC model. */
 typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
   /** Path to the ONNX model. */
@@ -1127,6 +1141,7 @@ typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
   /** Qwen3-ASR configuration. */
   SherpaOnnxOfflineQwen3ASRModelConfig qwen3_asr;
+  SherpaOnnxOfflineAudio8AsrModelConfig audio8_asr;
   /** Cohere Transcribe configuration. */
   SherpaOnnxOfflineCohereTranscribeModelConfig cohere_transcribe;
 } SherpaOnnxOfflineModelConfig;

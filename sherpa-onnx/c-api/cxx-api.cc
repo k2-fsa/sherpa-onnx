@@ -357,6 +357,15 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
   c.model_config.funasr_nano.hotwords =
       config.model_config.funasr_nano.hotwords.c_str();
 
+  c.model_config.audio8_asr.encoder =
+      config.model_config.audio8_asr.encoder.c_str();
+  c.model_config.audio8_asr.decoder =
+      config.model_config.audio8_asr.decoder.c_str();
+  c.model_config.audio8_asr.tokenizer =
+      config.model_config.audio8_asr.tokenizer.c_str();
+  c.model_config.audio8_asr.max_new_tokens =
+      config.model_config.audio8_asr.max_new_tokens;
+
   c.model_config.qwen3_asr.conv_frontend =
       config.model_config.qwen3_asr.conv_frontend.c_str();
   c.model_config.qwen3_asr.encoder =
@@ -1339,10 +1348,11 @@ SpokenLanguageIdentification SpokenLanguageIdentification::Create(
   return SpokenLanguageIdentification(p);
 }
 
+using SpokenLanguageIdC = SherpaOnnxSpokenLanguageIdentification;
+
 SpokenLanguageIdentification::SpokenLanguageIdentification(
-    const SherpaOnnxSpokenLanguageIdentification *p)
-    : MoveOnly<SpokenLanguageIdentification,
-               SherpaOnnxSpokenLanguageIdentification>(p) {}
+    const SpokenLanguageIdC *p)
+    : MoveOnly<SpokenLanguageIdentification, SpokenLanguageIdC>(p) {}
 
 void SpokenLanguageIdentification::Destroy(
     const SherpaOnnxSpokenLanguageIdentification *p) const {
@@ -1385,10 +1395,11 @@ SpeakerEmbeddingExtractor SpeakerEmbeddingExtractor::Create(
   return SpeakerEmbeddingExtractor(p);
 }
 
+using SpeakerEmbeddingC = SherpaOnnxSpeakerEmbeddingExtractor;
+
 SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
-    const SherpaOnnxSpeakerEmbeddingExtractor *p)
-    : MoveOnly<SpeakerEmbeddingExtractor,
-               SherpaOnnxSpeakerEmbeddingExtractor>(p) {}
+    const SpeakerEmbeddingC *p)
+    : MoveOnly<SpeakerEmbeddingExtractor, SpeakerEmbeddingC>(p) {}
 
 void SpeakerEmbeddingExtractor::Destroy(
     const SherpaOnnxSpeakerEmbeddingExtractor *p) const {
@@ -1560,7 +1571,8 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
   c.embedding.provider = config.embedding.provider.c_str();
   c.clustering.num_clusters = config.clustering.num_clusters;
   c.clustering.threshold = config.clustering.threshold;
-  c.clustering.compute_confidence = config.clustering.compute_confidence ? 1 : 0;
+  c.clustering.compute_confidence =
+      config.clustering.compute_confidence ? 1 : 0;
   c.min_duration_on = config.min_duration_on;
   c.min_duration_off = config.min_duration_off;
 
@@ -1569,10 +1581,11 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
   return OfflineSpeakerDiarization(p);
 }
 
+using OfflineSpeakerDiarizationC = SherpaOnnxOfflineSpeakerDiarization;
+
 OfflineSpeakerDiarization::OfflineSpeakerDiarization(
-    const SherpaOnnxOfflineSpeakerDiarization *p)
-    : MoveOnly<OfflineSpeakerDiarization,
-               SherpaOnnxOfflineSpeakerDiarization>(p) {}
+    const OfflineSpeakerDiarizationC *p)
+    : MoveOnly<OfflineSpeakerDiarization, OfflineSpeakerDiarizationC>(p) {}
 
 void OfflineSpeakerDiarization::Destroy(
     const SherpaOnnxOfflineSpeakerDiarization *p) const {
@@ -1589,7 +1602,8 @@ void OfflineSpeakerDiarization::SetConfig(
   memset(&c, 0, sizeof(c));
   c.clustering.num_clusters = config.clustering.num_clusters;
   c.clustering.threshold = config.clustering.threshold;
-  c.clustering.compute_confidence = config.clustering.compute_confidence ? 1 : 0;
+  c.clustering.compute_confidence =
+      config.clustering.compute_confidence ? 1 : 0;
   SherpaOnnxOfflineSpeakerDiarizationSetConfig(p_, &c);
 }
 
@@ -1662,15 +1676,21 @@ OfflineDiacritization OfflineDiacritization::Create(
   return OfflineDiacritization(diacrt);
 }
 
-OfflineDiacritization::OfflineDiacritization(const SherpaOnnxOfflineDiacritization *diacrt)
-    : MoveOnly<OfflineDiacritization, SherpaOnnxOfflineDiacritization>(diacrt) {}
+using OfflineDiacritizationC = SherpaOnnxOfflineDiacritization;
 
-void OfflineDiacritization::Destroy(const SherpaOnnxOfflineDiacritization *diacrt) const {
+OfflineDiacritization::OfflineDiacritization(
+    const OfflineDiacritizationC *diacrt)
+    : MoveOnly<OfflineDiacritization, OfflineDiacritizationC>(diacrt) {}
+
+void OfflineDiacritization::Destroy(
+    const SherpaOnnxOfflineDiacritization *diacrt) const {
   SherpaOnnxDestroyOfflineDiacritization(diacrt);
 }
 
-std::string OfflineDiacritization::AddDiacritics(const std::string &text) const {
-  const char *result = SherpaOfflineDiacritizationAddDiacritics(p_, text.c_str());
+std::string OfflineDiacritization::AddDiacritics(
+    const std::string &text) const {
+  const char *result =
+      SherpaOfflineDiacritizationAddDiacritics(p_, text.c_str());
   if (!result) return {};
   std::string ans(result);
   SherpaOfflineDiacritizationFreeText(result);

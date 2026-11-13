@@ -31,6 +31,25 @@ python3 ./python-api-examples/offline-qwen3-asr-decode-files.py \
 
 rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 
+log "test Audio8 ASR"
+
+# Prebuilt models are published as a release artifact.
+audio8_dir=sherpa-onnx-audio8-asr-0.1b-int8
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$audio8_dir.tar.bz2
+curl -fSL -O "$url" && tar xf "$audio8_dir.tar.bz2" && rm "$audio8_dir.tar.bz2"
+cp "$audio8_dir/encoder.int8.onnx" "$audio8_dir/encoder.onnx"
+cp "$audio8_dir/decoder.int8.onnx" "$audio8_dir/decoder.onnx"
+
+python3 ./python-api-examples/offline-audio8-asr-decode-files.py \
+  --encoder="$audio8_dir/encoder.onnx" \
+  --decoder="$audio8_dir/decoder.onnx" \
+  --tokenizer="$audio8_dir/tokenizer" \
+  --max-new-tokens=128 \
+  --num-threads=2 \
+  "$audio8_dir/test_wavs/0.wav"
+
+rm -rf "$audio8_dir"
+
 log "test Moonshine v2"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2

@@ -15,6 +15,7 @@
 #include "sherpa-onnx/python/csrc/offline-fire-red-asr-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-funasr-nano-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-medasr-ctc-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-audio8-asr-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-qwen3-asr-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-moonshine-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-nemo-enc-dec-ctc-model-config.h"
@@ -73,6 +74,8 @@ Args:
     Config for a FireRedAsr CTC model.
   qwen3_asr:
     Config for a Qwen3 ASR model.
+  audio8_asr:
+    Config for an Audio8 ASR model.
   telespeech_ctc:
     Path to the TeleSpeech CTC ONNX model file.
   tokens:
@@ -94,6 +97,7 @@ Args:
 )doc";
 
 void PybindOfflineModelConfig(py::module *m) {
+  PybindOfflineAudio8AsrModelConfig(m);
   PybindOfflineTransducerModelConfig(m);
   PybindOfflineParaformerModelConfig(m);
   PybindOfflineNemoEncDecCtcModelConfig(m);
@@ -132,10 +136,11 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineFunASRNanoModelConfig &,
                     const OfflineMedAsrCtcModelConfig &,
                     const OfflineFireRedAsrCtcModelConfig &,
-                    const OfflineQwen3ASRModelConfig &, 
-                    const std::string &,const std::string &, int32_t, bool,
-                    const std::string &,const std::string &, 
-                    const std::string &,const std::string &>(),
+                    const OfflineQwen3ASRModelConfig &,
+                    const OfflineAudio8AsrModelConfig &,
+                    const std::string &, const std::string &, int32_t, bool,
+                    const std::string &, const std::string &,
+                    const std::string &, const std::string &>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
            py::arg("nemo_ctc") = OfflineNemoEncDecCtcModelConfig(),
@@ -155,6 +160,7 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("medasr") = OfflineMedAsrCtcModelConfig(),
            py::arg("fire_red_asr_ctc") = OfflineFireRedAsrCtcModelConfig(),
            py::arg("qwen3_asr") = OfflineQwen3ASRModelConfig(),
+           py::arg("audio8_asr") = OfflineAudio8AsrModelConfig(),
            py::arg("telespeech_ctc") = "", py::arg("tokens") = "",
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "",
@@ -178,6 +184,7 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("medasr", &PyClass::medasr)
       .def_readwrite("fire_red_asr_ctc", &PyClass::fire_red_asr_ctc)
       .def_readwrite("qwen3_asr", &PyClass::qwen3_asr)
+      .def_readwrite("audio8_asr", &PyClass::audio8_asr)
       .def_readwrite("telespeech_ctc", &PyClass::telespeech_ctc)
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)

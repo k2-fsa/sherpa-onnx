@@ -1,0 +1,192 @@
+# Export Audio8-ASR-0.1B to ONNX, collect the model files, and publish them.
+#
+# Audio8-ASR-0.1B is a Whisper-style audio encoder followed by a small Qwen2
+# decoder. The export only needs torch + transformers (CPU is enough), so this
+# job runs on a normal runner; no NPU toolchain is involved.
+name: export-audio8-asr-onnx
+
+on:
+  workflow_dispatch:
+    inputs:
+      int8:
+        description: "Also produce dynamic-int8 graphs"
+        type: boolean
+        default: true
+      upload_to_hf:
+        description: "Push the models to HuggingFace (needs HF_TOKEN0)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: export-audio8-asr-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export:
+    name: Export and release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -ex
+          python3 -m pip install --upgrade pip
+          python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python3 -m pip install transformers onnx onnxruntime numpy librosa \
+            kaldi-native-fbank tokenizers huggingface_hub
+
+      - name: Download the checkpoint
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          python3 -c "from huggingface_hub import snapshot_download; snapshot_download('Edge0/Audio8-ASR-0.1B', local_dir='Audio8-ASR-0.1B', allow_patterns=['*.json', '*.py', '*.jinja', '*.txt', 'model.safetensors'])"
+          ls -lh Audio8-ASR-0.1B
+
+      - name: Export the ONNX graphs (fp32 + int8)
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          python3 export-onnx.py --out-dir ./exported ${{ inputs.int8 && '--int8' || '' }}
+          ls -lh exported
+          python3 - <<'PY'
+          import onnx
+          for name in ("encoder.onnx", "decoder.onnx"):
+              m = onnx.load("exported/" + name, load_external_data=False)
+              print(name, {p.key: p.value for p in m.metadata_props})
+          PY
+
+      - name: Download the test wavs (7 languages)
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          mkdir -p wavs
+          base=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models
+          for f in en fr de zh ja ko; do
+            curl -fSL -o wavs/$f.wav $base/$f.wav
+          done
+          curl -fSL -o wavs/cantonese.wav \
+            https://github.com/k2-fsa/sherpa/raw/refs/heads/gh-pages/_static/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09/yue-9.wav
+          ls -lh wavs
+
+      - name: Verify the export
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          python3 run-onnx.py --onnx-dir ./exported \
+            --tokenizer ./Audio8-ASR-0.1B wavs/zh.wav wavs/en.wav | tee verify.log
+          # every clip must produce some text
+          [ "$(grep -c ':' verify.log)" = "2" ]
+          grep -q "：" verify.log || grep -q ":" verify.log
+
+      - name: Collect files (fp32)
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          d=sherpa-onnx-audio8-asr-0.1b
+          mkdir -p $d/tokenizer $d/test_wavs
+          cp -v exported/encoder.onnx exported/decoder.onnx $d
+          cp -v Audio8-ASR-0.1B/vocab.json Audio8-ASR-0.1B/merges.txt \
+            Audio8-ASR-0.1B/tokenizer_config.json Audio8-ASR-0.1B/added_tokens.json \
+            Audio8-ASR-0.1B/tokenizer.json $d/tokenizer
+          cp -v fp32-README.md $d/README.md
+          curl -fSL -o $d/LICENSE \
+            https://huggingface.co/Edge0/Audio8-ASR-0.1B/resolve/main/LICENSE
+          cp -v wavs/*.wav $d/test_wavs
+          tar cjfv $d.tar.bz2 $d
+          ls -lh $d $d.tar.bz2
+          mv $d.tar.bz2 ../../
+
+      - name: Collect files (int8)
+        if: ${{ inputs.int8 }}
+        shell: bash
+        working-directory: scripts/audio8-asr
+        run: |
+          set -ex
+          d=sherpa-onnx-audio8-asr-0.1b-int8
+          mkdir -p $d/tokenizer $d/test_wavs
+          cp -v exported/encoder.int8.onnx exported/decoder.int8.onnx $d
+          cp -v Audio8-ASR-0.1B/vocab.json Audio8-ASR-0.1B/merges.txt \
+            Audio8-ASR-0.1B/tokenizer_config.json Audio8-ASR-0.1B/added_tokens.json \
+            Audio8-ASR-0.1B/tokenizer.json $d/tokenizer
+          cp -v int8-README.md $d/README.md
+          curl -fSL -o $d/LICENSE \
+            https://huggingface.co/Edge0/Audio8-ASR-0.1B/resolve/main/LICENSE
+          cp -v wavs/*.wav $d/test_wavs
+          tar cjfv $d.tar.bz2 $d
+          ls -lh $d $d.tar.bz2
+          mv $d.tar.bz2 ../../
+
+      - name: Upload the release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio8-asr-onnx
+          path: |
+            *.tar.bz2
+            scripts/audio8-asr/verify.log
+          compression-level: 0
+
+      - name: Publish to huggingface
+        if: ${{ inputs.upload_to_hf }}
+        continue-on-error: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 600
+          shell: bash
+          command: |
+            set -ex
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            # the folder name and the HuggingFace repo name differ
+            models=(
+              "sherpa-onnx-audio8-asr-0.1b audio8-asr-0.1b"
+              "sherpa-onnx-audio8-asr-0.1b-int8 audio8-asr-0.1b-int8"
+            )
+
+            for m in "${models[@]}"; do
+              set -- $m
+              local_dir=$1
+              repo=$2
+              [ -d "scripts/audio8-asr/$local_dir" ] || continue
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$repo huggingface
+              cp -av scripts/audio8-asr/$local_dir/* huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              git commit -m "first commit" || true
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$repo main
+              cd ..
+            done
+
+      - name: Release
+        continue-on-error: true
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
