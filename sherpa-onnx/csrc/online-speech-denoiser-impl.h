@@ -28,6 +28,11 @@ class OnlineSpeechDenoiserImpl {
   virtual void Reset() = 0;
   virtual int32_t GetSampleRate() const = 0;
   virtual int32_t GetFrameShiftInSamples() const = 0;
+
+  virtual bool SetVoiceSample(const float * /*samples*/, int32_t /*n*/,
+                              int32_t /*sample_rate*/) {
+    return false;
+  }
 };
 
 }  // namespace sherpa_onnx

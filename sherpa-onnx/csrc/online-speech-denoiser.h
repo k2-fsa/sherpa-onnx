@@ -49,6 +49,14 @@ class OnlineSpeechDenoiser {
   int32_t GetSampleRate() const;
   int32_t GetFrameShiftInSamples() const;
 
+  /*
+   * Set a PCM voice sample for VoxLock.
+   *
+   * See OfflineSpeechDenoiser::SetVoiceSample. On success the denoiser is
+   * reset so it uses the new clip.
+   */
+  bool SetVoiceSample(const float *samples, int32_t n, int32_t sample_rate);
+
  private:
   std::unique_ptr<OnlineSpeechDenoiserImpl> impl_;
 };

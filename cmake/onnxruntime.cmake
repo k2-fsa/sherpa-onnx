@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 # Copyright (c)  2022-2023  Xiaomi Corporation
 function(download_onnxruntime)
   include(FetchContent)

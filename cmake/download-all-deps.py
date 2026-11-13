@@ -71,13 +71,12 @@ def get_cmake_dir():
 def get_hardcoded_deps():
     """Return deps that don't have a cmake file (e.g., kaldifst).
 
-    Returns list of (name, url, url2, sha256).
+    Returns list of (name, url, sha256).
     """
     return [
         (
             "kaldifst",
             "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.8.0.tar.gz",
-            "",
             "3f247b7e5a2409071202f5e2bc6200060f66728c0a3443c03923ad2723e040b3",
         ),
     ]
@@ -86,21 +85,17 @@ def get_hardcoded_deps():
 def parse_url_and_hash(filepath):
     """Parse a cmake file for URL and SHA256 hash pairs.
 
-    Returns a list of (name, url, url2, sha256) tuples.
+    Returns a list of (name, url, sha256) tuples.
     """
     text = filepath.read_text()
     deps = []
 
     # Pattern: set(name_URL  "https://...")
-    #          set(name_URL2 "https://...")  (optional)
     #          set(name_HASH "SHA256=...")
     # Use [\w-]+ to match names with hyphens (e.g., simple-sentencepiece)
     name_re = r'([\w-]+?)'
     url_pattern = re.compile(
         rf'set\({name_re}_URL\s+"([^"]+)"\)', re.MULTILINE
-    )
-    url2_pattern = re.compile(
-        rf'set\({name_re}_URL2\s+"([^"]+)"\)', re.MULTILINE
     )
     hash_pattern = re.compile(
         rf'set\({name_re}_HASH\s+"SHA256=([^"]+)"\)', re.MULTILINE
@@ -113,14 +108,12 @@ def parse_url_and_hash(filepath):
         if "${" not in url and name not in urls:
             urls[name] = url
 
-    url2s = {m.group(1): m.group(2) for m in url2_pattern.finditer(text)}
     hashes = {m.group(1): m.group(2) for m in hash_pattern.finditer(text)}
 
     for name, url in urls.items():
         sha256 = hashes.get(name, "")
-        url2 = url2s.get(name, "")
         if sha256:
-            deps.append((name, url, url2, sha256))
+            deps.append((name, url, sha256))
 
     return deps
 
@@ -170,7 +163,7 @@ def parse_windows_onnxruntime(filepath, crt, build_type):
 def discover_common_deps(cmake_dir):
     """Discover platform-independent deps from cmake files.
 
-    Returns list of (name, url, url2, sha256).
+    Returns list of (name, url, sha256).
     """
     # These cmake files contain platform-independent deps
     dep_files = [
@@ -230,7 +223,7 @@ def ask_yes_no(question, default="y"):
 def select_onnxruntime_deps(cmake_dir):
     """Interactively select onnxruntime deps based on platform.
 
-    Returns list of (name, url, url2, sha256).
+    Returns list of (name, url, sha256).
     """
     os_choice = select_menu(
         "Select target OS:",
@@ -389,17 +382,14 @@ def parse_aarch64_gpu_deps(path):
 
         # Check for URL override in this block
         url_m = re.search(r'set\(onnxruntime_URL\s+"(https://[^"]+)"\)', block)
-        url2_m = re.search(r'set\(onnxruntime_URL2\s+"(https://[^"]+)"\)', block)
 
         if url_m:
             url = url_m.group(1)
-            url2 = url2_m.group(1) if url2_m else ""
         else:
             # Use template
             url = url_template.format(v=version)
-            url2 = ""
 
-        deps.append(("onnxruntime", url, url2, sha256))
+        deps.append(("onnxruntime", url, sha256))
 
     return deps
 
@@ -524,7 +514,7 @@ def main():
     # Discover common deps
     common_deps = get_hardcoded_deps() + discover_common_deps(cmake_dir)
     print(f"\nFound {len(common_deps)} common (platform-independent) dependencies:")
-    for name, url, url2, sha256 in common_deps:
+    for name, url, sha256 in common_deps:
         print(f"  {name}: {filename_from_url(url, name, cmake_dir)}")
 
     # Ask about onnxruntime
@@ -533,7 +523,7 @@ def main():
         ort_deps = select_onnxruntime_deps(cmake_dir)
         if ort_deps:
             print(f"\nSelected {len(ort_deps)} onnxruntime file(s):")
-            for name, url, url2, sha256 in ort_deps:
+            for name, url, sha256 in ort_deps:
                 print(f"  {name}: {filename_from_url(url, name, cmake_dir)}")
     else:
         print("\nSkipping onnxruntime download.")
@@ -560,18 +550,12 @@ def main():
     print(f"\nDownloading {len(all_deps)} file(s) to {dl_path}...")
     downloaded = []
     failed = []
-    for name, url, url2, sha256 in all_deps:
+    for name, url, sha256 in all_deps:
         fname = filename_from_url(url, name, cmake_dir)
         filepath = dl_path / fname
         if download_file(url, filepath, sha256):
             downloaded.append(fname)
         else:
-            # Try mirror URL
-            if url2:
-                print(f"  Trying mirror: {url2}")
-                if download_file(url2, filepath, sha256):
-                    downloaded.append(fname)
-                    continue
             failed.append(fname)
 
     # Summary

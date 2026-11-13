@@ -6,12 +6,15 @@
 # One of several groups run in parallel by .github/workflows/run-python-test.yaml.
 # Run .github/scripts/test-python.sh to run every group sequentially.
 
-set -ex
+set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 export GIT_CLONE_PROTECTION_ACTIVE=false
+
+log "test deterministic Parakeet Unified streaming"
+python3 sherpa-onnx/python/tests/test_online_unified_recognizer.py --verbose
 
 log "test T-one"
 

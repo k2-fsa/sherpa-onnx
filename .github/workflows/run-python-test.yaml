@@ -40,6 +40,11 @@ permissions:
 
 env:
   PYTHONIOENCODING: utf-8
+  # Keep the repository's LF line endings on Windows runners and avoid
+  # git's "LF will be replaced by CRLF" warnings.
+  GIT_CONFIG_COUNT: 1
+  GIT_CONFIG_KEY_0: core.autocrlf
+  GIT_CONFIG_VALUE_0: "false"
 
 # Each platform tests a single Python version, spread over the supported range
 # so both ends stay covered. The version is verified to exist on the matching
@@ -58,7 +63,7 @@ jobs:
         include:
           # Linux x64
           - os: ubuntu-latest
-            python-version: "3.8"
+            python-version: "3.12"
             arch: x64
 
           # Linux arm64
@@ -87,7 +92,7 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -113,12 +118,16 @@ jobs:
         with:
           key: ${{ matrix.os }}-python-${{ matrix.python-version }}
 
+      # ilammy/msvc-dev-cmd is used at its latest release (v1.13.0)
+      # below; that release still targets Node.js 20, so the runner's
+      # "Node.js 20 is deprecated" warning for it can only be fixed
+      # upstream.
       - name: sccache (Windows)
         # sccache is disabled on windows-11-arm: sccache-action extracts its
         # archive with pwsh, which crashes intermittently on this runner
         # ("Internal CLR error. 0x80131506") and fails the job before the build.
         if: runner.os == 'Windows' && matrix.os != 'windows-11-arm'
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.11
 
       - name: Set up MSVC
         if: runner.os == 'Windows'
@@ -140,7 +149,10 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install --upgrade pip numpy
-          python3 -m pip install wheel twine setuptools
+          # setuptools>=70.1 provides the integrated bdist_wheel command;
+          # installing the wheel package as well would trigger its
+          # FutureWarning about the relocated bdist_wheel command.
+          python3 -m pip install --upgrade "setuptools>=70.1" twine
 
       - name: Install ninja (Linux)
         if: runner.os == 'Linux'
@@ -239,18 +251,18 @@ jobs:
           fi
           ls -lh wheel
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheel-${{ matrix.os }}
           path: ./wheel
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
           name: ${{ matrix.os }}-${{ matrix.python-version }}-whl
           path: ./dist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
           name: ${{ matrix.os }}-${{ matrix.python-version }}-whl-patched
@@ -268,6 +280,7 @@ jobs:
           - asr-offline
           - asr-streaming
           - tts
+          - fa
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
@@ -278,7 +291,7 @@ jobs:
         include:
           # Keep these in sync with the build matrix above.
           - os: ubuntu-latest
-            python-version: "3.8"
+            python-version: "3.12"
             arch: x64
           - os: ubuntu-24.04-arm
             python-version: "3.9"
@@ -297,7 +310,7 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Python
         uses: actions/setup-python@v7
@@ -308,7 +321,7 @@ jobs:
       - name: Install test dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin soundfile onnx
           # External phonemizers used by the test-offline-tts-*-phonemize.py
           # examples. piper_phonemize ships espeak-ng inside the wheel; it is
           # a pip dependency, not a build dependency of sherpa-onnx.
@@ -328,7 +341,7 @@ jobs:
           python3 -m pip install --upgrade librosa || \
             echo "::warning::librosa could not be installed; offline-speaker-diarization.py will be skipped"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: wheel-${{ matrix.os }}
           path: ./wheel
@@ -371,13 +384,49 @@ jobs:
           export OS=${{ matrix.os }}
           .github/scripts/test-python-${{ matrix.group }}.sh
 
-      - uses: actions/upload-artifact@v4
+      - name: Show fa result english-mfa-v3.1.0
+        if: matrix.group == 'fa'
+        shell: bash
+        run: cat en.TextGrid
+
+      - name: Show fa result zh-aishell3-pinyin
+        if: matrix.group == 'fa'
+        shell: bash
+        run: cat zh.TextGrid
+
+      - uses: actions/upload-artifact@v7
+        if: matrix.group == 'fa'
+        with:
+          name: fa-textgrids-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./*.TextGrid
+
+      - uses: actions/upload-artifact@v7
+        if: matrix.group == 'fa'
+        with:
+          name: fa-word-clips-english-mfa-v3.1.0-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./word-clips-en
+
+      - uses: actions/upload-artifact@v7
+        if: matrix.group == 'fa'
+        with:
+          name: fa-word-clips-zh-aishell3-pinyin-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./word-clips-zh
+
+      - name: Clean up fa files
+        if: matrix.group == 'fa'
+        shell: bash
+        run: |
+          rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+          rm -rf word-clips-en word-clips-zh
+          rm -f ./*.TextGrid
+
+      - uses: actions/upload-artifact@v7
         if: matrix.group == 'misc'
         with:
           name: source-separation-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./source-separation
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: matrix.group == 'tts'
         with:
           name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.python-version }}
@@ -385,25 +434,25 @@ jobs:
 
       # The VoxLock examples run first in test-python-misc.sh; use if: always() so
       # their input/output wavs are uploaded even when a later test fails.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && matrix.group == 'misc'
         with:
           name: offline-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.python-version }}
           path: offline-speech-enhancement-voxlock
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && matrix.group == 'misc'
         with:
           name: offline-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.python-version }}
           path: offline-speech-enhancement-voxlock-with-voice-sample
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && matrix.group == 'misc'
         with:
           name: online-speech-enhancement-voxlock-${{ matrix.os }}-${{ matrix.python-version }}
           path: online-speech-enhancement-voxlock
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && matrix.group == 'misc'
         with:
           name: online-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.python-version }}

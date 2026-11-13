@@ -34,6 +34,8 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-fst.a \
   ./install/lib/libsherpa-onnx-kaldifst-core.a \
   ./install/lib/libkaldi-decoder-core.a \
+  ./install/lib/libkaldi-hmm-gmm-core.a \
+  ./install/lib/libkaldi-native-io-core.a \
   ./install/lib/libssentencepiece_core.a \
   ./install/lib/libutf8proc.a
 

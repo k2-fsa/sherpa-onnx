@@ -37,6 +37,62 @@ TEST(Transpose, Case2) {
   EXPECT_EQ(out, expected_out);
 }
 
+TEST(Softmax, Case1) {
+  std::vector<float> in = {1.0f, 2.0f, 3.0f};
+  Softmax(in.data(), static_cast<int32_t>(in.size()));
+
+  float sum = 0.0f;
+  for (float v : in) sum += v;
+  EXPECT_NEAR(sum, 1.0f, 1e-6f);
+  EXPECT_LT(in[0], in[1]);
+  EXPECT_LT(in[1], in[2]);
+}
+
+TEST(Softmax, Case2LargeLogits) {
+  std::vector<float> in = {1000.0f, 999.0f, 998.0f};
+  Softmax(in.data(), static_cast<int32_t>(in.size()));
+
+  float sum = 0.0f;
+  for (float v : in) {
+    EXPECT_FALSE(std::isnan(v));
+    EXPECT_FALSE(std::isinf(v));
+    sum += v;
+  }
+  EXPECT_NEAR(sum, 1.0f, 1e-6f);
+  EXPECT_GT(in[0], in[1]);
+  EXPECT_GT(in[1], in[2]);
+}
+
+TEST(Softmax, Case3Batched) {
+  std::vector<float> in = {1.0f, 2.0f, 3.0f, 0.0f, 0.0f, 0.0f};
+  Softmax(in.data(), 3, 2);
+
+  float row0 = in[0] + in[1] + in[2];
+  float row1 = in[3] + in[4] + in[5];
+  EXPECT_NEAR(row0, 1.0f, 1e-6f);
+  EXPECT_NEAR(row1, 1.0f, 1e-6f);
+  // Uniform input -> uniform output.
+  EXPECT_NEAR(in[3], 1.0f / 3.0f, 1e-6f);
+  EXPECT_NEAR(in[4], 1.0f / 3.0f, 1e-6f);
+  EXPECT_NEAR(in[5], 1.0f / 3.0f, 1e-6f);
+}
+
+TEST(Softmax, Case4InvalidInput1D) {
+  float stub = 0.0f;
+  EXPECT_FALSE(Softmax<float>(nullptr, 3));
+  EXPECT_FALSE(Softmax(&stub, 0));
+  EXPECT_FALSE(Softmax(&stub, -1));
+}
+
+TEST(Softmax, Case5InvalidInput2D) {
+  float stub = 0.0f;
+  EXPECT_FALSE(Softmax<float>(nullptr, 3, 2));
+  EXPECT_FALSE(Softmax(&stub, 0, 2));
+  EXPECT_FALSE(Softmax(&stub, 3, 0));
+  EXPECT_FALSE(Softmax(&stub, -1, 2));
+  EXPECT_FALSE(Softmax(&stub, 3, -1));
+}
+
 TEST(ScaleAdd, Case1) {
   std::vector<float> src = {1, 2, 3};
   float scale = 10;
@@ -168,6 +224,31 @@ TEST(NemoNormalizePerFeature, ConstantFeatureNormalizesToZero) {
 
   for (int32_t i = 0; i < num_frames; ++i) {
     EXPECT_NEAR(x[i], 0.0f, 1e-6f) << "at frame " << i;
+  }
+}
+
+TEST(NemoNormalizePerFeature, SampleVariance) {
+  std::vector<float> x{1.0f, 2.0f, 3.0f};
+  NemoNormalizePerFeature(x.data(), 3, 1, true);
+  EXPECT_NEAR(x[0], -1.0f, 2e-5f);
+  EXPECT_NEAR(x[1], 0.0f, 1e-6f);
+  EXPECT_NEAR(x[2], 1.0f, 2e-5f);
+}
+
+TEST(NemoNormalizePerFeature, SingleFrameSampleVariance) {
+  std::vector<float> x{3.0f, -2.0f};
+  NemoNormalizePerFeature(x.data(), 1, 2, true);
+  EXPECT_EQ(x[0], 0.0f);
+  EXPECT_EQ(x[1], 0.0f);
+}
+
+TEST(NemoNormalizePerFeature, ConstantLogFloorSampleVariance) {
+  for (int32_t frames : {112, 672}) {
+    std::vector<float> x(frames * 2, -15.94f);
+    NemoNormalizePerFeature(x.data(), frames, 2, true);
+    for (float value : x) {
+      EXPECT_EQ(value, 0.0f);
+    }
   }
 }
 

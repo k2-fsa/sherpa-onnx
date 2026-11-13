@@ -890,6 +890,8 @@ const
      {static link for linux and macos}
      {$linklib sherpa-onnx-c-api}
      {$linklib sherpa-onnx-core}
+     {$linklib kaldi-hmm-gmm-core}
+     {$linklib kaldi-native-io-core}
      {$linklib kaldi-decoder-core}
      {$linklib sherpa-onnx-kaldifst-core}
      {$linklib sherpa-onnx-fstfar}

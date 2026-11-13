@@ -1,8 +1,9 @@
+include_guard(GLOBAL)
+
 function(download_json)
   include(FetchContent)
 
   set(json_URL  "https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz")
-  set(json_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/json-3.12.0.tar.gz")
   set(json_HASH "SHA256=4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187")
 
   # If you don't have access to the Internet,
@@ -20,13 +21,12 @@ function(download_json)
       set(json_URL  "${f}")
       file(TO_CMAKE_PATH "${json_URL}" json_URL)
       message(STATUS "Found local downloaded json: ${json_URL}")
-      set(json_URL2)
       break()
     endif()
   endforeach()
 
   FetchContent_Declare(json
-    URL               ${json_URL} ${json_URL2}
+    URL               ${json_URL}
     URL_HASH          ${json_HASH}
   )
 
