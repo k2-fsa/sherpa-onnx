@@ -1,10 +1,10 @@
-name: jni
+name: kotlin
 
 on:
   push:
     branches:
       - master
-      - jni
+      - jni-fa
       - kotlin
     paths:
       - '.github/workflows/jni.yaml'
@@ -17,14 +17,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: jni-${{ github.ref }}
+  group: kotlin-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  jni:
+  kotlin:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -73,6 +73,60 @@ jobs:
 
           cd ./kotlin-api-examples
           ./run.sh
+
+      - name: Show fa result english-mfa-v3.1.0
+        shell: bash
+        run: cat kotlin-api-examples/test_forced_alignment_english/en.TextGrid
+
+      - name: Show fa result zh-aishell3-pinyin
+        shell: bash
+        run: cat kotlin-api-examples/test_forced_alignment_chinese/zh.TextGrid
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Extract word wavs from the TextGrids
+        shell: bash
+        run: |
+          python3 -m pip install soundfile
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav kotlin-api-examples/test_forced_alignment_english/en.wav \
+            --textgrid kotlin-api-examples/test_forced_alignment_english/en.TextGrid \
+            --out-dir word-clips-en
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav kotlin-api-examples/test_forced_alignment_chinese/zh.wav \
+            --textgrid kotlin-api-examples/test_forced_alignment_chinese/zh.TextGrid \
+            --out-dir word-clips-zh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-english-mfa-v3.1.0-${{ matrix.os }}
+          path: kotlin-api-examples/test_forced_alignment_english/en.TextGrid
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-zh-aishell3-pinyin-${{ matrix.os }}
+          path: kotlin-api-examples/test_forced_alignment_chinese/zh.TextGrid
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-english-mfa-v3.1.0-${{ matrix.os }}
+          path: ./word-clips-en
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-zh-aishell3-pinyin-${{ matrix.os }}
+          path: ./word-clips-zh
+
+      - name: Clean up fa files
+        shell: bash
+        run: |
+          rm -rf kotlin-api-examples/english-mfa-v3.1.0 kotlin-api-examples/zh-aishell3-pinyin
+          rm -rf kotlin-api-examples/test_forced_alignment_english
+          rm -rf kotlin-api-examples/test_forced_alignment_chinese
+          rm -rf word-clips-en word-clips-zh
 
       - uses: actions/upload-artifact@v4
         with:

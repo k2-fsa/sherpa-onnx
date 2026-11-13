@@ -1,10 +1,10 @@
-name: run-java-test
+name: java
 
 on:
   push:
     branches:
       - master
-      - jni
+      - jni-fa
       - java
     paths:
       - '.github/workflows/run-java-test.yaml'
@@ -17,14 +17,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: run-java-test-${{ github.ref }}
+  group: java-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  run_java_test:
+  java:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -35,8 +35,6 @@ jobs:
           - os: ubuntu-24.04-arm
 
           - os: macos-latest
-
-          - os: macos-14
 
           - os: windows-2022
             arch: x64
@@ -157,6 +155,67 @@ jobs:
         run: |
           cd ./java-api-examples
           ./run-version-test.sh
+
+      - name:  Run java test (forced alignment)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-forced-alignment-english.sh
+          ./run-forced-alignment-chinese.sh
+
+      - name: Show fa result english-mfa-v3.1.0
+        shell: bash
+        run: cat java-api-examples/ForcedAlignmentEnglish/en.TextGrid
+
+      - name: Show fa result zh-aishell3-pinyin
+        shell: bash
+        run: cat java-api-examples/ForcedAlignmentChinese/zh.TextGrid
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Extract word wavs from the TextGrids
+        shell: bash
+        run: |
+          python3 -m pip install soundfile
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav java-api-examples/ForcedAlignmentEnglish/en.wav \
+            --textgrid java-api-examples/ForcedAlignmentEnglish/en.TextGrid \
+            --out-dir word-clips-en
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav java-api-examples/ForcedAlignmentChinese/zh.wav \
+            --textgrid java-api-examples/ForcedAlignmentChinese/zh.TextGrid \
+            --out-dir word-clips-zh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-english-mfa-v3.1.0-${{ matrix.os }}
+          path: java-api-examples/ForcedAlignmentEnglish/en.TextGrid
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-zh-aishell3-pinyin-${{ matrix.os }}
+          path: java-api-examples/ForcedAlignmentChinese/zh.TextGrid
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-english-mfa-v3.1.0-${{ matrix.os }}
+          path: ./word-clips-en
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-zh-aishell3-pinyin-${{ matrix.os }}
+          path: ./word-clips-zh
+
+      - name: Clean up fa files
+        shell: bash
+        run: |
+          rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+          rm -rf word-clips-en word-clips-zh
+          rm -rf java-api-examples/ForcedAlignmentEnglish
+          rm -rf java-api-examples/ForcedAlignmentChinese
 
       - name:  Run speech enhancement (VoxLock)
         shell: bash
@@ -699,7 +758,7 @@ jobs:
                   <dependency>
                       <groupId>com.github.k2-fsa</groupId>
                       <artifactId>sherpa-onnx</artifactId>
-                      <version>2.0.1</version>
+                      <version>v2.0.1</version>
                   </dependency>
               </dependencies>
 
@@ -971,7 +1030,7 @@ jobs:
           }
 
           dependencies {
-              implementation 'com.github.k2-fsa:sherpa-onnx:2.0.1'
+              implementation 'com.github.k2-fsa:sherpa-onnx:v2.0.1'
           }
 
           java {

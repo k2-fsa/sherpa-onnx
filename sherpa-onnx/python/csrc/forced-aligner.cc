@@ -120,19 +120,16 @@ Decoding beam used for the second attempt when the first one fails.
 Default: 40.
 )doc";
 
-static constexpr const char *kForcedAlignmentOptionsTransitionScaleDoc =
-    R"doc(
+static constexpr const char *kForcedAlignmentOptionsTransitionScaleDoc = R"doc(
 Scale applied to the transition probabilities of the HMM topology.
 Default: 1.
 )doc";
 
-static constexpr const char *kForcedAlignmentOptionsSelfLoopScaleDoc =
-    R"doc(
+static constexpr const char *kForcedAlignmentOptionsSelfLoopScaleDoc = R"doc(
 Scale applied to the self-loop transition probabilities. Default: 0.1.
 )doc";
 
-static constexpr const char *kForcedAlignmentOptionsAcousticScaleDoc =
-    R"doc(
+static constexpr const char *kForcedAlignmentOptionsAcousticScaleDoc = R"doc(
 Scale applied to the acoustic (GMM) log-likelihoods. Default: 0.1.
 )doc";
 
@@ -197,8 +194,9 @@ polyphones avoid text-level guessing.
 The key shape depends on the language: English = words, Chinese = hanzi
 characters/phrases (hanzi-keyed, e.g. the ``lexicon.txt`` of the model
 packages), other languages = their writing units. Multi-word phrases
-keep their combined readings; ``" || "`` separates the per-word (or
-per-character) phone groups.
+keep their combined readings: a multi-token key writes one ``" || "``-
+separated phone group per word/character (``"银行 || i n || h a ŋ"``);
+single-token keys need no ``" || "`` (``"行 x a ŋ"``).
 
 Note: word intervals are recovered along the pronunciation path
 actually taken by the alignment; they are not counted with the phone
@@ -213,7 +211,7 @@ A lexicon looks like::
   can kʰ æ n             # a second pronunciation of the same word
   行 x a ŋ               # Chinese: one line per reading (polyphones)
   行 h a ŋ
-  研究 i n ɛ n || tɕ i o u  # per-character phone groups of a phrase
+  研究 || i n ɛ n || tɕ i o u  # per-character phone groups of a phrase
 )doc";
 
 static constexpr const char *kForcedAlignerConfigOptionsDoc = R"doc(
@@ -319,8 +317,7 @@ static void PybindForcedAlignmentOptions(py::module *m) {
   using PyClass = ForcedAlignmentOptions;
   py::class_<PyClass>(*m, "ForcedAlignmentOptions", kForcedAlignmentOptionsDoc)
       .def(py::init<>())
-      .def_readwrite("beam", &PyClass::beam,
-                     kForcedAlignmentOptionsBeamDoc)
+      .def_readwrite("beam", &PyClass::beam, kForcedAlignmentOptionsBeamDoc)
       .def_readwrite("retry_beam", &PyClass::retry_beam,
                      kForcedAlignmentOptionsRetryBeamDoc)
       .def_readwrite("transition_scale", &PyClass::transition_scale,

@@ -22,7 +22,8 @@
 #include "kaldi-native-fbank/csrc/feature-delta.h"
 #include "kaldi-native-fbank/csrc/feature-matrix.h"
 #include "kaldi-native-fbank/csrc/feature-splice.h"
-#include "kaldi_native_io/csrc/kaldi-io.h"
+#include "kaldi_native_io/csrc/io-funcs.h"
+#include "kaldi_native_io/csrc/kaldi-matrix.h"
 #include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -87,11 +88,8 @@ static bool JsonBool(const nlohmann::json &j, const char *key, bool dflt) {
 // All fields are optional; missing fields get kaldi defaults. Unsupported
 // model features (i-vectors, FMLLR, subsampling, ...) raise a
 // std::runtime_error naming the offending field.
-static FaModelMeta ParseFaModelMeta(const std::string &filename) {
-  std::ifstream is = OpenInputFile(filename);
-  if (!is) {
-    throw std::runtime_error("Failed to open meta.json: '" + filename + "'");
-  }
+static FaModelMeta ParseFaModelMeta(const std::string &filename,
+                                    std::istream &is) {
   nlohmann::json j;
   try {
     is >> j;
@@ -200,21 +198,168 @@ static FaModelMeta ParseFaModelMeta(const std::string &filename) {
 // ForcedAligner::Impl: loading
 // ---------------------------------------------------------------------------
 
+static knf::MatrixF ReadKaldiMatrix(const std::string &filename,
+                                    std::istream &is) {
+  bool binary = false;
+  if (!kaldiio::InitKaldiInputStream(is, &binary)) {
+    throw std::runtime_error("Failed to read '" + filename +
+                             "': bad kaldi binary header");
+  }
+  kaldiio::Matrix<double> mat;
+  try {
+    mat.Read(is, binary);
+  } catch (const std::exception &e) {
+    throw std::runtime_error("Failed to read '" + filename + "': " + e.what());
+  }
+
+  // Rows of a kaldiio matrix are padded (Stride() >= NumCols()).
+  using DoubleMatrix =
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+  Eigen::Map<const DoubleMatrix, Eigen::Unaligned, Eigen::OuterStride<>> src(
+      mat.Data(), mat.NumRows(), mat.NumCols(),
+      Eigen::OuterStride<>(mat.Stride()));
+  return knf::MatrixF(src.cast<float>());
+}
+
+template <typename Manager>
+ForcedAligner::Impl::Impl(Manager *mgr, const ForcedAlignerConfig &config)
+    : config_(config) {  // NOLINT
+  ValidateConfig();
+
+  {
+    std::string filename = ModelFile("meta.json");
+    auto buf = ReadFile(mgr, filename);
+    std::istringstream is(std::string(buf.data(), buf.size()));
+    meta_ = ParseFaModelMeta(filename, is);
+  }
+
+  {
+    std::string filename = ModelFile("lda.mat");
+    auto buf = ReadFile(mgr, filename);
+    use_lda_ = !buf.empty();
+    if (use_lda_) {
+      std::istringstream is(std::string(buf.data(), buf.size()));
+      LoadLdaTransform(filename, is);
+    }
+  }
+
+  {
+    std::string filename = ModelFile("final.alimdl");
+    auto buf = ReadFile(mgr, filename);
+    std::istringstream is(std::string(buf.data(), buf.size()));
+    LoadAcousticModel(filename, is);
+  }
+
+  {
+    std::string filename = ModelFile("tree");
+    auto buf = ReadFile(mgr, filename);
+    std::istringstream is(std::string(buf.data(), buf.size()));
+    LoadContextTree(filename, is);
+  }
+
+  {
+    std::string filename = ModelFile("phones.txt");
+    auto buf = ReadFile(mgr, filename);
+    if (buf.empty()) {
+      LoadPhoneTableFromMeta();
+    } else {
+      std::istringstream is(std::string(buf.data(), buf.size()));
+      LoadPhoneTable(is);
+    }
+  }
+
+  {
+    auto buf = ReadFile(mgr, config_.lexicon);
+    lexicon_ = FaLexicon::LoadFromString(std::string(buf.data(), buf.size()));
+  }
+
+  FinishLoad();
+}
+
+#if __ANDROID_API__ >= 9
+template ForcedAligner::Impl::Impl(AAssetManager *mgr,
+                                   const ForcedAlignerConfig &config);
+#endif
+
+#if __OHOS__
+template ForcedAligner::Impl::Impl(NativeResourceManager *mgr,
+                                   const ForcedAlignerConfig &config);
+#endif
+
 ForcedAligner::Impl::Impl(const ForcedAlignerConfig &config) : config_(config) {
+  ValidateConfig();
+  CheckModelFiles();
+
+  {
+    std::string filename = ModelFile("meta.json");
+    std::ifstream is = OpenInputFile(filename);
+    meta_ = ParseFaModelMeta(filename, is);
+  }
+
+  use_lda_ = FileExists(ModelFile("lda.mat"));
+  if (use_lda_) {
+    std::string filename = ModelFile("lda.mat");
+    std::ifstream is = OpenInputFile(filename, std::ios::binary);
+    LoadLdaTransform(filename, is);
+  }
+
+  {
+    std::string filename = ModelFile("final.alimdl");
+    std::ifstream is = OpenInputFile(filename, std::ios::binary);
+    LoadAcousticModel(filename, is);
+  }
+
+  {
+    std::string filename = ModelFile("tree");
+    std::ifstream is = OpenInputFile(filename, std::ios::binary);
+    LoadContextTree(filename, is);
+  }
+
+  {
+    std::string filename = ModelFile("phones.txt");
+    if (FileExists(filename)) {
+      std::ifstream is = OpenInputFile(filename);
+      LoadPhoneTable(is);
+    } else {
+      LoadPhoneTableFromMeta();
+    }
+  }
+
+  lexicon_ = FaLexicon::Load(config_.lexicon);
+
+  FinishLoad();
+}
+
+void ForcedAligner::Impl::ValidateConfig() const {
   if (config_.model_dir.empty()) {
     throw std::invalid_argument("ForcedAligner: model_dir must not be empty");
   }
   if (config_.lexicon.empty()) {
     throw std::invalid_argument("ForcedAligner: lexicon must not be empty");
   }
-  CheckModelFiles();
+}
 
-  meta_ = ParseFaModelMeta(ModelFile("meta.json"));
-  LoadLdaTransform();
-  LoadAcousticModel();
-  LoadContextTree();
-  lexicon_ = FaLexicon::Load(config_.lexicon);
-  LoadPhoneTable();
+void ForcedAligner::Impl::FinishLoad() {
+  if (!use_lda_ && meta_.uses_splices) {
+    throw std::runtime_error(
+        "ForcedAligner: meta.json requests splice+LDA but lda.mat is "
+        "missing: '" +
+        ModelFile("lda.mat") + "'");
+  }
+
+  if (phone2id_.empty()) {
+    throw std::runtime_error(
+        "ForcedAligner: no phone table (phones.txt missing and meta.json has "
+        "no phones list)");
+  }
+
+  auto it = phone2id_.find(meta_.optional_silence_phone);
+  if (it == phone2id_.end()) {
+    throw std::runtime_error("ForcedAligner: optional silence phone '" +
+                             meta_.optional_silence_phone +
+                             "' is not in the phone table");
+  }
+  sil_id_ = it->second;
 
   if (config_.debug) {
     PrintDebugInfo();
@@ -306,115 +451,94 @@ void ForcedAligner::Impl::CheckModelFiles() const {
   }
 }
 
-void ForcedAligner::Impl::LoadLdaTransform() {
-  std::string lda_path = ModelFile("lda.mat");
-  use_lda_ = FileExists(lda_path);
-  if (!use_lda_ && meta_.uses_splices) {
-    throw std::runtime_error(
-        "ForcedAligner: meta.json requests splice+LDA but lda.mat is "
-        "missing: '" +
-        lda_path + "'");
-  }
-  if (use_lda_) {
-    // Loaded once here; Compute() only applies it.
-    lda_ = std::make_unique<knf::FeatureTransform>(
-        knf::FeatureTransform::Read(lda_path));
-  }
+void ForcedAligner::Impl::LoadLdaTransform(const std::string &filename,
+                                           std::istream &is) {
+  // Loaded once here; Compute() only applies it. The kaldi matrix reader
+  // understands the same formats as knf::FeatureTransform::Read (binary
+  // FM/DM and text "[ ... ]").
+  lda_ = std::make_unique<knf::FeatureTransform>(ReadKaldiMatrix(filename, is));
 }
 
-void ForcedAligner::Impl::LoadAcousticModel() {
+void ForcedAligner::Impl::LoadAcousticModel(const std::string &filename,
+                                            std::istream &is) {
   // kaldi .mdl layout: TransitionModel followed by AmDiagGmm on one stream.
-  std::string path = ModelFile("final.alimdl");
   try {
-    bool binary = true;
-    kaldiio::Input ki(path, &binary);
-    trans_model_.Read(ki.Stream(), binary);
-    am_.Read(ki.Stream(), binary);
+    bool binary = false;
+    if (!kaldiio::InitKaldiInputStream(is, &binary)) {
+      throw std::runtime_error("Bad kaldi binary header");
+    }
+    trans_model_.Read(is, binary);
+    am_.Read(is, binary);
   } catch (const std::exception &e) {
-    throw std::runtime_error("ForcedAligner: failed to read '" + path +
+    throw std::runtime_error("ForcedAligner: failed to read '" + filename +
                              "': " + e.what());
   }
 }
 
-void ForcedAligner::Impl::LoadContextTree() {
-  std::string path = ModelFile("tree");
+void ForcedAligner::Impl::LoadContextTree(const std::string &filename,
+                                          std::istream &is) {
   try {
-    bool binary = true;
-    kaldiio::Input ki(path, &binary);
-    tree_.Read(ki.Stream(), binary);
+    bool binary = false;
+    if (!kaldiio::InitKaldiInputStream(is, &binary)) {
+      throw std::runtime_error("Bad kaldi binary header");
+    }
+    tree_.Read(is, binary);
   } catch (const std::exception &e) {
-    throw std::runtime_error("ForcedAligner: failed to read '" + path +
+    throw std::runtime_error("ForcedAligner: failed to read '" + filename +
                              "': " + e.what());
   }
 }
 
-void ForcedAligner::Impl::LoadPhoneTable() {
-  std::string phones_txt = ModelFile("phones.txt");
-  if (FileExists(phones_txt)) {
-    std::ifstream is = OpenInputFile(phones_txt);
-    std::string line;
-    while (std::getline(is, line)) {
-      std::istringstream iss(line);
-      std::string sym;
-      int32_t id;
-      if (iss >> sym >> id) {
-        phone2id_[sym] = id;
-        id2phone_[id] = sym;
-      }
-    }
-  } else {
-    // Older models ship no phones.txt. The ids then follow the kaldi
-    // convention of these models: <eps>=0, sil=1, spn=2, then the lexical
-    // phones of meta.json from 3.
-    SHERPA_ONNX_LOGE(
-        "phones.txt not found in '%s'; falling back to meta.json",
-        config_.model_dir.c_str());
-    phone2id_["sil"] = 1;
-    phone2id_["spn"] = 2;
-    id2phone_[1] = "sil";
-    id2phone_[2] = "spn";
-    for (size_t i = 0; i < meta_.phones.size(); ++i) {
-      int32_t id = static_cast<int32_t>(i) + 3;
-      phone2id_[meta_.phones[i]] = id;
-      id2phone_[id] = meta_.phones[i];
-    }
-
-    // The convention holds only when meta.json lists the model's complete
-    // phone set. MFA 2.0.x models (e.g. english_mfa v2.0.0) break it: they
-    // ship no phones.txt and their model has more phones than meta.json
-    // lists, so every phone would silently get a wrong pdf and the
-    // alignment would be garbage. Refuse them; v2.2.1 and newer satisfy
-    // the convention.
-    const std::vector<int32_t> &model_phones = trans_model_.GetPhones();
-    bool consistent = model_phones.size() == phone2id_.size();
-    for (int32_t p : model_phones) {
-      consistent = consistent && id2phone_.count(p) != 0;
-    }
-    if (!consistent) {
-      throw std::runtime_error(
-          "ForcedAligner: the model has no phones.txt, and the implicit "
-          "phone table (" +
-          std::to_string(phone2id_.size()) +
-          " phones) does not match the " +
-          std::to_string(model_phones.size()) +
-          " phones of the model. MFA 2.0.x models (e.g. english_mfa "
-          "v2.0.0) are known to be in this state and are not supported; "
-          "use v2.2.1 or newer");
+void ForcedAligner::Impl::LoadPhoneTable(std::istream &is) {
+  std::string line;
+  while (std::getline(is, line)) {
+    std::istringstream iss(line);
+    std::string sym;
+    int32_t id;
+    if (iss >> sym >> id) {
+      phone2id_[sym] = id;
+      id2phone_[id] = sym;
     }
   }
-  if (phone2id_.empty()) {
+}
+
+void ForcedAligner::Impl::LoadPhoneTableFromMeta() {
+  // Older models ship no phones.txt. The ids then follow the kaldi
+  // convention of these models: <eps>=0, sil=1, spn=2, then the lexical
+  // phones of meta.json from 3.
+  SHERPA_ONNX_LOGE("phones.txt not found in '%s'; falling back to meta.json",
+                   config_.model_dir.c_str());
+  phone2id_["sil"] = 1;
+  phone2id_["spn"] = 2;
+  id2phone_[1] = "sil";
+  id2phone_[2] = "spn";
+  for (size_t i = 0; i < meta_.phones.size(); ++i) {
+    int32_t id = static_cast<int32_t>(i) + 3;
+    phone2id_[meta_.phones[i]] = id;
+    id2phone_[id] = meta_.phones[i];
+  }
+
+  // The convention holds only when meta.json lists the model's complete
+  // phone set. MFA 2.0.x models (e.g. english_mfa v2.0.0) break it: they
+  // ship no phones.txt and their model has more phones than meta.json
+  // lists, so every phone would silently get a wrong pdf and the
+  // alignment would be garbage. Refuse them; v2.2.1 and newer satisfy
+  // the convention.
+  const std::vector<int32_t> &model_phones = trans_model_.GetPhones();
+  bool consistent = model_phones.size() == phone2id_.size();
+  for (int32_t p : model_phones) {
+    consistent = consistent && id2phone_.count(p) != 0;
+  }
+  if (!consistent) {
     throw std::runtime_error(
-        "ForcedAligner: no phone table (phones.txt missing and meta.json has "
-        "no phones list)");
+        "ForcedAligner: the model has no phones.txt, and the implicit "
+        "phone table (" +
+        std::to_string(phone2id_.size()) + " phones) does not match the " +
+        std::to_string(model_phones.size()) +
+        " phones of the model. MFA 2.0.x models (e.g. english_mfa "
+        "v2.0.0) are known to be in this state and are not supported; "
+        "use v2.2.1 or newer");
   }
-
-  auto it = phone2id_.find(meta_.optional_silence_phone);
-  if (it == phone2id_.end()) {
-    throw std::runtime_error("ForcedAligner: optional silence phone '" +
-                             meta_.optional_silence_phone +
-                             "' is not in the phone table");
-  }
-  sil_id_ = it->second;
 }
 
 ForcedAligner::Impl::~Impl() = default;

@@ -30,6 +30,11 @@ make -j$(nproc)
 
 - `sherpa-onnx/csrc/` — all core C++ (~600 files), plus the CLI executables (`sherpa-onnx.cc`, `sherpa-onnx-offline.cc`, `*-microphone*.cc`, websocket servers, ...). `csrc/README.md` lists the binaries.
 - Language bindings are thin layers over core, and a new config field/feature usually has to be mirrored in each: `sherpa-onnx/c-api` (C API + `cxx-api`), `sherpa-onnx/python/csrc` (pybind11) and `python/sherpa_onnx`, `sherpa-onnx/jni` + `java-api` + `kotlin-api`, `rust`, `pascal-api`, and the wrappers in `swift-api-examples`, `dotnet-examples`, `go-api-examples`, `nodejs-addon-examples`, `flutter`, `dart-api-examples`, `harmony-os`, `wasm`. Each language has a `*-examples` dir that CI tests.
+- When a new class is added to `kotlin-api` (e.g. the forced aligner),
+  also add a symlink in `android/SherpaOnnxAar/sherpa_onnx/src/main/java/com/k2fsa/sherpa/onnx/`
+  pointing at the new `.kt` file: the Android AAR packages the
+  `kotlin-api` sources via relative symlinks, and a missing link means
+  the class is absent from the AAR.
 - **Model-dispatch pattern**: public facades (`OnlineRecognizer`, `OfflineRecognizer`, `OfflineTts`, ...) hold a `*Impl` created by `*Impl::Create(config)` in `*-impl.cc`, which inspects the config / model metadata to pick a concrete implementation (`offline-recognizer-<model>-impl.h`, `online-recognizer-{transducer,ctc,paraformer}-impl.h`). Each model family has its own `*-model.{h,cc}`, `*-model-config.{h,cc}` and `*-model-meta-data.h`. Adding a model = new model + config + impl + registration in the dispatcher + `sources` in `csrc/CMakeLists.txt` + `Config` plumbing in every binding.
 - Configs are structs with `Register(ParseOptions*)`, `Validate()`, `ToString()`; CLI flags come from `Register`, and bindings expose the same fields.
 - VAD: `VadModel` (`silero-vad-model`, `ten-vad-model`) behind `VoiceActivityDetector`, which segments speech using a `CircularBuffer`.

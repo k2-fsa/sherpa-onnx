@@ -44,6 +44,13 @@ FaLexicon FaLexicon::Load(const std::string &filename) {
   if (!is) {
     throw std::runtime_error("Failed to open lexicon: '" + filename + "'");
   }
+  std::string contents((std::istreambuf_iterator<char>(is)),
+                       std::istreambuf_iterator<char>());
+  return LoadFromString(contents);
+}
+
+FaLexicon FaLexicon::LoadFromString(const std::string &contents) {
+  std::istringstream is(contents);
 
   FaLexicon lexicon;
   std::string line;
@@ -125,16 +132,15 @@ FaLexicon FaLexicon::Load(const std::string &filename) {
       }
     }
     if (duplicate) {
-      SHERPA_ONNX_LOGE("duplicate pronunciation for '%s' in '%s'; ignored",
-                       key.c_str(), filename.c_str());
+      SHERPA_ONNX_LOGE("duplicate pronunciation for '%s'; ignored",
+                       key.c_str());
     } else {
       bucket.push_back(std::move(pron));
     }
   }
 
   if (lexicon.entries.empty()) {
-    throw std::runtime_error("Lexicon contains no valid entry: '" + filename +
-                             "'");
+    throw std::runtime_error("Lexicon contains no valid entry");
   }
   return lexicon;
 }

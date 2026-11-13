@@ -145,6 +145,20 @@ std::string ForcedAlignmentResult::ToTextGrid() const {
 ForcedAligner::ForcedAligner(const ForcedAlignerConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
+template <typename Manager>
+ForcedAligner::ForcedAligner(Manager *mgr, const ForcedAlignerConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+
+#if __ANDROID_API__ >= 9
+template ForcedAligner::ForcedAligner(AAssetManager *mgr,
+                                      const ForcedAlignerConfig &config);
+#endif
+
+#if __OHOS__
+template ForcedAligner::ForcedAligner(NativeResourceManager *mgr,
+                                      const ForcedAlignerConfig &config);
+#endif
+
 ForcedAligner::~ForcedAligner() = default;
 
 std::unique_ptr<OfflineStream> ForcedAligner::CreateStream() const {
