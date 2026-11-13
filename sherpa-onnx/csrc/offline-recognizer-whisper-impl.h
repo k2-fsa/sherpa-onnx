@@ -83,14 +83,32 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
  private:
   void DecodeStream(OfflineStream *s) const {
+    // Per-stream 'language' overrides the configured one. Setting the option
+    // to an empty string explicitly switches this decode to auto-detect.
+    std::string effective_language = config_.model_config.whisper.language;
+    if (s->HasOption("language")) {
+      effective_language = s->GetOption("language");
+
+      if (!model_->IsMultiLingual()) {
+        SHERPA_ONNX_LOGE(
+            "Warning: per-stream language is ignored by non-multilingual "
+            "Whisper models");
+      } else if (!effective_language.empty() &&
+                 !model_->GetLang2ID().count(effective_language)) {
+        // Clear stream result and warn on bad 'language' code override
+        SHERPA_ONNX_LOGE("Invalid language: '%s'", effective_language.c_str());
+        s->SetResult({});
+        return;
+      }
+    }
+
     std::vector<int32_t> language_candidate_ids;
     if (s->HasOption("language_candidates")) {
       const auto &candidates = s->GetOption("language_candidates");
-      const auto &language = config_.model_config.whisper.language;
       bool is_multilingual = model_->IsMultiLingual();
       const auto &lang2id = model_->GetLang2ID();
       bool is_ok = ResolveWhisperLanguageCandidates(
-          candidates, language, is_multilingual, lang2id,
+          candidates, effective_language, is_multilingual, lang2id,
           &language_candidate_ids);
       if (!is_ok) {
         s->SetResult({});
@@ -148,9 +166,11 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     try {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
 
+      OfflineWhisperDecodeParams params{std::move(effective_language),
+                                        std::move(language_candidate_ids)};
       auto results = decoder_->Decode(
           std::move(cross_kv.first), std::move(cross_kv.second), num_frames,
-          language_candidate_ids);
+          params);
 
       auto r = Convert(results[0], symbol_table_);
 
