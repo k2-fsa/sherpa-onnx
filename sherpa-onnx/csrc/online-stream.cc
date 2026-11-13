@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-stream.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2026  Julian Pscheid
 #include "sherpa-onnx/csrc/online-stream.h"
 
 #include <memory>
@@ -38,12 +39,25 @@ class OnlineStream::Impl {
 
   bool IsLastFrame(int32_t frame) const {
     std::scoped_lock lock(mutex_);
-    return feat_extractor_.IsLastFrame(frame);
+    return feat_extractor_.IsLastFrame(frame + start_frame_index_);
   }
 
   std::vector<float> GetFrames(int32_t frame_index, int32_t n) const {
     std::scoped_lock lock(mutex_);
     return feat_extractor_.GetFrames(frame_index + start_frame_index_, n);
+  }
+
+  std::vector<float> GetBufferedFeatures(int32_t frame_index, int32_t n,
+                                         bool is_final,
+                                         int32_t *start_sample_offset) const {
+    std::scoped_lock lock(mutex_);
+    return feat_extractor_.GetBufferedFeatures(
+        frame_index + start_frame_index_, n, is_final, start_sample_offset);
+  }
+
+  int32_t NumTrailingSamples() const {
+    std::scoped_lock lock(mutex_);
+    return feat_extractor_.NumTrailingSamples();
   }
 
   void Reset() {
@@ -250,6 +264,17 @@ bool OnlineStream::IsLastFrame(int32_t frame) const {
 std::vector<float> OnlineStream::GetFrames(int32_t frame_index,
                                            int32_t n) const {
   return impl_->GetFrames(frame_index, n);
+}
+
+std::vector<float> OnlineStream::GetBufferedFeatures(
+    int32_t frame_index, int32_t n, bool is_final,
+    int32_t *start_sample_offset) const {
+  return impl_->GetBufferedFeatures(frame_index, n, is_final,
+                                    start_sample_offset);
+}
+
+int32_t OnlineStream::NumTrailingSamples() const {
+  return impl_->NumTrailingSamples();
 }
 
 void OnlineStream::Reset() { impl_->Reset(); }

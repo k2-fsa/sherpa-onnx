@@ -13,6 +13,9 @@ source "$SCRIPT_DIR/common.sh"
 
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
+log "test deterministic Parakeet Unified streaming"
+python3 sherpa-onnx/python/tests/test_online_unified_recognizer.py --verbose
+
 log "test T-one"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2

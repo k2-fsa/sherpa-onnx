@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-greedy-search-nemo-parakeet-unified-decoder.cc
 //
 // Copyright (c)  2026  Milan Leonard
+// Copyright (c)  2026  Julian Pscheid
 
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-parakeet-unified-decoder.h"
 
@@ -39,25 +40,23 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
 
   auto &r = s->GetResult();
 
-  auto decoder_input = BuildDecoderInput(
-      r.tokens.empty() ? blank_id : r.tokens.back(), model->Allocator());
-
+  Ort::Value &last_decoder_out = s->GetNeMoDecoderOut();
   std::vector<Ort::Value> &last_decoder_states = s->GetNeMoDecoderStates();
-
-  std::vector<Ort::Value> tmp_decoder_states;
-  tmp_decoder_states.reserve(last_decoder_states.size());
-  for (auto &v : last_decoder_states) {
-    tmp_decoder_states.push_back(View(&v));
+  // Keep the predictor independent of segment results, which Reset() clears.
+  // The cached state is after the token used to produce decoder_out.
+  std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair{
+      Ort::Value{nullptr}, std::vector<Ort::Value>{}};
+  if (last_decoder_out) {
+    decoder_output_pair.first = std::move(last_decoder_out);
+    decoder_output_pair.second = std::move(last_decoder_states);
+  } else {
+    auto decoder_input = BuildDecoderInput(blank_id, model->Allocator());
+    decoder_output_pair = model->RunDecoder(std::move(decoder_input),
+                                            std::move(last_decoder_states));
   }
 
-  std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair =
-      model->RunDecoder(std::move(decoder_input),
-                        std::move(tmp_decoder_states));
-
   std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
-  bool emitted = false;
   int32_t max_symbols_per_frame = 10;
-  std::vector<Ort::Value> last_token_decoder_states;
 
   for (int32_t t = 0; t != num_rows; ++t) {
     Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
@@ -80,24 +79,14 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
       float log_prob = p_logit[y];
 
       if (y != blank_id) {
-        emitted = true;
         r.tokens.push_back(y);
         r.timestamps.push_back(t + r.frame_offset);
         r.ys_probs.push_back(log_prob);
         r.num_trailing_blanks = 0;
 
-        decoder_input = BuildDecoderInput(y, model->Allocator());
-
-        std::vector<Ort::Value> decoder_state_views;
-        decoder_state_views.reserve(decoder_output_pair.second.size());
-        for (auto &v : decoder_output_pair.second) {
-          decoder_state_views.push_back(View(&v));
-        }
-
-        auto next_decoder_output_pair = model->RunDecoder(
-            std::move(decoder_input), std::move(decoder_state_views));
-        last_token_decoder_states = std::move(decoder_output_pair.second);
-        decoder_output_pair = std::move(next_decoder_output_pair);
+        auto decoder_input = BuildDecoderInput(y, model->Allocator());
+        decoder_output_pair = model->RunDecoder(
+            std::move(decoder_input), std::move(decoder_output_pair.second));
       } else {
         ++r.num_trailing_blanks;
         break;
@@ -105,9 +94,8 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
     }
   }
 
-  if (emitted) {
-    s->SetNeMoDecoderStates(std::move(last_token_decoder_states));
-  }
+  s->SetNeMoDecoderOut(std::move(decoder_output_pair.first));
+  s->SetNeMoDecoderStates(std::move(decoder_output_pair.second));
 
   r.frame_offset += num_rows;
 }
