@@ -200,7 +200,27 @@ class OfflineAudio8AsrModel::Impl {
     return t;
   }
 
+  static std::string GetModelType(Ort::Session *sess,
+                                  OrtAllocator *allocator) {
+    auto meta = sess->GetModelMetadata();
+    auto value = meta.LookupCustomMetadataMapAllocated("model_type", allocator);
+    return value ? std::string(value.get()) : std::string();
+  }
+
   void InitEncoder() {
+    // Refuse to run with a graph that was not exported for this model family:
+    // the file names are easy to mix up and a wrong encoder fails silently.
+    const std::string model_type =
+        GetModelType(encoder_sess_.get(), allocator_);
+    if (model_type != "audio8-asr") {
+      SHERPA_ONNX_LOGE(
+          "The encoder does not look like an Audio8-ASR model: expected "
+          "model_type=audio8-asr in its metadata, got '%s'. Please re-export "
+          "it with scripts/audio8-asr/export-onnx.py",
+          model_type.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                   &encoder_input_names_ptr_);
     GetOutputNames(encoder_sess_.get(), &encoder_output_names_,

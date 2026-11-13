@@ -2,8 +2,8 @@
 """Run the exported Audio8-ASR ONNX graphs and print the transcript.
 
 This is the small reference implementation used to sanity check the export. It
-only needs `onnxruntime`, `kaldi-native-fbank`, `numpy`, `soundfile` (optional)
-and `tokenizers` — the same feature extraction / tokenizer stack that the C++
+only needs `onnxruntime`, `kaldi-native-fbank`, `numpy`, `librosa` and
+`tokenizers` — the same feature extraction / tokenizer stack that the C++
 runtime uses, not `transformers`.
 
 Usage::
@@ -38,30 +38,9 @@ PROMPT_TEXT = "Please transcribe this audio."
 # --------------------------------------------------------------------------- #
 def read_wav(path: str) -> np.ndarray:
     """Return mono float32 samples at 16 kHz, truncated to the 30 s window."""
-    try:
-        import soundfile as sf
+    import librosa
 
-        samples, rate = sf.read(path, dtype="float32", always_2d=True)
-        samples = samples.mean(axis=1)
-    except ImportError:
-        import wave
-
-        with wave.open(path, "rb") as f:
-            if f.getsampwidth() != 2:
-                raise SystemExit(f"{path}: only 16-bit PCM wavs are supported")
-            rate = f.getframerate()
-            channels = f.getnchannels()
-            data = np.frombuffer(f.readframes(f.getnframes()), dtype=np.int16)
-            samples = data.astype(np.float32) / 32768.0
-            if channels > 1:
-                samples = samples.reshape(-1, channels).mean(axis=1)
-
-    if rate != 16000:
-        n = int(round(len(samples) * 16000 / rate))
-        samples = np.interp(np.linspace(0, len(samples) - 1, n, dtype=np.float64),
-                            np.arange(len(samples)), samples).astype(np.float32)
-        print(f"[warn] {path}: resampled {rate} Hz -> 16000 Hz")
-
+    samples, _ = librosa.load(path, sr=16000, mono=True)
     if len(samples) > MAX_SAMPLES:
         print(f"[warn] {path}: truncated to 30 s")
         samples = samples[:MAX_SAMPLES]

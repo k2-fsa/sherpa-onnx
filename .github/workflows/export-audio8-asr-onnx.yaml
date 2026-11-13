@@ -40,7 +40,7 @@ jobs:
           set -ex
           python3 -m pip install --upgrade pip
           python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-          python3 -m pip install transformers onnx onnxruntime numpy soundfile \
+          python3 -m pip install transformers onnx onnxruntime numpy librosa \
             kaldi-native-fbank tokenizers huggingface_hub
 
       - name: Download the checkpoint

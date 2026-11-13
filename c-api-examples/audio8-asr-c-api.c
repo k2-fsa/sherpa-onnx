@@ -53,7 +53,6 @@ int32_t main() {
   recognizer_config.model_config.audio8_asr.encoder = encoder_filename;
   recognizer_config.model_config.audio8_asr.decoder = decoder_filename;
   recognizer_config.model_config.audio8_asr.tokenizer = tokenizer_dir;
-  recognizer_config.model_config.audio8_asr.max_total_len = 512;
   recognizer_config.model_config.audio8_asr.max_new_tokens = 128;
 
   const SherpaOnnxOfflineRecognizer *recognizer =

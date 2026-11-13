@@ -363,8 +363,6 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.audio8_asr.decoder.c_str();
   c.model_config.audio8_asr.tokenizer =
       config.model_config.audio8_asr.tokenizer.c_str();
-  c.model_config.audio8_asr.max_total_len =
-      config.model_config.audio8_asr.max_total_len;
   c.model_config.audio8_asr.max_new_tokens =
       config.model_config.audio8_asr.max_new_tokens;
 

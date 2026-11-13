@@ -487,7 +487,6 @@ class OfflineRecognizer(object):
         decoding_method: str = "greedy_search",
         debug: bool = False,
         provider: str = "cpu",
-        max_total_len: int = 512,
         max_new_tokens: int = 128,
     ):
         """
@@ -514,17 +513,16 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution provider, e.g. cpu.
-          max_total_len:
-            Number of KV cache slots in the decoder graph.
           max_new_tokens:
-            Maximum number of generated tokens per utterance.
+            Maximum number of generated tokens per utterance; it is further
+            limited by the KV cache size of the decoder graph. It can be
+            overridden per stream with `stream.set_option("max_new_tokens", ...)`.
         """
         self = cls.__new__(cls)
         audio8 = OfflineAudio8AsrModelConfig(
             encoder=encoder,
             decoder=decoder,
             tokenizer=tokenizer,
-            max_total_len=max_total_len,
             max_new_tokens=max_new_tokens,
         )
 

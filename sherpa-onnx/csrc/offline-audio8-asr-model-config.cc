@@ -24,9 +24,6 @@ void OfflineAudio8AsrModelConfig::Register(ParseOptions *po) {
                "(tokenizer.json, vocab.json, merges.txt, "
                "tokenizer_config.json)");
 
-  po->Register("audio8-asr-max-total-len", &max_total_len,
-               "Number of KV cache slots in the Audio8-ASR decoder graph");
-
   po->Register("audio8-asr-max-new-tokens", &max_new_tokens,
                "Maximum number of new tokens to generate for Audio8-ASR");
 }
@@ -82,12 +79,6 @@ bool OfflineAudio8AsrModelConfig::Validate() const {
     return false;
   }
 
-  if (max_total_len <= 0) {
-    SHERPA_ONNX_LOGE("--audio8-asr-max-total-len should be > 0. Given: %d",
-                     max_total_len);
-    return false;
-  }
-
   if (max_new_tokens <= 0) {
     SHERPA_ONNX_LOGE("--audio8-asr-max-new-tokens should be > 0. Given: %d",
                      max_new_tokens);
@@ -104,7 +95,6 @@ std::string OfflineAudio8AsrModelConfig::ToString() const {
   os << "encoder=\"" << encoder << "\", ";
   os << "decoder=\"" << decoder << "\", ";
   os << "tokenizer=\"" << tokenizer << "\", ";
-  os << "max_total_len=" << max_total_len << ", ";
   os << "max_new_tokens=" << max_new_tokens << ")";
 
   return os.str();

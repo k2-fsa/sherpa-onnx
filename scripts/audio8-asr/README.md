@@ -55,9 +55,9 @@ dependent `split()`, which cannot be traced. The exported graph always processes
 ```bash
 # 0) dependencies
 #    export-onnx.py needs torch + transformers; run-onnx.py only needs
-#    onnxruntime, kaldi-native-fbank and tokenizers (the same feature/tokenizer
-#    stack as the C++ runtime, no transformers)
-pip install torch transformers onnx onnxruntime numpy soundfile \
+#    onnxruntime, kaldi-native-fbank, librosa and tokenizers (the same
+#    feature/tokenizer stack as the C++ runtime, no transformers)
+pip install torch transformers onnx onnxruntime numpy librosa \
     kaldi-native-fbank tokenizers
 
 # 1) download the checkpoint (the tokenizer files are needed as well)
@@ -160,6 +160,8 @@ Expected speed on an Apple M-series CPU (fp32, 4 threads): RTF ≈ 0.1, i.e. abo
 
 * The model is trained on 30 s windows, so longer audio has to be split, e.g. with
   a VAD. Audio beyond 30 s is truncated.
-* The decoder cache is limited to `max_total_len = 512` slots (prompt + generated
-  tokens). Raise `--audio8-asr-max-new-tokens` if a long sentence gets truncated.
+* The decoder cache has 512 slots (prompt + generated tokens); the size is read
+  from the exported decoder, not configured. Raise `--audio8-asr-max-new-tokens`
+  (or `stream->SetOption("max_new_tokens", "...")`) if a long sentence gets
+  truncated, and shorten the audio when prompt + generation does not fit.
 * The license of the checkpoint is CC-BY-NC-4.0 — check it before commercial use.

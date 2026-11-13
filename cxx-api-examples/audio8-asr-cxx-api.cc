@@ -30,7 +30,6 @@ int32_t main() {
   config.model_config.audio8_asr.encoder = dir + "/encoder.onnx";
   config.model_config.audio8_asr.decoder = dir + "/decoder.onnx";
   config.model_config.audio8_asr.tokenizer = dir + "/tokenizer";
-  config.model_config.audio8_asr.max_total_len = 512;
   config.model_config.audio8_asr.max_new_tokens = 128;
 
   config.model_config.num_threads = 2;

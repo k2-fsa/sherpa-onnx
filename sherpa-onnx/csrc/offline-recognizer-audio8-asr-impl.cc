@@ -194,17 +194,18 @@ int64_t OfflineRecognizerAudio8AsrImpl::SampleToken(const float *logits,
 }
 
 OfflineRecognitionResult OfflineRecognizerAudio8AsrImpl::GenerateText(
-    std::vector<float> *audio_features, int32_t num_audio_tokens,
-    int32_t audio_dim) const {
+    const OfflineStream *stream, std::vector<float> *audio_features,
+    int32_t num_audio_tokens, int32_t audio_dim) const {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
   OrtAllocator *allocator = model_->Allocator();
 
   const auto &c = config_.model_config.audio8_asr;
-  const int32_t model_max_len = model_->GetMaxTotalLen();
-  const int32_t max_total_len =
-      std::min(model_max_len, c.max_total_len > 0 ? c.max_total_len
-                                                 : model_max_len);
+  // The cache size comes from the exported decoder itself.
+  const int32_t max_total_len = model_->GetMaxTotalLen();
+  // `max_new_tokens` can be overridden per stream.
+  const int32_t requested_new_tokens =
+      stream->GetOptionInt("max_new_tokens", c.max_new_tokens);
 
   // ---- prompt -------------------------------------------------------------
   std::vector<int64_t> ids;
@@ -217,8 +218,8 @@ OfflineRecognitionResult OfflineRecognizerAudio8AsrImpl::GenerateText(
   ids.insert(ids.end(), prompt_suffix_ids_.begin(), prompt_suffix_ids_.end());
 
   const int32_t prompt_len = static_cast<int32_t>(ids.size());
-  const int32_t max_new_tokens = std::min(
-      c.max_new_tokens, max_total_len - prompt_len - 1);
+  const int32_t max_new_tokens =
+      std::min(requested_new_tokens, max_total_len - prompt_len - 1);
   if (max_new_tokens <= 0) {
     SHERPA_ONNX_LOGE(
         "audio8-asr: prompt (%d) + 1 exceeds max_total_len (%d); shorten the "
@@ -429,7 +430,7 @@ void OfflineRecognizerAudio8AsrImpl::Decode(OfflineStream *stream) const {
   }
 
   OfflineRecognitionResult r =
-      GenerateText(&audio_features, num_audio_tokens, hidden_dim);
+      GenerateText(stream, &audio_features, num_audio_tokens, hidden_dim);
   stream->SetResult(r);
 }
 

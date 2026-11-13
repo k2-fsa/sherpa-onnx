@@ -627,8 +627,6 @@ struct OfflineAudio8AsrModelConfig {
   std::string decoder;
   /** Tokenizer directory (with `vocab.json` and `merges.txt`). */
   std::string tokenizer;
-  /** Number of KV cache slots in the decoder graph. */
-  int32_t max_total_len = 512;
   /** Maximum number of new tokens to generate. */
   int32_t max_new_tokens = 128;
 };

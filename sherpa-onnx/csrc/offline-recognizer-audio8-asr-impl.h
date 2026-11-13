@@ -41,7 +41,8 @@ class OfflineRecognizerAudio8AsrImpl : public OfflineRecognizerImpl {
  private:
   void InitPromptIds();
 
-  OfflineRecognitionResult GenerateText(std::vector<float> *audio_features,
+  OfflineRecognitionResult GenerateText(const OfflineStream *stream,
+                                        std::vector<float> *audio_features,
                                         int32_t num_audio_tokens,
                                         int32_t audio_dim) const;
 

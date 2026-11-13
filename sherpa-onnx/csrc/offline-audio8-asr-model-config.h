@@ -24,10 +24,11 @@ struct OfflineAudio8AsrModelConfig {
   // Path to the directory holding tokenizer.json / vocab.json / merges.txt.
   std::string tokenizer;
 
-  // KV cache slots in the decoder graph. Must match the exported model.
-  int32_t max_total_len = 512;
-
-  // Maximum number of generated tokens.
+  // Maximum number of generated tokens per utterance. 128 is enough for
+  // roughly two minutes of speech with this tokenizer; the actual limit is
+  // smaller when the prompt is long, because prompt + generated tokens must fit
+  // into the KV cache of the decoder graph (see GetMaxTotalLen()). It can be
+  // overridden per stream with stream->SetOption("max_new_tokens", "...");
   int32_t max_new_tokens = 128;
 
   OfflineAudio8AsrModelConfig() = default;
@@ -35,11 +36,10 @@ struct OfflineAudio8AsrModelConfig {
   OfflineAudio8AsrModelConfig(const std::string &encoder,
                               const std::string &decoder,
                               const std::string &tokenizer,
-                              int32_t max_total_len, int32_t max_new_tokens)
+                              int32_t max_new_tokens)
       : encoder(encoder),
         decoder(decoder),
         tokenizer(tokenizer),
-        max_total_len(max_total_len),
         max_new_tokens(max_new_tokens) {}
 
   void Register(ParseOptions *po);

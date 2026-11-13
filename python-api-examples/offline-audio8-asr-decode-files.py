@@ -42,8 +42,6 @@ def get_args():
                         help="Path to decoder.onnx (KV cache decoder)")
     parser.add_argument("--tokenizer", type=str, required=True,
                         help="Path to the tokenizer directory")
-    parser.add_argument("--max-total-len", type=int, default=512,
-                        help="Number of KV cache slots in the decoder graph")
     parser.add_argument("--max-new-tokens", type=int, default=128,
                         help="Maximum number of generated tokens")
     parser.add_argument("--num-threads", type=int, default=2,
@@ -73,7 +71,6 @@ def main():
         feature_dim=args.feature_dim,
         debug=args.debug,
         provider=args.provider,
-        max_total_len=args.max_total_len,
         max_new_tokens=args.max_new_tokens,
     )
 
