@@ -1,10 +1,10 @@
-name: run-java-test
+name: java
 
 on:
   push:
     branches:
       - master
-      - jni
+      - jni-fa
       - java
     paths:
       - '.github/workflows/run-java-test.yaml'
@@ -17,14 +17,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: run-java-test-${{ github.ref }}
+  group: java-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  run_java_test:
+  java:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

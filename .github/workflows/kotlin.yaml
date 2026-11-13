@@ -1,10 +1,10 @@
-name: jni
+name: kotlin
 
 on:
   push:
     branches:
       - master
-      - jni
+      - jni-fa
       - kotlin
     paths:
       - '.github/workflows/jni.yaml'
@@ -17,14 +17,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: jni-${{ github.ref }}
+  group: kotlin-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  jni:
+  kotlin:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
