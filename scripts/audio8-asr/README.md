@@ -96,24 +96,36 @@ Tensor-level checks: encoder cosine ≈ 1.0, decoder prefill logits cosine ≈ 1
 
 ## Running with sherpa-onnx
 
+Prebuilt ONNX models (fp32 and dynamic-int8) are on HuggingFace:
+<https://huggingface.co/yunyu1258/audio8-asr-onnx> — `encoder.onnx`,
+`decoder.onnx`, `encoder.int8.onnx`, `decoder.int8.onnx`, `tokenizer/`,
+`test_wavs/`. They can also be reproduced with
+`.github/workflows/export-audio8-asr-onnx.yaml`.
+
+Run the commands below **from the repository root** (replace the paths with the
+place where you put the model):
+
 ```bash
 # C++
 ./build/bin/sherpa-onnx-offline \
-  --audio8-asr-encoder=./exported/encoder.onnx \
-  --audio8-asr-decoder=./exported/decoder.onnx \
-  --audio8-asr-tokenizer=./Audio8-ASR-0.1B \
-  --num-threads=4 wavs/0.wav
+  --audio8-asr-encoder=./Audio8-ASR-0.1B/encoder.onnx \
+  --audio8-asr-decoder=./Audio8-ASR-0.1B/decoder.onnx \
+  --audio8-asr-tokenizer=./Audio8-ASR-0.1B/tokenizer \
+  --num-threads=4 ./Audio8-ASR-0.1B/test_wavs/0.wav
 
-# Python
-python python-api-examples/offline-audio8-asr-decode-files.py \
-  --encoder=./exported/encoder.onnx \
-  --decoder=./exported/decoder.onnx \
-  --tokenizer=./Audio8-ASR-0.1B \
-  wavs/0.wav
+# Python (`pip install sherpa-onnx`, or use the package built from this tree)
+python3 python-api-examples/offline-audio8-asr-decode-files.py \
+  --encoder=./Audio8-ASR-0.1B/encoder.onnx \
+  --decoder=./Audio8-ASR-0.1B/decoder.onnx \
+  --tokenizer=./Audio8-ASR-0.1B/tokenizer \
+  ./Audio8-ASR-0.1B/test_wavs/0.wav
 ```
 
-Expected speed on an Apple M-series CPU (fp32, 4 threads): RTF ≈ 0.10, i.e. about
-1 s for a 10 s clip.
+For lower CPU cost use `encoder.int8.onnx` / `decoder.int8.onnx` with the same
+flags; on the five test clips the transcripts are identical to fp32.
+
+Expected speed on an Apple M-series CPU (fp32, 4 threads): RTF ≈ 0.1, i.e. about
+1 s for a 10 s clip; the int8 graphs are about 2x faster.
 
 ## Notes
 
