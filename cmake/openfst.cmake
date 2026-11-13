@@ -58,6 +58,13 @@ function(download_openfst)
 
   add_subdirectory(${openfst_SOURCE_DIR} ${openfst_BINARY_DIR} EXCLUDE_FROM_ALL)
 
+  if(TARGET fst AND MSVC)
+    # C4291: no matching operator delete for the placement operator new of
+    # the pool allocators. That is intentional in openfst (pool-managed
+    # memory), so silence it for its own target.
+    target_compile_options(fst PRIVATE /wd4291)
+  endif()
+
   if(_build_shared_libs_bak)
     set_target_properties(fst fstfar
       PROPERTIES

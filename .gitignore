@@ -220,3 +220,7 @@ sherpa-onnx-voxlock-int8
 *.TextGrid
 path.sh
 notes.md
+download
+word-clips-*
+zh-aishell3-pinyin
+english-mfa-v3.1.0

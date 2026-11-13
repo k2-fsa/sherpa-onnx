@@ -12,6 +12,13 @@ if(POLICY CMP0169)
   set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
 endif()
 
+# Keep honoring CMAKE_WARN_DEPRECATED, which the vendored dependencies use
+# to silence deprecation warnings (see cmake/kaldi-native-fbank.cmake).
+if(POLICY CMP0218)
+  cmake_policy(SET CMP0218 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0218 OLD)
+endif()
+
 if(POLICY CMP0177)
   cmake_policy(SET CMP0177 NEW)
 endif()
