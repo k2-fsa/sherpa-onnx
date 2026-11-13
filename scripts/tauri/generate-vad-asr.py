@@ -1158,6 +1158,7 @@ def gen_model_registry(models: List[Model], output_path: Path):
         elif family == "dolphin":
             lines.append(f'            config.model_config.dolphin = OfflineDolphinModelConfig {{')
             lines.append(f'                model: p("{files["model"]}"),')
+            lines.append(f"                ..Default::default()")
             lines.append(f"            }};")
         elif family == "zipformer_ctc":
             lines.append(f'            config.model_config.zipformer_ctc = OfflineZipformerCtcModelConfig {{')
