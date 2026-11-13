@@ -82,9 +82,15 @@ jobs:
         shell: bash
         run: cat kotlin-api-examples/test_forced_alignment_chinese/zh.TextGrid
 
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
       - name: Extract word wavs from the TextGrids
         shell: bash
         run: |
+          python3 -m pip install soundfile
           python3 ./python-api-examples/textgrid-to-word-wavs.py \
             --wav kotlin-api-examples/test_forced_alignment_english/en.wav \
             --textgrid kotlin-api-examples/test_forced_alignment_english/en.TextGrid \

@@ -299,19 +299,19 @@ ForcedAligner::Impl::Impl(const ForcedAlignerConfig &config) : config_(config) {
   use_lda_ = FileExists(ModelFile("lda.mat"));
   if (use_lda_) {
     std::string filename = ModelFile("lda.mat");
-    std::ifstream is = OpenInputFile(filename);
+    std::ifstream is = OpenInputFile(filename, std::ios::binary);
     LoadLdaTransform(filename, is);
   }
 
   {
     std::string filename = ModelFile("final.alimdl");
-    std::ifstream is = OpenInputFile(filename);
+    std::ifstream is = OpenInputFile(filename, std::ios::binary);
     LoadAcousticModel(filename, is);
   }
 
   {
     std::string filename = ModelFile("tree");
-    std::ifstream is = OpenInputFile(filename);
+    std::ifstream is = OpenInputFile(filename, std::ios::binary);
     LoadContextTree(filename, is);
   }
 
