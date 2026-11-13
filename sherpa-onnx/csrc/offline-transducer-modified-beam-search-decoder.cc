@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-decoder.h"
 
+#include <algorithm>
 #include <deque>
 #include <utility>
 #include <vector>
@@ -183,14 +184,35 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
 
   std::vector<OfflineTransducerDecoderResult> unsorted_ans(batch_size);
   for (int32_t i = 0; i != batch_size; ++i) {
-    Hypothesis hyp = cur[i].GetMostProbable(true);
+    int32_t stream_index = packed_encoder_out.sorted_indexes[i];
+    int32_t num_return_paths = 1;
+    if (ss != nullptr) {
+      num_return_paths = ss[stream_index]->GetOptionInt("num_return_paths", 1);
+    }
+    num_return_paths =
+        std::max(1, std::min(num_return_paths, max_active_paths_));
+    auto hyps = cur[i].GetTopK(num_return_paths, true);
 
-    auto &r = unsorted_ans[packed_encoder_out.sorted_indexes[i]];
+    auto &r = unsorted_ans[stream_index];
+    r.hypotheses.reserve(hyps.size());
 
-    // strip leading blanks
-    r.tokens = {hyp.ys.begin() + context_size, hyp.ys.end()};
-    r.timestamps = std::move(hyp.timestamps);
-    r.ys_log_probs = std::move(hyp.ys_probs);
+    for (auto &hyp : hyps) {
+      OfflineTransducerDecoderHypothesis h;
+
+      // strip leading blanks
+      h.tokens = {hyp.ys.begin() + context_size, hyp.ys.end()};
+      h.timestamps = std::move(hyp.timestamps);
+      h.ys_log_probs = std::move(hyp.ys_probs);
+      h.score = hyp.TotalLogProb() / hyp.ys.size();
+
+      r.hypotheses.push_back(std::move(h));
+    }
+
+    // Preserve the existing 1-best fields for backward compatibility.
+    const auto &best = r.hypotheses.front();
+    r.tokens = best.tokens;
+    r.timestamps = best.timestamps;
+    r.ys_log_probs = best.ys_log_probs;
   }
 
   return unsorted_ans;

@@ -48,6 +48,104 @@ def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
 
 
 class TestOfflineRecognizer(unittest.TestCase):
+    def test_from_transducer_positional_hotwords_compatibility(self):
+        with self.assertRaisesRegex(ValueError, "hotwords-file"):
+            sherpa_onnx.OfflineRecognizer.from_transducer(
+                "encoder.onnx",
+                "decoder.onnx",
+                "joiner.onnx",
+                "tokens.txt",
+                1,
+                16000,
+                80,
+                0.0,
+                "greedy_search",
+                4,
+                "hotwords.txt",
+            )
+
+    def test_transducer_modified_beam_search_nbest(self):
+        model_dir = Path(d) / "sherpa-onnx-zipformer-en-2023-04-01"
+        encoder = model_dir / "encoder-epoch-99-avg-1.int8.onnx"
+        decoder = model_dir / "decoder-epoch-99-avg-1.onnx"
+        joiner = model_dir / "joiner-epoch-99-avg-1.int8.onnx"
+        tokens = model_dir / "tokens.txt"
+        wave0 = model_dir / "test_wavs" / "0.wav"
+        wave1 = model_dir / "test_wavs" / "1.wav"
+
+        if not encoder.is_file():
+            print("skipping test_transducer_modified_beam_search_nbest()")
+            return
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_transducer(
+            encoder=str(encoder),
+            decoder=str(decoder),
+            joiner=str(joiner),
+            tokens=str(tokens),
+            num_threads=1,
+            decoding_method="modified_beam_search",
+            max_active_paths=8,
+            provider="cpu",
+        )
+
+        short_samples, sample_rate = read_wave(str(wave0))
+        long_samples, long_sample_rate = read_wave(str(wave1))
+        self.assertEqual(sample_rate, long_sample_rate)
+        # Deliberately mix lengths and options: the decoder sorts streams by
+        # length internally, but each result must use its original option.
+        cases = [
+            (short_samples, "3", 3),
+            (long_samples, None, 1),
+            (short_samples[: len(short_samples) // 2], "8", 8),
+            (short_samples, "0", 1),
+            (short_samples, "99", 8),
+            (short_samples, "invalid", 1),
+        ]
+
+        def create_stream(samples, option):
+            stream = recognizer.create_stream()
+            if option is not None:
+                stream.set_option("num_return_paths", option)
+            stream.accept_waveform(sample_rate, samples)
+            return stream
+
+        streams = [create_stream(samples, option) for samples, option, _ in cases]
+        recognizer.decode_streams(streams)
+        defaults = [create_stream(samples, None) for samples, _, _ in cases]
+        recognizer.decode_streams(defaults)
+        self.assertTrue(
+            any(
+                len(streams[i].result.hypotheses) > 1
+                for i, (_, _, limit) in enumerate(cases)
+                if limit > 1
+            )
+        )
+
+        fields = ("text", "tokens", "timestamps", "durations", "ys_log_probs")
+        for i, (_, _, limit) in enumerate(cases):
+            result = streams[i].result
+            hypotheses = result.hypotheses
+            self.assertGreaterEqual(len(hypotheses), 1)
+            self.assertLessEqual(len(hypotheses), limit)
+            self.assertTrue(
+                all(
+                    hypotheses[j - 1].score >= hypotheses[j].score
+                    for j in range(1, len(hypotheses))
+                )
+            )
+
+            # Keep the batch shape unchanged so quantized model numerics do
+            # not confound the check that returning more paths preserves top-1.
+            default = defaults[i].result
+            self.assertEqual(len(default.hypotheses), 1)
+            for field in fields:
+                self.assertEqual(
+                    getattr(result, field), getattr(hypotheses[0], field)
+                )
+                self.assertEqual(
+                    getattr(result, field), getattr(default, field)
+                )
+
     def test_transducer_single_file(self):
         for use_int8 in [True, False]:
             if use_int8:

@@ -30,6 +30,14 @@ Use the read-only properties to access individual fields of the result
 such as text, tokens, timestamps, etc.
 )doc";
 
+static constexpr const char *kOfflineRecognitionHypothesisDoc = R"doc(
+One hypothesis returned by offline modified beam search.
+
+The score is the decoder score used to rank the hypothesis. It is the
+length-normalized total log probability for the regular transducer decoder and
+the accumulated log probability for the NeMo decoder.
+)doc";
+
 static constexpr const char *kOfflineStreamDoc = R"doc(
 An offline stream is created by an OfflineRecognizer and holds a
 single utterance of audio. Feed audio into it with ``accept_waveform``,
@@ -38,6 +46,10 @@ then decode the stream with the recognizer to obtain the result.
 
 static constexpr const char *kSetOptionDoc = R"doc(
 Set a per-stream option.
+
+For transducer modified beam search, use ``num_return_paths`` to request
+ranked hypotheses, for example ``stream.set_option("num_return_paths", "3")``.
+The default is 1, and the value is clamped to [1, max_active_paths].
 
 Args:
   key:
@@ -68,6 +80,28 @@ Return:
   The option value as a string, or an empty string if the key
   does not exist.
 )doc";
+
+static void PybindOfflineRecognitionHypothesis(py::module *m) {  // NOLINT
+  using PyClass = OfflineRecognitionHypothesis;
+  py::class_<PyClass>(*m, "OfflineRecognitionHypothesis",
+                      kOfflineRecognitionHypothesisDoc)
+      .def_property_readonly(
+          "text",
+          [](const PyClass &self) -> py::str {
+            return py::str(PyUnicode_DecodeUTF8(self.text.c_str(),
+                                                self.text.size(), "ignore"));
+          })
+      .def_property_readonly("tokens",
+        [](const PyClass &self) { return self.tokens; })
+      .def_property_readonly("timestamps",
+        [](const PyClass &self) { return self.timestamps; })
+      .def_property_readonly("durations",
+        [](const PyClass &self) { return self.durations; })
+      .def_property_readonly("ys_log_probs",
+        [](const PyClass &self) { return self.ys_log_probs; })
+      .def_property_readonly("score",
+        [](const PyClass &self) { return self.score; });
+}
 
 static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
   using PyClass = OfflineRecognitionResult;
@@ -101,10 +135,13 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
       .def_property_readonly("segment_durations",
         [](const PyClass &self) { return self.segment_durations; })
       .def_property_readonly("segment_texts",
-        [](const PyClass &self) { return self.segment_texts; });
+        [](const PyClass &self) { return self.segment_texts; })
+      .def_property_readonly("hypotheses",
+        [](const PyClass &self) { return self.hypotheses; });
 }
 
 void PybindOfflineStream(py::module *m) {
+  PybindOfflineRecognitionHypothesis(m);
   PybindOfflineRecognitionResult(m);
 
   using PyClass = OfflineStream;
