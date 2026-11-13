@@ -33,6 +33,12 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
+  if (ParamCount <> 0) and (ParamCount <> 1) and (ParamCount <> 3) then
+  begin
+    WriteLn('Usage: qwen3_asr [input.wav [mfa-model-dir lexicon.txt]]');
+    Halt(1);
+  end;
+
   Initialize(Config);
 
   Config.ModelConfig.Qwen3Asr.ConvFrontend := './sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx';
@@ -46,6 +52,17 @@ begin
   Config.ModelConfig.Debug := True;
 
   WaveFilename := './sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav';
+
+  { Optional arguments: input.wav mfa-model-dir lexicon.txt.
+    Download an MFA model from the fa-models release. The model and lexicon
+    must match the language of the recognized speech. }
+  if ParamCount > 0 then
+    WaveFilename := ParamStr(1);
+  if ParamCount = 3 then
+  begin
+    Config.ModelConfig.Qwen3Asr.ForcedAlignerModelDir := ParamStr(2);
+    Config.ModelConfig.Qwen3Asr.ForcedAlignerLexicon := ParamStr(3);
+  end;
 
   Wave := SherpaOnnxReadWave(WaveFilename);
 

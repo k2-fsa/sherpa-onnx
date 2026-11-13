@@ -87,6 +87,8 @@ data class OfflineQwen3AsrModelConfig(
     var topP: Float = 0.8f,
     var seed: Int = 42,
     var hotwords: String = "",
+    var forcedAlignerModelDir: String = "",
+    var forcedAlignerLexicon: String = "",
 )
 
 data class OfflineWhisperModelConfig(

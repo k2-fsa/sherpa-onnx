@@ -91,6 +91,8 @@ export class OfflineQwen3AsrModelConfig {
   public topP: number = 0.8;
   public seed: number = 42;
   public hotwords: string = '';
+  public forcedAlignerModelDir: string = '';
+  public forcedAlignerLexicon: string = '';
 }
 
 export class OfflineZipformerCtcModelConfig {

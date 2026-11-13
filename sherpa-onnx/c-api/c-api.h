@@ -1050,6 +1050,12 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   /** Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. @c
    * "foo,bar,baz". */
   const char *hotwords;
+  /** Optional MFA acoustic-model directory. Set together with
+   * forced_aligner_lexicon to return word-level tokens and timestamps.
+   * The model and lexicon must match the recognized language. */
+  const char *forced_aligner_model_dir;
+  /** Pronunciation lexicon matching the MFA acoustic model. */
+  const char *forced_aligner_lexicon;
 } SherpaOnnxOfflineQwen3ASRModelConfig;
 
 /** @brief Configuration for a MedASR CTC model. */

@@ -6,6 +6,8 @@ public class OfflineQwen3AsrModelConfig {
     private final String decoder;
     private final String tokenizer;
     private final String hotwords;
+    private final String forcedAlignerModelDir;
+    private final String forcedAlignerLexicon;
     private final int maxTotalLen;
     private final int maxNewTokens;
     private final float temperature;
@@ -18,6 +20,8 @@ public class OfflineQwen3AsrModelConfig {
         this.decoder = builder.decoder;
         this.tokenizer = builder.tokenizer;
         this.hotwords = builder.hotwords;
+        this.forcedAlignerModelDir = builder.forcedAlignerModelDir;
+        this.forcedAlignerLexicon = builder.forcedAlignerLexicon;
         this.maxTotalLen = builder.maxTotalLen;
         this.maxNewTokens = builder.maxNewTokens;
         this.temperature = builder.temperature;
@@ -49,6 +53,14 @@ public class OfflineQwen3AsrModelConfig {
         return hotwords;
     }
 
+    public String getForcedAlignerModelDir() {
+        return forcedAlignerModelDir;
+    }
+
+    public String getForcedAlignerLexicon() {
+        return forcedAlignerLexicon;
+    }
+
     public int getMaxTotalLen() {
         return maxTotalLen;
     }
@@ -75,6 +87,8 @@ public class OfflineQwen3AsrModelConfig {
         private String decoder = "";
         private String tokenizer = "";
         private String hotwords = "";
+        private String forcedAlignerModelDir = "";
+        private String forcedAlignerLexicon = "";
         private int maxTotalLen = 512;
         private int maxNewTokens = 128;
         private float temperature = 1e-6f;
@@ -107,6 +121,16 @@ public class OfflineQwen3AsrModelConfig {
 
         public Builder setHotwords(String hotwords) {
             this.hotwords = hotwords;
+            return this;
+        }
+
+        public Builder setForcedAlignerModelDir(String forcedAlignerModelDir) {
+            this.forcedAlignerModelDir = forcedAlignerModelDir;
+            return this;
+        }
+
+        public Builder setForcedAlignerLexicon(String forcedAlignerLexicon) {
+            this.forcedAlignerLexicon = forcedAlignerLexicon;
             return this;
         }
 

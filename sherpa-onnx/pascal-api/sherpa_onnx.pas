@@ -428,6 +428,8 @@ type
     TopP: Single;
     Seed: Integer;
     Hotwords: AnsiString;
+    ForcedAlignerModelDir: AnsiString;
+    ForcedAlignerLexicon: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
     function ToString: AnsiString;
   end;
@@ -1056,6 +1058,8 @@ type
     TopP: cfloat;
     Seed: cint32;
     Hotwords: PAnsiChar;
+    ForcedAlignerModelDir: PAnsiChar;
+    ForcedAlignerLexicon: PAnsiChar;
   end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
@@ -2106,10 +2110,13 @@ begin
     ', TopP := %.3f' +
     ', Seed := %d' +
     ', Hotwords := %s' +
+    ', ForcedAlignerModelDir := %s' +
+    ', ForcedAlignerLexicon := %s' +
     ')',
     [Self.ConvFrontend, Self.Encoder, Self.Decoder, Self.Tokenizer,
      Self.MaxTotalLen, Self.MaxNewTokens, Self.Temperature,
-     Self.TopP, Self.Seed, Self.Hotwords]);
+     Self.TopP, Self.Seed, Self.Hotwords,
+     Self.ForcedAlignerModelDir, Self.ForcedAlignerLexicon]);
 end;
 
 function TSherpaOnnxOfflineFunAsrNanoModelConfig.ToString: AnsiString;
@@ -2373,6 +2380,8 @@ begin
   C.ModelConfig.Qwen3Asr.TopP := Config.ModelConfig.Qwen3Asr.TopP;
   C.ModelConfig.Qwen3Asr.Seed := Config.ModelConfig.Qwen3Asr.Seed;
   C.ModelConfig.Qwen3Asr.Hotwords := PAnsiChar(Config.ModelConfig.Qwen3Asr.Hotwords);
+  C.ModelConfig.Qwen3Asr.ForcedAlignerModelDir := PAnsiChar(Config.ModelConfig.Qwen3Asr.ForcedAlignerModelDir);
+  C.ModelConfig.Qwen3Asr.ForcedAlignerLexicon := PAnsiChar(Config.ModelConfig.Qwen3Asr.ForcedAlignerLexicon);
 
   C.ModelConfig.CohereTranscribe.Encoder := PAnsiChar(Config.ModelConfig.CohereTranscribe.Encoder);
   C.ModelConfig.CohereTranscribe.Decoder := PAnsiChar(Config.ModelConfig.CohereTranscribe.Decoder);
@@ -2447,7 +2456,7 @@ var
 begin
   pJson := SherpaOnnxGetOfflineStreamResultAsJson(Stream.Handle);
 
-  JsonData := GetJSON(AnsiString(pJson), False);
+  JsonData := GetJSON(UTF8String(pJson), True);
 
   JsonObject := JsonData as TJSONObject;
 

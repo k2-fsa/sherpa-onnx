@@ -78,7 +78,7 @@ class OfflineStream::Impl {
     }
   }
 
-  explicit Impl(WhisperTag tag) {
+  explicit Impl(WhisperTag tag) : keep_waveform_(tag.keep_waveform) {
     config_.normalize_samples = true;
     opts_.frame_opts.samp_freq = 16000;
     opts_.mel_opts.num_bins = tag.dim;
@@ -205,7 +205,12 @@ class OfflineStream::Impl {
     }
   }
 
+  const std::vector<float> &GetWaveform() const { return samples_; }
+
   void FeedWhisper(const float *samples, int32_t n) {
+    if (keep_waveform_ && n > 0) {
+      samples_.insert(samples_.end(), samples, samples + n);
+    }
     if (whisper_center_padding_ > 0 && n > 0) {
       // Reflect-pad the lead-in the way torch.stft(center=True,
       // pad_mode="reflect") does: sample -i mirrors sample i (the
@@ -388,7 +393,9 @@ class OfflineStream::Impl {
   int32_t whisper_center_padding_ = 0;
   int64_t whisper_num_samples_ = 0;
 
-  // used only when (is_moonshine_ || is_omnilingual_asr_) == true
+  bool keep_waveform_ = false;
+
+  // Raw-audio models, or WhisperTag streams requesting waveform retention.
   std::vector<float> samples_;
 
   std::unordered_map<std::string, std::string> options_;
@@ -413,6 +420,10 @@ OfflineStream::OfflineStream(const FaFeatureConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
 OfflineStream::~OfflineStream() = default;
+
+const std::vector<float> &OfflineStream::GetWaveform() const {
+  return impl_->GetWaveform();
+}
 
 void OfflineStream::AcceptWaveform(int32_t sampling_rate, const float *waveform,
                                    int32_t n) const {

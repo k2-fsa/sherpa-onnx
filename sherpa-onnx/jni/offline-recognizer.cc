@@ -443,6 +443,12 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                               qwen3_asr_config_cls, qwen3_asr_config);
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.hotwords, hotwords,
                               qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.qwen3_asr.forced_aligner_model_dir,
+      forcedAlignerModelDir, qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.forced_aligner_lexicon,
+                              forcedAlignerLexicon, qwen3_asr_config_cls,
+                              qwen3_asr_config);
   SHERPA_ONNX_JNI_READ_INT(ans.model_config.qwen3_asr.max_total_len,
                            maxTotalLen, qwen3_asr_config_cls, qwen3_asr_config);
   SHERPA_ONNX_JNI_READ_INT(ans.model_config.qwen3_asr.max_new_tokens,

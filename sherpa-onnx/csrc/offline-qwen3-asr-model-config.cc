@@ -8,6 +8,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/forced-aligner.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -29,6 +30,11 @@ void OfflineQwen3ASRModelConfig::Register(ParseOptions *po) {
   po->Register("qwen3-asr-hotwords", &hotwords,
                "Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. "
                "\"foo,bar,baz\".");
+
+  po->Register("qwen3-asr-forced-aligner-model-dir", &forced_aligner_model_dir,
+               "Optional MFA acoustic-model directory for word timestamps");
+  po->Register("qwen3-asr-forced-aligner-lexicon", &forced_aligner_lexicon,
+               "Pronunciation lexicon matching the MFA acoustic model");
 
   po->Register("qwen3-asr-max-total-len", &max_total_len,
                "Maximum total sequence length for Qwen3-ASR");
@@ -130,6 +136,15 @@ bool OfflineQwen3ASRModelConfig::Validate() const {
     return false;
   }
 
+  if (!forced_aligner_model_dir.empty() || !forced_aligner_lexicon.empty()) {
+    ForcedAlignerConfig config;
+    config.model_dir = forced_aligner_model_dir;
+    config.lexicon = forced_aligner_lexicon;
+    if (!config.Validate()) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -142,6 +157,8 @@ std::string OfflineQwen3ASRModelConfig::ToString() const {
   os << "decoder=\"" << decoder << "\", ";
   os << "tokenizer=\"" << tokenizer << "\", ";
   os << "hotwords=\"" << hotwords << "\", ";
+  os << "forced_aligner_model_dir=\"" << forced_aligner_model_dir << "\", ";
+  os << "forced_aligner_lexicon=\"" << forced_aligner_lexicon << "\", ";
   os << "max_total_len=" << max_total_len << ", ";
   os << "max_new_tokens=" << max_new_tokens << ", ";
   os << "temperature=" << temperature << ", ";

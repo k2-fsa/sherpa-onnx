@@ -493,6 +493,8 @@ class OfflineRecognizer(object):
         top_p: float = 0.8,
         seed: int = 42,
         hotwords: str = "",
+        forced_aligner_model_dir: str = "",
+        forced_aligner_lexicon: str = "",
     ):
         """
         Create an offline recognizer for Qwen3-ASR (conv_frontend + encoder +
@@ -532,6 +534,11 @@ class OfflineRecognizer(object):
             Random seed for sampling.
           hotwords:
             Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. ``"foo,bar,baz"``.
+          forced_aligner_model_dir:
+            Optional MFA acoustic-model directory. Set together with
+            ``forced_aligner_lexicon`` to return word-level timestamps.
+          forced_aligner_lexicon:
+            Pronunciation lexicon matching the MFA acoustic model.
         """
         self = cls.__new__(cls)
         qwen3 = OfflineQwen3ASRModelConfig(
@@ -540,6 +547,8 @@ class OfflineRecognizer(object):
             decoder=decoder,
             tokenizer=tokenizer,
             hotwords=hotwords,
+            forced_aligner_model_dir=forced_aligner_model_dir,
+            forced_aligner_lexicon=forced_aligner_lexicon,
             max_total_len=max_total_len,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
