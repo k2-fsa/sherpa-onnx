@@ -57,6 +57,13 @@ class OnlineRecognizerImpl {
 
   virtual void Reset(OnlineStream *s) const = 0;
 
+  // Lets OnlineRecognizer implement a VAD-coverage gate on IsReady() and
+  // a batch-skip over VAD-confirmed silence without touching each impl's
+  // IsReady()/DecodeStreams() body. Default (0) means "not supported for
+  // VAD purposes" -- the gate/skip simply no-op for that impl.
+  virtual int32_t GetChunkSizeForVad() const { return 0; }
+  virtual int32_t GetChunkShiftForVad() const { return 0; }
+
   std::string ApplyInverseTextNormalization(std::string text) const;
   std::string ApplyHomophoneReplacer(std::string text) const;
 

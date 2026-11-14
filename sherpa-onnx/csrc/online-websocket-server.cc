@@ -46,12 +46,19 @@ int32_t main(int32_t argc, char *argv[]) {
   // size of the thread pool for neural network computation and decoding
   int32_t num_work_threads = 3;
 
+  // size of the thread pool for the independent VAD pipeline (VadProcess).
+  int32_t num_vad_threads = 1;
+
   po.Register("num-io-threads", &num_io_threads,
               "Thread pool size for network connections.");
 
   po.Register("num-work-threads", &num_work_threads,
               "Thread pool size for neural network "
               "computation and decoding.");
+
+  po.Register("num-vad-threads", &num_vad_threads,
+              "Thread pool size for the independent VAD pipeline "
+              "(VadProcess). Only matters when --online-vad-model is set.");
 
   po.Register("port", &port, "The port on which the server will listen.");
 
@@ -74,16 +81,18 @@ int32_t main(int32_t argc, char *argv[]) {
 
   asio::io_context io_conn;  // for network connections
   asio::io_context io_work;  // for neural network and decoding
+  asio::io_context io_vad;   // for the independent VAD pipeline
 
-  sherpa_onnx::OnlineWebsocketServer server(io_conn, io_work, config);
+  sherpa_onnx::OnlineWebsocketServer server(io_conn, io_work, io_vad, config);
   server.Run(port);
 
   SHERPA_ONNX_LOGE("Started!");
   SHERPA_ONNX_LOGE("Listening on: %d", port);
   SHERPA_ONNX_LOGE("Number of work threads: %d", num_work_threads);
 
-  // give some work to do for the io_work pool
+  // give some work to do for the io_work/io_vad pools
   auto work_guard = asio::make_work_guard(io_work);
+  auto vad_work_guard = asio::make_work_guard(io_vad);
 
   std::vector<std::thread> io_threads;
 
@@ -97,6 +106,11 @@ int32_t main(int32_t argc, char *argv[]) {
     work_threads.emplace_back([&io_work]() { io_work.run(); });
   }
 
+  std::vector<std::thread> vad_threads;
+  for (int32_t i = 0; i < num_vad_threads; ++i) {
+    vad_threads.emplace_back([&io_vad]() { io_vad.run(); });
+  }
+
   io_conn.run();
 
   for (auto &t : io_threads) {
@@ -104,6 +118,10 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   for (auto &t : work_threads) {
+    t.join();
+  }
+
+  for (auto &t : vad_threads) {
     t.join();
   }
 

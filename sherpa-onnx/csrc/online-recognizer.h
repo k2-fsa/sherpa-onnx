@@ -17,9 +17,12 @@
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
+#include "sherpa-onnx/csrc/online-vad-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
+
+class OnlineVadModel;
 
 struct OnlineRecognizerResult {
   /// Recognition results.
@@ -70,6 +73,20 @@ struct OnlineRecognizerResult {
   /// initialization of this struct keeps working.
   int32_t num_trailing_blanks = 0;
 
+  /// Which endpoint rule fired for this result: 0 none, 1 blank-based
+  /// (rule1/2/3, undistinguished), 4 VAD-based (only possible when an
+  /// online VAD is configured, see OnlineRecognizerConfig::online_vad_config).
+  int32_t endpoint_rule = 0;
+
+  /// Seconds between the VAD-based endpoint firing and the VAD's last
+  /// scored speech frame. Only meaningful when endpoint_rule == 4; 0
+  /// otherwise.
+  float endpoint_delay = 0;
+
+  /// Stream time (seconds) at which the online VAD last scored speech for
+  /// this segment. Only meaningful when endpoint_rule == 4; 0 otherwise.
+  float speech_end_time = 0;
+
   /** Return a json string.
    *
    * The returned string contains:
@@ -83,6 +100,9 @@ struct OnlineRecognizerResult {
    *     "segment": x,
    *     "words": [x, x, x],
    *     "num_trailing_blanks": x,
+   *     "endpoint_rule": x,
+   *     "endpoint_delay": x,
+   *     "speech_end_time": x,
    *     "start_time": x,
    *     "is_final": true|false
    *     "is_eof": true|false
@@ -103,6 +123,13 @@ struct OnlineRecognizerConfig {
   OnlineLMConfig lm_config;
   EndpointConfig endpoint_config;
   OnlineCtcFstDecoderConfig ctc_fst_decoder_config;
+
+  // Optional, independent VAD pipeline (ds-k2-sherpa-onnx refactor_vad
+  // style -- see OnlineVadModelConfig). Disabled (default) when its
+  // `model` is empty. Driven explicitly via OnlineRecognizer::VadProcess()
+  // (e.g. the websocket server's own, faster-cadence timer); never run
+  // inline inside AcceptWaveform().
+  OnlineVadModelConfig online_vad_config;
 
   bool enable_endpoint = true;
 
@@ -206,6 +233,22 @@ class OnlineRecognizer {
    */
   bool IsReady(OnlineStream *s) const;
 
+  /** Scores the pending audio of the given streams with the shared VAD
+   * model (batched) -- mirrors DecodeStreams()'s shape but drives the
+   * independent VAD pipeline. Call it from your own schedule; it is never
+   * called automatically. A no-op without VAD. A stream whose end of
+   * speech is confirmed comes back with IsVadFlushPending() set.
+   */
+  void VadProcess(OnlineStream **ss, int32_t n) const;
+
+  /** True if DecodeStreams() can run on `s` right now. Unlike IsReady(), it
+   * has no side effects.
+   */
+  bool IsDecodable(OnlineStream *s) const;
+
+  /** True if `s` holds a full VAD window that VadProcess() would score. */
+  bool VadHasWindow(OnlineStream *s) const;
+
   /** Decode a single stream. */
   void DecodeStream(OnlineStream *s) const {
     OnlineStream *ss[1] = {s};
@@ -239,8 +282,23 @@ class OnlineRecognizer {
   // after calling this function, IsEndpoint(s) will return false
   void Reset(OnlineStream *s) const;
 
+  // When an independent VAD is configured on this stream and the
+  // current model's chunk-shift is known for VAD purposes (see
+  // OnlineRecognizerImpl::GetChunkShiftForVad()), fast-forwards
+  // s->GetNumProcessedFrames() over any VAD-confirmed trailing silence
+  // that fully covers the next ASR chunk, so the encoder is never run on
+  // it. A no-op otherwise. Called automatically from IsReady().
+  void MaybeSkipVadSilence(OnlineStream *s) const;
+
  private:
+  // Enables VAD on `s`; the model itself is shared.
+  void InitStreamVad(OnlineStream *s) const;
+
   std::unique_ptr<OnlineRecognizerImpl> impl_;
+  OnlineVadModelConfig online_vad_config_;
+  float asr_frame_shift_ms_ = 10.0f;
+  // Shared by all streams; null when disabled.
+  std::unique_ptr<OnlineVadModel> vad_model_;
 };
 
 }  // namespace sherpa_onnx

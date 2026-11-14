@@ -8,12 +8,15 @@
 #include <algorithm>
 #include <ios>
 #include <memory>
+#include <mutex>  // NOLINT
+#include <random>
 #include <regex>  // NOLINT
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
@@ -259,6 +262,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
            s->NumFramesReady();
   }
 
+  int32_t GetChunkSizeForVad() const override { return model_->ChunkSize(); }
+  int32_t GetChunkShiftForVad() const override { return model_->ChunkShift(); }
+
   // Warmping up engine with wp: warm_up count and max-batch-size
   void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const override {
     auto max_batch_size = mbs;
@@ -311,16 +317,38 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       }
 
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
-      std::vector<float> features =
-          ss[i]->GetFrames(num_processed_frames, chunk_size);
+      std::vector<float> features;
+
+      const bool flush = ss[i]->HasVad() && ss[i]->IsVadFlushPending() &&
+                         num_processed_frames + chunk_size >=
+                             ss[i]->GetVadEndpointFrame();
+      if (flush) {
+        // End-of-utterance flush: decode the real frames up to the VAD
+        // endpoint and pad the rest of the chunk with silence.
+        const int32_t avail =
+            std::max(0, ss[i]->NumFramesReady() - num_processed_frames);
+        const int32_t real_frames = std::max(
+            0, std::min({ss[i]->GetVadEndpointFrame() - num_processed_frames,
+                         chunk_size, avail}));
+        if (real_frames > 0) {
+          features = ss[i]->GetFrames(num_processed_frames, real_frames);
+        }
+        const auto &silence = GetSilenceFrames();
+        features.insert(features.end(), silence.begin(),
+                        silence.begin() + static_cast<size_t>(
+                            chunk_size - real_frames) * feature_dim);
+        ss[i]->GetNumProcessedFrames() += real_frames;
+        ss[i]->ClearVadFlushPending();
+      } else {
+        features = ss[i]->GetFrames(num_processed_frames, chunk_size);
+        // Question: should num_processed_frames include chunk_shift?
+        ss[i]->GetNumProcessedFrames() += chunk_shift;
+      }
 
       if (config_.feat_config.is_whisper) {
         OfflineWhisperModel::NormalizeFeatures(features.data(), chunk_size,
                                                feature_dim);
       }
-
-      // Question: should num_processed_frames include chunk_shift?
-      ss[i]->GetNumProcessedFrames() += chunk_shift;
 
       std::copy(features.begin(), features.end(),
                 features_vec.data() + i * chunk_size * feature_dim);
@@ -526,6 +554,31 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   }
 
  private:
+  // chunk_size frames of low-level noise features, built once; pads the
+  // flush chunk in DecodeStreams().
+  const std::vector<float> &GetSilenceFrames() const {
+    std::call_once(silence_once_, [this]() {
+      const int32_t chunk_size = model_->ChunkSize();
+      const int32_t sr = static_cast<int32_t>(config_.feat_config.sampling_rate);
+      const int32_t n = static_cast<int32_t>(
+          (chunk_size + 8) * config_.feat_config.frame_shift_ms * sr / 1000 +
+          config_.feat_config.frame_length_ms * sr / 1000);
+      std::mt19937 engine(0);
+      std::uniform_real_distribution<float> dist(-1.0f / 32768, 1.0f / 32768);
+      std::vector<float> noise(n);
+      for (auto &v : noise) v = dist(engine);
+
+      FeatureExtractor fe(config_.feat_config);
+      fe.AcceptWaveform(sr, noise.data(), n);
+      fe.InputFinished();
+      silence_frames_ = fe.GetFrames(0, chunk_size);
+    });
+    return silence_frames_;
+  }
+
+  mutable std::once_flag silence_once_;
+  mutable std::vector<float> silence_frames_;
+
   OnlineRecognizerConfig config_;
   std::vector<std::vector<int32_t>> hotwords_;
   std::vector<float> boost_scores_;
