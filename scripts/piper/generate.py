@@ -640,6 +640,30 @@ def get_hi_models():
     return ans
 
 
+# pali
+def get_pi_models():
+    # hi_IN-pratham-medium (unchanged weights) reading Pali through a lexicon of
+    # every word form of the Pali Tipitaka; no espeak-ng.
+    # See https://github.com/k2-fsa/sherpa-onnx/issues/4020
+    # and https://github.com/dhammagift/pali-tts/tree/main/sherpa
+    release = "https://github.com/dhammagift/pali-tts/releases/download/sherpa-pi-pratham-v2"
+    pratham = "https://huggingface.co/rhasspy/piper-voices/resolve/main/hi/hi_IN/pratham/medium"
+    m = PiperModel(name="pratham", kind="medium", sr=22050, ns=1)
+    m.lang = "pi"
+    m.model_name = "pi-pratham-medium.onnx"
+    m.text = "Dveme, bhikkhave, antā pabbajitena na sevitabbā."
+    m.url = "https://github.com/dhammagift/pali-tts/tree/main/sherpa"
+    m.cmd = f"""
+            wget -qq {pratham}/hi_IN-pratham-medium.onnx -O pi-pratham-medium.onnx
+            wget -qq {pratham}/hi_IN-pratham-medium.onnx.json -O pi-pratham-medium.onnx.json
+            wget -qq {pratham}/MODEL_CARD
+            wget -qq {release}/lexicon-pi.txt
+            wget -qq {release}/README.md
+            python3 -c "import json; f='pi-pratham-medium.onnx.json'; c=json.load(open(f)); c['lang_code']='pi'; c['phoneme_type']='lexicon'; json.dump(c, open(f, 'w'), ensure_ascii=False)"
+            """
+    return [m]
+
+
 # hungarian
 def get_hu_models():
     hu_HU = [
@@ -2188,6 +2212,7 @@ def get_all_models():
     ans += get_fi_models()
     ans += get_fr_models()
     ans += get_hi_models()
+    ans += get_pi_models()
     ans += get_id_models()
     ans += get_hu_models()
     ans += get_is_models()
@@ -2296,6 +2321,16 @@ def main():
                     "lexicon": f"{model_dir}/lexicon.txt",
                     "text": m.text,
                     "rule_fsts": f"{model_dir}/phone.fst,{model_dir}/date.fst,{model_dir}/number.fst",
+                }
+
+            if m.lang == "pi":
+                d = {
+                    "model": f"{model_dir}/{m.model_name}",
+                    "data_dir": "",
+                    "tokens": f"{model_dir}/tokens.txt",
+                    "lexicon": f"{model_dir}/lexicon.txt",
+                    "text": m.text,
+                    "rule_fsts": "",
                 }
 
             for i in range(m.ns):

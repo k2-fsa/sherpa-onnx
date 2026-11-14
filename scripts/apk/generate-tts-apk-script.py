@@ -225,6 +225,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-hi_IN-pratham-medium"),
         TtsModel(model_dir="vits-piper-hi_IN-priyamvada-medium"),
         TtsModel(model_dir="vits-piper-hi_IN-rohan-medium"),
+        TtsModel(model_dir="vits-piper-pi-pratham-medium"),
         TtsModel(model_dir="vits-piper-hu_HU-anna-medium"),
         TtsModel(model_dir="vits-piper-hu_HU-berta-medium"),
         TtsModel(model_dir="vits-piper-hu_HU-imre-medium"),
@@ -308,6 +309,9 @@ def get_piper_models() -> List[TtsModel]:
         ):
             m.lexicon = "lexicon.txt"
             m.rule_fsts = f"{m.model_dir}/phone.fst,{m.model_dir}/date.fst,{m.model_dir}/number.fst"
+        elif "-pi-" in m.model_dir:
+            # Pali: every word form of the Pali Tipitaka is in lexicon.txt
+            m.lexicon = "lexicon.txt"
         else:
             m.phonemize = True
 
