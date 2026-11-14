@@ -8,6 +8,7 @@
 #include <deque>
 #include <fstream>
 #include <map>
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -34,7 +35,8 @@ struct Connection {
   std::shared_ptr<OnlineStream> s;
 
   // set it to true when InputFinished() is called
-  bool eof = false;
+  // read by the ASR and VAD loops under different mutexes
+  std::atomic<bool> eof{false};
 
   // The last time we received a message from the client
   // TODO(fangjun): Use it to disconnect from a client if it is inactive
@@ -69,6 +71,15 @@ struct OnlineWebsocketDecoderConfig {
   // the server will resample internally.
   int32_t input_sample_rate = 16000;
 
+  // How often the independent VAD tick (VadProcess, ds-k2-sherpa-onnx
+  // refactor_vad style) runs. Deliberately faster than loop_interval_ms
+  // by default so VAD stays ahead of ASR. Only meaningful when
+  // recognizer_config.online_vad_config.model is set -- otherwise no VAD
+  // timer is armed at all.
+  int32_t vad_loop_interval_ms = 2;
+
+  int32_t max_vad_batch_size = 64;
+
   void Register(ParseOptions *po);
   void Validate() const;
 };
@@ -94,6 +105,12 @@ class OnlineWebsocketDecoder {
 
   void Run();
 
+  // Starts the independent VAD timer loop (VadProcess, running parallel
+  // to and ahead of the ASR decode loop). A no-op (never arms
+  // vad_timer_) if recognizer_config.online_vad_config.model is empty.
+  // Call alongside Run(), not instead of it.
+  void RunVad();
+
  private:
   void ProcessConnections(const asio::error_code &ec);
 
@@ -101,11 +118,24 @@ class OnlineWebsocketDecoder {
    */
   void Decode();
 
+  // Ticks the independent VAD pipeline: batches streams with pending
+  // copied audio (mirroring Decode()'s batching of DecodeStreams) and
+  // calls OnlineRecognizer::VadProcess() on them. Runs on the io_vad_
+  // timer thread / its own worker pool, never touching ASR decode state
+  // directly.
+  void ProcessVadConnections(const asio::error_code &ec);
+
+  void VadDecode();
+
  private:
+  // Queues streams with a pending VAD flush for an immediate Decode().
+  void ScheduleVadFlushes(const std::vector<std::shared_ptr<Connection>> &cs);
+
   OnlineWebsocketServer *server_;  // not owned
   std::unique_ptr<OnlineRecognizer> recognizer_;
   OnlineWebsocketDecoderConfig config_;
   asio::steady_timer timer_;
+  asio::steady_timer vad_timer_;
 
   // It protects `connections_`, `ready_connections_`, and `active_`
   std::mutex mutex_;
@@ -121,6 +151,13 @@ class OnlineWebsocketDecoder {
   // If we are decoding a stream, we put it in the active_ set so that
   // only one thread can decode a stream at a time.
   std::set<connection_hdl, std::owner_less<connection_hdl>> active_;
+
+  // Mirrors ready_connections_/active_, but for the VAD pipeline --
+  // kept separate so the VAD tick never contends with the ASR decode
+  // path's own bookkeeping.
+  std::mutex vad_mutex_;
+  std::deque<std::shared_ptr<Connection>> vad_ready_connections_;
+  std::set<connection_hdl, std::owner_less<connection_hdl>> vad_active_;
 };
 
 struct OnlineWebsocketServerConfig {
@@ -136,6 +173,7 @@ class OnlineWebsocketServer {
  public:
   explicit OnlineWebsocketServer(asio::io_context &io_conn,  // NOLINT
                                  asio::io_context &io_work,  // NOLINT
+                                 asio::io_context &io_vad,   // NOLINT
                                  const OnlineWebsocketServerConfig &config);
 
   void Run(uint16_t port);
@@ -143,6 +181,7 @@ class OnlineWebsocketServer {
   const OnlineWebsocketServerConfig &GetConfig() const { return config_; }
   asio::io_context &GetConnectionContext() { return io_conn_; }
   asio::io_context &GetWorkContext() { return io_work_; }
+  asio::io_context &GetVadContext() { return io_vad_; }
   server &GetServer() { return server_; }
 
   void Send(connection_hdl hdl, const std::string &text);
@@ -169,6 +208,7 @@ class OnlineWebsocketServer {
   OnlineWebsocketServerConfig config_;
   asio::io_context &io_conn_;
   asio::io_context &io_work_;
+  asio::io_context &io_vad_;
   server server_;
 
   std::ofstream log_;

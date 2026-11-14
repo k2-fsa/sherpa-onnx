@@ -191,6 +191,9 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
            s->NumFramesReady();
   }
 
+  int32_t GetChunkSizeForVad() const override { return model_->ChunkSize(); }
+  int32_t GetChunkShiftForVad() const override { return model_->ChunkShift(); }
+
   OnlineRecognizerResult GetResult(OnlineStream *s) const override {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
