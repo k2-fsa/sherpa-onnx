@@ -76,13 +76,19 @@ public class ForcedAlignerConfig {
      * <p>A lexicon looks like:
      *
      * <pre>
-     * ask æ s k              # one word, one pronunciation
-     * can k ə n              # a second word
-     * can kʰ æ n             # a second pronunciation of the same word
-     * 行 x a ŋ               # Chinese: one line per reading (polyphones)
+     * ask æ s k
+     * can k ə n
+     * can kʰ æ n
+     * 行 x a ŋ
      * 行 h a ŋ
-     * 研究 || i n ɛ n || tɕ i o u  # per-character phone groups of a phrase
+     * 研究 || i n ɛ n || tɕ i o u
      * </pre>
+     *
+     * <p>{@code ask æ s k} is one word with one pronunciation.
+     * {@code can k ə n} and {@code can kʰ æ n} are two pronunciations of
+     * the word "can". The two {@code 行} lines give the two readings of a
+     * Chinese polyphone. {@code 研究 || ...} is a phrase with a
+     * two-character key: one phone group per character.
      */
     public String lexicon;
 

@@ -221,23 +221,36 @@ static knf::MatrixF ReadKaldiMatrix(const std::string &filename,
   return knf::MatrixF(src.cast<float>());
 }
 
-template <typename Manager>
-ForcedAligner::Impl::Impl(Manager *mgr, const ForcedAlignerConfig &config)
-    : config_(config) {  // NOLINT
-  ValidateConfig();
+template <typename Exists>
+void ForcedAligner::Impl::CheckModelFiles(const Exists &exists) const {
+  for (const char *name : {"meta.json", "final.alimdl", "tree"}) {
+    std::string p = ModelFile(name);
+    if (!exists(p)) {
+      throw std::runtime_error("ForcedAligner: missing required file: '" + p +
+                               "'");
+    }
+  }
+  if (!exists(config_.lexicon)) {
+    throw std::invalid_argument("ForcedAligner: lexicon does not exist: '" +
+                                config_.lexicon + "'");
+  }
+}
 
+template <typename Exists, typename Read>
+void ForcedAligner::Impl::LoadModelFiles(const Exists &exists,
+                                         const Read &read) {
   {
     std::string filename = ModelFile("meta.json");
-    auto buf = ReadFile(mgr, filename);
+    auto buf = read(filename);
     std::istringstream is(std::string(buf.data(), buf.size()));
     meta_ = ParseFaModelMeta(filename, is);
   }
 
   {
     std::string filename = ModelFile("lda.mat");
-    auto buf = ReadFile(mgr, filename);
-    use_lda_ = !buf.empty();
+    use_lda_ = exists(filename);
     if (use_lda_) {
+      auto buf = read(filename);
       std::istringstream is(std::string(buf.data(), buf.size()));
       LoadLdaTransform(filename, is);
     }
@@ -245,34 +258,43 @@ ForcedAligner::Impl::Impl(Manager *mgr, const ForcedAlignerConfig &config)
 
   {
     std::string filename = ModelFile("final.alimdl");
-    auto buf = ReadFile(mgr, filename);
+    auto buf = read(filename);
     std::istringstream is(std::string(buf.data(), buf.size()));
     LoadAcousticModel(filename, is);
   }
 
   {
     std::string filename = ModelFile("tree");
-    auto buf = ReadFile(mgr, filename);
+    auto buf = read(filename);
     std::istringstream is(std::string(buf.data(), buf.size()));
     LoadContextTree(filename, is);
   }
 
   {
     std::string filename = ModelFile("phones.txt");
-    auto buf = ReadFile(mgr, filename);
-    if (buf.empty()) {
-      LoadPhoneTableFromMeta();
-    } else {
+    if (exists(filename)) {
+      auto buf = read(filename);
       std::istringstream is(std::string(buf.data(), buf.size()));
       LoadPhoneTable(is);
+    } else {
+      LoadPhoneTableFromMeta();
     }
   }
 
   {
-    auto buf = ReadFile(mgr, config_.lexicon);
+    auto buf = read(config_.lexicon);
     lexicon_ = FaLexicon::LoadFromString(std::string(buf.data(), buf.size()));
   }
+}
 
+template <typename Manager>
+ForcedAligner::Impl::Impl(Manager *mgr, const ForcedAlignerConfig &config)
+    : config_(config) {  // NOLINT
+  ValidateConfig();
+  auto exists = [mgr](const std::string &p) { return FileExists(mgr, p); };
+  auto read = [mgr](const std::string &p) { return ReadFile(mgr, p); };
+  CheckModelFiles(exists);
+  LoadModelFiles(exists, read);
   FinishLoad();
 }
 
@@ -288,45 +310,10 @@ template ForcedAligner::Impl::Impl(NativeResourceManager *mgr,
 
 ForcedAligner::Impl::Impl(const ForcedAlignerConfig &config) : config_(config) {
   ValidateConfig();
-  CheckModelFiles();
-
-  {
-    std::string filename = ModelFile("meta.json");
-    std::ifstream is = OpenInputFile(filename);
-    meta_ = ParseFaModelMeta(filename, is);
-  }
-
-  use_lda_ = FileExists(ModelFile("lda.mat"));
-  if (use_lda_) {
-    std::string filename = ModelFile("lda.mat");
-    std::ifstream is = OpenInputFile(filename, std::ios::binary);
-    LoadLdaTransform(filename, is);
-  }
-
-  {
-    std::string filename = ModelFile("final.alimdl");
-    std::ifstream is = OpenInputFile(filename, std::ios::binary);
-    LoadAcousticModel(filename, is);
-  }
-
-  {
-    std::string filename = ModelFile("tree");
-    std::ifstream is = OpenInputFile(filename, std::ios::binary);
-    LoadContextTree(filename, is);
-  }
-
-  {
-    std::string filename = ModelFile("phones.txt");
-    if (FileExists(filename)) {
-      std::ifstream is = OpenInputFile(filename);
-      LoadPhoneTable(is);
-    } else {
-      LoadPhoneTableFromMeta();
-    }
-  }
-
-  lexicon_ = FaLexicon::Load(config_.lexicon);
-
+  auto exists = [](const std::string &p) { return FileExists(p); };
+  auto read = [](const std::string &p) { return ReadFile(p); };
+  CheckModelFiles(exists);
+  LoadModelFiles(exists, read);
   FinishLoad();
 }
 
@@ -437,19 +424,6 @@ std::string ForcedAligner::Impl::ModelFile(const char *name) const {
   return config_.model_dir + "/" + name;
 }
 
-void ForcedAligner::Impl::CheckModelFiles() const {
-  for (const char *name : {"meta.json", "final.alimdl", "tree"}) {
-    std::string p = ModelFile(name);
-    if (!FileExists(p)) {
-      throw std::runtime_error("ForcedAligner: missing required file: '" + p +
-                               "'");
-    }
-  }
-  if (!FileExists(config_.lexicon)) {
-    throw std::invalid_argument("ForcedAligner: lexicon does not exist: '" +
-                                config_.lexicon + "'");
-  }
-}
 
 void ForcedAligner::Impl::LoadLdaTransform(const std::string &filename,
                                            std::istream &is) {
@@ -719,10 +693,11 @@ ForcedAligner::Impl::ResolvedWords ForcedAligner::Impl::ResolveWords(
   }
 
   if (num_oov == static_cast<int32_t>(tokens.size())) {
-    throw std::runtime_error(
+    SHERPA_ONNX_LOGE(
         "ForcedAligner: every word is out-of-vocabulary; the lexicon key "
         "shape does not match the text (e.g. hanzi text with a pinyin-keyed "
-        "lexicon)");
+        "lexicon); returning an empty result");
+    return {};
   }
   if (num_oov > 0) {
     SHERPA_ONNX_LOGE("%d of %d words are out-of-vocabulary (mapped to '%s')",
@@ -911,6 +886,10 @@ ForcedAlignmentResult ForcedAligner::Impl::Compute(
     SHERPA_ONNX_LOGE("debug: tokens: %d", static_cast<int>(tokens.size()));
   }
   ResolvedWords words = ResolveWords(tokens, debug);
+  if (words.word_ids.empty()) {
+    // Every word is out-of-vocabulary; ResolveWords() has logged the reason.
+    return {};
+  }
 
   fst::VectorFst<fst::StdArc> graph = CompileAlignGraph(words);
   std::vector<int32_t> aligned_words;

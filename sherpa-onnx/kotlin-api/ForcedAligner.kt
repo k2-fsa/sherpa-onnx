@@ -71,7 +71,11 @@ class ForcedAligner(
      *   Punctuation is ignored
      * @return the alignment result; empty (no tiers) with a warning on
      *   stderr when the stream is null, the text is empty, the stream has no
-     *   features, or word boundaries cannot be recovered
+     *   features, every word is out-of-vocabulary, or word boundaries cannot
+     *   be recovered
+     * @throws RuntimeException if the alignment fails
+     * @throws NullPointerException if this aligner or the stream has
+     *   already been released
      */
     fun compute(stream: OfflineStream, text: String): ForcedAlignmentResult =
         compute(ptr, stream.ptr, text)

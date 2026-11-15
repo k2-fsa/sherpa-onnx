@@ -76,7 +76,14 @@ class ForcedAligner::Impl {
 
   std::string ModelFile(const char *name) const;
 
-  void CheckModelFiles() const;
+  // The callbacks resolve paths either against the file system or against
+  // a resource manager (Android asset manager / OHOS native resource
+  // manager).
+  template <typename Exists>
+  void CheckModelFiles(const Exists &exists) const;
+
+  template <typename Exists, typename Read>
+  void LoadModelFiles(const Exists &exists, const Read &read);
 
   void LoadLdaTransform(const std::string &filename, std::istream &is);
 

@@ -7,7 +7,7 @@ on:
       - jni-fa
       - java
     paths:
-      - '.github/workflows/run-java-test.yaml'
+      - '.github/workflows/java.yaml'
       - 'cmake/**'
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'

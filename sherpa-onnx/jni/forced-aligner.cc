@@ -50,7 +50,7 @@ static ForcedAlignerConfig GetForcedAlignerConfig(JNIEnv *env, jobject config,
 static jobject NewAlignmentInterval(JNIEnv *env, const AlignmentInterval &iv) {
   jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/AlignmentInterval");
   jmethodID ctor = env->GetMethodID(cls, "<init>", "(FFLjava/lang/String;)V");
-  jstring text = env->NewStringUTF(iv.text.c_str());
+  jstring text = SafeNewStringUTF(env, iv.text);
   jobject ans = env->NewObject(cls, ctor, iv.start, iv.end, text);
   env->DeleteLocalRef(cls);
   env->DeleteLocalRef(text);
@@ -73,7 +73,7 @@ static jobject NewAlignmentTier(JNIEnv *env, const AlignmentTier &tier) {
   jmethodID ctor = env->GetMethodID(
       cls, "<init>",
       "(Ljava/lang/String;[Lcom/k2fsa/sherpa/onnx/AlignmentInterval;)V");
-  jstring name = env->NewStringUTF(tier.name.c_str());
+  jstring name = SafeNewStringUTF(env, tier.name);
   jobject ans = env->NewObject(cls, ctor, name, intervals);
   env->DeleteLocalRef(cls);
   env->DeleteLocalRef(name);
@@ -98,7 +98,7 @@ static jobject NewForcedAlignmentResult(JNIEnv *env,
                                     "(F[Lcom/k2fsa/sherpa/onnx/AlignmentTier;"
                                     "Ljava/lang/String;)V");
   std::string text_grid = result.ToTextGrid();
-  jstring textgrid = env->NewStringUTF(text_grid.c_str());
+  jstring textgrid = SafeNewStringUTF(env, text_grid);
   jobject ans = env->NewObject(cls, ctor, result.duration, tiers, textgrid);
   env->DeleteLocalRef(cls);
   env->DeleteLocalRef(textgrid);
@@ -121,6 +121,11 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_ForcedAligner_newFromFile(
 
   if (config.debug) {
     SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  }
+
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
   }
 
   sherpa_onnx::ForcedAligner *aligner = nullptr;
@@ -157,6 +162,18 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_ForcedAligner_newFromAsset(
     SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
   }
 
+#if __ANDROID_API__ >= 9
+  if (!config.Validate(mgr)) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#else
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#endif
+
   sherpa_onnx::ForcedAligner *aligner = nullptr;
   try {
     aligner = new sherpa_onnx::ForcedAligner(
@@ -181,31 +198,50 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_ForcedAligner_delete(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_ForcedAligner_createStream(
-    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
-  auto aligner = reinterpret_cast<sherpa_onnx::ForcedAligner *>(ptr);
-  std::unique_ptr<sherpa_onnx::OfflineStream> s = aligner->CreateStream();
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  return SafeJNI(
+      env, "ForcedAligner_createStream",
+      [&]() -> jlong {
+        if (!ValidatePointer(env, ptr, "ForcedAligner_createStream",
+                             "ForcedAligner pointer is null.")) {
+          return 0;
+        }
 
-  // The user is responsible to free the returned pointer.
-  //
-  // See Java_com_k2fsa_sherpa_onnx_OfflineStream_delete() from
-  // ./offline-stream.cc
-  sherpa_onnx::OfflineStream *p = s.release();
-  return (jlong)p;
+        auto aligner = reinterpret_cast<sherpa_onnx::ForcedAligner *>(ptr);
+        std::unique_ptr<sherpa_onnx::OfflineStream> s = aligner->CreateStream();
+
+        // The user is responsible to free the returned pointer.
+        //
+        // See Java_com_k2fsa_sherpa_onnx_OfflineStream_delete() from
+        // ./offline-stream.cc
+        return (jlong)s.release();
+      },
+      (jlong)0);
 }
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_ForcedAligner_compute(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jlong stream_ptr, jstring text) {
-  auto aligner = reinterpret_cast<sherpa_onnx::ForcedAligner *>(ptr);
-  auto stream =
-      reinterpret_cast<const sherpa_onnx::OfflineStream *>(stream_ptr);
+  return SafeJNI(
+      env, "ForcedAligner_compute",
+      [&]() -> jobject {
+        if (!ValidatePointer(env, ptr, "ForcedAligner_compute",
+                             "ForcedAligner pointer is null.") ||
+            !ValidatePointer(env, stream_ptr, "ForcedAligner_compute",
+                             "OfflineStream pointer is null.")) {
+          return (jobject)nullptr;
+        }
 
-  const char *p_text = env->GetStringUTFChars(text, nullptr);
-  std::string cpp_text(p_text);
-  env->ReleaseStringUTFChars(text, p_text);
+        auto aligner = reinterpret_cast<sherpa_onnx::ForcedAligner *>(ptr);
+        auto stream =
+            reinterpret_cast<const sherpa_onnx::OfflineStream *>(stream_ptr);
 
-  sherpa_onnx::ForcedAlignmentResult result =
-      aligner->Compute(stream, cpp_text);
+        std::string cpp_text = JStringToUtf8(env, text);
 
-  return sherpa_onnx::NewForcedAlignmentResult(env, result);
+        sherpa_onnx::ForcedAlignmentResult result =
+            aligner->Compute(stream, cpp_text);
+
+        return sherpa_onnx::NewForcedAlignmentResult(env, result);
+      },
+      (jobject)nullptr);
 }

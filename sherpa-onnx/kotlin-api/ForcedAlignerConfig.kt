@@ -62,13 +62,18 @@ package com.k2fsa.sherpa.onnx
  * A lexicon looks like:
  *
  * ```
- * ask æ s k              # one word, one pronunciation
- * can k ə n              # a second word
- * can kʰ æ n             # a second pronunciation of the same word
- * 行 x a ŋ               # Chinese: one line per reading (polyphones)
+ * ask æ s k
+ * can k ə n
+ * can kʰ æ n
+ * 行 x a ŋ
  * 行 h a ŋ
- * 研究 || i n ɛ n || tɕ i o u  # per-character phone groups of a phrase
+ * 研究 || i n ɛ n || tɕ i o u
  * ```
+ *
+ * `ask æ s k` is one word with one pronunciation. `can k ə n` and
+ * `can kʰ æ n` are two pronunciations of the word "can". The two `行`
+ * lines give the two readings of a Chinese polyphone. `研究 || ...` is a
+ * phrase with a two-character key: one phone group per character.
  *
  * @property options default alignment options
  * @property debug true to print debug information: model info while loading

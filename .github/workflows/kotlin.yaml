@@ -7,7 +7,7 @@ on:
       - jni-fa
       - kotlin
     paths:
-      - '.github/workflows/jni.yaml'
+      - '.github/workflows/kotlin.yaml'
       - 'cmake/**'
       - 'kotlin-api-examples/**'
       - 'sherpa-onnx/kotlin-api/**'
