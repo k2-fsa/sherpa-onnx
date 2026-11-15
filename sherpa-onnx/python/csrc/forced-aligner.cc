@@ -346,7 +346,8 @@ static void PybindForcedAlignerConfig(py::module *m) {
       .def_readwrite("options", &PyClass::options,
                      kForcedAlignerConfigOptionsDoc)
       .def_readwrite("debug", &PyClass::debug, kForcedAlignerConfigDebugDoc)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
