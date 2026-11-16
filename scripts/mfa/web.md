@@ -15,6 +15,36 @@ Praat **TextGrid** or txt files, and share the result with other apps
 (WeChat, ...). Everything runs locally in the browser — no backend, no
 uploads, offline-capable.
 
+## Try it in your browser
+
+The apps are hosted on GitHub Pages — click a link to open the demo of the
+model you want (the first visit downloads the model, 3–37 MB, with a
+progress bar):
+
+| Model | Language | Link |
+|-------|----------|------|
+| `zh-aishell3-pinyin` | Chinese | [Open the demo](https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/zh-aishell3-pinyin/) |
+| `zh-biaobei-pinyin` | Chinese | [Open the demo](https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/zh-biaobei-pinyin/) |
+| `zh-large-pinyin` | Chinese | [Open the demo](https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/zh-large-pinyin/) |
+| `english-mfa-v2.2.1` | English | [Open the demo](https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/english-mfa-v2.2.1/) |
+| `english-mfa-v3.0.0` | English | [Open the demo](https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/english-mfa-v3.0.0/) |
+| `english-mfa-v3.1.0` | English | [Open the demo](https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/english-mfa-v3.1.0/) |
+
+The entry points in full:
+
+- `zh-aishell3-pinyin` (Chinese):
+  https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/zh-aishell3-pinyin/
+- `zh-biaobei-pinyin` (Chinese):
+  https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/zh-biaobei-pinyin/
+- `zh-large-pinyin` (Chinese):
+  https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/zh-large-pinyin/
+- `english-mfa-v2.2.1` (English):
+  https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/english-mfa-v2.2.1/
+- `english-mfa-v3.0.0` (English):
+  https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/english-mfa-v3.0.0/
+- `english-mfa-v3.1.0` (English):
+  https://k2-fsa.github.io/sherpa/onnx/forced-alignment/demo/english-mfa-v3.1.0/
+
 ## Which file do I need?
 
 One app per model. Download the zip of the model you want, unzip it, and
