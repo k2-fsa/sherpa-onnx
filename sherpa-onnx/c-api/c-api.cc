@@ -53,6 +53,14 @@
 
 #define SHERPA_ONNX_OR(x, y) (x ? x : y)
 
+// Copy a std::string to a new C string; the caller must delete[] it.
+static char *CopyString(const std::string &s) {
+  char *ans = new char[s.size() + 1];
+  std::copy(s.begin(), s.end(), ans);
+  ans[s.size()] = 0;
+  return ans;
+}
+
 const char *SherpaOnnxGetVersionStr() { return sherpa_onnx::GetVersionStr(); }
 const char *SherpaOnnxGetGitSha1() { return sherpa_onnx::GetGitSha1(); }
 const char *SherpaOnnxGetGitDate() { return sherpa_onnx::GetGitDate(); }
@@ -300,17 +308,11 @@ const SherpaOnnxOnlineRecognizerResult *SherpaOnnxGetOnlineStreamResult(
   memset(r, 0, sizeof(SherpaOnnxOnlineRecognizerResult));
 
   // copy text
-  char *pText = new char[text.size() + 1];
-  std::copy(text.begin(), text.end(), pText);
-  pText[text.size()] = 0;
-  r->text = pText;
+  r->text = CopyString(text);
 
   // copy json
   std::string json = result.AsJsonString();
-  char *pJson = new char[json.size() + 1];
-  std::copy(json.begin(), json.end(), pJson);
-  pJson[json.size()] = 0;
-  r->json = pJson;
+  r->json = CopyString(json);
 
   // copy tokens
   auto count = result.tokens.size();
@@ -371,10 +373,7 @@ const char *SherpaOnnxGetOnlineStreamResultAsJson(
   sherpa_onnx::OnlineRecognizerResult result =
       recognizer->impl->GetResult(stream->impl.get());
   std::string json = result.AsJsonString();
-  char *pJson = new char[json.size() + 1];
-  std::copy(json.begin(), json.end(), pJson);
-  pJson[json.size()] = 0;
-  return pJson;
+  return CopyString(json);
 }
 
 void SherpaOnnxDestroyOnlineStreamResultJson(const char *s) {
@@ -814,38 +813,23 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
   auto r = new SherpaOnnxOfflineRecognizerResult;
   memset(r, 0, sizeof(SherpaOnnxOfflineRecognizerResult));
 
-  char *pText = new char[text.size() + 1];
-  std::copy(text.begin(), text.end(), pText);
-  pText[text.size()] = 0;
-  r->text = pText;
+  r->text = CopyString(text);
 
   // lang
   const auto &lang = result.lang;
-  char *c_lang = new char[lang.size() + 1];
-  std::copy(lang.begin(), lang.end(), c_lang);
-  c_lang[lang.size()] = '\0';
-  r->lang = c_lang;
+  r->lang = CopyString(lang);
 
   // emotion
   const auto &emotion = result.emotion;
-  char *c_emotion = new char[emotion.size() + 1];
-  std::copy(emotion.begin(), emotion.end(), c_emotion);
-  c_emotion[emotion.size()] = '\0';
-  r->emotion = c_emotion;
+  r->emotion = CopyString(emotion);
 
   // event
   const auto &event = result.event;
-  char *c_event = new char[event.size() + 1];
-  std::copy(event.begin(), event.end(), c_event);
-  c_event[event.size()] = '\0';
-  r->event = c_event;
+  r->event = CopyString(event);
 
   // copy json
   std::string json = result.AsJsonString();
-  char *pJson = new char[json.size() + 1];
-  std::copy(json.begin(), json.end(), pJson);
-  pJson[json.size()] = 0;
-  r->json = pJson;
+  r->json = CopyString(json);
 
   // copy tokens
   auto count = result.tokens.size();
@@ -974,10 +958,7 @@ const char *SherpaOnnxGetOfflineStreamResultAsJson(
   const sherpa_onnx::OfflineRecognitionResult &result =
       stream->impl->GetResult();
   std::string json = result.AsJsonString();
-  char *pJson = new char[json.size() + 1];
-  std::copy(json.begin(), json.end(), pJson);
-  pJson[json.size()] = 0;
-  return pJson;
+  return CopyString(json);
 }
 
 void SherpaOnnxDestroyOfflineStreamResultJson(const char *s) {
@@ -1153,17 +1134,11 @@ const SherpaOnnxKeywordResult *SherpaOnnxGetKeywordResult(
   r->start_time = result.start_time;
 
   // copy keyword
-  char *pKeyword = new char[keyword.size() + 1];
-  std::copy(keyword.begin(), keyword.end(), pKeyword);
-  pKeyword[keyword.size()] = 0;
-  r->keyword = pKeyword;
+  r->keyword = CopyString(keyword);
 
   // copy json
   std::string json = result.AsJsonString();
-  char *pJson = new char[json.size() + 1];
-  std::copy(json.begin(), json.end(), pJson);
-  pJson[json.size()] = 0;
-  r->json = pJson;
+  r->json = CopyString(json);
 
   // copy tokens
   auto count = result.tokens.size();
@@ -1225,10 +1200,7 @@ const char *SherpaOnnxGetKeywordResultAsJson(
       spotter->impl->GetResult(stream->impl.get());
 
   std::string json = result.AsJsonString();
-  char *pJson = new char[json.size() + 1];
-  std::copy(json.begin(), json.end(), pJson);
-  pJson[json.size()] = 0;
-  return pJson;
+  return CopyString(json);
 }
 
 void SherpaOnnxFreeKeywordResultJson(const char *s) {
@@ -1686,10 +1658,7 @@ int32_t SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts) {
 
 const char *SherpaOnnxOfflineTtsLang(const SherpaOnnxOfflineTts *tts) {
   std::string lang = tts->impl->Lang();
-  char *p = new char[lang.size() + 1];
-  std::copy(lang.begin(), lang.end(), p);
-  p[lang.size()] = 0;
-  return p;
+  return CopyString(lang);
 }
 
 void SherpaOnnxDestroyOfflineTtsLang(const char *s) {
@@ -2086,9 +2055,7 @@ int32_t SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts) {
 
 const char *SherpaOnnxOfflineTtsLang(const SherpaOnnxOfflineTts *tts) {
   SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
-  char *p = new char[1];
-  p[0] = 0;
-  return p;
+  return CopyString("");
 }
 
 void SherpaOnnxDestroyOfflineTtsLang(const char *s) {
@@ -2342,12 +2309,9 @@ SherpaOnnxSpokenLanguageIdentificationCompute(
     const SherpaOnnxSpokenLanguageIdentification *slid,
     const SherpaOnnxOfflineStream *s) {
   std::string lang = slid->impl->Compute(s->impl.get());
-  char *c_lang = new char[lang.size() + 1];
-  std::copy(lang.begin(), lang.end(), c_lang);
-  c_lang[lang.size()] = '\0';
   SherpaOnnxSpokenLanguageIdentificationResult *r =
       new SherpaOnnxSpokenLanguageIdentificationResult;
-  r->lang = c_lang;
+  r->lang = CopyString(lang);
   return r;
 }
 
@@ -2524,11 +2488,7 @@ const char *SherpaOnnxSpeakerEmbeddingManagerSearch(
     return nullptr;
   }
 
-  char *name = new char[r.size() + 1];
-  std::copy(r.begin(), r.end(), name);
-  name[r.size()] = '\0';
-
-  return name;
+  return CopyString(r);
 }
 
 void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(const char *name) {
@@ -2551,11 +2511,7 @@ SherpaOnnxSpeakerEmbeddingManagerGetBestMatches(
   for (int i = 0; i < matches.size(); ++i) {
     resultMatches[i].score = matches[i].score;
 
-    char *name = new char[matches[i].name.size() + 1];
-    std::copy(matches[i].name.begin(), matches[i].name.end(), name);
-    name[matches[i].name.size()] = '\0';
-
-    resultMatches[i].name = name;
+    resultMatches[i].name = CopyString(matches[i].name);
   }
 
   auto *result = new SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult();
@@ -2608,9 +2564,7 @@ const char *const *SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
 
   int32_t i = 0;
   for (const auto &name : all_speakers) {
-    p[i] = new char[name.size() + 1];
-    std::copy(name.begin(), name.end(), p[i]);
-    p[i][name.size()] = '\0';
+    p[i] = CopyString(name);
 
     i += 1;
   }
@@ -2720,11 +2674,7 @@ const SherpaOnnxAudioEvent *const *SherpaOnnxAudioTaggingCompute(
   for (const auto &e : events) {
     SherpaOnnxAudioEvent *p = new SherpaOnnxAudioEvent;
 
-    char *name = new char[e.name.size() + 1];
-    std::copy(e.name.begin(), e.name.end(), name);
-    name[e.name.size()] = 0;
-
-    p->name = name;
+    p->name = CopyString(e.name);
 
     p->index = e.index;
     p->prob = e.prob;
@@ -2814,11 +2764,7 @@ const char *SherpaOfflinePunctuationAddPunct(
   if (!punct || !text) return nullptr;
   std::string text_with_punct = punct->impl->AddPunctuation(text);
 
-  char *ans = new char[text_with_punct.size() + 1];
-  std::copy(text_with_punct.begin(), text_with_punct.end(), ans);
-  ans[text_with_punct.size()] = 0;
-
-  return ans;
+  return CopyString(text_with_punct);
 }
 
 void SherpaOfflinePunctuationFreeText(const char *text) {
@@ -2893,10 +2839,7 @@ const char *SherpaOnnxOnlinePunctuationAddPunct(
 
   try {
     std::string s = punctuation->impl->AddPunctuationWithCase(text);
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = '\0';
-    return p;
+    return CopyString(s);
   } catch (const std::exception &e) {
     SHERPA_ONNX_LOGE("Failed to add punctuation: %s", e.what());
     return nullptr;
@@ -4080,11 +4023,7 @@ const char *SherpaOfflineDiacritizationAddDiacritics(
   if (!diacrt || !text) return nullptr;
   std::string text_with_diacritics = diacrt->impl->AddDiacritics(text);
 
-  char *ans = new char[text_with_diacritics.size() + 1];
-  std::copy(text_with_diacritics.begin(), text_with_diacritics.end(), ans);
-  ans[text_with_diacritics.size()] = 0;
-
-  return ans;
+  return CopyString(text_with_diacritics);
 }
 
 void SherpaOfflineDiacritizationFreeText(const char *text) {
@@ -4116,14 +4055,6 @@ static sherpa_onnx::ForcedAlignerConfig GetForcedAlignerConfig(
       SHERPA_ONNX_OR(config->options.acoustic_scale, 0.1f);
   ans.debug = config->debug;
 
-  return ans;
-}
-
-// Copy a std::string to a new C string; the caller must delete[] it.
-static char *CopyString(const std::string &s) {
-  char *ans = new char[s.size() + 1];
-  std::copy(s.begin(), s.end(), ans);
-  ans[s.size()] = 0;
   return ans;
 }
 
