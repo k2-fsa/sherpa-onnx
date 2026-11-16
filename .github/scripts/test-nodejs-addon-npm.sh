@@ -14,6 +14,53 @@ node_version=$(node -p "process.versions.node.split('.')[0]")
 echo "----------Version----------"
 node ./test_version.js
 
+echo "----------Forced alignment (english-mfa-v3.1.0)----------"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2
+
+node ./test_forced_alignment_english.js
+grep -q 'name = "phones"' en.TextGrid
+grep -q 'name = "words"' en.TextGrid
+cat en.TextGrid
+
+node ./test_forced_alignment_english_async.js
+grep -q 'name = "phones"' en-async.TextGrid
+grep -q 'name = "words"' en-async.TextGrid
+cat en-async.TextGrid
+
+mkdir -p test_forced_alignment_english
+mv en.TextGrid en-async.TextGrid test_forced_alignment_english/
+cp english-mfa-v3.1.0/en.wav test_forced_alignment_english/
+python3 -m pip install soundfile
+python3 ../../python-api-examples/textgrid-to-word-wavs.py \
+  --wav english-mfa-v3.1.0/en.wav \
+  --textgrid test_forced_alignment_english/en.TextGrid \
+  --out-dir test_forced_alignment_english/word-clips-en
+
+echo "----------Forced alignment (zh-aishell3-pinyin)----------"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2
+
+node ./test_forced_alignment_chinese.js
+grep -q 'name = "phones"' zh.TextGrid
+grep -q 'name = "words"' zh.TextGrid
+cat zh.TextGrid
+
+node ./test_forced_alignment_chinese_async.js
+grep -q 'name = "phones"' zh-async.TextGrid
+grep -q 'name = "words"' zh-async.TextGrid
+cat zh-async.TextGrid
+
+mkdir -p test_forced_alignment_chinese
+mv zh.TextGrid zh-async.TextGrid test_forced_alignment_chinese/
+cp zh-aishell3-pinyin/zh.wav test_forced_alignment_chinese/
+python3 ../../python-api-examples/textgrid-to-word-wavs.py \
+  --wav zh-aishell3-pinyin/zh.wav \
+  --textgrid test_forced_alignment_chinese/zh.TextGrid \
+  --out-dir test_forced_alignment_chinese/word-clips-zh
+
+rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+
 echo "----------Source separation----------"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2

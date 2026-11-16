@@ -23,6 +23,8 @@ void InitAudioTagging(Napi::Env env, Napi::Object exports);
 
 void InitOfflinePunctuation(Napi::Env env, Napi::Object exports);
 
+void InitForcedAligner(Napi::Env env, Napi::Object exports);
+
 void InitOnlinePunctuation(Napi::Env env, Napi::Object exports);
 
 void InitKeywordSpotting(Napi::Env env, Napi::Object exports);
@@ -54,6 +56,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitSpeakerID(env, exports);
   InitAudioTagging(env, exports);
   InitOfflinePunctuation(env, exports);
+  InitForcedAligner(env, exports);
   InitOnlinePunctuation(env, exports);
   InitKeywordSpotting(env, exports);
   InitNonStreamingSpeakerDiarization(env, exports);

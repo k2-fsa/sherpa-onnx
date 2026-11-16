@@ -66,6 +66,11 @@ export const offlineTtsGenerateAsyncWithConfig: (handle: object, input: object) 
 
 export const createOfflinePunctuation: (config: object, mgr?: object) => object;
 export const offlinePunctuationAddPunct: (handle: object, text: string) => string;
+export const createForcedAligner: (config: object, mgr?: object) => object;
+export const createForcedAlignerAsync: (config: object) => Promise<object>;
+export const forcedAlignerCreateStream: (handle: object) => object;
+export const forcedAlignerCompute: (handle: object, stream: object, text: string) => object;
+export const forcedAlignerComputeAsync: (handle: object, stream: object, text: string) => Promise<object>;
 export const createOnlinePunctuation: (config: object, mgr?: object) => object;
 export const onlinePunctuationAddPunct: (handle: object, text: string) => string;
 
