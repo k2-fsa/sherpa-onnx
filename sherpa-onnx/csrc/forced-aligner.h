@@ -15,13 +15,24 @@
 namespace sherpa_onnx {
 
 struct AlignmentInterval {
+  /// Start time in seconds.
   float start = 0.0f;
+
+  /// End time in seconds.
   float end = 0.0f;
+
+  /// Label of this interval: the phone symbol in the "phones" tier or the
+  /// word/character in the "words" tier. It is empty for a silence gap in
+  /// the "words" tier: the intervals tile the whole utterance, so the gaps
+  /// between words are reported as intervals with empty text.
   std::string text;
 };
 
 struct AlignmentTier {
+  /// Tier name: exactly "phones" or "words"; never empty.
   std::string name;
+
+  /// The intervals of this tier, in time order.
   std::vector<AlignmentInterval> intervals;
 };
 

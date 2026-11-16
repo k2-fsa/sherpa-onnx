@@ -6,7 +6,7 @@ package com.k2fsa.sherpa.onnx
  * The intervals tile the whole utterance: adjacent intervals share an
  * endpoint and silence is represented by intervals with an empty label.
  *
- * @property name tier name, e.g. "phones" or "words"
+ * @property name tier name: exactly "phones" or "words"; never empty
  * @property intervals the intervals of this tier, in time order; iterate
  *   them with a for-in loop
  */

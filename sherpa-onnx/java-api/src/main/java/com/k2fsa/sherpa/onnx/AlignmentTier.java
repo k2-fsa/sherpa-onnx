@@ -20,7 +20,8 @@ public final class AlignmentTier {
      * Constructor. Called from JNI; applications normally only read the
      * objects returned by {@link ForcedAligner#compute}.
      *
-     * @param name tier name, e.g. {@code "phones"} or {@code "words"}
+     * @param name tier name: exactly {@code "phones"} or {@code
+     *     "words"}; never empty
      * @param intervals the intervals of this tier, in time order
      */
     public AlignmentTier(String name, AlignmentInterval[] intervals) {

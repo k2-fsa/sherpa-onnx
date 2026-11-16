@@ -29,8 +29,11 @@ End time of this interval in seconds.
 )doc";
 
 static constexpr const char *kAlignmentIntervalTextDoc = R"doc(
-Label of this interval: a phone name, a word/character, or an empty
-string for silence gaps.
+Label of this interval: the phone symbol in the ``"phones"`` tier or the
+word/character in the ``"words"`` tier. It is an empty string for a
+silence gap in the ``"words"`` tier: the intervals tile the whole
+utterance, so the gaps between words are reported as intervals with
+empty text.
 )doc";
 
 static constexpr const char *kAlignmentTierDoc = R"doc(
@@ -38,7 +41,7 @@ One tier of an alignment: a named sequence of time intervals.
 )doc";
 
 static constexpr const char *kAlignmentTierNameDoc = R"doc(
-Name of this tier, e.g., ``"phones"`` or ``"words"``.
+Name of this tier: exactly ``"phones"`` or ``"words"``; never empty.
 )doc";
 
 static constexpr const char *kAlignmentTierIntervalsDoc = R"doc(

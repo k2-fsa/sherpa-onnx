@@ -11,8 +11,10 @@ package com.k2fsa.sherpa.onnx
  *
  * @property start start time of this interval in seconds
  * @property end end time of this interval in seconds
- * @property text label of this interval: a phone, a word/character, or empty
- *   for silence gaps
+ * @property text label of this interval: the phone symbol in the "phones"
+ *   tier or the word/character in the "words" tier; empty for a silence gap
+ *   in the "words" tier (the intervals tile the whole utterance, so the
+ *   gaps between words are reported as intervals with empty text)
  */
 data class AlignmentInterval(
     val start: Float,
