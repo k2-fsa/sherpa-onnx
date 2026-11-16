@@ -4,6 +4,8 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
+  // relative asset URLs so the build works from any sub-path
+  base: "./",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

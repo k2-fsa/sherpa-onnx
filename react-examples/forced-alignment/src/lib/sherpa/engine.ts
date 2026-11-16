@@ -13,7 +13,8 @@
 
 import { currentModel } from "../model-config";
 
-const SHERPA_BASE = "/sherpa";
+// relative to the page, so the app works from any sub-path
+const SHERPA_BASE = "sherpa";
 
 const MAIN_JS = "sherpa-onnx-wasm-main-fa.js";
 const FA_JS = "sherpa-onnx-fa.js";

@@ -37,10 +37,14 @@ if [ ! -f public/sherpa/sherpa-onnx-wasm-main-fa.data ]; then
   cp -v ../../wasm/forced-alignment/sherpa-onnx-fa.js public/sherpa/
 fi
 
-# 2. Set the model index (the same sed the CI uses).
-sed -i.bak "s/export const SELECTED_MODEL_INDEX = .*/export const SELECTED_MODEL_INDEX = $index;/" src/lib/model-config.ts
-rm -f src/lib/model-config.ts.bak
-grep "SELECTED_MODEL_INDEX" src/lib/model-config.ts
+# 2. Set the model index (the same sed the CI uses). The file is restored
+# afterwards so building never dirties the working tree.
+config=src/lib/model-config.ts
+cp -v $config $config.orig
+trap 'mv -f $config.orig $config' EXIT
+sed -i.bak "s/export const SELECTED_MODEL_INDEX = .*/export const SELECTED_MODEL_INDEX = $index;/" $config
+rm -f $config.bak
+grep "SELECTED_MODEL_INDEX" $config
 
 # 3. Build.
 npm install --no-audit --no-fund
