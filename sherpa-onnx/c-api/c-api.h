@@ -3216,9 +3216,10 @@ SHERPA_ONNX_API SherpaOnnxOfflineStream *SherpaOnnxForcedAlignerCreateStream(
  * @return Returns the alignment result. The caller must free it with
  *         SherpaOnnxDestroyForcedAlignmentResult(). An empty result (no
  *         tiers, empty textgrid) with a warning on stderr is returned when
- *         the stream is NULL, the text is empty, the stream has no features,
- *         every word is out-of-vocabulary, or word boundaries cannot be
- *         recovered. NULL is returned if the alignment itself fails.
+ *         the text is empty, the stream has no features, every word is
+ *         out-of-vocabulary, or word boundaries cannot be recovered. NULL
+ *         is returned if any argument is NULL or if the alignment itself
+ *         fails.
  *
  * @code
  * const SherpaOnnxForcedAlignmentResult *result =

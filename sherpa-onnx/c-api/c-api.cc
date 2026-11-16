@@ -4193,7 +4193,13 @@ const SherpaOnnxForcedAlignmentResult *SherpaOnnxForcedAlignerCompute(
   SherpaOnnxForcedAlignmentResult *ans = new SherpaOnnxForcedAlignmentResult;
 
   ans->duration = result.duration;
-  ans->textgrid = CopyString(result.ToTextGrid());
+  // Keep the textgrid empty when there are no tiers; ToTextGrid() emits a
+  // TextGrid header even for an empty result.
+  if (result.tiers.empty()) {
+    ans->textgrid = CopyString("");
+  } else {
+    ans->textgrid = CopyString(result.ToTextGrid());
+  }
 
   int32_t n = static_cast<int32_t>(result.tiers.size());
   SherpaOnnxForcedAlignmentTier *tiers = new SherpaOnnxForcedAlignmentTier[n];
