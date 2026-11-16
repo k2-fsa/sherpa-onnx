@@ -151,6 +151,19 @@ jobs:
           path: scripts/nodejs/test-online-speech-enhancement-voxlock-with-voice-sample
           if-no-files-found: warn
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-english-mfa-v3.1.0-nodejs-${{ matrix.os }}
+          # each dir holds the test wav, the TextGrid and the word clips
+          path: scripts/nodejs/test-forced-alignment-english
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-zh-aishell3-pinyin-nodejs-${{ matrix.os }}
+          path: scripts/nodejs/test-forced-alignment-chinese
+          if-no-files-found: warn
+
       - name: Setup tmate session
         if: false
         # if: failure()
