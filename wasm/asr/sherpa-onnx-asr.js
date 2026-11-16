@@ -2033,5 +2033,6 @@ if (typeof process == 'object' && typeof process.versions == 'object' &&
   module.exports = {
     createOnlineRecognizer,
     OfflineRecognizer,
+    OfflineStream,
   };
 }
