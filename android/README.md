@@ -20,6 +20,7 @@ for usage.
 |[SherpaOnnxAudioTaggingWearOS](./SherpaOnnxAudioTagging)|[URL](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos.html)| It shows how to use audio tagging on WearOS.|
 |[SherpaOnnxSimulateStreamingAsr](./SherpaOnnxSimulateStreamingAsr)|| It shows how to use a non-streaming ASR model for streaming speech recognition.|
 |[SherpaOnnxSimulateStreamingAsrWearOs](./SherpaOnnxSimulateStreamingAsrWearOs)|| It shows how to use a non-streaming ASR model for streaming speech recognition with WearOS.|
+|[SherpaOnnxForcedAlignment](./SherpaOnnxForcedAlignment)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/tag/apk-fa)| It is for forced alignment: given an audio file and its transcript, it computes the start/end time of every word; see [../scripts/mfa/android.md](../scripts/mfa/android.md).|
 
 ## Reproducible F-Droid builds
 
