@@ -347,14 +347,8 @@ void OnlineRecognizer::MaybeSkipVadSilence(OnlineStream *s) const {
 
   while (true) {
     int32_t local_processed = s->GetNumProcessedFrames();
-    // Safety clamp: never advance past what the feature extractor has
-    // actually buffered. The VAD's own coverage estimate
-    // (vad_covered, derived from window-count * window-shift-seconds)
-    // is necessarily approximate -- trusting it alone to gate how far
-    // num_processed_frames_ moves risks running DecodeStreams/GetFrames
-    // past real data and crashing (found via load testing: a long-
-    // running load test eventually hit `features.cc:GetFrames` tripping
-    // its "frame_index + n <= NumFramesReady()" assertion).
+    // Never skip past the feature frames that are actually buffered. The
+    // VAD coverage is only an estimate (window count * window shift).
     if (local_processed + chunk_shift > s->NumFramesReady()) {
       break;
     }
