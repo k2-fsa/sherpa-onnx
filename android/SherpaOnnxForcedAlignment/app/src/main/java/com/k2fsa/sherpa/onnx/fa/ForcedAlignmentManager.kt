@@ -9,7 +9,6 @@ import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-import java.util.concurrent.atomic.AtomicBoolean
 
 /** One completed alignment run, ready for display and playback. */
 data class AlignmentRun(
@@ -25,9 +24,13 @@ data class AlignmentRun(
 
 /**
  * Runs forced alignment on a background thread. Publishes status/log lines,
- * progress and the final result through the callbacks; [cancel] abandons the
- * current run (the single compute() call is not interruptible, so a cancelled
- * run's result is dropped).
+ * progress and the final result through the callbacks.
+ *
+ * [cancel] abandons the current run: the single compute() call cannot be
+ * interrupted, so the worker keeps going until it notices the cancellation.
+ * Exactly one of [onResult], [onError] or [onCancelled] is delivered per run,
+ * as a single synchronized terminal transition; a cancelled run never
+ * delivers a result.
  */
 class ForcedAlignmentManager(private val context: Context) {
     var onLog: (String) -> Unit = {}
@@ -37,17 +40,25 @@ class ForcedAlignmentManager(private val context: Context) {
     var onError: (String) -> Unit = {}
     var onCancelled: () -> Unit = {}
 
+    @Volatile
     var isRunning: Boolean = false
         private set
 
+    // The last completed run; kept here because the Align screen may be
+    // disposed (e.g. the Info tab is showing) when a run finishes.
+    @Volatile
+    var lastResult: AlignmentRun? = null
+
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
-    private val cancelled = AtomicBoolean(false)
     private var future: Future<*>? = null
     private var aligner: ForcedAligner? = null
-    private var pendingRelease = false
 
-    @Volatile
+    // Guards the fields below and the terminal-callback delivery.
+    private val lock = Any()
+    private var cancelled = false
+    private var terminalSent = false
     private var warmingUp = false
+    private var pendingRelease = false
 
     /**
      * Creates the native aligner in the background (model + lexicon are
@@ -55,7 +66,7 @@ class ForcedAlignmentManager(private val context: Context) {
      * failures are reported by the first real [run] instead.
      */
     fun warmUp() {
-        synchronized(this) {
+        synchronized(lock) {
             if (isRunning || warmingUp || aligner != null) return
             warmingUp = true
         }
@@ -65,10 +76,7 @@ class ForcedAlignmentManager(private val context: Context) {
             } catch (e: Throwable) {
                 // ignore here; the first run reports the error
             } finally {
-                warmingUp = false
-                if (pendingRelease) {
-                    releaseAligner()
-                }
+                taskFinished(isRun = false)
             }
         }
     }
@@ -81,14 +89,17 @@ class ForcedAlignmentManager(private val context: Context) {
      *   the input is invalid
      */
     fun run(uri: Uri?, cacheFile: File?, text: String): Boolean {
-        if (isRunning) return false
         val trimmed = text.trim()
         if (trimmed.isEmpty()) {
             onError("Please enter the transcript first")
             return false
         }
-        cancelled.set(false)
-        isRunning = true
+        synchronized(lock) {
+            if (isRunning) return false
+            cancelled = false
+            terminalSent = false
+            isRunning = true
+        }
         onProgress(0f)
         onStatus("Preparing input...")
         future = executor.submit {
@@ -97,38 +108,89 @@ class ForcedAlignmentManager(private val context: Context) {
             } catch (e: Throwable) {
                 // e.g. the model is missing from the APK assets and the
                 // native ForcedAligner constructor failed
-                onError("Error: ${e.message ?: e.javaClass.simpleName}")
+                deliverError("Error: ${e.message ?: e.javaClass.simpleName}")
             } finally {
-                isRunning = false
+                taskFinished(isRun = true)
                 onProgress(0f)
-                if (pendingRelease) {
-                    releaseAligner()
-                }
             }
         }
         return true
     }
 
+    /**
+     * Marks the current run as cancelled. [onCancelled] is delivered when the
+     * worker actually stops; until then [isRunning] stays true so a new run
+     * cannot start while the old one is still winding down.
+     */
     fun cancel() {
-        if (!isRunning) return
-        cancelled.set(true)
+        synchronized(lock) {
+            if (!isRunning || cancelled) return
+            cancelled = true
+        }
         onStatus("Cancelled")
         onLog("Cancelled")
-        onCancelled()
     }
 
     /** Releases the native aligner; call when the activity is destroyed. */
     fun dispose() {
-        cancelled.set(true)
+        val needRelease = synchronized(lock) {
+            cancelled = true
+            if (isRunning || warmingUp) {
+                // still using the native aligner; release it when the task
+                // finishes (see taskFinished())
+                pendingRelease = true
+                false
+            } else {
+                true
+            }
+        }
         future?.cancel(true)
         executor.shutdown()
-        if (isRunning || warmingUp) {
-            // still using the native aligner; release it when the task
-            // finishes (see the finally blocks of run()/warmUp())
-            pendingRelease = true
-        } else {
-            releaseAligner()
+        if (needRelease) releaseAligner()
+    }
+
+    /** Delivers a result unless this run was cancelled or already finished. */
+    private fun deliverResult(run: AlignmentRun) {
+        synchronized(lock) {
+            if (terminalSent || cancelled) return
+            terminalSent = true
+            lastResult = run
         }
+        onResult(run)
+    }
+
+    /** Delivers an error unless this run was cancelled or already finished. */
+    private fun deliverError(msg: String) {
+        synchronized(lock) {
+            if (terminalSent || cancelled) return
+            terminalSent = true
+        }
+        onError(msg)
+    }
+
+    private fun isCancelled(): Boolean = synchronized(lock) { cancelled }
+
+    /**
+     * Called when a background task (run or warm-up) has finished. Ends the
+     * run's terminal state (delivering [onCancelled] if the run was cancelled
+     * before delivering anything) and releases the aligner if [dispose] asked
+     * for a deferred release while this task was using it.
+     */
+    private fun taskFinished(isRun: Boolean) {
+        var notifyCancelled = false
+        val needRelease: Boolean
+        synchronized(lock) {
+            isRunning = false
+            warmingUp = false
+            needRelease = pendingRelease
+            pendingRelease = false
+            if (isRun && cancelled && !terminalSent) {
+                terminalSent = true
+                notifyCancelled = true
+            }
+        }
+        if (notifyCancelled) onCancelled()
+        if (needRelease) releaseAligner()
     }
 
     private fun releaseAligner() {
@@ -137,100 +199,111 @@ class ForcedAlignmentManager(private val context: Context) {
     }
 
     private fun doRun(uri: Uri?, cacheFile: File?, text: String) {
-        // 1. Resolve the input to a real file (FFmpeg wants a path).
-        val inputFile: File
-        val fileName: String
-        if (cacheFile != null) {
-            inputFile = cacheFile
-            fileName = cacheFile.name
-        } else if (uri != null) {
-            onStatus("Copying file...")
-            val copied = copyToCache(uri) ?: run {
-                onError("Could not read the selected file")
+        // Manager-owned copy of a picked file; deleted when the run ends.
+        var ownedInput: File? = null
+        try {
+            // 1. Resolve the input to a real file (FFmpeg wants a path).
+            val inputFile: File
+            val fileName: String
+            if (cacheFile != null) {
+                inputFile = cacheFile
+                fileName = cacheFile.name
+            } else if (uri != null) {
+                onStatus("Copying file...")
+                val copied = copyToCache(uri) ?: run {
+                    deliverError("Could not read the selected file")
+                    return
+                }
+                ownedInput = copied
+                inputFile = copied
+                fileName = context.queryDisplayName(uri)
+            } else {
+                deliverError("No input file")
                 return
             }
-            inputFile = copied
-            fileName = context.queryDisplayName(uri)
-        } else {
-            onError("No input file")
-            return
-        }
 
-        // 2. Decode any format to 16 kHz mono float32 PCM.
-        onLog("Loaded: $fileName")
-        onStatus("Decoding audio...")
-        onProgress(0.1f)
-        val decodeBegin = System.nanoTime()
-        val decoded = AudioDecoder.decode(inputFile, context.cacheDir)
-        val decodeSeconds = (System.nanoTime() - decodeBegin) / 1e9
-        if (decoded == null) {
-            onError("Error: Could not decode audio file")
-            return
-        }
-        if (cancelled.get()) {
-            onStatus("Cancelled")
-            onCancelled()
-            return
-        }
-        onLog(
-            "Decoded: ${decoded.duration} s, ${decoded.sampleRate} Hz, " +
-                "${decoded.samples.size} samples in ${decodeSeconds} s"
-        )
-        onProgress(0.5f)
+            // 2. Decode any format to 16 kHz mono float32 PCM.
+            onLog("Loaded: $fileName")
+            onStatus("Decoding audio...")
+            onProgress(0.1f)
+            val decodeBegin = System.nanoTime()
+            val decoded = AudioDecoder.decode(inputFile, context.cacheDir)
+            val decodeSeconds = (System.nanoTime() - decodeBegin) / 1e9
+            if (decoded == null) {
+                deliverError("Error: Could not decode audio file")
+                return
+            }
+            if (isCancelled()) {
+                onStatus("Cancelled")
+                return
+            }
+            onLog(
+                "Decoded: ${decoded.duration} s, ${decoded.sampleRate} Hz, " +
+                    "${decoded.samples.size} samples in ${decodeSeconds} s"
+            )
+            onProgress(0.5f)
 
-        // 3. Align.
-        onStatus("Aligning...")
-        val begin = System.nanoTime()
-        val aligner = getAligner()
-        val stream = aligner.createStream()
-        val result = try {
-            stream.acceptWaveform(decoded.samples, decoded.sampleRate)
-            aligner.compute(stream, text)
+            // 3. Align.
+            onStatus("Aligning...")
+            val begin = System.nanoTime()
+            val aligner = getAligner()
+            val stream = aligner.createStream()
+            val result = try {
+                stream.acceptWaveform(decoded.samples, decoded.sampleRate)
+                aligner.compute(stream, text)
+            } finally {
+                stream.release()
+            }
+            if (isCancelled()) {
+                onStatus("Cancelled")
+                return
+            }
+            val elapsedSeconds = (System.nanoTime() - begin) / 1e9
+
+            // 4. Collect the word tier.
+            val wordsTier = result.tiers.firstOrNull { it.name == "words" }
+            val words = wordsTier?.intervals?.filter { it.text.isNotEmpty() }
+                ?: emptyList()
+            if (words.isEmpty()) {
+                deliverError(
+                    "Alignment failed (no words). Please check that the " +
+                        "transcript matches the audio."
+                )
+                return
+            }
+
+            onProgress(1f)
+            onStatus("Done")
+            onLog(
+                ("Aligned: ${words.size} words | Audio duration: " +
+                    "%.3f s | Decode time: %.3f s | Elapsed: %.3f s | " +
+                    "RTF = %.3f").format(
+                    decoded.duration, decodeSeconds, elapsedSeconds,
+                    if (decoded.duration > 0) {
+                        elapsedSeconds / decoded.duration
+                    } else {
+                        0.0
+                    },
+                )
+            )
+            deliverResult(
+                AlignmentRun(
+                    words = words,
+                    textGrid = result.textGrid,
+                    duration = result.duration,
+                    decodeSeconds = decodeSeconds,
+                    elapsedSeconds = elapsedSeconds,
+                    samples = decoded.samples,
+                    sampleRate = decoded.sampleRate,
+                    fileName = fileName,
+                )
+            )
         } finally {
-            stream.release()
+            ownedInput?.delete()
         }
-        if (cancelled.get()) {
-            onStatus("Cancelled")
-            onCancelled()
-            return
-        }
-        val elapsedSeconds = (System.nanoTime() - begin) / 1e9
-
-        // 4. Collect the word tier.
-        val wordsTier = result.tiers.firstOrNull { it.name == "words" }
-        val words = wordsTier?.intervals?.filter { it.text.isNotEmpty() } ?: emptyList()
-        if (words.isEmpty()) {
-            onError(
-                "Alignment failed (no words). Please check that the " +
-                    "transcript matches the audio."
-            )
-            return
-        }
-
-        onProgress(1f)
-        onStatus("Done")
-        onLog(
-            "Aligned: ${words.size} words | Audio duration: " +
-                "%.3f s | Decode time: %.3f s | Elapsed: %.3f s | RTF = %.3f"
-                    .format(
-                        decoded.duration, decodeSeconds, elapsedSeconds,
-                        if (decoded.duration > 0) elapsedSeconds / decoded.duration else 0.0,
-                    )
-        )
-        onResult(
-            AlignmentRun(
-                words = words,
-                textGrid = result.textGrid,
-                duration = result.duration,
-                decodeSeconds = decodeSeconds,
-                elapsedSeconds = elapsedSeconds,
-                samples = decoded.samples,
-                sampleRate = decoded.sampleRate,
-                fileName = fileName,
-            )
-        )
     }
 
+    // Only called from the single-threaded executor, so no locking needed.
     private fun getAligner(): ForcedAligner {
         aligner?.let { return it }
         val model = currentModel

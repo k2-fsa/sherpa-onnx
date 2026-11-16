@@ -11,7 +11,7 @@ fun Context.queryDisplayName(uri: Uri): String {
     contentResolver.query(uri, null, null, null, null)?.use { cursor ->
         val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
         if (index >= 0 && cursor.moveToFirst()) {
-            return cursor.getString(index)
+            cursor.getString(index)?.let { return it }
         }
     }
     return uri.lastPathSegment ?: "input"

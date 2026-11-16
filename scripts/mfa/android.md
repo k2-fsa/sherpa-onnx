@@ -121,6 +121,7 @@ of v2.2.1/v3.0.0 (see the README for the differences).
    cd android/SherpaOnnxForcedAlignment/app/src/main/assets
    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2
    tar xvf english-mfa-v3.1.0.tar.bz2
+   cd ../../../../../../  # back to the repository root
    ```
 
 3. Set `SELECTED_MODEL_INDEX` in

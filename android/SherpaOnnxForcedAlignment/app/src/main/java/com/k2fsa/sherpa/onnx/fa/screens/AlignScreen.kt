@@ -103,7 +103,9 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
     // A local cache-file input: the Example wav or a microphone recording.
     var cacheFile by rememberSaveable { mutableStateOf<File?>(null) }
 
-    var result by remember { mutableStateOf<AlignmentRun?>(null) }
+    // The manager survives tab switches and keeps the last completed run;
+    // restore it so returning from the Info tab does not lose the result.
+    var result by remember { mutableStateOf(manager.lastResult) }
     // the manager outlives this screen (tab switches); a run may already be
     // in progress when the screen is (re)created
     var isProcessing by remember { mutableStateOf(manager.isRunning) }
@@ -178,6 +180,10 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
     DisposableEffect(wordPlayer) {
         onDispose { wordPlayer.stop() }
     }
+    DisposableEffect(recorder) {
+        // do not keep capturing when the screen leaves composition
+        onDispose { recorder.stop() }
+    }
 
     // ---- actions ----
     fun loadPlayer(uri: Uri) {
@@ -185,8 +191,19 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
         player.prepare()
     }
 
+    // Restore the selected media into a fresh player (created after a tab
+    // switch or an activity recreation).
+    LaunchedEffect(player, inputUri, cacheFile) {
+        val uri = inputUri ?: cacheFile?.let { Uri.fromFile(it) }
+        if (uri != null && player.mediaItemCount == 0) {
+            player.setMediaItem(MediaItem.fromUri(uri))
+            player.prepare()
+        }
+    }
+
     fun resetResult() {
         wordPlayer.stop()
+        manager.lastResult = null
         result = null
         playingIndex = -1
         hitIndex = -1
@@ -219,7 +236,9 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
             val start = (word.start * run.sampleRate).toInt().coerceIn(0, run.samples.size)
             val end = (word.end * run.sampleRate).toInt().coerceIn(start, run.samples.size)
             val bytes = WavEncoder.encode(run.samples.copyOfRange(start, end), run.sampleRate)
-            context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+            val out = context.contentResolver.openOutputStream(uri)
+                ?: throw IllegalStateException("could not open the output file")
+            out.use { it.write(bytes) }
             appendLog("Saved word wav")
         } catch (e: Exception) {
             error = "Could not save wav: $e"
@@ -232,7 +251,9 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
         val run = result ?: return@rememberLauncherForActivityResult
         if (uri == null) return@rememberLauncherForActivityResult
         try {
-            context.contentResolver.openOutputStream(uri)?.use {
+            val out = context.contentResolver.openOutputStream(uri)
+                ?: throw IllegalStateException("could not open the output file")
+            out.use {
                 it.write(run.textGrid.toByteArray(Charsets.UTF_8))
             }
             appendLog("Saved TextGrid")
@@ -250,7 +271,9 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
             val text = run.words.joinToString("\n") {
                 "[${formatClock(it.start)} -> ${formatClock(it.end)}] ${it.text}"
             }
-            context.contentResolver.openOutputStream(uri)?.use {
+            val out = context.contentResolver.openOutputStream(uri)
+                ?: throw IllegalStateException("could not open the output file")
+            out.use {
                 it.write(text.toByteArray(Charsets.UTF_8))
             }
             appendLog("Saved timestamped txt")
@@ -266,7 +289,9 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
         if (uri == null) return@rememberLauncherForActivityResult
         try {
             val text = run.words.joinToString(" ") { it.text }
-            context.contentResolver.openOutputStream(uri)?.use {
+            val out = context.contentResolver.openOutputStream(uri)
+                ?: throw IllegalStateException("could not open the output file")
+            out.use {
                 it.write(text.toByteArray(Charsets.UTF_8))
             }
             appendLog("Saved plain txt")
@@ -397,6 +422,15 @@ fun AlignScreen(manager: ForcedAlignmentManager) {
             startRecording()
         } else {
             error = "Microphone permission denied"
+        }
+    }
+
+    // Capture ended unexpectedly: keep the partial recording but report it.
+    LaunchedEffect(recorder) {
+        recorder.onError = { msg ->
+            appendLog(msg)
+            stopRecording()
+            error = "$msg (the audio captured so far was kept)"
         }
     }
 

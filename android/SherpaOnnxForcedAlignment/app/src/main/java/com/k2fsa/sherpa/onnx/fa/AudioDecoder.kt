@@ -3,6 +3,7 @@ package com.k2fsa.sherpa.onnx.fa
 import com.antonkarpenko.ffmpegkit.FFmpegKit
 import com.antonkarpenko.ffmpegkit.ReturnCode
 import java.io.File
+import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -37,20 +38,42 @@ object AudioDecoder {
             if (!ReturnCode.isSuccess(session.returnCode)) {
                 return null
             }
-            val bytes = output.readBytes()
-            if (bytes.size < 4) {
+            // f32le: 4 bytes per sample
+            val outputBytes = output.length()
+            if (outputBytes < 4 || outputBytes / 4 > Int.MAX_VALUE) {
                 return null
             }
-            val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-                .asFloatBuffer()
-            val samples = FloatArray(buffer.remaining())
-            buffer.get(samples)
+            val numSamples = (outputBytes / 4).toInt()
+            // One allocation for the samples; read the raw file in chunks so
+            // we never hold a full byte copy of it in memory.
+            val samples = FloatArray(numSamples)
+            val chunk = ByteArray(256 * 1024)
+            FileInputStream(output).use { ins ->
+                var filled = 0
+                while (filled < numSamples) {
+                    val want = minOf(chunk.size, (numSamples - filled) * 4)
+                    var got = 0
+                    while (got < want) {
+                        val n = ins.read(chunk, got, want - got)
+                        if (n < 0) break
+                        got += n
+                    }
+                    if (got < want) {
+                        return null // truncated raw output
+                    }
+                    val floats = ByteBuffer.wrap(chunk, 0, want)
+                        .order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer()
+                    floats.get(samples, filled, want / 4)
+                    filled += want / 4
+                }
+            }
             DecodedAudio(
                 samples = samples,
                 sampleRate = SAMPLE_RATE,
-                duration = samples.size.toDouble() / SAMPLE_RATE,
+                duration = numSamples.toDouble() / SAMPLE_RATE,
             )
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            // includes OutOfMemoryError on very long inputs
             null
         } finally {
             output.delete()

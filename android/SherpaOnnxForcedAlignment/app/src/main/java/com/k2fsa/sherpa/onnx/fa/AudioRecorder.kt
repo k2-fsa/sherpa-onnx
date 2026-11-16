@@ -10,16 +10,25 @@ import java.io.ByteArrayOutputStream
  * Records from the microphone as 16 kHz mono Float32 PCM (the same format
  * [AudioDecoder] produces and the aligner wants).
  *
- * Usage: [start], then [stop] to get the recorded samples.
+ * Usage: [start], then [stop] to get the recorded samples. If capture ends
+ * unexpectedly (e.g. a read error), [onError] is called and the samples
+ * captured so far stay available to [stop].
  */
 class AudioRecorder {
     companion object {
         const val SAMPLE_RATE = 16000
     }
 
+    /** Called from the recording thread when capture terminates unexpectedly. */
+    var onError: (String) -> Unit = {}
+
     private var record: AudioRecord? = null
     private var thread: Thread? = null
-    private val samples = ByteArrayOutputStream()
+
+    // The buffer of the current session; only touched by the session's worker
+    // thread and by stop() after that worker has exited.
+    private var sessionSamples: ByteArrayOutputStream? = null
+
     @Volatile
     private var running = false
 
@@ -55,7 +64,8 @@ class AudioRecorder {
             rec.release()
             return false
         }
-        samples.reset()
+        val samples = ByteArrayOutputStream()
+        sessionSamples = samples
         record = rec
         running = true
         thread = Thread {
@@ -64,7 +74,13 @@ class AudioRecorder {
                 rec.startRecording()
                 while (running) {
                     val n = rec.read(buf, 0, buf.size)
-                    if (n <= 0) break
+                    if (n < 0) {
+                        // recording error; keep the samples captured so far
+                        running = false
+                        onError("Recording failed (AudioRecord.read error $n)")
+                        return@Thread
+                    }
+                    if (n == 0) continue
                     synchronized(samples) {
                         for (i in 0 until n) {
                             val v = buf[i].toInt()
@@ -74,7 +90,8 @@ class AudioRecorder {
                     }
                 }
             } catch (e: Exception) {
-                // recording failed; stop() reports the samples read so far
+                running = false
+                onError("Recording failed: $e")
             }
         }.also { it.start() }
         return true
@@ -82,23 +99,26 @@ class AudioRecorder {
 
     /**
      * Stops recording and returns the samples normalized to [-1, 1].
-     * Returns null if nothing was recorded.
+     * Returns the samples captured so far even if the worker already failed
+     * (see [onError]); returns null if there was no recording session.
      */
     @Synchronized
     fun stop(): FloatArray? {
-        if (!running) return null
+        if (sessionSamples == null && thread == null && record == null) return null
         running = false
-        thread?.join(1000)
+        // stop capture first so the worker's read() returns and it exits
+        record?.let { runCatching { it.stop() } }
+        thread?.join()
         thread = null
         record?.let {
-            runCatching { it.stop() }
             runCatching { it.release() }
         }
         record = null
+        val samples = sessionSamples
+        sessionSamples = null
+        if (samples == null) return null
 
-        val bytes: ByteArray
-        synchronized(samples) { bytes = samples.toByteArray() }
-        samples.reset()
+        val bytes = synchronized(samples) { samples.toByteArray() }
         if (bytes.size < 2) return null
 
         val numSamples = bytes.size / 2
