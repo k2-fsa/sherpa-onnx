@@ -163,14 +163,14 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: fa-english-mfa-v3.1.0-cxx-api
+          name: fa-english-mfa-v3.1.0-cxx-api-${{ matrix.os }}
           path: |
             english-mfa-v3.1.0/en.wav
             en.TextGrid
 
       - uses: actions/upload-artifact@v4
         with:
-          name: fa-word-clips-english-mfa-v3.1.0-cxx-api
+          name: fa-word-clips-english-mfa-v3.1.0-cxx-api-${{ matrix.os }}
           path: ./word-clips-en
 
       - name: Clean up fa files (english-mfa-v3.1.0)
@@ -216,14 +216,14 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: fa-zh-aishell3-pinyin-cxx-api
+          name: fa-zh-aishell3-pinyin-cxx-api-${{ matrix.os }}
           path: |
             zh-aishell3-pinyin/zh.wav
             zh.TextGrid
 
       - uses: actions/upload-artifact@v4
         with:
-          name: fa-word-clips-zh-aishell3-pinyin-cxx-api
+          name: fa-word-clips-zh-aishell3-pinyin-cxx-api-${{ matrix.os }}
           path: ./word-clips-zh
 
       - name: Clean up fa files (zh-aishell3-pinyin)
