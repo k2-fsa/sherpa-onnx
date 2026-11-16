@@ -96,6 +96,10 @@ class ForcedAligner {
 
     freeConfig(config, Module);
 
+    if (!handle) {
+      throw new Error('Failed to create the forced aligner');
+    }
+
     this.handle = handle;
     this.Module = Module;
   }
