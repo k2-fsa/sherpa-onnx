@@ -468,7 +468,7 @@ void ForcedAligner::Impl::LoadPhoneTable(std::istream &is) {
   while (std::getline(is, line)) {
     std::istringstream iss(line);
     std::string sym;
-    int32_t id;
+    int32_t id = -1;
     if (iss >> sym >> id) {
       phone2id_[sym] = id;
       id2phone_[id] = sym;
@@ -581,7 +581,7 @@ bool MatchWordSpans(
     if (!matches) {
       continue;
     }
-    spans->push_back({seg_idx, seg_idx + pron.size() - 1});
+    spans->emplace_back(seg_idx, seg_idx + pron.size() - 1);
     if (MatchWordSpans(word_ids, word_idx + 1, pronunciations, segs,
                        seg_idx + pron.size(), sil_id, spans)) {
       return true;
@@ -652,8 +652,12 @@ ForcedAligner::Impl::ResolvedWords ForcedAligner::Impl::ResolveWords(
       for (const auto &p : pron) {
         auto pit = phone2id_.find(p);
         if (pit == phone2id_.end()) {
-          throw std::runtime_error("ForcedAligner: phone '" + p + "' (word '" +
-                                   w + "') is not in the phone table");
+          std::string msg = "ForcedAligner: phone '";
+          msg += p;
+          msg += "' (word '";
+          msg += w;
+          msg += "') is not in the phone table";
+          throw std::runtime_error(msg);
         }
         ids.push_back(pit->second);
       }
