@@ -22,6 +22,7 @@
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/display.h"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/forced-aligner.h"
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-diacritization.h"
@@ -4090,3 +4091,179 @@ void SherpaOfflineDiacritizationFreeText(const char *text) {
   if (!text) return;
   delete[] text;
 }
+
+// ============================================================
+// For forced alignment
+// ============================================================
+
+struct SherpaOnnxForcedAligner {
+  std::unique_ptr<sherpa_onnx::ForcedAligner> impl;
+};
+
+static sherpa_onnx::ForcedAlignerConfig GetForcedAlignerConfig(
+    const SherpaOnnxForcedAlignerConfig *config) {
+  sherpa_onnx::ForcedAlignerConfig ans;
+
+  ans.model_dir = SHERPA_ONNX_OR(config->model_dir, "");
+  ans.lexicon = SHERPA_ONNX_OR(config->lexicon, "");
+  ans.options.beam = SHERPA_ONNX_OR(config->options.beam, 10.0f);
+  ans.options.retry_beam = SHERPA_ONNX_OR(config->options.retry_beam, 40.0f);
+  ans.options.transition_scale =
+      SHERPA_ONNX_OR(config->options.transition_scale, 1.0f);
+  ans.options.self_loop_scale =
+      SHERPA_ONNX_OR(config->options.self_loop_scale, 0.1f);
+  ans.options.acoustic_scale =
+      SHERPA_ONNX_OR(config->options.acoustic_scale, 0.1f);
+  ans.debug = config->debug;
+
+  return ans;
+}
+
+// Copy a std::string to a new C string; the caller must delete[] it.
+static char *CopyString(const std::string &s) {
+  char *ans = new char[s.size() + 1];
+  std::copy(s.begin(), s.end(), ans);
+  ans[s.size()] = 0;
+  return ans;
+}
+
+SherpaOnnxForcedAligner *SherpaOnnxCreateForcedAligner(
+    const SherpaOnnxForcedAlignerConfig *config) {
+  if (!config || !config->model_dir || !config->lexicon) {
+    SHERPA_ONNX_LOGE("Please set the model_dir and lexicon fields!");
+    return nullptr;
+  }
+
+  sherpa_onnx::ForcedAlignerConfig c = GetForcedAlignerConfig(config);
+  if (!c.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return nullptr;
+  }
+
+  SherpaOnnxForcedAligner *ans = new SherpaOnnxForcedAligner;
+  try {
+    ans->impl = std::make_unique<sherpa_onnx::ForcedAligner>(c);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create ForcedAligner: %s", e.what());
+    delete ans;
+    return nullptr;
+  }
+
+  return ans;
+}
+
+void SherpaOnnxDestroyForcedAligner(const SherpaOnnxForcedAligner *aligner) {
+  delete aligner;
+}
+
+SherpaOnnxOfflineStream *SherpaOnnxForcedAlignerCreateStream(
+    const SherpaOnnxForcedAligner *aligner) {
+  if (!aligner || !aligner->impl) {
+    SHERPA_ONNX_LOGE("aligner is null!");
+    return nullptr;
+  }
+
+  return new SherpaOnnxOfflineStream(aligner->impl->CreateStream());
+}
+
+const SherpaOnnxForcedAlignmentResult *SherpaOnnxForcedAlignerCompute(
+    const SherpaOnnxForcedAligner *aligner,
+    const SherpaOnnxOfflineStream *stream, const char *text) {
+  if (!aligner || !aligner->impl) {
+    SHERPA_ONNX_LOGE("aligner is null!");
+    return nullptr;
+  }
+  if (!stream || !stream->impl) {
+    SHERPA_ONNX_LOGE("stream is null!");
+    return nullptr;
+  }
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is null!");
+    return nullptr;
+  }
+
+  sherpa_onnx::ForcedAlignmentResult result;
+  try {
+    result = aligner->impl->Compute(stream->impl.get(), text);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Forced alignment failed: %s", e.what());
+    return nullptr;
+  }
+
+  SherpaOnnxForcedAlignmentResult *ans = new SherpaOnnxForcedAlignmentResult;
+
+  ans->duration = result.duration;
+  ans->textgrid = CopyString(result.ToTextGrid());
+
+  int32_t n = static_cast<int32_t>(result.tiers.size());
+  SherpaOnnxForcedAlignmentTier *tiers = new SherpaOnnxForcedAlignmentTier[n];
+  for (int32_t i = 0; i != n; ++i) {
+    const sherpa_onnx::AlignmentTier &t = result.tiers[i];
+    tiers[i].name = CopyString(t.name);
+
+    int32_t m = static_cast<int32_t>(t.intervals.size());
+    SherpaOnnxForcedAlignmentInterval *intervals =
+        new SherpaOnnxForcedAlignmentInterval[m];
+    for (int32_t k = 0; k != m; ++k) {
+      intervals[k].start = t.intervals[k].start;
+      intervals[k].end = t.intervals[k].end;
+      intervals[k].text = CopyString(t.intervals[k].text);
+    }
+    tiers[i].intervals = intervals;
+    tiers[i].num_intervals = m;
+  }
+  ans->tiers = tiers;
+  ans->num_tiers = n;
+
+  return ans;
+}
+
+void SherpaOnnxDestroyForcedAlignmentResult(
+    const SherpaOnnxForcedAlignmentResult *result) {
+  if (!result) return;
+
+  delete[] result->textgrid;
+
+  for (int32_t i = 0; i != result->num_tiers; ++i) {
+    const SherpaOnnxForcedAlignmentTier &t = result->tiers[i];
+    delete[] t.name;
+    for (int32_t k = 0; k != t.num_intervals; ++k) {
+      delete[] t.intervals[k].text;
+    }
+    delete[] t.intervals;
+  }
+  delete[] result->tiers;
+
+  delete result;
+}
+
+#if __OHOS__
+SherpaOnnxForcedAligner *SherpaOnnxCreateForcedAlignerOHOS(
+    const SherpaOnnxForcedAlignerConfig *config, NativeResourceManager *mgr) {
+  if (mgr == nullptr) {
+    return SherpaOnnxCreateForcedAligner(config);
+  }
+
+  if (!config || !config->model_dir || !config->lexicon) {
+    SHERPA_ONNX_LOGE("Please set the model_dir and lexicon fields!");
+    return nullptr;
+  }
+
+  sherpa_onnx::ForcedAlignerConfig c = GetForcedAlignerConfig(config);
+  if (!c.Validate(mgr)) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return nullptr;
+  }
+
+  SherpaOnnxForcedAligner *ans = new SherpaOnnxForcedAligner;
+  try {
+    ans->impl = std::make_unique<sherpa_onnx::ForcedAligner>(mgr, c);
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create ForcedAligner: %{public}s", e.what());
+    delete ans;
+    return nullptr;
+  }
+
+  return ans;
+}
+#endif

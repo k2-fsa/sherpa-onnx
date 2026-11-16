@@ -22,8 +22,12 @@ public final class AlignmentInterval {
      *
      * @param start start time of this interval in seconds
      * @param end end time of this interval in seconds
-     * @param text label of this interval: a phone, a word/character, or
-     *     empty for silence gaps
+     * @param text label of this interval: the phone symbol in the
+     *     {@code "phones"} tier or the word/character in the
+     *     {@code "words"} tier; empty for a silence gap in the
+     *     {@code "words"} tier (the intervals tile the whole utterance, so
+     *     the gaps between words are reported as intervals with empty
+     *     text)
      */
     public AlignmentInterval(float start, float end, String text) {
         this.start = start;
@@ -42,8 +46,11 @@ public final class AlignmentInterval {
     }
 
     /**
-     * Returns the label of this interval: a phone, a word/character, or
-     * empty for silence gaps.
+     * Returns the label of this interval: the phone symbol in the
+     * {@code "phones"} tier or the word/character in the {@code "words"}
+     * tier; empty for a silence gap in the {@code "words"} tier (the
+     * intervals tile the whole utterance, so the gaps between words are
+     * reported as intervals with empty text).
      */
     public String getText() {
         return text;
