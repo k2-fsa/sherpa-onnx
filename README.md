@@ -1,10 +1,4 @@
-<div align="center">
-
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/k2-fsa/sherpa-onnx)
-
-</div>
-
- ### Supported functions
+### Supported functions
 
 |Speech recognition| [Speech synthesis][tts-url] | [Source separation][ss-url] |
 |------------------|------------------|-------------------|
@@ -21,6 +15,10 @@
 | [Keyword spotting][kws-url] | [Add punctuation][punct-url] | [Speech enhancement][se-url] |
 |------------------|-----------------|--------------------|
 |     ✔️            |       ✔️         |      ✔️             |
+
+| Forced alignment |  |  |
+|------------------|-----------------|--------------------|
+|     ✔️            |                 |                    |
 
 
 ### Supported platforms
@@ -109,6 +107,8 @@ This repository supports running the following functions **locally**
   - Speech enhancement (e.g., [gtcrn][gtcrn], [DPDFNet](https://github.com/ceva-ip/DPDFNet), [VoxLock](https://github.com/arbazsiddiqui/voxlock))
   - Keyword spotting
   - Source separation (e.g., [spleeter][spleeter], [UVR][UVR])
+  - Forced alignment (i.e., computing word-level timestamps given an audio
+    and its transcript)
 
 on the following platforms and operating systems:
 
@@ -208,6 +208,7 @@ We also have spaces built using WebAssembly. They are listed below:
 | Speaker identification                 | [Address][apk-sid]                 | [点此][apk-sid-cn]                |
 | Spoken language identification         | [Address][apk-slid]                | [点此][apk-slid-cn]               |
 | Keyword spotting                       | [Address][apk-kws]                 | [点此][apk-kws-cn]                |
+| Forced alignment                       | [Address][apk-fa]                  | [Address][apk-fa]                 |
 
 </details>
 
@@ -264,6 +265,7 @@ We also have spaces built using WebAssembly. They are listed below:
 | Speaker segmentation                        | [Address][speaker-segmentation-models]                                                |
 | Speech enhancement                          | [Address][speech-enhancement-models]                                                  |
 | Source separation                           | [Address][source-separation-models]                                                  |
+| Forced alignment                             | [Address][fa-models]                                                                 |
 
 </details>
 
@@ -321,6 +323,29 @@ for more models. The following table lists only **SOME** of them.
 |[sherpa-onnx-zipformer-korean-2024-06-24][sherpa-onnx-zipformer-korean-2024-06-24]|Korean|See [also](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/zipformer-transducer-models.html#sherpa-onnx-zipformer-korean-2024-06-24-korean)|
 |[sherpa-onnx-zipformer-thai-2024-06-20][sherpa-onnx-zipformer-thai-2024-06-20]|Thai| See [also](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/zipformer-transducer-models.html#sherpa-onnx-zipformer-thai-2024-06-20-thai)|
 |[sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04][sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04]|Chinese| 支持多种方言. See [also](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/telespeech/models.html#sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04)|
+
+</details>
+
+#### Some pre-trained forced-alignment models
+
+<details>
+
+Please see
+[scripts/mfa/README.md](https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/README.md)
+for how the models are packaged and used. The following table lists all of
+them. On Android, you can use the pre-built APKs in the
+[apk-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/apk-fa) release;
+see
+[scripts/mfa/android.md](https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/android.md).
+
+|Name | Supported Languages| Description|
+|-----|-----|----|
+|[zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2)| Chinese | Chinese MFA acoustic model trained on AISHELL-3, pinyin lexicon |
+|[zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2)| Chinese | Chinese MFA acoustic model trained on the biaobei reading corpus, pinyin lexicon |
+|[zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2)| Chinese | Chinese MFA acoustic model trained on AISHELL-3 + biaobei + more, pinyin lexicon |
+|[english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2)| English | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
+|[english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2)| English | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
+|[english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2)| English | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
 
 </details>
 
@@ -787,6 +812,7 @@ llama-server.
 [apk-slid-cn]: https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk-cn.html
 [apk-kws]: https://k2-fsa.github.io/sherpa/onnx/kws/apk.html
 [apk-kws-cn]: https://k2-fsa.github.io/sherpa/onnx/kws/apk-cn.html
+[apk-fa]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/apk-fa
 [apk-flutter-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr
 [apk-flutter-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr
 [flutter-tts-android]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-android.html
@@ -832,6 +858,7 @@ llama-server.
 [NVIDIA Jetson Nano B01]: https://www.seeedstudio.com/blog/2020/01/16/new-revision-of-jetson-nano-dev-kit-now-supports-new-jetson-nano-module/
 [speech-enhancement-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 [source-separation-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/source-separation-models
+[fa-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/fa-models
 [RK3588]: https://www.rock-chips.com/uploads/pdf/2022.8.26/192/RK3588%20Brief%20Datasheet.pdf
 [spleeter]: https://github.com/deezer/spleeter
 [UVR]: https://github.com/Anjok07/ultimatevocalremovergui

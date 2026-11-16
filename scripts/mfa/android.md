@@ -51,24 +51,24 @@ same models for the other ABIs.
 
 | APK | Language | Model | Notes |
 |-----|----------|-------|-------|
-| `sherpa-onnx-fa-arm64-v8a-zh-aishell3.apk` | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
-| `sherpa-onnx-fa-arm64-v8a-zh-biaobei.apk` | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
-| `sherpa-onnx-fa-arm64-v8a-zh-large.apk` | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
-| `sherpa-onnx-fa-arm64-v8a-en-v2.2.1.apk` | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-arm64-v8a-en-v3.0.0.apk` | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-arm64-v8a-en-v3.1.0.apk` | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
+| [`sherpa-onnx-fa-arm64-v8a-zh-aishell3.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-arm64-v8a-zh-aishell3.apk) | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
+| [`sherpa-onnx-fa-arm64-v8a-zh-biaobei.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-arm64-v8a-zh-biaobei.apk) | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
+| [`sherpa-onnx-fa-arm64-v8a-zh-large.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-arm64-v8a-zh-large.apk) | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
+| [`sherpa-onnx-fa-arm64-v8a-en-v2.2.1.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-arm64-v8a-en-v2.2.1.apk) | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-arm64-v8a-en-v3.0.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-arm64-v8a-en-v3.0.0.apk) | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-arm64-v8a-en-v3.1.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-arm64-v8a-en-v3.1.0.apk) | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
 
 <details>
 <summary>APK names for <code>armeabi-v7a</code> (older 32-bit ARM phones) — click to show</summary>
 
 | APK | Language | Model | Notes |
 |-----|----------|-------|-------|
-| `sherpa-onnx-fa-armeabi-v7a-zh-aishell3.apk` | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
-| `sherpa-onnx-fa-armeabi-v7a-zh-biaobei.apk` | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
-| `sherpa-onnx-fa-armeabi-v7a-zh-large.apk` | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
-| `sherpa-onnx-fa-armeabi-v7a-en-v2.2.1.apk` | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-armeabi-v7a-en-v3.0.0.apk` | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-armeabi-v7a-en-v3.1.0.apk` | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
+| [`sherpa-onnx-fa-armeabi-v7a-zh-aishell3.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-armeabi-v7a-zh-aishell3.apk) | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
+| [`sherpa-onnx-fa-armeabi-v7a-zh-biaobei.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-armeabi-v7a-zh-biaobei.apk) | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
+| [`sherpa-onnx-fa-armeabi-v7a-zh-large.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-armeabi-v7a-zh-large.apk) | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
+| [`sherpa-onnx-fa-armeabi-v7a-en-v2.2.1.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-armeabi-v7a-en-v2.2.1.apk) | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-armeabi-v7a-en-v3.0.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-armeabi-v7a-en-v3.0.0.apk) | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-armeabi-v7a-en-v3.1.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-armeabi-v7a-en-v3.1.0.apk) | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
 
 </details>
 
@@ -77,12 +77,12 @@ same models for the other ABIs.
 
 | APK | Language | Model | Notes |
 |-----|----------|-------|-------|
-| `sherpa-onnx-fa-x86_64-zh-aishell3.apk` | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
-| `sherpa-onnx-fa-x86_64-zh-biaobei.apk` | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
-| `sherpa-onnx-fa-x86_64-zh-large.apk` | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
-| `sherpa-onnx-fa-x86_64-en-v2.2.1.apk` | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-x86_64-en-v3.0.0.apk` | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-x86_64-en-v3.1.0.apk` | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
+| [`sherpa-onnx-fa-x86_64-zh-aishell3.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86_64-zh-aishell3.apk) | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
+| [`sherpa-onnx-fa-x86_64-zh-biaobei.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86_64-zh-biaobei.apk) | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
+| [`sherpa-onnx-fa-x86_64-zh-large.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86_64-zh-large.apk) | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
+| [`sherpa-onnx-fa-x86_64-en-v2.2.1.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86_64-en-v2.2.1.apk) | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-x86_64-en-v3.0.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86_64-en-v3.0.0.apk) | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-x86_64-en-v3.1.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86_64-en-v3.1.0.apk) | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
 
 </details>
 
@@ -91,12 +91,12 @@ same models for the other ABIs.
 
 | APK | Language | Model | Notes |
 |-----|----------|-------|-------|
-| `sherpa-onnx-fa-x86-zh-aishell3.apk` | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
-| `sherpa-onnx-fa-x86-zh-biaobei.apk` | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
-| `sherpa-onnx-fa-x86-zh-large.apk` | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
-| `sherpa-onnx-fa-x86-en-v2.2.1.apk` | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-x86-en-v3.0.0.apk` | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
-| `sherpa-onnx-fa-x86-en-v3.1.0.apk` | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
+| [`sherpa-onnx-fa-x86-zh-aishell3.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86-zh-aishell3.apk) | Chinese | [zh-aishell3-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 |
+| [`sherpa-onnx-fa-x86-zh-biaobei.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86-zh-biaobei.apk) | Chinese | [zh-biaobei-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-biaobei-pinyin.tar.bz2) | pinyin lexicon, trained on the biaobei reading corpus |
+| [`sherpa-onnx-fa-x86-zh-large.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86-zh-large.apk) | Chinese | [zh-large-pinyin](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-large-pinyin.tar.bz2) | pinyin lexicon, trained on AISHELL-3 + biaobei + more |
+| [`sherpa-onnx-fa-x86-en-v2.2.1.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86-en-v2.2.1.apk) | English | [english-mfa-v2.2.1](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v2.2.1.tar.bz2) | MFA `english_mfa` acoustic model v2.2.1, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-x86-en-v3.0.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86-en-v3.0.0.apk) | English | [english-mfa-v3.0.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.0.0.tar.bz2) | MFA `english_mfa` acoustic model v3.0.0, 100 phones, ~95k-word dictionary |
+| [`sherpa-onnx-fa-x86-en-v3.1.0.apk`](https://github.com/k2-fsa/sherpa-onnx/releases/download/apk-fa/sherpa-onnx-fa-x86-en-v3.1.0.apk) | English | [english-mfa-v3.1.0](https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2) | MFA `english_mfa` acoustic model v3.1.0, 100 phones, 42k-word core dictionary |
 
 </details>
 
