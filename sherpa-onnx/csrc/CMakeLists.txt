@@ -284,6 +284,9 @@ list(APPEND sources
   offline-recognizer-funasr-nano-impl.cc
   funasr-nano-tokenizer.cc
   offline-qwen3-asr-model-config.cc
+  offline-audio8-asr-model.cc
+  offline-audio8-asr-model-config.cc
+  offline-recognizer-audio8-asr-impl.cc
   offline-qwen3-asr-model.cc
   offline-recognizer-qwen3-asr-impl.cc
   qwen-asr-tokenizer.cc

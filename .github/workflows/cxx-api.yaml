@@ -296,6 +296,34 @@ jobs:
           rm -rf sherpa-onnx-funasr-*
           rm -v ./$name
 
+      - name: Test Audio8 ASR
+        shell: bash
+        run: |
+          name=audio8-asr-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          # Prebuilt models are published as a release artifact; the int8
+          # folder keeps the ".int8" suffix, the example uses the plain names.
+          dir=sherpa-onnx-audio8-asr-0.1b-int8
+          url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$dir.tar.bz2
+          curl -fSL -O $url && tar xf $dir.tar.bz2 && rm $dir.tar.bz2
+          cp $dir/encoder.int8.onnx $dir/encoder.onnx
+          cp $dir/decoder.int8.onnx $dir/decoder.onnx
+
+          echo "---"
+
+          ./$name
+
+          rm -rf sherpa-onnx-audio8-*
+          rm -v ./$name
+
       - name: Test MedASR CTC
         shell: bash
         run: |

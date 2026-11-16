@@ -619,6 +619,18 @@ struct OfflineQwen3ASRModelConfig {
   int32_t seed = 42;
 };
 
+/** @brief Offline Audio8-ASR-0.1B model configuration. */
+struct OfflineAudio8AsrModelConfig {
+  /** Encoder ONNX model file. */
+  std::string encoder;
+  /** Decoder ONNX model file (KV cache). */
+  std::string decoder;
+  /** Tokenizer directory (with `vocab.json` and `merges.txt`). */
+  std::string tokenizer;
+  /** Maximum number of new tokens to generate. */
+  int32_t max_new_tokens = 128;
+};
+
 /**
  * @brief Acoustic model configuration for offline ASR.
  *
@@ -677,6 +689,7 @@ struct OfflineModelConfig {
   OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
   /** Qwen3-ASR configuration. */
   OfflineQwen3ASRModelConfig qwen3_asr;
+  OfflineAudio8AsrModelConfig audio8_asr;
   /** Cohere Transcribe configuration. */
   OfflineCohereTranscribeModelConfig cohere_transcribe;
 };
@@ -2075,8 +2088,8 @@ struct OfflineSpeakerDiarizationSegment {
 };
 
 /** @brief Progress callback for offline speaker diarization. */
-using OfflineSpeakerDiarizationProgressCallback =
-    std::function<void(int32_t num_processed_chunks, int32_t num_total_chunks)>;
+using OfflineSpeakerDiarizationProgressCallback = std::function<void(
+    int32_t num_processed_chunks, int32_t num_total_chunks)>;
 
 /** @brief RAII wrapper for offline speaker diarization. */
 class SHERPA_ONNX_API OfflineSpeakerDiarization
@@ -2138,7 +2151,8 @@ class SHERPA_ONNX_API OfflineDiacritization
     : public MoveOnly<OfflineDiacritization, SherpaOnnxOfflineDiacritization> {
  public:
   /** @brief Create an offline diacritization model. */
-  static OfflineDiacritization Create(const OfflineDiacritizationConfig &config);
+  static OfflineDiacritization Create(
+      const OfflineDiacritizationConfig &config);
 
   /** @brief Destroy the wrapped C handle. */
   void Destroy(const SherpaOnnxOfflineDiacritization *diacrt) const;
