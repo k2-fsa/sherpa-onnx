@@ -300,18 +300,10 @@ bool OnlineRecognizer::IsReady(OnlineStream *s) const {
 
   MaybeSkipVadSilence(s);
 
-  // MaybeSkipVadSilence() may have just advanced num_processed_frames_,
-  // but `ready` above was computed *before* that, against the old
-  // position. Re-validate against real fbank-frame availability at the
-  // new position before trusting it: the VAD coverage check below is an
-  // *additional* requirement on top of real readiness, never a
-  // substitute for it. Skipping this re-check was the actual root cause
-  // of a crash found under sustained load (features.cc:GetFrames
-  // tripping "frame_index + n <= NumFramesReady()", confirmed via an
-  // AddressSanitizer-instrumented build) -- the per-step clamp inside
-  // MaybeSkipVadSilence only protects each chunk_shift-sized step of the
-  // skip loop itself, not the chunk_size-sized window this function
-  // then promises the caller is safe to decode.
+  // MaybeSkipVadSilence() can advance num_processed_frames_, so the
+  // readiness computed above refers to the old position. Check again at the
+  // new position that a full chunk of feature frames is available. The VAD
+  // coverage check below is an additional requirement, not a replacement.
   ready = impl_->IsReady(s);
   if (!ready) {
     return false;
