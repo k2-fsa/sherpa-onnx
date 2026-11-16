@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 d=nodejs-addon-examples
@@ -32,7 +32,7 @@ mkdir -p test_forced_alignment_english
 mv en.TextGrid en-async.TextGrid test_forced_alignment_english/
 cp english-mfa-v3.1.0/en.wav test_forced_alignment_english/
 python3 -m pip install soundfile
-python3 ../../python-api-examples/textgrid-to-word-wavs.py \
+python3 ../python-api-examples/textgrid-to-word-wavs.py \
   --wav english-mfa-v3.1.0/en.wav \
   --textgrid test_forced_alignment_english/en.TextGrid \
   --out-dir test_forced_alignment_english/word-clips-en
@@ -54,7 +54,7 @@ cat zh-async.TextGrid
 mkdir -p test_forced_alignment_chinese
 mv zh.TextGrid zh-async.TextGrid test_forced_alignment_chinese/
 cp zh-aishell3-pinyin/zh.wav test_forced_alignment_chinese/
-python3 ../../python-api-examples/textgrid-to-word-wavs.py \
+python3 ../python-api-examples/textgrid-to-word-wavs.py \
   --wav zh-aishell3-pinyin/zh.wav \
   --textgrid test_forced_alignment_chinese/zh.TextGrid \
   --out-dir test_forced_alignment_chinese/word-clips-zh
