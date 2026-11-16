@@ -96,6 +96,23 @@ jobs:
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: fa-models
+          body: |
+            Acoustic models and pronunciation dictionaries for **forced alignment** with
+            [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) — English
+            (english_mfa v2.2.1 / v3.0.0 / v3.1.0) and Chinese
+            (aishell3_pinyin / biaobei_pinyin / large_pinyin).
+
+            Models, sources, package contents and usage are documented in
+            [scripts/mfa/README.md](https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/README.md).
+
+            ## Android
+
+            Want to run these models on an Android phone or tablet? Download the
+            pre-built APKs of the forced-alignment Android app (one APK per model and
+            ABI) from the
+            [apk-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/apk-fa) release —
+            [scripts/mfa/android.md](https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/android.md)
+            describes which APK to pick and what the app does.
 
       - name: Release en models
         uses: svenstaro/upload-release-action@v2
@@ -106,3 +123,20 @@ jobs:
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: fa-models
+          body: |
+            Acoustic models and pronunciation dictionaries for **forced alignment** with
+            [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) — English
+            (english_mfa v2.2.1 / v3.0.0 / v3.1.0) and Chinese
+            (aishell3_pinyin / biaobei_pinyin / large_pinyin).
+
+            Models, sources, package contents and usage are documented in
+            [scripts/mfa/README.md](https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/README.md).
+
+            ## Android
+
+            Want to run these models on an Android phone or tablet? Download the
+            pre-built APKs of the forced-alignment Android app (one APK per model and
+            ABI) from the
+            [apk-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/apk-fa) release —
+            [scripts/mfa/android.md](https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/android.md)
+            describes which APK to pick and what the app does.
