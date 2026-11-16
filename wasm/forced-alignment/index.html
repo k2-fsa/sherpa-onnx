@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forced Alignment (sherpa-onnx wasm)</title>
+    <style>
+      body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+             margin: 0 auto; max-width: 900px; padding: 16px; color: #1f2329; }
+      .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+              padding: 16px; margin-bottom: 12px; }
+      h2 { margin: 0 0 12px; font-size: 16px; }
+      .hint { color: #6b7280; font-size: 13px; }
+      button { padding: 8px 14px; border: 1px solid #e5e7eb; border-radius: 6px;
+               background: #fff; cursor: pointer; margin-right: 8px; }
+      button.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+      textarea { width: 100%; box-sizing: border-box; min-height: 60px; }
+      table { border-collapse: collapse; width: 100%; }
+      td, th { border-bottom: 1px solid #e5e7eb; padding: 4px 8px; font-size: 13px;
+               text-align: left; }
+      tr:hover { background: #f5f6f8; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Forced Alignment demo (sherpa-onnx · WebAssembly)</h2>
+      <p class="hint">
+        <span id="status">Not loaded</span>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Input</h2>
+      <p>
+        <input id="file" type="file" accept="audio/*,video/*" />
+        <button id="example">Example</button>
+      </p>
+      <p>
+        <textarea id="text" placeholder="Enter the transcript of the audio"></textarea>
+      </p>
+      <p>
+        <button id="align" class="primary">Align</button>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Result</h2>
+      <p class="hint" id="stats"></p>
+      <table id="table">
+        <thead>
+          <tr><th>Word</th><th>Time</th><th>Audio</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p><button id="download-textgrid">Download .TextGrid</button></p>
+      <p class="hint">
+        Source code:
+        <a href="https://github.com/k2-fsa/sherpa-onnx/tree/master/wasm/forced-alignment">wasm/forced-alignment</a>
+        ·
+        <a href="https://github.com/k2-fsa/sherpa-onnx/tree/master/react-examples/forced-alignment">react-examples/forced-alignment</a>
+      </p>
+    </div>
+
+    <script>
+      // The emscripten main script reads window.Module while loading.
+      window.Module = {
+        print: (t) => console.log('[sherpa]', t),
+        printErr: (t) => console.warn('[sherpa]', t),
+        onRuntimeInitialized: () => window.onSherpaReady && window.onSherpaReady(),
+      };
+    </script>
+    <script src="sherpa-onnx-wasm-main-fa.js"></script>
+    <script src="sherpa-onnx-fa.js"></script>
+    <script src="app-fa.js"></script>
+  </body>
+</html>

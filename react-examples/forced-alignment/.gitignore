@@ -1,0 +1,7 @@
+node_modules/
+*.tsbuildinfo
+dist/
+dist-model-*/
+# built wasm artifacts (see the README for how to build them)
+public/sherpa/*
+!public/sherpa/.gitkeep

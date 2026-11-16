@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Design system: clean light gradient background, purple/indigo brand
+   accents, large display headings. */
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    --background: 270 30% 99%;
+    --foreground: 240 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 25% 15%;
+    --primary: 258 90% 66%; /* light elegant purple #7C3AED / #6366F1 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 255 100% 97%;
+    --secondary-foreground: 258 70% 45%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --muted: 240 20% 97%;
+    --muted-foreground: 240 10% 45%;
+    --accent: 255 100% 96%;
+    --accent-foreground: 258 75% 45%;
+    --border: 245 30% 91%;
+    --input: 245 30% 91%;
+    --ring: 258 90% 66%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'HarmonyOS Sans', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.05) 0%, transparent 60%),
+      radial-gradient(circle at 100% 15%, rgba(99, 102, 241, 0.04) 0%, transparent 40%);
+    background-repeat: no-repeat;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 9999px;
+  }
+}
+
+@layer utilities {
+  /* serif display font for headings */
+  .font-serif-title {
+    font-family: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', 'SimSun', STSong, Georgia, serif;
+  }
+  /* gradient text for highlights; inline-block + padding keeps letter
+     descenders ('g', 'y', 'p') from being clipped by background-clip */
+  .text-brand-gradient {
+    display: inline-block;
+    padding-bottom: 0.12em;
+    line-height: 1.15;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #9333EA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}

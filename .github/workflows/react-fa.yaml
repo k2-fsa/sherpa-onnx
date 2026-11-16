@@ -1,0 +1,112 @@
+name: react-fa
+
+on:
+  push:
+    branches:
+      - wasm
+      - wasm-web-fa
+
+  workflow_dispatch:
+
+concurrency:
+  group: react-fa-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  web_app_forced_alignment:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ubuntu-latest
+    name: web app for ${{ matrix.model }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - model: zh-aishell3-pinyin
+            short: zh-aishell3
+            index: 0
+          - model: zh-biaobei-pinyin
+            short: zh-biaobei
+            index: 1
+          - model: zh-large-pinyin
+            short: zh-large
+            index: 2
+          - model: english-mfa-v2.2.1
+            short: en-v2.2.1
+            index: 3
+          - model: english-mfa-v3.0.0
+            short: en-v3.0.0
+            index: 4
+          - model: english-mfa-v3.1.0
+            short: en-v3.1.0
+            index: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # https://github.com/mymindstorm/setup-emsdk
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.23
+          actions-cache-folder: emsdk-cache
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download model ${{ matrix.model }}
+        shell: bash
+        run: |
+          cd wasm/forced-alignment/assets
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/${{ matrix.model }}.tar.bz2
+          tar xf ${{ matrix.model }}.tar.bz2
+          rm ${{ matrix.model }}.tar.bz2
+          ls -lh
+
+      - name: Build wasm
+        shell: bash
+        run: |
+          ./build-wasm-simd-forced-alignment.sh
+
+      - name: Build web app
+        shell: bash
+        run: |
+          mkdir -p react-examples/forced-alignment/public/sherpa
+          cp -v build-wasm-simd-forced-alignment/install/bin/wasm/forced-alignment/sherpa-onnx-wasm-main-fa.{js,wasm,data} \
+             react-examples/forced-alignment/public/sherpa/
+          cp -v wasm/forced-alignment/sherpa-onnx-fa.js react-examples/forced-alignment/public/sherpa/
+
+          cd react-examples/forced-alignment
+          chmod +x build-static.sh
+          ./build-static.sh ${{ matrix.index }}
+
+      - name: Package
+        shell: bash
+        run: |
+          cd react-examples/forced-alignment
+          # a zip of the dist folder, named after the model: unzip it and
+          # serve the directory with any static HTTP server
+          name=sherpa-onnx-react-fa-${{ matrix.model }}
+          cp -r dist-model-${{ matrix.index }} $name
+          zip -r ../../$name.zip $name
+          ls -lh ../../$name.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./sherpa-onnx-react-fa-*.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: react-fa
+          body: |
+            Static web apps (WASM) for the sherpa-onnx forced-alignment web app.
+            One app per model — unzip and serve the directory with any static
+            HTTP server.
+            See https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/web.md
+            for a description of each file.

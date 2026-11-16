@@ -15,6 +15,12 @@ release.
 [apk-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/apk-fa) release;
 [android.md](android.md) describes which APK to pick.
 
+**In a browser?** Download the pre-built static web apps of the
+[forced-alignment web app](../../react-examples/forced-alignment)
+(one app per model) from the
+[react-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/react-fa)
+release; [web.md](web.md) describes which one to pick.
+
 ## Table of contents
 
 - [English](#english)
