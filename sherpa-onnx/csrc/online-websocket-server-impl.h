@@ -71,11 +71,9 @@ struct OnlineWebsocketDecoderConfig {
   // the server will resample internally.
   int32_t input_sample_rate = 16000;
 
-  // How often the independent VAD tick (VadProcess, ds-k2-sherpa-onnx
-  // refactor_vad style) runs. Deliberately faster than loop_interval_ms
-  // by default so VAD stays ahead of ASR. Only meaningful when
-  // recognizer_config.online_vad_config.model is set -- otherwise no VAD
-  // timer is armed at all.
+  // How often the VAD tick (VadProcess) runs. Shorter than loop_interval_ms
+  // by default so the VAD stays ahead of ASR. Only used when
+  // recognizer_config.online_vad_config.model is set.
   int32_t vad_loop_interval_ms = 2;
 
   int32_t max_vad_batch_size = 64;

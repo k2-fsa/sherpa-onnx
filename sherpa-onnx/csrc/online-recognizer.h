@@ -124,11 +124,6 @@ struct OnlineRecognizerConfig {
   EndpointConfig endpoint_config;
   OnlineCtcFstDecoderConfig ctc_fst_decoder_config;
 
-  // Optional, independent VAD pipeline (ds-k2-sherpa-onnx refactor_vad
-  // style -- see OnlineVadModelConfig). Disabled (default) when its
-  // `model` is empty. Driven explicitly via OnlineRecognizer::VadProcess()
-  // (e.g. the websocket server's own, faster-cadence timer); never run
-  // inline inside AcceptWaveform().
   OnlineVadModelConfig online_vad_config;
 
   bool enable_endpoint = true;

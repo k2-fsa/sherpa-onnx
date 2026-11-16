@@ -146,17 +146,11 @@ class OnlineStream {
   float GetOptionFloat(const std::string &key,
                        float default_value = 0.0f) const;
 
-  // ---- Independent VAD pipeline (ds-k2-sherpa-onnx refactor_vad style) ----
+  // ---- VAD ----
   //
-  // Unlike a design where VAD runs inline inside AcceptWaveform(), here
-  // AcceptWaveform() only appends a *copy* of the incoming waveform to a
-  // separate raw-audio buffer; actual Silero inference only happens when
-  // something calls VadProcessStep() explicitly (the websocket server
-  // does this from its own, faster-cadence timer, running ahead of the
-  // ASR decode loop -- see OnlineRecognizer::VadProcess()). This mirrors
-  // the source architecture's OnlineVadModel/OnlineVadBuffer split: a
-  // prediction buffer the ASR side polls for coverage, written by a VAD
-  // step the ASR side never calls itself.
+  // AcceptWaveform() only appends a copy of the incoming audio to a separate
+  // buffer. Silero inference runs when OnlineRecognizer::VadProcess() is
+  // called (the websocket server does this from its own timer).
 
   // Enables VAD on this stream; the model is shared, the stream keeps its
   // own state. `window_shift`/`window_size` are in samples at

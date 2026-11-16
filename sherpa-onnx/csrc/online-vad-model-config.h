@@ -12,18 +12,10 @@
 
 namespace sherpa_onnx {
 
-// Configuration for an independent Silero VAD pipeline that runs
-// *parallel to* the online (streaming) recognizer's decode loop --
-// mirroring ds-k2-sherpa-onnx's refactor_vad architecture: a VadProcess()
-// step on its own schedule, reading an independent copy of each stream's
-// raw audio, writing predictions to a per-stream OnlineVadBuffer that
-// OnlineRecognizer::IsReady()'s coverage gate and IsEndpoint() read.
-//
-// Disabled when `model` is empty -- zero overhead and zero behavior
-// change for callers who don't set it. Unlike the inline-VAD branch of
-// this port, there is no "run inline inside AcceptWaveform" fallback:
-// VadProcess() must be driven explicitly (the websocket server does
-// this on its own io_vad_ timer), exactly as in the source architecture.
+// Configuration for the online Silero VAD. It runs next to the streaming
+// recognizer: OnlineRecognizer::VadProcess() scores a per-stream copy of the
+// audio, and OnlineRecognizer::IsReady() / IsEndpoint() read the result.
+// Disabled when `model` is empty.
 struct OnlineVadModelConfig {
   // Path to a Silero VAD ONNX model (v4 or v5). Empty disables this
   // feature entirely.
