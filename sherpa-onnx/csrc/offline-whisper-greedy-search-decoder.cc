@@ -214,8 +214,9 @@ OfflineWhisperGreedySearchDecoder::Decode(
     }
   }
 
-  // assume at most 6 tokens per second
-  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
+  // assume at most max_tokens_per_second tokens per second
+  int32_t num_possible_tokens =
+      num_feature_frames / 100.0 * params.max_tokens_per_second;
   num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
 
   for (int32_t i = 0; i < num_possible_tokens; ++i) {
@@ -286,6 +287,17 @@ OfflineWhisperGreedySearchDecoder::Decode(
     } else {
       max_token_id = MaxElementIndex(p_logits, vocab_size);
     }
+  }
+
+  if (max_token_id != eot &&
+      static_cast<int32_t>(predicted_tokens.size()) == num_possible_tokens) {
+    SHERPA_ONNX_LOGE(
+        "Warning: the decode stopped at the token limit (%d tokens for %.2f s "
+        "of audio, max_tokens_per_second=%d) rather than at an end-of-text "
+        "token. The text may be truncated. Set the per-stream option "
+        "'max_tokens_per_second' to a larger value to allow more tokens.",
+        num_possible_tokens, num_feature_frames / 100.0,
+        params.max_tokens_per_second);
   }
 
   std::vector<OfflineWhisperDecoderResult> ans(1);

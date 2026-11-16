@@ -24,6 +24,12 @@ struct OfflineWhisperDecodeParams {
   // Ordered metadata language IDs for automatic detection; empty means
   // unrestricted.
   std::vector<int32_t> language_candidate_ids;
+
+  // Maximum number of tokens to generate per second of audio; the decode
+  // stops after num_feature_frames / 100 * max_tokens_per_second tokens.
+  // Scripts whose tokens are shorter than ~1/6 s of speech need a larger
+  // value. Set via the per-stream option "max_tokens_per_second".
+  int32_t max_tokens_per_second = 6;
 };
 
 class OfflineWhisperDecoder {
