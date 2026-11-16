@@ -166,8 +166,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     try {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
 
-      OfflineWhisperDecodeParams params{std::move(effective_language),
-                                        std::move(language_candidate_ids)};
+      OfflineWhisperDecodeParams params{
+          std::move(effective_language), std::move(language_candidate_ids),
+          s->GetOptionInt("max_tokens_per_second", 6)};
       auto results = decoder_->Decode(
           std::move(cross_kv.first), std::move(cross_kv.second), num_frames,
           params);
