@@ -35,7 +35,7 @@ const std::vector<FaPronunciation> &FaLexicon::Get(
 }
 
 static bool IsNumericToken(const std::string &s) {
-  float value;
+  float value = 0.0f;
   return ConvertStringToReal(s, &value);
 }
 
@@ -44,6 +44,13 @@ FaLexicon FaLexicon::Load(const std::string &filename) {
   if (!is) {
     throw std::runtime_error("Failed to open lexicon: '" + filename + "'");
   }
+  std::string contents((std::istreambuf_iterator<char>(is)),
+                       std::istreambuf_iterator<char>());
+  return LoadFromString(contents);
+}
+
+FaLexicon FaLexicon::LoadFromString(const std::string &contents) {
+  std::istringstream is(contents);
 
   FaLexicon lexicon;
   std::string line;
@@ -85,7 +92,7 @@ FaLexicon FaLexicon::Load(const std::string &filename) {
       }
       for (size_t i = 0; i != bar; ++i) {
         if (i) {
-          key += " ";
+          key += ' ';
         }
         key += tokens[i];
       }
@@ -112,29 +119,28 @@ FaLexicon FaLexicon::Load(const std::string &filename) {
     }
 
     auto &bucket = lexicon.entries[key];
-    bool duplicate = false;
+    FaPronunciation *dup = nullptr;
     for (auto &e : bucket) {
       if (e.phones == pron.phones) {
-        duplicate = true;
-        // Same pronunciation: keep the form with more per-character groups
-        // so the key stays usable as a pronunciation context.
-        if (pron.groups.size() > e.groups.size()) {
-          e = std::move(pron);
-        }
+        dup = &e;
         break;
       }
     }
-    if (duplicate) {
-      SHERPA_ONNX_LOGE("duplicate pronunciation for '%s' in '%s'; ignored",
-                       key.c_str(), filename.c_str());
+    if (dup) {
+      // Same pronunciation: keep the form with more per-character groups
+      // so the key stays usable as a pronunciation context.
+      if (pron.groups.size() > dup->groups.size()) {
+        *dup = std::move(pron);
+      }
+      SHERPA_ONNX_LOGE("duplicate pronunciation for '%s'; ignored",
+                       key.c_str());
     } else {
       bucket.push_back(std::move(pron));
     }
   }
 
   if (lexicon.entries.empty()) {
-    throw std::runtime_error("Lexicon contains no valid entry: '" + filename +
-                             "'");
+    throw std::runtime_error("Lexicon contains no valid entry");
   }
   return lexicon;
 }
@@ -239,7 +245,7 @@ std::vector<std::vector<std::vector<std::string>>> ResolveFaPronunciations(
       for (size_t k = i; k < j; ++k) {
         key += words[k];
         if (k != i) {
-          spaced += " ";
+          spaced += ' ';
         }
         spaced += words[k];
       }

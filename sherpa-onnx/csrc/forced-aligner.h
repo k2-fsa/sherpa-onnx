@@ -94,12 +94,24 @@ struct ForcedAlignerConfig {
 
   void Register(ParseOptions *po);
   bool Validate() const;
+
+  // Like Validate(), for model files given by a resource manager (Android
+  // asset manager / OHOS native resource manager): model_dir and lexicon
+  // are paths relative to the resource root.
+  template <typename Manager>
+  bool Validate(Manager *mgr) const;
+
   std::string ToString() const;
 };
 
 class ForcedAligner {
  public:
   explicit ForcedAligner(const ForcedAlignerConfig &config);
+
+  // model_dir and lexicon are paths relative to the asset root.
+  template <typename Manager>
+  ForcedAligner(Manager *mgr, const ForcedAlignerConfig &config);
+
   ~ForcedAligner();
 
   // Alignment options can be overridden per stream via SetOption(); when

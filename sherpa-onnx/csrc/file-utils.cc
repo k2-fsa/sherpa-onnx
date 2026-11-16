@@ -53,6 +53,24 @@ bool FileExists(const std::string &filename) {
 #endif
 }
 
+#if __ANDROID_API__ >= 9
+bool FileExists(AAssetManager *mgr, const std::string &filename) {
+  std::unique_ptr<AAsset, decltype(&AAsset_close)> asset(
+      AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_BUFFER),
+      AAsset_close);
+  return asset != nullptr;
+}
+#endif
+
+#if __OHOS__
+bool FileExists(NativeResourceManager *mgr, const std::string &filename) {
+  std::unique_ptr<RawFile, decltype(&OH_ResourceManager_CloseRawFile)> fp(
+      OH_ResourceManager_OpenRawFile(mgr, filename.c_str()),
+      OH_ResourceManager_CloseRawFile);
+  return fp != nullptr;
+}
+#endif
+
 void AssertFileExists(const std::string &filename) {
   if (!FileExists(filename)) {
     SHERPA_ONNX_LOGE("filename '%s' does not exist", filename.c_str());
@@ -101,20 +119,19 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
         "See also https://github.com/k2-fsa/sherpa-onnx/issues/2562");
   }
 
-  AAsset *asset = AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_BUFFER);
+  std::unique_ptr<AAsset, decltype(&AAsset_close)> asset(
+      AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_BUFFER),
+      AAsset_close);
   if (!asset) {
     __android_log_print(ANDROID_LOG_FATAL, "sherpa-onnx",
                         "Read binary file: Load '%s' failed", filename.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
-  auto p = reinterpret_cast<const char *>(AAsset_getBuffer(asset));
-  size_t asset_length = AAsset_getLength(asset);
+  auto p = reinterpret_cast<const char *>(AAsset_getBuffer(asset.get()));
+  size_t asset_length = AAsset_getLength(asset.get());
 
-  std::vector<char> buffer(p, p + asset_length);
-  AAsset_close(asset);
-
-  return buffer;
+  return std::vector<char>(p, p + asset_length);
 }
 #endif
 

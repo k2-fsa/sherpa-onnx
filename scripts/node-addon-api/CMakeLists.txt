@@ -9,6 +9,9 @@ cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0091 NEW)
 cmake_policy(SET CMP0042 NEW)
 
+# Keep in sync with the deployment target of the root CMakeLists.txt.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
+
 project(sherpa-onnx)
 
 set(CMAKE_CXX_STANDARD 17)

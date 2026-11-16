@@ -66,25 +66,50 @@ void ForcedAlignerConfig::Register(ParseOptions *po) {
   options.Register(po);
 }
 
-bool ForcedAlignerConfig::Validate() const {
-  if (model_dir.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateForcedAlignerConfig(const ForcedAlignerConfig &config,
+                                        const Exists &exists) {
+  if (config.model_dir.empty()) {
     SHERPA_ONNX_LOGE("model-dir is empty");
     return false;
   }
-  if (lexicon.empty()) {
+  if (config.lexicon.empty()) {
     SHERPA_ONNX_LOGE("lexicon is empty");
     return false;
   }
-  if (!FileExists(model_dir + "/meta.json")) {
-    SHERPA_ONNX_LOGE("no meta.json in model-dir: '%s'", model_dir.c_str());
+  if (!exists(config.model_dir + "/meta.json")) {
+    SHERPA_ONNX_LOGE("no meta.json in model-dir: '%s'",
+                     config.model_dir.c_str());
     return false;
   }
-  if (!FileExists(lexicon)) {
-    SHERPA_ONNX_LOGE("lexicon does not exist: '%s'", lexicon.c_str());
+  if (!exists(config.lexicon)) {
+    SHERPA_ONNX_LOGE("lexicon does not exist: '%s'", config.lexicon.c_str());
     return false;
   }
   return true;
 }
+
+bool ForcedAlignerConfig::Validate() const {
+  return ValidateForcedAlignerConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool ForcedAlignerConfig::Validate(Manager *mgr) const {
+  return ValidateForcedAlignerConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool ForcedAlignerConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool ForcedAlignerConfig::Validate(NativeResourceManager *mgr) const;
+#endif
 
 std::string ForcedAlignerConfig::ToString() const {
   std::ostringstream os;
@@ -144,6 +169,20 @@ std::string ForcedAlignmentResult::ToTextGrid() const {
 
 ForcedAligner::ForcedAligner(const ForcedAlignerConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+template <typename Manager>
+ForcedAligner::ForcedAligner(Manager *mgr, const ForcedAlignerConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+
+#if __ANDROID_API__ >= 9
+template ForcedAligner::ForcedAligner(AAssetManager *mgr,
+                                      const ForcedAlignerConfig &config);
+#endif
+
+#if __OHOS__
+template ForcedAligner::ForcedAligner(NativeResourceManager *mgr,
+                                      const ForcedAlignerConfig &config);
+#endif
 
 ForcedAligner::~ForcedAligner() = default;
 

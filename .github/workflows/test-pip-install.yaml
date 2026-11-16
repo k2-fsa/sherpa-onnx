@@ -17,7 +17,7 @@ jobs:
   test_pip_install:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
     strategy:
       fail-fast: false
       matrix:
@@ -60,9 +60,9 @@ jobs:
             python-version: "3.9"
 
           # macOS arm64
-          - os: macos-14
+          - os: macos-latest
             python-version: "3.10"
-          - os: macos-14
+          - os: macos-latest
             python-version: "3.11"
           - os: macos-latest
             python-version: "3.12"
@@ -144,7 +144,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+          architecture: ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
 
       - name: Install sherpa-onnx
         shell: bash

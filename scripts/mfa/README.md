@@ -138,10 +138,13 @@ acoustics pick the best one. Words without a pronunciation are left out of
 the lexicon and reported as out-of-vocabulary at runtime.
 
 - **English**: keys are words; multi-word phrases keep their combined
-  readings, ` || ` separating the per-word phone groups.
+  readings: a multi-token key writes one ` || `-separated phone group per
+  word (`do not || d uː || n ɑː t`); single-token keys need no ` || `
+  (`ask æ s k`).
 - **Chinese**: keys are hanzi (characters and multi-character phrases),
-  phones are pinyin-derived; ` || ` separates the per-character phone
-  groups. Multi-character keys provide pronunciation context for
+  phones are pinyin-derived; a multi-character key writes one ` || `-
+  separated group per character (`银行 || i n || h a ŋ`), single-character
+  keys need none (`行 x a ŋ`). Multi-character keys provide pronunciation context for
   polyphones. No runtime pypinyin is needed.
 
 ## Usage
