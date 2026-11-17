@@ -112,6 +112,9 @@ object TtsEngine {
         // usePhonemize = true // option 1: phonemize the text with piper-phonemize; no extra files needed
         // lexicon = "lexicon-en-us.txt" // option 2: lexicon file inside the model directory.
         //   Download it from https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-en-us.txt
+        //   A bare file name is looked up inside modelDir; a name containing
+        //   "/" is used as-is (relative to the assets root). A comma-separated
+        //   list names several lexicons, each resolved the same way.
         //
         // Neither option uses the espeak-ng-data directory shipped in the model
         // package; delete it to make the APK smaller.

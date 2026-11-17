@@ -94,7 +94,7 @@ sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
 
 {% if tts_model.rule_fars %}
   rule_fars={{ tts_model.rule_fars }}
-  sed -i.bak s%"ruleFsts = null"%"ruleFars = \"$rule_fars\""% ./MainActivity.kt
+  sed -i.bak s%"ruleFars = null"%"ruleFars = \"$rule_fars\""% ./MainActivity.kt
 {% endif %}
 
 {% if tts_model.phonemize %}
