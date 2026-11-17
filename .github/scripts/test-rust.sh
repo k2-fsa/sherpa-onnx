@@ -101,6 +101,9 @@ rm -rf sherpa-onnx-medasr-ctc-en-int8-2025-12-25
 bash ./run-telespeech-ctc.sh
 rm -rf sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04
 
+bash ./run-omnilingual-asr-ctc.sh
+rm -rf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+
 bash ./run-silero-vad-remove-silence.sh
 
 bash ./run-ten-vad-remove-silence.sh
