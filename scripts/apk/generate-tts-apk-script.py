@@ -324,6 +324,7 @@ def get_piper_models() -> List[TtsModel]:
             model_dir="vits-piper-hi_IN-pratham-medium",
             model_name="hi_IN-pratham-medium.onnx",
             lang="pi",
+            phonemize=False,
             lexicon="lexicon.txt",
             lexicon_url="https://github.com/dhammagift/pali-tts/releases/download/sherpa-pi-pratham-v2/lexicon-pi.txt",
         )
