@@ -106,6 +106,17 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
                     const ssentencepiece::Ssentencepiece *bpe_encoder,
                     std::vector<std::vector<int32_t>> *hotwords,
                     std::vector<float> *boost_scores) {
+  if (bpe_encoder == nullptr &&
+      (modeling_unit == "bpe" || modeling_unit == "bbpe" ||
+       modeling_unit == "cjkchar+bpe")) {
+    SHERPA_ONNX_LOGE(
+        "modeling_unit is '%s' but bpe_encoder is nullptr. Please check "
+        "that decoding_method is modified_beam_search (the greedy-search "
+        "decoders never construct the BPE encoder) and that bpe_vocab is "
+        "set. Skipping hotwords.",
+        modeling_unit.c_str());
+    return false;
+  }
   std::vector<std::string> lines;
   std::string line;
   std::string word;
