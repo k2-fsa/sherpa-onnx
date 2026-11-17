@@ -19,7 +19,7 @@ export interface FaModelInfo {
 }
 
 const docUrl =
-  "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/android.md";
+  "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/mfa/web.md";
 export { docUrl };
 
 const faModelsUrl =
@@ -79,4 +79,12 @@ export const modelInfo: FaModelInfo[] = [
 
 export function currentModel(index: number = SELECTED_MODEL_INDEX): FaModelInfo {
   return modelInfo[Math.min(index, modelInfo.length - 1)];
+}
+
+/** Download URL of the pre-built web app zip of the given model. */
+export function appZipUrl(model: FaModelInfo): string {
+  return (
+    "https://github.com/k2-fsa/sherpa-onnx/releases/download/react-fa/" +
+    `sherpa-onnx-react-fa-${model.dir}.zip`
+  );
 }

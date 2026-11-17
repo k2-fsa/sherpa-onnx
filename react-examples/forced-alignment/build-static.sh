@@ -34,7 +34,7 @@ if [ ! -f public/sherpa/sherpa-onnx-wasm-main-fa.data ]; then
   fi
   mkdir -p public/sherpa
   cp -v $src/sherpa-onnx-wasm-main-fa.{js,wasm,data} public/sherpa/
-  cp -v ../../wasm/forced-alignment/sherpa-onnx-fa.js public/sherpa/
+  cp -v ../../wasm/nodejs/sherpa-onnx-forced-aligner.js public/sherpa/
 fi
 
 # 2. Set the model index (the same sed the CI uses). The file is restored

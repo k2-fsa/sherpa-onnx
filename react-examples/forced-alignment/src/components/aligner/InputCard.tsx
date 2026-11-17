@@ -118,7 +118,7 @@ export function InputCard(props: Props) {
         <div className="flex gap-2 flex-wrap">
           <Button
             onClick={isAligning ? onCancel : onAlign}
-            disabled={!ready || (!isAligning && (!fileName || !transcript.trim()))}
+            disabled={!ready}
           >
             {isAligning ? "Stop" : "Align"}
           </Button>

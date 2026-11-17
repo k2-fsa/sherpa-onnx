@@ -17,7 +17,7 @@ import { currentModel } from "../model-config";
 const SHERPA_BASE = "sherpa";
 
 const MAIN_JS = "sherpa-onnx-wasm-main-fa.js";
-const FA_JS = "sherpa-onnx-fa.js";
+const FA_JS = "sherpa-onnx-forced-aligner.js";
 const MAIN_WASM = "sherpa-onnx-wasm-main-fa.wasm";
 const MAIN_DATA = "sherpa-onnx-wasm-main-fa.data";
 
@@ -54,6 +54,8 @@ export interface SherpaEngine {
 
 export interface LoadOptions {
   onProgress?: (p: LoadProgress) => void;
+  /** Receives the wasm engine's own stdout/stderr lines. */
+  onNativeLog?: (line: string) => void;
   /** Index into model-config.ts's modelInfo; the directory must exist. */
   modelIndex?: number;
 }
@@ -137,7 +139,7 @@ export function loadSherpaEngineOnce(
 }
 
 async function doLoad(options: LoadOptions): Promise<SherpaEngine> {
-  const { onProgress, modelIndex = 0 } = options;
+  const { onProgress, onNativeLog, modelIndex = 0 } = options;
   const report = (
     stage: LoadStage,
     loaded: number,
@@ -188,8 +190,14 @@ async function doLoad(options: LoadOptions): Promise<SherpaEngine> {
         }
       },
       onRuntimeInitialized: () => resolve(),
-      print: (text: string) => console.log("[sherpa]", text),
-      printErr: (text: string) => console.warn("[sherpa]", text),
+      print: (text: string) => {
+        console.log("[sherpa]", text);
+        onNativeLog?.(text);
+      },
+      printErr: (text: string) => {
+        console.warn("[sherpa]", text);
+        onNativeLog?.(`warning: ${text}`);
+      },
     };
     setTimeout(() => reject(new Error("Engine initialization timed out, please retry")), 300_000);
   });
@@ -206,7 +214,7 @@ async function doLoad(options: LoadOptions): Promise<SherpaEngine> {
   // ---- phase 4: create the forced aligner ----
   const ForcedAlignerCtor = window.ForcedAligner;
   if (!ForcedAlignerCtor) {
-    throw new Error("ForcedAligner is undefined (sherpa-onnx-fa.js failed to load)");
+    throw new Error("ForcedAligner is undefined (sherpa-onnx-forced-aligner.js failed to load)");
   }
   const modelDirs = listModelDirs(module);
   const model = currentModel(modelIndex);

@@ -88,7 +88,10 @@ export default function AlignerPage() {
 
   // ---- engine loading ----
   useEffect(() => {
-    loadSherpaEngineOnce({ onProgress: setLoad })
+    loadSherpaEngineOnce({
+      onProgress: setLoad,
+      onNativeLog: (line) => appendLog(`[wasm] ${line}`),
+    })
       .then((e) => {
         setEngine(e);
         setVersion(readVersionInfo(e.module));
@@ -197,7 +200,20 @@ export default function AlignerPage() {
   // ---- alignment ----
   const runAlign = async () => {
     if (!engine) return;
-    if (!decoded || !transcript.trim()) return;
+    if (!decoded) {
+      const msg = "Please select or record an audio file first";
+      setError(msg);
+      setStatus(msg);
+      appendLog(msg);
+      return;
+    }
+    if (!transcript.trim()) {
+      const msg = "Please enter the transcript of the audio";
+      setError(msg);
+      setStatus(msg);
+      appendLog(msg);
+      return;
+    }
     setError(null);
     setResult(null);
     setPlayingIndex(-1);

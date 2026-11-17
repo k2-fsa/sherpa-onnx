@@ -55,8 +55,8 @@ install(
   FILES
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-fa>/sherpa-onnx-wasm-main-fa.js"
     "index.html"
-    "sherpa-onnx-fa.js"
     "app-fa.js"
+    "${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-forced-aligner.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-fa>/sherpa-onnx-wasm-main-fa.wasm"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-fa>/sherpa-onnx-wasm-main-fa.data"
   DESTINATION

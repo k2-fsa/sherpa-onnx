@@ -77,7 +77,7 @@ jobs:
           mkdir -p react-examples/forced-alignment/public/sherpa
           cp -v build-wasm-simd-forced-alignment/install/bin/wasm/forced-alignment/sherpa-onnx-wasm-main-fa.{js,wasm,data} \
              react-examples/forced-alignment/public/sherpa/
-          cp -v wasm/forced-alignment/sherpa-onnx-fa.js react-examples/forced-alignment/public/sherpa/
+          cp -v wasm/nodejs/sherpa-onnx-forced-aligner.js react-examples/forced-alignment/public/sherpa/
 
           cd react-examples/forced-alignment
           chmod +x build-static.sh

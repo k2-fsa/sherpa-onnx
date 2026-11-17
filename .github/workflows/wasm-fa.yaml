@@ -1,0 +1,86 @@
+name: wasm-fa
+
+on:
+  push:
+    branches:
+      - wasm
+      - wasm-web-fa
+
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-fa-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  web_demo_forced_alignment:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ubuntu-latest
+    name: wasm demo for ${{ matrix.model }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - model: zh-aishell3-pinyin
+          - model: zh-biaobei-pinyin
+          - model: zh-large-pinyin
+          - model: english-mfa-v2.2.1
+          - model: english-mfa-v3.0.0
+          - model: english-mfa-v3.1.0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # https://github.com/mymindstorm/setup-emsdk
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.23
+          actions-cache-folder: emsdk-cache
+
+      - name: Get sherpa-onnx version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+          echo "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
+
+      - name: Download model ${{ matrix.model }}
+        shell: bash
+        run: |
+          cd wasm/forced-alignment/assets
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/${{ matrix.model }}.tar.bz2
+          tar xf ${{ matrix.model }}.tar.bz2
+          rm ${{ matrix.model }}.tar.bz2
+          ls -lh
+
+      - name: Build wasm demo
+        shell: bash
+        run: |
+          # assets/ holds exactly one model, so the demo picks it up no
+          # matter what its modelIndex constant is set to
+          ./build-wasm-simd-forced-alignment.sh
+
+      - name: Package
+        shell: bash
+        run: |
+          # one folder per zip: unzip it and open index.html with any static
+          # HTTP server (file:// does not work: the wasm/data are fetched)
+          name=sherpa-onnx-wasm-fa-${{ matrix.model }}
+          cp -r build-wasm-simd-forced-alignment/install/bin/wasm/forced-alignment $name
+          zip -r $name.zip $name
+          ls -lh $name.zip
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./sherpa-onnx-wasm-fa-*.zip
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: ${{ env.SHERPA_ONNX_VERSION }}

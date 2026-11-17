@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
     <title>Forced Alignment (sherpa-onnx wasm)</title>
     <style>
       body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -19,6 +20,8 @@
       td, th { border-bottom: 1px solid #e5e7eb; padding: 4px 8px; font-size: 13px;
                text-align: left; }
       tr:hover { background: #f5f6f8; cursor: pointer; }
+      .log-box { max-height: 220px; overflow-y: auto; }
+      .log-line { font-family: monospace; font-size: 12px; color: #6b7280; }
     </style>
   </head>
   <body>
@@ -34,12 +37,15 @@
       <p>
         <input id="file" type="file" accept="audio/*,video/*" />
         <button id="example">Example</button>
+        <button id="record">Record</button>
+        <button id="play">Play audio</button>
       </p>
       <p>
         <textarea id="text" placeholder="Enter the transcript of the audio"></textarea>
       </p>
       <p>
         <button id="align" class="primary">Align</button>
+        <button id="clear">Clear</button>
       </p>
     </div>
 
@@ -52,7 +58,10 @@
         </thead>
         <tbody></tbody>
       </table>
-      <p><button id="download-textgrid">Download .TextGrid</button></p>
+      <p>
+        <button id="download-textgrid">Download .TextGrid</button>
+        <button id="download-timestamped">Download timestamped .txt</button>
+      </p>
       <p class="hint">
         Source code:
         <a href="https://github.com/k2-fsa/sherpa-onnx/tree/master/wasm/forced-alignment">wasm/forced-alignment</a>
@@ -61,16 +70,27 @@
       </p>
     </div>
 
+    <div class="card">
+      <h2>Log</h2>
+      <div id="log-box" class="log-box"></div>
+    </div>
+
     <script>
       // The emscripten main script reads window.Module while loading.
       window.Module = {
-        print: (t) => console.log('[sherpa]', t),
-        printErr: (t) => console.warn('[sherpa]', t),
+        print: (t) => {
+          console.log('[sherpa]', t);
+          if (window.appendLog) window.appendLog(t);
+        },
+        printErr: (t) => {
+          console.warn('[sherpa]', t);
+          if (window.appendLog) window.appendLog('warning: ' + t);
+        },
         onRuntimeInitialized: () => window.onSherpaReady && window.onSherpaReady(),
       };
     </script>
     <script src="sherpa-onnx-wasm-main-fa.js"></script>
-    <script src="sherpa-onnx-fa.js"></script>
+    <script src="sherpa-onnx-forced-aligner.js"></script>
     <script src="app-fa.js"></script>
   </body>
 </html>

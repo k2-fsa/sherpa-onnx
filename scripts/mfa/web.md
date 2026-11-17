@@ -1,10 +1,24 @@
 # Forced-alignment Web app (WASM)
 
-This page describes the files of the
-[react-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/react-fa) GitHub
-release. Each file is a **static web app** build of
-[`react-examples/forced-alignment`](../../react-examples/forced-alignment)
-with one forced-alignment model bundled in.
+Two pre-built web demos are available, one app per model: a **web demo**
+built from [`wasm/forced-alignment`](../../wasm/forced-alignment) and a
+full-featured **web app** built from
+[`react-examples/forced-alignment`](../../react-examples/forced-alignment).
+
+## Web demo (wasm/forced-alignment)
+
+The files `sherpa-onnx-wasm-fa-<model>.zip` of the current release, e.g.
+[v2.0.1](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1), contain
+the plain-web demo: unzip a file and open `index.html` with any static HTTP
+server. It covers the basics — pick an audio/video file or record from the
+microphone, enter the transcript, align, play words and export the result.
+
+## Web app (react-examples/forced-alignment)
+
+The files `sherpa-onnx-react-fa-<model>.zip` of the
+[react-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/react-fa)
+release contain the full-featured web app described below. The remainder of
+this page refers to it.
 
 ## What the app does
 
@@ -70,14 +84,23 @@ The source code of the app is in
 [`react-examples/forced-alignment`](../../react-examples/forced-alignment)
 (the wasm module is in [`wasm/forced-alignment`](../../wasm/forced-alignment)).
 
-## How to use it
+## How to download and run it locally
 
-1. Unzip the file: `unzip sherpa-onnx-react-fa-<model>.zip`.
-2. Serve the unzipped directory with any static HTTP server, e.g.
+1. Download the zip of your model from the table above, e.g.
+   `sherpa-onnx-react-fa-english-mfa-v3.1.0.zip` from the
+   [react-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/react-fa)
+   release.
+2. Unzip it: `unzip sherpa-onnx-react-fa-<model>.zip` — this creates a
+   `sherpa-onnx-react-fa-<model>/` folder with the whole app (html, css, js
+   and the wasm package with the model inside).
+3. Serve that folder with any static HTTP server, e.g. run
    `python3 -m http.server 8000` inside it.
-3. Open `http://localhost:8000` in a browser. The model loads with a progress
+4. Open `http://localhost:8000` in a browser. The model loads with a progress
    bar on first visit (the model is inside the wasm data file; the first load
    downloads it, later loads come from the browser cache).
+
+Any other static HTTP server works as well (nginx, `npx serve`, ...); the
+only requirement is that `.wasm` files are served as `application/wasm`.
 
 ## How to build it yourself
 

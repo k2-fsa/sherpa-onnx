@@ -5,11 +5,21 @@
 // one by its index (sorted directory names).
 'use strict'
 
-let Module = null;
+// The emscripten module is called sherpaModule (not Module): a top-level
+// `Module` in a classic script would collide with the glue's global
+// `var Module`.
+
+let sherpaModule = null;
 let aligner = null;
 let audioCtx = null;
 let decoded = null;      // {samples: Float32Array, sampleRate: 16000, duration}
 let lastResult = null;
+let lastWords = [];
+let fullSource = null;      // whole-file playback source
+let recorder = null;        // MediaRecorder while recording
+let recordChunks = [];
+let recordTimer = null;
+let recordStartMs = 0;
 
 function setStatus(msg) {
   document.getElementById('status').textContent = msg;
@@ -18,7 +28,21 @@ function setStatus(msg) {
 function log(msg) {
   console.log('[fa]', msg);
   setStatus(msg);
+  appendLog(msg);
 }
+
+// Appends a line to the on-page Log section (also used for the wasm
+// engine's own output, see index.html).
+function appendLog(msg) {
+  const box = document.getElementById('log-box');
+  if (!box) return;
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+window.appendLog = appendLog;
 
 // The model index into the directories of assets/ (developer constant, like
 // wasm/tts's modelType; set at build/CI time — not exposed to users).
@@ -33,7 +57,7 @@ function listModelDirs() {
                       'english-mfa-v2.2.1', 'english-mfa-v3.0.0', 'english-mfa-v3.1.0'];
   return candidates.filter((d) => {
     try {
-      return Module.FS.readdir('/' + d).indexOf('meta.json') >= 0;
+      return sherpaModule.FS.readdir('/' + d).indexOf('meta.json') >= 0;
     } catch (e) {
       return false;
     }
@@ -53,7 +77,7 @@ function loadModel() {
   }
   try {
     aligner = new ForcedAligner(
-        {modelDir: dir, lexicon: dir + '/lexicon.txt'}, Module);
+        {modelDir: dir, lexicon: dir + '/lexicon.txt'}, sherpaModule);
     setStatus('Model loaded: ' + dir + ' (ready to align)');
   } catch (e) {
     setStatus('Failed to load the model: ' + e);
@@ -88,18 +112,24 @@ async function loadFile(file) {
 
 // ---- alignment ----------------------------------------------------------
 
+function warnUser(msg) {
+  alert(msg);
+  setStatus(msg);
+  appendLog(msg);
+}
+
 function align() {
   if (!aligner) {
     setStatus('Please load the model first');
     return;
   }
   if (!decoded) {
-    setStatus('Please select an audio file first');
+    warnUser('Please select or record an audio file first');
     return;
   }
   const text = document.getElementById('text').value.trim();
   if (!text) {
-    setStatus('Please enter the transcript');
+    warnUser('Please enter the transcript of the audio');
     return;
   }
   const t0 = performance.now();
@@ -117,8 +147,9 @@ function align() {
       }
     }
   }
+  lastWords = words;
   if (words.length === 0) {
-    setStatus('Alignment failed: check that the transcript matches the audio');
+    log('Alignment failed: no words. Please check that the transcript matches the audio; see the Log for details.');
     return;
   }
   document.getElementById('stats').textContent =
@@ -162,20 +193,127 @@ function playWord(start, end) {
   src.start();
 }
 
-function downloadTextGrid() {
-  if (!lastResult) return;
-  const blob = new Blob([lastResult.textgrid], {type: 'text/plain'});
+/** Formats seconds as mm:ss.cc */
+function formatClock(t) {
+  const m = Math.floor(t / 60);
+  const s = t - m * 60;
+  return String(m).padStart(2, '0') + ':' + s.toFixed(2).padStart(5, '0');
+}
+
+function downloadText(content, name) {
+  const blob = new Blob([content], {type: 'text/plain'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'result.TextGrid';
+  a.download = name;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+function downloadTextGrid() {
+  if (!lastResult) return;
+  downloadText(lastResult.textgrid, 'result.TextGrid');
+}
+
+function downloadTimestamped() {
+  downloadText(
+      lastWords.map((w) => `[${formatClock(w.start)} -> ${formatClock(w.end)}] ${w.text}`).join('\n'),
+      'result_timestamped.txt');
+}
+
+function stopFullPlayback() {
+  if (fullSource) {
+    try { fullSource.stop(); } catch (e) {}
+    fullSource = null;
+  }
+  document.getElementById('play').textContent = 'Play audio';
+}
+
+// Toggle whole-file playback of the loaded audio.
+function playAudio() {
+  if (fullSource) {
+    stopFullPlayback();
+    return;
+  }
+  if (!decoded) {
+    setStatus('Please select an audio file first');
+    return;
+  }
+  if (!audioCtx) audioCtx = new AudioContext();
+  const buf = audioCtx.createBuffer(1, decoded.samples.length, decoded.sampleRate);
+  buf.getChannelData(0).set(decoded.samples);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioCtx.destination);
+  src.onended = () => stopFullPlayback();
+  src.start();
+  fullSource = src;
+  document.getElementById('play').textContent = 'Stop audio';
+}
+
+// Toggle microphone recording; the recording is loaded for alignment.
+async function toggleRecord() {
+  const btn = document.getElementById('record');
+  if (recorder) {
+    recorder.stop();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    const rec = new MediaRecorder(stream);
+    recordChunks = [];
+    rec.ondataavailable = (e) => {
+      if (e.data.size > 0) recordChunks.push(e.data);
+    };
+    rec.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      if (recordTimer) {
+        clearInterval(recordTimer);
+        recordTimer = null;
+      }
+      recorder = null;
+      btn.textContent = 'Record';
+      const blob = new Blob(recordChunks, {type: rec.mimeType || 'audio/webm'});
+      if (blob.size === 0) {
+        log('Recording discarded');
+        return;
+      }
+      log('Recording finished: ' + (blob.size / 1024).toFixed(0) + ' KB');
+      await loadFile(new File([blob], 'recording.webm'));
+    };
+    recorder = rec;
+    rec.start();
+    recordStartMs = Date.now();
+    recordTimer = setInterval(() => {
+      btn.textContent =
+          'Stop recording (' + Math.floor((Date.now() - recordStartMs) / 1000) + 's)';
+    }, 500);
+    btn.textContent = 'Stop recording (0s)';
+    log('Recording started');
+  } catch (e) {
+    setStatus('Cannot access the microphone: ' + e);
+  }
+}
+
+function clearAll() {
+  stopFullPlayback();
+  if (recorder) {
+    recordChunks = [];
+    recorder.stop();
+  }
+  lastResult = null;
+  lastWords = [];
+  decoded = null;
+  document.getElementById('file').value = '';
+  document.getElementById('text').value = '';
+  document.querySelector('#table tbody').innerHTML = '';
+  document.getElementById('stats').textContent = '';
+  setStatus('Ready');
 }
 
 // ---- wiring -------------------------------------------------------------
 
 window.onSherpaReady = () => {
-  Module = window.Module;
+  sherpaModule = window.Module;
   log('wasm engine ready');
   loadModel();
 
@@ -191,7 +329,7 @@ window.onSherpaReady = () => {
     log('Loading example: ' + dir + '/' + wav);
     let bytes;
     try {
-      bytes = Module.FS.readFile('/' + dir + '/' + wav);
+      bytes = sherpaModule.FS.readFile('/' + dir + '/' + wav);
     } catch (e) {
       setStatus('Example audio not found: ' + dir + '/' + wav);
       return;
@@ -202,7 +340,13 @@ window.onSherpaReady = () => {
         dir.indexOf('english') === 0 ?
         'ask not what your country can do for you, ask what you can do for your country.' :
         '不要问你的国家能为你做什么，而要问你能为你的国家做什么。';
-  };
+    };
   document.getElementById('align').onclick = align;
+  document.getElementById('clear').onclick = clearAll;
+  document.getElementById('play').onclick = playAudio;
+  document.getElementById('record').onclick = toggleRecord;
   document.getElementById('download-textgrid').onclick = downloadTextGrid;
+  document.getElementById('download-timestamped').onclick = downloadTimestamped;
+
 };
+

@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { currentModel, docUrl } from "@/lib/model-config";
+import { appZipUrl, currentModel, docUrl } from "@/lib/model-config";
 import type { VersionInfo } from "@/lib/sherpa/engine";
 
 const githubUrl = "https://github.com/k2-fsa/sherpa-onnx";
@@ -36,7 +36,11 @@ export function AppFooter({ version }: { version: VersionInfo | null }) {
           <p className="font-medium">{model.name}</p>
           <p className="text-muted-foreground break-all">
             <a className="underline" href={model.url}>
-              Download
+              Download the model
+            </a>
+            {" · "}
+            <a className="underline" href={appZipUrl(model)}>
+              Download this app (.zip)
             </a>
             {" · "}
             <a className="underline" href={docUrl}>
@@ -49,6 +53,13 @@ export function AppFooter({ version }: { version: VersionInfo | null }) {
           </p>
           <p className="text-muted-foreground">
             Runs fully in your browser — offline-capable, no audio is uploaded anywhere.
+          </p>
+          <p className="text-muted-foreground">
+            To run it locally: download the app zip above, unpack it, and open
+            the folder with any static HTTP server (for example
+            <code> python3 -m http.server 8000</code>), then visit the
+            printed address in your browser. See the documentation for
+            details.
           </p>
         </CardContent>
       </Card>
