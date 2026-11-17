@@ -1,0 +1,43 @@
+{
+  "model_type": "ONNX",
+  "npu_mode": "NPU1",
+  "input": "./encoder-ax650.onnx",
+  "output_name": "encoder.axmodel",
+  "output_dir": "./output_encoder",
+  "work_dir": "./output_encoder/work",
+  "target_hardware": "AX650",
+  "input_shapes": "x4d:1x1x1000x80",
+  "onnx_opt": {
+    "disable_onnx_optimization": false,
+    "enable_onnxsim": false,
+    "model_check": true
+  },
+  "quant": {
+    "input_configs": [
+      {
+        "tensor_name": "x4d",
+        "calibration_dataset": "./x4d.tar.gz",
+        "calibration_format": "Numpy",
+        "calibration_size": 16,
+        "calibration_mean": [],
+        "calibration_std": []
+      }
+    ],
+    "calibration_method": "MinMax",
+    "precision_analysis": false,
+    "highest_mix_precision": false,
+    "conv_bias_data_type": "FP32",
+    "disable_auto_refine_scale": true
+  },
+  "input_processors": [
+    {
+      "tensor_name": "x4d",
+      "tensor_layout": "NCHW",
+      "src_dtype": "FP32",
+      "src_layout": "NCHW"
+    }
+  ],
+  "compiler": {
+    "check": 0
+  }
+}

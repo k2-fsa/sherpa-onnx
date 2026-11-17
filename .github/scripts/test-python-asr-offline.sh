@@ -5,7 +5,7 @@
 # One of several groups run in parallel by .github/workflows/run-python-test.yaml.
 # Run .github/scripts/test-python.sh to run every group sequentially.
 
-set -ex
+set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"

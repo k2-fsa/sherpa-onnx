@@ -207,6 +207,12 @@ add_executable(keywords-spotter-buffered-tokens-keywords-c-api
                keywords-spotter-buffered-tokens-keywords-c-api.c)
 target_link_libraries(keywords-spotter-buffered-tokens-keywords-c-api sherpa-onnx-c-api)
 
+add_executable(forced-alignment-en-c-api forced-alignment-en-c-api.c)
+target_link_libraries(forced-alignment-en-c-api sherpa-onnx-c-api)
+
+add_executable(forced-alignment-zh-c-api forced-alignment-zh-c-api.c)
+target_link_libraries(forced-alignment-zh-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)
 elseif((UNIX AND NOT APPLE) OR LINUX)

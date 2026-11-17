@@ -17,6 +17,8 @@ const sherpa_onnx_speaker_diarization =
     require('./sherpa-onnx-speaker-diarization.js');
 const sherpa_onnx_speech_enhancement =
     require('./sherpa-onnx-speech-enhancement.js');
+const sherpa_onnx_forced_aligner =
+    require('./sherpa-onnx-forced-aligner.js');
 
 
 
@@ -50,6 +52,10 @@ function createOfflinePunctuation(config) {
 
 function createOnlinePunctuation(config) {
   return new sherpa_onnx_punctuation.OnlinePunctuation(config, wasmModule);
+}
+
+function createForcedAligner(config) {
+  return new sherpa_onnx_forced_aligner.ForcedAligner(config, wasmModule);
 }
 
 function createOfflineSpeakerDiarization(config) {
@@ -114,6 +120,7 @@ module.exports = {
   createVad,
   createOfflinePunctuation,
   createOnlinePunctuation,
+  createForcedAligner,
   createOfflineSpeakerDiarization,
   createOfflineSpeechDenoiser,
   createOnlineSpeechDenoiser,

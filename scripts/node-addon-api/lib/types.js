@@ -895,5 +895,61 @@
  * @property {number} sampleRate - Output sample rate in Hz.
  */
 
+
+/**
+ * Opaque handle of a native forced aligner.
+ * @typedef {Object} ForcedAlignerHandle
+ */
+
+/**
+ * Alignment options of a forced aligner. A value of 0 lets the C API use
+ * its default for that option.
+ * @typedef {Object} ForcedAlignerOptions
+ * @property {number} [beam=10] - Decoding beam of the alignment search.
+ * @property {number} [retryBeam=40] - Decoding beam of the retry pass.
+ * @property {number} [transitionScale=1] - Transition-probability scale.
+ * @property {number} [selfLoopScale=0.1] - Self-loop probability scale.
+ * @property {number} [acousticScale=0.1] - Acoustic likelihood scale.
+ */
+
+/**
+ * Configuration of a ForcedAligner.
+ * @typedef {Object} ForcedAlignerConfig
+ * @property {string} modelDir - Directory of the acoustic model; it must
+ *   contain meta.json, final.alimdl and tree; lda.mat and phones.txt are
+ *   optional.
+ * @property {string} lexicon - Pronunciation dictionary used to build the
+ *   lexicon FST.
+ * @property {ForcedAlignerOptions} [options] - Default alignment options.
+ * @property {boolean} [debug] - Print debug information.
+ */
+
+/**
+ * One aligned interval: a phone in the "phones" tier or a word in the
+ * "words" tier.
+ * @typedef {Object} ForcedAlignmentInterval
+ * @property {number} start - Start time in seconds.
+ * @property {number} end - End time in seconds.
+ * @property {string} text - The word/phone label; empty for a silence gap
+ *   in the "words" tier.
+ */
+
+/**
+ * One tier of the alignment (phones or words).
+ * @typedef {Object} ForcedAlignmentTier
+ * @property {string} name - "phones" or "words"; never empty.
+ * @property {ForcedAlignmentInterval[]} intervals - In time order.
+ */
+
+/**
+ * The result of ForcedAligner.compute(); tiers[0].name == "phones",
+ * tiers[1].name == "words".
+ * @typedef {Object} ForcedAlignmentResult
+ * @property {number} duration - Duration of the aligned audio in seconds.
+ * @property {string} textgrid - The whole alignment as a Praat TextGrid
+ *   string; empty for an empty result.
+ * @property {ForcedAlignmentTier[]} tiers - Empty for an empty result.
+ */
+
 // Export typedefs so they can be referenced by require('./types.js')
 module.exports = {};

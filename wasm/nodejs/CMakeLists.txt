@@ -25,6 +25,7 @@ install(
   ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
   ${CMAKE_SOURCE_DIR}/wasm/vad/sherpa-onnx-vad.js
   ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-punctuation.js
+  ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-forced-aligner.js
   ${CMAKE_SOURCE_DIR}/wasm/speaker-diarization/sherpa-onnx-speaker-diarization.js
   ${CMAKE_SOURCE_DIR}/wasm/speech-enhancement/sherpa-onnx-speech-enhancement.js
   ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-wave.js

@@ -8,9 +8,11 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/context-graph.h"
+#include "sherpa-onnx/csrc/fa-feature-extractor.h"
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -27,6 +29,11 @@ struct OfflineRecognitionResult {
   std::vector<std::string> tokens;
 
   std::string lang;
+
+  // Per-language probabilities from Whisper's language identification pass.
+  // Empty unless the per-stream option "top_k_langs" is set.
+  // Each pair is {language_code, probability}.
+  std::vector<std::pair<std::string, float>> lang_probs;
 
   // emotion target of the audio.
   std::string emotion;
@@ -91,6 +98,8 @@ class OfflineStream {
   explicit OfflineStream(CEDTag tag);
   explicit OfflineStream(MoonshineTag tag);
   explicit OfflineStream(OmnilingualAsrTag tag);
+  explicit OfflineStream(const FaFeatureConfig &config);
+
   ~OfflineStream();
 
   /**

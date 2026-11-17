@@ -1,0 +1,1 @@
+../sherpa-onnx/kotlin-api/AlignmentTier.kt

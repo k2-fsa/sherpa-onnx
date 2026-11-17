@@ -281,3 +281,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(offline-tts-piper-cxx-api ./offline-tts-piper-cxx-api.cc)
   target_link_libraries(offline-tts-piper-cxx-api sherpa-onnx-cxx-api)
 endif()
+
+add_executable(forced-alignment-en-cxx-api ./forced-alignment-en-cxx-api.cc)
+target_link_libraries(forced-alignment-en-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(forced-alignment-zh-cxx-api ./forced-alignment-zh-cxx-api.cc)
+target_link_libraries(forced-alignment-zh-cxx-api sherpa-onnx-cxx-api)

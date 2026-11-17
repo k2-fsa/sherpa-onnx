@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+#
+# Please set the environment variable ANDROID_NDK
+# before running this script
+
+# Inside the $ANDROID_NDK directory, you can find a binary ndk-build
+# and some other files like the file "build/cmake/android.toolchain.cmake"
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+log "Building forced alignment APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
+
+export SHERPA_ONNX_ENABLE_TTS=OFF
+
+log "====================arm64-v8a================="
+./build-android-arm64-v8a.sh
+log "====================armv7-eabi================"
+./build-android-armv7-eabi.sh
+log "====================x86-64===================="
+./build-android-x86-64.sh
+log "====================x86===================="
+./build-android-x86.sh
+
+mkdir -p apks
+
+app_dir=./android/SherpaOnnxForcedAlignment
+model_config=$app_dir/app/src/main/java/com/k2fsa/sherpa/onnx/fa/ModelConfig.kt
+cp -v $model_config $model_config.orig
+
+{% for model in model_list %}
+
+model_name={{ model.model_name }}
+short_name={{ model.short_name }}
+model_index={{ model.index }}
+
+log "------------------------------------------------------------"
+log "prepare model $model_name"
+log "------------------------------------------------------------"
+
+pushd $app_dir/app/src/main/assets/
+
+ls -lh
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/$model_name.tar.bz2
+tar xvf $model_name.tar.bz2
+rm $model_name.tar.bz2
+
+echo "pwd: $PWD"
+ls -lh
+
+popd
+
+sed -i.bak "s/const val SELECTED_MODEL_INDEX = .*/const val SELECTED_MODEL_INDEX = $model_index/" $model_config
+rm -fv $model_config.bak
+grep "SELECTED_MODEL_INDEX" $model_config
+
+for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+  log "------------------------------------------------------------"
+  log "build forced alignment apk for $arch and $model_name"
+  log "------------------------------------------------------------"
+  src_arch=$arch
+  if [ $arch == "armeabi-v7a" ]; then
+    src_arch=armv7-eabi
+  elif [ $arch == "x86_64" ]; then
+    src_arch=x86-64
+  fi
+
+  ls -lh ./build-android-$src_arch/install/lib/*.so
+
+  cp -v ./build-android-$src_arch/install/lib/*.so $app_dir/app/src/main/jniLibs/$arch/
+
+  pushd $app_dir
+  # -Pabi makes the APK contain only this ABI (also for the ffmpeg-kit libs)
+  ./gradlew build -Pabi=$arch
+  popd
+
+  mv $app_dir/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-fa-$arch-$short_name.apk
+  ls -lh apks
+  rm -v $app_dir/app/src/main/jniLibs/$arch/*.so
+done
+
+rm -rf $app_dir/app/src/main/assets/$model_name
+
+{% endfor %}
+
+# restore ModelConfig.kt
+mv -v $model_config.orig $model_config
+
+ls -lh apks

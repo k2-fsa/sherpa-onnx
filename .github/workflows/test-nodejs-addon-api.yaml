@@ -181,6 +181,20 @@ jobs:
           .github/scripts/test-nodejs-addon-npm.sh
       - uses: actions/upload-artifact@v4
         with:
+          name: fa-english-mfa-v3.1.0-node-addon-${{ matrix.os }}-${{ matrix.node-version }}
+          # each dir holds the test wav, both TextGrids (sync and async) and
+          # the word clips
+          path: nodejs-addon-examples/test_forced_alignment_english
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-zh-aishell3-pinyin-node-addon-${{ matrix.os }}-${{ matrix.node-version }}
+          path: nodejs-addon-examples/test_forced_alignment_chinese
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
           name: tts-waves-${{ matrix.os }}-${{ matrix.node-version }}
           path: |
             nodejs-addon-examples/test-*-lexicon.wav

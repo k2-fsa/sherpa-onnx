@@ -5,7 +5,6 @@ set -ex
 
 pip install \
   nemo_toolkit['asr'] \
-  "numpy<2" \
   ipython \
   kaldi-native-fbank \
   librosa \

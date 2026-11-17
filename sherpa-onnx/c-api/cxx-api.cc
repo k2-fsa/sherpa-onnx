@@ -1038,7 +1038,7 @@ bool VoiceActivityDetector::IsEmpty() const {
   return SherpaOnnxVoiceActivityDetectorEmpty(p_);
 }
 
-bool VoiceActivityDetector ::IsDetected() const {
+bool VoiceActivityDetector::IsDetected() const {
   return SherpaOnnxVoiceActivityDetectorDetected(p_);
 }
 
@@ -1387,8 +1387,8 @@ SpeakerEmbeddingExtractor SpeakerEmbeddingExtractor::Create(
 
 SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     const SherpaOnnxSpeakerEmbeddingExtractor *p)
-    : MoveOnly<SpeakerEmbeddingExtractor,
-               SherpaOnnxSpeakerEmbeddingExtractor>(p) {}
+    : MoveOnly<SpeakerEmbeddingExtractor, SherpaOnnxSpeakerEmbeddingExtractor>(
+          p) {}
 
 void SpeakerEmbeddingExtractor::Destroy(
     const SherpaOnnxSpeakerEmbeddingExtractor *p) const {
@@ -1462,8 +1462,7 @@ bool SpeakerEmbeddingManager::Remove(const std::string &name) const {
 
 std::string SpeakerEmbeddingManager::Search(const float *v,
                                             float threshold) const {
-  const char *name =
-      SherpaOnnxSpeakerEmbeddingManagerSearch(p_, v, threshold);
+  const char *name = SherpaOnnxSpeakerEmbeddingManagerSearch(p_, v, threshold);
   if (!name) return {};
   std::string ans(name);
   SherpaOnnxSpeakerEmbeddingManagerFreeSearch(name);
@@ -1547,8 +1546,7 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
     const OfflineSpeakerDiarizationConfig &config) {
   struct SherpaOnnxOfflineSpeakerDiarizationConfig c;
   memset(&c, 0, sizeof(c));
-  c.segmentation.pyannote.model =
-      config.segmentation.pyannote.model.c_str();
+  c.segmentation.pyannote.model = config.segmentation.pyannote.model.c_str();
   c.segmentation.pyannote.window_shift_ratio =
       config.segmentation.pyannote.window_shift_ratio;
   c.segmentation.num_threads = config.segmentation.num_threads;
@@ -1564,7 +1562,8 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
   c.embedding.provider = config.embedding.provider.c_str();
   c.clustering.num_clusters = config.clustering.num_clusters;
   c.clustering.threshold = config.clustering.threshold;
-  c.clustering.compute_confidence = config.clustering.compute_confidence ? 1 : 0;
+  c.clustering.compute_confidence =
+      config.clustering.compute_confidence ? 1 : 0;
   c.min_duration_on = config.min_duration_on;
   c.min_duration_off = config.min_duration_off;
 
@@ -1575,8 +1574,8 @@ OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
 
 OfflineSpeakerDiarization::OfflineSpeakerDiarization(
     const SherpaOnnxOfflineSpeakerDiarization *p)
-    : MoveOnly<OfflineSpeakerDiarization,
-               SherpaOnnxOfflineSpeakerDiarization>(p) {}
+    : MoveOnly<OfflineSpeakerDiarization, SherpaOnnxOfflineSpeakerDiarization>(
+          p) {}
 
 void OfflineSpeakerDiarization::Destroy(
     const SherpaOnnxOfflineSpeakerDiarization *p) const {
@@ -1593,7 +1592,8 @@ void OfflineSpeakerDiarization::SetConfig(
   memset(&c, 0, sizeof(c));
   c.clustering.num_clusters = config.clustering.num_clusters;
   c.clustering.threshold = config.clustering.threshold;
-  c.clustering.compute_confidence = config.clustering.compute_confidence ? 1 : 0;
+  c.clustering.compute_confidence =
+      config.clustering.compute_confidence ? 1 : 0;
   SherpaOnnxOfflineSpeakerDiarizationSetConfig(p_, &c);
 }
 
@@ -1666,18 +1666,86 @@ OfflineDiacritization OfflineDiacritization::Create(
   return OfflineDiacritization(diacrt);
 }
 
-OfflineDiacritization::OfflineDiacritization(const SherpaOnnxOfflineDiacritization *diacrt)
-    : MoveOnly<OfflineDiacritization, SherpaOnnxOfflineDiacritization>(diacrt) {}
+OfflineDiacritization::OfflineDiacritization(
+    const SherpaOnnxOfflineDiacritization *diacrt)
+    : MoveOnly<OfflineDiacritization, SherpaOnnxOfflineDiacritization>(diacrt) {
+}
 
-void OfflineDiacritization::Destroy(const SherpaOnnxOfflineDiacritization *diacrt) const {
+void OfflineDiacritization::Destroy(
+    const SherpaOnnxOfflineDiacritization *diacrt) const {
   SherpaOnnxDestroyOfflineDiacritization(diacrt);
 }
 
-std::string OfflineDiacritization::AddDiacritics(const std::string &text) const {
-  const char *result = SherpaOfflineDiacritizationAddDiacritics(p_, text.c_str());
+std::string OfflineDiacritization::AddDiacritics(
+    const std::string &text) const {
+  const char *result =
+      SherpaOfflineDiacritizationAddDiacritics(p_, text.c_str());
   if (!result) return {};
   std::string ans(result);
   SherpaOfflineDiacritizationFreeText(result);
+  return ans;
+}
+
+// ============================================================
+// For forced alignment
+// ============================================================
+ForcedAligner ForcedAligner::Create(const ForcedAlignerConfig &config) {
+  struct SherpaOnnxForcedAlignerConfig c;
+  memset(&c, 0, sizeof(c));
+  c.model_dir = config.model_dir.c_str();
+  c.lexicon = config.lexicon.c_str();
+  c.options.beam = config.options.beam;
+  c.options.retry_beam = config.options.retry_beam;
+  c.options.transition_scale = config.options.transition_scale;
+  c.options.self_loop_scale = config.options.self_loop_scale;
+  c.options.acoustic_scale = config.options.acoustic_scale;
+  c.debug = config.debug;
+
+  return ForcedAligner(SherpaOnnxCreateForcedAligner(&c));
+}
+
+ForcedAligner::ForcedAligner(const SherpaOnnxForcedAligner *p)
+    : MoveOnly<ForcedAligner, SherpaOnnxForcedAligner>(p) {}
+
+void ForcedAligner::Destroy(const SherpaOnnxForcedAligner *p) const {
+  SherpaOnnxDestroyForcedAligner(p);
+}
+
+OfflineStream ForcedAligner::CreateStream() const {
+  return OfflineStream(SherpaOnnxForcedAlignerCreateStream(p_));
+}
+
+ForcedAlignmentResult ForcedAligner::Compute(const OfflineStream &stream,
+                                             const std::string &text) const {
+  const SherpaOnnxForcedAlignmentResult *r =
+      SherpaOnnxForcedAlignerCompute(p_, stream.Get(), text.c_str());
+
+  ForcedAlignmentResult ans;
+  if (!r) {
+    return ans;
+  }
+
+  ans.duration = r->duration;
+  ans.textgrid = r->textgrid ? r->textgrid : "";
+
+  for (int32_t i = 0; i != r->num_tiers; ++i) {
+    const SherpaOnnxForcedAlignmentTier &t = r->tiers[i];
+
+    ForcedAlignmentTier tier;
+    tier.name = t.name ? t.name : "";
+
+    for (int32_t k = 0; k != t.num_intervals; ++k) {
+      ForcedAlignmentInterval interval;
+      interval.start = t.intervals[k].start;
+      interval.end = t.intervals[k].end;
+      interval.text = t.intervals[k].text ? t.intervals[k].text : "";
+      tier.intervals.push_back(std::move(interval));
+    }
+
+    ans.tiers.push_back(std::move(tier));
+  }
+
+  SherpaOnnxDestroyForcedAlignmentResult(r);
   return ans;
 }
 

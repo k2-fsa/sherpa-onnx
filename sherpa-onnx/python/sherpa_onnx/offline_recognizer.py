@@ -1315,7 +1315,10 @@ class OfflineRecognizer(object):
             The spoken language in the audio file. Example values: en, de, zh,
             jp, fr. See https://github.com/openai/whisper/blob/main/whisper/tokenizer.py#L10
             for all possible values. Note that for non-multilingual models, the
-            only valid value is 'en'.
+            only valid value is 'en'. Can be overridden per stream via
+            ``stream.set_option("language", "de")``; ``""`` means auto-detect.
+            Non-multilingual models and the QNN/Ascend recognizer ignore the
+            override with a warning.
           task:
             Valid values are: transcribe, translate. Note that for
             non-multilingual models, the only valid value is 'transcribe'.

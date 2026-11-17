@@ -22,7 +22,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["3.10"]
+        # Not 3.10: on darwin-arm64 it resolves to 3.10.11, which lacks
+        # tarfile extract(filter=...) (PEP 706, backported in 3.10.12) and
+        # nemo_toolkit's restore_from() crashes on it.
+        python-version: ["3.11"]
         version: ["v2", "v3", "ultra", "redux"]
 
     steps:
@@ -145,7 +148,7 @@ jobs:
 
       - name: Publish to huggingface
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20

@@ -27,6 +27,16 @@ namespace sherpa_onnx {
  */
 bool FileExists(const std::string &filename);
 
+#if __ANDROID_API__ >= 9
+// filename is relative to the asset root.
+bool FileExists(AAssetManager *mgr, const std::string &filename);
+#endif
+
+#if __OHOS__
+// filename is relative to the raw file root.
+bool FileExists(NativeResourceManager *mgr, const std::string &filename);
+#endif
+
 /** Abort if the file does not exist.
  *
  * @param filename The file to check.

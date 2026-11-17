@@ -22,7 +22,6 @@ curl -SL -O https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wa
 
 pip install \
   "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git" \
-  "numpy<2" \
   ipython \
   kaldi-native-fbank \
   librosa \

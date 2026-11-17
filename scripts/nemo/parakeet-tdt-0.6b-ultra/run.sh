@@ -24,12 +24,11 @@ ls -lh
 
 pip install \
   nemo_toolkit['asr'] \
-  "numpy<2" \
   ipython \
   kaldi-native-fbank \
   librosa \
-  onnx==1.17.0 \
-  onnxruntime==1.17.1 \
+  onnx==1.23.2 \
+  onnxruntime==1.31.1 \
   safetensors \
   soundfile
 

@@ -2954,6 +2954,301 @@ SHERPA_ONNX_API int32_t SherpaOnnxWriteWaveMultiChannel(
     int32_t num_channels, const char *filename);
 
 /**
+ * @brief Opaque forced aligner object.
+ *
+ * Create it with SherpaOnnxCreateForcedAligner() and destroy it with
+ * SherpaOnnxDestroyForcedAligner().
+ */
+typedef struct SherpaOnnxForcedAligner SherpaOnnxForcedAligner;
+
+/**
+ * @brief Options of a forced aligner. A stream can override any of them via
+ *        its own option mechanism before the alignment is computed.
+ */
+typedef struct SherpaOnnxForcedAlignmentOptions {
+  /**
+   * Decoding beam used by the alignment search. Larger is more accurate
+   * and slower. If set to 0, the default value 10 is used.
+   */
+  float beam;
+
+  /**
+   * Decoding beam used to retry failed alignments. If set to 0, the
+   * default value 40 is used.
+   */
+  float retry_beam;
+
+  /**
+   * Transition-probability scale relative to the acoustics. If set to 0,
+   * the default value 1 is used.
+   */
+  float transition_scale;
+
+  /**
+   * Scale of self-loop versus non-self-loop log probs relative to the
+   * acoustics. If set to 0, the default value 0.1 is used.
+   */
+  float self_loop_scale;
+
+  /**
+   * Scaling factor for acoustic likelihoods. If set to 0, the default
+   * value 0.1 is used.
+   */
+  float acoustic_scale;
+} SherpaOnnxForcedAlignmentOptions;
+
+/**
+ * @brief Configuration of a forced aligner.
+ */
+typedef struct SherpaOnnxForcedAlignerConfig {
+  /**
+   * Directory of one forced-alignment acoustic model. Required files:
+   *
+   *   - meta.json: feature chain + silence/OOV parameters (parsed once at
+   *     construction, field by field)
+   *   - final.alimdl: the alignment model (kaldi format: TransitionModel +
+   *     AmDiagGmm); note it is final.alimdl, NOT final.mdl
+   *   - tree: the context dependency tree (ContextDependency)
+   *   - lda.mat: required iff the feature chain is splice+LDA
+   *   - phones.txt: optional phone table (falls back to the phones list in
+   *     meta.json when missing)
+   *
+   * Other files of the upstream model bundles (final.mdl, phone_lm.fst,
+   * graphemes.txt, rules.yaml, ...) are unused and ignored; missing
+   * required files are reported by name.
+   */
+  const char *model_dir;
+
+  /**
+   * Path to the pronunciation dictionary used to build the lexicon FST.
+   * One pronunciation per line:
+   *
+   *   key [probability columns ...] phone1 phone2 ...
+   *
+   * Probability columns (floating point numbers between the key and the
+   * phones, e.g. MFA .dict files) are ignored. Several lines under one key
+   * give several pronunciations of the same word/character and ALL are
+   * kept: each pronunciation becomes a parallel path in the lexicon FST
+   * and the acoustics pick the one used by the alignment. This is how
+   * Chinese polyphones avoid text-level guessing.
+   *
+   * The key shape depends on the language: English = words, Chinese = hanzi
+   * characters/phrases (hanzi-keyed), other languages = their writing
+   * units. Multi-word phrases keep their combined readings: a multi-token
+   * key writes one " || "-separated phone group per word/character
+   * ("银行 || i n || h a ŋ"); single-token keys need no " || "
+   * ("行 x a ŋ"). Words without a pronunciation are reported as
+   * out-of-vocabulary and aligned as the model's OOV phone.
+   *
+   * Word intervals are recovered along the pronunciation path actually
+   * taken by the alignment; they are not counted with the phone count of
+   * the first pronunciation (pronunciations differ in length).
+   *
+   * The lexicon FST is not shipped with the model; it is built at load
+   * time in kaldi dictionary form (optional silence + word output
+   * symbols).
+   */
+  const char *lexicon;
+
+  /**
+   * Default alignment options; a stream can override any of them before
+   * the alignment is computed.
+   */
+  SherpaOnnxForcedAlignmentOptions options;
+
+  /**
+   * Non-zero to print debug information: model info while loading the
+   * model and per-utterance alignment info in
+   * SherpaOnnxForcedAlignerCompute().
+   */
+  int32_t debug;
+} SherpaOnnxForcedAlignerConfig;
+
+/**
+ * One aligned interval: a phone in the "phones" tier or a word in the
+ * "words" tier.
+ */
+typedef struct SherpaOnnxForcedAlignmentInterval {
+  /**
+   * Start time in seconds.
+   */
+  float start;
+
+  /**
+   * End time in seconds.
+   */
+  float end;
+
+  /**
+   * The text of this interval: the word for a word interval, the phone
+   * symbol for a phone interval. It is empty for a silence gap in the
+   * "words" tier (Praat interval tiers must tile the full time range, so
+   * the gaps between words are reported as intervals with empty text).
+   */
+  const char *text;
+} SherpaOnnxForcedAlignmentInterval;
+
+/**
+ * One tier of the alignment (phones or words).
+ */
+typedef struct SherpaOnnxForcedAlignmentTier {
+  /**
+   * Tier name: "phones" or "words"; it is never empty.
+   */
+  const char *name;
+
+  /**
+   * Number of intervals in this tier.
+   */
+  int32_t num_intervals;
+
+  /**
+   * The aligned intervals of this tier, in time order.
+   */
+  const SherpaOnnxForcedAlignmentInterval *intervals;
+} SherpaOnnxForcedAlignmentTier;
+
+/**
+ * @brief The result of SherpaOnnxForcedAlignerCompute().
+ *
+ * tiers[0].name == "phones", tiers[1].name == "words".
+ */
+typedef struct SherpaOnnxForcedAlignmentResult {
+  /**
+   * Duration of the aligned audio in seconds.
+   */
+  float duration;
+
+  /**
+   * The whole alignment as a Praat TextGrid string; save it to a .TextGrid
+   * file and open it with Praat (https://www.fon.hum.uva.nl/praat/) to
+   * visualize the phone and word boundaries.
+   */
+  const char *textgrid;
+
+  /**
+   * Number of tiers in the result; 0 for an empty result.
+   */
+  int32_t num_tiers;
+
+  /**
+   * The tiers of the alignment ("phones", "words").
+   */
+  const SherpaOnnxForcedAlignmentTier *tiers;
+} SherpaOnnxForcedAlignmentResult;
+
+/**
+ * @brief Create a forced aligner from a model directory and a pronunciation
+ *        dictionary.
+ *
+ * @param config Configuration for forced alignment. The caller is
+ *               responsible for freeing config->model_dir, config->lexicon
+ *               and config itself; they are copied internally.
+ * @return Returns a pointer to the aligner. NULL is returned if the aligner
+ *         could not be created, e.g. a missing model file; see stderr for
+ *         the reason. The caller must free it with
+ *         SherpaOnnxDestroyForcedAligner().
+ *
+ * @code
+ * SherpaOnnxForcedAlignerConfig config;
+ * memset(&config, 0, sizeof(config));
+ * config.model_dir = "./english-mfa-v3.1.0";
+ * config.lexicon = "./english-mfa-v3.1.0/lexicon.txt";
+ *
+ * SherpaOnnxForcedAligner *aligner = SherpaOnnxCreateForcedAligner(&config);
+ * @endcode
+ * @see SherpaOnnxForcedAlignerConfig, SherpaOnnxDestroyForcedAligner
+ */
+SHERPA_ONNX_API SherpaOnnxForcedAligner *SherpaOnnxCreateForcedAligner(
+    const SherpaOnnxForcedAlignerConfig *config);
+
+/**
+ * @brief Free a forced aligner created by SherpaOnnxCreateForcedAligner().
+ *
+ * @param aligner A pointer returned by SherpaOnnxCreateForcedAligner().
+ *
+ * @code
+ * SherpaOnnxDestroyForcedAligner(aligner);
+ * aligner = NULL;
+ * @endcode
+ * @see SherpaOnnxCreateForcedAligner
+ */
+SHERPA_ONNX_API void SherpaOnnxDestroyForcedAligner(
+    const SherpaOnnxForcedAligner *aligner);
+
+/**
+ * @brief Create an utterance stream for a forced aligner.
+ *
+ * Fill the stream with SherpaOnnxAcceptWaveformOffline(), then pass it to
+ * SherpaOnnxForcedAlignerCompute().
+ *
+ * @param aligner A pointer returned by SherpaOnnxCreateForcedAligner().
+ * @return Returns a stream pointer. Free it with
+ *         SherpaOnnxDestroyOfflineStream().
+ *
+ * @code
+ * SherpaOnnxOfflineStream *stream =
+ *     SherpaOnnxForcedAlignerCreateStream(aligner);
+ *
+ * // Optional: per-stream options, e.g. debug output of one utterance.
+ * SherpaOnnxOfflineStreamSetOption(stream, "debug", "1");
+ *
+ * SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
+ *                                 wave->num_samples);
+ * @endcode
+ * @see SherpaOnnxForcedAlignerCompute, SherpaOnnxAcceptWaveformOffline,
+ *      SherpaOnnxDestroyOfflineStream
+ */
+SHERPA_ONNX_API SherpaOnnxOfflineStream *SherpaOnnxForcedAlignerCreateStream(
+    const SherpaOnnxForcedAligner *aligner);
+
+/**
+ * @brief Compute the alignment of one utterance.
+ *
+ * @param aligner A pointer returned by SherpaOnnxCreateForcedAligner().
+ * @param stream  A stream returned by
+ *                SherpaOnnxForcedAlignerCreateStream() and filled with a
+ *                waveform.
+ * @param text    The transcript of the whole utterance. Hanzi text is
+ *                tokenized per character (multi-character dictionary keys
+ *                give pronunciation context); anything else is split on
+ *                whitespace. Punctuation is ignored.
+ * @return Returns the alignment result. The caller must free it with
+ *         SherpaOnnxDestroyForcedAlignmentResult(). An empty result (no
+ *         tiers, empty textgrid) with a warning on stderr is returned when
+ *         the text is empty, the stream has no features, every word is
+ *         out-of-vocabulary, or word boundaries cannot be recovered. NULL
+ *         is returned if any argument is NULL or if the alignment itself
+ *         fails.
+ *
+ * @code
+ * const SherpaOnnxForcedAlignmentResult *result =
+ *     SherpaOnnxForcedAlignerCompute(aligner, stream, text);
+ * printf("%s\n", result->textgrid);
+ * @endcode
+ * @see SherpaOnnxForcedAlignerCreateStream, SherpaOnnxForcedAlignmentResult,
+ *      SherpaOnnxDestroyForcedAlignmentResult
+ */
+SHERPA_ONNX_API const SherpaOnnxForcedAlignmentResult *
+SherpaOnnxForcedAlignerCompute(const SherpaOnnxForcedAligner *aligner,
+                               const SherpaOnnxOfflineStream *stream,
+                               const char *text);
+
+/**
+ * @brief Free the result of SherpaOnnxForcedAlignerCompute().
+ *
+ * @param result A pointer returned by SherpaOnnxForcedAlignerCompute().
+ *
+ * @code
+ * SherpaOnnxDestroyForcedAlignmentResult(result);
+ * result = NULL;
+ * @endcode
+ * @see SherpaOnnxForcedAlignerCompute
+ */
+SHERPA_ONNX_API void SherpaOnnxDestroyForcedAlignmentResult(
+    const SherpaOnnxForcedAlignmentResult *result);
+
+/**
  * @brief Decoded mono WAVE file content.
  *
  * Free this object with SherpaOnnxFreeWave().
@@ -4884,6 +5179,21 @@ SHERPA_ONNX_API const SherpaOnnxOfflineSourceSeparation *
 SherpaOnnxCreateOfflineSourceSeparationOHOS(
     const SherpaOnnxOfflineSourceSeparationConfig *config,
     NativeResourceManager *mgr);
+
+/**
+ * @brief Create a forced aligner on HarmonyOS.
+ *
+ * This is the HarmonyOS counterpart of SherpaOnnxCreateForcedAligner().
+ * The model_dir and lexicon fields of the config are paths relative to the
+ * resource root.
+ *
+ * @param config Forced aligner configuration.
+ * @param mgr HarmonyOS resource manager used to resolve bundled assets.
+ * @return A newly allocated aligner, or NULL on error. Free it with
+ *         SherpaOnnxDestroyForcedAligner().
+ */
+SHERPA_ONNX_API SherpaOnnxForcedAligner *SherpaOnnxCreateForcedAlignerOHOS(
+    const SherpaOnnxForcedAlignerConfig *config, NativeResourceManager *mgr);
 #endif
 
 // ============================================================

@@ -44,6 +44,27 @@ class OfflineStream {
   setOption(key, value) {
     addon.offlineStreamSetOption(this.handle, key, value);
   }
+
+  /**
+   * Get a string option of the underlying offline stream.
+   *
+   * Returns an empty string if the option has not been set; use hasOption()
+   * to distinguish an unset option from an empty value.
+   * @param {string} key
+   * @returns {string}
+   */
+  getOption(key) {
+    return addon.offlineStreamGetOption(this.handle, key);
+  }
+
+  /**
+   * Check whether an option has been set on the underlying offline stream.
+   * @param {string} key
+   * @returns {boolean}
+   */
+  hasOption(key) {
+    return addon.offlineStreamHasOption(this.handle, key);
+  }
 }
 
 /**

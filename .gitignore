@@ -217,3 +217,14 @@ compile_commands.json
 # run.sh is ignored above; keep the ones that are part of the tree
 !scripts/nemo/nemotron-3-diarization/run.sh
 !go-api-examples/non-streaming-speaker-diarization-sortformer/run.sh
+todo*.md
+plan*.md
+sherpa-onnx-voxlock
+sherpa-onnx-voxlock-int8
+*.TextGrid
+path.sh
+notes.md
+download
+word-clips-*
+zh-aishell3-pinyin
+english-mfa-v3.1.0

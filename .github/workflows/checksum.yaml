@@ -11,10 +11,11 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        tag: [null, asr-models, tts-models, kws-models, speaker-recongition-models, audio-tagging-models, punctuation-models]
+        tag: [null, asr-models, tts-models, kws-models, speaker-recongition-models, audio-tagging-models, punctuation-models, source-separation-models, fa-models]
     steps:
       - name: Run checksum action
-        uses: thewh1teagle/checksum@v1
+        # Pin by commit SHA: this job uploads release assets with GITHUB_TOKEN write access.
+        uses: XDcobra/checksum@672d1f6e3d3c6e2fd68329f450923e84755fdc47 # v1.0.1
         with:
           tag: ${{ matrix.tag }}
         env:

@@ -117,6 +117,12 @@ set(exported_functions
   SherpaOnnxDestroyOnlinePunctuation
   SherpaOnnxOnlinePunctuationAddPunct
   SherpaOnnxOnlinePunctuationFreeText
+  # forced alignment
+  SherpaOnnxCreateForcedAligner
+  SherpaOnnxDestroyForcedAligner
+  SherpaOnnxForcedAlignerCreateStream
+  SherpaOnnxForcedAlignerCompute
+  SherpaOnnxDestroyForcedAlignmentResult
   # version
   SherpaOnnxGetGitDate
   SherpaOnnxGetGitSha1

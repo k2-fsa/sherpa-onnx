@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 echo "dir: $d"
@@ -12,6 +12,43 @@ ls -lh node_modules
 
 echo "---test version---"
 node ./test-version.js
+
+echo "---test forced alignment (english-mfa-v3.1.0)---"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/english-mfa-v3.1.0.tar.bz2
+
+node ./test-forced-alignment-english.js
+grep -q 'name = "phones"' en.TextGrid
+grep -q 'name = "words"' en.TextGrid
+cat en.TextGrid
+
+mkdir -p test-forced-alignment-english
+mv en.TextGrid test-forced-alignment-english/
+cp english-mfa-v3.1.0/en.wav test-forced-alignment-english/
+python3 -m pip install soundfile
+python3 ../../python-api-examples/textgrid-to-word-wavs.py \
+  --wav english-mfa-v3.1.0/en.wav \
+  --textgrid test-forced-alignment-english/en.TextGrid \
+  --out-dir test-forced-alignment-english/word-clips-en
+
+echo "---test forced alignment (zh-aishell3-pinyin)---"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/fa-models/zh-aishell3-pinyin.tar.bz2
+
+node ./test-forced-alignment-chinese.js
+grep -q 'name = "phones"' zh.TextGrid
+grep -q 'name = "words"' zh.TextGrid
+cat zh.TextGrid
+
+mkdir -p test-forced-alignment-chinese
+mv zh.TextGrid test-forced-alignment-chinese/
+cp zh-aishell3-pinyin/zh.wav test-forced-alignment-chinese/
+python3 ../../python-api-examples/textgrid-to-word-wavs.py \
+  --wav zh-aishell3-pinyin/zh.wav \
+  --textgrid test-forced-alignment-chinese/zh.TextGrid \
+  --out-dir test-forced-alignment-chinese/word-clips-zh
+
+rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
 
 echo "---test voxlock speech enhancement---"
 

@@ -31,6 +31,11 @@ static_assert(sizeof(SherpaOnnxOfflineTdnnModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineCanaryModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineLMConfig) == 2 * 4, "");
+static_assert(sizeof(SherpaOnnxForcedAlignmentOptions) == 5 * 4, "");
+static_assert(sizeof(SherpaOnnxForcedAlignerConfig) == 2 * 4 + 5 * 4 + 4, "");
+static_assert(sizeof(SherpaOnnxForcedAlignmentInterval) == 3 * 4, "");
+static_assert(sizeof(SherpaOnnxForcedAlignmentTier) == 3 * 4, "");
+static_assert(sizeof(SherpaOnnxForcedAlignmentResult) == 4 * 4, "");
 
 static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                   sizeof(SherpaOnnxOfflineTransducerModelConfig) +
@@ -261,7 +266,8 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "seed: %d\n", qwen3_asr->seed);
   fprintf(stdout, "hotwords: %s\n", qwen3_asr->hotwords);
 
-  fprintf(stdout, "----------offline Cohere Transcribe model config----------\n");
+  fprintf(stdout,
+          "----------offline Cohere Transcribe model config----------\n");
   fprintf(stdout, "encoder: %s\n", cohere_transcribe->encoder);
   fprintf(stdout, "decoder: %s\n", cohere_transcribe->decoder);
   fprintf(stdout, "language: %s\n", cohere_transcribe->language);

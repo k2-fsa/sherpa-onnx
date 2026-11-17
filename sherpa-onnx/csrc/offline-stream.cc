@@ -133,7 +133,18 @@ class OfflineStream::Impl {
     config_.sampling_rate = 16000;
   }
 
+  explicit Impl(const FaFeatureConfig &config) {
+    // Forced-alignment stream. The extractor handles the kaldi int16
+    // scaling and resampling itself.
+    fa_ = std::make_unique<FaFeatureExtractor>(config);
+    config_.sampling_rate = config.sample_frequency;
+  }
+
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
+    if (fa_) {
+      fa_->AcceptWaveform(sampling_rate, waveform, n);
+      return;
+    }
     if (config_.normalize_samples) {
       AcceptWaveformImpl(sampling_rate, waveform, n);
     } else {
@@ -219,6 +230,9 @@ class OfflineStream::Impl {
   }
 
   int32_t FeatureDim() const {
+    if (fa_) {
+      return fa_->FeatureDim();
+    }
     if (is_moonshine_ || is_omnilingual_asr_) {
       return samples_.size();
     }
@@ -227,6 +241,9 @@ class OfflineStream::Impl {
   }
 
   std::vector<float> GetFrames() const {
+    if (fa_) {
+      return fa_->GetFrames();
+    }
     if (is_moonshine_ || is_omnilingual_asr_) {
       return samples_;
     }
@@ -359,6 +376,7 @@ class OfflineStream::Impl {
   std::unique_ptr<knf::OnlineFbank> fbank_;
   std::unique_ptr<knf::OnlineMfcc> mfcc_;
   std::unique_ptr<knf::OnlineWhisperFbank> whisper_fbank_;
+  std::unique_ptr<FaFeatureExtractor> fa_;
   knf::FbankOptions opts_;
   knf::MfccOptions mfcc_opts_;
   OfflineRecognitionResult r_;
@@ -390,6 +408,9 @@ OfflineStream::OfflineStream(MoonshineTag tag)
 
 OfflineStream::OfflineStream(OmnilingualAsrTag tag)
     : impl_(std::make_unique<Impl>(tag)) {}
+
+OfflineStream::OfflineStream(const FaFeatureConfig &config)
+    : impl_(std::make_unique<Impl>(config)) {}
 
 OfflineStream::~OfflineStream() = default;
 
@@ -446,6 +467,22 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   os << "\"lang\""
      << ": ";
   os << QuoteJsonString(lang) << ", ";
+
+  os << "\"lang_probs\""
+     << ": ";
+  os << "[";
+  {
+    // lang probs already filtered by top_k_langs
+    std::string lp_sep = "";
+    for (const auto &lp : lang_probs) {
+      os << lp_sep << "{"
+         << "\"lang\": " << QuoteJsonString(lp.first) << ", "
+         << "\"prob\": " << std::fixed << std::setprecision(6) << lp.second
+         << "}";
+      lp_sep = ", ";
+    }
+  }
+  os << "], ";
 
   os << "\"emotion\""
      << ": ";
