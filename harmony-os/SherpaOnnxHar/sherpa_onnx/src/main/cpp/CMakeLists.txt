@@ -41,6 +41,7 @@ include_directories(${node_addon_api_SOURCE_DIR})
 
 add_library(sherpa_onnx SHARED
   audio-tagging.cc
+  forced-alignment.cc
   keyword-spotting.cc
   non-streaming-asr.cc
   non-streaming-speaker-diarization.cc

@@ -61,6 +61,14 @@ export { OfflineTtsKittenModelConfig,
   TtsInputWithConfig,
 } from './src/main/ets/components/NonStreamingTts';
 
+export { ForcedAlignerOptions,
+  ForcedAlignerConfig,
+  ForcedAlignmentInterval,
+  ForcedAlignmentTier,
+  ForcedAlignmentResult,
+  ForcedAligner,
+} from './src/main/ets/components/ForcedAlignment';
+
 export { OfflinePunctuationModelConfig,
   OfflinePunctuationConfig,
   OfflinePunctuation,

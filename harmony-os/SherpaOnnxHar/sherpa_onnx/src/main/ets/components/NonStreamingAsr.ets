@@ -1,5 +1,8 @@
 import {
   acceptWaveformOffline,
+  offlineStreamSetOption,
+  offlineStreamGetOption,
+  offlineStreamHasOption,
   createOfflineRecognizer,
   createOfflineStream,
   decodeOfflineStream,
@@ -24,6 +27,31 @@ export class OfflineStream {
   // sampleRate is a number
   acceptWaveform(obj: Samples) {
     acceptWaveformOffline(this.handle, obj)
+  }
+
+  /**
+   * Set a per-stream option; it overrides the config for this stream only.
+   * For example setOption('debug', '1') prints the per-utterance alignment
+   * info of this stream.
+   */
+  setOption(key: string, value: string): void {
+    offlineStreamSetOption(this.handle, key, value);
+  }
+
+  /**
+   * Get a string option of this stream. Returns an empty string if the
+   * option has not been set; use hasOption() to distinguish an unset
+   * option from an empty value.
+   */
+  getOption(key: string): string {
+    return offlineStreamGetOption(this.handle, key);
+  }
+
+  /**
+   * Check whether an option has been set on this stream.
+   */
+  hasOption(key: string): boolean {
+    return offlineStreamHasOption(this.handle, key);
   }
 }
 

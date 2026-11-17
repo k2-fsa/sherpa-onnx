@@ -26,12 +26,18 @@ export const createOfflineRecognizer: (config: object, mgr?: object) => object;
 export const createOfflineStream: (handle: object) => object;
 export const offlineRecognizerSetConfig: (handle: object, config: object) => void;
 export const acceptWaveformOffline: (handle: object, audio: object) => void;
+export const offlineStreamSetOption: (handle: object, key: string, value: string) => void;
+export const offlineStreamGetOption: (handle: object, key: string) => string;
+export const offlineStreamHasOption: (handle: object, key: string) => boolean;
 export const decodeOfflineStream: (handle: object, streamHandle: object) => void;
 export const getOfflineStreamResultAsJson: (streamHandle: object) => string;
 
 export const createOnlineRecognizer: (config: object, mgr?: object) => object;
 export const createOnlineStream: (handle: object) => object;
 export const acceptWaveformOnline: (handle: object, audio: object) => void;
+export const onlineStreamSetOption: (handle: object, key: string, value: string) => void;
+export const onlineStreamGetOption: (handle: object, key: string) => string;
+export const onlineStreamHasOption: (handle: object, key: string) => boolean;
 export const inputFinished: (streamHandle: object) => void;
 export const isOnlineStreamReady: (handle: object, streamHandle: object) => boolean;
 export const decodeOnlineStream: (handle: object, streamHandle: object) => void;
@@ -66,6 +72,11 @@ export const offlineTtsGenerateAsyncWithConfig: (handle: object, input: object) 
 
 export const createOfflinePunctuation: (config: object, mgr?: object) => object;
 export const offlinePunctuationAddPunct: (handle: object, text: string) => string;
+export const createForcedAligner: (config: object, mgr?: object) => object;
+export const createForcedAlignerAsync: (config: object) => Promise<object>;
+export const forcedAlignerCreateStream: (handle: object) => object;
+export const forcedAlignerCompute: (handle: object, stream: object, text: string) => object;
+export const forcedAlignerComputeAsync: (handle: object, stream: object, text: string) => Promise<object>;
 export const createOnlinePunctuation: (config: object, mgr?: object) => object;
 export const onlinePunctuationAddPunct: (handle: object, text: string) => string;
 

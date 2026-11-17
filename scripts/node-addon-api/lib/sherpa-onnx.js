@@ -16,6 +16,7 @@ const slid = require('./spoken-language-identification.js');
 const sid = require('./speaker-identification.js');
 const at = require('./audio-tagg.js');
 const punct = require('./punctuation.js');
+const fa = require('./forced-alignment.js');
 const kws = require('./keyword-spotter.js');
 const sd = require('./non-streaming-speaker-diarization.js');
 const speech_denoiser = require('./non-streaming-speech-denoiser.js');
@@ -40,6 +41,7 @@ module.exports = {
   SpeakerEmbeddingManager : sid.SpeakerEmbeddingManager,
   AudioTagging : at.AudioTagging,
   OfflinePunctuation : punct.OfflinePunctuation,
+  ForcedAligner : fa.ForcedAligner,
   OnlinePunctuation : punct.OnlinePunctuation,
   KeywordSpotter : kws.KeywordSpotter,
   OfflineSpeakerDiarization : sd.OfflineSpeakerDiarization,
