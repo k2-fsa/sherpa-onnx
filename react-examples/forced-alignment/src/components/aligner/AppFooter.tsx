@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/card";
 import { appZipUrl, currentModel, docUrl } from "@/lib/model-config";
 import type { VersionInfo } from "@/lib/sherpa/engine";
+import { useState } from "react";
 
 const githubUrl = "https://github.com/k2-fsa/sherpa-onnx";
 const sourceUrl =
@@ -13,6 +14,15 @@ const sourceUrl =
 
 export function AppFooter({ version }: { version: VersionInfo | null }) {
   const model = currentModel();
+  const zipUrl = appZipUrl(model);
+  const zipName = `sherpa-onnx-react-fa-${model.dir}.zip`;
+  const zipDir = zipName.replace(/\.zip$/, "");
+  const [copied, setCopied] = useState(false);
+  const commands =
+    `wget ${zipUrl}
+unzip ${zipName}
+cd ${zipDir}
+python3 -m http.server 8000`;
   return (
     <footer className="mt-8 pb-10 space-y-3">
       {version && (
@@ -55,11 +65,37 @@ export function AppFooter({ version }: { version: VersionInfo | null }) {
             Runs fully in your browser — offline-capable, no audio is uploaded anywhere.
           </p>
           <p className="text-muted-foreground">
-            To run it locally: download the app zip above, unpack it, and open
-            the folder with any static HTTP server (for example
-            <code> python3 -m http.server 8000</code>), then visit the
-            printed address in your browser. See the documentation for
-            details.
+            To run it locally:
+          </p>
+          <div className="relative">
+            <button
+              type="button"
+              className="absolute right-1.5 top-1.5 rounded-md border bg-white px-2.5 py-0.5 text-xs"
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(commands)
+                  .then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  })
+                  .catch(() => {});
+              }}
+            >
+              {copied ? "Copied!" : "Copy"}
+            </button>
+            <pre
+              className="text-muted-foreground overflow-x-auto whitespace-pre rounded-md border p-2 font-mono"
+              style={{ fontSize: "11px" }}
+            >
+              {commands}
+            </pre>
+          </div>
+          <p className="text-muted-foreground">
+            then open a browser and visit{" "}
+            <a className="underline" href="http://localhost:8000">
+              http://localhost:8000
+            </a>
+            . See the documentation for details.
           </p>
         </CardContent>
       </Card>

@@ -22,6 +22,7 @@
       tr:hover { background: #f5f6f8; cursor: pointer; }
       .log-box { max-height: 220px; overflow-y: auto; }
       .log-line { font-family: monospace; font-size: 12px; color: #6b7280; }
+      .code-wrap { position: relative; }
       .code-block {
         background: #f5f6f8;
         border: 1px solid #e5e7eb;
@@ -31,7 +32,20 @@
         font-size: 11px;
         color: #1f2329;
         overflow-x: auto;
-        white-space: nowrap;
+        /* one command per line, no wrapping (long lines scroll) */
+        white-space: pre;
+      }
+      .copy-btn {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        padding: 2px 10px;
+        font-size: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #fff;
+        color: #1f2329;
+        cursor: pointer;
       }
     </style>
   </head>
@@ -88,7 +102,10 @@
         <a id="download-app" href="#">Download this demo (.zip)</a> — to run it
         locally:
       </p>
-      <pre id="run-locally" class="code-block"></pre>
+      <div class="code-wrap">
+        <button id="copy-code" class="copy-btn" type="button">Copy</button>
+        <pre id="run-locally" class="code-block"></pre>
+      </div>
       <p class="hint">
         then open a browser and visit
         <a href="http://localhost:8000">http://localhost:8000</a>. Any other

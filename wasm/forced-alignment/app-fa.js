@@ -77,6 +77,16 @@ function showVersionInfo() {
     'cd ' + dir,
     'python3 -m http.server 8000',
   ].join('\n');
+
+  const copyBtn = document.getElementById('copy-code');
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(document.getElementById('run-locally').textContent)
+        .then(() => {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+        })
+        .catch(() => { copyBtn.textContent = 'Copy failed'; });
+  };
 }
 
 // ---- model selection by index ------------------------------------------
