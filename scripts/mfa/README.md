@@ -15,6 +15,18 @@ release.
 [apk-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/apk-fa) release;
 [android.md](android.md) describes which APK to pick.
 
+**In a browser?** Two pre-built web demos are available, one app per model
+(see [web.md](web.md) for which file to pick):
+
+  - the **web demo** ([wasm/forced-alignment](../../wasm/forced-alignment)):
+    download `sherpa-onnx-v<version>-wasm-fa-<model>.zip` from the current release,
+    e.g. [v2.0.1](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1),
+    unzip it and open `index.html` with any static HTTP server;
+  - the **web app** ([react-examples/forced-alignment](../../react-examples/forced-alignment)):
+    download `sherpa-onnx-react-fa-<model>.zip` from the
+    [react-fa](https://github.com/k2-fsa/sherpa-onnx/releases/tag/react-fa)
+    release, unzip it and serve the directory with any static HTTP server.
+
 ## Table of contents
 
 - [English](#english)

@@ -200,6 +200,13 @@ espeak-ng-data
 # downloaded piper-phonemize wasm bundle for the TTS web demo; see
 # wasm/tts/assets/README.md
 wasm/tts/piper-phonemize/
+# downloaded forced-alignment model packages for the wasm demo; see
+# wasm/forced-alignment/assets/README.md
+wasm/forced-alignment/assets/*/
+# built wasm artifacts of the web app; see its README.md
+react-examples/forced-alignment/public/sherpa/*
+!react-examples/forced-alignment/public/sherpa/.gitkeep
+react-examples/forced-alignment/dist-model-*/
 sherpa-onnx-nemo*
 kokoro-int8-en-v0_19
 vits-inflect-*-v2

@@ -1,7 +1,12 @@
 // Copyright (c)  2026  Xiaomi Corporation
+//
+// Forced-alignment API over the sherpa-onnx C API. This single file serves
+// both environments:
+//   - NodeJS: require() it (module.exports), see nodejs-examples/
+//   - browsers: load it with a classic <script> tag (classes mount on
+//     window); it is installed next to sherpa-onnx-wasm-main-fa.js, see
+//     wasm/forced-alignment/
 'use strict'
-
-const sherpa_onnx_asr = require('./sherpa-onnx-asr.js');
 
 function freeConfig(config, Module) {
   if ('buffer' in config) {
@@ -89,7 +94,42 @@ function readResult(ptr, Module) {
   return ans;
 }
 
+class OfflineStream {
+  constructor(handle, Module) {
+    this.handle = handle;
+    this.Module = Module;
+  }
+
+  free() {
+    if (this.handle) {
+      this.Module._SherpaOnnxDestroyOfflineStream(this.handle);
+      this.handle = null;
+    }
+  }
+
+  /**
+   * @param sampleRate {Number}
+   * @param samples {Float32Array} Containing samples in the range [-1, 1]
+   */
+  acceptWaveform(sampleRate, samples) {
+    const pointer =
+        this.Module._malloc(samples.length * samples.BYTES_PER_ELEMENT);
+    this.Module.HEAPF32.set(samples, pointer / samples.BYTES_PER_ELEMENT);
+    this.Module._SherpaOnnxAcceptWaveformOffline(
+        this.handle, sampleRate, pointer, samples.length);
+    this.Module._free(pointer);
+  }
+}
+
 class ForcedAligner {
+  /**
+   * @param configObj {Object} {modelDir, lexicon, options, debug}. modelDir
+   *   and lexicon are paths inside the wasm virtual FS (or on disk for the
+   *   NodeJS build), e.g. 'zh-aishell3-pinyin' and
+   *   'zh-aishell3-pinyin/lexicon.txt'.
+   * @param Module {Object} The emscripten module of
+   *   sherpa-onnx-wasm-main-fa (browser) or sherpa-onnx-wasm-nodejs (NodeJS).
+   */
   constructor(configObj, Module) {
     const config = initForcedAlignerConfig(configObj, Module);
     const handle = Module._SherpaOnnxCreateForcedAligner(config.ptr);
@@ -114,7 +154,7 @@ class ForcedAligner {
   createStream() {
     const handle =
         this.Module._SherpaOnnxForcedAlignerCreateStream(this.handle);
-    return new sherpa_onnx_asr.OfflineStream(handle, this.Module);
+    return new OfflineStream(handle, this.Module);
   }
 
   /**
@@ -140,6 +180,9 @@ class ForcedAligner {
   }
 }
 
-module.exports = {
-  ForcedAligner,
-};
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {ForcedAligner, OfflineStream};
+} else {
+  window.ForcedAligner = ForcedAligner;
+  window.OfflineStream = OfflineStream;
+}
