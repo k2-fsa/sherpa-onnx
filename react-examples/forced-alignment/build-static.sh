@@ -25,16 +25,17 @@ out=${2:-dist-model-$index}
 
 cd "$(dirname "$0")"
 
-# 1. Copy the wasm package into public/sherpa/ if it is not there yet.
-if [ ! -f public/sherpa/sherpa-onnx-wasm-main-fa.data ]; then
-  src=../../build-wasm-simd-forced-alignment/install/bin/wasm/forced-alignment
-  if [ ! -f $src/sherpa-onnx-wasm-main-fa.data ]; then
-    echo "Cannot find the wasm package. Please run ./build-wasm-simd-forced-alignment.sh first."
-    exit 1
-  fi
+# 1. Copy the wasm package into public/sherpa/. Always refresh it from the
+# root build when that exists, so a rebuilt model is never left stale; only
+# fall back to a pre-populated public/sherpa/ when there is no root build.
+src=../../build-wasm-simd-forced-alignment/install/bin/wasm/forced-alignment
+if [ -f $src/sherpa-onnx-wasm-main-fa.data ]; then
   mkdir -p public/sherpa
   cp -v $src/sherpa-onnx-wasm-main-fa.{js,wasm,data} public/sherpa/
   cp -v ../../wasm/nodejs/sherpa-onnx-forced-aligner.js public/sherpa/
+elif [ ! -f public/sherpa/sherpa-onnx-wasm-main-fa.data ]; then
+  echo "Cannot find the wasm package. Please run ./build-wasm-simd-forced-alignment.sh first."
+  exit 1
 fi
 
 # 2. Set the model index (the same sed the CI uses). The file is restored
@@ -50,8 +51,11 @@ grep "SELECTED_MODEL_INDEX" $config
 npm install --no-audit --no-fund
 npm run build
 
-# 4. Collect the static site.
-rm -rf "$out"
-mkdir -p "$out"
-cp -rv dist/* "$out/"
+# 4. Collect the static site. When the output directory is dist itself, the
+# build already is the bundle: deleting it would delete the copy source.
+if [ "$out" != "dist" ]; then
+  rm -rf "$out"
+  mkdir -p "$out"
+  cp -rv dist/* "$out/"
+fi
 echo "Static site is in $(pwd)/$out — serve it with any static HTTP server."

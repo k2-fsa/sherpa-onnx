@@ -124,14 +124,25 @@ function loadScript(src: string): Promise<void> {
 }
 
 let enginePromise: Promise<SherpaEngine> | null = null;
+let mainScriptInjected = false;
+let fatalError: Error | null = null;
 
 export function loadSherpaEngineOnce(
   options: LoadOptions = {},
 ): Promise<SherpaEngine> {
+  if (fatalError) return Promise.reject(fatalError);
   if (!enginePromise) {
     enginePromise = doLoad(options).catch((err) => {
-      // safe to retry while the main script has not been injected
       enginePromise = null;
+      if (mainScriptInjected) {
+        // The emscripten main script cannot be injected twice: retrying
+        // would hang waiting for a second onRuntimeInitialized. Tell the
+        // user to reload instead of retrying in-place.
+        fatalError = new Error(
+          `${String((err as Error)?.message || err)} ` +
+            "(the engine cannot be re-loaded in place; please reload the page)",
+        );
+      }
       throw err;
     });
   }
@@ -139,7 +150,7 @@ export function loadSherpaEngineOnce(
 }
 
 async function doLoad(options: LoadOptions): Promise<SherpaEngine> {
-  const { onProgress, onNativeLog, modelIndex = 0 } = options;
+  const { onProgress, onNativeLog, modelIndex } = options;
   const report = (
     stage: LoadStage,
     loaded: number,
@@ -203,6 +214,7 @@ async function doLoad(options: LoadOptions): Promise<SherpaEngine> {
   });
 
   report("init", 0, 0, "Starting the inference engine…");
+  mainScriptInjected = true;
   await loadScript(`${SHERPA_BASE}/${MAIN_JS}`);
   await runtimeReady;
 
@@ -217,10 +229,10 @@ async function doLoad(options: LoadOptions): Promise<SherpaEngine> {
     throw new Error("ForcedAligner is undefined (sherpa-onnx-forced-aligner.js failed to load)");
   }
   const modelDirs = listModelDirs(module);
+  // SELECTED_MODEL_INDEX is the default (via currentModel); modelIndex only
+  // overrides it, so the engine and the UI always agree on the model.
   const model = currentModel(modelIndex);
-  const dir = modelDirs.includes(model.dir)
-    ? model.dir
-    : modelDirs[Math.min(modelIndex, modelDirs.length - 1)];
+  const dir = modelDirs.includes(model.dir) ? model.dir : modelDirs[0];
   if (!dir) {
     throw new Error("No model in the wasm package; see wasm/forced-alignment/assets/README.md");
   }

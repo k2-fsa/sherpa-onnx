@@ -129,7 +129,10 @@
           console.warn('[sherpa]', t);
           if (window.appendLog) window.appendLog('warning: ' + t);
         },
-        onRuntimeInitialized: () => window.onSherpaReady && window.onSherpaReady(),
+        onRuntimeInitialized: () => {
+          window.sherpaRuntimeReady = true;
+          if (window.onSherpaReady) window.onSherpaReady();
+        },
       };
     </script>
     <script src="sherpa-onnx-wasm-main-fa.js"></script>

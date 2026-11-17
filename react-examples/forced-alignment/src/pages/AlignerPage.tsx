@@ -85,6 +85,8 @@ export default function AlignerPage() {
   const playWordRef = useRef<(index: number) => void>(() => {});
   const pickTokenRef = useRef(0);
   const runTokenRef = useRef(0);
+  const recordPendingRef = useRef(false);
+  const playSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const appendLog = (msg: string) => {
     setLogs((prev) => [...prev, `[${nowStamp()}] ${msg}`].slice(-200));
@@ -110,6 +112,13 @@ export default function AlignerPage() {
   // ---- input handling ----
   const acceptFile = async (file: File) => {
     const token = ++pickTokenRef.current;
+    // a running alignment belongs to the old input: drop it and its busy
+    // state, and forget the old samples so they cannot be aligned against
+    // the new file name
+    runTokenRef.current += 1;
+    setIsAligning(false);
+    stopPlayback();
+    setDecoded(null);
     setResult(null);
     setStats(null);
     setFileName(file.name);
@@ -155,6 +164,8 @@ export default function AlignerPage() {
       recorderRef.current?.stop();
       return;
     }
+    if (recordPendingRef.current) return; // a permission request is in flight
+    recordPendingRef.current = true;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const rec = new MediaRecorder(stream);
@@ -175,6 +186,7 @@ export default function AlignerPage() {
       };
       recorderRef.current = rec;
       rec.start();
+      recordPendingRef.current = false;
       setRecording(true);
       setRecordSeconds(0);
       recordStartRef.current = Date.now();
@@ -183,6 +195,7 @@ export default function AlignerPage() {
       }, 500);
       appendLog("Recording started");
     } catch (e) {
+      recordPendingRef.current = false;
       setError(`Cannot access the microphone: ${e}`);
     }
   };
@@ -190,7 +203,8 @@ export default function AlignerPage() {
   const clearAll = () => {
     runTokenRef.current += 1;
     pickTokenRef.current += 1;
-    playTokenRef.current += 1;
+    stopPlayback();
+    setIsAligning(false); // the invalidated run's finally will not reset it
     setResult(null);
     setStats(null);
     setFileName(null);
@@ -204,6 +218,7 @@ export default function AlignerPage() {
     setError(null);
     setStatus("Ready");
     setPlayingIndex(-1);
+    recordPendingRef.current = false;
   };
 
   // ---- alignment ----
@@ -234,6 +249,8 @@ export default function AlignerPage() {
     appendLog("Alignment started");
     // yield so the progress bar paints
     await new Promise((r) => setTimeout(r, 30));
+    // cancelled while waiting? then do not start the blocking inference
+    if (runTokenRef.current !== token) return;
     try {
       const t0 = performance.now();
       const r = align(engine, decoded.samples, decoded.sampleRate, transcript.trim());
@@ -270,26 +287,48 @@ export default function AlignerPage() {
   };
 
   // ---- playback (sample-accurate word slices) ----
+  const stopPlayback = () => {
+    playTokenRef.current += 1;
+    const src = playSourceRef.current;
+    playSourceRef.current = null;
+    if (src) {
+      src.onended = null;
+      try {
+        src.stop();
+      } catch {
+        // already stopped
+      }
+    }
+    setPlayingIndex(-1);
+  };
+
   const playWord = (index: number) => {
     if (!decoded || !result) return;
     if (playingIndex === index) {
-      playTokenRef.current += 1;
-      setPlayingIndex(-1);
+      stopPlayback();
       return;
     }
     const words = result.words;
     if (index < 0 || index >= words.length) return;
-    const token = ++playTokenRef.current;
+    stopPlayback(); // never overlap two words
+    const token = playTokenRef.current;
     setPlayingIndex(index);
     const w = words[index];
-    playSlice(decoded.samples, decoded.sampleRate, w.start, w.end, () => {
-      if (playTokenRef.current !== token) return;
-      if (playingAllRef.current && index + 1 < words.length) {
-        playWordRef.current(index + 1);
-      } else {
-        setPlayingIndex(-1);
-      }
-    });
+    playSourceRef.current = playSlice(
+      decoded.samples,
+      decoded.sampleRate,
+      w.start,
+      w.end,
+      () => {
+        playSourceRef.current = null;
+        if (playTokenRef.current !== token) return;
+        if (playingAllRef.current && index + 1 < words.length) {
+          playWordRef.current(index + 1);
+        } else {
+          setPlayingIndex(-1);
+        }
+      },
+    );
   };
 
   // the playback chain must always see the latest state
@@ -407,7 +446,8 @@ export default function AlignerPage() {
             onShare={onShare}
             onClearResults={() => {
               runTokenRef.current += 1;
-              playTokenRef.current += 1;
+              stopPlayback();
+              setIsAligning(false);
               setResult(null);
               setStats(null);
               setPlayingIndex(-1);

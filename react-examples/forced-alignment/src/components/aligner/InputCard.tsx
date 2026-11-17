@@ -79,7 +79,10 @@ export function InputCard(props: Props) {
         </div>
 
         <div
-          {...dropzone.getRootProps()}
+          {...dropzone.getRootProps({
+            "aria-label":
+              "Audio or video file: drop a file here or use the select button",
+          })}
           className={`border border-dashed rounded-lg p-6 text-center cursor-pointer ${
             dropzone.isDragActive ? "border-indigo-500 bg-indigo-50" : "border-gray-300"
           }`}
@@ -88,21 +91,16 @@ export function InputCard(props: Props) {
           <Upload className="w-5 h-5 mx-auto text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">
             Drag an audio/video file here, or
-            <label className="text-indigo-600 underline mx-1 cursor-pointer">
+            <button
+              type="button"
+              className="text-indigo-600 underline mx-1 cursor-pointer bg-transparent border-0 p-0 font-normal"
+              onClick={(e) => {
+                e.stopPropagation();
+                dropzone.open();
+              }}
+            >
               select a file
-              <input
-                type="file"
-                accept="audio/*,video/*"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 0) {
-                    onPickFile(e.target.files[0]);
-                  }
-                  // allow selecting the same file again after a clear
-                  e.target.value = "";
-                }}
-              />
-            </label>
+            </button>
             （wav / mp3 / m4a / flac / ogg / mp4 …）
           </p>
           {fileName && (

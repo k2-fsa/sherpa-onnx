@@ -21,6 +21,7 @@ let recordChunks = [];
 let recordTimer = null;
 let recordStartMs = 0;
 let loadSeq = 0;        // token to drop out-of-order decode results
+let recordGen = 0;      // token to cancel a pending/discarded recording
 
 function setStatus(msg) {
   document.getElementById('status').textContent = msg;
@@ -154,12 +155,13 @@ async function loadFile(file) {
     d = await decodeArrayBuffer(await file.arrayBuffer());
   } catch (e) {
     if (seq === loadSeq) warnUser('Could not decode this file');
-    return;
+    return false;
   }
-  if (seq !== loadSeq) return; // superseded by a newer file
+  if (seq !== loadSeq) return false; // superseded by a newer file
   decoded = d;
   log('Decoded: ' + decoded.duration.toFixed(2) + ' s');
   resetResult();
+  return true;
 }
 
 // ---- alignment ----------------------------------------------------------
@@ -300,8 +302,10 @@ function downloadTimestamped() {
 
 function stopFullPlayback() {
   if (fullSource) {
-    try { fullSource.stop(); } catch (e) {}
+    const src = fullSource;
     fullSource = null;
+    src.onended = null; // stop() fires ended; do not re-enter through it
+    try { src.stop(); } catch (e) {}
   }
   document.getElementById('play').textContent = 'Play audio';
 }
@@ -322,7 +326,9 @@ function playAudio() {
   const src = audioCtx.createBufferSource();
   src.buffer = buf;
   src.connect(audioCtx.destination);
-  src.onended = () => stopFullPlayback();
+  src.onended = () => {
+    if (fullSource === src) stopFullPlayback(); // ignore a stale source
+  };
   src.start();
   fullSource = src;
   document.getElementById('play').textContent = 'Stop audio';
@@ -335,8 +341,14 @@ async function toggleRecord() {
     recorder.stop();
     return;
   }
+  const gen = ++recordGen;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    if (gen !== recordGen) {
+      // cleared while the permission request was pending
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
     const rec = new MediaRecorder(stream);
     recordChunks = [];
     rec.ondataavailable = (e) => {
@@ -350,6 +362,12 @@ async function toggleRecord() {
       }
       recorder = null;
       btn.textContent = 'Record';
+      if (gen !== recordGen) {
+        // discarded by Clear: the chunks were already dropped, and the
+        // final dataavailable may have repopulated the buffer — ignore it
+        log('Recording discarded');
+        return;
+      }
       const blob = new Blob(recordChunks, {type: rec.mimeType || 'audio/webm'});
       if (blob.size === 0) {
         log('Recording discarded');
@@ -374,6 +392,7 @@ async function toggleRecord() {
 
 function clearAll() {
   loadSeq += 1; // drop a decode that is still in flight
+  recordGen += 1; // cancel a pending or active recording session
   stopFullPlayback();
   if (recorder) {
     recordChunks = [];
@@ -413,7 +432,8 @@ window.onSherpaReady = () => {
       setStatus('Example audio not found: ' + dir + '/' + wav);
       return;
     }
-    await loadFile(new File([bytes], wav));
+    const ok = await loadFile(new File([bytes], wav));
+    if (!ok) return; // superseded by a newer input
     // The test transcripts of the packages' test wavs (data, not UI).
     document.getElementById('text').value =
         dir.indexOf('english') === 0 ?
@@ -429,3 +449,6 @@ window.onSherpaReady = () => {
 
 };
 
+// The runtime may have become ready before this script installed the
+// handler (classic scripts load independently); run it now in that case.
+if (window.sherpaRuntimeReady) window.onSherpaReady();

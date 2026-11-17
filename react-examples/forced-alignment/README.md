@@ -43,7 +43,8 @@ to use.
 
 ## Build and run (development)
 
-Prerequisites: Node.js ≥ 20, and [emsdk](https://github.com/emscripten-core/emsdk)
+Prerequisites: Node.js `^20.19.0` or `>= 22.12.0` (what Vite requires), and
+[emsdk](https://github.com/emscripten-core/emsdk)
 **4.0.23** for the wasm module.
 
 ```bash
@@ -60,7 +61,7 @@ cd ../../..
 mkdir -p react-examples/forced-alignment/public/sherpa
 cp build-wasm-simd-forced-alignment/install/bin/wasm/forced-alignment/sherpa-onnx-wasm-main-fa.{js,wasm,data} \
    react-examples/forced-alignment/public/sherpa/
-cp wasm/forced-alignment/sherpa-onnx-fa.js react-examples/forced-alignment/public/sherpa/
+cp wasm/nodejs/sherpa-onnx-forced-aligner.js react-examples/forced-alignment/public/sherpa/
 
 # 3. run the dev server
 cd react-examples/forced-alignment
