@@ -631,18 +631,6 @@ making it easy to match supported sherpa-onnx models to different hardware.
 > splits each recording into speech segments, and sherpa-onnx's INT8 export of
 > Qwen3-ASR 0.6B transcribes them. The ~1 GB model is downloaded on demand.
 
-### China Unicom 中国联通安卓 App
-
-> The Android App (version `>= 12.14.1 (2026.07.28)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
-
-<img width="800" alt="APK lib screenshot showing only armeabi-v7a" src="https://github.com/user-attachments/assets/a9ce9731-1ec7-4975-a62e-2dd44b8f3bfe" />
-
-### China Life 中国人寿 App
-
-> The Android App (version `>= 3.5.46 (2026.03.23)`) uses `sherpa-onnx` Kotlin API for keyword spotting.
-
-<img width="800" alt="APK lib screenshot" src="https://github.com/user-attachments/assets/0d9d8021-f908-4659-993f-95b5c789d5c6" />
-
 ### [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 
 > It [uses](https://github.com/deepseek-ai/deepseek-harness/commit/47ae64ee68b416cc0aa78891892ae9e9be6590c5)
