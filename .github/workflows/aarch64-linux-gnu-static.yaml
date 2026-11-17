@@ -138,6 +138,12 @@ jobs:
           name: sherpa-onnx-linux-aarch64-static
           path: sherpa-onnx-*.tar.bz2
 
+      - name: Get sherpa-onnx version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+          echo "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
       - name: Release pre-compiled binaries and libs for linux aarch64
         if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
@@ -147,7 +153,7 @@ jobs:
           file: sherpa-onnx-*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v2.0.1
+          tag: ${{ env.SHERPA_ONNX_VERSION }}
 
       - name: Release pre-compiled binaries and libs for linux aarch64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
