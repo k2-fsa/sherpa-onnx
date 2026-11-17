@@ -20,6 +20,7 @@ let recorder = null;        // MediaRecorder while recording
 let recordChunks = [];
 let recordTimer = null;
 let recordStartMs = 0;
+let loadSeq = 0;        // token to drop out-of-order decode results
 
 function setStatus(msg) {
   document.getElementById('status').textContent = msg;
@@ -146,8 +147,17 @@ async function decodeArrayBuffer(arrayBuffer) {
 }
 
 async function loadFile(file) {
+  const seq = ++loadSeq;
   log('Decoding: ' + file.name + ' …');
-  decoded = await decodeArrayBuffer(await file.arrayBuffer());
+  let d;
+  try {
+    d = await decodeArrayBuffer(await file.arrayBuffer());
+  } catch (e) {
+    if (seq === loadSeq) warnUser('Could not decode this file');
+    return;
+  }
+  if (seq !== loadSeq) return; // superseded by a newer file
+  decoded = d;
   log('Decoded: ' + decoded.duration.toFixed(2) + ' s');
   resetResult();
 }
@@ -176,9 +186,13 @@ function align() {
   }
   const t0 = performance.now();
   const stream = aligner.createStream();
-  stream.acceptWaveform(decoded.sampleRate, decoded.samples);
-  const computed = aligner.compute(stream, text);
-  stream.free();
+  let computed;
+  try {
+    stream.acceptWaveform(decoded.sampleRate, decoded.samples);
+    computed = aligner.compute(stream, text);
+  } finally {
+    stream.free();
+  }
   const elapsed = (performance.now() - t0) / 1000;
 
   const words = [];
@@ -240,8 +254,11 @@ function playWord(start, end) {
 
 /** Formats seconds as mm:ss.cc */
 function formatClock(t) {
-  const m = Math.floor(t / 60);
-  const s = t - m * 60;
+  // round to centiseconds first so that e.g. 59.996 rolls over to 01:00.00
+  // instead of producing the invalid "00:60.00"
+  const total = Math.round(t * 100) / 100;
+  const m = Math.floor(total / 60);
+  const s = total - m * 60;
   return String(m).padStart(2, '0') + ':' + s.toFixed(2).padStart(5, '0');
 }
 
@@ -356,6 +373,7 @@ async function toggleRecord() {
 }
 
 function clearAll() {
+  loadSeq += 1; // drop a decode that is still in flight
   stopFullPlayback();
   if (recorder) {
     recordChunks = [];
@@ -380,6 +398,8 @@ window.onSherpaReady = () => {
     if (e.target.files.length > 0) {
       loadFile(e.target.files[0]);
     }
+    // allow selecting the same file again after a clear
+    e.target.value = '';
   };
   document.getElementById('example').onclick = async () => {
     const dirs = listModelDirs();
