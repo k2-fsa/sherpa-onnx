@@ -48,6 +48,29 @@ window.appendLog = appendLog;
 // wasm/tts's modelType; set at build/CI time — not exposed to users).
 const modelIndex = 0;
 
+// Fills the Version card and the download link of this demo. The zip file
+// name embeds the sherpa-onnx version, see .github/workflows/wasm-fa.yaml.
+function showVersionInfo() {
+  const g = (f) =>
+      sherpaModule['_' + f] ? sherpaModule.UTF8ToString(sherpaModule['_' + f]()) : 'unknown';
+  const version = g('SherpaOnnxGetVersionStr');
+  const lines = [
+    'sherpa-onnx: ' + version,
+    'Git SHA1: ' + g('SherpaOnnxGetGitSha1'),
+    'Git date: ' + g('SherpaOnnxGetGitDate'),
+    'onnxruntime: ' + g('SherpaOnnxGetOnnxruntimeVersionStr'),
+  ];
+  document.getElementById('version-info').innerHTML = lines.join('<br/>');
+
+  const dirs = listModelDirs();
+  const model = dirs[Math.min(modelIndex, dirs.length - 1)] || 'model';
+  const zip = 'sherpa-onnx-v' + version + '-wasm-fa-' + model + '.zip';
+  const a = document.getElementById('download-app');
+  a.href = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/v' +
+      version + '/' + zip;
+  a.textContent = 'Download this demo: ' + zip;
+}
+
 // ---- model selection by index ------------------------------------------
 
 function listModelDirs() {
@@ -315,6 +338,7 @@ function clearAll() {
 window.onSherpaReady = () => {
   sherpaModule = window.Module;
   log('wasm engine ready');
+  showVersionInfo();
   loadModel();
 
   document.getElementById('file').onchange = (e) => {

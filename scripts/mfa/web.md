@@ -7,7 +7,7 @@ full-featured **web app** built from
 
 ## Web demo (wasm/forced-alignment)
 
-The files `sherpa-onnx-wasm-fa-<model>.zip` of the current release, e.g.
+The files `sherpa-onnx-v<version>-wasm-fa-<model>.zip` of the current release, e.g.
 [v2.0.1](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1), contain
 the plain-web demo: unzip a file and open `index.html` with any static HTTP
 server. It covers the basics — pick an audio/video file or record from the

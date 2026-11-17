@@ -69,7 +69,7 @@ jobs:
         run: |
           # one folder per zip: unzip it and open index.html with any static
           # HTTP server (file:// does not work: the wasm/data are fetched)
-          name=sherpa-onnx-wasm-fa-${{ matrix.model }}
+          name=sherpa-onnx-${SHERPA_ONNX_VERSION}-wasm-fa-${{ matrix.model }}
           cp -r build-wasm-simd-forced-alignment/install/bin/wasm/forced-alignment $name
           zip -r $name.zip $name
           ls -lh $name.zip
@@ -80,7 +80,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: ./sherpa-onnx-wasm-fa-*.zip
+          file: ./sherpa-onnx-*-wasm-fa-*.zip
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: ${{ env.SHERPA_ONNX_VERSION }}

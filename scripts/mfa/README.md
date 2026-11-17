@@ -19,7 +19,7 @@ release.
 (see [web.md](web.md) for which file to pick):
 
   - the **web demo** ([wasm/forced-alignment](../../wasm/forced-alignment)):
-    download `sherpa-onnx-wasm-fa-<model>.zip` from the current release,
+    download `sherpa-onnx-v<version>-wasm-fa-<model>.zip` from the current release,
     e.g. [v2.0.1](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1),
     unzip it and open `index.html` with any static HTTP server;
   - the **web app** ([react-examples/forced-alignment](../../react-examples/forced-alignment)):
