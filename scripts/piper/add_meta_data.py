@@ -120,9 +120,6 @@ def main():
 
     has_g2pw = 0
     has_espeak = 1
-    if config.get("phoneme_type") == "lexicon":
-        # e.g. Pali (pi): phonemes come from lexicon.txt
-        has_espeak = 0
 
     if (
         "phoneme_type" in config

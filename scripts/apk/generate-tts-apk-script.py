@@ -49,6 +49,7 @@ class TtsModel:
     lang_iso_639_3: str = ""
     lang_iso_639_3_2: str = ""
     lexicon: str = ""
+    lexicon_url: str = ""  # downloaded into the model dir as lexicon.txt
     is_kitten: bool = False
     is_supertonic: bool = False
     supertonic_duration_predictor: str = ""
@@ -225,7 +226,6 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-hi_IN-pratham-medium"),
         TtsModel(model_dir="vits-piper-hi_IN-priyamvada-medium"),
         TtsModel(model_dir="vits-piper-hi_IN-rohan-medium"),
-        TtsModel(model_dir="vits-piper-pi-pratham-medium"),
         TtsModel(model_dir="vits-piper-hu_HU-anna-medium"),
         TtsModel(model_dir="vits-piper-hu_HU-berta-medium"),
         TtsModel(model_dir="vits-piper-hu_HU-imre-medium"),
@@ -309,14 +309,25 @@ def get_piper_models() -> List[TtsModel]:
         ):
             m.lexicon = "lexicon.txt"
             m.rule_fsts = f"{m.model_dir}/phone.fst,{m.model_dir}/date.fst,{m.model_dir}/number.fst"
-        elif "-pi-" in m.model_dir:
-            # Pali: every word form of the Pali Tipitaka is in lexicon.txt
-            m.lexicon = "lexicon.txt"
         else:
             m.phonemize = True
 
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
+
+    # Pali (pi): the hi_IN-pratham-medium files above, reading Pali through
+    # lexicon.txt (every word form of the Pali Tipitaka), no new model files.
+    # See https://github.com/k2-fsa/sherpa-onnx/issues/4020
+    # and https://github.com/dhammagift/pali-tts/tree/main/sherpa
+    models.append(
+        TtsModel(
+            model_dir="vits-piper-hi_IN-pratham-medium",
+            model_name="hi_IN-pratham-medium.onnx",
+            lang="pi",
+            lexicon="lexicon.txt",
+            lexicon_url="https://github.com/dhammagift/pali-tts/releases/download/sherpa-pi-pratham-v2/lexicon-pi.txt",
+        )
+    )
 
     return models
 
