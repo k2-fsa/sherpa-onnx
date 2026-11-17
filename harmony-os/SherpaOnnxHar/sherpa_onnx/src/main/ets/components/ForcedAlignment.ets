@@ -5,6 +5,7 @@ import {
   forcedAlignerCompute,
   forcedAlignerComputeAsync,
 } from 'libsherpa_onnx.so';
+import { OfflineStream } from './NonStreamingAsr';
 
 /**
  * Alignment options of a forced aligner. A stream can override any of them
@@ -174,9 +175,15 @@ export class ForcedAligner {
    * @param config configuration for forced alignment
    * @param mgr optional HarmonyOS resource manager used to resolve the
    *   bundled assets of config.modelDir and config.lexicon
+   * @param handle optional native handle built earlier; createAsync()
+   *   passes it in so the model is not loaded a second time
    */
-  constructor(config: ForcedAlignerConfig, mgr?: object) {
-    this.handle = createForcedAligner(config, mgr);
+  constructor(config: ForcedAlignerConfig, mgr?: object, handle?: object) {
+    if (handle !== undefined) {
+      this.handle = handle;
+    } else {
+      this.handle = createForcedAligner(config, mgr);
+    }
     this.config = config;
   }
 
@@ -189,18 +196,15 @@ export class ForcedAligner {
    */
   static async createAsync(config: ForcedAlignerConfig): Promise<ForcedAligner> {
     const handle = await createForcedAlignerAsync(config);
-    const ans = Object.create(ForcedAligner.prototype) as ForcedAligner;
-    ans.handle = handle;
-    ans.config = config;
-    return ans;
+    return new ForcedAligner(config, undefined, handle);
   }
 
   /**
    * Create an utterance stream. Fill it with acceptWaveform(), then pass
    * it to compute().
    */
-  createStream(): object {
-    return forcedAlignerCreateStream(this.handle);
+  createStream(): OfflineStream {
+    return new OfflineStream(forcedAlignerCreateStream(this.handle));
   }
 
   /**
@@ -216,8 +220,8 @@ export class ForcedAligner {
    *   warning on stderr when the stream has no features, every word is
    *   out-of-vocabulary, or word boundaries cannot be recovered
    */
-  compute(stream: object, text: string): ForcedAlignmentResult {
-    return forcedAlignerCompute(this.handle, stream, text) as ForcedAlignmentResult;
+  compute(stream: OfflineStream, text: string): ForcedAlignmentResult {
+    return forcedAlignerCompute(this.handle, stream.handle, text) as ForcedAlignmentResult;
   }
 
   /**
@@ -228,8 +232,8 @@ export class ForcedAligner {
    * @param text the transcript of the whole utterance
    * @returns the alignment result; the same contract as compute()
    */
-  async computeAsync(stream: object, text: string): Promise<ForcedAlignmentResult> {
-    const result = await forcedAlignerComputeAsync(this.handle, stream, text);
+  async computeAsync(stream: OfflineStream, text: string): Promise<ForcedAlignmentResult> {
+    const result = await forcedAlignerComputeAsync(this.handle, stream.handle, text);
     return result as ForcedAlignmentResult;
   }
 }

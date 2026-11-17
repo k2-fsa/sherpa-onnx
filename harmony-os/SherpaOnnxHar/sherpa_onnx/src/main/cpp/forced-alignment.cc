@@ -80,7 +80,8 @@ static Napi::External<SherpaOnnxForcedAligner> CreateForcedAlignerWrapper(
 #endif
 
   if (!info[0].IsObject()) {
-    Napi::TypeError::New(env, "You should pass an object as the first argument.")
+    Napi::TypeError::New(
+        env, "You should pass an object as the first argument.")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -309,15 +310,21 @@ static Napi::Object ForcedAlignerComputeWrapper(
 
 class ForcedAlignerComputeAsyncWorker : public Napi::AsyncWorker {
  public:
-  ForcedAlignerComputeAsyncWorker(Napi::Env env,
-                                  const SherpaOnnxForcedAligner *aligner,
-                                  const SherpaOnnxOfflineStream *stream,
-                                  const std::string &text,
-                                  Napi::Promise::Deferred deferred)
+  ForcedAlignerComputeAsyncWorker(
+      Napi::Env env, Napi::External<SherpaOnnxForcedAligner> aligner,
+      Napi::External<SherpaOnnxOfflineStream> stream, const std::string &text,
+      Napi::Promise::Deferred deferred)
       : Napi::AsyncWorker(env),
-        aligner_(aligner),
-        stream_(stream),
+        aligner_(aligner.Data()),
+        stream_(stream.Data()),
         text_(text),
+        // Keep the two External handles alive for the whole worker: their
+        // finalizers free the native objects, so without these references
+        // a garbage collection during Execute() would free them under us.
+        // The references are released on the JavaScript thread in OnOK()/
+        // OnError().
+        aligner_ref_(Napi::Persistent(aligner)),
+        stream_ref_(Napi::Persistent(stream)),
         deferred_(deferred) {}
 
   void Execute() override {
@@ -331,6 +338,9 @@ class ForcedAlignerComputeAsyncWorker : public Napi::AsyncWorker {
   void OnOK() override {
     Napi::Env env = Env();
 
+    aligner_ref_.Reset();
+    stream_ref_.Reset();
+
     Napi::Object ans = GetForcedAlignmentResultObject(env, result_);
 
     SherpaOnnxDestroyForcedAlignmentResult(result_);
@@ -338,13 +348,20 @@ class ForcedAlignerComputeAsyncWorker : public Napi::AsyncWorker {
     deferred_.Resolve(ans);
   }
 
-  void OnError(const Napi::Error &e) override { deferred_.Reject(e.Value()); }
+  void OnError(const Napi::Error &e) override {
+    aligner_ref_.Reset();
+    stream_ref_.Reset();
+
+    deferred_.Reject(e.Value());
+  }
 
  private:
   const SherpaOnnxForcedAligner *aligner_;
   const SherpaOnnxOfflineStream *stream_;
   std::string text_;
   const SherpaOnnxForcedAlignmentResult *result_ = nullptr;
+  Napi::Reference<Napi::External<SherpaOnnxForcedAligner>> aligner_ref_;
+  Napi::Reference<Napi::External<SherpaOnnxOfflineStream>> stream_ref_;
   Napi::Promise::Deferred deferred_;
 };
 
@@ -370,10 +387,10 @@ static Napi::Value ForcedAlignerComputeAsyncWrapper(
     return env.Null();
   }
 
-  SherpaOnnxForcedAligner *aligner =
-      info[0].As<Napi::External<SherpaOnnxForcedAligner>>().Data();
-  SherpaOnnxOfflineStream *stream =
-      info[1].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
+  Napi::External<SherpaOnnxForcedAligner> aligner =
+      info[0].As<Napi::External<SherpaOnnxForcedAligner>>();
+  Napi::External<SherpaOnnxOfflineStream> stream =
+      info[1].As<Napi::External<SherpaOnnxOfflineStream>>();
 
   Napi::String _str = info[2].As<Napi::String>();
   std::string text = _str.Utf8Value();
