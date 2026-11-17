@@ -81,6 +81,10 @@ export default function AlignerPage() {
   const [subtitlesOn, setSubtitlesOn] = useState(true);
 
   const playTokenRef = useRef(0);
+  const playingAllRef = useRef(false);
+  const playWordRef = useRef<(index: number) => void>(() => {});
+  const pickTokenRef = useRef(0);
+  const runTokenRef = useRef(0);
 
   const appendLog = (msg: string) => {
     setLogs((prev) => [...prev, `[${nowStamp()}] ${msg}`].slice(-200));
@@ -105,6 +109,7 @@ export default function AlignerPage() {
 
   // ---- input handling ----
   const acceptFile = async (file: File) => {
+    const token = ++pickTokenRef.current;
     setResult(null);
     setStats(null);
     setFileName(file.name);
@@ -117,6 +122,7 @@ export default function AlignerPage() {
     const t0 = performance.now();
     const d = await decodeToMono16k(file);
     const dt = (performance.now() - t0) / 1000;
+    if (pickTokenRef.current !== token) return; // superseded by a newer file
     if (!d) {
       setStatus("Decode failed");
       setError("Could not decode this file");
@@ -182,6 +188,9 @@ export default function AlignerPage() {
   };
 
   const clearAll = () => {
+    runTokenRef.current += 1;
+    pickTokenRef.current += 1;
+    playTokenRef.current += 1;
     setResult(null);
     setStats(null);
     setFileName(null);
@@ -214,6 +223,8 @@ export default function AlignerPage() {
       appendLog(msg);
       return;
     }
+    const token = ++runTokenRef.current;
+    playTokenRef.current += 1;
     setError(null);
     setResult(null);
     setPlayingIndex(-1);
@@ -227,6 +238,7 @@ export default function AlignerPage() {
       const t0 = performance.now();
       const r = align(engine, decoded.samples, decoded.sampleRate, transcript.trim());
       const dt = (performance.now() - t0) / 1000;
+      if (runTokenRef.current !== token) return; // cancelled/cleared/re-run
       setProgress(100);
       if (r.words.length === 0) {
         setStatus("Alignment failed");
@@ -248,11 +260,12 @@ export default function AlignerPage() {
         );
       }
     } catch (e) {
+      if (runTokenRef.current !== token) return;
       setStatus("Alignment failed");
       setError(`Alignment failed: ${e}`);
       appendLog(`Alignment failed: ${e}`);
     } finally {
-      setIsAligning(false);
+      if (runTokenRef.current === token) setIsAligning(false);
     }
   };
 
@@ -271,13 +284,16 @@ export default function AlignerPage() {
     const w = words[index];
     playSlice(decoded.samples, decoded.sampleRate, w.start, w.end, () => {
       if (playTokenRef.current !== token) return;
-      if (playingAll && index + 1 < words.length) {
-        playWord(index + 1);
+      if (playingAllRef.current && index + 1 < words.length) {
+        playWordRef.current(index + 1);
       } else {
         setPlayingIndex(-1);
       }
     });
   };
+
+  // the playback chain must always see the latest state
+  playWordRef.current = playWord;
 
   const saveWord = (index: number) => {
     if (!decoded || !result) return;
@@ -346,7 +362,8 @@ export default function AlignerPage() {
             onAlign={runAlign}
             onCancel={() => {
               // the wasm compute() cannot be interrupted; the result is
-              // discarded when it arrives after a re-run/clear
+              // discarded when it arrives (see the token check in runAlign)
+              runTokenRef.current += 1;
               setIsAligning(false);
               setStatus("Cancelled");
               appendLog("Cancelled");
@@ -373,7 +390,10 @@ export default function AlignerPage() {
             result={result}
             playingIndex={playingIndex}
             playingAll={playingAll}
-            onPlayingAll={(v: boolean) => setPlayingAll(v)}
+            onPlayingAll={(v: boolean) => {
+              playingAllRef.current = v;
+              setPlayingAll(v);
+            }}
             onPlayWord={playWord}
             onSaveWord={saveWord}
             onRowClick={playWord}
@@ -386,6 +406,8 @@ export default function AlignerPage() {
             onExport={onExport}
             onShare={onShare}
             onClearResults={() => {
+              runTokenRef.current += 1;
+              playTokenRef.current += 1;
               setResult(null);
               setStats(null);
               setPlayingIndex(-1);

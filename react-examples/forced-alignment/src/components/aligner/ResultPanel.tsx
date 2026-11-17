@@ -109,14 +109,16 @@ export function ResultPanel(props: Props) {
                 className="h-8 w-32 text-xs"
               />
               <span className="text-xs text-muted-foreground w-10">
-                {hits.length > 0 ? `${hitIndex + 1}/${hits.length}` : ""}
+                {hits.length > 0 ? `${hitIndex >= 0 ? hitIndex + 1 : "–"}/${hits.length}` : ""}
               </span>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={hits.length === 0}
                 onClick={() =>
-                  onHitIndex((hitIndex - 1 + hits.length) % hits.length)
+                  onHitIndex(
+                    hitIndex < 0 ? hits.length - 1 : (hitIndex - 1 + hits.length) % hits.length,
+                  )
                 }
               >
                 ↑
@@ -125,7 +127,7 @@ export function ResultPanel(props: Props) {
                 variant="ghost"
                 size="sm"
                 disabled={hits.length === 0}
-                onClick={() => onHitIndex((hitIndex + 1) % hits.length)}
+                onClick={() => onHitIndex(hitIndex < 0 ? 0 : (hitIndex + 1) % hits.length)}
               >
                 ↓
               </Button>

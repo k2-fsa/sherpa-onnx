@@ -7,6 +7,5 @@ declare global {
       config: Record<string, unknown>,
       module: unknown,
     ) => unknown;
-    OfflineStream?: new (handle: number, module: unknown) => unknown;
   }
 }

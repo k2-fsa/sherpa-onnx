@@ -98,6 +98,8 @@ export function InputCard(props: Props) {
                   if (e.target.files && e.target.files.length > 0) {
                     onPickFile(e.target.files[0]);
                   }
+                  // allow selecting the same file again after a clear
+                  e.target.value = "";
                 }}
               />
             </label>

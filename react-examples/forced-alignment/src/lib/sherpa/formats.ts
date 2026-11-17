@@ -4,8 +4,11 @@ import type { WordInterval } from "./engine";
 
 /** Formats seconds as mm:ss.cc */
 export function formatClock(t: number): string {
-  const m = Math.floor(t / 60);
-  const s = t - m * 60;
+  // round to centiseconds first so that e.g. 59.996 rolls over to 01:00.00
+  // instead of producing the invalid "00:60.00"
+  const total = Math.round(t * 100) / 100;
+  const m = Math.floor(total / 60);
+  const s = total - m * 60;
   return `${String(m).padStart(2, "0")}:${s.toFixed(2).padStart(5, "0")}`;
 }
 

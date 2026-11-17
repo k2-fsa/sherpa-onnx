@@ -72,7 +72,8 @@ export function encodeWav(samples: Float32Array, sampleRate: number): Uint8Array
   let offset = 44;
   for (let i = 0; i < samples.length; ++i, offset += 2) {
     const v = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(offset, v < 0 ? v * 32768 : v * 32767, true);
+    // round to the nearest 16-bit step (truncation biases toward zero)
+    view.setInt16(offset, Math.round(v < 0 ? v * 32768 : v * 32767), true);
   }
   return new Uint8Array(out);
 }
