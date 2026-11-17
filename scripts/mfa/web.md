@@ -93,11 +93,16 @@ The source code of the app is in
 2. Unzip it: `unzip sherpa-onnx-react-fa-<model>.zip` — this creates a
    `sherpa-onnx-react-fa-<model>/` folder with the whole app (html, css, js
    and the wasm package with the model inside).
-3. Serve that folder with any static HTTP server, e.g. run
-   `python3 -m http.server 8000` inside it.
-4. Open `http://localhost:8000` in a browser. The model loads with a progress
-   bar on first visit (the model is inside the wasm data file; the first load
-   downloads it, later loads come from the browser cache).
+3. Serve the folder with any static HTTP server:
+
+   ```bash
+   cd sherpa-onnx-react-fa-<model>
+   python3 -m http.server 8000
+   ```
+
+4. Open a browser and visit <http://localhost:8000>. The model loads with a
+   progress bar on first visit (the model is inside the wasm data file; the
+   first load downloads it, later loads come from the browser cache).
 
 Any other static HTTP server works as well (nginx, `npx serve`, ...); the
 only requirement is that `.wasm` files are served as `application/wasm`.

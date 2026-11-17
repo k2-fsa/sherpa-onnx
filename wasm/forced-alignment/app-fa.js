@@ -65,10 +65,18 @@ function showVersionInfo() {
   const dirs = listModelDirs();
   const model = dirs[Math.min(modelIndex, dirs.length - 1)] || 'model';
   const zip = 'sherpa-onnx-v' + version + '-wasm-fa-' + model + '.zip';
-  const a = document.getElementById('download-app');
-  a.href = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/v' +
+  const url = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/v' +
       version + '/' + zip;
+  const dir = zip.replace(/\.zip$/, '');
+  const a = document.getElementById('download-app');
+  a.href = url;
   a.textContent = 'Download this demo: ' + zip;
+  document.getElementById('run-locally').textContent = [
+    'wget ' + url,
+    'unzip ' + zip,
+    'cd ' + dir,
+    'python3 -m http.server 8000',
+  ].join('\n');
 }
 
 // ---- model selection by index ------------------------------------------
@@ -131,6 +139,7 @@ async function loadFile(file) {
   log('Decoding: ' + file.name + ' …');
   decoded = await decodeArrayBuffer(await file.arrayBuffer());
   log('Decoded: ' + decoded.duration.toFixed(2) + ' s');
+  resetResult();
 }
 
 // ---- alignment ----------------------------------------------------------
@@ -158,23 +167,26 @@ function align() {
   const t0 = performance.now();
   const stream = aligner.createStream();
   stream.acceptWaveform(decoded.sampleRate, decoded.samples);
-  lastResult = aligner.compute(stream, text);
+  const computed = aligner.compute(stream, text);
   stream.free();
   const elapsed = (performance.now() - t0) / 1000;
 
   const words = [];
-  for (const tier of lastResult.tiers) {
+  for (const tier of computed.tiers) {
     if (tier.name === 'words') {
       for (const itv of tier.intervals) {
         if (itv.text) words.push(itv);
       }
     }
   }
-  lastWords = words;
   if (words.length === 0) {
+    resetResult();
     log('Alignment failed: no words. Please check that the transcript matches the audio; see the Log for details.');
     return;
   }
+  lastResult = computed;
+  lastWords = words;
+  updateDownloadButtons();
   document.getElementById('stats').textContent =
       'Words: ' + words.length + ' | Audio duration: ' +
       decoded.duration.toFixed(3) + ' s | Elapsed: ' + elapsed.toFixed(3) +
@@ -223,6 +235,21 @@ function formatClock(t) {
   return String(m).padStart(2, '0') + ':' + s.toFixed(2).padStart(5, '0');
 }
 
+// The export buttons are only enabled when a result exists.
+function updateDownloadButtons() {
+  const has = lastResult !== null && lastWords.length > 0;
+  document.getElementById('download-textgrid').disabled = !has;
+  document.getElementById('download-timestamped').disabled = !has;
+}
+
+function resetResult() {
+  lastResult = null;
+  lastWords = [];
+  document.querySelector('#table tbody').innerHTML = '';
+  document.getElementById('stats').textContent = '';
+  updateDownloadButtons();
+}
+
 function downloadText(content, name) {
   const blob = new Blob([content], {type: 'text/plain'});
   const a = document.createElement('a');
@@ -238,6 +265,7 @@ function downloadTextGrid() {
 }
 
 function downloadTimestamped() {
+  if (lastWords.length === 0) return;
   downloadText(
       lastWords.map((w) => `[${formatClock(w.start)} -> ${formatClock(w.end)}] ${w.text}`).join('\n'),
       'result_timestamped.txt');
@@ -323,13 +351,10 @@ function clearAll() {
     recordChunks = [];
     recorder.stop();
   }
-  lastResult = null;
-  lastWords = [];
+  resetResult();
   decoded = null;
   document.getElementById('file').value = '';
   document.getElementById('text').value = '';
-  document.querySelector('#table tbody').innerHTML = '';
-  document.getElementById('stats').textContent = '';
   setStatus('Ready');
 }
 

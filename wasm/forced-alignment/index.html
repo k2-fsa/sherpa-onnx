@@ -22,6 +22,17 @@
       tr:hover { background: #f5f6f8; cursor: pointer; }
       .log-box { max-height: 220px; overflow-y: auto; }
       .log-line { font-family: monospace; font-size: 12px; color: #6b7280; }
+      .code-block {
+        background: #f5f6f8;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-family: monospace;
+        font-size: 11px;
+        color: #1f2329;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
     </style>
   </head>
   <body>
@@ -59,8 +70,8 @@
         <tbody></tbody>
       </table>
       <p>
-        <button id="download-textgrid">Download .TextGrid</button>
-        <button id="download-timestamped">Download timestamped .txt</button>
+        <button id="download-textgrid" disabled>Download .TextGrid</button>
+        <button id="download-timestamped" disabled>Download timestamped .txt</button>
       </p>
       <p class="hint">
         Source code:
@@ -74,10 +85,14 @@
       <h2>Version</h2>
       <div id="version-info" class="hint"></div>
       <p class="hint">
-        <a id="download-app" href="#">Download this demo (.zip)</a> — unzip it
-        and open the folder with any static HTTP server (for example
-        <code>python3 -m http.server 8000</code>), then visit the printed
-        address in your browser to run it locally.
+        <a id="download-app" href="#">Download this demo (.zip)</a> — to run it
+        locally:
+      </p>
+      <pre id="run-locally" class="code-block"></pre>
+      <p class="hint">
+        then open a browser and visit
+        <a href="http://localhost:8000">http://localhost:8000</a>. Any other
+        static HTTP server works as well.
       </p>
     </div>
 
