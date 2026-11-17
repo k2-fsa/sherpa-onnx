@@ -856,13 +856,20 @@ static void OfflineRecognizerSetConfigWrapper(const Napi::CallbackInfo &info) {
 
 class DecodeOfflineStreamAsyncWorker : public Napi::AsyncWorker {
  public:
-  DecodeOfflineStreamAsyncWorker(Napi::Env env,
-                                 const SherpaOnnxOfflineRecognizer *recognizer,
-                                 const SherpaOnnxOfflineStream *stream,
-                                 Napi::Promise::Deferred deferred)
+  DecodeOfflineStreamAsyncWorker(
+      Napi::Env env, Napi::External<SherpaOnnxOfflineRecognizer> recognizer,
+      Napi::External<SherpaOnnxOfflineStream> stream,
+      Napi::Promise::Deferred deferred)
       : Napi::AsyncWorker(env),
-        recognizer_(recognizer),
-        stream_(stream),
+        recognizer_(recognizer.Data()),
+        stream_(stream.Data()),
+        // Keep the two External handles alive for the whole worker: their
+        // finalizers free the native objects, so without these references
+        // a garbage collection during Execute() would free them under us.
+        // The references are released on the JavaScript thread in OnOK()/
+        // OnError().
+        recognizer_ref_(Napi::Persistent(recognizer)),
+        stream_ref_(Napi::Persistent(stream)),
         deferred_(deferred) {}
 
   void Execute() override {
@@ -875,16 +882,27 @@ class DecodeOfflineStreamAsyncWorker : public Napi::AsyncWorker {
 
   void OnOK() override {
     const char *json = SherpaOnnxGetOfflineStreamResultAsJson(stream_);
+
+    recognizer_ref_.Reset();
+    stream_ref_.Reset();
+
     Napi::String s = Napi::String::New(Env(), json);
     SherpaOnnxDestroyOfflineStreamResultJson(json);
     deferred_.Resolve(s);
   }
 
-  void OnError(const Napi::Error &e) override { deferred_.Reject(e.Value()); }
+  void OnError(const Napi::Error &e) override {
+    recognizer_ref_.Reset();
+    stream_ref_.Reset();
+
+    deferred_.Reject(e.Value());
+  }
 
  private:
   const SherpaOnnxOfflineRecognizer *recognizer_;
   const SherpaOnnxOfflineStream *stream_;
+  Napi::Reference<Napi::External<SherpaOnnxOfflineRecognizer>> recognizer_ref_;
+  Napi::Reference<Napi::External<SherpaOnnxOfflineStream>> stream_ref_;
   Napi::Promise::Deferred deferred_;
 };
 
@@ -906,11 +924,11 @@ static Napi::Value DecodeOfflineStreamAsyncWrapper(
     return env.Null();
   }
 
-  const SherpaOnnxOfflineRecognizer *recognizer =
-      info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
+  Napi::External<SherpaOnnxOfflineRecognizer> recognizer =
+      info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>();
 
-  const SherpaOnnxOfflineStream *stream =
-      info[1].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
+  Napi::External<SherpaOnnxOfflineStream> stream =
+      info[1].As<Napi::External<SherpaOnnxOfflineStream>>();
 
   Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
 
