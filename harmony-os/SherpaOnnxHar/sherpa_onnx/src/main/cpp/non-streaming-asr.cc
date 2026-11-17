@@ -817,6 +817,80 @@ static void OfflineStreamSetOptionWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxOfflineStreamSetOption(stream, key.c_str(), value.c_str());
 }
 
+static Napi::String OfflineStreamGetOptionWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an offline stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsString()) {
+    Napi::TypeError::New(env, "Argument 1 should be a string.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  const SherpaOnnxOfflineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
+
+  std::string key = info[1].As<Napi::String>().Utf8Value();
+
+  // The returned pointer is owned by the stream and is an empty string if the
+  // option has not been set, so copy it into a JS string right away.
+  const char *value = SherpaOnnxOfflineStreamGetOption(stream, key.c_str());
+
+  return Napi::String::New(env, value ? value : "");
+}
+
+static Napi::Boolean OfflineStreamHasOptionWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an offline stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsString()) {
+    Napi::TypeError::New(env, "Argument 1 should be a string.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  const SherpaOnnxOfflineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
+
+  std::string key = info[1].As<Napi::String>().Utf8Value();
+
+  int32_t has_option = SherpaOnnxOfflineStreamHasOption(stream, key.c_str());
+
+  return Napi::Boolean::New(env, has_option);
+}
+
 static void OfflineRecognizerSetConfigWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {
@@ -1021,6 +1095,12 @@ void InitNonStreamingAsr(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "offlineStreamSetOption"),
               Napi::Function::New(env, OfflineStreamSetOptionWrapper));
+
+  exports.Set(Napi::String::New(env, "offlineStreamGetOption"),
+              Napi::Function::New(env, OfflineStreamGetOptionWrapper));
+
+  exports.Set(Napi::String::New(env, "offlineStreamHasOption"),
+              Napi::Function::New(env, OfflineStreamHasOptionWrapper));
 
   exports.Set(Napi::String::New(env, "decodeOfflineStream"),
               Napi::Function::New(env, DecodeOfflineStreamWrapper));
