@@ -694,6 +694,14 @@ llama-server.
 - [Website](https://baxy.app)
 - [Releases](https://github.com/REDSOULTM/BAXY/releases)
 
+### [Tomoru](https://github.com/ACAne0320/Tomoru)
+
+> Open-source desktop app for real-time bilingual subtitles and screen text translation for streams, anime, games, and meetings.
+> It uses sherpa-onnx for local, offline speech recognition with SenseVoice and voice activity detection with Silero VAD.
+
+- [Website](https://tomoru.acane.dev)
+- [Releases](https://github.com/ACAne0320/Tomoru/releases)
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
