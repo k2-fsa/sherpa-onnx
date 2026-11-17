@@ -374,14 +374,17 @@ fun getOfflineTtsConfig(
         throw IllegalArgumentException("Please provide lmFlow for Pocket TTS")
     }
 
-    // Resolve the lexicon path once: "" stays "" (e.g. when the text is
+    // Resolve the lexicon path(s): "" stays "" (e.g. when the text is
     // pre-phonemized via GenerationConfig.phonemeCodepoints and no lexicon is
-    // used), multi-lexicon strings ("a.txt,b.txt") are used as-is, and a bare
-    // filename is looked up inside modelDir.
-    val lexiconPath = when {
-        lexicon == "" -> lexicon
-        "," in lexicon -> lexicon
-        else -> "$modelDir/$lexicon"
+    // used). Each entry of a comma-separated list is resolved on its own: a
+    // bare filename is looked up inside modelDir, while a name containing "/"
+    // is used as-is (e.g. a path relative to the assets root).
+    val lexiconPath = if (lexicon.isEmpty()) {
+        lexicon
+    } else {
+        lexicon.split(",").joinToString(",") { entry ->
+            if ('/' in entry) entry else "$modelDir/$entry"
+        }
     }
 
     val vits = if (modelName.isNotEmpty() && voices.isEmpty() && !isSupertonic) {

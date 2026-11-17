@@ -115,7 +115,7 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 
 {% if tts_model.rule_fars %}
   rule_fars={{ tts_model.rule_fars }}
-  sed -i.bak s%"ruleFsts = null"%"ruleFars = \"$rule_fars\""% ./TtsEngine.kt
+  sed -i.bak s%"ruleFars = null"%"ruleFars = \"$rule_fars\""% ./TtsEngine.kt
 {% endif %}
 
 {% if tts_model.phonemize %}
