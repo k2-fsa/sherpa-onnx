@@ -216,6 +216,21 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 
   std::unique_ptr<OnlineStream> CreateStream(
       const std::string &hotwords) const override {
+    // The greedy-search decoders never construct bpe_encoder_, so a
+    // bpe-encoded hotwords request would dereference null in EncodeHotwords.
+    // Forward to the no-hotwords CreateStream() instead, which is the same
+    // state the EncodeHotwords failure path produces.
+    if (bpe_encoder_ == nullptr &&
+        (config_.model_config.modeling_unit == "bpe" ||
+         config_.model_config.modeling_unit == "bbpe" ||
+         config_.model_config.modeling_unit == "cjkchar+bpe")) {
+      SHERPA_ONNX_LOGE(
+          "modeling_unit is '%s' but bpe_encoder_ is nullptr (the "
+          "greedy-search decoders never construct it). Ignoring hotwords "
+          "and forwarding to CreateStream().",
+          config_.model_config.modeling_unit.c_str());
+      return CreateStream();
+    }
     auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
     std::istringstream is(hws);
     std::vector<std::vector<int32_t>> current;
