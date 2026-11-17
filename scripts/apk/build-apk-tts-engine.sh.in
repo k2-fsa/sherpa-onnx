@@ -60,6 +60,10 @@ rm $model_dir.tar.bz2
 # phonemizer (piper-phonemize) bundles its own copy. Drop it to shrink the APK.
 rm -rf $model_dir/espeak-ng-data
 
+{% if tts_model.lexicon_url %}
+  wget -qq {{ tts_model.lexicon_url }} -O $model_dir/lexicon.txt
+{% endif %}
+
 {% if tts_model.vocoder %}
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$vocoder
 {% endif %}
