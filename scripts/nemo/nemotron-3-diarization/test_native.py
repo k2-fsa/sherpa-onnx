@@ -15,6 +15,7 @@ import _sherpa_onnx as sherpa_onnx
 import numpy as np
 import soundfile as sf
 
+from test_model_validation import test_model_validation
 from test_onnx import OnnxModel, compute_features, diarize, to_segments
 
 
@@ -33,6 +34,7 @@ def main():
     parser.add_argument("--model-dir", type=Path, required=True)
     parser.add_argument("--wav", type=Path, required=True)
     args = parser.parse_args()
+    test_model_validation(args.model_dir / "model.onnx")
     audio, sample_rate = sf.read(args.wav, dtype="float32", always_2d=True)
     assert sample_rate == 16000 and audio.shape[1] == 1
     audio = audio[:, 0]

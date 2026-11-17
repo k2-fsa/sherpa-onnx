@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -30,28 +31,32 @@
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
-// Read a float
-#define SHERPA_ONNX_READ_META_DATA_FLOAT(dst, src_key)                         \
-  do {                                                                         \
-    auto value = LookupCustomModelMetaData(meta_data, src_key, allocator);     \
-    if (value.empty()) {                                                       \
-      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);        \
-      SHERPA_ONNX_EXIT(-1);                                                    \
-    }                                                                          \
-                                                                               \
-    char *end = nullptr;                                                       \
-    errno = 0;                                                                 \
-    dst = std::strtof(value.c_str(), &end);                                    \
-    if (end == value.c_str() || *end != '\0' || errno == ERANGE ||             \
-        !std::isfinite(dst)) {                                                 \
-      SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.c_str(), src_key); \
-      SHERPA_ONNX_EXIT(-1);                                                    \
-    }                                                                          \
-  } while (0)
-
 namespace sherpa_onnx {
 
 namespace {
+
+std::string ReadMetaData(const Ort::ModelMetadata &meta_data, const char *key,
+                         OrtAllocator *allocator) {
+  auto value = LookupCustomModelMetaData(meta_data, key, allocator);
+  if (value.empty()) {
+    throw std::runtime_error("'" + std::string(key) +
+                             "' does not exist in the metadata");
+  }
+  return value;
+}
+
+float ReadFloatMetaData(const Ort::ModelMetadata &meta_data, const char *key,
+                        OrtAllocator *allocator) {
+  auto value = ReadMetaData(meta_data, key, allocator);
+  char *end = nullptr;
+  errno = 0;
+  float parsed = std::strtof(value.c_str(), &end);
+  if (end == value.c_str() || *end != '\0' || errno == ERANGE ||
+      !std::isfinite(parsed)) {
+    throw std::runtime_error("Invalid value '" + value + "' for '" + key + "'");
+  }
+  return parsed;
+}
 
 int32_t ReadIntMetaData(const Ort::ModelMetadata &meta_data, const char *key,
                         OrtAllocator *allocator) {
@@ -62,8 +67,7 @@ int32_t ReadIntMetaData(const Ort::ModelMetadata &meta_data, const char *key,
   if (value.empty() || end == value.c_str() || *end != '\0' ||
       errno == ERANGE || parsed < 0 ||
       parsed > std::numeric_limits<int32_t>::max()) {
-    SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.c_str(), key);
-    SHERPA_ONNX_EXIT(-1);
+    throw std::runtime_error("Invalid value '" + value + "' for '" + key + "'");
   }
   return static_cast<int32_t>(parsed);
 }
@@ -127,8 +131,7 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
                                  meta_data_.cache.num_speakers} ||
         out[1].GetTensorTypeAndShapeInfo().GetShape() !=
             std::vector<int64_t>{1, num_embeds, meta_data_.cache.hidden_size}) {
-      SHERPA_ONNX_LOGE("Invalid Sortformer output shapes/types");
-      SHERPA_ONNX_EXIT(-1);
+      throw std::runtime_error("Invalid Sortformer output shapes/types");
     }
 
     return {std::move(out[0]), std::move(out[1])};
@@ -140,10 +143,9 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
       sess_ = std::make_unique<Ort::Session>(env_, model_data,
                                              model_data_length, sess_opts_);
     } else if (!sess_) {
-      SHERPA_ONNX_LOGE(
+      throw std::runtime_error(
           "Please pass model data or initialize the session outside of "
           "this function");
-      SHERPA_ONNX_EXIT(-1);
     }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
@@ -162,14 +164,12 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
 #endif
     }
 
-    Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+    Ort::AllocatorWithDefaultOptions allocator;
 
-    std::string model_type;
-    SHERPA_ONNX_READ_META_DATA_STR(model_type, "model_type");
+    auto model_type = ReadMetaData(meta_data, "model_type", allocator);
     if (model_type != "nemotron3_diarization") {
-      SHERPA_ONNX_LOGE("Unsupported Sortformer model type: '%s'",
-                       model_type.c_str());
-      SHERPA_ONNX_EXIT(-1);
+      throw std::runtime_error("Unsupported Sortformer model type: '" +
+                               model_type + "'");
     }
 
     int32_t version;
@@ -178,8 +178,8 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
         input_names_ != std::vector<std::string>{"features", "cached_embeds",
                                                  "num_frames"} ||
         output_names_ != std::vector<std::string>{"probs", "chunk_embeds"}) {
-      SHERPA_ONNX_LOGE("Unsupported Sortformer model interface/version");
-      SHERPA_ONNX_EXIT(-1);
+      throw std::runtime_error(
+          "Unsupported Sortformer model interface/version");
     }
 
     auto &m = meta_data_;
@@ -188,7 +188,7 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
     m.win_length = ReadIntMetaData(meta_data, "win_length", allocator);
     m.hop_length = ReadIntMetaData(meta_data, "hop_length", allocator);
     m.num_mel_bins = ReadIntMetaData(meta_data, "num_mel_bins", allocator);
-    SHERPA_ONNX_READ_META_DATA_FLOAT(m.preemphasis, "preemphasis");
+    m.preemphasis = ReadFloatMetaData(meta_data, "preemphasis", allocator);
 
     m.chunk_length = ReadIntMetaData(meta_data, "chunk_length", allocator);
     m.chunk_right_context =
@@ -206,26 +206,31 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
         ReadIntMetaData(meta_data, "speaker_cache_length", allocator);
     c.num_silence_frames = ReadIntMetaData(
         meta_data, "speaker_cache_silence_frames_per_speaker", allocator);
-    SHERPA_ONNX_READ_META_DATA_FLOAT(c.prediction_score_threshold,
-                                     "prediction_score_threshold");
-    SHERPA_ONNX_READ_META_DATA_FLOAT(c.latest_frames_score_boost,
-                                     "latest_frames_score_boost");
-    SHERPA_ONNX_READ_META_DATA_FLOAT(c.min_positive_scores_rate,
-                                     "min_positive_scores_rate");
-    SHERPA_ONNX_READ_META_DATA_FLOAT(c.strong_boost_rate, "strong_boost_rate");
-    SHERPA_ONNX_READ_META_DATA_FLOAT(c.weak_boost_rate, "weak_boost_rate");
-    SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(c.silence_embeds, "silence_embeds");
+    c.prediction_score_threshold =
+        ReadFloatMetaData(meta_data, "prediction_score_threshold", allocator);
+    c.latest_frames_score_boost =
+        ReadFloatMetaData(meta_data, "latest_frames_score_boost", allocator);
+    c.min_positive_scores_rate =
+        ReadFloatMetaData(meta_data, "min_positive_scores_rate", allocator);
+    c.strong_boost_rate =
+        ReadFloatMetaData(meta_data, "strong_boost_rate", allocator);
+    c.weak_boost_rate =
+        ReadFloatMetaData(meta_data, "weak_boost_rate", allocator);
+    auto silence_embeds = ReadMetaData(meta_data, "silence_embeds", allocator);
+    if (!SplitStringToFloats(silence_embeds.c_str(), ",", true,
+                             &c.silence_embeds)) {
+      throw std::runtime_error("Invalid value '" + silence_embeds +
+                               "' for 'silence_embeds'");
+    }
 
     if (static_cast<int32_t>(c.silence_embeds.size()) != c.hidden_size) {
-      SHERPA_ONNX_LOGE("Expect %d values for silence_embeds. Given: %d",
-                       c.hidden_size,
-                       static_cast<int32_t>(c.silence_embeds.size()));
-      SHERPA_ONNX_EXIT(-1);
+      throw std::runtime_error("Expect " + std::to_string(c.hidden_size) +
+                               " values for silence_embeds. Given: " +
+                               std::to_string(c.silence_embeds.size()));
     }
     for (float value : c.silence_embeds) {
       if (!std::isfinite(value)) {
-        SHERPA_ONNX_LOGE("Non-finite Sortformer silence embedding");
-        SHERPA_ONNX_EXIT(-1);
+        throw std::runtime_error("Non-finite Sortformer silence_embeds");
       }
     }
 
@@ -243,8 +248,7 @@ class OfflineSpeakerSegmentationSortformerModel::Impl {
         !(c.min_positive_scores_rate >= 0 && c.min_positive_scores_rate <= 1) ||
         !(c.strong_boost_rate >= 0 && std::isfinite(c.strong_boost_rate)) ||
         !(c.weak_boost_rate >= 0 && std::isfinite(c.weak_boost_rate))) {
-      SHERPA_ONNX_LOGE("Invalid Sortformer model meta data");
-      SHERPA_ONNX_EXIT(-1);
+      throw std::runtime_error("Invalid Sortformer model meta data");
     }
   }
 
