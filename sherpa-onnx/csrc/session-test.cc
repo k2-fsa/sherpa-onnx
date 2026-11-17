@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/session.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <fstream>
 #include <string>
@@ -158,6 +159,106 @@ TEST(CudaProviderOptions, MapsEveryAlgoSearchValue) {
   EXPECT_EQ(BuildCudaProviderOptions({}, 0, OrtCudnnConvAlgoSearchDefault)
                 .at("cudnn_conv_algo_search"),
             "DEFAULT");
+}
+
+TEST(CudaDeviceId, UsesMergedDefaultsAndOverrides) {
+  int32_t device_id = -1;
+  ASSERT_TRUE(GetCudaDeviceId(
+      BuildCudaProviderOptions({}, 0, OrtCudnnConvAlgoSearchHeuristic),
+      &device_id));
+  EXPECT_EQ(device_id, 0);
+  ASSERT_TRUE(GetCudaDeviceId(
+      BuildCudaProviderOptions({}, 2, OrtCudnnConvAlgoSearchHeuristic),
+      &device_id));
+  EXPECT_EQ(device_id, 2);
+  ASSERT_TRUE(GetCudaDeviceId(
+      BuildCudaProviderOptions({{"device_id", "1"}}, 2,
+                               OrtCudnnConvAlgoSearchHeuristic),
+      &device_id));
+  EXPECT_EQ(device_id, 1);
+}
+
+TEST(CudaDeviceId, AcceptsNonNegativeInt32) {
+  for (const auto &value : {"0", "1", "2147483647"}) {
+    SCOPED_TRACE(value);
+    int32_t device_id = -1;
+    ASSERT_TRUE(GetCudaDeviceId({{"device_id", value}}, &device_id));
+    EXPECT_EQ(std::to_string(device_id), value);
+  }
+}
+
+TEST(CudaDeviceId, RejectsInvalidIdsWithoutChangingOutput) {
+  int32_t device_id = 7;
+  EXPECT_FALSE(GetCudaDeviceId({}, &device_id));
+  EXPECT_EQ(device_id, 7);
+  for (const auto &value : {"", "-1", "2147483648", "1x", "1.0"}) {
+    SCOPED_TRACE(value);
+    EXPECT_FALSE(GetCudaDeviceId({{"device_id", value}}, &device_id));
+    EXPECT_EQ(device_id, 7);
+  }
+}
+
+TEST(CudaDeviceId, RejectsEmbeddedNulWithoutTruncating) {
+  int32_t device_id = 7;
+  EXPECT_FALSE(GetCudaDeviceId({{"device_id", std::string("1\0x", 3)}},
+                               &device_id));
+  EXPECT_EQ(device_id, 7);
+}
+
+TEST(CudaProviderInfo, NonCudaProvidersResetPreviousState) {
+  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "cuda-session-test");
+  TempConfigFile config("device_id=1\n");
+  ASSERT_TRUE(config.Ok());
+  for (const std::string &provider :
+       {std::string("cpu"), std::string(""), std::string("unknown-provider"),
+        "cpu:" + config.Path()}) {
+    SCOPED_TRACE(provider);
+    CudaProviderInfo info{true, 7};
+    auto opts = GetSessionOptionsImpl(1, provider, nullptr, &info);
+    EXPECT_FALSE(info.enabled);
+    EXPECT_EQ(info.device_id, 0);
+  }
+}
+
+TEST(CudaProviderInfo, UnavailableCudaNeverEnablesBinding) {
+  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "cuda-session-test");
+  const auto providers = Ort::GetAvailableProviders();
+  if (std::find(providers.begin(), providers.end(), "CUDAExecutionProvider") !=
+      providers.end()) {
+    GTEST_SKIP() << "Requires ONNX Runtime without CUDA EP";
+  }
+  TempConfigFile empty_config("");
+  TempConfigFile config("device_id=1\n");
+  ASSERT_TRUE(empty_config.Ok());
+  ASSERT_TRUE(config.Ok());
+  for (const std::string &provider :
+       {std::string("cuda"), "cuda:" + empty_config.Path(),
+        "  CuDa : " + config.Path() + "  "}) {
+    SCOPED_TRACE(provider);
+    CudaProviderInfo info{true, 7};
+    auto opts = GetSessionOptionsImpl(1, provider, nullptr, &info);
+    EXPECT_FALSE(info.enabled);
+    EXPECT_EQ(info.device_id, 0);
+  }
+}
+
+TEST(CudaProviderInfo, RejectedCudaOptionNeverEnablesBinding) {
+#if ORT_API_VERSION >= 12
+  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "cuda-session-test");
+  const auto providers = Ort::GetAvailableProviders();
+  if (std::find(providers.begin(), providers.end(), "CUDAExecutionProvider") ==
+      providers.end()) {
+    GTEST_SKIP() << "Requires CUDA EP to exercise option rejection";
+  }
+  TempConfigFile config("sherpa_test_invalid_cuda_option=1\n");
+  ASSERT_TRUE(config.Ok());
+  CudaProviderInfo info{true, 7};
+  auto opts = GetSessionOptionsImpl(1, "cuda:" + config.Path(), nullptr, &info);
+  EXPECT_FALSE(info.enabled);
+  EXPECT_EQ(info.device_id, 0);
+#else
+  GTEST_SKIP() << "Requires CUDA V2 provider options";
+#endif
 }
 
 TEST(Provider, CudaConfigFileDoesNotThrowWithoutCudaEp) {

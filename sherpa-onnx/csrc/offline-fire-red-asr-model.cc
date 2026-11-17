@@ -30,24 +30,15 @@
 
 namespace sherpa_onnx {
 
-namespace {
-
-static inline bool IsCudaProvider(const std::string &provider) {
-  return provider == "cuda";
-}
-
-}  // namespace
-
 class OfflineFireRedAsrModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_(GetSessionOptions(config)),
+        sess_opts_(GetSessionOptions(config, &cuda_provider_info_)),
         allocator_{},
         cpu_mem_info_(
-            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
-        is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)) {
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(config.fire_red_asr.encoder),
         sess_opts_);
@@ -65,11 +56,10 @@ class OfflineFireRedAsrModel::Impl {
   Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_(GetSessionOptions(config)),
+        sess_opts_(GetSessionOptions(config, &cuda_provider_info_)),
         allocator_{},
         cpu_mem_info_(
-            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
-        is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)) {
     {
       auto buf = ReadFile(mgr, config.fire_red_asr.encoder);
       InitEncoder(buf.data(), buf.size());
@@ -91,6 +81,9 @@ class OfflineFireRedAsrModel::Impl {
     std::vector<Ort::Value> encoder_out;
 
     if (use_cuda_iobinding_) {
+      // BindInput can copy tensors before Run() selects the session's device.
+      Ort::ThrowOnError(
+          Ort::GetApi().SetCurrentGpuDeviceId(cuda_provider_info_.device_id));
       // Encoder outputs (cross_k, cross_v) are used multiple times in decoder
       // steps, so keep them on GPU to avoid device<->host copies.
       Ort::IoBinding binding(*encoder_sess_);
@@ -128,6 +121,9 @@ class OfflineFireRedAsrModel::Impl {
     std::vector<Ort::Value> decoder_out;
 
     if (use_cuda_iobinding_) {
+      // BindInput can copy tensors before Run() selects the session's device.
+      Ort::ThrowOnError(
+          Ort::GetApi().SetCurrentGpuDeviceId(cuda_provider_info_.device_id));
       // CPU-side sampling needs logits on CPU, while self KV cache should
       // remain on GPU to avoid large device<->host copies between decode steps.
       Ort::IoBinding binding(*decoder_sess_);
@@ -272,26 +268,24 @@ class OfflineFireRedAsrModel::Impl {
   }
 
   void InitCudaIOBinding() {
-    use_cuda_iobinding_ =
-        (!is_cpu_provider_ && IsCudaProvider(config_.provider));
+    use_cuda_iobinding_ = cuda_provider_info_.enabled;
     if (use_cuda_iobinding_) {
-      // Use device 0 by default. SessionOptions() in sherpa-onnx usually
-      // configures the CUDA EP device; binding here only affects output memory.
       cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
-          "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
+          "Cuda", OrtDeviceAllocator, cuda_provider_info_.device_id,
+          OrtMemTypeDefault);
     }
   }
 
  private:
   OfflineModelConfig config_;
   Ort::Env env_;
+  CudaProviderInfo cuda_provider_info_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
   Ort::MemoryInfo cpu_mem_info_;
   std::unique_ptr<Ort::MemoryInfo> cuda_mem_info_;
   bool use_cuda_iobinding_ = false;
-  bool is_cpu_provider_ = false;
 
   std::unique_ptr<Ort::Session> encoder_sess_;
   std::unique_ptr<Ort::Session> decoder_sess_;
