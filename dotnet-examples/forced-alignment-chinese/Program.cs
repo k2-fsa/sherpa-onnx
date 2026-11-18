@@ -36,13 +36,13 @@ class ForcedAlignmentChinese
         var phones = result.Tiers[0];
         var words = result.Tiers[1];
 
-        Console.WriteLine($"--- {phones.Name} ({phones.Intervals.Count} intervals) ---");
+        Console.WriteLine($"--- {phones.Name} ({phones.Intervals.Length} intervals) ---");
         foreach (var interval in phones.Intervals)
         {
             Console.WriteLine($"{interval.Start:F2} - {interval.End:F2}  {interval.Text}");
         }
 
-        Console.WriteLine($"--- {words.Name} ({words.Intervals.Count} intervals) ---");
+        Console.WriteLine($"--- {words.Name} ({words.Intervals.Length} intervals) ---");
         foreach (var interval in words.Intervals)
         {
             Console.WriteLine($"{interval.Start:F2} - {interval.End:F2}  {interval.Text}");
