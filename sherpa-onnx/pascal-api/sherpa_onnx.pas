@@ -605,6 +605,57 @@ type
     property GetHandle: Pointer Read Handle;
   end;
 
+  TSherpaOnnxAlignmentInterval = record
+    StartTime: Single;
+    EndTime: Single;
+    Text: AnsiString;
+  end;
+
+  TSherpaOnnxAlignmentTier = record
+    Name: AnsiString;
+    Intervals: array of TSherpaOnnxAlignmentInterval;
+  end;
+
+  TSherpaOnnxForcedAlignmentResult = record
+  private
+    FTextGrid: AnsiString;
+  public
+    Duration: Single;
+    Tiers: array of TSherpaOnnxAlignmentTier;
+    function ToTextGrid: AnsiString;
+    function TextGrid: AnsiString; { same as ToTextGrid }
+  end;
+
+  TSherpaOnnxForcedAlignmentOptions = record
+    Beam: Single;
+    RetryBeam: Single;
+    TransitionScale: Single;
+    SelfLoopScale: Single;
+    AcousticScale: Single;
+    { All zero: let the C API use its own defaults }
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxForcedAlignmentOptions);
+  end;
+
+  TSherpaOnnxForcedAlignerConfig = record
+    ModelDir: AnsiString;
+    Lexicon: AnsiString;
+    Options: TSherpaOnnxForcedAlignmentOptions;
+    Debug: Integer;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxForcedAlignerConfig);
+  end;
+
+  TSherpaOnnxForcedAligner = class
+  private
+    Handle: Pointer;
+  public
+    constructor Create(Config: TSherpaOnnxForcedAlignerConfig);
+    destructor Destroy; override;
+    function CreateStream: TSherpaOnnxOfflineStream;
+    function Compute(Stream: TSherpaOnnxOfflineStream;
+      const Text: AnsiString): TSherpaOnnxForcedAlignmentResult;
+    property GetHandle: Pointer Read Handle;
+  end;
+
   TSherpaOnnxSileroVadModelConfig = record
     Model: AnsiString;
     Threshold: Single;
@@ -1412,6 +1463,48 @@ type
 
   PSherpaOnnxDenoisedAudio = ^SherpaOnnxDenoisedAudio;
 
+  SherpaOnnxForcedAlignmentOptions = record
+    Beam: cfloat;
+    RetryBeam: cfloat;
+    TransitionScale: cfloat;
+    SelfLoopScale: cfloat;
+    AcousticScale: cfloat;
+  end;
+
+  SherpaOnnxForcedAlignerConfig = record
+    ModelDir: PAnsiChar;
+    Lexicon: PAnsiChar;
+    Options: SherpaOnnxForcedAlignmentOptions;
+    Debug: cint32;
+  end;
+
+  PSherpaOnnxForcedAlignerConfig = ^SherpaOnnxForcedAlignerConfig;
+
+  SherpaOnnxForcedAlignmentInterval = record
+    StartTime: cfloat;
+    EndTime: cfloat;
+    Text: PAnsiChar;
+  end;
+
+  PSherpaOnnxForcedAlignmentInterval = ^SherpaOnnxForcedAlignmentInterval;
+
+  SherpaOnnxForcedAlignmentTier = record
+    Name: PAnsiChar;
+    NumIntervals: cint32;
+    Intervals: PSherpaOnnxForcedAlignmentInterval;
+  end;
+
+  PSherpaOnnxForcedAlignmentTier = ^SherpaOnnxForcedAlignmentTier;
+
+  SherpaOnnxForcedAlignmentResult = record
+    Duration: cfloat;
+    TextGrid: PAnsiChar;
+    NumTiers: cint32;
+    Tiers: PSherpaOnnxForcedAlignmentTier;
+  end;
+
+  PSherpaOnnxForcedAlignmentResult = ^SherpaOnnxForcedAlignmentResult;
+
 function SherpaOnnxCreateLinearResampler(SampleRateInHz: cint32;
   SampleRateOutHz: cint32;
   FilterCutoffHz: cfloat;
@@ -1703,6 +1796,22 @@ function SherpaOnnxGetOfflineStreamResultAsJson(Stream: Pointer): PAnsiChar; cde
   external SherpaOnnxLibName;
 
 procedure SherpaOnnxDestroyOfflineStreamResultJson(Json: PAnsiChar); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCreateForcedAligner(Config: PSherpaOnnxForcedAlignerConfig): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyForcedAligner(Aligner: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxForcedAlignerCreateStream(Aligner: Pointer): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxForcedAlignerCompute(Aligner: Pointer; Stream: Pointer;
+  Text: PAnsiChar): PSherpaOnnxForcedAlignmentResult; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyForcedAlignmentResult(AlignmentResult: Pointer); cdecl;
   external SherpaOnnxLibName;
 
 function SherpaOnnxReadWaveWrapper(Filename: PAnsiChar): PSherpaOnnxWave; cdecl;
@@ -2528,6 +2637,115 @@ begin
     'Timestamps := %s' +
     ')',
     [Self.Text, TokensStr, TimestampStr]);
+end;
+
+class operator TSherpaOnnxForcedAlignmentOptions.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxForcedAlignmentOptions);
+begin
+  { All zero: let the C API use its own defaults }
+  Dest.Beam := 0;
+  Dest.RetryBeam := 0;
+  Dest.TransitionScale := 0;
+  Dest.SelfLoopScale := 0;
+  Dest.AcousticScale := 0;
+end;
+
+class operator TSherpaOnnxForcedAlignerConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxForcedAlignerConfig);
+begin
+  Dest.ModelDir := '';
+  Dest.Lexicon := '';
+  Dest.Options.Beam := 0;
+  Dest.Options.RetryBeam := 0;
+  Dest.Options.TransitionScale := 0;
+  Dest.Options.SelfLoopScale := 0;
+  Dest.Options.AcousticScale := 0;
+  Dest.Debug := 0;
+end;
+
+function ConvertForcedAlignerConfig(Config: TSherpaOnnxForcedAlignerConfig): SherpaOnnxForcedAlignerConfig;
+begin
+  Result.ModelDir := PAnsiChar(Config.ModelDir);
+  Result.Lexicon := PAnsiChar(Config.Lexicon);
+  Result.Options.Beam := Config.Options.Beam;
+  Result.Options.RetryBeam := Config.Options.RetryBeam;
+  Result.Options.TransitionScale := Config.Options.TransitionScale;
+  Result.Options.SelfLoopScale := Config.Options.SelfLoopScale;
+  Result.Options.AcousticScale := Config.Options.AcousticScale;
+  Result.Debug := Config.Debug;
+end;
+
+constructor TSherpaOnnxForcedAligner.Create(Config: TSherpaOnnxForcedAlignerConfig);
+var
+  C: SherpaOnnxForcedAlignerConfig;
+begin
+  C := ConvertForcedAlignerConfig(Config);
+  Self.Handle := SherpaOnnxCreateForcedAligner(@C);
+end;
+
+destructor TSherpaOnnxForcedAligner.Destroy;
+begin
+  SherpaOnnxDestroyForcedAligner(Self.Handle);
+  Self.Handle := nil;
+end;
+
+function TSherpaOnnxForcedAligner.CreateStream: TSherpaOnnxOfflineStream;
+var
+  Stream: Pointer;
+begin
+  Stream := SherpaOnnxForcedAlignerCreateStream(Self.Handle);
+  Result := TSherpaOnnxOfflineStream.Create(Stream);
+end;
+
+function TSherpaOnnxForcedAligner.Compute(Stream: TSherpaOnnxOfflineStream;
+  const Text: AnsiString): TSherpaOnnxForcedAlignmentResult;
+var
+  R: PSherpaOnnxForcedAlignmentResult;
+  Tiers: PSherpaOnnxForcedAlignmentTier;
+  Intervals: PSherpaOnnxForcedAlignmentInterval;
+  I: Integer;
+  J: Integer;
+begin
+  Result.Duration := 0;
+  Result.FTextGrid := '';
+  SetLength(Result.Tiers, 0);
+
+  R := SherpaOnnxForcedAlignerCompute(Self.Handle, Stream.Handle,
+    PAnsiChar(Text));
+  if R = nil then
+    begin
+      Exit
+    end;
+
+  { Copy everything before the native result is destroyed }
+  Result.Duration := R^.Duration;
+  Result.FTextGrid := R^.TextGrid;
+
+  SetLength(Result.Tiers, R^.NumTiers);
+  Tiers := R^.Tiers;
+  for I := 0 to R^.NumTiers - 1 do
+    begin
+      Result.Tiers[I].Name := Tiers[I].Name;
+      SetLength(Result.Tiers[I].Intervals, Tiers[I].NumIntervals);
+
+      Intervals := Tiers[I].Intervals;
+      for J := 0 to Tiers[I].NumIntervals - 1 do
+        begin
+          Result.Tiers[I].Intervals[J].StartTime := Intervals[J].StartTime;
+          Result.Tiers[I].Intervals[J].EndTime := Intervals[J].EndTime;
+          Result.Tiers[I].Intervals[J].Text := Intervals[J].Text;
+        end;
+    end;
+
+  SherpaOnnxDestroyForcedAlignmentResult(R);
+end;
+
+function TSherpaOnnxForcedAlignmentResult.ToTextGrid: AnsiString;
+begin
+  Result := FTextGrid;
+end;
+
+function TSherpaOnnxForcedAlignmentResult.TextGrid: AnsiString;
+begin
+  Result := FTextGrid;
 end;
 
 function TSherpaOnnxSileroVadModelConfig.ToString: AnsiString;
