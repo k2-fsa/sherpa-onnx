@@ -9,6 +9,33 @@ trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
 
 bash ./run-version.sh
 
+bash ./run-forced-alignment-english.sh
+grep -q 'name = "phones"' en.TextGrid
+grep -q 'name = "words"' en.TextGrid
+cat en.TextGrid
+
+bash ./run-forced-alignment-chinese.sh
+grep -q 'name = "phones"' zh.TextGrid
+grep -q 'name = "words"' zh.TextGrid
+cat zh.TextGrid
+
+python3 -m pip install soundfile
+mkdir -p test-forced-alignment-english test-forced-alignment-chinese
+cp english-mfa-v3.1.0/en.wav test-forced-alignment-english/
+mv en.TextGrid test-forced-alignment-english/
+python3 ../python-api-examples/textgrid-to-word-wavs.py \
+  --wav test-forced-alignment-english/en.wav \
+  --textgrid test-forced-alignment-english/en.TextGrid \
+  --out-dir test-forced-alignment-english/word-clips-en
+cp zh-aishell3-pinyin/zh.wav test-forced-alignment-chinese/
+mv zh.TextGrid test-forced-alignment-chinese/
+python3 ../python-api-examples/textgrid-to-word-wavs.py \
+  --wav test-forced-alignment-chinese/zh.wav \
+  --textgrid test-forced-alignment-chinese/zh.TextGrid \
+  --out-dir test-forced-alignment-chinese/word-clips-zh
+
+rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+
 bash ./run-offline-speech-enhancement-voxlock.sh
 bash ./run-offline-speech-enhancement-voxlock-with-voice-sample.sh
 bash ./run-streaming-speech-enhancement-voxlock.sh
