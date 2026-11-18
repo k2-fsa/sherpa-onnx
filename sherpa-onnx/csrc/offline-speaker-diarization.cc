@@ -45,12 +45,16 @@ bool OfflineSpeakerDiarizationConfig::Validate() const {
     return false;
   }
 
-  if (!embedding.Validate()) {
-    return false;
-  }
+  // Sortformer models do end-to-end diarization. They need neither a
+  // speaker embedding model nor clustering.
+  if (segmentation.sortformer.model.empty()) {
+    if (!embedding.Validate()) {
+      return false;
+    }
 
-  if (!clustering.Validate()) {
-    return false;
+    if (!clustering.Validate()) {
+      return false;
+    }
   }
 
   if (min_duration_on < 0) {

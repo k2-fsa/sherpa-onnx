@@ -38,3 +38,13 @@ $EXE \
 rm -rf sherpa-onnx-pyannote-*
 rm -fv *.onnx
 rm -fv *.wav
+
+# Uncomment after sherpa-onnx-nemotron-3-diarization.tar.bz2 is published
+# log "Sortformer (Nemotron-3-Diarization)"
+# download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-nemotron-3-diarization.tar.bz2
+#
+# $EXE \
+#   --segmentation.sortformer-model=./sherpa-onnx-nemotron-3-diarization/model.int8.onnx \
+#   ./sherpa-onnx-nemotron-3-diarization/test_wavs/0-four-speakers-zh.wav
+#
+# rm -rf sherpa-onnx-nemotron-3-diarization

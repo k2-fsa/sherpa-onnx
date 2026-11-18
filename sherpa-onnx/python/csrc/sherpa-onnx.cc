@@ -116,6 +116,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   m.attr("OfflineSpeakerDiarizationSegment") = py::none();
   m.attr("OfflineSpeakerDiarizationResult") = py::none();
   m.attr("OfflineSpeakerSegmentationPyannoteModelConfig") = py::none();
+  m.attr("OfflineSpeakerSegmentationSortformerModelConfig") = py::none();
   m.attr("OfflineSpeakerSegmentationModelConfig") = py::none();
   m.attr("OfflineSpeakerDiarizationConfig") = py::none();
   m.attr("OfflineSpeakerDiarization") = py::none();

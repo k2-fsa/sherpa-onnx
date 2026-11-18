@@ -14,6 +14,7 @@ namespace SherpaOnnx
             NumThreads = 1;
             Debug = 0;
             Provider = "cpu";
+            Sortformer = new OfflineSpeakerSegmentationSortformerModelConfig();
         }
 
         public OfflineSpeakerSegmentationPyannoteModelConfig Pyannote;
@@ -26,6 +27,8 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Provider;
+
+        public OfflineSpeakerSegmentationSortformerModelConfig Sortformer;
     }
 }
 

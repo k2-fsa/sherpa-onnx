@@ -7,12 +7,17 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model-config.h"
+#include "sherpa-onnx/csrc/offline-speaker-segmentation-sortformer-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
 
 struct OfflineSpeakerSegmentationModelConfig {
   OfflineSpeakerSegmentationPyannoteModelConfig pyannote;
+
+  // If sortformer.model is not empty, it is used for end-to-end speaker
+  // diarization and pyannote is ignored.
+  OfflineSpeakerSegmentationSortformerModelConfig sortformer;
 
   int32_t num_threads = 1;
   bool debug = false;
@@ -24,6 +29,16 @@ struct OfflineSpeakerSegmentationModelConfig {
       const OfflineSpeakerSegmentationPyannoteModelConfig &pyannote,
       int32_t num_threads, bool debug, const std::string &provider)
       : pyannote(pyannote),
+        num_threads(num_threads),
+        debug(debug),
+        provider(provider) {}
+
+  OfflineSpeakerSegmentationModelConfig(
+      const OfflineSpeakerSegmentationPyannoteModelConfig &pyannote,
+      const OfflineSpeakerSegmentationSortformerModelConfig &sortformer,
+      int32_t num_threads, bool debug, const std::string &provider)
+      : pyannote(pyannote),
+        sortformer(sortformer),
         num_threads(num_threads),
         debug(debug),
         provider(provider) {}
