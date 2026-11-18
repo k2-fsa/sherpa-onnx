@@ -3201,6 +3201,11 @@ SherpaOnnxOfflineSourceSeparationProcessWithCallbackNoArg(
     const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
     int32_t num_channels, int32_t num_samples, int32_t sample_rate,
     SherpaOnnxOfflineSourceSeparationProgressCallbackNoArg callback) {
+  if (callback == nullptr) {
+    return ProcessOfflineSourceSeparation(
+        ss, samples, num_channels, num_samples, sample_rate, nullptr, nullptr);
+  }
+
   auto wrapper = [callback](int32_t num_processed_chunks,
                             int32_t num_total_chunks, void *) {
     return callback(num_processed_chunks, num_total_chunks);
