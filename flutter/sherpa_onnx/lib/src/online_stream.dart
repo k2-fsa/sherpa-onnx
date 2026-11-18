@@ -87,5 +87,46 @@ class OnlineStream {
     calloc.free(pValue);
   }
 
+  /// Get a string option of the underlying stream. Returns '' if the option
+  /// does not exist. The value is copied from the stream, which owns the
+  /// original.
+  String getOption({required String key}) {
+    if (SherpaOnnxBindings.onlineStreamGetOption == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return '';
+    }
+
+    final pKey = key.toNativeUtf8();
+    final p =
+        SherpaOnnxBindings.onlineStreamGetOption?.call(ptr, pKey) ?? nullptr;
+    calloc.free(pKey);
+
+    if (p == nullptr) {
+      return '';
+    }
+
+    return p.toDartString();
+  }
+
+  /// Return whether the underlying stream has the option [key].
+  bool hasOption({required String key}) {
+    if (SherpaOnnxBindings.onlineStreamHasOption == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return false;
+    }
+
+    final pKey = key.toNativeUtf8();
+    final ans = SherpaOnnxBindings.onlineStreamHasOption?.call(ptr, pKey) ?? 0;
+    calloc.free(pKey);
+
+    return ans != 0;
+  }
+
   Pointer<SherpaOnnxOnlineStream> ptr;
 }

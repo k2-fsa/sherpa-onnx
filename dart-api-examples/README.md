@@ -100,6 +100,8 @@ For concrete Flutter examples, see
 | [audio-tagging](./audio-tagging) | Audio tagging |
 | [keyword-spotter](./keyword-spotter) | Keyword spotting |
 | [add-punctuations](./add-punctuations) | Adding punctuations to text |
+| [forced-alignment-english](./forced-alignment-english) | Forced alignment of an English utterance |
+| [forced-alignment-chinese](./forced-alignment-chinese) | Forced alignment of a Chinese utterance |
 | [speech-enhancement-gtcrn](./speech-enhancement-gtcrn) | Speech enhancement/denoising with GTCRN |
 | [speech-enhancement-dpdfnet](./speech-enhancement-dpdfnet) | Speech enhancement/denoising with DPDFNet (16 kHz family) |
 | [streaming-speech-enhancement-gtcrn](./streaming-speech-enhancement-gtcrn) | Streaming speech enhancement with GTCRN |

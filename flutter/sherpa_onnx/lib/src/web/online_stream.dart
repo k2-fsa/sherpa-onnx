@@ -13,6 +13,8 @@ class OnlineStream {
       {required Float32List samples, required int sampleRate}) {}
   void inputFinished() {}
   void setOption({required String key, required String value}) {}
+  String getOption({required String key}) => '';
+  bool hasOption({required String key}) => false;
 
   dynamic ptr;
 }

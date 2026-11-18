@@ -818,6 +818,67 @@ final class SherpaOnnxKeywordSpotterConfig extends Struct {
   external int keywordsBufSize;
 }
 
+final class SherpaOnnxForcedAlignmentOptions extends Struct {
+  @Float()
+  external double beam;
+
+  @Float()
+  external double retryBeam;
+
+  @Float()
+  external double transitionScale;
+
+  @Float()
+  external double selfLoopScale;
+
+  @Float()
+  external double acousticScale;
+}
+
+final class SherpaOnnxForcedAlignerConfig extends Struct {
+  external Pointer<Utf8> modelDir;
+
+  external Pointer<Utf8> lexicon;
+
+  external SherpaOnnxForcedAlignmentOptions options;
+
+  @Int32()
+  external int debug;
+}
+
+final class SherpaOnnxForcedAlignmentInterval extends Struct {
+  @Float()
+  external double start;
+
+  @Float()
+  external double end;
+
+  external Pointer<Utf8> text;
+}
+
+final class SherpaOnnxForcedAlignmentTier extends Struct {
+  external Pointer<Utf8> name;
+
+  @Int32()
+  external int numIntervals;
+
+  external Pointer<SherpaOnnxForcedAlignmentInterval> intervals;
+}
+
+final class SherpaOnnxForcedAlignmentResult extends Struct {
+  @Float()
+  external double duration;
+
+  external Pointer<Utf8> textGrid;
+
+  @Int32()
+  external int numTiers;
+
+  external Pointer<SherpaOnnxForcedAlignmentTier> tiers;
+}
+
+final class SherpaOnnxForcedAligner extends Opaque {}
+
 final class SherpaOnnxOfflinePunctuation extends Opaque {}
 
 final class SherpaOnnxOnlinePunctuation extends Opaque {}
@@ -1028,6 +1089,40 @@ typedef SherpaOnnxDestroyOfflineSpeakerDiarizationNative =
 
 typedef SherpaOnnxDestroyOfflineSpeakerDiarization =
     void Function(Pointer<SherpaOnnxOfflineSpeakerDiarization>);
+
+typedef SherpaOnnxCreateForcedAlignerNative =
+    Pointer<SherpaOnnxForcedAligner> Function(
+      Pointer<SherpaOnnxForcedAlignerConfig>,
+    );
+
+typedef SherpaOnnxCreateForcedAligner = SherpaOnnxCreateForcedAlignerNative;
+
+typedef SherpaOnnxDestroyForcedAlignerNative =
+    Void Function(Pointer<SherpaOnnxForcedAligner>);
+
+typedef SherpaOnnxDestroyForcedAligner =
+    void Function(Pointer<SherpaOnnxForcedAligner>);
+
+typedef SherpaOnnxForcedAlignerCreateStreamNative =
+    Pointer<SherpaOnnxOfflineStream> Function(Pointer<SherpaOnnxForcedAligner>);
+
+typedef SherpaOnnxForcedAlignerCreateStream
+    = SherpaOnnxForcedAlignerCreateStreamNative;
+
+typedef SherpaOnnxForcedAlignerComputeNative =
+    Pointer<SherpaOnnxForcedAlignmentResult> Function(
+      Pointer<SherpaOnnxForcedAligner>,
+      Pointer<SherpaOnnxOfflineStream>,
+      Pointer<Utf8>,
+    );
+
+typedef SherpaOnnxForcedAlignerCompute = SherpaOnnxForcedAlignerComputeNative;
+
+typedef SherpaOnnxDestroyForcedAlignmentResultNative =
+    Void Function(Pointer<SherpaOnnxForcedAlignmentResult>);
+
+typedef SherpaOnnxDestroyForcedAlignmentResult =
+    void Function(Pointer<SherpaOnnxForcedAlignmentResult>);
 
 typedef SherpaOnnxCreateOfflinePunctuationNative =
     Pointer<SherpaOnnxOfflinePunctuation> Function(
@@ -1451,6 +1546,18 @@ typedef OfflineStreamSetOption =
       Pointer<Utf8>,
     );
 
+typedef OfflineStreamGetOptionNative =
+    Pointer<Utf8> Function(Pointer<SherpaOnnxOfflineStream>, Pointer<Utf8>);
+
+typedef OfflineStreamGetOption =
+    Pointer<Utf8> Function(Pointer<SherpaOnnxOfflineStream>, Pointer<Utf8>);
+
+typedef OfflineStreamHasOptionNative =
+    Int32 Function(Pointer<SherpaOnnxOfflineStream>, Pointer<Utf8>);
+
+typedef OfflineStreamHasOption =
+    int Function(Pointer<SherpaOnnxOfflineStream>, Pointer<Utf8>);
+
 typedef DecodeOfflineStreamNative =
     Void Function(
       Pointer<SherpaOnnxOfflineRecognizer>,
@@ -1869,6 +1976,18 @@ typedef OnlineStreamSetOption =
       Pointer<Utf8>,
     );
 
+typedef OnlineStreamGetOptionNative =
+    Pointer<Utf8> Function(Pointer<SherpaOnnxOnlineStream>, Pointer<Utf8>);
+
+typedef OnlineStreamGetOption =
+    Pointer<Utf8> Function(Pointer<SherpaOnnxOnlineStream>, Pointer<Utf8>);
+
+typedef OnlineStreamHasOptionNative =
+    Int32 Function(Pointer<SherpaOnnxOnlineStream>, Pointer<Utf8>);
+
+typedef OnlineStreamHasOption =
+    int Function(Pointer<SherpaOnnxOnlineStream>, Pointer<Utf8>);
+
 typedef SherpaOnnxSpeakerEmbeddingExtractorIsReadyNative =
     Int32 Function(
       Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
@@ -1982,6 +2101,18 @@ class SherpaOnnxBindings {
   static SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg?
   sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg;
 
+  static SherpaOnnxCreateForcedAligner? sherpaOnnxCreateForcedAligner;
+
+  static SherpaOnnxDestroyForcedAligner? sherpaOnnxDestroyForcedAligner;
+
+  static SherpaOnnxForcedAlignerCreateStream?
+      sherpaOnnxForcedAlignerCreateStream;
+
+  static SherpaOnnxForcedAlignerCompute? sherpaOnnxForcedAlignerCompute;
+
+  static SherpaOnnxDestroyForcedAlignmentResult?
+      sherpaOnnxDestroyForcedAlignmentResult;
+
   static SherpaOnnxCreateOfflinePunctuation? sherpaOnnxCreateOfflinePunctuation;
   static SherpaOnnxDestroyOfflinePunctuation?
   sherpaOnnxDestroyOfflinePunctuation;
@@ -2033,6 +2164,10 @@ class SherpaOnnxBindings {
   static DestroyOfflineStream? destroyOfflineStream;
   static AcceptWaveformOffline? acceptWaveformOffline;
   static OfflineStreamSetOption? offlineStreamSetOption;
+
+  static OfflineStreamGetOption? offlineStreamGetOption;
+
+  static OfflineStreamHasOption? offlineStreamHasOption;
   static DecodeOfflineStream? decodeOfflineStream;
   static GetOfflineStreamResultAsJson? getOfflineStreamResultAsJson;
   static DestroyOfflineStreamResultJson? destroyOfflineStreamResultJson;
@@ -2123,6 +2258,10 @@ class SherpaOnnxBindings {
   static OnlineStreamInputFinished? onlineStreamInputFinished;
 
   static OnlineStreamSetOption? onlineStreamSetOption;
+
+  static OnlineStreamGetOption? onlineStreamGetOption;
+
+  static OnlineStreamHasOption? onlineStreamHasOption;
 
   static SherpaOnnxSpeakerEmbeddingExtractorIsReady?
   speakerEmbeddingExtractorIsReady;
@@ -2353,6 +2492,36 @@ class SherpaOnnxBindings {
         .lookup<
           NativeFunction<SherpaOnnxOfflineSpeakerDiarizationDestroyResultNative>
         >('SherpaOnnxOfflineSpeakerDiarizationDestroyResult')
+        .asFunction();
+
+    sherpaOnnxCreateForcedAligner ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateForcedAlignerNative>>(
+          'SherpaOnnxCreateForcedAligner',
+        )
+        .asFunction();
+
+    sherpaOnnxDestroyForcedAligner ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyForcedAlignerNative>>(
+          'SherpaOnnxDestroyForcedAligner',
+        )
+        .asFunction();
+
+    sherpaOnnxForcedAlignerCreateStream ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxForcedAlignerCreateStreamNative>>(
+          'SherpaOnnxForcedAlignerCreateStream',
+        )
+        .asFunction();
+
+    sherpaOnnxForcedAlignerCompute ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxForcedAlignerComputeNative>>(
+          'SherpaOnnxForcedAlignerCompute',
+        )
+        .asFunction();
+
+    sherpaOnnxDestroyForcedAlignmentResult ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyForcedAlignmentResultNative>>(
+          'SherpaOnnxDestroyForcedAlignmentResult',
+        )
         .asFunction();
 
     sherpaOnnxCreateOfflinePunctuation ??= dynamicLibrary
@@ -2586,6 +2755,18 @@ class SherpaOnnxBindings {
     offlineStreamSetOption ??= dynamicLibrary
         .lookup<NativeFunction<OfflineStreamSetOptionNative>>(
           'SherpaOnnxOfflineStreamSetOption',
+        )
+        .asFunction();
+
+    offlineStreamGetOption ??= dynamicLibrary
+        .lookup<NativeFunction<OfflineStreamGetOptionNative>>(
+          'SherpaOnnxOfflineStreamGetOption',
+        )
+        .asFunction();
+
+    offlineStreamHasOption ??= dynamicLibrary
+        .lookup<NativeFunction<OfflineStreamHasOptionNative>>(
+          'SherpaOnnxOfflineStreamHasOption',
         )
         .asFunction();
 
@@ -2846,6 +3027,18 @@ class SherpaOnnxBindings {
     onlineStreamSetOption ??= dynamicLibrary
         .lookup<NativeFunction<OnlineStreamSetOptionNative>>(
           'SherpaOnnxOnlineStreamSetOption',
+        )
+        .asFunction();
+
+    onlineStreamGetOption ??= dynamicLibrary
+        .lookup<NativeFunction<OnlineStreamGetOptionNative>>(
+          'SherpaOnnxOnlineStreamGetOption',
+        )
+        .asFunction();
+
+    onlineStreamHasOption ??= dynamicLibrary
+        .lookup<NativeFunction<OnlineStreamHasOptionNative>>(
+          'SherpaOnnxOnlineStreamHasOption',
         )
         .asFunction();
 

@@ -14,8 +14,8 @@ import 'package:sherpa_onnx_web/sherpa_onnx_web.dart'
 ///
 /// Import this library to access offline and streaming ASR, text-to-speech,
 /// VAD, speaker identification, speaker diarization, punctuation restoration,
-/// audio tagging, spoken language identification, speech denoising, and WAV
-/// I/O helpers from a single entry point.
+/// audio tagging, spoken language identification, speech denoising, forced
+/// alignment, and WAV I/O helpers from a single entry point.
 ///
 /// ## Initialization
 ///
@@ -58,6 +58,9 @@ export 'src/audio_tagging_config.dart';
 export 'src/audio_tagging.dart'
     if (dart.library.js_interop) 'src/web/audio_tagging.dart';
 export 'src/feature_config.dart';
+export 'src/forced_aligner_config.dart';
+export 'src/forced_aligner.dart'
+    if (dart.library.js_interop) 'src/web/forced_aligner.dart';
 export 'src/homophone_replacer_config.dart';
 export 'src/keyword_spotter_config.dart';
 export 'src/keyword_spotter.dart'
