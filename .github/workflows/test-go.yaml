@@ -264,6 +264,10 @@ jobs:
             arch: arm64
             index: 8
             tests: "non-streaming-speaker-diarization"
+          - os: macos-latest
+            arch: arm64
+            index: 9
+            tests: "forced-alignment-english forced-alignment-chinese"
           # macOS x64
           - os: macos-15-intel
             arch: amd64
@@ -301,6 +305,10 @@ jobs:
             arch: amd64
             index: 8
             tests: "non-streaming-speaker-diarization"
+          - os: macos-15-intel
+            arch: amd64
+            index: 9
+            tests: "forced-alignment-english forced-alignment-chinese"
           # Linux x64
           - os: ubuntu-latest
             arch: amd64
@@ -338,6 +346,10 @@ jobs:
             arch: amd64
             index: 8
             tests: "non-streaming-speaker-diarization"
+          - os: ubuntu-latest
+            arch: amd64
+            index: 9
+            tests: "forced-alignment-english forced-alignment-chinese"
           # Linux arm64
           - os: ubuntu-22.04-arm
             arch: arm64
@@ -375,6 +387,10 @@ jobs:
             arch: arm64
             index: 8
             tests: "non-streaming-speaker-diarization"
+          - os: ubuntu-22.04-arm
+            arch: arm64
+            index: 9
+            tests: "forced-alignment-english forced-alignment-chinese"
           # Windows x64
           - os: windows-2022
             arch: x64
@@ -412,6 +428,10 @@ jobs:
             arch: x64
             index: 8
             tests: "non-streaming-speaker-diarization"
+          - os: windows-2022
+            arch: x64
+            index: 9
+            tests: "forced-alignment-english forced-alignment-chinese"
           # Windows x86 (source-separation skipped on x86)
           - os: windows-2022
             arch: x86
@@ -449,6 +469,10 @@ jobs:
             arch: x86
             index: 8
             tests: "non-streaming-speaker-diarization"
+          - os: windows-2022
+            arch: x86
+            index: 9
+            tests: "forced-alignment-english forced-alignment-chinese"
           # Windows arm64
           - os: windows-11-arm
             arch: arm64
@@ -486,6 +510,10 @@ jobs:
             arch: arm64
             index: 8
             tests: "non-streaming-speaker-diarization"
+          - os: windows-11-arm
+            arch: arm64
+            index: 9
+            tests: "forced-alignment-english forced-alignment-chinese"
 
     steps:
       - uses: actions/checkout@v4
@@ -534,6 +562,16 @@ jobs:
               echo 'replace github.com/k2-fsa/sherpa-onnx-go/v2/sherpa_onnx => ../../scripts/go/_internal' >> "$dir/go.mod"
             fi
           done
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade soundfile
 
       - name: Run tests
         shell: bash
@@ -589,4 +627,17 @@ jobs:
         with:
           name: streaming-speech-enhancement-voxlock-with-voice-sample-${{ matrix.os }}-${{ matrix.arch }}
           path: go-api-examples/streaming-speech-enhancement-voxlock-with-voice-sample/*.wav
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-english-mfa-v3.1.0-go-${{ matrix.os }}-${{ matrix.arch }}
+          # each dir holds the test wav, the TextGrid and the word clips
+          path: test-forced-alignment-english
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-zh-aishell3-pinyin-go-${{ matrix.os }}-${{ matrix.arch }}
+          path: test-forced-alignment-chinese
           if-no-files-found: warn

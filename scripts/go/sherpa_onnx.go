@@ -3110,3 +3110,181 @@ func (ss *SourceSeparator) Process(buf *AudioBuffer) []*AudioBuffer {
 
 	return stems
 }
+
+// ============================================================
+// Forced alignment
+// ============================================================
+
+// Alignment options of a forced aligner. A stream can override any of them
+// before the alignment is computed. A value of 0 lets the C API use its
+// default for that option.
+type ForcedAlignmentOptions struct {
+	Beam            float32 // Decoding beam of the alignment search; 0 means the default 10
+	RetryBeam       float32 // Decoding beam of the retry pass; 0 means the default 40
+	TransitionScale float32 // Transition-probability scale; 0 means the default 1
+	SelfLoopScale   float32 // Self-loop probability scale; 0 means the default 0.1
+	AcousticScale   float32 // Acoustic likelihood scale; 0 means the default 0.1
+}
+
+// Configuration of a ForcedAligner.
+type ForcedAlignerConfig struct {
+	// ModelDir is the directory of one forced-alignment acoustic model.
+	// Required files: meta.json (feature chain + silence/OOV parameters),
+	// final.alimdl (the alignment model, kaldi format: TransitionModel +
+	// AmDiagGmm; note it is final.alimdl, NOT final.mdl), tree (the
+	// context dependency tree), lda.mat (required iff the feature chain is
+	// splice+LDA) and phones.txt (optional phone table; falls back to the
+	// phones list in meta.json when missing). Other files of the upstream
+	// model bundles are unused and ignored; missing required files are
+	// reported by name.
+	ModelDir string
+
+	// Lexicon is the pronunciation dictionary used to build the lexicon
+	// FST. One pronunciation per line: "key [probability columns ...]
+	// phone1 phone2 ...". Probability columns are ignored. Several lines
+	// under one key give several pronunciations of the same word/character
+	// and ALL are kept: each becomes a parallel path in the lexicon FST and
+	// the acoustics pick the one used by the alignment. A multi-token key
+	// writes one " || " separated phone group per word/character
+	// ("银行 || i n || h a ŋ"); single-token keys need no " || "
+	// ("行 x a ŋ"). Words without a pronunciation are reported as
+	// out-of-vocabulary and aligned as the model's OOV phone.
+	Lexicon string
+
+	Options ForcedAlignmentOptions // Default alignment options
+	Debug   int                    // True to print debug information
+}
+
+// One aligned interval: a phone in the "phones" tier or a word in the
+// "words" tier.
+type AlignmentInterval struct {
+	Start float32 // Start time in seconds
+	End   float32 // End time in seconds
+
+	// Text is the label of this interval: the word for a word interval, the
+	// phone symbol for a phone interval. It is empty for a silence gap in
+	// the "words" tier (Praat interval tiers must tile the full time range,
+	// so the gaps between words are intervals with empty text).
+	Text string
+}
+
+// One tier of the alignment (phones or words).
+type AlignmentTier struct {
+	Name      string // "phones" or "words"; never empty
+	Intervals []AlignmentInterval
+}
+
+// The result of ForcedAligner.Compute(): the phone and word boundaries of
+// one utterance, and the same content as a Praat TextGrid.
+type ForcedAlignmentResult struct {
+	Duration float32 // Duration of the aligned audio in seconds
+
+	// Tiers are the alignment tiers: Tiers[0].Name == "phones",
+	// Tiers[1].Name == "words". Empty for an empty result.
+	Tiers []AlignmentTier
+
+	// TextGrid is the alignment as a Praat TextGrid string. Write it to a
+	// .TextGrid file and open it with Praat (https://www.fon.hum.uva.nl/praat/)
+	// to visualize the phone and word boundaries. Empty for an empty result.
+	TextGrid string
+}
+
+type ForcedAligner struct {
+	impl *C.struct_SherpaOnnxForcedAligner
+}
+
+// NewForcedAligner creates a forced aligner from a model directory and a
+// pronunciation dictionary. It returns nil on failure, e.g. a missing
+// model file; see stderr for the reason.
+func NewForcedAligner(config *ForcedAlignerConfig) *ForcedAligner {
+	cfg := C.struct_SherpaOnnxForcedAlignerConfig{}
+	cfg.model_dir = C.CString(config.ModelDir)
+	defer C.free(unsafe.Pointer(cfg.model_dir))
+	cfg.lexicon = C.CString(config.Lexicon)
+	defer C.free(unsafe.Pointer(cfg.lexicon))
+	cfg.options.beam = C.float(config.Options.Beam)
+	cfg.options.retry_beam = C.float(config.Options.RetryBeam)
+	cfg.options.transition_scale = C.float(config.Options.TransitionScale)
+	cfg.options.self_loop_scale = C.float(config.Options.SelfLoopScale)
+	cfg.options.acoustic_scale = C.float(config.Options.AcousticScale)
+	cfg.debug = C.int(config.Debug)
+
+	impl := C.SherpaOnnxCreateForcedAligner(&cfg)
+	if impl == nil {
+		return nil
+	}
+	a := &ForcedAligner{}
+	a.impl = impl
+	return a
+}
+
+// DeleteForcedAligner frees the memory of a forced aligner.
+//
+// The user is responsible to invoke [DeleteForcedAligner]() to free the
+// memory.
+func DeleteForcedAligner(a *ForcedAligner) {
+	C.SherpaOnnxDestroyForcedAligner(a.impl)
+	a.impl = nil
+}
+
+// CreateStream creates an utterance stream. Fill it with
+// [OfflineStream.AcceptWaveform](), then pass it to
+// [ForcedAligner.Compute]().
+//
+// The user is responsible to invoke [DeleteOfflineStream]() to free it.
+func (a *ForcedAligner) CreateStream() *OfflineStream {
+	stream := &OfflineStream{}
+	stream.impl = C.SherpaOnnxForcedAlignerCreateStream(a.impl)
+	return stream
+}
+
+// Compute computes the alignment of one utterance.
+//
+// It returns nil when the alignment itself fails. The documented empty
+// result (empty text, no features, every word out-of-vocabulary, or word
+// boundaries cannot be recovered) comes back non-nil with empty Tiers and
+// an empty TextGrid.
+func (a *ForcedAligner) Compute(s *OfflineStream, text string) *ForcedAlignmentResult {
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+
+	p := C.SherpaOnnxForcedAlignerCompute(a.impl, s.impl, inputText)
+	if p == nil {
+		return nil
+	}
+	defer C.SherpaOnnxDestroyForcedAlignmentResult(p)
+
+	// Everything is copied into Go values before the deferred free runs.
+	result := &ForcedAlignmentResult{}
+	result.Duration = float32(p.duration)
+	result.TextGrid = C.GoString(p.textgrid)
+
+	n := int(p.num_tiers)
+	if n == 0 || p.tiers == nil {
+		return result
+	}
+	result.Tiers = make([]AlignmentTier, n)
+	tiers := unsafe.Slice(p.tiers, n)
+	for i := 0; i < n; i++ {
+		t := tiers[i]
+		tier := AlignmentTier{Name: C.GoString(t.name)}
+
+		m := int(t.num_intervals)
+		if m > 0 && t.intervals != nil {
+			tier.Intervals = make([]AlignmentInterval, m)
+			intervals := unsafe.Slice(t.intervals, m)
+			for k := 0; k < m; k++ {
+				iv := intervals[k]
+				tier.Intervals[k] = AlignmentInterval{
+					Start: float32(iv.start),
+					End:   float32(iv.end),
+					Text:  C.GoString(iv.text),
+				}
+			}
+		}
+
+		result.Tiers[i] = tier
+	}
+
+	return result
+}
