@@ -249,6 +249,16 @@ jobs:
             cargo run --example version
           fi
 
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade soundfile
+
       - name: Run test
         shell: bash
         run: |
@@ -366,7 +376,7 @@ jobs:
             set -e
 
             apt update -y
-            apt install -y cmake make git libc++ clang
+            apt install -y cmake make git libc++ clang python
             apt install -y android-liblog || true
             apt install -y libandroid-dev || true
             apt install -y android-libandroid || true

@@ -105,7 +105,12 @@ def main():
                     help="output directory for the per-word clips")
     args = ap.parse_args()
 
-    import soundfile as sf
+    try:
+        import soundfile as sf
+    except ImportError:
+        print("soundfile is not installed; skipping the word clips "
+              "(install it with: python3 -m pip install soundfile)")
+        sys.exit(0)
 
     words = read_words_tier(args.textgrid)
     samples, sample_rate = sf.read(args.wav, dtype="int16", always_2d=True)
