@@ -28,6 +28,15 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
+static int32_t ProgressCallback(int32_t num_processed_chunks,
+                                int32_t num_total_chunks, void *arg) {
+  float progress = 100.0 * num_processed_chunks / num_total_chunks;
+  fprintf(stderr, "progress %.2f%%\n", progress);
+
+  // the return value is currently ignored
+  return 0;
+}
+
 int32_t main() {
   SherpaOnnxOfflineSourceSeparationConfig config;
   memset(&config, 0, sizeof(config));
@@ -56,9 +65,9 @@ int32_t main() {
   int32_t num_channels = wave->num_channels;
 
   const SherpaOnnxSourceSeparationOutput *output =
-      SherpaOnnxOfflineSourceSeparationProcess(
-          ss, wave->samples, num_channels, wave->num_samples,
-          wave->sample_rate);
+      SherpaOnnxOfflineSourceSeparationProcessWithCallback(
+          ss, wave->samples, num_channels, wave->num_samples, wave->sample_rate,
+          ProgressCallback, NULL);
 
   if (!output) {
     fprintf(stderr, "Source separation failed\n");

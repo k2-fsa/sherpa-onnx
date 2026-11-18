@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_H_
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -51,6 +52,9 @@ struct OfflineSourceSeparationOutput {
 
 class OfflineSourceSeparationImpl;
 
+using OfflineSourceSeparationProgressCallback = std::function<int32_t(
+    int32_t processed_chunks, int32_t num_chunks, void *arg)>;
+
 class OfflineSourceSeparation {
  public:
   ~OfflineSourceSeparation();
@@ -62,7 +66,9 @@ class OfflineSourceSeparation {
                           const OfflineSourceSeparationConfig &config);
 
   OfflineSourceSeparationOutput Process(
-      const OfflineSourceSeparationInput &input) const;
+      const OfflineSourceSeparationInput &input,
+      OfflineSourceSeparationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const;
 
   int32_t GetOutputSampleRate() const;
 

@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "sherpa-onnx/csrc/offline-source-separation-impl.h"
 
@@ -49,8 +50,10 @@ OfflineSourceSeparation::OfflineSourceSeparation(
 OfflineSourceSeparation::~OfflineSourceSeparation() = default;
 
 OfflineSourceSeparationOutput OfflineSourceSeparation::Process(
-    const OfflineSourceSeparationInput &input) const {
-  return impl_->Process(input);
+    const OfflineSourceSeparationInput &input,
+    OfflineSourceSeparationProgressCallback callback /*= nullptr*/,
+    void *callback_arg /*= nullptr*/) const {
+  return impl_->Process(input, std::move(callback), callback_arg);
 }
 
 int32_t OfflineSourceSeparation::GetOutputSampleRate() const {

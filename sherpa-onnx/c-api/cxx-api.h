@@ -2040,6 +2040,14 @@ struct SourceSeparationOutput {
   int32_t sample_rate = 0;
 };
 
+/**
+ * @brief Progress callback for offline source separation.
+ *
+ * Called as (num_processed_chunks, num_total_chunks).
+ */
+using OfflineSourceSeparationProgressCallback =
+    std::function<void(int32_t, int32_t)>;  // NOLINT
+
 /** @brief RAII wrapper for offline source separation. */
 class SHERPA_ONNX_API OfflineSourceSeparation
     : public MoveOnly<OfflineSourceSeparation,
@@ -2064,6 +2072,12 @@ class SHERPA_ONNX_API OfflineSourceSeparation
   SourceSeparationOutput Process(const float *const *samples,
                                  int32_t num_channels, int32_t num_samples,
                                  int32_t sample_rate) const;
+
+  /** @brief Run source separation with a progress callback. */
+  SourceSeparationOutput Process(
+      const float *const *samples, int32_t num_channels, int32_t num_samples,
+      int32_t sample_rate,
+      const OfflineSourceSeparationProgressCallback &callback) const;
 
   /** @brief Return the output sample rate. */
   int32_t GetOutputSampleRate() const;

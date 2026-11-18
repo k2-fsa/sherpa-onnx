@@ -3135,10 +3135,10 @@ int32_t SherpaOnnxOfflineSourceSeparationGetNumberOfStems(
   return ss ? ss->impl->GetNumberOfStems() : 0;
 }
 
-const SherpaOnnxSourceSeparationOutput *
-SherpaOnnxOfflineSourceSeparationProcess(
+static const SherpaOnnxSourceSeparationOutput *ProcessOfflineSourceSeparation(
     const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
-    int32_t num_channels, int32_t num_samples, int32_t sample_rate) {
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate,
+    sherpa_onnx::OfflineSourceSeparationProgressCallback callback, void *arg) {
   if (ss == nullptr) {
     return nullptr;
   }
@@ -3154,7 +3154,7 @@ SherpaOnnxOfflineSourceSeparationProcess(
     input.samples.data[i].assign(samples[i], samples[i] + num_samples);
   }
 
-  auto output = ss->impl->Process(input);
+  auto output = ss->impl->Process(input, std::move(callback), arg);
 
   auto *ans = new SherpaOnnxSourceSeparationOutput;
   ans->sample_rate = output.sample_rate;
@@ -3177,6 +3177,37 @@ SherpaOnnxOfflineSourceSeparationProcess(
   ans->stems = stems;
 
   return ans;
+}
+
+const SherpaOnnxSourceSeparationOutput *
+SherpaOnnxOfflineSourceSeparationProcess(
+    const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate) {
+  return ProcessOfflineSourceSeparation(ss, samples, num_channels, num_samples,
+                                        sample_rate, nullptr, nullptr);
+}
+
+const SherpaOnnxSourceSeparationOutput *
+SherpaOnnxOfflineSourceSeparationProcessWithCallback(
+    const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate,
+    SherpaOnnxOfflineSourceSeparationProgressCallback callback, void *arg) {
+  return ProcessOfflineSourceSeparation(ss, samples, num_channels, num_samples,
+                                        sample_rate, callback, arg);
+}
+
+const SherpaOnnxSourceSeparationOutput *
+SherpaOnnxOfflineSourceSeparationProcessWithCallbackNoArg(
+    const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate,
+    SherpaOnnxOfflineSourceSeparationProgressCallbackNoArg callback) {
+  auto wrapper = [callback](int32_t num_processed_chunks,
+                            int32_t num_total_chunks, void *) {
+    return callback(num_processed_chunks, num_total_chunks);
+  };
+
+  return ProcessOfflineSourceSeparation(ss, samples, num_channels, num_samples,
+                                        sample_rate, wrapper, nullptr);
 }
 
 void SherpaOnnxDestroySourceSeparationOutput(

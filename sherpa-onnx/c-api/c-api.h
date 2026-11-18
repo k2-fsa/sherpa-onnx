@@ -4958,9 +4958,80 @@ SherpaOnnxOfflineSourceSeparationProcess(
     int32_t num_channels, int32_t num_samples, int32_t sample_rate);
 
 /**
+ * @brief Progress callback for offline source separation.
+ *
+ * The current implementation reports progress but ignores the callback's
+ * return value.
+ */
+typedef int32_t (*SherpaOnnxOfflineSourceSeparationProgressCallback)(
+    int32_t num_processed_chunks, int32_t num_total_chunks, void *arg);
+
+/**
+ * @brief Same as SherpaOnnxOfflineSourceSeparationProgressCallback but
+ * without a user pointer.
+ */
+typedef int32_t (*SherpaOnnxOfflineSourceSeparationProgressCallbackNoArg)(
+    int32_t num_processed_chunks, int32_t num_total_chunks);
+
+/**
+ * @brief Run source separation on multi-channel audio with a progress
+ * callback.
+ *
+ * All input channels must have the same number of samples.
+ *
+ * @param ss            A pointer returned by
+ *                      SherpaOnnxCreateOfflineSourceSeparation().
+ * @param samples       samples[c] is a float array for channel c, values in
+ *                      [-1, 1].
+ * @param num_channels  Number of input channels.
+ * @param num_samples   Number of samples per channel (all channels must have
+ *                      the same length).
+ * @param sample_rate   Input sample rate in Hz.
+ * @param callback      Progress callback.
+ * @param arg           User pointer forwarded to @p callback.
+ * @return A newly allocated output on success, or NULL on error. Free it
+ *         with SherpaOnnxDestroySourceSeparationOutput().
+ *
+ * @code
+ * static int32_t ProgressCallback(int32_t done, int32_t total, void *arg) {
+ *   fprintf(stderr, "progress %.2f%%\n", 100.0f * done / total);
+ *   return 0;
+ * }
+ * @endcode
+ */
+SHERPA_ONNX_API const SherpaOnnxSourceSeparationOutput *
+SherpaOnnxOfflineSourceSeparationProcessWithCallback(
+    const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate,
+    SherpaOnnxOfflineSourceSeparationProgressCallback callback, void *arg);
+
+/**
+ * @brief Run source separation on multi-channel audio with a progress
+ * callback that has no user pointer.
+ *
+ * @param ss            A pointer returned by
+ *                      SherpaOnnxCreateOfflineSourceSeparation().
+ * @param samples       samples[c] is a float array for channel c, values in
+ *                      [-1, 1].
+ * @param num_channels  Number of input channels.
+ * @param num_samples   Number of samples per channel (all channels must have
+ *                      the same length).
+ * @param sample_rate   Input sample rate in Hz.
+ * @param callback      Progress callback.
+ * @return A newly allocated output on success, or NULL on error. Free it
+ *         with SherpaOnnxDestroySourceSeparationOutput().
+ */
+SHERPA_ONNX_API const SherpaOnnxSourceSeparationOutput *
+SherpaOnnxOfflineSourceSeparationProcessWithCallbackNoArg(
+    const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate,
+    SherpaOnnxOfflineSourceSeparationProgressCallbackNoArg callback);
+
+/**
  * @brief Destroy the output of a source-separation run.
  *
- * @param p A pointer returned by SherpaOnnxOfflineSourceSeparationProcess().
+ * @param p A pointer returned by one of the
+ *          SherpaOnnxOfflineSourceSeparationProcess*() functions.
  */
 SHERPA_ONNX_API void SherpaOnnxDestroySourceSeparationOutput(
     const SherpaOnnxSourceSeparationOutput *p);
