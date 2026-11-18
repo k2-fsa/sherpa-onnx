@@ -45,6 +45,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-enhancement-voxlock-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "version-test", "version-test\version-test.csproj", "{E57711E5-6546-4BA0-B627-79C94F415BC5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "forced-alignment-english", "forced-alignment-english\forced-alignment-english.csproj", "{CCA7D74D-8774-47D1-90DC-285E6CC9BC60}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "forced-alignment-chinese", "forced-alignment-chinese\forced-alignment-chinese.csproj", "{4997AECF-333D-4416-B74C-EE2EACFCCB5B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-canary-decode-files", "non-streaming-canary-decode-files\non-streaming-canary-decode-files.csproj", "{925779DB-4429-4366-87C3-B14DD44AE1D4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kitten-tts-lexicon", "kitten-tts-lexicon\kitten-tts-lexicon.csproj", "{E5AB574B-9E31-45D4-9B75-1C1892241E41}"
@@ -104,6 +108,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCA7D74D-8774-47D1-90DC-285E6CC9BC60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCA7D74D-8774-47D1-90DC-285E6CC9BC60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCA7D74D-8774-47D1-90DC-285E6CC9BC60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCA7D74D-8774-47D1-90DC-285E6CC9BC60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4997AECF-333D-4416-B74C-EE2EACFCCB5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4997AECF-333D-4416-B74C-EE2EACFCCB5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4997AECF-333D-4416-B74C-EE2EACFCCB5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4997AECF-333D-4416-B74C-EE2EACFCCB5B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{075B72D7-D8BB-468F-AEE2-E449E34B7D0C}.Release|Any CPU.ActiveCfg = Release|Any CPU

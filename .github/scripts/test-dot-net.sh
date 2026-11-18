@@ -9,6 +9,17 @@ cd ./version-test
 ./run.sh
 ls -lh
 
+# forced alignment first among the feature tests, so its problems surface
+# as early as possible
+cd ../forced-alignment-english
+./run.sh
+ls -lh
+
+cd ../forced-alignment-chinese
+./run.sh
+ls -lh
+rm -rf ./english-mfa-v3.1.0 ./zh-aishell3-pinyin
+
 cd ../speech-enhancement-voxlock
 ./run.sh
 ls -lh
