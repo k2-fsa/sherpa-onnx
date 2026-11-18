@@ -9,6 +9,48 @@ trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
 
 bash ./run-version.sh
 
+bash ./run-forced-alignment-english.sh
+grep -q 'name = "phones"' en.TextGrid
+grep -q 'name = "words"' en.TextGrid
+cat en.TextGrid
+
+bash ./run-forced-alignment-chinese.sh
+grep -q 'name = "phones"' zh.TextGrid
+grep -q 'name = "words"' zh.TextGrid
+cat zh.TextGrid
+
+mkdir -p test-forced-alignment-english test-forced-alignment-chinese
+cp english-mfa-v3.1.0/en.wav test-forced-alignment-english/
+mv en.TextGrid test-forced-alignment-english/
+cp zh-aishell3-pinyin/zh.wav test-forced-alignment-chinese/
+mv zh.TextGrid test-forced-alignment-chinese/
+
+# The word clips need Python; skip them where it is missing (e.g. Termux).
+# The helper itself skips when soundfile is not installed. Termux calls the
+# interpreter `python`, most other platforms `python3`.
+if command -v python3 >/dev/null 2>&1; then
+  py=python3
+elif command -v python >/dev/null 2>&1; then
+  py=python
+else
+  py=
+fi
+
+if [ -n "$py" ]; then
+  $py ../python-api-examples/textgrid-to-word-wavs.py \
+    --wav test-forced-alignment-english/en.wav \
+    --textgrid test-forced-alignment-english/en.TextGrid \
+    --out-dir test-forced-alignment-english/word-clips-en
+  $py ../python-api-examples/textgrid-to-word-wavs.py \
+    --wav test-forced-alignment-chinese/zh.wav \
+    --textgrid test-forced-alignment-chinese/zh.TextGrid \
+    --out-dir test-forced-alignment-chinese/word-clips-zh
+else
+  echo "Python is not available; skipping the word clips"
+fi
+
+rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+
 bash ./run-offline-speech-enhancement-voxlock.sh
 bash ./run-offline-speech-enhancement-voxlock-with-voice-sample.sh
 bash ./run-streaming-speech-enhancement-voxlock.sh

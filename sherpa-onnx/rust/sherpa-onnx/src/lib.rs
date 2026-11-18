@@ -280,6 +280,7 @@
 //! ```
 mod audio_tagging;
 mod display;
+mod forced_alignment;
 mod kws;
 mod offline_asr;
 mod offline_punctuation;
@@ -298,6 +299,7 @@ mod wave;
 
 pub use audio_tagging::*;
 pub use display::*;
+pub use forced_alignment::*;
 pub use kws::*;
 pub use offline_asr::*;
 pub use offline_punctuation::*;
