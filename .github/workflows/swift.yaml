@@ -72,10 +72,33 @@ jobs:
 
           ./build-macos.sh
 
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade soundfile
+
       - name: test
         shell: bash
         run: |
           .github/scripts/test-swift.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-english-mfa-v3.1.0-swift-${{ matrix.os }}
+          # each dir holds the test wav, the TextGrid and the word clips
+          path: swift-api-examples/test-forced-alignment-english
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-zh-aishell3-pinyin-swift-${{ matrix.os }}
+          path: swift-api-examples/test-forced-alignment-chinese
+          if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:

@@ -10,6 +10,37 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-forced-alignment-english.sh
+grep -q 'name = "phones"' en.TextGrid
+grep -q 'name = "words"' en.TextGrid
+cat en.TextGrid
+
+./run-forced-alignment-chinese.sh
+grep -q 'name = "phones"' zh.TextGrid
+grep -q 'name = "words"' zh.TextGrid
+cat zh.TextGrid
+
+mkdir -p test-forced-alignment-english test-forced-alignment-chinese
+cp english-mfa-v3.1.0/en.wav test-forced-alignment-english/
+mv en.TextGrid test-forced-alignment-english/
+cp zh-aishell3-pinyin/zh.wav test-forced-alignment-chinese/
+mv zh.TextGrid test-forced-alignment-chinese/
+
+if command -v python3 >/dev/null 2>&1; then
+  python3 ../python-api-examples/textgrid-to-word-wavs.py \
+    --wav test-forced-alignment-english/en.wav \
+    --textgrid test-forced-alignment-english/en.TextGrid \
+    --out-dir test-forced-alignment-english/word-clips-en
+  python3 ../python-api-examples/textgrid-to-word-wavs.py \
+    --wav test-forced-alignment-chinese/zh.wav \
+    --textgrid test-forced-alignment-chinese/zh.TextGrid \
+    --out-dir test-forced-alignment-chinese/word-clips-zh
+else
+  echo "Python is not available; skipping the word clips"
+fi
+
+rm -rf english-mfa-v3.1.0 zh-aishell3-pinyin
+
 ./run-speech-enhancement-voxlock.sh
 ./run-speech-enhancement-voxlock-with-voice-sample.sh
 ./run-online-speech-enhancement-voxlock.sh
