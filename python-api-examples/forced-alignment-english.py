@@ -67,13 +67,20 @@ def main():
     result = aligner.compute(s, text)
     end = time.perf_counter()
 
-    for tier in result.tiers:
-        print(f"--- tier: {tier.name}")
-        for interval in tier.intervals:
-            print(f"{interval.start:.2f} - {interval.end:.2f}  {interval.text}")
+    # tiers[0] is always the "phones" tier, tiers[1] the "words" tier
+    phones = result.tiers[0]
+    words = result.tiers[1]
+
+    print(f"--- {phones.name} ({len(phones.intervals)} intervals) ---")
+    for interval in phones.intervals:
+        print(f"{interval.start:.2f} - {interval.end:.2f}  {interval.text}")
+
+    print(f"--- {words.name} ({len(words.intervals)} intervals) ---")
+    for interval in words.intervals:
+        print(f"{interval.start:.2f} - {interval.end:.2f}  {interval.text}")
 
     with open("en.TextGrid", "w", encoding="utf-8") as f:
-        f.write(result.to_textgrid())
+        f.write(result.textgrid)
     print("wrote en.TextGrid")
 
     # time statistics, like sherpa-onnx-fa prints
