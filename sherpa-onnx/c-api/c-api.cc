@@ -3147,6 +3147,10 @@ static const SherpaOnnxSourceSeparationOutput *ProcessOfflineSourceSeparation(
     return nullptr;
   }
 
+  if (num_samples <= 0) {
+    return nullptr;
+  }
+
   sherpa_onnx::OfflineSourceSeparationInput input;
   input.sample_rate = sample_rate;
   input.samples.data.resize(num_channels);
