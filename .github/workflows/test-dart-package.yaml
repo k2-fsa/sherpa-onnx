@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm, windows-2022, windows-11-arm]
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm, windows-2022]
 
     steps:
       - uses: actions/checkout@v4
@@ -33,15 +33,7 @@ jobs:
           ./new-release.sh
           git diff .
 
-      # see https://github.com/subosito/flutter-action/issues/345
-      - name: Set up Dart (ARM64)
-        if: matrix.os == 'windows-11-arm'
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-
       - name: Set up Flutter
-        if: matrix.os != 'windows-11-arm'
         uses: subosito/flutter-action@v2
         with:
           channel: master
