@@ -217,15 +217,6 @@ jobs:
           - arch: x86_64
             runner: ubuntu-latest
             lib_setup: auto
-          - arch: i686
-            runner: ubuntu-latest
-            lib_setup: explicit_lib
-          - arch: i686
-            runner: ubuntu-latest
-            lib_setup: explicit_archive
-          - arch: i686
-            runner: ubuntu-latest
-            lib_setup: auto
 
     steps:
       - uses: actions/checkout@v4

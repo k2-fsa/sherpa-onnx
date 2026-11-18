@@ -317,39 +317,21 @@ jobs:
         include:
           - arch: aarch64
             runner: ubuntu-24.04-arm
-            image: termux/termux-docker:aarch64
             lib_setup: lib_dir
           - arch: aarch64
             runner: ubuntu-24.04-arm
-            image: termux/termux-docker:aarch64
             lib_setup: archive_dir
           - arch: arm
             runner: ubuntu-24.04-arm
-            image: termux/termux-docker:arm
             lib_setup: lib_dir
           - arch: arm
             runner: ubuntu-24.04-arm
-            image: termux/termux-docker:arm
             lib_setup: archive_dir
           - arch: x86_64
             runner: ubuntu-latest
-            image: termux/termux-docker:x86_64
             lib_setup: lib_dir
           - arch: x86_64
             runner: ubuntu-latest
-            image: termux/termux-docker:x86_64
-            lib_setup: archive_dir
-          # The newer i686 image (sha256:8361d03f...) cannot resolve
-          # hostnames inside the container, so apt cannot reach the Termux
-          # package mirror; pin the last known-good image. Unpin once the
-          # i686 image ships with working DNS again.
-          - arch: i686
-            runner: ubuntu-latest
-            image: termux/termux-docker@sha256:8dcb4a014c5ec241b32091caf0076f86bb327b595a772135e11a88c2abc3fd15
-            lib_setup: lib_dir
-          - arch: i686
-            runner: ubuntu-latest
-            image: termux/termux-docker@sha256:8dcb4a014c5ec241b32091caf0076f86bb327b595a772135e11a88c2abc3fd15
             lib_setup: archive_dir
 
     steps:
@@ -383,7 +365,7 @@ jobs:
         run: |
           docker run --rm \
             --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
-            ${{ matrix.image }} \
+            termux/termux-docker:${{ matrix.arch }} \
           bash -c '
             set -e
 
@@ -482,7 +464,7 @@ jobs:
           docker run --rm \
             --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
             --volume /tmp/sherpa-onnx-archive:/tmp/sherpa-onnx-archive \
-            ${{ matrix.image }} \
+            termux/termux-docker:${{ matrix.arch }} \
           bash -c '
             set -ex
 
