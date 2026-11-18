@@ -2476,6 +2476,10 @@ public class SourceSeparator {
 /// before the alignment is computed. A value of 0 lets the C API use its
 /// default for that option.
 public struct ForcedAlignmentOptions {
+  /// Create the options with the documented defaults. Set the properties
+  /// you want to override afterwards.
+  public init() {}
+
   /// Decoding beam used by the alignment search. Larger is more accurate
   /// and slower. Default: 10.
   public var beam: Float = 10
@@ -2496,6 +2500,10 @@ public struct ForcedAlignmentOptions {
 
 /// Configuration of a ForcedAligner.
 public struct ForcedAlignerConfig {
+  /// Create the configuration with the documented defaults. Set the
+  /// properties you want to override afterwards.
+  public init() {}
+
   /// Directory of one forced-alignment acoustic model. Required files:
   ///
   /// - meta.json: feature chain + silence/OOV parameters (parsed once at
