@@ -404,6 +404,10 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 </div>
 
+### [hyprvoice](https://github.com/mainliufeng/hyprvoice)
+
+> A voice-input tool for the Hyprland/Wayland desktop, written in C++ with GTK4. Press to talk or toggle recording, read the transcript in a non-focus-stealing layer-shell overlay, and paste the result into the active window. Streaming X-ASR transducers give live text, an offline transducer model refines it, and Silero VAD rejects silence. Recognition is local; an optional OpenAI-compatible endpoint handles correction, rewriting and translation.
+
 ---
 ### [BreezeApp](https://github.com/mtkresearch/BreezeApp) from [MediaTek Research](https://github.com/mtkresearch)
 
