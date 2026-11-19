@@ -140,6 +140,9 @@ def main():
             "x": {0: "N", 1: "T"},
             "embeddings": {0: "N"},
         },
+        # the TorchScript exporter keeps the historical graph format;
+        # the new torch.export-based one rejects these dynamic_axes
+        dynamo=False,
     )
 
     # all models from 3d-speaker expect input samples in the range
