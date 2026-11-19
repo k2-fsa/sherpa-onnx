@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -191,8 +192,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     Timer clustering_timer(config_.segmentation.debug);
     std::vector<float> silhouettes;
-    std::vector<int32_t> cluster_labels = clustering_->Cluster(
-        &embeddings(0, 0), embeddings.rows(), embeddings.cols(),
+    std::vector<int32_t> cluster_labels = ClusterEmbeddings(
+        &embeddings, chunk_speaker_samples_list_pair.second, n,
         config_.clustering.compute_confidence ? &silhouettes : nullptr);
     clustering_timer.Log("OfflineSpeakerDiarization: clustering");
 
@@ -585,6 +586,92 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     return ans;
+  }
+
+  // An embedding computed from little clean speech is not reliable, and a few
+  // of them can take a whole cluster. As in pyannote, we cluster only the
+  // embeddings with at least 20% of the window as clean speech, and then
+  // assign each of the others to the closest cluster centroid.
+  std::vector<int32_t> ClusterEmbeddings(
+      Matrix2D *embeddings,
+      const std::vector<std::vector<Int32Pair>> &sample_indexes, int32_t n,
+      std::vector<float> *silhouettes) const {
+    const auto &meta_data = segmentation_model_.GetModelMetaData();
+    int32_t min_samples = 0.2 * meta_data.window_size;
+    int32_t num_rows = embeddings->rows();
+
+    std::vector<int32_t> keep;
+    for (int32_t i = 0; i != num_rows; ++i) {
+      int32_t num_samples = 0;
+      for (const auto &p : sample_indexes[i]) {
+        num_samples += std::max(0, std::min(p.second, n) - p.first);
+      }
+
+      if (num_samples >= min_samples) {
+        keep.push_back(i);
+      }
+    }
+
+    int32_t num_keep = keep.size();
+    if (num_keep == num_rows ||
+        num_keep <= std::max(2, config_.clustering.num_clusters)) {
+      return clustering_->Cluster(embeddings->data(), num_rows,
+                                  embeddings->cols(), silhouettes);
+    }
+
+    embeddings->rowwise().normalize();
+
+    Matrix2D kept(num_keep, embeddings->cols());
+    for (int32_t i = 0; i != num_keep; ++i) {
+      kept.row(i) = embeddings->row(keep[i]);
+    }
+
+    std::vector<float> kept_silhouettes;
+    std::vector<int32_t> kept_labels =
+        clustering_->Cluster(kept.data(), kept.rows(), kept.cols(),
+                             silhouettes ? &kept_silhouettes : nullptr);
+
+    int32_t num_clusters =
+        *std::max_element(kept_labels.begin(), kept_labels.end()) + 1;
+    Matrix2D sums = Matrix2D::Zero(num_clusters, kept.cols());
+    FloatRowVector counts = FloatRowVector::Zero(num_clusters);
+    for (int32_t i = 0; i != num_keep; ++i) {
+      sums.row(kept_labels[i]) += kept.row(i);
+      counts[kept_labels[i]] += 1;
+    }
+
+    Matrix2D similarity =
+        (*embeddings) * sums.rowwise().normalized().transpose();
+
+    std::vector<int32_t> labels(num_rows);
+    for (int32_t i = 0; i != num_rows; ++i) {
+      similarity.row(i).maxCoeff(&labels[i]);
+    }
+
+    if (silhouettes) {
+      // Mean cosine distance from each embedding to each cluster
+      Matrix2D distance =
+          1 - (((*embeddings) * sums.transpose()).array().rowwise() /
+               counts.array());
+
+      silhouettes->assign(num_rows, kSilhouetteUnavailable);
+      for (int32_t i = 0; num_clusters > 1 && i != num_rows; ++i) {
+        float a = distance(i, labels[i]);
+        distance(i, labels[i]) = std::numeric_limits<float>::infinity();
+        float b = distance.row(i).minCoeff();
+        float denom = std::max(a, b);
+        (*silhouettes)[i] = denom > 0 ? (b - a) / denom : 0;
+      }
+    }
+
+    for (int32_t i = 0; i != num_keep; ++i) {
+      labels[keep[i]] = kept_labels[i];
+      if (silhouettes) {
+        (*silhouettes)[keep[i]] = kept_silhouettes[i];
+      }
+    }
+
+    return labels;
   }
 
   std::unordered_map<Int32Pair, int32_t, PairHash> ConvertChunkSpeakerToCluster(
