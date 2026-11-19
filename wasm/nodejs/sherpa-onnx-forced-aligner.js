@@ -119,6 +119,51 @@ class OfflineStream {
         this.handle, sampleRate, pointer, samples.length);
     this.Module._free(pointer);
   }
+
+  /**
+   * @param key {String} The option name
+   * @param value {String} The option value
+   */
+  setOption(key, value) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const valueLen = this.Module.lengthBytesUTF8(value) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    const pValue = this.Module._malloc(valueLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    this.Module.stringToUTF8(value, pValue, valueLen);
+    this.Module._SherpaOnnxOfflineStreamSetOption(this.handle, pKey, pValue);
+    this.Module._free(pKey);
+    this.Module._free(pValue);
+  }
+
+  /**
+   * @param key {String} The option name
+   * @returns {String} The option value, or empty string if not set
+   */
+  getOption(key) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    const pValue =
+        this.Module._SherpaOnnxOfflineStreamGetOption(this.handle, pKey);
+    const value = this.Module.UTF8ToString(pValue);
+    this.Module._free(pKey);
+    return value;
+  }
+
+  /**
+   * @param key {String} The option name
+   * @returns {Number} 1 if the option exists, 0 otherwise
+   */
+  hasOption(key) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    const ans =
+        this.Module._SherpaOnnxOfflineStreamHasOption(this.handle, pKey);
+    this.Module._free(pKey);
+    return ans;
+  }
 }
 
 class ForcedAligner {

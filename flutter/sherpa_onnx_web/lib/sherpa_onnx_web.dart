@@ -62,6 +62,7 @@ class SherpaOnnxWeb {
       _loadAsset('$prefix/sherpa-onnx-punctuation.js'),
       _loadAsset('$prefix/sherpa-onnx-speaker-diarization.js'),
       _loadAsset('$prefix/sherpa-onnx-speech-enhancement.js'),
+      _loadAsset('$prefix/sherpa-onnx-forced-aligner.js'),
     ]);
 
     // 2. Load WASM binary.

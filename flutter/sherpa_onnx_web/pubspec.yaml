@@ -49,3 +49,5 @@ flutter:
       platforms: [web]
     - path: assets/sherpa-onnx-speech-enhancement.js
       platforms: [web]
+    - path: assets/sherpa-onnx-forced-aligner.js
+      platforms: [web]

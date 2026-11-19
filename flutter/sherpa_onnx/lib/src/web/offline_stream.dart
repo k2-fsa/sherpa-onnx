@@ -49,4 +49,12 @@ class OfflineStream {
     final result = getOptionFn.callAsFunction(handle, key.toJS);
     return (result as JSString?)?.toDart ?? '';
   }
+
+  bool hasOption({required String key}) {
+    final handle = ptr as JSObject;
+    final hasOptionFn = handle.getProperty('hasOption'.toJS) as JSFunction?;
+    if (hasOptionFn == null) return false;
+    final result = hasOptionFn.callAsFunction(handle, key.toJS);
+    return (result as JSNumber?)?.toDartInt != 0;
+  }
 }
