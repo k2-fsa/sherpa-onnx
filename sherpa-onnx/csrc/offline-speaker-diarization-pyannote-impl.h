@@ -193,7 +193,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     Timer clustering_timer(config_.segmentation.debug);
     std::vector<float> silhouettes;
     std::vector<int32_t> cluster_labels = ClusterEmbeddings(
-        &embeddings, chunk_speaker_samples_list_pair.second,
+        &embeddings, chunk_speaker_samples_list_pair.second, n,
         config_.clustering.compute_confidence ? &silhouettes : nullptr);
     clustering_timer.Log("OfflineSpeakerDiarization: clustering");
 
@@ -594,7 +594,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
   // assign each of the others to the closest cluster centroid.
   std::vector<int32_t> ClusterEmbeddings(
       Matrix2D *embeddings,
-      const std::vector<std::vector<Int32Pair>> &sample_indexes,
+      const std::vector<std::vector<Int32Pair>> &sample_indexes, int32_t n,
       std::vector<float> *silhouettes) const {
     const auto &meta_data = segmentation_model_.GetModelMetaData();
     int32_t min_samples = 0.2 * meta_data.window_size;
@@ -604,7 +604,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     for (int32_t i = 0; i != num_rows; ++i) {
       int32_t num_samples = 0;
       for (const auto &p : sample_indexes[i]) {
-        num_samples += p.second - p.first;
+        num_samples += std::max(0, std::min(p.second, n) - p.first);
       }
 
       if (num_samples >= min_samples) {
