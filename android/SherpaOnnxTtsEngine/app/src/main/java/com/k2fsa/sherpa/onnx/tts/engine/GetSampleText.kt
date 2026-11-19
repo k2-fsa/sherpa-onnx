@@ -144,6 +144,11 @@ fun getSampleText(lang: String): String {
             text = "Dette er en tekst til tale-motor som bruker neste generasjons kaldi"
         }
 
+        "pli" -> {
+            // SN 56.11 (Dhammacakkappavattanasutta)
+            text = "Yaṁ kiñci samudayadhammaṁ, sabbaṁ taṁ nirodhadhammaṁ."
+        }
+
         "pol" -> {
             text = "Jest to silnik syntezatora mowy wykorzystujący Kaldi nowej generacji"
         }
