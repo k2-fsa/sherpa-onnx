@@ -6,7 +6,9 @@ import android.speech.tts.SynthesisCallback
 import android.speech.tts.SynthesisRequest
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeechService
+import android.speech.tts.Voice
 import android.util.Log
+import java.util.Locale
 
 /*
 https://developer.android.com/reference/java/util/Locale#getISO3Language()
@@ -71,15 +73,43 @@ class TtsService : TextToSpeechService() {
         super.onDestroy()
     }
 
+    // Pali (pli) is not among Android's locales (Locale.getAvailableLocales()), so the default
+    // onGetVoices() finds no voice at all for this engine, and no app asks for "pli": apps such as
+    // T2S ask for the device's or the text's language and get LANG_NOT_SUPPORTED ("Speech engine
+    // is not responding"). Its one voice takes a request in any language and reads it as Pali.
+    private fun isPali(): Boolean = TtsEngine.lang == "pli"
+
+    private fun supports(lang: String): Boolean =
+        lang == TtsEngine.lang || lang == TtsEngine.lang2 || isPali()
+
     // https://developer.android.com/reference/kotlin/android/speech/tts/TextToSpeechService#onislanguageavailable
     override fun onIsLanguageAvailable(_lang: String?, _country: String?, _variant: String?): Int {
         val lang = _lang ?: ""
 
-        if (lang == TtsEngine.lang || lang == TtsEngine.lang2) {
+        if (supports(lang)) {
             return TextToSpeech.LANG_AVAILABLE
         }
 
         return TextToSpeech.LANG_NOT_SUPPORTED
+    }
+
+    // The engine's own voice, for a language Android has no locale for (see isPali).
+    override fun onGetVoices(): List<Voice> {
+        if (!isPali()) {
+            return super.onGetVoices()
+        }
+        return listOfNotNull(TtsEngine.lang, TtsEngine.lang2).map {
+            val locale = Locale(it)
+            Voice(locale.toLanguageTag(), locale, Voice.QUALITY_HIGH, Voice.LATENCY_NORMAL, false, emptySet())
+        }
+    }
+
+    // TextToSpeech.setLanguage() takes the voice of this name from onGetVoices(): for any language, that one voice.
+    override fun onGetDefaultVoiceNameFor(lang: String?, country: String?, variant: String?): String? {
+        if (!isPali()) {
+            return super.onGetDefaultVoiceNameFor(lang, country, variant)
+        }
+        return Locale(TtsEngine.lang!!).toLanguageTag()
     }
 
     override fun onGetLanguage(): Array<String> {
@@ -91,7 +121,7 @@ class TtsService : TextToSpeechService() {
         Log.i(TAG, "onLoadLanguage: $_lang, $_country")
         val lang = _lang ?: ""
 
-        return if (lang == TtsEngine.lang || lang == TtsEngine.lang2) {
+        return if (supports(lang)) {
             Log.i(TAG, "creating tts, lang :$lang")
             TtsEngine.createTts(application)
             TextToSpeech.LANG_AVAILABLE
