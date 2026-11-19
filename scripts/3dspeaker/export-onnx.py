@@ -10,9 +10,40 @@ from typing import Dict
 
 import onnx
 import torch
+import torch.nn.functional as F
 from infer_sv import supports
 from modelscope.hub.snapshot_download import snapshot_download
+from speakerlab.models.campplus.layers import CAMLayer
 from speakerlab.utils.builder import dynamic_import
+
+
+def seg_pooling(self, x, seg_len: int = 100, stype: str = "avg"):
+    """Replacement for CAMLayer.seg_pooling() used when exporting CAM++.
+
+    The original uses F.avg_pool1d(..., ceil_mode=True), which is exported
+    as AveragePool(ceil_mode=1, count_include_pad=1). For the last, partial
+    segment, onnxruntime 1.28 and older divide the sum by seg_len instead
+    of by the number of frames in that segment, so the embedding depends on
+    the input length modulo 2 seconds.
+
+    Since there is no padding, count_include_pad=False gives the same result
+    in PyTorch, and it is exported as AveragePool(count_include_pad=0),
+    which old and new versions of onnxruntime compute as PyTorch does.
+
+    See https://github.com/k2-fsa/sherpa-onnx/issues/4201
+    """
+    assert stype == "avg", stype
+    seg = F.avg_pool1d(
+        x,
+        kernel_size=seg_len,
+        stride=seg_len,
+        ceil_mode=True,
+        count_include_pad=False,
+    )
+    shape = seg.shape
+    seg = seg.unsqueeze(-1).expand(*shape, seg_len).reshape(*shape[:-1], -1)
+    seg = seg[..., : x.shape[-1]]
+    return seg
 
 
 def add_meta_data(filename: str, meta_data: Dict[str, str]):
@@ -81,6 +112,9 @@ def main():
             dst.symlink_to(src)
     pretrained_model = save_dir / conf["model_pt"]
     pretrained_state = torch.load(pretrained_model, map_location="cpu")
+
+    if "campplus" in args.model:
+        CAMLayer.seg_pooling = seg_pooling
 
     model = conf["model"]
     embedding_model = dynamic_import(model["obj"])(**model["args"])
