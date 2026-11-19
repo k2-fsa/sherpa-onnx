@@ -105,6 +105,26 @@ class OfflineSpeakerDiarizationPyannoteImpl
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
       void *callback_arg = nullptr) const override {
+    return ProcessImpl(audio, n, kMinActiveRatio, std::move(callback),
+                       callback_arg);
+  }
+
+  OfflineSpeakerDiarizationResult Process(
+      const OfflineStream *stream,
+      OfflineSpeakerDiarizationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const override {
+    std::vector<float> samples = stream->GetFrames();
+    float min_active_ratio =
+        stream->GetOptionFloat("min_active_ratio", kMinActiveRatio);
+    return ProcessImpl(samples.data(), static_cast<int32_t>(samples.size()),
+                       min_active_ratio, std::move(callback), callback_arg);
+  }
+
+ private:
+  OfflineSpeakerDiarizationResult ProcessImpl(
+      const float *audio, int32_t n, float min_active_ratio,
+      OfflineSpeakerDiarizationProgressCallback callback,
+      void *callback_arg) const {
     Timer total_timer(config_.segmentation.debug);
     Timer segmentation_timer(config_.segmentation.debug);
     std::vector<Matrix2D> segmentations = RunSpeakerSegmentationModel(audio, n);
@@ -194,6 +214,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     std::vector<float> silhouettes;
     std::vector<int32_t> cluster_labels = ClusterEmbeddings(
         &embeddings, chunk_speaker_samples_list_pair.second, n,
+        min_active_ratio,
         config_.clustering.compute_confidence ? &silhouettes : nullptr);
     clustering_timer.Log("OfflineSpeakerDiarization: clustering");
 
@@ -238,7 +259,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
     return result;
   }
 
- private:
   void LogTotal(float total_seconds, int32_t num_samples) const {
     float audio_duration = static_cast<float>(num_samples) / SampleRate();
 
@@ -590,14 +610,14 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
   // An embedding computed from little clean speech is not reliable, and a few
   // of them can take a whole cluster. As in pyannote, we cluster only the
-  // embeddings with at least 20% of the window as clean speech, and then
-  // assign each of the others to the closest cluster centroid.
+  // embeddings with at least min_active_ratio of the window as clean speech,
+  // and then assign each of the others to the closest cluster centroid.
   std::vector<int32_t> ClusterEmbeddings(
       Matrix2D *embeddings,
       const std::vector<std::vector<Int32Pair>> &sample_indexes, int32_t n,
-      std::vector<float> *silhouettes) const {
+      float min_active_ratio, std::vector<float> *silhouettes) const {
     const auto &meta_data = segmentation_model_.GetModelMetaData();
-    int32_t min_samples = 0.2 * meta_data.window_size;
+    int32_t min_samples = min_active_ratio * meta_data.window_size;
     int32_t num_rows = embeddings->rows();
 
     std::vector<int32_t> keep;
@@ -963,6 +983,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
   }
 
  private:
+  static constexpr float kMinActiveRatio = 0.2;
+
   OfflineSpeakerDiarizationConfig config_;
   OfflineSpeakerSegmentationPyannoteModel segmentation_model_;
   SpeakerEmbeddingExtractor embedding_extractor_;
