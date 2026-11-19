@@ -1,0 +1,1 @@
+../../../../go-api-examples/forced-alignment-english/main.go

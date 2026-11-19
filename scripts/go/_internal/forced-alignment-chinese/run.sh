@@ -1,0 +1,1 @@
+../../../../go-api-examples/forced-alignment-chinese/run.sh
