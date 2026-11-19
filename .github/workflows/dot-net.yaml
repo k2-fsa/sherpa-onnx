@@ -206,7 +206,7 @@ jobs:
       - name: Push to nuget.org
         if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
         run: |
-          dotnet nuget push "/tmp/dotnet/packages/org.k2fsa.sherpa.onnx.*.nupkg" \
+          dotnet nuget push "/tmp/packages/org.k2fsa.sherpa.onnx.*.nupkg" \
             --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
