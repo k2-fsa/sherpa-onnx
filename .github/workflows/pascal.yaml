@@ -109,6 +109,8 @@ jobs:
           if [[ ${{ matrix.os }} == 'windows-2022' ]]; then
             cp -v install/lib/*.dll ../pascal-api-examples/non-streaming-asr
             cp -v install/lib/*.dll ../pascal-api-examples/read-wav
+            cp -v install/lib/*.dll ../pascal-api-examples/forced-alignment-english
+            cp -v install/lib/*.dll ../pascal-api-examples/forced-alignment-chinese
             cp -v install/lib/*.dll ../pascal-api-examples/speaker-diarization
             cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-gtcrn
             cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-dpdfnet
@@ -126,6 +128,8 @@ jobs:
 
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/non-streaming-asr
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/read-wav
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/forced-alignment-english
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/forced-alignment-chinese
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speaker-diarization
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-gtcrn
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-dpdfnet
@@ -150,6 +154,69 @@ jobs:
           pushd version
           ./run.sh
           popd
+
+      - name:  Run Pascal test (forced alignment)
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          pushd forced-alignment-english
+          ./run.sh
+          popd
+
+          pushd forced-alignment-chinese
+          ./run.sh
+          popd
+
+      - name: Show fa result english-mfa-v3.1.0
+        shell: bash
+        run: cat pascal-api-examples/forced-alignment-english/en.TextGrid
+
+      - name: Show fa result zh-aishell3-pinyin
+        shell: bash
+        run: cat pascal-api-examples/forced-alignment-chinese/zh.TextGrid
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Extract word wavs from the TextGrids
+        shell: bash
+        run: |
+          python3 -m pip install soundfile
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav pascal-api-examples/forced-alignment-english/english-mfa-v3.1.0/en.wav \
+            --textgrid pascal-api-examples/forced-alignment-english/en.TextGrid \
+            --out-dir word-clips-en
+          python3 ./python-api-examples/textgrid-to-word-wavs.py \
+            --wav pascal-api-examples/forced-alignment-chinese/zh-aishell3-pinyin/zh.wav \
+            --textgrid pascal-api-examples/forced-alignment-chinese/zh.TextGrid \
+            --out-dir word-clips-zh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-english-mfa-v3.1.0-${{ matrix.os }}
+          path: pascal-api-examples/forced-alignment-english/en.TextGrid
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-textgrids-zh-aishell3-pinyin-${{ matrix.os }}
+          path: pascal-api-examples/forced-alignment-chinese/zh.TextGrid
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-english-mfa-v3.1.0-${{ matrix.os }}
+          path: ./word-clips-en
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fa-word-clips-zh-aishell3-pinyin-${{ matrix.os }}
+          path: ./word-clips-zh
+          if-no-files-found: warn
 
       - name:  Run Speech Enhancement test (VoxLock)
         shell: bash
