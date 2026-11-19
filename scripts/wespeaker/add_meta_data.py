@@ -9,11 +9,13 @@ Usage:
 """
 
 import argparse
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict
 
 import onnx
 import onnxruntime
+from onnx import numpy_helper
 
 
 def get_args():
@@ -76,6 +78,90 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
     onnx.save(model, filename)
 
 
+def remove_no_op_pad_before_average_pool(filename: str) -> int:
+    """Remove Pad nodes that pad nothing and feed only AveragePool nodes.
+    The model is changed in-place, and it is saved only if a node is removed.
+
+    The CAM++ models from wespeaker contain, for each segment pooling,
+    Pad(pads=0) followed by AveragePool(ceil_mode=1). The Pad does not
+    change its input, but onnxruntime 1.21 and later fuse it into the
+    AveragePool and set count_include_pad=1 there. For the last, partial
+    window, onnxruntime 1.28 and older then divide the sum by the kernel
+    size instead of by the number of frames in that window, so with
+    onnxruntime 1.21 to 1.28 the embedding depends on the input length
+    modulo 2 seconds.
+
+    Without the Pad, old and new versions of onnxruntime compute the same
+    result as PyTorch. Models without such a Pad, e.g., the ResNet models,
+    are not changed.
+
+    See https://github.com/k2-fsa/sherpa-onnx/issues/4201
+
+    Args:
+      filename:
+        Filename of the ONNX model to be changed.
+    Returns:
+      Return the number of removed Pad nodes.
+    """
+    model = onnx.load(filename)
+    graph = model.graph
+
+    constants = {t.name: t for t in graph.initializer}
+    for node in graph.node:
+        if node.op_type == "Constant" and node.attribute[0].name == "value":
+            constants[node.output[0]] = node.attribute[0].t
+
+    consumers = defaultdict(list)
+    for node in graph.node:
+        for name in node.input:
+            consumers[name].append(node)
+
+    graph_outputs = {o.name for o in graph.output}
+
+    removed = []
+    for node in graph.node:
+        if node.op_type != "Pad" or len(node.input) < 2:
+            continue
+
+        pads = constants.get(node.input[1])
+        if pads is None or numpy_helper.to_array(pads).any():
+            continue
+
+        users = consumers[node.output[0]]
+        if node.output[0] in graph_outputs or not users:
+            continue
+
+        if any(u.op_type != "AveragePool" for u in users):
+            continue
+
+        for u in users:
+            for i, name in enumerate(u.input):
+                if name == node.output[0]:
+                    u.input[i] = node.input[0]
+
+        removed.append(node)
+
+    if not removed:
+        return 0
+
+    for node in removed:
+        graph.node.remove(node)
+
+    # Remove the pads constants that are no longer used
+    used = {name for node in graph.node for name in node.input}
+    unused = {node.input[1] for node in removed} - used
+    for node in [n for n in graph.node if n.op_type == "Constant"]:
+        if node.output[0] in unused:
+            graph.node.remove(node)
+
+    for t in [t for t in graph.initializer if t.name in unused]:
+        graph.initializer.remove(t)
+
+    onnx.save(model, filename)
+
+    return len(removed)
+
+
 def get_output_dim(filename) -> int:
     filename = str(filename)
     session_opts = onnxruntime.SessionOptions()
@@ -119,6 +205,9 @@ def main():
 
     assert len(language) > 0, len(language)
     assert len(url) > 0, len(url)
+
+    num_removed = remove_no_op_pad_before_average_pool(str(model))
+    print(f"Removed {num_removed} no-op Pad node(s) before AveragePool")
 
     output_dim = get_output_dim(model)
 
