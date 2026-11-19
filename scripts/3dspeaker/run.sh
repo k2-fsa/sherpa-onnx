@@ -7,7 +7,9 @@ function install_3d_speaker() {
   git clone https://github.com/modelscope/3D-Speaker
   pushd 3D-Speaker
   pip install -q -r ./requirements.txt
-  pip install -q modelscope==1.14.0 onnx onnxruntime kaldi-native-fbank
+  # modelscope>=1.30 retries downloads and handles responses without a
+  # Content-Length header; 1.14.0 raises FileDownloadError on them
+  pip install -q modelscope==1.40.3 onnx onnxruntime kaldi-native-fbank
   popd
 }
 
