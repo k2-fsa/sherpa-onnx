@@ -1,0 +1,5 @@
+- Batch delete model
+- Export model to zip
+- Github proxy url
+- Add tips
+- refactor model and voice, and support speaker id.
