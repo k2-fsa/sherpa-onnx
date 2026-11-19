@@ -16,6 +16,11 @@ data class OfflineRecognizerResult(
     // The decoded word IDs. Empty for greedy search decoding, non-empty when
     // an HLG graph is used, i.e. when ctcFstDecoderConfig.graph is set.
     val words: IntArray = IntArray(0),
+
+    // ysLogProbs[i] is the log probability (confidence) of tokens[i].
+    // Non-empty only for transducer models, e.g., zipformer and NeMo
+    // transducer/TDT, with greedy_search or modified_beam_search.
+    val ysLogProbs: FloatArray = FloatArray(0),
 )
 
 data class OfflineTransducerModelConfig(
