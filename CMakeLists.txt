@@ -35,7 +35,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./CHANGELOG.md
 # ./new-release.sh
-set(SHERPA_ONNX_VERSION "2.0.1")
+set(SHERPA_ONNX_VERSION "2.0.2")
 
 # Disable warning about
 #
