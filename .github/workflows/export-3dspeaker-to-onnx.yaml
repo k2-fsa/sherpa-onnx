@@ -46,7 +46,7 @@ jobs:
 
       - name: Publish to huggingface
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
