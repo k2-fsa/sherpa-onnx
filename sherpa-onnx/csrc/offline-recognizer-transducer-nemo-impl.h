@@ -222,6 +222,15 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       r.text = ApplyHomophoneReplacer(std::move(r.text));
+      for (auto &hyp : r.hypotheses) {
+        // Keep N-best text preprocessing consistent with the 1-best result.
+        if (!hyp.text.empty() && hyp.text.front() == ' ') {
+          hyp.text.erase(0, 1);
+        }
+
+        hyp.text = ApplyInverseTextNormalization(std::move(hyp.text));
+        hyp.text = ApplyHomophoneReplacer(std::move(hyp.text));
+      }
 
       ss[i]->SetResult(r);
     }

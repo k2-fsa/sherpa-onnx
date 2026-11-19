@@ -51,5 +51,31 @@ TEST(OfflineTransducerConvert, RemoveCjkSpaceDefaultsToEnabled) {
   EXPECT_EQ(Convert(decoded, symbols, 10, 4).text, "你好");
 }
 
+TEST(OfflineTransducerConvert, RemoveCjkSpaceAppliesToAllHypotheses) {
+  SymbolTable symbols(kSymbols, false);
+  OfflineTransducerDecoderResult decoded;
+  decoded.tokens = {2, 4, 3};
+
+  OfflineTransducerDecoderHypothesis first;
+  first.tokens = decoded.tokens;
+  first.score = -0.1;
+  OfflineTransducerDecoderHypothesis second;
+  second.tokens = {3, 4, 2};
+  second.score = -0.2;
+  decoded.hypotheses = {first, second};
+
+  for (int32_t remove_cjk_space : {0, 1}) {
+    auto result = Convert(decoded, symbols, 10, 4, remove_cjk_space);
+    ASSERT_EQ(result.hypotheses.size(), 2u);
+    EXPECT_EQ(result.text, remove_cjk_space ? "你好" : "你 好");
+    EXPECT_EQ(result.text, result.hypotheses[0].text);
+    EXPECT_EQ(result.tokens, result.hypotheses[0].tokens);
+    EXPECT_EQ(result.hypotheses[1].text,
+              remove_cjk_space ? "好你" : "好 你");
+    EXPECT_DOUBLE_EQ(result.hypotheses[0].score, first.score);
+    EXPECT_DOUBLE_EQ(result.hypotheses[1].score, second.score);
+  }
+}
+
 }  // namespace
 }  // namespace sherpa_onnx

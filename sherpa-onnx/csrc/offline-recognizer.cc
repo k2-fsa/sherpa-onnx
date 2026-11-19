@@ -176,6 +176,9 @@ void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) const {
   for (int32_t i = 0; i < n; ++i) {
     auto r = ss[i]->GetResult();
     r.text = RemoveLeadingSpaces(r.text);
+    for (auto &hyp : r.hypotheses) {
+      hyp.text = RemoveLeadingSpaces(hyp.text);
+    }
     ss[i]->SetResult(r);
   }
 }
