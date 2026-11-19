@@ -1257,6 +1257,7 @@ jobs:
           cp wasm/nodejs/sherpa-onnx-punctuation.js flutter/sherpa_onnx_web/assets/
           cp wasm/speaker-diarization/sherpa-onnx-speaker-diarization.js flutter/sherpa_onnx_web/assets/
           cp wasm/speech-enhancement/sherpa-onnx-speech-enhancement.js flutter/sherpa_onnx_web/assets/
+          cp wasm/nodejs/sherpa-onnx-forced-aligner.js flutter/sherpa_onnx_web/assets/
 
           ls -lh flutter/sherpa_onnx_web/assets/
 

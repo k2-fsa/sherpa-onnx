@@ -109,39 +109,40 @@ class ForcedAligner {
       return null;
     }
 
-    // Everything is copied into Dart values before the C result is freed.
-    final textGrid =
-        p.ref.textGrid == nullptr ? '' : p.ref.textGrid.toDartString();
+    try {
+      // Everything is copied into Dart values before the C result is freed.
+      final textGrid =
+          p.ref.textGrid == nullptr ? '' : p.ref.textGrid.toDartString();
 
-    final tiers = <AlignmentTier>[];
-    final numTiers = p.ref.numTiers;
-    for (var i = 0; i < numTiers; ++i) {
-      final t = p.ref.tiers[i];
-      final name = t.name == nullptr ? '' : t.name.toDartString();
+      final tiers = <AlignmentTier>[];
+      final numTiers = p.ref.numTiers;
+      for (var i = 0; i < numTiers; ++i) {
+        final t = p.ref.tiers[i];
+        final name = t.name == nullptr ? '' : t.name.toDartString();
 
-      final intervals = <AlignmentInterval>[];
-      final numIntervals = t.numIntervals;
-      for (var k = 0; k < numIntervals; ++k) {
-        final iv = t.intervals[k];
-        intervals.add(AlignmentInterval(
-          start: iv.start,
-          end: iv.end,
-          text: iv.text == nullptr ? '' : iv.text.toDartString(),
-        ));
+        final intervals = <AlignmentInterval>[];
+        final numIntervals = t.numIntervals;
+        for (var k = 0; k < numIntervals; ++k) {
+          final iv = t.intervals[k];
+          intervals.add(AlignmentInterval(
+            start: iv.start,
+            end: iv.end,
+            text: iv.text == nullptr ? '' : iv.text.toDartString(),
+          ));
+        }
+
+        tiers.add(AlignmentTier(name: name, intervals: intervals));
       }
 
-      tiers.add(AlignmentTier(name: name, intervals: intervals));
+      return ForcedAlignmentResult(
+        duration: p.ref.duration,
+        tiers: tiers,
+        textGrid: textGrid,
+      );
+    } finally {
+      // Runs even if a UTF-8 conversion above throws.
+      SherpaOnnxBindings.sherpaOnnxDestroyForcedAlignmentResult?.call(p);
     }
-
-    final ans = ForcedAlignmentResult(
-      duration: p.ref.duration,
-      tiers: tiers,
-      textGrid: textGrid,
-    );
-
-    SherpaOnnxBindings.sherpaOnnxDestroyForcedAlignmentResult?.call(p);
-
-    return ans;
   }
 
   Pointer<SherpaOnnxForcedAligner> ptr;

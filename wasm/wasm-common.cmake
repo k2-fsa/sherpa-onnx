@@ -28,6 +28,7 @@ set(exported_functions
   SherpaOnnxIsOnlineStreamReady
   SherpaOnnxOnlineStreamAcceptWaveform
   SherpaOnnxOnlineStreamGetOption
+  SherpaOnnxOnlineStreamHasOption
   SherpaOnnxOnlineStreamInputFinished
   SherpaOnnxOnlineStreamIsEndpoint
   SherpaOnnxOnlineStreamReset
@@ -46,6 +47,7 @@ set(exported_functions
   SherpaOnnxGetOfflineStreamResult
   SherpaOnnxGetOfflineStreamResultAsJson
   SherpaOnnxOfflineStreamGetOption
+  SherpaOnnxOfflineStreamHasOption
   SherpaOnnxOfflineStreamSetOption
   SherpaOnnxOfflineRecognizerSetConfig
   # online kws

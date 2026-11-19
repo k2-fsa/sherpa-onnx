@@ -1861,6 +1861,20 @@ class OfflineStream {
     this.Module._free(pKey);
     return value;
   }
+
+  /**
+   * @param key {String} The option name
+   * @returns {Number} 1 if the option exists, 0 otherwise
+   */
+  hasOption(key) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    const ans =
+        this.Module._SherpaOnnxOfflineStreamHasOption(this.handle, pKey);
+    this.Module._free(pKey);
+    return ans;
+  }
 };
 
 class OfflineRecognizer {
@@ -1974,6 +1988,20 @@ class OnlineStream {
     const value = this.Module.UTF8ToString(pValue);
     this.Module._free(pKey);
     return value;
+  }
+
+  /**
+   * @param key {String} The option name
+   * @returns {Number} 1 if the option exists, 0 otherwise
+   */
+  hasOption(key) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    const ans =
+        this.Module._SherpaOnnxOnlineStreamHasOption(this.handle, pKey);
+    this.Module._free(pKey);
+    return ans;
   }
 };
 
