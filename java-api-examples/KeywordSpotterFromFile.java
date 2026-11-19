@@ -5,7 +5,7 @@
 
 import com.k2fsa.sherpa.onnx.*;
 
-public class KyewordSpotterFromFile {
+public class KeywordSpotterFromFile {
   public static void main(String[] args) {
     // please download test files from https://github.com/k2-fsa/sherpa-onnx/releases/tag/kws-models
     String encoder =

@@ -7,7 +7,12 @@ function install_3d_speaker() {
   git clone https://github.com/modelscope/3D-Speaker
   pushd 3D-Speaker
   pip install -q -r ./requirements.txt
-  pip install -q modelscope==1.14.0 onnx onnxruntime kaldi-native-fbank
+  # modelscope>=1.30 retries downloads and handles responses without a
+  # Content-Length header; 1.14.0 raises FileDownloadError on them.
+  # addict and datasets are needed by modelscope.pipelines (imported by
+  # speakerlab/bin/infer_sv.py) but are not declared by the slim core;
+  # keep datasets within modelscope's own tested range
+  pip install -q modelscope==1.40.3 addict 'datasets<=4.8.4,>=4.0.0' onnx onnxruntime kaldi-native-fbank
   popd
 }
 
