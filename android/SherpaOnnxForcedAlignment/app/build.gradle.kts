@@ -12,7 +12,7 @@ android {
         minSdk = 24 // ffmpeg-kit-audio requires 24
         targetSdk = 34
         versionCode = 20261116
-        versionName = "2.0.1"
+        versionName = "2.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
