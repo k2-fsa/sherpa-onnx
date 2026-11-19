@@ -77,10 +77,10 @@ class TtsService : TextToSpeechService() {
     // onGetVoices() finds no voice at all for this engine, and no app asks for "pli": apps such as
     // T2S ask for the device's or the text's language and get LANG_NOT_SUPPORTED ("Speech engine
     // is not responding"). Its one voice takes a request in any language and reads it as Pali.
-    private fun acceptsAnyLanguage(): Boolean = TtsEngine.lang == "pli"
+    private fun isPali(): Boolean = TtsEngine.lang == "pli"
 
     private fun supports(lang: String): Boolean =
-        lang == TtsEngine.lang || lang == TtsEngine.lang2 || acceptsAnyLanguage()
+        lang == TtsEngine.lang || lang == TtsEngine.lang2 || isPali()
 
     // https://developer.android.com/reference/kotlin/android/speech/tts/TextToSpeechService#onislanguageavailable
     override fun onIsLanguageAvailable(_lang: String?, _country: String?, _variant: String?): Int {
@@ -93,9 +93,9 @@ class TtsService : TextToSpeechService() {
         return TextToSpeech.LANG_NOT_SUPPORTED
     }
 
-    // The engine's own voice, for a language Android has no locale for (see acceptsAnyLanguage).
+    // The engine's own voice, for a language Android has no locale for (see isPali).
     override fun onGetVoices(): List<Voice> {
-        if (!acceptsAnyLanguage()) {
+        if (!isPali()) {
             return super.onGetVoices()
         }
         return listOfNotNull(TtsEngine.lang, TtsEngine.lang2).map {
@@ -106,7 +106,7 @@ class TtsService : TextToSpeechService() {
 
     // TextToSpeech.setLanguage() takes the voice of this name from onGetVoices(): for any language, that one voice.
     override fun onGetDefaultVoiceNameFor(lang: String?, country: String?, variant: String?): String? {
-        if (!acceptsAnyLanguage()) {
+        if (!isPali()) {
             return super.onGetDefaultVoiceNameFor(lang, country, variant)
         }
         return Locale(TtsEngine.lang!!).toLanguageTag()
