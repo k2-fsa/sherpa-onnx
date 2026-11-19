@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-libs:
@@ -29,6 +29,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Cache the built libs keyed on the native sources so a push that
+      # does not touch them skips the ~15 min rebuild. Must run before
+      # ./new-release.sh, which rewrites version.cc with the git sha1 and
+      # would otherwise bust the cache on every commit; a cache hit ships
+      # the sha1/date strings of the commit that populated the cache.
+      - name: Restore built libs
+        id: cache-libs
+        uses: actions/cache@v4
+        with:
+          path: sherpa-onnx-*-win-${{ matrix.arch }}.tar.bz2
+          key: win-libs-${{ matrix.arch }}-${{ hashFiles('CMakeLists.txt', 'new-release.sh', 'cmake/**', 'sherpa-onnx/csrc/**', 'sherpa-onnx/c-api/**') }}
+
       - name: Update version
         shell: bash
         run: |
@@ -36,6 +48,7 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
+        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           arch=${{ matrix.arch }}
@@ -62,6 +75,7 @@ jobs:
           rm -rf install/pkgconfig
 
       - name: Create tar file
+        if: steps.cache-libs.outputs.cache-hit != 'true'
         shell: bash
         run: |
           arch=${{ matrix.arch }}
@@ -120,7 +134,7 @@ jobs:
 
             git add .
 
-            git commit -m "add more files"
+            git commit -m "add more files" || echo "nothing to commit (cache hit: libs unchanged)"
 
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
             rm -rf huggingface
@@ -128,6 +142,9 @@ jobs:
   release-nuget-package:
     runs-on: ${{ matrix.os }}
     needs: [build-libs]
+    permissions:
+      id-token: write # NuGet/login@v1 uses GitHub OIDC
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -193,12 +210,17 @@ jobs:
 
           ls -lh /tmp/packages
 
-      - name: publish .Net packages to nuget.org
+      - name: NuGet login
         if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
-        shell: bash
-        env:
-          API_KEY: ${{ secrets.NUGET_API_KEY }}
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: csukuangfj
+
+      - name: Push to nuget.org
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
         run: |
-          # API_KEY is valid until 2025.04.26
-          cd /tmp/packages
-          dotnet nuget push ./org.k2fsa.sherpa.onnx.*.nupkg --skip-duplicate --api-key $API_KEY --source https://api.nuget.org/v3/index.json
+          dotnet nuget push "/tmp/packages/org.k2fsa.sherpa.onnx.*.nupkg" \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
