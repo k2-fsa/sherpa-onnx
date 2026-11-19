@@ -128,6 +128,9 @@ jobs:
   release-nuget-package:
     runs-on: ${{ matrix.os }}
     needs: [build-libs]
+    permissions:
+      id-token: write # NuGet/login@v1 uses GitHub OIDC
+      contents: read
     strategy:
       fail-fast: false
       matrix:
