@@ -116,6 +116,12 @@ class OfflineSpeakerDiarizationPyannoteImpl
     std::vector<float> samples = stream->GetFrames();
     float min_active_ratio =
         stream->GetOptionFloat("min_active_ratio", kMinActiveRatio);
+    // NaN is rejected too, since any comparison with NaN is false
+    if (!(min_active_ratio >= 0 && min_active_ratio <= 1)) {
+      SHERPA_ONNX_LOGE("min_active_ratio %f is not in [0, 1]. Use %.1f",
+                       min_active_ratio, kMinActiveRatio);
+      min_active_ratio = kMinActiveRatio;
+    }
     return ProcessImpl(samples.data(), static_cast<int32_t>(samples.size()),
                        min_active_ratio, std::move(callback), callback_arg);
   }

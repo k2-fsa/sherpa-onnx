@@ -80,8 +80,8 @@ class OfflineSpeakerDiarization {
 
   // Options can be set with stream->SetOption(key, value). Supported keys:
   //  - min_active_ratio: only the embeddings with at least this ratio of the
-  //    window as clean speech are clustered. Default 0.2. Use 0 to cluster
-  //    all of them.
+  //    window as clean speech are clustered. It must be in [0, 1]. Default
+  //    0.2. Use 0 to cluster all of them.
   OfflineSpeakerDiarizationResult Process(
       const OfflineStream *stream,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
