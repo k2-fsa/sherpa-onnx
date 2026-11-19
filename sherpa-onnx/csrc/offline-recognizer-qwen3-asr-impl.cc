@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <exception>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -411,6 +412,7 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
           config.model_config.qwen3_asr.tokenizer)),
       rng_(config.model_config.qwen3_asr.seed) {
   InitPromptTemplateIds();
+  InitForcedAligner();
 }
 
 template <typename Manager>
@@ -423,6 +425,7 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
           mgr, config.model_config.qwen3_asr.tokenizer)),
       rng_(config.model_config.qwen3_asr.seed) {
   InitPromptTemplateIds();
+  InitForcedAligner();
 }
 
 std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream()
@@ -433,7 +436,20 @@ std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream()
   // half-shift frame offset is enough to make the 1.7B model collapse into
   // repetition loops on some inputs (k2-fsa/sherpa-onnx#3535).
   tag.align_to_stft_center = true;
+  tag.keep_waveform = forced_aligner_ != nullptr;
   return std::make_unique<OfflineStream>(tag);
+}
+
+void OfflineRecognizerQwen3ASRImpl::InitForcedAligner() {
+  const auto &qwen3 = config_.model_config.qwen3_asr;
+  if (qwen3.forced_aligner_model_dir.empty()) {
+    return;
+  }
+  ForcedAlignerConfig config;
+  config.model_dir = qwen3.forced_aligner_model_dir;
+  config.lexicon = qwen3.forced_aligner_lexicon;
+  config.debug = config_.model_config.debug;
+  forced_aligner_ = std::make_unique<ForcedAligner>(config);
 }
 
 void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
@@ -1231,6 +1247,37 @@ void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
       GenerateText(std::move(audio_features), valid_frames, stream);
 
   r.text = ApplyHomophoneReplacer(std::move(r.text));
+
+  if (forced_aligner_ && !r.text.empty()) {
+    const auto &samples = stream->GetWaveform();
+    auto alignment_stream = forced_aligner_->CreateStream();
+    alignment_stream->AcceptWaveform(16000, samples.data(), samples.size());
+    try {
+      auto alignment = forced_aligner_->Compute(alignment_stream.get(), r.text);
+      for (const auto &tier : alignment.tiers) {
+        if (tier.name != "words") {
+          continue;
+        }
+        OfflineRecognitionResult aligned;
+        for (const auto &interval : tier.intervals) {
+          if (interval.text.empty()) {
+            continue;
+          }
+          aligned.tokens.push_back(interval.text);
+          aligned.timestamps.push_back(interval.start);
+          aligned.durations.push_back(interval.end - interval.start);
+        }
+        if (!aligned.tokens.empty()) {
+          r.tokens = std::move(aligned.tokens);
+          r.timestamps = std::move(aligned.timestamps);
+          r.durations = std::move(aligned.durations);
+        }
+        break;
+      }
+    } catch (const std::exception &e) {
+      SHERPA_ONNX_LOGE("qwen3-asr: forced alignment failed: %s", e.what());
+    }
+  }
 
   stream->SetResult(r);
 }

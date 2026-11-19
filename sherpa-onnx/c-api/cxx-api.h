@@ -617,6 +617,11 @@ struct OfflineQwen3ASRModelConfig {
   float top_p = 0.8f;
   /** Random seed for reproducible sampling. */
   int32_t seed = 42;
+  /** Optional MFA acoustic-model directory, paired with the lexicon below.
+   * Both paths must be filesystem paths. Extract packaged resources first. */
+  std::string forced_aligner_model_dir;
+  /** Pronunciation lexicon matching the MFA acoustic model. */
+  std::string forced_aligner_lexicon;
 };
 
 /**

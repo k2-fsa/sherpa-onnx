@@ -119,6 +119,9 @@ export class OfflineQwen3AsrModelConfig {
   public topP: number = 0.8;
   public seed: number = 42;
   public hotwords: string = '';
+  // Use filesystem paths for MFA. Extract packaged resources first.
+  public forcedAlignerModelDir: string = '';
+  public forcedAlignerLexicon: string = '';
 }
 
 export class OfflineZipformerCtcModelConfig {

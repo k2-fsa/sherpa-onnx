@@ -20,6 +20,8 @@ namespace SherpaOnnx
             TopP = 0.8F;
             Seed = 42;
             Hotwords = "";
+            ForcedAlignerModelDir = "";
+            ForcedAlignerLexicon = "";
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
@@ -42,5 +44,11 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Hotwords;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ForcedAlignerModelDir;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ForcedAlignerLexicon;
     }
 }

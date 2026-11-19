@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/forced-aligner.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-qwen3-asr-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
@@ -45,6 +46,7 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
 
  private:
   void InitPromptTemplateIds();
+  void InitForcedAligner();
   std::vector<int64_t> BuildSourceIds(const std::string &hotwords,
                                       const std::string &language,
                                       int32_t audio_token_len,
@@ -70,6 +72,7 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig config_;
   std::unique_ptr<OfflineQwen3ASRModel> model_;
   std::unique_ptr<QwenAsrTokenizer> tokenizer_;
+  std::unique_ptr<ForcedAligner> forced_aligner_;
   std::vector<int64_t> audio_pad_ids_;
   std::vector<int64_t> prompt_ids_after_;
   int64_t asr_text_token_id_ = -1;

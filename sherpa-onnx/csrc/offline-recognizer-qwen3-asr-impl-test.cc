@@ -5,7 +5,9 @@
 #include "sherpa-onnx/csrc/offline-recognizer-qwen3-asr-impl.h"
 
 #include <array>
+#include <cmath>
 #include <cstring>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -93,6 +95,42 @@ TEST(TrimAudioFeatures, NoTrailingSilenceFlagStaysFalse) {
   auto trimmed_shape = trimmed.GetTensorTypeAndShapeInfo().GetShape();
   ASSERT_EQ(trimmed_shape.size(), 3u);
   EXPECT_EQ(trimmed_shape[1], kFrames);
+}
+
+TEST(Qwen3ASRWaveform, RetentionDoesNotChangeFeatures) {
+  std::vector<float> samples(16000);
+  for (size_t i = 0; i != samples.size(); ++i) {
+    samples[i] = 0.1f * std::sin(i * 0.1f);
+  }
+  WhisperTag tag;
+  tag.dim = 128;
+  tag.align_to_stft_center = true;
+  OfflineStream original(tag);
+  tag.keep_waveform = true;
+  OfflineStream retained(tag);
+  original.AcceptWaveform(16000, samples.data(), samples.size());
+  retained.AcceptWaveform(16000, samples.data(), samples.size());
+  EXPECT_TRUE(original.GetWaveform().empty());
+  EXPECT_EQ(retained.GetWaveform(), samples);
+  EXPECT_EQ(original.GetFrames(), retained.GetFrames());
+}
+
+TEST(Qwen3ASRWaveform, RetainsResampledAudioWithoutCenterPadding) {
+  std::vector<float> samples(24000);
+  for (size_t i = 0; i != samples.size(); ++i) {
+    samples[i] = static_cast<float>(i) / samples.size();
+  }
+  WhisperTag tag;
+  tag.dim = 128;
+  tag.align_to_stft_center = true;
+  tag.keep_waveform = true;
+  OfflineStream retained(tag);
+  retained.AcceptWaveform(24000, samples.data(), samples.size());
+  const auto &waveform = retained.GetWaveform();
+  ASSERT_EQ(waveform.size(), 16000u);
+  for (size_t i = 160; i + 160 < waveform.size(); i += 160) {
+    EXPECT_NEAR(waveform[i], static_cast<float>(i) / 16000, 1e-3f);
+  }
 }
 
 }  // namespace sherpa_onnx

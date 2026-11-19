@@ -27,6 +27,12 @@ struct OfflineQwen3ASRModelConfig {
   // Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. "foo,bar,baz".
   std::string hotwords;
 
+  // Optional MFA acoustic model and matching pronunciation lexicon.
+  // Both paths must be filesystem paths, even with a resource manager.
+  // Extract packaged resources before setting these paths.
+  std::string forced_aligner_model_dir;
+  std::string forced_aligner_lexicon;
+
   // Maximum total sequence length (from model metadata or config)
   int32_t max_total_len = 512;
 
@@ -50,12 +56,16 @@ struct OfflineQwen3ASRModelConfig {
                              const std::string &tokenizer,
                              int32_t max_total_len, int32_t max_new_tokens,
                              float temperature, float top_p, int32_t seed,
-                             const std::string &hotwords = "")
+                             const std::string &hotwords = "",
+                             const std::string &forced_aligner_model_dir = "",
+                             const std::string &forced_aligner_lexicon = "")
       : conv_frontend(conv_frontend),
         encoder(encoder),
         decoder(decoder),
         tokenizer(tokenizer),
         hotwords(hotwords),
+        forced_aligner_model_dir(forced_aligner_model_dir),
+        forced_aligner_lexicon(forced_aligner_lexicon),
         max_total_len(max_total_len),
         max_new_tokens(max_new_tokens),
         temperature(temperature),

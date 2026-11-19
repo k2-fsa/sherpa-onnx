@@ -151,6 +151,8 @@ pub struct OfflineQwen3ASRModelConfig {
     pub top_p: c_float,
     pub seed: i32,
     pub hotwords: *const c_char,
+    pub forced_aligner_model_dir: *const c_char,
+    pub forced_aligner_lexicon: *const c_char,
 }
 
 #[repr(C)]
