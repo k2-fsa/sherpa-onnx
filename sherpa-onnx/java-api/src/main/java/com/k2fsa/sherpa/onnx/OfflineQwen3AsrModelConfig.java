@@ -75,7 +75,7 @@ public class OfflineQwen3AsrModelConfig {
         private String decoder = "";
         private String tokenizer = "";
         private String hotwords = "";
-        private int maxTotalLen = 512;
+        private int maxTotalLen = 1024;
         private int maxNewTokens = 128;
         private float temperature = 1e-6f;
         private float topP = 0.8f;
