@@ -414,4 +414,25 @@ time $EXE \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/en-english.wav
 
+log "Test NeMo TDT transducer with modified_beam_search and hotwords given as tokens from tokens.txt"
+
+# Each phrase starts with a word-start token (▁) and all its tokens are in
+# tokens.txt, so it is used as is instead of being encoded with bpe.vocab
+cat > $repo/hotwords.txt << EOF
+▁P h o e be
+▁old ▁p ort ra it
+EOF
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.int8.onnx \
+  --decoder=$repo/decoder.int8.onnx \
+  --joiner=$repo/joiner.int8.onnx \
+  --model-type=nemo_transducer \
+  --decoding-method=modified_beam_search \
+  --hotwords-file=$repo/hotwords.txt \
+  --hotwords-score=1.5 \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/en-english.wav
+
 rm -rf $repo
