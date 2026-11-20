@@ -522,8 +522,24 @@ struct OfflineSenseVoiceModelConfig {
 
 /** @brief Offline Dolphin model file. */
 struct OfflineDolphinModelConfig {
-  /** Model ONNX file. */
+  /** Model ONNX file for the CTC branch. */
   std::string model;
+
+  /** encoder.onnx of the attention decoder branch. Required when decoder
+   * is non-empty. */
+  std::string encoder;
+
+  /** decoder.onnx of the attention decoder branch. When non-empty, the
+   * attention decoder is used for recognition. */
+  std::string decoder;
+
+  /** Language code for the attention decoder, e.g., zh, en, fil. Empty
+   * means the decoder predicts it. */
+  std::string language;
+
+  /** Region code for the attention decoder, e.g., CN, PH, US. Requires
+   * language to be non-empty. */
+  std::string region;
 };
 
 /** @brief Offline Zipformer CTC model file. */

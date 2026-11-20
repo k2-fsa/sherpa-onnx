@@ -78,20 +78,43 @@ class OfflineNemoEncDecCtcModelConfig {
 
 /// Model files for an offline Dolphin recognizer.
 class OfflineDolphinModelConfig {
-  const OfflineDolphinModelConfig({this.model = ''});
+  const OfflineDolphinModelConfig({
+    this.model = '',
+    this.encoder = '',
+    this.decoder = '',
+    this.language = '',
+    this.region = '',
+  });
 
   factory OfflineDolphinModelConfig.fromJson(Map<String, dynamic> json) {
-    return OfflineDolphinModelConfig(model: json['model'] as String? ?? '');
+    return OfflineDolphinModelConfig(
+      model: json['model'] as String? ?? '',
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+      language: json['language'] as String? ?? '',
+      region: json['region'] as String? ?? '',
+    );
   }
 
   @override
   String toString() {
-    return 'OfflineDolphinModelConfig(model: $model)';
+    return 'OfflineDolphinModelConfig(model: $model, encoder: $encoder, '
+        'decoder: $decoder, language: $language, region: $region)';
   }
 
-  Map<String, dynamic> toJson() => {'model': model};
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'encoder': encoder,
+        'decoder': decoder,
+        'language': language,
+        'region': region,
+      };
 
   final String model;
+  final String encoder;
+  final String decoder;
+  final String language;
+  final String region;
 }
 
 /// Model files for an offline Zipformer CTC recognizer.
