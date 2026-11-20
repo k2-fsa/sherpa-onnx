@@ -40,7 +40,9 @@ struct SpeechSegment {
 // independently, so one detector can serve several audio inputs.
 //
 // Every method takes an internal lock, so one thread can feed a stream
-// while another processes it.
+// while another processes it. The detector serializes the shared model
+// across its streams, so different streams of one detector can be
+// processed from different threads as well.
 class VadStreamState {
  public:
   VadStreamState(const VadModelConfig& config, float buffer_size_in_seconds);

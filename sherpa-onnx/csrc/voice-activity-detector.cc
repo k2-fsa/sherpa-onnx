@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <utility>
 #include <vector>
@@ -59,6 +60,10 @@ class VoiceActivityDetector::Impl {
   }
 
   void Process(const OnlineStream *stream) const {
+    // The model is shared by every stream of this detector, so the
+    // restore-evaluate-save cycle of one stream must not interleave
+    // with that of another stream.
+    std::lock_guard<std::mutex> model_lock(model_mutex_);
     GetState(stream).Process(model_.get());
   }
 
@@ -83,10 +88,12 @@ class VoiceActivityDetector::Impl {
   }
 
   void Reset(const OnlineStream *stream) const {
+    std::lock_guard<std::mutex> model_lock(model_mutex_);
     GetState(stream).Reset(model_.get());
   }
 
   void Flush(const OnlineStream *stream) const {
+    std::lock_guard<std::mutex> model_lock(model_mutex_);
     GetState(stream).Flush(model_.get());
   }
 
@@ -280,6 +287,11 @@ class VoiceActivityDetector::Impl {
   SpeechSegment cur_segment_;
 
   std::unique_ptr<VadModel> model_;
+
+  // Guards model_. Streams of one detector may be processed from
+  // different threads, and every window does restore-evaluate-save on
+  // the shared model.
+  mutable std::mutex model_mutex_;
   VadModelConfig config_;
   float buffer_size_in_seconds_ = 60;
   CircularBuffer buffer_;
