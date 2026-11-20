@@ -36,6 +36,15 @@ class VoiceActivityDetector {
   // below. Note that a detector processes either the samples of
   // AcceptWaveform() above or the streams it has created; do not mix the
   // two for one detector.
+  //
+  // Threading: different streams of one detector may be driven from
+  // different threads. Process(), Flush(), and Reset() hold a
+  // detector-level lock while they run, so the shared model handles one
+  // window at a time and these calls are serialized across the streams
+  // of a detector. Feeding a stream with AcceptWaveform() and the other
+  // per-stream accessors take a per-stream lock, so one thread can feed
+  // a stream while another thread processes it. No extra locking is
+  // required from the caller.
   std::unique_ptr<OnlineStream> CreateStream() const;
 
   // Return true if the number of samples in the stream is >= window_size.
