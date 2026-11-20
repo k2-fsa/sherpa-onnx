@@ -39,6 +39,13 @@ TEST(SupertonicDuration, RejectsDurationThatOverflowsAfterSpeed) {
   EXPECT_FALSE(AdjustSupertonicDuration(0.5f, &dur));
 }
 
+TEST(SupertonicDuration, RejectsDurationThatBecomesZeroAfterSpeed) {
+  // 1 / inf is 0, which must not be clamped to the minimum duration.
+  float dur = 1.0f;
+  EXPECT_FALSE(
+      AdjustSupertonicDuration(std::numeric_limits<float>::infinity(), &dur));
+}
+
 TEST(SupertonicDuration, AppliesSpeedAndMinDuration) {
   float dur = 2.0f;
   EXPECT_TRUE(AdjustSupertonicDuration(1.0f, &dur));

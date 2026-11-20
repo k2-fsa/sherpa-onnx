@@ -25,7 +25,8 @@ inline bool AdjustSupertonicDuration(float speed, float *dur) {
 
   if (speed != 1.0f) {
     *dur /= speed;
-    if (!std::isfinite(*dur)) {
+    // e.g., a very large speed can make it 0
+    if (!std::isfinite(*dur) || *dur <= 0.0f) {
       return false;
     }
 
