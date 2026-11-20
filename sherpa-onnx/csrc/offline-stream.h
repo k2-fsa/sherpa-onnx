@@ -89,6 +89,12 @@ struct MoonshineTag {};
 // It is based on Wav2Vec, accepting raw audio samples as input
 struct OmnilingualAsrTag {};
 
+// It keeps the audio samples, resampled to sample_rate if needed.
+// GetFrames() returns them.
+struct SpeakerDiarizationTag {
+  int32_t sample_rate = 16000;
+};
+
 class OfflineStream {
  public:
   explicit OfflineStream(const FeatureExtractorConfig &config = {},
@@ -98,6 +104,7 @@ class OfflineStream {
   explicit OfflineStream(CEDTag tag);
   explicit OfflineStream(MoonshineTag tag);
   explicit OfflineStream(OmnilingualAsrTag tag);
+  explicit OfflineStream(SpeakerDiarizationTag tag);
   explicit OfflineStream(const FaFeatureConfig &config);
 
   ~OfflineStream();

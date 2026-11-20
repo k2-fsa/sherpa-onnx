@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/fast-clustering-config.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-result.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-model-config.h"
+#include "sherpa-onnx/csrc/offline-stream.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
 namespace sherpa_onnx {
@@ -72,6 +73,17 @@ class OfflineSpeakerDiarization {
 
   OfflineSpeakerDiarizationResult Process(
       const float *audio, int32_t n,
+      OfflineSpeakerDiarizationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const;
+
+  std::unique_ptr<OfflineStream> CreateStream() const;
+
+  // Options can be set with stream->SetOption(key, value). Supported keys:
+  //  - min_active_ratio: only the embeddings with at least this ratio of the
+  //    window as clean speech are clustered. It must be in [0, 1]. Default
+  //    0.2. Use 0 to cluster all of them.
+  OfflineSpeakerDiarizationResult Process(
+      const OfflineStream *stream,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
       void *callback_arg = nullptr) const;
 

@@ -125,12 +125,16 @@ class OfflineStream::Impl {
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
 
-  explicit Impl(MoonshineTag /*tag*/) : is_moonshine_(true) {
+  explicit Impl(MoonshineTag /*tag*/) : keep_samples_(true) {
     config_.sampling_rate = 16000;
   }
 
-  explicit Impl(OmnilingualAsrTag /*tag*/) : is_omnilingual_asr_(true) {
+  explicit Impl(OmnilingualAsrTag /*tag*/) : keep_samples_(true) {
     config_.sampling_rate = 16000;
+  }
+
+  explicit Impl(SpeakerDiarizationTag tag) : keep_samples_(true) {
+    config_.sampling_rate = tag.sample_rate;
   }
 
   explicit Impl(const FaFeatureConfig &config) {
@@ -175,7 +179,7 @@ class OfflineStream::Impl {
       std::vector<float> samples;
       resampler->Resample(waveform, n, true, &samples);
 
-      if (is_moonshine_ || is_omnilingual_asr_) {
+      if (keep_samples_) {
         samples_.insert(samples_.end(), samples.begin(), samples.end());
       } else if (fbank_) {
         fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
@@ -192,7 +196,7 @@ class OfflineStream::Impl {
       return;
     }  // if (sampling_rate != config_.sampling_rate)
 
-    if (is_moonshine_ || is_omnilingual_asr_) {
+    if (keep_samples_) {
       samples_.insert(samples_.end(), waveform, waveform + n);
     } else if (fbank_) {
       fbank_->AcceptWaveform(sampling_rate, waveform, n);
@@ -233,7 +237,7 @@ class OfflineStream::Impl {
     if (fa_) {
       return fa_->FeatureDim();
     }
-    if (is_moonshine_ || is_omnilingual_asr_) {
+    if (keep_samples_) {
       return samples_.size();
     }
 
@@ -244,7 +248,7 @@ class OfflineStream::Impl {
     if (fa_) {
       return fa_->GetFrames();
     }
-    if (is_moonshine_ || is_omnilingual_asr_) {
+    if (keep_samples_) {
       return samples_;
     }
 
@@ -382,13 +386,12 @@ class OfflineStream::Impl {
   OfflineRecognitionResult r_;
   ContextGraphPtr context_graph_;
   bool is_ced_ = false;
-  bool is_moonshine_ = false;
-  bool is_omnilingual_asr_ = false;
+  bool keep_samples_ = false;
   bool whisper_align_to_stft_center_ = false;
   int32_t whisper_center_padding_ = 0;
   int64_t whisper_num_samples_ = 0;
 
-  // used only when (is_moonshine_ || is_omnilingual_asr_) == true
+  // used only when keep_samples_ == true
   std::vector<float> samples_;
 
   std::unordered_map<std::string, std::string> options_;
@@ -407,6 +410,9 @@ OfflineStream::OfflineStream(MoonshineTag tag)
     : impl_(std::make_unique<Impl>(tag)) {}
 
 OfflineStream::OfflineStream(OmnilingualAsrTag tag)
+    : impl_(std::make_unique<Impl>(tag)) {}
+
+OfflineStream::OfflineStream(SpeakerDiarizationTag tag)
     : impl_(std::make_unique<Impl>(tag)) {}
 
 OfflineStream::OfflineStream(const FaFeatureConfig &config)

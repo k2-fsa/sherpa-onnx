@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -104,6 +105,19 @@ OfflineSpeakerDiarizationResult OfflineSpeakerDiarization::Process(
     OfflineSpeakerDiarizationProgressCallback callback /*= nullptr*/,
     void *callback_arg /*= nullptr*/) const {
   return impl_->Process(audio, n, std::move(callback), callback_arg);
+}
+
+std::unique_ptr<OfflineStream> OfflineSpeakerDiarization::CreateStream() const {
+  SpeakerDiarizationTag tag;
+  tag.sample_rate = SampleRate();
+  return std::make_unique<OfflineStream>(tag);
+}
+
+OfflineSpeakerDiarizationResult OfflineSpeakerDiarization::Process(
+    const OfflineStream *stream,
+    OfflineSpeakerDiarizationProgressCallback callback /*= nullptr*/,
+    void *callback_arg /*= nullptr*/) const {
+  return impl_->Process(stream, std::move(callback), callback_arg);
 }
 
 #if __ANDROID_API__ >= 9

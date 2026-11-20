@@ -7,6 +7,8 @@
 
 #include <functional>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 namespace sherpa_onnx {
@@ -32,6 +34,15 @@ class OfflineSpeakerDiarizationImpl {
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
       void *callback_arg = nullptr) const = 0;
+
+  virtual OfflineSpeakerDiarizationResult Process(
+      const OfflineStream *stream,
+      OfflineSpeakerDiarizationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const {
+    std::vector<float> samples = stream->GetFrames();
+    return Process(samples.data(), static_cast<int32_t>(samples.size()),
+                   std::move(callback), callback_arg);
+  }
 };
 
 }  // namespace sherpa_onnx
