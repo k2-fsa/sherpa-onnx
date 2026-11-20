@@ -44,7 +44,13 @@ class VoiceActivityDetector {
   // of a detector. Feeding a stream with AcceptWaveform() and the other
   // per-stream accessors take a per-stream lock, so one thread can feed
   // a stream while another thread processes it. No extra locking is
-  // required from the caller.
+  // required for feeding and processing. The one thing the locks do not
+  // cover is the caller's use of the reference returned by
+  // Front(stream): the lock is released when Front() returns, and
+  // Reset(stream), Pop(stream), and Clear(stream) destroy the segment
+  // that reference points to and may run on another thread while the
+  // reference is still in use, so synchronize those calls with reading
+  // the segment yourself.
   std::unique_ptr<OnlineStream> CreateStream() const;
 
   // Return true if the number of samples in the stream is >= window_size.
@@ -86,6 +92,12 @@ class VoiceActivityDetector {
   void Clear(const OnlineStream *stream) const;
 
   // It is an error to call Front() if Empty(stream) returns true.
+  //
+  // The returned reference is valid until the next call to
+  // Pop(stream), Clear(stream), or Reset(stream) for that stream. If
+  // the stream is used from several threads, synchronize those calls
+  // with your use of the reference; see the threading note above
+  // CreateStream().
   const SpeechSegment &Front(const OnlineStream *stream) const;
 
   bool IsSpeechDetected(const OnlineStream *stream) const;
