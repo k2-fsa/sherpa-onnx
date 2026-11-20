@@ -34,6 +34,8 @@ VadStreamState::~VadStreamState() = default;
 
 void VadStreamState::AcceptWaveform(int32_t sampling_rate,
                                     const float* waveform, int32_t n) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
   if (!resampler_ && sampling_rate != sample_rate_) {
     SHERPA_ONNX_LOGE(
         "Creating a resampler:\n"
@@ -67,12 +69,23 @@ void VadStreamState::AcceptWaveform(int32_t sampling_rate,
   samples_.insert(samples_.end(), waveform, waveform + n);
 }
 
-bool VadStreamState::IsReady(const VadModel* model) const {
-  return static_cast<int64_t>(samples_.size()) >= model->WindowSize();
+bool VadStreamState::IsReady(const VadModel *model) const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return IsReadyLocked(model);
 }
 
-void VadStreamState::Process(VadModel* model) {
-  if (!IsReady(model)) {
+bool VadStreamState::IsReadyLocked(const VadModel *model) const {
+  return static_cast<int64_t>(samples_.size()) - read_pos_ >=
+         model->WindowSize();
+}
+
+void VadStreamState::Process(VadModel *model) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  ProcessLocked(model);
+}
+
+void VadStreamState::ProcessLocked(VadModel *model) {
+  if (!IsReadyLocked(model)) {
     return;
   }
 
@@ -109,13 +122,24 @@ void VadStreamState::Process(VadModel* model) {
     model->SetState(std::move(model_state_));
   }
 
-  const float* p = samples_.data();
+  const float *p = samples_.data() + read_pos_;
   buffer_.Push(p, window_shift);
   bool is_speech = model->IsSpeech(p, window_size);
 
   model_state_ = model->GetState();
 
-  samples_.erase(samples_.begin(), samples_.begin() + window_shift);
+  read_pos_ += window_shift;
+
+  // Erasing the consumed prefix on every window would move the whole
+  // remaining backlog each time, which is quadratic when a caller
+  // buffers a long input before processing it. Erase it in bulk instead,
+  // once it reaches half of the buffer, so draining stays linear.
+  if (read_pos_ >= (1 << 16) &&
+      read_pos_ * 2 >= static_cast<int64_t>(samples_.size())) {
+    samples_.erase(samples_.begin(),
+                   samples_.begin() + static_cast<std::ptrdiff_t>(read_pos_));
+    read_pos_ = 0;
+  }
 
   if (is_speech) {
     if (start_ == -1) {
@@ -167,14 +191,16 @@ void VadStreamState::Process(VadModel* model) {
 }
 
 void VadStreamState::Flush(VadModel* model) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
   if (resampler_) {
     std::vector<float> tail;
     resampler_->Resample(nullptr, 0, true, &tail);
     samples_.insert(samples_.end(), tail.begin(), tail.end());
   }
 
-  while (IsReady(model)) {
-    Process(model);
+  while (IsReadyLocked(model)) {
+    ProcessLocked(model);
   }
 
   if (start_ == -1 || buffer_.Size() == 0) {
@@ -182,8 +208,10 @@ void VadStreamState::Flush(VadModel* model) {
   }
 
   // These samples are waiting for a full window and belong to this segment
-  buffer_.Push(samples_.data(), static_cast<int32_t>(samples_.size()));
+  buffer_.Push(samples_.data() + read_pos_,
+               static_cast<int32_t>(samples_.size() - read_pos_));
   samples_.clear();
+  read_pos_ = 0;
 
   int64_t end = buffer_.Tail();
   if (end <= start_) {
@@ -209,6 +237,8 @@ void VadStreamState::Flush(VadModel* model) {
 }
 
 void VadStreamState::Reset(VadModel* model) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
   model->Reset();
   model_state_ = model->GetState();
 
@@ -216,6 +246,7 @@ void VadStreamState::Reset(VadModel* model) {
 
   buffer_.Reset();
   samples_.clear();
+  read_pos_ = 0;
   resampler_.reset();
 
   start_ = -1;
@@ -224,10 +255,12 @@ void VadStreamState::Reset(VadModel* model) {
   cur_segment_.samples.clear();
 }
 
-const SpeechSegment& VadStreamState::Front() const {
+const SpeechSegment &VadStreamState::Front() const {
   static SpeechSegment tmp;
 
-  if (Empty()) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  if (segments_.empty()) {
     SHERPA_ONNX_LOGE(
         "Make sure you call this method only when Empty() returns false; "
         "Return an empty segment");

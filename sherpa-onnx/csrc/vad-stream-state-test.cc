@@ -136,7 +136,7 @@ TEST(VadStreamState, SavesSegmentWhenSpeechEnds) {
 
 TEST(VadStreamState, TwoStreamsAreIndependent) {
   VadModelConfig config = TestConfig();
-  FakeVadModel model({true, false, false, false, false, false, false, false});
+  FakeVadModel model({true, false, false, true});
 
   VadStreamState first(config, 60);
   VadStreamState second(config, 60);
@@ -161,9 +161,18 @@ TEST(VadStreamState, TwoStreamsAreIndependent) {
   EXPECT_EQ(second.Front().start, 0);
   EXPECT_EQ(second.Front().samples.size(), 512u);
 
-  // The first stream is untouched.
+  // The first stream's queued segment is untouched.
   EXPECT_FALSE(first.Empty());
   EXPECT_EQ(first.Front().samples.size(), 2u * 512);
+
+  // The shared model now sits at the second stream's position. Processing
+  // the first stream again produces the right window only if its own saved
+  // state is restored into the shared model: position 3 of the pattern is
+  // speech, while the position the second stream left is not.
+  samples = Window(0.03f);
+  first.AcceptWaveform(16000, samples.data(), samples.size());
+  first.Process(&model);
+  EXPECT_TRUE(first.IsSpeechDetected());
 }
 
 TEST(VadStreamState, FlushSavesOpenSegment) {

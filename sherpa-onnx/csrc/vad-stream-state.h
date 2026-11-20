@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_VAD_STREAM_STATE_H_
 
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <vector>
 
@@ -37,6 +38,9 @@ struct SpeechSegment {
 // samples waiting to be processed, the model state saved from the last
 // window, and the speech segments found so far. Each stream is processed
 // independently, so one detector can serve several audio inputs.
+//
+// Every method takes an internal lock, so one thread can feed a stream
+// while another processes it.
 class VadStreamState {
  public:
   VadStreamState(const VadModelConfig& config, float buffer_size_in_seconds);
@@ -69,11 +73,20 @@ class VadStreamState {
 
   void Reset(VadModel* model);
 
-  bool Empty() const { return segments_.empty(); }
+  bool Empty() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return segments_.empty();
+  }
 
-  void Pop() { segments_.pop(); }
+  void Pop() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    segments_.pop();
+  }
 
-  void Clear() { std::queue<SpeechSegment>().swap(segments_); }
+  void Clear() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::queue<SpeechSegment>().swap(segments_);
+  }
 
   // It is an error to call Front() if Empty() returns true.
   //
@@ -81,15 +94,28 @@ class VadStreamState {
   // of this class.
   const SpeechSegment& Front() const;
 
-  bool IsSpeechDetected() const { return start_ != -1; }
+  bool IsSpeechDetected() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return start_ != -1;
+  }
 
   // It is empty if IsSpeechDetected() returns false
-  SpeechSegment CurrentSpeechSegment() const { return cur_segment_; }
+  SpeechSegment CurrentSpeechSegment() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return cur_segment_;
+  }
 
  private:
-  // The samples received so far and not processed yet. They are shorter
-  // than a window when IsReady() returns false.
+  bool IsReadyLocked(const VadModel *model) const;
+
+  void ProcessLocked(VadModel *model);
+
+  // The samples received so far and not processed yet. The consumed
+  // prefix before read_pos_ is erased in bulk once it reaches half of
+  // the buffer, so draining a large backlog stays linear. The unprocessed
+  // range is shorter than a window when IsReady() returns false.
   std::vector<float> samples_;
+  int64_t read_pos_ = 0;
 
   std::unique_ptr<knf::LinearResample> resampler_;
 
@@ -108,6 +134,11 @@ class VadStreamState {
   int32_t max_utterance_length_ = -1;  // in samples
 
   int64_t start_ = -1;
+
+  // Guards all members above. OnlineStream::AcceptWaveform() appends to
+  // samples_ while VoiceActivityDetector::Process() consumes it, possibly
+  // from different threads.
+  mutable std::mutex mutex_;
 };
 
 }  // namespace sherpa_onnx
