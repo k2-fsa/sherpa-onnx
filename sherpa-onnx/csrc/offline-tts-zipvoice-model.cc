@@ -66,7 +66,8 @@ class OfflineTtsZipvoiceModel::Impl {
 
   Ort::Value Run(Ort::Value tokens, Ort::Value prompt_tokens,
                  Ort::Value prompt_features, float speed, int32_t num_steps,
-                 float t_shift, float guidance_scale) {
+                 float t_shift, float guidance_scale,
+                 const ZipvoiceStepCallback &on_step) {
     std::vector<int64_t> tokens_shape =
         tokens.GetTensorTypeAndShapeInfo().GetShape();
 
@@ -147,6 +148,10 @@ class OfflineTtsZipvoiceModel::Impl {
       const float *v_ptr = v.GetTensorData<float>();
       for (int64_t i = 0; i < N; ++i) {
         x_ptr[i] += v_ptr[i] * delta_t;
+      }
+
+      if (on_step && !on_step(step + 1, num_steps)) {
+        return Ort::Value{nullptr};
       }
     }
 
@@ -391,10 +396,12 @@ Ort::Value OfflineTtsZipvoiceModel::Run(Ort::Value tokens,
                                         float speed /*= 1.0*/,
                                         int32_t num_steps /*= 16*/,
                                         float t_shift /*= 0.5f*/,
-                                        float guidance_scale /*= 1.0f*/) const {
+                                        float guidance_scale /*= 1.0f*/,
+                                        const ZipvoiceStepCallback &on_step
+                                        /*= nullptr*/) const {
   return impl_->Run(std::move(tokens), std::move(prompt_tokens),
                     std::move(prompt_features), speed, num_steps, t_shift,
-                    guidance_scale);
+                    guidance_scale, on_step);
 }
 
 #if __ANDROID_API__ >= 9
