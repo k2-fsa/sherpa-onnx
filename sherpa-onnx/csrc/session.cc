@@ -4,7 +4,14 @@
 
 #include "sherpa-onnx/csrc/session.h"
 
+#if defined(__linux__)
+#include <dlfcn.h>
+#endif
+#include <stdlib.h>
+
 #include <algorithm>
+#include <cstring>
+#include <mutex>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -220,6 +227,105 @@ static bool AppendCudaProviderV2(
     api.ReleaseCUDAProviderOptions(cuda_options);
   }
   return success;
+}
+#endif
+
+#if ORT_API_VERSION >= 23
+// The Vulkan plugin EP (https://github.com/automataIA/onnx-vulkan-rs or the
+// like) is a shared library that onnxruntime loads at run time; it needs an
+// onnxruntime at least as new as the one it was built for. It is looked for
+// in SHERPA_ONNX_VULKAN_EP, else as libonnxruntime_ep_vulkan.so next to the
+// loaded libonnxruntime. Returns false (and the session stays on the CPU)
+// if there is no plugin or no Vulkan device.
+static bool AppendVulkanProvider(Ort::SessionOptions *sess_opts,
+                                 const std::unordered_map<std::string,
+                                                          std::string> &config) {
+  static std::once_flag once;
+  static bool registered = false;
+  static Ort::Env *env = nullptr;
+  const auto &api = Ort::GetApi();
+
+  std::call_once(once, [&api]() {
+    std::string lib;
+    const char *from_env = getenv("SHERPA_ONNX_VULKAN_EP");
+    if (from_env != nullptr && *from_env != '\0') {
+      lib = from_env;
+    } else {
+#if defined(__linux__)
+      Dl_info info;
+      if (dladdr(reinterpret_cast<void *>(&OrtGetApiBase), &info) != 0 &&
+          info.dli_fname != nullptr) {
+        lib = info.dli_fname;
+        auto slash = lib.rfind('/');
+        lib = (slash == std::string::npos ? std::string() : lib.substr(0, slash + 1)) +
+              "libonnxruntime_ep_vulkan.so";
+      }
+#endif
+    }
+    if (lib.empty() || !FileExists(lib)) {
+      SHERPA_ONNX_LOGE("No Vulkan execution provider library (%s). Fallback to cpu",
+                       lib.empty() ? "SHERPA_ONNX_VULKAN_EP is not set" : lib.c_str());
+      return;
+    }
+    // without compiling the graph for the device the plugin is slower than
+    // the CPU; the user's environment wins
+    setenv("VULKAN_EP_COMPILE", "1", 0);
+    // onnxruntime keeps one environment per process: this is the one the
+    // models create too. It is never released, the plugin stays loaded.
+    env = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "sherpa-onnx");
+    OrtStatus *status =
+        api.RegisterExecutionProviderLibrary(*env, "vulkan", lib.c_str());
+    if (status != nullptr) {
+      SHERPA_ONNX_LOGE("Cannot load %s: %s. Fallback to cpu", lib.c_str(),
+                       api.GetErrorMessage(status));
+      api.ReleaseStatus(status);
+      return;
+    }
+    registered = true;
+  });
+  if (!registered) {
+    return false;
+  }
+
+  const OrtEpDevice *const *devices = nullptr;
+  size_t num_devices = 0;
+  OrtStatus *status = api.GetEpDevices(*env, &devices, &num_devices);
+  if (status != nullptr) {
+    SHERPA_ONNX_LOGE("Cannot list the devices: %s. Fallback to cpu",
+                     api.GetErrorMessage(status));
+    api.ReleaseStatus(status);
+    return false;
+  }
+  // the first device of the plugin; the CPU provider is always there too
+  std::vector<const OrtEpDevice *> chosen;
+  for (size_t i = 0; i < num_devices && chosen.empty(); ++i) {
+    const char *name = api.EpDevice_EpName(devices[i]);
+    if (name != nullptr && strcmp(name, "CPUExecutionProvider") != 0) {
+      chosen.push_back(devices[i]);
+    }
+  }
+  if (chosen.empty()) {
+    SHERPA_ONNX_LOGE("No Vulkan device. Fallback to cpu");
+    return false;
+  }
+
+  std::vector<const char *> keys, values;
+  for (const auto &kv : config) {
+    if (kv.first != "DEBUG") {
+      keys.push_back(kv.first.c_str());
+      values.push_back(kv.second.c_str());
+    }
+  }
+  status = api.SessionOptionsAppendExecutionProvider_V2(
+      *sess_opts, *env, chosen.data(), chosen.size(), keys.data(),
+      values.data(), keys.size());
+  if (status != nullptr) {
+    SHERPA_ONNX_LOGE("Failed to enable Vulkan: %s. Fallback to cpu",
+                     api.GetErrorMessage(status));
+    api.ReleaseStatus(status);
+    return false;
+  }
+  return true;
 }
 #endif
 
@@ -625,6 +731,17 @@ Ort::SessionOptions GetSessionOptionsImpl(
       SHERPA_ONNX_LOGE(
           "OpenVINO requires ONNX Runtime 1.17 or newer. Current API version: "
           "%d. Fallback to cpu!",
+          static_cast<int32_t>(ORT_API_VERSION));
+#endif
+      break;
+    }
+    case Provider::kVulkan: {
+#if ORT_API_VERSION >= 23
+      AppendVulkanProvider(&sess_opts, config);
+#else
+      SHERPA_ONNX_LOGE(
+          "Vulkan needs ONNX Runtime 1.23 or newer. Current API version: %d. "
+          "Fallback to cpu!",
           static_cast<int32_t>(ORT_API_VERSION));
 #endif
       break;
