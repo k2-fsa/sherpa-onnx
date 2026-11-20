@@ -11,7 +11,8 @@ Usage:
         ./0.wav ./1.wav
 
 Each wave is decoded alone. With --check-batch, all of them are then
-decoded as one zero-padded batch, which must give the same text. That holds
+decoded as one zero-padded batch, which must give the same text and, on
+each wave's valid frames, logits within 1e-3. That holds
 for model.onnx; model.int8.onnx quantizes activations with ranges taken
 over the whole batch, so a batch can change a character or two.
 """
@@ -128,8 +129,10 @@ def main():
         features.append(compute_features(samples[:, 0], sample_rate))
 
     alone = []
+    alone_logits = []
     for w, x in zip(args.waves, features):
         logits, _ = model(x[None], np.array([x.shape[0]], dtype=np.int64))
+        alone_logits.append(logits[0])
         alone.append(to_text(greedy(logits[0], model.blank_id), id2token))
         print(f"{w}: {alone[-1]}")
 
@@ -140,11 +143,25 @@ def main():
     for i, x in enumerate(features):
         batch[i, : x.shape[0]] = x
     logits, logits_lengths = model(batch, lengths)
+    worst = 0.0
     for i, w in enumerate(args.waves):
-        text = to_text(greedy(logits[i, : logits_lengths[i]], model.blank_id), id2token)
+        valid = logits[i, : logits_lengths[i]]
+        if valid.shape != alone_logits[i].shape:
+            raise SystemExit(
+                f"{w}: {valid.shape[0]} valid frames batched, "
+                f"{alone_logits[i].shape[0]} alone"
+            )
+        diff = float(np.abs(valid - alone_logits[i]).max())
+        worst = max(worst, diff)
+        if diff > 1e-3:
+            raise SystemExit(f"{w}: batched logits differ by up to {diff:.2e}")
+        text = to_text(greedy(valid, model.blank_id), id2token)
         if text != alone[i]:
             raise SystemExit(f"{w}: batched decoding gives '{text}'")
-    print(f"A padded batch of {len(features)} gives the same text")
+    print(
+        f"A padded batch of {len(features)} gives the same text, "
+        f"with logits within {worst:.2e} of decoding each alone"
+    )
 
 
 if __name__ == "__main__":

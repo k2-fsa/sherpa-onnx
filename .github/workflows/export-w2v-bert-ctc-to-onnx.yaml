@@ -11,6 +11,10 @@ concurrency:
   group: export-w2v-bert-ctc-to-onnx-${{ github.ref }}
   cancel-in-progress: true
 
+# The release and Hugging Face steps use their own tokens from secrets.
+permissions:
+  contents: read
+
 jobs:
   export-w2v-bert-ctc-to-onnx:
     name: export w2v-bert ctc
@@ -23,6 +27,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # run.sh installs packages from PyPI; keep the token out of them.
+          persist-credentials: false
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -93,6 +100,8 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            # Fail on any error, so a failed push is retried.
+            set -e
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
@@ -118,7 +127,8 @@ jobs:
               git status
               git add .
               git status
-              git commit -m "add models"
+              # A retry after a push that succeeded has nothing to commit.
+              git diff --cached --quiet || git commit -m "add models"
               git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
               cd ..
             done
