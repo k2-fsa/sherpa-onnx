@@ -153,7 +153,8 @@ def main():
             )
         diff = float(np.abs(valid - alone_logits[i]).max())
         worst = max(worst, diff)
-        if diff > 1e-3:
+        # A NaN or infinite logit makes diff NaN, which compares false.
+        if not np.isfinite(diff) or diff > 1e-3:
             raise SystemExit(f"{w}: batched logits differ by up to {diff:.2e}")
         text = to_text(greedy(valid, model.blank_id), id2token)
         if text != alone[i]:
