@@ -1,0 +1,206 @@
+[
+  {
+    "text": "The budget is 1969 dollars.",
+    "expected": "The budget is one thousand nine hundred and sixty nine dollars."
+  },
+  {
+    "text": "The budget is nineteen sixty nine dollars.",
+    "expected": "The budget is nineteen sixty nine dollars."
+  },
+  {
+    "text": "The price is $12.50 and the increase is 15%.",
+    "expected": "The price is twelve dollars fifty cents and the increase is fifteen percent."
+  },
+  {
+    "text": "In 1969, people watched the moon landing.",
+    "expected": "In nineteen sixty nine, people watched the moon landing."
+  },
+  {
+    "text": "We meet at 9:30 AM.",
+    "expected": "We meet at nine thirty a m."
+  },
+  {
+    "text": "There are 42 items.",
+    "expected": "There are forty two items."
+  },
+  {
+    "text": "The value is -3.14.",
+    "expected": "The value is minus three point one four."
+  },
+  {
+    "text": "Pay $1.01 or $2.00.",
+    "expected": "Pay one dollar one cent or two dollars."
+  },
+  {
+    "text": "The increase was 0.5%.",
+    "expected": "The increase was zero point five percent."
+  },
+  {
+    "text": "This is the 21st item.",
+    "expected": "This is the twenty first item."
+  },
+  {
+    "text": "My neighbors can read aloud.",
+    "expected": "My neighbors can read aloud."
+  },
+  {
+    "text": "The deployment uses SQL, API, and v3.14.",
+    "expected": "The deployment uses SQL, API, and v3.14."
+  },
+  {
+    "text": "No numbers here: café.",
+    "expected": "No numbers here: café."
+  },
+  {
+    "text": "The code is 007.",
+    "observe": true
+  },
+  {
+    "text": "On 10/29/2026 we met.",
+    "observe": true
+  },
+  {
+    "text": "Use 1/2 of it.",
+    "observe": true
+  },
+  {
+    "text": "Visit https://hedy.ai/v3.14.",
+    "observe": true
+  },
+  {
+    "text": "Meeting at 13:49.",
+    "observe": true
+  },
+  {
+    "text": "2 + 2 = 4.",
+    "expected": "two plus two equals four."
+  },
+  {
+    "text": "We meet at 12:00 PM.",
+    "expected": "We meet at twelve p m."
+  },
+  {
+    "text": "3:00 PM",
+    "expected": "three p m"
+  },
+  {
+    "text": "9:00",
+    "expected": "nine o'clock"
+  },
+  {
+    "text": "09:00",
+    "expected": "nine o'clock"
+  },
+  {
+    "text": "12:00 PM",
+    "expected": "twelve p m"
+  },
+  {
+    "text": "12:00 AM",
+    "expected": "twelve a m"
+  },
+  {
+    "text": "3:00 pm",
+    "expected": "three p m"
+  },
+  {
+    "text": "9:30 am",
+    "expected": "nine thirty a m"
+  },
+  {
+    "text": "I am available at 9:30 am.",
+    "expected": "I am available at nine thirty a m."
+  },
+  {
+    "text": "I am calm.",
+    "expected": "I am calm."
+  },
+  {
+    "text": "The pm is available.",
+    "expected": "The pm is available."
+  },
+  {
+    "text": "AMBER meets at 3:00 PM.",
+    "expected": "AMBER meets at three p m."
+  },
+  {
+    "text": "3:05 PM",
+    "expected": "three o five p m"
+  },
+  {
+    "text": "12:15 PM",
+    "expected": "twelve fifteen p m"
+  },
+  {
+    "text": "12:20 pm",
+    "expected": "twelve twenty p m"
+  },
+  {
+    "text": "09:09 AM",
+    "expected": "nine o nine a m"
+  },
+  {
+    "text": "AM-PM",
+    "expected": "a m-p m"
+  },
+  {
+    "text": "PM-AM",
+    "expected": "p m-a m"
+  },
+  {
+    "text": "$10",
+    "expected": "ten dollars"
+  },
+  {
+    "text": "US$1",
+    "expected": "one us dollar"
+  },
+  {
+    "text": "US$10",
+    "expected": "ten us dollars"
+  },
+  {
+    "text": "US$10.00",
+    "expected": "ten us dollars"
+  },
+  {
+    "text": "US$12.50",
+    "expected": "twelve us dollars fifty cents"
+  },
+  {
+    "text": "café3.14",
+    "expected": "café3.14"
+  },
+  {
+    "text": "café3.14",
+    "expected": "café3.14"
+  },
+  {
+    "text": "中3.14",
+    "expected": "中3.14"
+  },
+  {
+    "text": "café 3.14",
+    "expected": "café three point one four"
+  },
+  {
+    "text": "The bin 1969 is full.",
+    "expected": "The bin one thousand nine hundred and sixty nine is full."
+  },
+  {
+    "text": "The midyear 1969 count.",
+    "expected": "The midyear one thousand nine hundred and sixty nine count."
+  },
+  {
+    "text": "They met in 1969.",
+    "expected": "They met in nineteen sixty nine."
+  },
+  {
+    "text": "caféin 1969",
+    "expected": "caféin one thousand nine hundred and sixty nine"
+  },
+  {
+    "text": "café—3.14",
+    "expected": "café—three point one four"
+  }
+]

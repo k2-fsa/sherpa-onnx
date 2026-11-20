@@ -1,0 +1,31 @@
+{
+  "format_version": 1,
+  "nemo": {
+    "repository": "NVIDIA/NeMo-text-processing",
+    "revision": "ddadfb2a38d2bc6b8cc6232c4f915eb60f500688",
+    "archive_sha256": "5b8e15b68c6e07d250d15fff00d742104d8fa2220426f8af0190dff7afdc8d4b"
+  },
+  "build_dependencies": {
+    "pynini": "2.1.7",
+    "kaldifst": "1.8.3",
+    "regex": "2026.9.29",
+    "tqdm": "4.70.1",
+    "joblib": "1.6.0",
+    "sacremoses": "0.2.0",
+    "click": "8.5.0",
+    "editdistance": "0.8.1",
+    "cdifflib": "1.2.9",
+    "cloudpickle": "3.1.2"
+  },
+  "artifacts": {
+    "english_tn.fst": {
+      "bytes": 5470546,
+      "sha256": "04729388478de97ce9866478637c78738de1ebe05d257b4c61a5cfa73ef17d02"
+    },
+    "english_symbols.fst": {
+      "bytes": 108726,
+      "sha256": "c870d6f6995840a108bdb3f307d9cfc5cd90335807f5cdc423aa25dfa6d602c5"
+    }
+  },
+  "unicode_data_version": "15.0.0"
+}
