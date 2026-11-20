@@ -30,6 +30,24 @@ bool OnlinePunctuationConfig::Validate() const {
   return true;
 }
 
+template <typename Manager>
+bool OnlinePunctuationConfig::Validate(Manager *mgr) const {
+  if (!model.Validate(mgr)) {
+    return false;
+  }
+
+  return true;
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlinePunctuationConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlinePunctuationConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
+
 std::string OnlinePunctuationConfig::ToString() const {
   std::ostringstream os;
 

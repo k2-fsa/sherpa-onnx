@@ -25,20 +25,46 @@ void OfflinePunctuationModelConfig::Register(ParseOptions *po) {
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool OfflinePunctuationModelConfig::Validate() const {
-  if (ct_transformer.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflinePunctuationModelConfig(
+    const OfflinePunctuationModelConfig &config, const Exists &exists) {
+  if (config.ct_transformer.empty()) {
     SHERPA_ONNX_LOGE("Please provide --ct-transformer");
     return false;
   }
 
-  if (!FileExists(ct_transformer)) {
+  if (!exists(config.ct_transformer)) {
     SHERPA_ONNX_LOGE("--ct-transformer %s does not exist",
-                     ct_transformer.c_str());
+                     config.ct_transformer.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OfflinePunctuationModelConfig::Validate() const {
+  return ValidateOfflinePunctuationModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflinePunctuationModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflinePunctuationModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflinePunctuationModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflinePunctuationModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflinePunctuationModelConfig::ToString() const {
   std::ostringstream os;

@@ -32,6 +32,24 @@ bool OfflinePunctuationConfig::Validate() const {
   return true;
 }
 
+template <typename Manager>
+bool OfflinePunctuationConfig::Validate(Manager *mgr) const {
+  if (!model.Validate(mgr)) {
+    return false;
+  }
+
+  return true;
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflinePunctuationConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflinePunctuationConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
+
 std::string OfflinePunctuationConfig::ToString() const {
   std::ostringstream os;
 
