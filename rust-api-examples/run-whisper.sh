@@ -15,4 +15,5 @@ cargo run --example whisper -- \
     --decoder ./sherpa-onnx-whisper-tiny/tiny-decoder.onnx \
     --tokens ./sherpa-onnx-whisper-tiny/tiny-tokens.txt \
     --language en \
+    --top-k-langs 5 \
     --num-threads 2
