@@ -316,6 +316,15 @@ jobs:
 
           .github/scripts/test-offline-fire-red-asr.sh
 
+      - name: Test offline w2v-BERT CTC
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-w2v-bert-ctc.sh
+
       - name: Test offline CTC
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash

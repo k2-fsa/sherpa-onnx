@@ -29,6 +29,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineStream,
     OfflineTdnnModelConfig,
     OfflineTransducerModelConfig,
+    OfflineW2vBertCtcModelConfig,
     OfflineWenetCtcModelConfig,
     OfflineWhisperModelConfig,
     OfflineZipformerCtcModelConfig,
@@ -845,6 +846,58 @@ class OfflineRecognizer(object):
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
             fire_red_asr_ctc=OfflineFireRedAsrCtcModelConfig(model=model),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            model_config=model_config,
+            decoding_method=decoding_method,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_w2v_bert_ctc(
+        cls,
+        model: str,
+        tokens: str,
+        num_threads: int = 1,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+    ):
+        """
+        Please refer to
+        `<https://github.com/k2-fsa/sherpa-onnx/tree/master/scripts/w2v-bert>`_
+        for how to export a w2v-BERT 2.0 CTC model.
+
+        Args:
+          model:
+            Path to ``model.onnx`` or ``model.int8.onnx``. The weights of
+            ``model.onnx`` are in ``model.weights``, which must be in the
+            same directory.
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          decoding_method:
+            The only supported decoding method is greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            w2v_bert_ctc=OfflineW2vBertCtcModelConfig(model=model),
             tokens=tokens,
             num_threads=num_threads,
             debug=debug,

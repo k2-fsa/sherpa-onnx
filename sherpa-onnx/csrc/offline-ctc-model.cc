@@ -27,6 +27,7 @@
 #include "sherpa-onnx/csrc/offline-omnilingual-asr-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-telespeech-ctc-model.h"
+#include "sherpa-onnx/csrc/offline-w2v-bert-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-wenet-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -197,6 +198,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     return std::make_unique<OfflineMedAsrCtcModel>(config);
   } else if (!config.fire_red_asr_ctc.model.empty()) {
     return std::make_unique<OfflineFireRedAsrCtcModel>(config);
+  } else if (!config.w2v_bert_ctc.model.empty()) {
+    return std::make_unique<OfflineW2vBertCtcModel>(config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here
@@ -263,6 +266,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     return std::make_unique<OfflineMedAsrCtcModel>(mgr, config);
   } else if (!config.fire_red_asr_ctc.model.empty()) {
     return std::make_unique<OfflineFireRedAsrCtcModel>(mgr, config);
+  } else if (!config.w2v_bert_ctc.model.empty()) {
+    return std::make_unique<OfflineW2vBertCtcModel>(mgr, config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here

@@ -23,6 +23,7 @@
 #include "sherpa-onnx/python/csrc/offline-sense-voice-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tdnn-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-transducer-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-w2v-bert-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-wenet-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-whisper-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-zipformer-ctc-model-config.h"
@@ -73,6 +74,8 @@ Args:
     Config for a FireRedAsr CTC model.
   qwen3_asr:
     Config for a Qwen3 ASR model.
+  w2v_bert_ctc:
+    Config for a w2v-BERT 2.0 CTC model.
   telespeech_ctc:
     Path to the TeleSpeech CTC ONNX model file.
   tokens:
@@ -112,6 +115,7 @@ void PybindOfflineModelConfig(py::module *m) {
   PybindOfflineMedAsrCtcModelConfig(m);
   PybindOfflineFireRedAsrCtcModelConfig(m);
   PybindOfflineQwen3ASRModelConfig(m);
+  PybindOfflineW2vBertCtcModelConfig(m);
 
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")
@@ -132,9 +136,10 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineFunASRNanoModelConfig &,
                     const OfflineMedAsrCtcModelConfig &,
                     const OfflineFireRedAsrCtcModelConfig &,
-                    const OfflineQwen3ASRModelConfig &, 
+                    const OfflineQwen3ASRModelConfig &,
+                    const OfflineW2vBertCtcModelConfig &,
                     const std::string &,const std::string &, int32_t, bool,
-                    const std::string &,const std::string &, 
+                    const std::string &,const std::string &,
                     const std::string &,const std::string &>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
@@ -155,6 +160,7 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("medasr") = OfflineMedAsrCtcModelConfig(),
            py::arg("fire_red_asr_ctc") = OfflineFireRedAsrCtcModelConfig(),
            py::arg("qwen3_asr") = OfflineQwen3ASRModelConfig(),
+           py::arg("w2v_bert_ctc") = OfflineW2vBertCtcModelConfig(),
            py::arg("telespeech_ctc") = "", py::arg("tokens") = "",
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "",
@@ -178,6 +184,7 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("medasr", &PyClass::medasr)
       .def_readwrite("fire_red_asr_ctc", &PyClass::fire_red_asr_ctc)
       .def_readwrite("qwen3_asr", &PyClass::qwen3_asr)
+      .def_readwrite("w2v_bert_ctc", &PyClass::w2v_bert_ctc)
       .def_readwrite("telespeech_ctc", &PyClass::telespeech_ctc)
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)
