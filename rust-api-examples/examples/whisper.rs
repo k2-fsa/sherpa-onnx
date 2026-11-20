@@ -48,6 +48,11 @@ struct Args {
     /// Number of threads
     #[arg(long, default_value_t = 2)]
     num_threads: i32,
+
+    /// Print the top-k detected languages with their probabilities (0 to disable,
+    /// -1 to print all languages). Only for multilingual Whisper models.
+    #[arg(long, default_value_t = 0, allow_hyphen_values = true)]
+    top_k_langs: i32,
 }
 
 fn main() {
@@ -84,6 +89,9 @@ fn main() {
     println!("Recognizer created in {:.3} seconds.", creation_elapsed);
 
     let stream = recognizer.create_stream();
+    if args.top_k_langs != 0 {
+        stream.set_option("top_k_langs", &args.top_k_langs.to_string());
+    }
 
     // Measure recognition time
     let start_recognition = Instant::now();
@@ -94,6 +102,12 @@ fn main() {
     // Get recognition result
     if let Some(result) = stream.get_result() {
         println!("Decoded text: {}", result.text);
+        if !result.lang.is_empty() {
+            println!("Language: {}", result.lang);
+        }
+        for lp in &result.lang_probs {
+            println!("  {}: {:.4}", lp.lang, lp.prob);
+        }
 
         let total_elapsed = creation_elapsed + recognition_elapsed;
         let rtf = recognition_elapsed / audio_duration;

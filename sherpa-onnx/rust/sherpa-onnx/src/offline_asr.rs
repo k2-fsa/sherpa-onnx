@@ -644,12 +644,22 @@ impl Default for OfflineRecognizerConfig {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+/// Probability of one language from a language identification pass.
+pub struct LangProb {
+    pub lang: String,
+    pub prob: f32,
+}
+
+#[derive(Clone, Debug, Deserialize)]
 /// Recognition result returned by [`OfflineStream::get_result`].
 pub struct OfflineRecognizerResult {
     pub text: String,
     pub tokens: Vec<String>,
     pub timestamps: Option<Vec<f32>>,
     pub durations: Option<Vec<f32>>,
+    pub lang: String,
+    /// Empty unless the stream option top_k_langs is set.
+    pub lang_probs: Vec<LangProb>,
 }
 
 /// Offline speech recognizer.
