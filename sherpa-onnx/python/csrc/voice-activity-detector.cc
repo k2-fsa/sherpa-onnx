@@ -81,18 +81,32 @@ void PybindVoiceActivityDetector(py::module *m) {
           py::arg("samples"), kAcceptWaveformDoc,
           py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("config", &PyClass::GetConfig)
-      .def("empty", &PyClass::Empty, kEmptyDoc,
-           py::call_guard<py::gil_scoped_release>())
-      .def("pop", &PyClass::Pop, kPopDoc,
-           py::call_guard<py::gil_scoped_release>())
-      .def("is_speech_detected", &PyClass::IsSpeechDetected,
-           kIsSpeechDetectedDoc, py::call_guard<py::gil_scoped_release>())
-      .def("reset", &PyClass::Reset, kResetDoc,
-           py::call_guard<py::gil_scoped_release>())
-      .def("flush", &PyClass::Flush, kFlushDoc,
-           py::call_guard<py::gil_scoped_release>())
-      .def_property_readonly("front", &PyClass::Front, kFrontDoc)
-      .def_property_readonly("current_segment", &PyClass::CurrentSpeechSegment);
+      .def(
+          "empty",
+          [](const PyClass &self) { return self.Empty(); }, kEmptyDoc,
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "pop",
+          [](PyClass &self) { self.Pop(); }, kPopDoc,
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "is_speech_detected",
+          [](const PyClass &self) { return self.IsSpeechDetected(); },
+          kIsSpeechDetectedDoc, py::call_guard<py::gil_scoped_release>())
+      .def(
+          "reset",
+          [](const PyClass &self) { self.Reset(); }, kResetDoc,
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "flush",
+          [](const PyClass &self) { self.Flush(); }, kFlushDoc,
+          py::call_guard<py::gil_scoped_release>())
+      .def_property_readonly(
+          "front",
+          [](const PyClass &self) { return self.Front(); }, kFrontDoc)
+      .def_property_readonly(
+          "current_segment",
+          [](const PyClass &self) { return self.CurrentSpeechSegment(); });
 }
 
 }  // namespace sherpa_onnx

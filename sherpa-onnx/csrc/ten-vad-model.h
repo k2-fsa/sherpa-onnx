@@ -45,6 +45,9 @@ class TenVadModel : public VadModel {
   void SetMinSilenceDuration(float s) override;
   void SetThreshold(float threshold) override;
 
+  VadModelState GetState() const override;
+  void SetState(VadModelState state) override;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
