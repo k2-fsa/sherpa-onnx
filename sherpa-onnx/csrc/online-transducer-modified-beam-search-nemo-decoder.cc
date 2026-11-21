@@ -16,6 +16,8 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/online-stream.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -45,8 +47,9 @@ Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
   return decoder_input;
 }
 
+template <typename Model>
 void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
-               OnlineTransducerNeMoModel *model, int32_t max_active_paths,
+               const Model *model, int32_t max_active_paths,
                float blank_penalty, OnlineStream *s) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -294,10 +297,10 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
   r.frame_offset += num_rows;
 }
 
-}  // namespace
-
-void OnlineTransducerModifiedBeamSearchNeMoDecoder::Decode(
-    Ort::Value encoder_out, OnlineStream **ss, int32_t n) const {
+template <typename Model>
+void DecodeBatch(const Ort::Value &encoder_out, OnlineStream **ss, int32_t n,
+                 const Model *model, int32_t max_active_paths,
+                 float blank_penalty) {
   auto shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
   int32_t batch_size = static_cast<int32_t>(shape[0]);
 
@@ -315,9 +318,20 @@ void OnlineTransducerModifiedBeamSearchNeMoDecoder::Decode(
   for (int32_t i = 0; i != batch_size; ++i) {
     const float *this_p = p + dim1 * dim2 * i;
 
-    DecodeOne(this_p, dim1, dim2, model_, max_active_paths_, blank_penalty_,
-              ss[i]);
+    DecodeOne(this_p, dim1, dim2, model, max_active_paths, blank_penalty, ss[i]);
   }
+}
+
+}  // namespace
+
+void OnlineTransducerModifiedBeamSearchNeMoDecoder::Decode(
+    Ort::Value encoder_out, OnlineStream **ss, int32_t n) const {
+  std::visit(
+      [&](const auto *model) {
+        DecodeBatch(encoder_out, ss, n, model, max_active_paths_,
+                    blank_penalty_);
+      },
+      model_);
 }
 
 }  // namespace sherpa_onnx
