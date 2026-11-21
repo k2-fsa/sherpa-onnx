@@ -25,6 +25,9 @@ Unified beam search accepts 1 to 32 active paths and supports
 `--blank-penalty`. Hotwords and external language model fusion are unavailable
 with this decoder.
 
+The default beam width is 4. Larger widths can increase deletions in some
+recordings. Compare on representative audio before changing the width.
+
 New streams start with an empty predictor. Within a segment, the beam carries
 its candidates across chunks, so a later chunk can revise the partial result.
 `Reset()` commits the best path and clears the result for the next segment
