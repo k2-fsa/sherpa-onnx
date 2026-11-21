@@ -140,6 +140,25 @@ std::vector<int64_t> PiperPhonemesToIdsVits(
   return ans;
 }
 
+// Positions after these phonemes are preferred when a long phoneme sequence
+// has to be split into several chunks.
+static bool IsPhonemeBreak(char32_t p) {
+  switch (p) {
+    case U' ':
+    case U',':
+    case U'.':
+    case U'!':
+    case U'?':
+    case U';':
+    case U':':
+    case U'\u2014':  // em dash
+    case U'\u2026':  // ellipsis
+      return true;
+    default:
+      return false;
+  }
+}
+
 std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
     const std::unordered_map<char32_t, int32_t> &token2id,
     const std::vector<char32_t> &phonemes, bool use_eos_bos,
@@ -155,22 +174,41 @@ std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
     current.push_back(bos);
   }
 
+  // Index in |current| right after the last space or punctuation. When a
+  // chunk gets too long, we split there instead of in the middle of a word.
+  // 0 means there is no such position in |current|.
+  size_t last_break = 0;
+  const size_t start = current.size();  // 1 if BOS was added, 0 otherwise
+
   for (auto p : phonemes) {
     if (token2id.count(p)) {
       current.push_back(token2id.at(p));
+      if (IsPhonemeBreak(p)) {
+        last_break = current.size();
+      }
     } else {
       SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
                        static_cast<uint32_t>(p));
     }
 
     if (current.size() > max_token_len + 1) {
+      std::vector<int64_t> rest;
+      if (last_break > start && last_break < current.size()) {
+        rest.assign(current.begin() + last_break, current.end());
+        current.resize(last_break);
+      }
+
       if (eos >= 0) {
         current.push_back(eos);
       }
       ans.push_back(std::move(current));
+
+      current.clear();  // NOLINT(bugprone-use-after-move)
       if (bos >= 0) {
-        current.push_back(bos);  // NOLINT(bugprone-use-after-move)
+        current.push_back(bos);
       }
+      current.insert(current.end(), rest.begin(), rest.end());
+      last_break = 0;
     }
   }
 
