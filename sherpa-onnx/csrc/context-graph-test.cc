@@ -75,6 +75,42 @@ TEST(ContextGraph, TestCustomizeNonStrict) {
   TestHelper(queries, 5, false);
 }
 
+// The scores must not depend on the order of the phrases. Here "ABXY" is
+// added after "ABCD" with a higher score, which raises the scores of the
+// shared nodes "A" and "AB" after "ABC" and "ABCD" were created.
+static float Score(const ContextGraph &context_graph, const std::string &query,
+                   bool strict_mode) {
+  float total_scores = 0;
+  auto state = context_graph.Root();
+  for (auto q : query) {
+    auto res = context_graph.ForwardOneStep(state, q, strict_mode);
+    total_scores += std::get<0>(res);
+    state = std::get<1>(res);
+  }
+  return total_scores + context_graph.Finalize(state).first;
+}
+
+TEST(ContextGraph, TestPhraseOrder) {
+  std::vector<std::vector<int32_t>> abcd_first({{'A', 'B', 'C', 'D'},
+                                                {'A', 'B', 'X', 'Y'}});
+  std::vector<std::vector<int32_t>> abxy_first({{'A', 'B', 'X', 'Y'},
+                                                {'A', 'B', 'C', 'D'}});
+  auto graph1 = ContextGraph(abcd_first, 1, {1, 3});
+  auto graph2 = ContextGraph(abxy_first, 1, {3, 1});
+  for (bool strict_mode : {true, false}) {
+    // A partial match must be fully cancelled.
+    for (const auto &query : {"ABCZ", "ABXZ", "AB", "ABC"}) {
+      EXPECT_EQ(Score(graph1, query, strict_mode), 0) << query;
+      EXPECT_EQ(Score(graph2, query, strict_mode), 0) << query;
+    }
+    for (const auto &query : {"ABCD", "ABXY"}) {
+      EXPECT_EQ(Score(graph1, query, strict_mode),
+                Score(graph2, query, strict_mode))
+          << query;
+    }
+  }
+}
+
 TEST(ContextGraph, Benchmark) {
   std::random_device rd;
   std::mt19937 mt(rd());
