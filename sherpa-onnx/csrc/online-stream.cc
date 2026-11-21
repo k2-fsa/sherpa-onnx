@@ -4,6 +4,8 @@
 // Copyright (c)  2026  Julian Pscheid
 #include "sherpa-onnx/csrc/online-stream.h"
 
+#include <atomic>
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -11,6 +13,8 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-vad-buffer.h"
+#include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 
@@ -20,16 +24,44 @@ class OnlineStream::Impl {
  public:
   explicit Impl(const FeatureExtractorConfig &config,
                 ContextGraphPtr context_graph)
-      : feat_extractor_(config), context_graph_(std::move(context_graph)) {}
+      : feat_extractor_(config),
+        context_graph_(std::move(context_graph)),
+        id_(NextId()) {}
+
+  int64_t Id() const { return id_; }
 
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     std::scoped_lock lock(mutex_);
     feat_extractor_.AcceptWaveform(sampling_rate, waveform, n);
+
+    if (!vad_enabled_) return;
+
+    // Buffer a copy at the VAD sample rate; the VAD loop scores it later.
+    const float *vad_waveform = waveform;
+    int32_t vad_n = n;
+    std::vector<float> resampled;
+    if (sampling_rate != vad_sample_rate_) {
+      if (!vad_resampler_ ||
+          vad_resampler_->GetInputSamplingRate() != sampling_rate) {
+        float min_freq = std::min<int32_t>(sampling_rate, vad_sample_rate_);
+        float lowpass_cutoff = 0.99f * 0.5f * min_freq;
+        vad_resampler_ = std::make_unique<LinearResample>(
+            sampling_rate, vad_sample_rate_, lowpass_cutoff, 6);
+      }
+      vad_resampler_->Resample(waveform, n, false, &resampled);
+      vad_waveform = resampled.data();
+      vad_n = static_cast<int32_t>(resampled.size());
+    }
+    if (vad_n > 0) {
+      vad_pending_.insert(vad_pending_.end(), vad_waveform,
+                          vad_waveform + vad_n);
+    }
   }
 
-  void InputFinished() const {
+  void InputFinished() {
     std::scoped_lock lock(mutex_);
     feat_extractor_.InputFinished();
+    input_finished_ = true;
   }
 
   int32_t NumFramesReady() const {
@@ -65,6 +97,171 @@ class OnlineStream::Impl {
     // we don't reset the feature extractor
     start_frame_index_ += num_processed_frames_;
     num_processed_frames_ = 0;
+  }
+
+  void InitVad(int32_t vad_sample_rate, int32_t window_shift,
+               int32_t window_size, float asr_frame_shift_ms,
+               bool flush_supported) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    vad_enabled_ = true;
+    vad_sample_rate_ = vad_sample_rate;
+    vad_window_size_ = window_size;
+    asr_frame_shift_ms_ = asr_frame_shift_ms;
+    vad_window_shift_seconds_ =
+        window_shift / static_cast<float>(vad_sample_rate_);
+    vad_window_shift_ = window_shift;
+    vad_flush_supported_ = flush_supported;
+  }
+
+  bool HasVad() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return vad_enabled_;
+  }
+
+  // ---- used by the shared OnlineVadModel ----
+  int32_t VadPendingSize() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return static_cast<int32_t>(vad_pending_.size());
+  }
+
+  bool VadPeekWindow(int32_t win, std::vector<float> *out) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (static_cast<int32_t>(vad_pending_.size()) < win) return false;
+    out->assign(vad_pending_.begin(), vad_pending_.begin() + win);
+    return true;
+  }
+
+  void VadDropSamples(int32_t k) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    k = std::min<int32_t>(k, static_cast<int32_t>(vad_pending_.size()));
+    vad_pending_.erase(vad_pending_.begin(), vad_pending_.begin() + k);
+  }
+
+  // Frame (absolute, ASR frame units) the VAD has scored up to; mutex_ held.
+  int64_t VadFramesCoveredLocked() const {
+    if (!vad_enabled_ || asr_frame_shift_ms_ <= 0.0f) return 0;
+    float seconds_covered =
+        vad_predictions_.NumFramesReady() * vad_window_shift_seconds_;
+    return static_cast<int64_t>(seconds_covered * 1000.0f /
+                                asr_frame_shift_ms_);
+  }
+
+  // Called after each scored window. A confirmed speech -> silence flip
+  // arms the endpoint and, if supported, the end-of-utterance flush.
+  void VadPushPrediction(bool is_speech) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    vad_predictions_.Push(is_speech ? 1.0f : 0.0f);
+    const int64_t idx = vad_predictions_.NumFramesReady();
+
+    if (is_speech) {
+      vad_had_speech_ = true;
+      vad_last_speech_frame_ = idx;
+    } else if (vad_is_speech_) {
+      vad_silence_start_frame_ = idx;
+      if (vad_had_speech_ && !vad_endpoint_) {
+        vad_endpoint_ = true;
+        if (vad_flush_supported_) {
+          // ASR-relative frame the flush must decode up to.
+          vad_endpoint_frame_ = static_cast<int32_t>(
+              VadFramesCoveredLocked() - start_frame_index_);
+          vad_flush_pending_ = true;
+        }
+      }
+    }
+    vad_is_speech_ = is_speech;
+
+    // Bound memory; only the monotonic NumFramesReady() is read.
+    constexpr int32_t kMaxRetainedPredictions = 1000;  // ~32s @ 32ms/window
+    constexpr int32_t kTrimToPredictions = 200;        // ~6.4s
+    if (vad_predictions_.Size() > kMaxRetainedPredictions) {
+      vad_predictions_.Pop(vad_predictions_.Size() - kTrimToPredictions);
+    }
+  }
+
+  int64_t GetVadFramesCoveredAbsolute() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return VadFramesCoveredLocked();
+  }
+
+  bool GetVadConfirmedSilenceStartAbsolute(int64_t *out_frame) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!vad_enabled_ || vad_is_speech_ || vad_silence_start_frame_ < 0 ||
+        asr_frame_shift_ms_ <= 0.0f) {
+      return false;
+    }
+    float seconds = vad_silence_start_frame_ * vad_window_shift_seconds_;
+    *out_frame = static_cast<int64_t>(seconds * 1000.0f / asr_frame_shift_ms_);
+    return true;
+  }
+
+  bool IsVadSpeechDetected() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return vad_enabled_ && vad_is_speech_;
+  }
+
+  // Reported only after the flush chunk is decoded, so the final words are
+  // in the result.
+  bool IsVadEndpoint() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return vad_enabled_ && vad_endpoint_ && !vad_flush_pending_;
+  }
+
+  bool IsVadEndpointArmed() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return vad_enabled_ && vad_endpoint_;
+  }
+
+  bool IsVadFlushPending() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return vad_flush_pending_;
+  }
+
+  int32_t GetVadEndpointFrame() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return vad_endpoint_frame_;
+  }
+
+  void ClearVadFlushPending() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    vad_flush_pending_ = false;
+  }
+
+  void ResetVad() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    vad_had_speech_ = false;
+    vad_endpoint_ = false;
+    vad_flush_pending_ = false;
+    vad_endpoint_frame_ = 0;
+  }
+
+  // Per-stream model state; VAD thread only.
+  std::vector<Ort::Value> &GetVadStates() { return vad_states_; }
+  void SetVadStates(std::vector<Ort::Value> states) {
+    vad_states_ = std::move(states);
+  }
+  bool &IsVadTriggered() { return vad_triggered_; }
+  int32_t &GetVadCurrentSample() { return vad_current_sample_; }
+  int32_t &GetVadTempStart() { return vad_temp_start_; }
+  int32_t &GetVadTempEnd() { return vad_temp_end_; }
+
+  bool IsInputFinished() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return input_finished_;
+  }
+
+  int32_t &GetEndpointRule() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return endpoint_rule_;
+  }
+
+  float &GetEndpointDelay() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return endpoint_delay_;
+  }
+
+  float &GetSpeechEndTime() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return speech_end_time_;
   }
 
   int32_t &GetNumProcessedFrames() {
@@ -240,6 +437,49 @@ class OnlineStream::Impl {
   std::unordered_map<std::string, std::string> options_;
   std::unique_ptr<kaldi_decoder::FasterDecoder> faster_decoder_;
   int32_t faster_decoder_processed_frames_ = 0;
+
+  // The model is shared; everything mutable lives here.
+  bool vad_enabled_ = false;
+  std::unique_ptr<LinearResample> vad_resampler_;
+  int32_t vad_sample_rate_ = 16000;
+  int32_t vad_window_shift_ = 512;
+  int32_t vad_window_size_ = 576;
+
+  // Unscored samples at the VAD sample rate; guarded by mutex_.
+  std::vector<float> vad_pending_;
+
+  // Model state; touched only by the VAD thread, so unlocked.
+  std::vector<Ort::Value> vad_states_;  // LSTM h/c (v4) or state (v5)
+  bool vad_triggered_ = false;          // IsSpeech state machine
+  int32_t vad_current_sample_ = 0;
+  int32_t vad_temp_start_ = 0;
+  int32_t vad_temp_end_ = 0;
+
+  OnlineVadBuffer vad_predictions_;  // one entry per VAD window
+  bool vad_had_speech_ = false;
+  bool vad_is_speech_ = false;
+  int64_t vad_silence_start_frame_ = -1;  // in vad_predictions_ frame units
+  int64_t vad_last_speech_frame_ = -1;
+  float vad_window_shift_seconds_ = 0.032f;
+
+  // Armed by VadPushPrediction().
+  bool vad_flush_supported_ = false;
+  bool vad_endpoint_ = false;
+  bool vad_flush_pending_ = false;
+  int32_t vad_endpoint_frame_ = 0;  // ASR-relative frame to flush up to
+
+  float asr_frame_shift_ms_ = 10.0f;
+  bool input_finished_ = false;
+
+  int32_t endpoint_rule_ = 0;
+  float endpoint_delay_ = 0.0f;
+  float speech_end_time_ = 0.0f;
+
+  static int64_t NextId() {
+    static std::atomic<int64_t> next{1};
+    return next.fetch_add(1);
+  }
+  int64_t id_ = 0;
 };
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/,
@@ -288,6 +528,8 @@ int32_t &OnlineStream::GetNumProcessedFrames() {
 int32_t OnlineStream::GetNumFramesSinceStart() const {
   return impl_->GetNumFramesSinceStart();
 }
+
+int64_t OnlineStream::Id() const { return impl_->Id(); }
 
 int32_t &OnlineStream::GetCurrentSegment() {
   return impl_->GetCurrentSegment();
@@ -417,5 +659,84 @@ float OnlineStream::GetOptionFloat(const std::string &key,
                                    float default_value) const {
   return impl_->GetOptionFloat(key, default_value);
 }
+
+void OnlineStream::InitVad(int32_t vad_sample_rate, int32_t window_shift,
+                           int32_t window_size, float asr_frame_shift_ms,
+                           bool flush_supported) {
+  impl_->InitVad(vad_sample_rate, window_shift, window_size,
+                 asr_frame_shift_ms, flush_supported);
+}
+
+bool OnlineStream::HasVad() const { return impl_->HasVad(); }
+
+int32_t OnlineStream::VadPendingSize() const {
+  return impl_->VadPendingSize();
+}
+
+bool OnlineStream::VadPeekWindow(int32_t win, std::vector<float> *out) const {
+  return impl_->VadPeekWindow(win, out);
+}
+
+void OnlineStream::VadDropSamples(int32_t k) { impl_->VadDropSamples(k); }
+
+void OnlineStream::VadPushPrediction(bool is_speech) {
+  impl_->VadPushPrediction(is_speech);
+}
+
+std::vector<Ort::Value> &OnlineStream::GetVadStates() {
+  return impl_->GetVadStates();
+}
+
+void OnlineStream::SetVadStates(std::vector<Ort::Value> states) {
+  impl_->SetVadStates(std::move(states));
+}
+
+bool &OnlineStream::IsVadTriggered() { return impl_->IsVadTriggered(); }
+int32_t &OnlineStream::GetVadCurrentSample() {
+  return impl_->GetVadCurrentSample();
+}
+int32_t &OnlineStream::GetVadTempStart() { return impl_->GetVadTempStart(); }
+int32_t &OnlineStream::GetVadTempEnd() { return impl_->GetVadTempEnd(); }
+
+int64_t OnlineStream::GetVadFramesCoveredAbsolute() const {
+  return impl_->GetVadFramesCoveredAbsolute();
+}
+
+bool OnlineStream::GetVadConfirmedSilenceStartAbsolute(
+    int64_t *out_frame) const {
+  return impl_->GetVadConfirmedSilenceStartAbsolute(out_frame);
+}
+
+bool OnlineStream::IsVadSpeechDetected() const {
+  return impl_->IsVadSpeechDetected();
+}
+
+bool OnlineStream::IsVadEndpoint() const { return impl_->IsVadEndpoint(); }
+
+bool OnlineStream::IsVadEndpointArmed() const {
+  return impl_->IsVadEndpointArmed();
+}
+
+bool OnlineStream::IsVadFlushPending() const {
+  return impl_->IsVadFlushPending();
+}
+
+int32_t OnlineStream::GetVadEndpointFrame() const {
+  return impl_->GetVadEndpointFrame();
+}
+
+void OnlineStream::ClearVadFlushPending() { impl_->ClearVadFlushPending(); }
+
+void OnlineStream::ResetVad() { impl_->ResetVad(); }
+
+bool OnlineStream::IsInputFinished() const {
+  return impl_->IsInputFinished();
+}
+
+int32_t &OnlineStream::GetEndpointRule() { return impl_->GetEndpointRule(); }
+
+float &OnlineStream::GetEndpointDelay() { return impl_->GetEndpointDelay(); }
+
+float &OnlineStream::GetSpeechEndTime() { return impl_->GetSpeechEndTime(); }
 
 }  // namespace sherpa_onnx

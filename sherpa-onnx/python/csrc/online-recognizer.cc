@@ -168,6 +168,15 @@ static void PybindOnlineRecognizerResult(py::module *m) {
           [](PyClass &self) -> std::vector<int32_t> { return self.words; })
       .def_property_readonly(
           "is_final", [](PyClass &self) -> bool { return self.is_final; })
+      .def_property_readonly(
+          "endpoint_rule",
+          [](PyClass &self) -> int32_t { return self.endpoint_rule; })
+      .def_property_readonly(
+          "endpoint_delay",
+          [](PyClass &self) -> float { return self.endpoint_delay; })
+      .def_property_readonly(
+          "speech_end_time",
+          [](PyClass &self) -> float { return self.speech_end_time; })
       .def("__str__", &PyClass::AsJsonString,
            py::call_guard<py::gil_scoped_release>())
       .def("as_json_string", &PyClass::AsJsonString,
