@@ -32,7 +32,9 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
       : config_(config), model_(mgr, config_.model) {}
 
   OfflineSourceSeparationOutput Process(
-      const OfflineSourceSeparationInput &_input) const override {
+      const OfflineSourceSeparationInput &_input,
+      OfflineSourceSeparationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const override {
     auto input = Resample(_input, config_.model.debug);
 
     auto chunks_ch0 = SplitIntoChunks(input.samples.data[0]);
@@ -45,9 +47,10 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
     std::vector<float> samples_ch0;
     std::vector<float> samples_ch1;
 
-    for (int32_t i = 0; i != static_cast<int32_t>(chunks_ch0.size()); ++i) {
+    int32_t num_chunks = static_cast<int32_t>(chunks_ch0.size());
+    for (int32_t i = 0; i != num_chunks; ++i) {
       bool is_first_chunk = (i == 0);
-      bool is_last_chunk = (i == static_cast<int32_t>(chunks_ch0.size()) - 1);
+      bool is_last_chunk = (i == num_chunks - 1);
 
       auto s = ProcessChunk(
           chunks_ch0[i],
@@ -56,6 +59,10 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
 
       samples_ch0.insert(samples_ch0.end(), s.first.begin(), s.first.end());
       samples_ch1.insert(samples_ch1.end(), s.second.begin(), s.second.end());
+
+      if (callback) {
+        callback(i + 1, num_chunks, callback_arg);
+      }
     }
 
     auto &vocals_ch0 = samples_ch0;

@@ -24,7 +24,9 @@ class OfflineSourceSeparationImpl {
   virtual ~OfflineSourceSeparationImpl() = default;
 
   virtual OfflineSourceSeparationOutput Process(
-      const OfflineSourceSeparationInput &input) const = 0;
+      const OfflineSourceSeparationInput &input,
+      OfflineSourceSeparationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const = 0;
 
   virtual int32_t GetOutputSampleRate() const = 0;
 
