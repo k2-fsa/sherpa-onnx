@@ -362,6 +362,12 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [multi-speaker-agent-demo](https://github.com/nia-teams/multi-speaker-agent-demo)
+
+> A browser audio workbench using `sherpa-onnx-node` with ERes2Net speaker
+> embeddings for session-scoped speaker attribution. It combines local voiceprint
+> clustering with cloud streaming ASR and Agent suggestions for multi-speaker conversations.
+
 ### [VocaRead](https://apps.apple.com/us/app/vocaread/id6757822401)
 
 > iOS app for reading EPUBs, PDFs, and documents aloud. It uses sherpa-onnx
