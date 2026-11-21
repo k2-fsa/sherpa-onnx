@@ -4,6 +4,38 @@ This folder contains scripts to export the model from
 <https://huggingface.co/nvidia/parakeet-unified-en-0.6b>
 to sherpa-onnx.
 
+## Streaming with modified beam search
+
+Use `--decoding-method=modified_beam_search` to keep multiple candidate
+transcripts while decoding. The default method is `greedy_search`.
+For the 1120 ms INT8 export:
+
+```bash
+sherpa-onnx \
+  --encoder="$model_dir/encoder.int8.onnx" \
+  --decoder="$model_dir/decoder.int8.onnx" \
+  --joiner="$model_dir/joiner.int8.onnx" \
+  --tokens="$model_dir/tokens.txt" \
+  --decoding-method=modified_beam_search \
+  --max-active-paths=4 \
+  "$model_dir/test_wavs/0.wav"
+```
+
+Unified beam search accepts 1 to 32 active paths and supports
+`--blank-penalty`. Hotwords and external language model fusion are unavailable
+with this decoder.
+
+New streams start with an empty predictor. Within a segment, the beam carries
+its candidates across chunks, so a later chunk can revise the partial result.
+`Reset()` commits the best path and clears the result for the next segment
+while retaining its predictor state and the audio context. Create a new stream
+to start without that context.
+
+Use `benchmark_mbs.py --help` to compare WER and CPU runtime using the same
+audio and human references for each method. Supply a JSONL manifest with one
+`id`, `wav`, and `text` entry per line. WAV paths are relative to the manifest
+directory and must point to mono 16 kHz PCM16 audio.
+
 ## asr_model.cfg
 
 ```
