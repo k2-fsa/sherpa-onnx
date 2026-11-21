@@ -82,6 +82,10 @@ class OfflineSpeakerDiarization {
   //  - min_active_ratio: only the embeddings with at least this ratio of the
   //    window as clean speech are clustered. It must be in [0, 1]. Default
   //    0.2. Use 0 to cluster all of them.
+  //  - min_duration_on, min_duration_off: override the values in the config.
+  //    They must be >= 0.
+  //  - window_shift_ratio: overrides segmentation.pyannote.window_shift_ratio
+  //    in the config. It must be in (0, 1].
   OfflineSpeakerDiarizationResult Process(
       const OfflineStream *stream,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
