@@ -30,6 +30,8 @@ struct SpeakerEmbeddingExtractorConfig {
 
   void Register(ParseOptions *po);
   bool Validate() const;
+  template <typename Manager>
+  bool Validate(Manager *mgr) const;
   std::string ToString() const;
 };
 
