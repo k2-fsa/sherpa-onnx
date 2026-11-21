@@ -559,7 +559,8 @@ GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
   std::vector<std::vector<float>> chunk_samples;
   chunk_samples.reserve(text_chunks.size());
   int32_t num_chunks = static_cast<int32_t>(text_chunks.size());
-  for (int32_t i = 0; i < num_chunks; ++i) {
+  bool should_continue = true;
+  for (int32_t i = 0; i < num_chunks && should_continue; ++i) {
     auto chunk_result =
         Process(text_chunks[i], lang, sid, num_steps, speed, gen);
     if (chunk_result.samples.empty()) {
@@ -568,8 +569,8 @@ GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
     if (callback) {
       float progress =
           static_cast<float>(i + 1) / static_cast<float>(num_chunks);
-      callback(chunk_result.samples.data(), chunk_result.samples.size(),
-               progress);
+      should_continue = callback(chunk_result.samples.data(),
+                                 chunk_result.samples.size(), progress);
     }
     chunk_samples.push_back(std::move(chunk_result.samples));
   }
