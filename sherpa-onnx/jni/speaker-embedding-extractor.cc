@@ -53,6 +53,16 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromAsset(
 
   SHERPA_ONNX_LOGE("new config:\n%s", config.ToString().c_str());
 
+#if __ANDROID_API__ >= 9
+  const bool valid = config.Validate(mgr);
+#else
+  const bool valid = config.Validate();
+#endif
+  if (!valid) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+
   auto extractor = new sherpa_onnx::SpeakerEmbeddingExtractor(
 #if __ANDROID_API__ >= 9
       mgr,
