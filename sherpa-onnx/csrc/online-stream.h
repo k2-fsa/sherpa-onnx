@@ -17,6 +17,7 @@
 #include "sherpa-onnx/csrc/online-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/online-stream-state.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
+#include "sherpa-onnx/csrc/vad-stream-state.h"
 
 namespace sherpa_onnx {
 
@@ -142,6 +143,17 @@ class OnlineStream {
   int32_t GetOptionInt(const std::string &key, int32_t default_value = 0) const;
   float GetOptionFloat(const std::string &key,
                        float default_value = 0.0f) const;
+
+  // The per-stream state of a VoiceActivityDetector, set by
+  // VoiceActivityDetector::CreateStream(). While it is set, samples
+  // passed to AcceptWaveform() are buffered for the VAD instead of being
+  // converted to features.
+  //
+  // The stream is passed as a const pointer to the VAD methods, so the
+  // state is returned as a mutable pointer: the detector updates it while
+  // processing the stream.
+  void SetVadStreamState(std::unique_ptr<VadStreamState> state);
+  VadStreamState *GetVadStreamState() const;
 
  private:
   class Impl;

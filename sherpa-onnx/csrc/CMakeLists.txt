@@ -159,6 +159,7 @@ set(sources
   utils.cc
   vad-model-config.cc
   vad-model.cc
+  vad-stream-state.cc
   version.cc
   voice-activity-detector.cc
   wave-reader.cc
@@ -863,6 +864,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     transpose-test.cc
     unbind-test.cc
     utfcpp-test.cc
+    vad-stream-state-test.cc
     wave-reader-test.cc
   )
   if(SHERPA_ONNX_ENABLE_TTS)

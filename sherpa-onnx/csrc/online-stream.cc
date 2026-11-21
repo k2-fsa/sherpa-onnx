@@ -24,7 +24,19 @@ class OnlineStream::Impl {
 
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     std::scoped_lock lock(mutex_);
+    if (vad_stream_state_) {
+      vad_stream_state_->AcceptWaveform(sampling_rate, waveform, n);
+      return;
+    }
     feat_extractor_.AcceptWaveform(sampling_rate, waveform, n);
+  }
+
+  void SetVadStreamState(std::unique_ptr<VadStreamState> state) {
+    vad_stream_state_ = std::move(state);
+  }
+
+  VadStreamState *GetVadStreamState() const {
+    return vad_stream_state_.get();
   }
 
   void InputFinished() const {
@@ -238,6 +250,9 @@ class OnlineStream::Impl {
   OnlineParaformerDecoderResult paraformer_result_;
   OnlineTransducerDecoderResultNoOrt qnn_result_;
   std::unordered_map<std::string, std::string> options_;
+
+  // set by VoiceActivityDetector::CreateStream()
+  std::unique_ptr<VadStreamState> vad_stream_state_;
   std::unique_ptr<kaldi_decoder::FasterDecoder> faster_decoder_;
   int32_t faster_decoder_processed_frames_ = 0;
 };
@@ -416,6 +431,14 @@ int32_t OnlineStream::GetOptionInt(const std::string &key,
 float OnlineStream::GetOptionFloat(const std::string &key,
                                    float default_value) const {
   return impl_->GetOptionFloat(key, default_value);
+}
+
+void OnlineStream::SetVadStreamState(std::unique_ptr<VadStreamState> state) {
+  impl_->SetVadStreamState(std::move(state));
+}
+
+VadStreamState *OnlineStream::GetVadStreamState() const {
+  return impl_->GetVadStreamState();
 }
 
 }  // namespace sherpa_onnx

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <utility>
 #include <vector>
@@ -21,7 +22,9 @@
 
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/vad-model.h"
+#include "sherpa-onnx/csrc/vad-stream-state.h"
 
 namespace sherpa_onnx {
 
@@ -30,6 +33,7 @@ class VoiceActivityDetector::Impl {
   explicit Impl(const VadModelConfig &config, float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(config)),
         config_(config),
+        buffer_size_in_seconds_(buffer_size_in_seconds),
         buffer_(buffer_size_in_seconds * config.sample_rate) {
     Init();
   }
@@ -39,8 +43,58 @@ class VoiceActivityDetector::Impl {
        float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(mgr, config)),
         config_(config),
+        buffer_size_in_seconds_(buffer_size_in_seconds),
         buffer_(buffer_size_in_seconds * config.sample_rate) {
     Init();
+  }
+
+  std::unique_ptr<OnlineStream> CreateStream() const {
+    auto stream = std::make_unique<OnlineStream>();
+    stream->SetVadStreamState(
+        std::make_unique<VadStreamState>(config_, buffer_size_in_seconds_));
+    return stream;
+  }
+
+  bool IsReady(const OnlineStream *stream) const {
+    return GetState(stream).IsReady(model_.get());
+  }
+
+  void Process(const OnlineStream *stream) const {
+    // The model is shared by every stream of this detector, so the
+    // restore-evaluate-save cycle of one stream must not interleave
+    // with that of another stream.
+    std::lock_guard<std::mutex> model_lock(model_mutex_);
+    GetState(stream).Process(model_.get());
+  }
+
+  bool IsSpeechDetected(const OnlineStream *stream) const {
+    return GetState(stream).IsSpeechDetected();
+  }
+
+  SpeechSegment CurrentSpeechSegment(const OnlineStream *stream) const {
+    return GetState(stream).CurrentSpeechSegment();
+  }
+
+  bool Empty(const OnlineStream *stream) const {
+    return GetState(stream).Empty();
+  }
+
+  void Pop(const OnlineStream *stream) { GetState(stream).Pop(); }
+
+  void Clear(const OnlineStream *stream) const { GetState(stream).Clear(); }
+
+  const SpeechSegment &Front(const OnlineStream *stream) const {
+    return GetState(stream).Front();
+  }
+
+  void Reset(const OnlineStream *stream) const {
+    std::lock_guard<std::mutex> model_lock(model_mutex_);
+    GetState(stream).Reset(model_.get());
+  }
+
+  void Flush(const OnlineStream *stream) const {
+    std::lock_guard<std::mutex> model_lock(model_mutex_);
+    GetState(stream).Flush(model_.get());
   }
 
   float Compute(const float *samples, int32_t n) {
@@ -225,13 +279,21 @@ class VoiceActivityDetector::Impl {
   }
 
  private:
+  static VadStreamState &GetState(const OnlineStream *stream);
+
   std::queue<SpeechSegment> segments_;
 
   // it is empty if no speech is detected
   SpeechSegment cur_segment_;
 
   std::unique_ptr<VadModel> model_;
+
+  // Guards model_. Streams of one detector may be processed from
+  // different threads, and every window does restore-evaluate-save on
+  // the shared model.
+  mutable std::mutex model_mutex_;
   VadModelConfig config_;
+  float buffer_size_in_seconds_ = 60;
   CircularBuffer buffer_;
   std::vector<float> last_;
 
@@ -241,6 +303,17 @@ class VoiceActivityDetector::Impl {
 
   int64_t start_ = -1;
 };
+
+VadStreamState &VoiceActivityDetector::Impl::GetState(
+    const OnlineStream *stream) {
+  auto *state = stream->GetVadStreamState();
+  if (state == nullptr) {
+    SHERPA_ONNX_LOGE(
+        "The stream is not created by VoiceActivityDetector::CreateStream()");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  return *state;
+}
 
 VoiceActivityDetector::VoiceActivityDetector(
     const VadModelConfig &config, float buffer_size_in_seconds /*= 60*/)
@@ -286,6 +359,53 @@ const VadModelConfig &VoiceActivityDetector::GetConfig() const {
 
 float VoiceActivityDetector::Compute(const float *samples, int32_t n) {
   return impl_->Compute(samples, n);
+}
+
+std::unique_ptr<OnlineStream> VoiceActivityDetector::CreateStream() const {
+  return impl_->CreateStream();
+}
+
+bool VoiceActivityDetector::IsReady(const OnlineStream *stream) const {
+  return impl_->IsReady(stream);
+}
+
+void VoiceActivityDetector::Process(const OnlineStream *stream) const {
+  impl_->Process(stream);
+}
+
+bool VoiceActivityDetector::Empty(const OnlineStream *stream) const {
+  return impl_->Empty(stream);
+}
+
+void VoiceActivityDetector::Pop(const OnlineStream *stream) {
+  impl_->Pop(stream);
+}
+
+void VoiceActivityDetector::Clear(const OnlineStream *stream) const {
+  impl_->Clear(stream);
+}
+
+const SpeechSegment &VoiceActivityDetector::Front(
+    const OnlineStream *stream) const {
+  return impl_->Front(stream);
+}
+
+bool VoiceActivityDetector::IsSpeechDetected(
+    const OnlineStream *stream) const {
+  return impl_->IsSpeechDetected(stream);
+}
+
+SpeechSegment VoiceActivityDetector::CurrentSpeechSegment(
+    const OnlineStream *stream) const {
+  return impl_->CurrentSpeechSegment(stream);
+}
+
+void VoiceActivityDetector::Reset(const OnlineStream *stream) const {
+  impl_->Reset(stream);
+}
+
+void VoiceActivityDetector::Flush(const OnlineStream *stream) const {
+  impl_->Flush(stream);
 }
 
 #if __ANDROID_API__ >= 9
