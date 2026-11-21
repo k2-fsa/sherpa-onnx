@@ -218,7 +218,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(config);
     } else if (!config.model_config.moonshine.encoder.empty() ||
                !config.model_config.moonshine.decoder.empty() ||
-               !config.model_config.moonshine.qnn_config.context_binary.empty()) {
+               !config.model_config.moonshine.qnn_config.context_binary
+                    .empty()) {
       return std::make_unique<OfflineRecognizerMoonshineQnnImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
@@ -588,7 +589,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(mgr, config);
     } else if (!config.model_config.moonshine.encoder.empty() ||
-               !config.model_config.moonshine.qnn_config.context_binary.empty()) {
+               !config.model_config.moonshine.qnn_config.context_binary
+                    .empty()) {
       return std::make_unique<OfflineRecognizerMoonshineQnnImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(

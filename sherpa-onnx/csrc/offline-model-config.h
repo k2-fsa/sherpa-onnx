@@ -82,7 +82,8 @@ struct OfflineModelConfig {
                      const OfflineMoonshineModelConfig &moonshine,
                      const OfflineDolphinModelConfig &dolphin,
                      const OfflineCanaryModelConfig &canary,
-                     const OfflineCohereTranscribeModelConfig &cohere_transcribe,
+                     const OfflineCohereTranscribeModelConfig
+                         &cohere_transcribe,
                      const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
                      const OfflineFunASRNanoModelConfig &funasr_nano,
                      const OfflineMedAsrCtcModelConfig &medasr,

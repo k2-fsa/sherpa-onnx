@@ -215,12 +215,14 @@ bool OfflineModelConfig::Validate() const {
         "--provider=qnn requires QNN offline transducer artifacts (*.so or "
         "--transducer.qnn-context-binary). Given encoder: '%s', decoder: '%s', "
         "joiner: '%s'",
-        transducer.encoder_filename.c_str(), transducer.decoder_filename.c_str(),
+        transducer.encoder_filename.c_str(),
+        transducer.decoder_filename.c_str(),
         transducer.joiner_filename.c_str());
     return false;
   }
 
-  if (!transducer.encoder_filename.empty() || !transducer.decoder_filename.empty() ||
+  if (!transducer.encoder_filename.empty() ||
+      !transducer.decoder_filename.empty() ||
       !transducer.joiner_filename.empty() ||
       !transducer.qnn_config.context_binary.empty()) {
     return transducer.Validate();
