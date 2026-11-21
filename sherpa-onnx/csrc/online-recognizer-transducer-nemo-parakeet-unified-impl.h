@@ -181,7 +181,8 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
         SHERPA_ONNX_LOGE("Hotwords are not supported for Parakeet Unified.");
         SHERPA_ONNX_EXIT(-1);
       }
-      if (!config_.lm_config.model.empty()) {
+      if (!config_.lm_config.model.empty() ||
+          !config_.lm_config.lodr_fst.empty()) {
         SHERPA_ONNX_LOGE(
             "LM fusion is not supported for Parakeet Unified "
             "modified_beam_search.");
