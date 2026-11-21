@@ -167,6 +167,19 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       config_.feat_config.snip_edges = true;
     }
 
+    if (!config_.model_config.w2v_bert_ctc.model.empty()) {
+      // What transformers' SeamlessM4TFeatureExtractor computes: Kaldi
+      // filterbanks of samples scaled to 16 bits, with no padding at the
+      // edges. The model normalizes and stacks them; see
+      // offline-w2v-bert-ctc-model.h
+      config_.feat_config.feature_dim = 80;
+      config_.feat_config.low_freq = 20;
+      config_.feat_config.high_freq = 0;
+      config_.feat_config.dither = 0;
+      config_.feat_config.snip_edges = true;
+      config_.feat_config.normalize_samples = false;
+    }
+
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 

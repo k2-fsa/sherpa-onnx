@@ -57,6 +57,14 @@ python3 ./python-api-examples/offline-fire-red-asr-ctc-decode-files.py
 
 rm -rf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
 
+log "test w2v-BERT CTC"
+
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+
+python3 ./python-api-examples/offline-w2v-bert-ctc-decode-files.py
+
+rm -rf sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20
+
 log "test FireRedASR AED"
 
 download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2

@@ -21,6 +21,7 @@
 #include "sherpa-onnx/csrc/offline-sense-voice-model-config.h"
 #include "sherpa-onnx/csrc/offline-tdnn-model-config.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
+#include "sherpa-onnx/csrc/offline-w2v-bert-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-wenet-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-whisper-model-config.h"
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model-config.h"
@@ -46,6 +47,7 @@ struct OfflineModelConfig {
   OfflineMedAsrCtcModelConfig medasr;
   OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
   OfflineQwen3ASRModelConfig qwen3_asr;
+  OfflineW2vBertCtcModelConfig w2v_bert_ctc;
   std::string telespeech_ctc;
 
   std::string tokens;
@@ -80,12 +82,14 @@ struct OfflineModelConfig {
                      const OfflineMoonshineModelConfig &moonshine,
                      const OfflineDolphinModelConfig &dolphin,
                      const OfflineCanaryModelConfig &canary,
-                     const OfflineCohereTranscribeModelConfig &cohere_transcribe,
+                     const OfflineCohereTranscribeModelConfig
+                         &cohere_transcribe,
                      const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
                      const OfflineFunASRNanoModelConfig &funasr_nano,
                      const OfflineMedAsrCtcModelConfig &medasr,
                      const OfflineFireRedAsrCtcModelConfig &fire_red_asr_ctc,
                      const OfflineQwen3ASRModelConfig &qwen3_asr,
+                     const OfflineW2vBertCtcModelConfig &w2v_bert_ctc,
                      const std::string &telespeech_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
@@ -109,6 +113,7 @@ struct OfflineModelConfig {
         medasr(medasr),
         fire_red_asr_ctc(fire_red_asr_ctc),
         qwen3_asr(qwen3_asr),
+        w2v_bert_ctc(w2v_bert_ctc),
         telespeech_ctc(telespeech_ctc),
         tokens(tokens),
         num_threads(num_threads),

@@ -41,6 +41,7 @@ set(srcs
   offline-stream.cc
   offline-tdnn-model-config.cc
   offline-transducer-model-config.cc
+  offline-w2v-bert-ctc-model-config.cc
   offline-wenet-ctc-model-config.cc
   offline-whisper-model-config.cc
   offline-zipformer-ctc-model-config.cc
