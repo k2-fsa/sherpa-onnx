@@ -24,6 +24,7 @@ enum class Provider : std::uint8_t {
   kDirectML = 6,  // DmlExecutionProvider
   kSpacemiT = 7,  // SpacemiTExecutionProvider
   kOpenVINO = 8,  // OpenVINOExecutionProvider
+  kVulkan = 9,    // plugin EP libonnxruntime_ep_vulkan.so (onnx-vulkan-rs)
 };
 
 /**
