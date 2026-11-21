@@ -73,6 +73,10 @@ struct Hypothesis {
   // Used only by OnlineTransducerModifiedBeamSearchNeMoDecoder.
   CopyableOrtValue nemo_decoder_out;
 
+  // Viterbi score of the alignment supplying the Unified beam's metadata.
+  // log_prob instead sums the probability of the merged alignments.
+  double nemo_alignment_log_prob = 0;
+
   // the LODR states
   std::shared_ptr<LodrStateCost> lodr_state;
 

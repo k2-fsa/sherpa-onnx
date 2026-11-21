@@ -325,6 +325,58 @@ class TestOnlineUnifiedRecognizer(unittest.TestCase):
                         "B C",
                     )
 
+    def test_beam_combines_alignments_for_same_transcript(self):
+        with tempfile.TemporaryDirectory() as d:
+            directory = Path(d)
+            probabilities = blank_probabilities(2, 5)
+            probabilities[0, 4, [0, 4]] = [0.33, 0.67]
+            for second_frame in (1, 7):
+                with self.subTest(second_frame=second_frame):
+                    # Empty has probability .67**2. Neither alignment of A
+                    # wins alone, but together they have .33 + .67 * .33.
+                    phases = np.ones((1, 1, 200), np.float32)
+                    phases[0, 0, [0, second_frame]] = 0
+                    create_lookup_models(directory, phases, probabilities)
+                    rec = self.create_recognizer(
+                        directory, "modified_beam_search", max_active_paths=8
+                    )
+                    stream = rec.create_stream()
+                    stream.accept_waveform(16000, np.zeros(57 * 160, np.float32))
+                    self.assertTrue(rec.is_ready(stream))
+                    rec.decode_stream(stream)
+                    if second_frame == 7:
+                        self.assertEqual(rec.get_result(stream).text.strip(), "")
+                    stream.accept_waveform(16000, np.zeros(55 * 160, np.float32))
+                    self.assertEqual(self.finish(rec, stream), "A")
+                    result = rec.get_result(stream)
+                    self.assertEqual(result.timestamps, [0.0])
+                    self.assertEqual(len(result.ys_probs), 1)
+
+    def test_beam_metadata_uses_strongest_alignment(self):
+        with tempfile.TemporaryDirectory() as d:
+            directory = Path(d)
+            probabilities = blank_probabilities(3, 5)
+            probabilities[0, 4, [0, 4]] = [0.22, 0.78]
+            probabilities[1, 4, [0, 4]] = [0.60, 0.40]
+            # The first two A alignments sum to .3916. The third alignment
+            # has probability .36504 and is the strongest individual path.
+            phases = np.full((1, 1, 200), 2, np.float32)
+            phases[0, 0, [0, 1, 7]] = [0, 0, 1]
+            create_lookup_models(directory, phases, probabilities)
+            rec = self.create_recognizer(
+                directory, "modified_beam_search", max_active_paths=8
+            )
+            stream = rec.create_stream()
+            stream.accept_waveform(16000, np.zeros(57 * 160, np.float32))
+            self.assertTrue(rec.is_ready(stream))
+            rec.decode_stream(stream)
+            self.assertEqual(rec.get_result(stream).text.strip(), "")
+            stream.accept_waveform(16000, np.zeros(55 * 160, np.float32))
+            self.assertEqual(self.finish(rec, stream), "A")
+            result = rec.get_result(stream)
+            np.testing.assert_allclose(result.timestamps, [0.56], atol=1e-6)
+            np.testing.assert_allclose(result.ys_probs, [np.log(0.60)], atol=1e-4)
+
     def test_beam_one_matches_greedy(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)

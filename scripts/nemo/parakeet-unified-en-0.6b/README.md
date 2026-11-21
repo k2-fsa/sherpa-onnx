@@ -27,6 +27,8 @@ with this decoder.
 
 The default beam width is 4. Larger widths can increase deletions in some
 recordings. Compare on representative audio before changing the width.
+Beam search combines the probabilities of equivalent token alignments.
+Timestamps and token scores come from the highest-scoring individual alignment.
 
 New streams start with an empty predictor. Within a segment, the beam carries
 its candidates across chunks, so a later chunk can revise the partial result.

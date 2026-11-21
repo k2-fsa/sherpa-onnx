@@ -241,6 +241,10 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         nc.hyp.context_state = c.hyp.context_state;
         nc.hyp.num_trailing_blanks = c.hyp.num_trailing_blanks;
         nc.hyp.log_prob = c.hyp.log_prob + p_logit[token];
+        if constexpr (kUnified) {
+          nc.hyp.nemo_alignment_log_prob =
+              c.hyp.nemo_alignment_log_prob + p_logit[token];
+        }
 
         if (token == blank_id) {
           // Keep the decoder output and states, advance the frame
@@ -279,17 +283,14 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     }
 
     // Recombine candidates that have an identical token sequence at the
-    // same frame with the same per-frame symbol count, keeping only the
-    // best-scoring alignment (Viterbi-style). Their decoder states and
+    // same frame with the same per-frame symbol count. Their decoder states and
     // context states are identical, since both are deterministic functions
     // of the emitted tokens. Without recombination, the beam fills up with
     // alignments of one and the same token sequence, and paths that emit
     // tokens in low-confidence regions get pruned in favor of blank-only
-    // paths, which causes deletions on long audio. Keeping the maximum
-    // instead of summing (marginalizing over emission positions) matches
-    // the offline decoder and greedy search; summing would let a weak but
-    // consistent token accumulate mass across all possible emission
-    // positions and beat silence on noise-only audio.
+    // paths. Unified sums their probability for ranking and keeps metadata
+    // from the highest-scoring alignment. Using only that alignment's
+    // score can favor a blank-only path over well-supported speech.
     {
       std::unordered_map<std::string, size_t> index;
       std::vector<std::pair<double, Candidate>> merged;
@@ -307,7 +308,16 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         }
 
         auto &dst = merged[it->second];
-        if (p.second.hyp.log_prob > dst.second.hyp.log_prob) {
+        if constexpr (kUnified) {
+          const double total =
+              LogAdd<double>()(dst.second.hyp.log_prob, p.second.hyp.log_prob);
+          if (p.second.hyp.nemo_alignment_log_prob >
+              dst.second.hyp.nemo_alignment_log_prob) {
+            dst = std::move(p);
+          }
+          dst.first = total;
+          dst.second.hyp.log_prob = total;
+        } else if (p.second.hyp.log_prob > dst.second.hyp.log_prob) {
           dst = std::move(p);
         }
       }
