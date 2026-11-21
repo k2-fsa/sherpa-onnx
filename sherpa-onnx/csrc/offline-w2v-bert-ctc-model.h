@@ -24,7 +24,14 @@ void NormalizeW2vBertFeatures(float *features, int32_t num_frames,
  *
  * The model takes "input_features", float32 (N, T, 160), and
  * "input_lengths", int64 (N,), and returns logits (N, T_out, vocab_size) and
- * their lengths, int64 (N,). It masks padding itself.
+ * their lengths, int64 (N,). It masks padding itself, so with fp32 weights
+ * (model.onnx) a padded batch gives each utterance the logits it gets alone.
+ * model.int8.onnx quantizes activations dynamically, with ranges taken over
+ * the whole batch, so its output depends on the other utterances in the
+ * batch: batched transcripts can differ from single ones by a word or a
+ * character. On 200 FLEURS Galician recordings, batches of 8 and of 32
+ * changed about a third of the transcripts but not the word error rate.
+ * Decode one utterance per call where exact reproducibility matters.
  *
  * Its input is what SeamlessM4TFeatureExtractor computes: 80 Kaldi
  * filterbank energies per 10 ms from samples scaled to 16 bits (the

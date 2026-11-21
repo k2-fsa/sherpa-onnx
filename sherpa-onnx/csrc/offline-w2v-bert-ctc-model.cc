@@ -101,6 +101,9 @@ class OfflineW2vBertCtcModel::Impl {
       std::fill(dst + valid, dst + utterance_size, 0.0f);
     }
 
+    // With an int8 model the batch still shares activation quantization
+    // ranges, so a batch can differ slightly from single decoding; see the
+    // class comment.
     std::array<Ort::Value, 2> inputs = {std::move(stacked), std::move(length)};
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),

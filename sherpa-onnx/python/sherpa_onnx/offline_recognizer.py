@@ -879,7 +879,11 @@ class OfflineRecognizer(object):
           model:
             Path to ``model.onnx`` or ``model.int8.onnx``. The weights of
             ``model.onnx`` are in ``model.weights``, which must be in the
-            same directory.
+            same directory. With ``model.onnx``, ``decode_streams`` gives
+            each stream what ``decode_stream`` gives it alone. The int8
+            model quantizes activations over the whole batch, so a batch
+            can change a transcript by a word or a character, though in
+            our tests not the word error rate.
           tokens:
             Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
             columns::
