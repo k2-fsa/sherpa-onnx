@@ -1,3 +1,16 @@
+## 2.0.3
+
+* Fix building node-addon package for linux x64 (#4275)
+* Update piper-phonemize in examples to v1.6.1 (#4264)
+* Export w2v-BERT 2.0 CTC models to ONNX (#4248)
+* Update the PocketTTS model README: weights are CC-BY-4.0, not non-commercial (#4250)
+* Expose Whisper lang and lang_probs on Rust OfflineRecognizerResult (#4245)
+* Add CreateStream() and Process(stream) to OfflineSpeakerDiarization (#4244)
+* TTS engine: make the Pali engine work as the system TTS (#4242)
+* Fix publishing nuget packages (#4243)
+* Cluster only embeddings with enough clean speech in speaker diarization (#4240)
+* Remove the no-op Pad before AveragePool in CAM++ models (#4241)
+
 ## 2.0.2
 
 * Add Dart API for forced alignment (#4232)

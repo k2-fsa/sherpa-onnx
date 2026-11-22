@@ -67,7 +67,7 @@ PY
 
 # Point an SPM example at the repo root package instead of the published one.
 use_local_package() {
-  sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "2.0.2")|.package(path: "../../")|' "$1"
+  sed -i.bak 's|.package(url: "https://github.com/k2-fsa/sherpa-onnx", exact: "2.0.3")|.package(path: "../../")|' "$1"
 }
 
 use_shared_product() {

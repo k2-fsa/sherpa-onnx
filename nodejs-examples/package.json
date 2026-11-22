@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "piper-phonemize": "^1.6.1",
-    "sherpa-onnx": "^2.0.2",
+    "sherpa-onnx": "^2.0.3",
     "wav": "^1.0.2"
   }
 }
