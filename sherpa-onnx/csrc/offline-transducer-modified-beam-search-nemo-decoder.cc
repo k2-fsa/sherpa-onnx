@@ -37,6 +37,9 @@ struct NeMoHypothesis {
   int32_t frame_offset = 0;  // current frame position for this hypothesis
   int32_t num_symbols =
       0;  // number of non-blank symbols emitted at current frame
+  // context-graph score not given yet, see
+  // ContextGraph::ForwardOneStepOnFrame()
+  float context_withheld = 0.0f;
 
   NeMoHypothesis() = default;
 
@@ -50,7 +53,8 @@ struct NeMoHypothesis {
         context_state(other.context_state),
         allocator(other.allocator),
         frame_offset(other.frame_offset),
-        num_symbols(other.num_symbols) {
+        num_symbols(other.num_symbols),
+        context_withheld(other.context_withheld) {
     // Deep copy of decoder states
     decoder_states.reserve(other.decoder_states.size());
     for (const auto &state : other.decoder_states) {
@@ -69,6 +73,7 @@ struct NeMoHypothesis {
       allocator = other.allocator;
       frame_offset = other.frame_offset;
       num_symbols = other.num_symbols;
+      context_withheld = other.context_withheld;
 
       decoder_states.clear();
       decoder_states.reserve(other.decoder_states.size());
@@ -271,6 +276,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           new_hyp.durations = hyp.durations;
           new_hyp.ys_probs = hyp.ys_probs;
           new_hyp.context_state = hyp.context_state;
+          new_hyp.context_withheld = hyp.context_withheld;
           new_hyp.allocator = allocator;
           new_hyp.log_prob = hyp.log_prob;
           new_hyp.num_symbols = 0;
@@ -384,6 +390,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           new_hyp.durations = hyp.durations;
           new_hyp.ys_probs = hyp.ys_probs;
           new_hyp.context_state = hyp.context_state;
+          new_hyp.context_withheld = hyp.context_withheld;
           new_hyp.allocator = allocator;
           new_hyp.log_prob = log_prob;
           return new_hyp;
@@ -464,10 +471,14 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
             new_hyp.decoder_states.push_back(Clone(allocator, &state));
           }
 
-          // Update context graph
+          // Update context graph. Only the first token of a frame gets the
+          // hotword bonus: with duration 0 a hypothesis can emit up to
+          // max_symbols_per_frame tokens on one frame, and a hotword could
+          // otherwise earn its bonus again and again on it.
           if (context_graphs[b] != nullptr) {
-            auto context_res = context_graphs[b]->ForwardOneStep(
-                new_hyp.context_state, token, false);
+            auto context_res = context_graphs[b]->ForwardOneStepOnFrame(
+                new_hyp.context_state, token, hyp.num_symbols == 0,
+                &new_hyp.context_withheld, false);
             new_hyp.log_prob += std::get<0>(context_res);
             new_hyp.context_state = std::get<1>(context_res);
           }
@@ -487,7 +498,8 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     for (auto &hyp : cur_hyps) {
       if (context_graphs[b] != nullptr) {
         auto context_res = context_graphs[b]->Finalize(hyp.context_state);
-        hyp.log_prob += context_res.first;
+        hyp.log_prob += context_res.first + hyp.context_withheld;
+        hyp.context_withheld = 0;
         hyp.context_state = context_res.second;
       }
     }

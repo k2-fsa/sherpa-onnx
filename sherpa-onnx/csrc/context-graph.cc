@@ -106,6 +106,29 @@ ContextGraph::ForwardOneStep(const ContextState *state, int32_t token,
   return std::make_tuple(score + node->output_score, node, matched_node);
 }
 
+std::tuple<float, const ContextState *, const ContextState *>
+ContextGraph::ForwardOneStepOnFrame(const ContextState *state, int32_t token,
+                                    bool first_on_frame, float *withheld,
+                                    bool strict_mode /*= true*/) const {
+  auto res = ForwardOneStep(state, token, strict_mode);
+  float score = std::get<0>(res);
+  if (score > 0 && !first_on_frame) {
+    *withheld += score;
+    score = 0;
+  } else if (score < 0 && *withheld > 0) {
+    // Taking a match back: what was withheld from it was never given.
+    float back = std::min(*withheld, -score);
+    score += back;
+    *withheld -= back;
+  }
+  if (std::get<1>(res) == root_.get()) {
+    // At the root, a completed phrase keeps what it was given and an
+    // unfinished one has been taken back.
+    *withheld = 0;
+  }
+  return std::make_tuple(score, std::get<1>(res), std::get<2>(res));
+}
+
 std::pair<float, const ContextState *> ContextGraph::Finalize(
     const ContextState *state) const {
   float score = -state->node_score;

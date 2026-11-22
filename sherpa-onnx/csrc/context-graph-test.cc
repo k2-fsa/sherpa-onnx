@@ -9,6 +9,7 @@
 #include <map>
 #include <random>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -73,6 +74,58 @@ TEST(ContextGraph, TestCustomizeNonStrict) {
       {"SHED", 10},     {"SHELF", 10},     {"HELL", 5},
       {"HELLO", 5},     {"DHRHISQ", 5.84}, {"THEN", 5}};
   TestHelper(queries, 5, false);
+}
+
+// A decoder that emits several tokens on one frame (TDT tokens with duration
+// 0) must not let a phrase earn its bonus again and again without consuming
+// frames. In a query, '|' starts a new frame.
+TEST(ContextGraph, TestOneBonusPerFrame) {
+  std::vector<std::string> contexts_str({"ABCD"});
+  std::vector<std::vector<int32_t>> contexts;
+  for (const auto &c : contexts_str) {
+    contexts.emplace_back(c.begin(), c.end());
+  }
+  auto context_graph = ContextGraph(contexts, 1);
+
+  auto score = [&context_graph](const std::string &query, bool per_frame) {
+    float total_scores = 0;
+    float withheld = 0;
+    bool first_on_frame = true;
+    auto state = context_graph.Root();
+    for (auto q : query) {
+      if (q == '|') {
+        first_on_frame = true;
+        continue;
+      }
+      auto res = per_frame ? context_graph.ForwardOneStepOnFrame(
+                                 state, q, first_on_frame, &withheld, false)
+                           : context_graph.ForwardOneStep(state, q, false);
+      total_scores += std::get<0>(res);
+      state = std::get<1>(res);
+      first_on_frame = false;
+    }
+    return total_scores + context_graph.Finalize(state).first + withheld;
+  };
+
+  // {query, score with ForwardOneStep, score with ForwardOneStepOnFrame}
+  std::vector<std::tuple<std::string, float, float>> queries = {
+      // One token per frame: the same as before.
+      {"A|B|C|D", 4, 4},
+      {"A|B|C|D|A|B|C|D", 8, 8},
+      // A phrase repeated on one frame earns its bonus per token, without
+      // consuming frames; now only the first token of the frame gets one.
+      {"ABCD", 4, 1},
+      {"ABCDABCDABCD", 12, 1},
+      {"ABCD|ABCD", 8, 2},
+      // An unfinished match still adds up to 0.
+      {"ABC", 0, 0},
+      {"ABCX", 0, 0},
+      {"A|BC", 0, 0},
+  };
+  for (const auto &q : queries) {
+    EXPECT_EQ(score(std::get<0>(q), false), std::get<1>(q)) << std::get<0>(q);
+    EXPECT_EQ(score(std::get<0>(q), true), std::get<2>(q)) << std::get<0>(q);
+  }
 }
 
 TEST(ContextGraph, Benchmark) {
