@@ -94,7 +94,10 @@ ContextGraph::ForwardOneStep(const ContextState *state, int32_t token,
   const ContextState *matched_node =
       node->is_end ? node : (node->output != nullptr ? node->output : nullptr);
 
-  if (!strict_mode && node->output_score != 0) {
+  // In non-strict mode a matched phrase goes back to the root, but only when
+  // no longer phrase continues from it. Otherwise the longer phrase could never
+  // be matched, e.g., "CATCH" when "CAT" is also a phrase.
+  if (!strict_mode && node->output_score != 0 && node->next.empty()) {
     SHERPA_ONNX_CHECK(nullptr != matched_node);
     float output_score =
         node->is_end ? node->node_score
