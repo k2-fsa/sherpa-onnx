@@ -89,7 +89,7 @@ jobs:
                 -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
                 ..
 
-              make -j$(nproc) install
+              make -j1 install
 
               echo "=== Fix RPATH ==="
               rm -fv ./install/lib/libonnxruntime4j_jni.so
@@ -201,10 +201,11 @@ jobs:
               echo "RPATH: $RPATH"
 
               cd /k2-fsa/sherpa-onnx
-              # The 32-bit Termux toolchain intermittently kills the heaviest
-              # translation unit (the eigen.cc of kaldi-decoder) with no message at
-              # make -j4 (out of memory); build serially so the wheel builds
-              # reliably. See run 45013334934.
+              # Parallel make fails intermittently in the emulated 32-bit
+              # Termux container: the jobserver pipe breaks ("duping jobs
+              # pipe: Bad file descriptor") and child compilers die silently.
+              # -j1 runs without a jobserver and is reliable.
+              # See runs 45013334934 and 45020154515.
               export SHERPA_ONNX_MAKE_ARGS=-j1
               SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON python3 setup.py bdist_wheel --plat-name android_24_armeabi_v7a
               ls -lh dist
