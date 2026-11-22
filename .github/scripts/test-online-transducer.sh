@@ -58,7 +58,9 @@ case "${EXE##*/}" in
       --hotwords-file="$repo/hotwords.txt" --hotwords-score=1.5 \
       "$repo/test_wavs/0.wav" > "$repo/hotwords.log" 2>&1
     cat "$repo/hotwords.log"
-    grep -q '"context_scores": \[[^]]*1\.500000' "$repo/hotwords.log"
+    grep -Eq \
+      '"context_scores"[[:space:]]*:[[:space:]]*\[([^]]*,)?[[:space:]]*1\.500000[[:space:]]*(,|\])' \
+      "$repo/hotwords.log"
     ;;
 esac
 

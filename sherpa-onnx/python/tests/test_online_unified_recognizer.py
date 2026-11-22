@@ -537,7 +537,13 @@ elif option == "joiner_output":
                 logit_rows=[(0, 4, [10, np.nan, -10, -10, 0])],
             )
             rec = self.create_recognizer(
-                directory, "modified_beam_search", max_active_paths=2
+                directory,
+                "modified_beam_search",
+                enable_endpoint=True,
+                max_active_paths=2,
+                endpoint_config=sherpa_onnx.EndpointConfig(
+                    rule1=sherpa_onnx.EndpointRule(False, 0.52, 0),
+                ),
             )
             stream = rec.create_stream()
             stream.accept_waveform(16000, np.zeros(57 * 160, np.float32))
@@ -545,8 +551,11 @@ elif option == "joiner_output":
             rec.decode_stream(stream)
             result = rec.get_result(stream)
             self.assertEqual(result.tokens, [])
+            # Six valid blank frames (0.48 s) do not meet the threshold.
+            # Counting the corrupt seventh frame would trigger an endpoint.
+            self.assertFalse(rec.is_endpoint(stream))
             self.assertEqual(
-                json.loads(result.as_json_string())["num_trailing_blanks"], 7
+                json.loads(result.as_json_string())["num_trailing_blanks"], 0
             )
             stream.accept_waveform(16000, np.zeros(55 * 160, np.float32))
             self.assertEqual(self.finish(rec, stream), "C")
@@ -686,6 +695,34 @@ elif option == "joiner_output":
                         100 if seconds else 0,
                     )
                     self.assertEqual(rec.is_endpoint(stream), bool(seconds))
+
+    def test_beam_with_blank_penalty_rejects_weak_token_emissions(self):
+        with tempfile.TemporaryDirectory() as d:
+            directory = Path(d)
+            probabilities = blank_probabilities(2, 5)
+            probabilities[0, 4, [0, 1, 4]] = [0.20, 0.06, 0.74]
+            phases = np.ones((1, 1, 200), np.float32)
+            phases[0, 0, [0, 7]] = 0
+            create_lookup_models(directory, phases, probabilities)
+            rec = self.create_recognizer(
+                directory,
+                "modified_beam_search",
+                max_active_paths=8,
+                blank_penalty=0.25,
+            )
+            stream = rec.create_stream()
+            stream.accept_waveform(16000, np.zeros(57 * 160, np.float32))
+            self.assertTrue(rec.is_ready(stream))
+            rec.decode_stream(stream)
+            stream.accept_waveform(16000, np.zeros(55 * 160, np.float32))
+            # After the blank penalty, the empty transcript has mass ~.475.
+            # The two alignments for A combine to ~.404 and stay below it.
+            self.assertEqual(self.finish(rec, stream), "")
+            result = rec.get_result(stream)
+            self.assertEqual(result.tokens, [])
+            self.assertEqual(
+                json.loads(result.as_json_string())["num_trailing_blanks"], 14
+            )
 
     def test_beam_endpoint_after_trailing_silence(self):
         with tempfile.TemporaryDirectory() as d:

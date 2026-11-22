@@ -126,6 +126,7 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     r.hyps.Clear();
   }
 
+  bool reported_invalid_scores = false;
   while (true) {
     // Hypotheses can be at different frames since a non-blank emission does
     // not advance the frame. Always expand the ones that are furthest behind.
@@ -197,11 +198,17 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
       if constexpr (kUnified) {
         if (std::any_of(p_logit, p_logit + vocab_size,
                         [](float score) { return std::isnan(score); })) {
-          // An unusable row cannot rank tokens. Keep this predictor and
-          // advance as a blank so one bad frame does not stop other streams.
+          if (!reported_invalid_scores) {
+            SHERPA_ONNX_LOGE(
+                "Skipping invalid Parakeet Unified joiner scores in this "
+                "chunk.");
+            reported_invalid_scores = true;
+          }
+          // Advance without changing the predictor. An invalid row breaks
+          // the run of valid blank frames used for endpointing.
           ++c.frame;
           c.num_symbols = 0;
-          ++c.hyp.num_trailing_blanks;
+          c.hyp.num_trailing_blanks = 0;
           all_candidates.emplace_back(c.hyp.log_prob, std::move(c));
           continue;
         }
@@ -341,9 +348,8 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     }
   }
 
-  // Persist the hypotheses for the next chunk. Hypotheses with an identical
-  // token sequence are merged; their decoder states are identical since the
-  // prediction network is a deterministic function of the emitted tokens.
+  // All survivors reached (num_rows, 0), so the last recombination already
+  // made their token sequences unique. Persist them for the next chunk.
   Hypotheses hyps;
   for (auto &c : cur) {
     hyps.Add(std::move(c.hyp));
