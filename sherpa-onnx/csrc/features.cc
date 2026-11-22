@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -348,6 +349,12 @@ class FeatureExtractor::Impl {
     opts_.mel_opts.low_freq = config_.low_freq;
 
     opts_.mel_opts.is_librosa = config_.is_librosa;
+
+    if (config_.use_nemo_log_guard) {
+      // Same as the offline NeMo features; see offline-stream.cc
+      opts_.use_log_floor = false;
+      opts_.eps = std::numeric_limits<float>::epsilon() / 2;
+    }
 
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
