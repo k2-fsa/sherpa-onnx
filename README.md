@@ -706,6 +706,18 @@ llama-server.
 - [Website](https://tomoru.acane.dev)
 - [Releases](https://github.com/ACAne0320/Tomoru/releases)
 
+### [ambivox](https://github.com/whispem/ambivox)
+
+> A self-hosted voice call app with live translation. Two people open a web page
+> on the same server, each picks a language, and each hears the other in theirs,
+> with live captions on both sides. English, French, Spanish and Italian.
+> No audio leaves the machine.
+
+It uses the C API of sherpa-onnx (`SherpaOnnxOfflineTts`) with Piper VITS voices to speak the translated text, next to whisper.cpp for recognition and [sussurro.cpp](https://github.com/whispem/sussurro.cpp) for translation.
+
+- [Releases](https://github.com/whispem/ambivox/releases)
+- Docker images for x86-64 and arm64 · MIT
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
