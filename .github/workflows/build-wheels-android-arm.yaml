@@ -202,7 +202,7 @@ jobs:
 
               cd /k2-fsa/sherpa-onnx
               # The 32-bit Termux toolchain intermittently kills the heaviest
-              # translation unit (kaldi-decoder's eigen.cc) with no message at
+              # translation unit (the eigen.cc of kaldi-decoder) with no message at
               # make -j4 (out of memory); build serially so the wheel builds
               # reliably. See run 45013334934.
               export SHERPA_ONNX_MAKE_ARGS=-j1
