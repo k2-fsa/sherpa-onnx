@@ -136,6 +136,33 @@ jobs:
               tar czvf sherpa-onnx-linux-arm64.tgz sherpa-onnx-node
             '
 
+      # Show the toolchain baseline of the built addon and shared lib
+      # (outside the docker), see
+      # https://github.com/k2-fsa/sherpa-onnx/issues/4272
+      - name: Show CXXABI/GLIBC requirements
+        shell: bash
+        run: |
+          echo "CXXABI versions in sherpa-onnx.node:"
+          strings scripts/node-addon-api/build/Release/sherpa-onnx.node | grep -oE 'CXXABI_1\.3\.[0-9]+' | sort -V -u | tail -1 || true
+
+          echo "GLIBC versions in sherpa-onnx.node:"
+          strings scripts/node-addon-api/build/Release/sherpa-onnx.node | grep ^GLIBC || true
+
+          echo "CXXABI versions in libsherpa-onnx-c-api.so:"
+          strings build/install/lib/libsherpa-onnx-c-api.so | grep -oE 'CXXABI_1\.3\.[0-9]+' | sort -V -u | tail -1 || true
+
+          echo "GLIBC versions in libsherpa-onnx-c-api.so:"
+          strings build/install/lib/libsherpa-onnx-c-api.so | grep ^GLIBC || true
+
+          echo "Max CXXABI version in libonnxruntime.so:"
+          strings build/install/lib/libonnxruntime.so | grep -oE 'CXXABI_1\.3\.[0-9]+' | sort -V -u | tail -1 || true
+
+          echo "Max GLIBC version in libonnxruntime.so:"
+          strings build/install/lib/libonnxruntime.so | grep -oE 'GLIBC_2\.[0-9.]+' | sort -V -u | tail -1 || true
+
+          echo "Max GLIBCXX version in libonnxruntime.so:"
+          strings build/install/lib/libonnxruntime.so | grep -oE 'GLIBCXX_[0-9.]+' | sort -V -u | tail -1 || true
+
       - name: Publish
         shell: bash
         run: |

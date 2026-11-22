@@ -49,6 +49,10 @@ cp $src_dir/README-optional.md $dst/README.md
 cp -fv build/install/lib/lib* $dst/ || true
 cp -fv build/install/lib/*dll $dst/ || true
 
+# The CXX API (libsherpa-onnx-cxx-api.so / .dylib / sherpa-onnx-cxx-api.dll)
+# is not used by the node addon; keep it out of the npm package
+rm -fv $dst/*cxx-api*
+
 cp scripts/node-addon-api/build/Release/sherpa-onnx.node $dst/
 
 ls $dst
