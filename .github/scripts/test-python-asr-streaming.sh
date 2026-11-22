@@ -33,7 +33,11 @@ repo=$(basename -s .tar.bz2 $name)
 download_and_extract $url
 ls -lh $repo
 python3 ./python-api-examples/online-nemo-ctc-decode-files.py
-rm -rf $repo
+mkdir -p /tmp/icefall-models
+rm -rf /tmp/icefall-models/$repo
+mv $repo /tmp/icefall-models/
+python3 sherpa-onnx/python/tests/test_online_recognizer.py --verbose
+rm -rf /tmp/icefall-models/$repo
 
 log "test streaming zipformer2 ctc HLG decoding"
 

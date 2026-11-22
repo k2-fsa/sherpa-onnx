@@ -108,6 +108,8 @@ class OnlineNeMoCtcModel::Impl {
 
   int32_t ChunkShift() const { return chunk_shift_; }
 
+  int32_t SubsamplingFactor() const { return subsampling_factor_; }
+
   OrtAllocator *Allocator() { return allocator_; }
 
   // Return a vector containing 3 tensors
@@ -320,6 +322,10 @@ int32_t OnlineNeMoCtcModel::VocabSize() const { return impl_->VocabSize(); }
 int32_t OnlineNeMoCtcModel::ChunkLength() const { return impl_->ChunkLength(); }
 
 int32_t OnlineNeMoCtcModel::ChunkShift() const { return impl_->ChunkShift(); }
+
+int32_t OnlineNeMoCtcModel::SubsamplingFactor() const {
+  return impl_->SubsamplingFactor();
+}
 
 OrtAllocator *OnlineNeMoCtcModel::Allocator() const {
   return impl_->Allocator();
