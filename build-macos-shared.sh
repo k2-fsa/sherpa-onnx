@@ -62,9 +62,9 @@ cat > $FRAMEWORK_DIR/Versions/A/Resources/Info.plist << 'EOF'
   <key>CFBundleExecutable</key>
   <string>SherpaOnnxC</string>
   <key>CFBundleVersion</key>
-  <string>20261119</string>
+  <string>20261122</string>
   <key>CFBundleShortVersionString</key>
-  <string>2.0.2</string>
+  <string>2.0.3</string>
 </dict>
 </plist>
 EOF

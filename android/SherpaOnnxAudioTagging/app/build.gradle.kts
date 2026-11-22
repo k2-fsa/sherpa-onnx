@@ -11,8 +11,8 @@ android {
         applicationId = "com.k2fsa.sherpa.onnx.audio.tagging"
         minSdk = 21
         targetSdk = 34
-        versionCode = 20261119
-        versionName = "2.0.2"
+        versionCode = 20261122
+        versionName = "2.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
