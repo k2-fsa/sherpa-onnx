@@ -10,6 +10,7 @@ on:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-kws.sh'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-unified-beam-noise.py'
       - '.github/scripts/test-offline-speech-denoiser.sh'
       - '.github/scripts/test-offline-source-separation.sh'
       - '.github/scripts/test-offline-cohere-transcribe.sh'
@@ -39,6 +40,7 @@ on:
       - '.github/scripts/test-offline-source-separation.sh'
       - '.github/scripts/test-offline-cohere-transcribe.sh'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-unified-beam-noise.py'
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
@@ -485,6 +487,23 @@ jobs:
 
           .github/scripts/test-online-transducer.sh
           du -h -d1 .
+
+      - name: Test Unified beam on silence and noise
+        if: >-
+          matrix.build_type == 'Release' && matrix.shared_lib == 'OFF' &&
+          matrix.with_tts == 'OFF' && !startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          source .github/scripts/common.sh
+          model_name=sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-streaming-1120ms
+          model_tmp=$(mktemp -d)
+          trap 'rm -rf -- "$model_tmp"' EXIT
+          archive="$model_tmp/$model_name.tar.bz2"
+          download "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$model_name.tar.bz2" "$archive"
+          printf '%s  %s\n' 4788229a6dd03be33f8243ccee48e33a8d15df7b448cb99150b0ccddd1b02d74 "$archive" | sha256sum -c
+          tar -xjf "$archive" -C "$model_tmp"
+          python3 .github/scripts/test-online-unified-beam-noise.py \
+            --exe build/bin/sherpa-onnx --model-dir "$model_tmp/$model_name"
 
       - name: Test spoken language identification (C++ API)
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

@@ -523,7 +523,32 @@ elif option == "joiner_output":
                         "Invalid Parakeet Unified joiner output",
                     )
 
-    def test_beam_advances_past_nan_joiner_row(self):
+    def test_beam_discards_nan_candidate_when_valid_path_remains(self):
+        with tempfile.TemporaryDirectory() as d:
+            directory = Path(d)
+            probabilities = blank_probabilities(3, 5)
+            probabilities[0, 4, [0, 4]] = [0.45, 0.55]
+            probabilities[1, 4, [1, 4]] = [0.39, 0.61]
+            phases = np.full((1, 1, 200), 2, np.float32)
+            phases[0, 0, :2] = [0, 1]
+            create_lookup_models(
+                directory,
+                phases,
+                probabilities,
+                logit_rows=[(1, 0, [0, np.nan, 0, 0, 0])],
+            )
+            rec = self.create_recognizer(
+                directory, "modified_beam_search", max_active_paths=2
+            )
+            stream = rec.create_stream()
+            stream.accept_waveform(16000, np.zeros(57 * 160, np.float32))
+            self.assertTrue(rec.is_ready(stream))
+            rec.decode_stream(stream)
+            # Skipping the invalid row at zero cost would let A keep ~.45,
+            # beating the empty path after its valid blank (~.55 * .61).
+            self.assertEqual(rec.get_result(stream).tokens, [])
+
+    def test_beam_advances_when_all_joiner_rows_are_nan(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)
             probabilities = blank_probabilities(3, 5)
@@ -534,7 +559,9 @@ elif option == "joiner_output":
                 directory,
                 phases,
                 probabilities,
-                logit_rows=[(0, 4, [10, np.nan, -10, -10, 0])],
+                logit_rows=[
+                    (0, state, [10, np.nan, -10, -10, 0]) for state in range(5)
+                ],
             )
             rec = self.create_recognizer(
                 directory,
@@ -562,6 +589,31 @@ elif option == "joiner_output":
             result = rec.get_result(stream)
             self.assertAlmostEqual(result.timestamps[0], 0.56)
             self.assertTrue(np.all(np.isfinite(result.ys_probs)))
+
+    def test_beam_recovers_nan_when_other_paths_have_zero_probability(self):
+        with tempfile.TemporaryDirectory() as d:
+            directory = Path(d)
+            phases = np.full((1, 1, 200), 2, np.float32)
+            phases[0, 0, :2] = [0, 1]
+            create_lookup_models(
+                directory,
+                phases,
+                blank_probabilities(3, 5),
+                logit_rows=[
+                    (0, 4, [-np.inf] * 4 + [0]),
+                    (1, 4, [0, np.nan, 0, 0, 0]),
+                ],
+            )
+            rec = self.create_recognizer(
+                directory, "modified_beam_search", max_active_paths=2
+            )
+            stream = rec.create_stream()
+            stream.accept_waveform(16000, np.zeros(57 * 160, np.float32))
+            self.assertTrue(rec.is_ready(stream))
+            rec.decode_stream(stream)
+            # The first frame permits only blank. Any token path that reaches
+            # the NaN at the second frame has zero probability.
+            self.assertEqual(rec.get_result(stream).tokens, [])
 
     def test_beam_reset_commits_reported_winner(self):
         with tempfile.TemporaryDirectory() as d:

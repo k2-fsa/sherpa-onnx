@@ -140,6 +140,7 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     }
 
     std::vector<std::pair<double, Candidate>> all_candidates;
+    std::vector<std::pair<double, Candidate>> skipped_candidates;
 
     for (auto &c : cur) {
       if (c.frame > min_frame) {
@@ -209,7 +210,7 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
           ++c.frame;
           c.num_symbols = 0;
           c.hyp.num_trailing_blanks = 0;
-          all_candidates.emplace_back(c.hyp.log_prob, std::move(c));
+          skipped_candidates.emplace_back(c.hyp.log_prob, std::move(c));
           continue;
         }
       }
@@ -286,6 +287,16 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
 
         double log_prob = nc.hyp.log_prob;
         all_candidates.emplace_back(log_prob, std::move(nc));
+      }
+    }
+
+    if constexpr (kUnified) {
+      // Use zero-cost skips only if no candidate with a finite score can
+      // continue. Top-k can also retain zero-probability paths.
+      if (!skipped_candidates.empty() &&
+          std::none_of(all_candidates.begin(), all_candidates.end(),
+                       [](const auto &p) { return std::isfinite(p.first); })) {
+        all_candidates = std::move(skipped_candidates);
       }
     }
 
