@@ -179,14 +179,22 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
       } else if (modeling_unit == "bbpe") {
         std::vector<std::string> bpes;
 
+        // Match icefall's byte_encode(tokenize_by_CJK_char(text)), which is
+        // how bbpe models are trained: each CJK character is a word of its
+        // own, and other characters stay together, e.g. "你好HELLO" becomes
+        // "你 好 HELLO" before the bytes are mapped.
         const auto &id2token = GetByteBpeTableId2Token();
         std::string tokens;
-        for (size_t i = 0; i < word.length(); ++i) {
-          uint8_t byte = static_cast<uint8_t>(word[i]);
-          tokens += id2token.at(byte);
-          if ((i + 1) % 3 == 0 && (i + 1) < word.length()) {
+        bool prev_is_cjk = false;
+        for (char32_t cp : Utf8ToUtf32(word)) {
+          bool is_cjk = IsCJK(cp);
+          if (!tokens.empty() && (is_cjk || prev_is_cjk)) {
             tokens += ' ';
           }
+          for (char c : Utf32ToUtf8(cp)) {
+            tokens += id2token.at(static_cast<uint8_t>(c));
+          }
+          prev_is_cjk = is_cjk;
         }
 
         bpe_encoder->Encode(tokens, &bpes);

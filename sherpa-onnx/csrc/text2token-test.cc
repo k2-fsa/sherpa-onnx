@@ -169,4 +169,53 @@ TEST(TEXT2TOKEN, TEST_bbpe) {
   EXPECT_EQ(scores, expected_scores);
 }
 
+TEST(TEXT2TOKEN, TEST_bbpe_non_cjk) {
+  // bbpe models are trained on byte_encode(tokenize_by_CJK_char(text)) in
+  // icefall, so "你好HELLO" is seen as "你 好 HELLO": one word per CJK
+  // character, while "HELLO" stays one word. A tiny vocabulary in the
+  // byte-mapped form is enough to check this. After mapping each byte,
+  // 你 is "ƋţŅ" and 好 is "ƌŋţ".
+  std::string vocab =
+      "<unk> 0\n"
+      "▁ -10\n"
+      "H -10\n"
+      "E -10\n"
+      "L -10\n"
+      "O -10\n"
+      "▁HELLO -1\n"
+      "▁ƋţŅ -1\n"
+      "▁ƌŋţ -1\n";
+  std::istringstream vocab_is(vocab);
+  auto bpe_processor =
+      std::make_unique<ssentencepiece::Ssentencepiece>(vocab_is);
+
+  std::string tokens =
+      "<unk> 0\n"
+      "▁ 1\n"
+      "H 2\n"
+      "E 3\n"
+      "L 4\n"
+      "O 5\n"
+      "▁HELLO 6\n"
+      "▁ƋţŅ 7\n"
+      "▁ƌŋţ 8\n";
+  auto sym_table = SymbolTable(tokens, false);
+
+  std::string text = "HELLO :2.0\n你好HELLO\n你好";
+  std::istringstream iss(text);
+
+  std::vector<std::vector<int32_t>> ids;
+  std::vector<float> scores;
+
+  auto r = EncodeHotwords(iss, "bbpe", sym_table, bpe_processor.get(), &ids,
+                          &scores);
+  EXPECT_TRUE(r);
+
+  std::vector<std::vector<int32_t>> expected_ids({{6}, {7, 8, 6}, {7, 8}});
+  EXPECT_EQ(ids, expected_ids);
+
+  std::vector<float> expected_scores({2.0, 0, 0});
+  EXPECT_EQ(scores, expected_scores);
+}
+
 }  // namespace sherpa_onnx
