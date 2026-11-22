@@ -8,17 +8,17 @@ function(download_kaldifst)
 
   include(FetchContent)
 
-  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.9.0.tar.gz")
-  set(kaldifst_HASH "SHA256=225d8377d1d262e3aedab23558fead106b4cbc83462fb29f1c5e7d9e3b0c14dd")
+  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.9.2.tar.gz")
+  set(kaldifst_HASH "SHA256=8007cfde794f6c5e287d0e5e22753c1cf3503c9b02512fbcd6dc5d75e5b41fa2")
 
   # If you don't have access to the Internet,
   # please pre-download kaldifst
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldifst-1.9.0.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldifst-1.9.0.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldifst-1.9.0.tar.gz
-    /tmp/kaldifst-1.9.0.tar.gz
-    /star-fj/fangjun/download/github/kaldifst-1.9.0.tar.gz
+    $ENV{HOME}/Downloads/kaldifst-1.9.2.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldifst-1.9.2.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldifst-1.9.2.tar.gz
+    /tmp/kaldifst-1.9.2.tar.gz
+    /star-fj/fangjun/download/github/kaldifst-1.9.2.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
