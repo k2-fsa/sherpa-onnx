@@ -321,6 +321,43 @@ class TestOnlineRecognizer(unittest.TestCase):
                 print(f"{wave_filename}\n{result}")
                 print("-" * 10)
 
+    def test_nemo_ctc_timestamps_and_endpoint(self):
+        m = "sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms"
+        model = f"{d}/{m}/model.onnx"
+        tokens = f"{d}/{m}/tokens.txt"
+        wave0 = f"{d}/{m}/test_wavs/0.wav"
+
+        if not Path(model).is_file():
+            print("skipping test_nemo_ctc_timestamps_and_endpoint()")
+            return
+
+        recognizer = sherpa_onnx.OnlineRecognizer.from_nemo_ctc(
+            model=model,
+            tokens=tokens,
+            num_threads=1,
+            enable_endpoint_detection=True,
+            rule2_min_trailing_silence=1.2,
+        )
+        s = recognizer.create_stream()
+        samples, sample_rate = read_wave(wave0)
+        s.accept_waveform(sample_rate, samples)
+
+        # The last word ends about 0.2 s before the end of the file
+        silence = np.zeros(int(2 * sample_rate), dtype=np.float32)
+        s.accept_waveform(sample_rate, silence)
+        while recognizer.is_ready(s):
+            recognizer.decode_stream(s)
+
+        # The model has subsampling factor 8, so one output frame is 80 ms
+        duration = len(samples) / sample_rate
+        timestamps = recognizer.get_result_all(s).timestamps
+        print(recognizer.get_result(s), timestamps[-1], duration)
+        self.assertGreater(timestamps[-1], duration - 1)
+        self.assertLess(timestamps[-1], duration)
+
+        # About 2.2 s of trailing silence: rule 2 (1.2 s) must have fired
+        self.assertTrue(recognizer.is_endpoint(s))
+
     def test_streaming_paraformer(self):
         m = "sherpa-onnx-streaming-paraformer-bilingual-zh-en"
         encoder = f"{d}/{m}/encoder.int8.onnx"
