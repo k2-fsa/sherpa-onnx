@@ -631,16 +631,27 @@ class OfflineSpeakerDiarizationPyannoteImpl
       }
 
       stream->InputFinished();
-      if (!embedding_extractor_.IsReady(stream.get())) {
+
+      // A speaker that the segmentation model finds only in the zero padding
+      // of the last chunk passes the 10-frame filter in
+      // GetChunkSpeakerSampleIndexes(), but its samples are clipped at n
+      // above, so there may be too few of them for an embedding. We skip it
+      // as we skip a NaN embedding.
+      // See https://github.com/k2-fsa/sherpa-onnx/issues/4288
+      bool is_ready = embedding_extractor_.IsReady(stream.get());
+      if (!is_ready && config_.segmentation.debug) {
         SHERPA_ONNX_LOGE(
-            "This segment is too short, which should not happen since we have "
-            "already filtered short segments");
-        SHERPA_ONNX_EXIT(-1);
+            "Skip (chunk, speaker) pair %d: too few samples for an embedding",
+            k);
       }
 
-      std::vector<float> embedding = embedding_extractor_.Compute(stream.get());
+      std::vector<float> embedding;
+      if (is_ready) {
+        embedding = embedding_extractor_.Compute(stream.get());
+      }
 
-      if (std::none_of(embedding.begin(), embedding.end(), IsNaNWrapper)) {
+      if (is_ready &&
+          std::none_of(embedding.begin(), embedding.end(), IsNaNWrapper)) {
         // a valid embedding
         std::copy(embedding.begin(), embedding.end(), &ans(cur_row_index, 0));
         cur_row_index += 1;
