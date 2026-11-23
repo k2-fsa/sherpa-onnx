@@ -380,6 +380,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             let mut config = OfflineRecognizerConfig::default();
             config.model_config.dolphin = OfflineDolphinModelConfig {
                 model: p("model.int8.onnx"),
+                ..Default::default()
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
