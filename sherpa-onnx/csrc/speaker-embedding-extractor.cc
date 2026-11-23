@@ -35,19 +35,32 @@ void SpeakerEmbeddingExtractorConfig::Register(ParseOptions *po) {
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool SpeakerEmbeddingExtractorConfig::Validate() const {
+template <typename Exists>
+static bool ValidateSpeakerModel(const std::string &model,
+                                 const Exists &exists) {
   if (model.empty()) {
     SHERPA_ONNX_LOGE("Please provide a speaker embedding extractor model");
     return false;
   }
 
-  if (!FileExists(model)) {
+  if (!exists(model)) {
     SHERPA_ONNX_LOGE("speaker embedding extractor model: '%s' does not exist",
                      model.c_str());
     return false;
   }
 
   return true;
+}
+
+bool SpeakerEmbeddingExtractorConfig::Validate() const {
+  return ValidateSpeakerModel(
+      model, [](const std::string &path) { return FileExists(path); });
+}
+
+template <typename Manager>
+bool SpeakerEmbeddingExtractorConfig::Validate(Manager *mgr) const {
+  return ValidateSpeakerModel(
+      model, [mgr](const std::string &path) { return FileExists(mgr, path); });
 }
 
 std::string SpeakerEmbeddingExtractorConfig::ToString() const {
@@ -88,11 +101,15 @@ std::vector<float> SpeakerEmbeddingExtractor::Compute(OnlineStream *s) const {
 }
 
 #if __ANDROID_API__ >= 9
+template bool SpeakerEmbeddingExtractorConfig::Validate(
+    AAssetManager *mgr) const;
 template SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
 #endif
 
 #if __OHOS__
+template bool SpeakerEmbeddingExtractorConfig::Validate(
+    NativeResourceManager *mgr) const;
 template SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     NativeResourceManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
 #endif
