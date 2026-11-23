@@ -263,8 +263,7 @@ std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream(
 
 void OnlineRecognizer::InitStreamVad(OnlineStream *s) const {
   if (!vad_model_) return;
-  // Decoders without chunk geometry cannot flush.
-  const bool flush_supported = impl_->GetChunkSizeForVad() > 0;
+  const bool flush_supported = impl_->SupportsVadFlush();
   s->InitVad(vad_model_->SampleRate(), vad_model_->WindowShift(),
              vad_model_->WindowSize(), asr_frame_shift_ms_, flush_supported);
 }
@@ -339,11 +338,12 @@ void OnlineRecognizer::MaybeSkipVadSilence(OnlineStream *s) const {
     return;
   }
 
+  // One locked read: the silence start and the coverage must be consistent.
   int64_t silence_start = 0;
-  if (!s->GetVadConfirmedSilenceStartAbsolute(&silence_start)) {
+  int64_t vad_covered = 0;
+  if (!s->GetVadSkipRange(&silence_start, &vad_covered)) {
     return;
   }
-  int64_t vad_covered = s->GetVadFramesCoveredAbsolute();
 
   while (true) {
     int32_t local_processed = s->GetNumProcessedFrames();

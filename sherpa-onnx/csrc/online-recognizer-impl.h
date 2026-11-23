@@ -63,6 +63,9 @@ class OnlineRecognizerImpl {
   // VAD purposes" -- the gate/skip simply no-op for that impl.
   virtual int32_t GetChunkSizeForVad() const { return 0; }
   virtual int32_t GetChunkShiftForVad() const { return 0; }
+  // True if DecodeStreams() implements the end-of-utterance flush (decode up
+  // to the VAD endpoint frame, clear the flag). Independent of chunk geometry.
+  virtual bool SupportsVadFlush() const { return false; }
 
   std::string ApplyInverseTextNormalization(std::string text) const;
   std::string ApplyHomophoneReplacer(std::string text) const;

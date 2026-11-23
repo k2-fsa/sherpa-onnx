@@ -172,7 +172,9 @@ class OnlineStream {
   void VadDropSamples(int32_t k);
   // Records one window's decision. On a confirmed speech -> silence flip
   // this arms the endpoint and the end-of-utterance flush.
-  void VadPushPrediction(bool is_speech);
+  // `tentative_onset`: speech above threshold that min_speech_duration has not
+  // confirmed yet.
+  void VadPushPrediction(bool is_speech, bool tentative_onset);
   // Model state kept per stream (LSTM state and state-machine counters).
   std::vector<Ort::Value> &GetVadStates();
   void SetVadStates(std::vector<Ort::Value> states);
@@ -191,6 +193,10 @@ class OnlineStream {
   // buffer's current confirmed-silence run began, if the VAD is
   // presently silent and a silence run has actually started.
   bool GetVadConfirmedSilenceStartAbsolute(int64_t *out_frame) const;
+
+  // Atomic version for the silence skip: true in confirmed silence, with the
+  // silence start and the frame up to which skipping is safe (absolute).
+  bool GetVadSkipRange(int64_t *silence_start, int64_t *limit) const;
 
   // True if the VAD buffer currently considers this stream to contain
   // speech (sticky through its own min-silence-duration hangover).

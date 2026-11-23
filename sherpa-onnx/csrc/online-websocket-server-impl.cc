@@ -165,16 +165,18 @@ void OnlineWebsocketDecoder::ProcessConnections(const asio::error_code &ec) {
       continue;
     }
 
-    // IsReady() can advance the stream's processed frames (silence skip), so
-    // evaluate it once: a second call could flip to false after this
-    // stream was already accepted.
+    // Read eof before IsReady(): once input is finished, IsReady() skips the
+    // VAD coverage gate, so a stale `false` must not lead to dropping the
+    // stream. IsReady() can also advance the processed frames (silence
+    // skip), so evaluate it once.
+    const bool eof = c->eof;
     const bool ready = recognizer_->IsReady(c->s.get());
-    if (!ready && !c->eof) {
+    if (!ready && !eof) {
       // this stream has not enough frames to decode, so skip it
       continue;
     }
 
-    if (!ready && c->eof) {
+    if (!ready && eof) {
       // We won't receive samples from the client, so send a Done! to client
 
       asio::post(server_->GetWorkContext(),

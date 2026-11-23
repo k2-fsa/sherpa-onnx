@@ -79,6 +79,14 @@ int32_t main(int32_t argc, char *argv[]) {
 
   config.Validate();
 
+  const auto &vad_config =
+      config.decoder_config.recognizer_config.online_vad_config;
+  if (!vad_config.model.empty() && num_vad_threads <= 0) {
+    SHERPA_ONNX_LOGE(
+        "--num-vad-threads must be positive when the VAD is enabled");
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
+  }
+
   asio::io_context io_conn;  // for network connections
   asio::io_context io_work;  // for neural network and decoding
   asio::io_context io_vad;   // for the independent VAD pipeline

@@ -32,9 +32,6 @@ struct OnlineVadModelConfig {
   // has started.
   float min_speech_duration = 0.25f;
 
-  // See SileroVadModelConfig::max_speech_duration.
-  float max_speech_duration = 20.0f;
-
   // Window size in samples per Silero inference call. 16 kHz: 512, 1024,
   // 1536. 8 kHz: 256, 512, 768. (Silero v5 ONNX exports in this repo
   // require 512 regardless of sample rate -- see silero-vad-model.cc.)

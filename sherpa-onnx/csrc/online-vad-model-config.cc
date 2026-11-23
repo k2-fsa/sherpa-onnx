@@ -32,9 +32,6 @@ void OnlineVadModelConfig::Register(ParseOptions *po) {
                "In seconds. Sustained speech the online VAD requires "
                "before considering a new speech segment started.");
 
-  po->Register("online-vad-max-speech-duration", &max_speech_duration,
-               "In seconds. See --silero-vad-max-speech-duration.");
-
   po->Register("online-vad-window-size", &window_size,
                "In samples. See --silero-vad-window-size.");
 
@@ -97,13 +94,6 @@ bool OnlineVadModelConfig::Validate() const {
     return false;
   }
 
-  if (max_speech_duration <= 0.0f) {
-    SHERPA_ONNX_LOGE(
-        "Invalid --online-vad-max-speech-duration=%f (must be > 0)",
-        max_speech_duration);
-    return false;
-  }
-
   if (window_size <= 0) {
     SHERPA_ONNX_LOGE("Invalid --online-vad-window-size=%d (must be > 0)",
                      window_size);
@@ -120,7 +110,6 @@ std::string OnlineVadModelConfig::ToString() const {
   os << "threshold=" << threshold << ", ";
   os << "min_silence_duration=" << min_silence_duration << ", ";
   os << "min_speech_duration=" << min_speech_duration << ", ";
-  os << "max_speech_duration=" << max_speech_duration << ", ";
   os << "window_size=" << window_size << ", ";
   os << "neg_threshold=" << neg_threshold << ", ";
   os << "sample_rate=" << sample_rate << ", ";
@@ -137,7 +126,6 @@ VadModelConfig OnlineVadModelConfig::ToVadModelConfig() const {
   vad_config.silero_vad.threshold = threshold;
   vad_config.silero_vad.min_silence_duration = min_silence_duration;
   vad_config.silero_vad.min_speech_duration = min_speech_duration;
-  vad_config.silero_vad.max_speech_duration = max_speech_duration;
   vad_config.silero_vad.window_size = window_size;
   vad_config.silero_vad.neg_threshold = neg_threshold;
   vad_config.sample_rate = sample_rate;

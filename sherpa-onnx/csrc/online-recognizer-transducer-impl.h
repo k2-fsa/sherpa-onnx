@@ -264,6 +264,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 
   int32_t GetChunkSizeForVad() const override { return model_->ChunkSize(); }
   int32_t GetChunkShiftForVad() const override { return model_->ChunkShift(); }
+  bool SupportsVadFlush() const override { return true; }
 
   // Warmping up engine with wp: warm_up count and max-batch-size
   void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const override {
