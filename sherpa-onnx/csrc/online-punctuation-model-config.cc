@@ -27,29 +27,56 @@ void OnlinePunctuationModelConfig::Register(ParseOptions *po) {
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool OnlinePunctuationModelConfig::Validate() const {
-  if (cnn_bilstm.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOnlinePunctuationModelConfig(
+    const OnlinePunctuationModelConfig &config, const Exists &exists) {
+  if (config.cnn_bilstm.empty()) {
     SHERPA_ONNX_LOGE("Please provide --cnn-bilstm");
     return false;
   }
 
-  if (!FileExists(cnn_bilstm)) {
-    SHERPA_ONNX_LOGE("--cnn-bilstm '%s' does not exist", cnn_bilstm.c_str());
+  if (!exists(config.cnn_bilstm)) {
+    SHERPA_ONNX_LOGE("--cnn-bilstm '%s' does not exist",
+                     config.cnn_bilstm.c_str());
     return false;
   }
 
-  if (bpe_vocab.empty()) {
+  if (config.bpe_vocab.empty()) {
     SHERPA_ONNX_LOGE("Please provide --bpe-vocab");
     return false;
   }
 
-  if (!FileExists(bpe_vocab)) {
-    SHERPA_ONNX_LOGE("--bpe-vocab '%s' does not exist", bpe_vocab.c_str());
+  if (!exists(config.bpe_vocab)) {
+    SHERPA_ONNX_LOGE("--bpe-vocab '%s' does not exist",
+                     config.bpe_vocab.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OnlinePunctuationModelConfig::Validate() const {
+  return ValidateOnlinePunctuationModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OnlinePunctuationModelConfig::Validate(Manager *mgr) const {
+  return ValidateOnlinePunctuationModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlinePunctuationModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlinePunctuationModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlinePunctuationModelConfig::ToString() const {
   std::ostringstream os;
