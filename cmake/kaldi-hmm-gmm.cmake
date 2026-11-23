@@ -3,8 +3,8 @@ include_guard(GLOBAL)
 function(download_kaldi_hmm_gmm)
   include(FetchContent)
 
-  set(kaldi_hmm_gmm_URL  "https://github.com/csukuangfj/kaldi-hmm-gmm/archive/refs/tags/v1.2.1.tar.gz")
-  set(kaldi_hmm_gmm_HASH "SHA256=8344681ef464373bab54d548877ffa1cc82c16097e4f0975ce7b497c2e5b6e33")
+  set(kaldi_hmm_gmm_URL  "https://github.com/csukuangfj/kaldi-hmm-gmm/archive/refs/tags/v1.3.5.tar.gz")
+  set(kaldi_hmm_gmm_HASH "SHA256=18a2345c2e235befa5a8a8fd0b35ceaa34db7e174bc9620774152bc09736c5a7")
 
   set(KHG_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
   set(KHG_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
@@ -13,11 +13,11 @@ function(download_kaldi_hmm_gmm)
   # If you don't have access to the Internet,
   # please pre-download kaldi-hmm-gmm
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldi-hmm-gmm-1.2.1.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldi-hmm-gmm-1.2.1.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldi-hmm-gmm-1.2.1.tar.gz
-    /tmp/kaldi-hmm-gmm-1.2.1.tar.gz
-    /star-fj/fangjun/download/github/kaldi-hmm-gmm-1.2.1.tar.gz
+    $ENV{HOME}/Downloads/kaldi-hmm-gmm-1.3.5.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldi-hmm-gmm-1.3.5.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldi-hmm-gmm-1.3.5.tar.gz
+    /tmp/kaldi-hmm-gmm-1.3.5.tar.gz
+    /star-fj/fangjun/download/github/kaldi-hmm-gmm-1.3.5.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

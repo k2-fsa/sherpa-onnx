@@ -12,7 +12,16 @@
 #include <vector>
 
 #include "Eigen/Dense"
+#if defined(_MSC_VER)
+// The vendored fastcluster sources use "#pragma STDC", which MSVC does
+// not know (warning C4068).
+#pragma warning(push)
+#pragma warning(disable : 4068)
+#endif
 #include "fastcluster-all-in-one.h"  // NOLINT
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 namespace sherpa_onnx {
 

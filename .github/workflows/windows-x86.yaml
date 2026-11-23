@@ -47,6 +47,19 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: Free disk space
+        shell: bash
+        run: |
+          # The Debug/RelWithDebInfo matrix jobs ran out of disk while
+          # linking (LNK1180/LNK1116 error 112). The .pdb/.ilk debug info
+          # is large; drop the debugging/development toolchains this job
+          # never uses to make room for it.
+          rm -rf /c/Android "/c/Program Files/Android" "/c/Program Files (x86)/Android"
+          rm -rf /c/ghcup /c/mingw64 /c/Miniconda /c/Strawberry /c/R
+          rm -rf "/c/Program Files/LLVM" "/c/Program Files/MongoDB"
+          rm -rf "/c/Program Files/MySQL" "/c/Program Files/dotnet"
+          df -h .
+
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
 

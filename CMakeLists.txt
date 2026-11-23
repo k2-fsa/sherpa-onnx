@@ -96,6 +96,24 @@ set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used 
 option(SHERPA_ONNX_USE_STATIC_CRT "For Windows only. ON to use static CRT (/MT /MTd); OFF to use dynamic (/MD /MDd)" ON)
 
 
+if(MSVC)
+  # The prebuilt onnxruntime libraries reference PDBs that are not shipped
+  # with them, so every link emits LNK4099 ("PDB ... was not found with
+  # ...; linking object as if no debug info") per object -- tens of
+  # thousands of lines per build. The debug info simply does not exist;
+  # ignore the warning instead of flooding the log.
+  add_link_options(/IGNORE:4099)
+
+  # The Visual Studio generator does not enable /MP, so each project
+  # compiles its sources one at a time; /MP parallelizes within a project.
+  # /FS is required for /Zi configs with /MP (serialized PDB writes).
+  add_compile_options(/MP /FS)
+
+  # Never link incrementally: the .ilk caches are debug-only, huge, and
+  # exhaust the runner's disk (LNK1116 error 112) in Debug/RelWithDebInfo.
+  add_link_options(/INCREMENTAL:NO)
+endif()
+
 # On Windows with MSVC, explicitly control which C runtime (CRT) to use.
 #
 # We rely on CMAKE_MSVC_RUNTIME_LIBRARY (CMake >= 3.15) instead of manually
