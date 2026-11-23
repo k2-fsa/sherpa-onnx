@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -30,23 +31,35 @@ void VadModelConfig::Register(ParseOptions *po) {
                "true to display debug information when loading vad models");
 }
 
-bool VadModelConfig::Validate() const {
-  if (provider != "rknn") {
-    if (!silero_vad.model.empty() && EndsWith(silero_vad.model, ".rknn")) {
+// Provider/model-format consistency checks shared by Validate() and
+// Validate(Manager *).
+static bool ValidateVadModelProvider(const VadModelConfig &config) {
+  if (config.provider != "rknn") {
+    if (!config.silero_vad.model.empty() &&
+        EndsWith(config.silero_vad.model, ".rknn")) {
       SHERPA_ONNX_LOGE(
           "--provider is %s, which is not rknn, but you pass an rknn model "
           "'%s'",
-          provider.c_str(), silero_vad.model.c_str());
+          config.provider.c_str(), config.silero_vad.model.c_str());
       return false;
     }
   }
 
-  if (provider == "rknn") {
-    if (!silero_vad.model.empty() && EndsWith(silero_vad.model, ".onnx")) {
+  if (config.provider == "rknn") {
+    if (!config.silero_vad.model.empty() &&
+        EndsWith(config.silero_vad.model, ".onnx")) {
       SHERPA_ONNX_LOGE("--provider is rknn, but you pass an onnx model '%s'",
-                       silero_vad.model.c_str());
+                       config.silero_vad.model.c_str());
       return false;
     }
+  }
+
+  return true;
+}
+
+bool VadModelConfig::Validate() const {
+  if (!ValidateVadModelProvider(*this)) {
+    return false;
   }
 
   if (!silero_vad.model.empty()) {
@@ -61,6 +74,33 @@ bool VadModelConfig::Validate() const {
 
   return false;
 }
+
+template <typename Manager>
+bool VadModelConfig::Validate(Manager *mgr) const {
+  if (!ValidateVadModelProvider(*this)) {
+    return false;
+  }
+
+  if (!silero_vad.model.empty()) {
+    return silero_vad.Validate(mgr);
+  }
+
+  if (!ten_vad.model.empty()) {
+    return ten_vad.Validate(mgr);
+  }
+
+  SHERPA_ONNX_LOGE("Please provide one VAD model.");
+
+  return false;
+}
+
+#if __ANDROID_API__ >= 9
+template bool VadModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool VadModelConfig::Validate(NativeResourceManager *mgr) const;
+#endif
 
 std::string VadModelConfig::ToString() const {
   std::ostringstream os;

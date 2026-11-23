@@ -49,61 +49,85 @@ void SileroVadModelConfig::Register(ParseOptions *po) {
                "(threshold - 0.15) with lower bound 0.01.");
 }
 
-bool SileroVadModelConfig::Validate() const {
-  if (model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateSileroVadModelConfig(const SileroVadModelConfig &config,
+                                         const Exists &exists) {
+  if (config.model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --silero-vad-model");
     return false;
   }
 
-  if (!FileExists(model)) {
+  if (!exists(config.model)) {
     SHERPA_ONNX_LOGE("Silero vad model file '%s' does not exist",
-                     model.c_str());
+                     config.model.c_str());
     return false;
   }
 
-  if (threshold < 0.01) {
+  if (config.threshold < 0.01) {
     SHERPA_ONNX_LOGE(
         "Please use a larger value for --silero-vad-threshold. Given: %f",
-        threshold);
+        config.threshold);
     return false;
   }
 
-  if (threshold >= 1) {
+  if (config.threshold >= 1) {
     SHERPA_ONNX_LOGE(
         "Please use a smaller value for --silero-vad-threshold. Given: %f",
-        threshold);
+        config.threshold);
     return false;
   }
 
-  if (min_silence_duration <= 0) {
+  if (config.min_silence_duration <= 0) {
     SHERPA_ONNX_LOGE(
         "Please use a larger value for --silero-vad-min-silence-duration. "
         "Given: "
         "%f",
-        min_silence_duration);
+        config.min_silence_duration);
     return false;
   }
 
-  if (min_speech_duration <= 0) {
+  if (config.min_speech_duration <= 0) {
     SHERPA_ONNX_LOGE(
         "Please use a larger value for --silero-vad-min-speech-duration. "
         "Given: "
         "%f",
-        min_speech_duration);
+        config.min_speech_duration);
     return false;
   }
 
-  if (max_speech_duration <= 0) {
+  if (config.max_speech_duration <= 0) {
     SHERPA_ONNX_LOGE(
         "Please use a larger value for --silero-vad-max-speech-duration. "
         "Given: "
         "%f",
-        max_speech_duration);
+        config.max_speech_duration);
     return false;
   }
 
   return true;
 }
+
+bool SileroVadModelConfig::Validate() const {
+  return ValidateSileroVadModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool SileroVadModelConfig::Validate(Manager *mgr) const {
+  return ValidateSileroVadModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool SileroVadModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool SileroVadModelConfig::Validate(NativeResourceManager *mgr) const;
+#endif
 
 std::string SileroVadModelConfig::ToString() const {
   std::ostringstream os;

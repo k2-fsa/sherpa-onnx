@@ -32,7 +32,8 @@ void PybindVadModelConfig(py::module *m) {
       .def_readwrite("provider", &PyClass::provider)
       .def_readwrite("debug", &PyClass::debug)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate",
+           static_cast<bool (VadModelConfig::*)() const>(&PyClass::Validate));
 }
 
 }  // namespace sherpa_onnx
