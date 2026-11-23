@@ -31,7 +31,9 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
       : config_(config), model_(mgr, config_.model) {}
 
   OfflineSourceSeparationOutput Process(
-      const OfflineSourceSeparationInput &_input) const override {
+      const OfflineSourceSeparationInput &_input,
+      OfflineSourceSeparationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const override {
     auto input = Resample(_input, config_.model.debug);
 
     auto stft_ch0 = ComputeStft(input, 0);
@@ -89,19 +91,48 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    std::array<int64_t, 4> x_shape{2, num_frames / 512, 512, 1024};
-    Ort::Value x_tensor = Ort::Value::CreateTensor(
-        memory_info, &x[0], x.size(), x_shape.data(), x_shape.size());
+    int32_t num_chunks = num_frames / 512;
+    int32_t chunk_size = 512 * 1024;
+    int32_t channel_size = num_frames * 1024;
 
-    Ort::Value vocals_spec_tensor = model_.RunVocals(View(&x_tensor));
-    Ort::Value accompaniment_spec_tensor =
-        model_.RunAccompaniment(std::move(x_tensor));
+    Eigen::VectorXf vocals_spec(x.size());
+    Eigen::VectorXf accompaniment_spec(x.size());
 
-    Eigen::VectorXf vocals_spec = Eigen::Map<Eigen::VectorXf>(
-        vocals_spec_tensor.GetTensorMutableData<float>(), x.size());
+    std::array<int64_t, 4> x_shape{2, 1, 512, 1024};
+    std::vector<float> chunk(2 * chunk_size);
 
-    Eigen::VectorXf accompaniment_spec = Eigen::Map<Eigen::VectorXf>(
-        accompaniment_spec_tensor.GetTensorMutableData<float>(), x.size());
+    // chunks are independent, so we run them one by one
+    for (int32_t k = 0; k != num_chunks; ++k) {
+      for (int32_t c = 0; c != 2; ++c) {
+        const float *src = &x[0] + c * channel_size + k * chunk_size;
+        std::copy(src, src + chunk_size, chunk.data() + c * chunk_size);
+      }
+
+      Ort::Value x_tensor =
+          Ort::Value::CreateTensor(memory_info, chunk.data(), chunk.size(),
+                                   x_shape.data(), x_shape.size());
+
+      Ort::Value vocals_spec_tensor = model_.RunVocals(View(&x_tensor));
+      Ort::Value accompaniment_spec_tensor =
+          model_.RunAccompaniment(std::move(x_tensor));
+
+      const float *p_vocals = vocals_spec_tensor.GetTensorData<float>();
+      const float *p_accompaniment =
+          accompaniment_spec_tensor.GetTensorData<float>();
+
+      for (int32_t c = 0; c != 2; ++c) {
+        int32_t offset = c * channel_size + k * chunk_size;
+        std::copy(p_vocals + c * chunk_size, p_vocals + (c + 1) * chunk_size,
+                  &vocals_spec[offset]);
+        std::copy(p_accompaniment + c * chunk_size,
+                  p_accompaniment + (c + 1) * chunk_size,
+                  &accompaniment_spec[offset]);
+      }
+
+      if (callback) {
+        callback(k + 1, num_chunks, callback_arg);
+      }
+    }
 
     Eigen::VectorXf sum_spec = vocals_spec.array().square() +
                                accompaniment_spec.array().square() + 1e-10;

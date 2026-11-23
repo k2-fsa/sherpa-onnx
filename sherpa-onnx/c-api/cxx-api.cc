@@ -1286,11 +1286,8 @@ OfflineSourceSeparation::OfflineSourceSeparation(
     const SherpaOnnxOfflineSourceSeparation *p)
     : MoveOnly<OfflineSourceSeparation, SherpaOnnxOfflineSourceSeparation>(p) {}
 
-SourceSeparationOutput OfflineSourceSeparation::Process(
-    const float *const *samples, int32_t num_channels, int32_t num_samples,
-    int32_t sample_rate) const {
-  auto output = SherpaOnnxOfflineSourceSeparationProcess(
-      p_, samples, num_channels, num_samples, sample_rate);
+static SourceSeparationOutput CollectStems(
+    const SherpaOnnxSourceSeparationOutput *output) {
   if (output == nullptr) {
     return {};
   }
@@ -1309,6 +1306,34 @@ SourceSeparationOutput OfflineSourceSeparation::Process(
 
   SherpaOnnxDestroySourceSeparationOutput(output);
   return ans;
+}
+
+static int32_t SourceSeparationProgressCallback(int32_t num_processed_chunks,
+                                                int32_t num_total_chunks,
+                                                void *arg) {
+  auto *cb = static_cast<OfflineSourceSeparationProgressCallback *>(arg);
+  (*cb)(num_processed_chunks, num_total_chunks);
+  return 0;
+}
+
+SourceSeparationOutput OfflineSourceSeparation::Process(
+    const float *const *samples, int32_t num_channels, int32_t num_samples,
+    int32_t sample_rate) const {
+  return CollectStems(SherpaOnnxOfflineSourceSeparationProcess(
+      p_, samples, num_channels, num_samples, sample_rate));
+}
+
+SourceSeparationOutput OfflineSourceSeparation::Process(
+    const float *const *samples, int32_t num_channels, int32_t num_samples,
+    int32_t sample_rate,
+    const OfflineSourceSeparationProgressCallback &callback) const {
+  if (!callback) {
+    return Process(samples, num_channels, num_samples, sample_rate);
+  }
+  OfflineSourceSeparationProgressCallback cb = callback;
+  return CollectStems(SherpaOnnxOfflineSourceSeparationProcessWithCallback(
+      p_, samples, num_channels, num_samples, sample_rate,
+      SourceSeparationProgressCallback, &cb));
 }
 
 int32_t OfflineSourceSeparation::GetOutputSampleRate() const {
