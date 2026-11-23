@@ -16,6 +16,11 @@ const possible_paths = [
   `./node_modules/sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
   `../sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
   './sherpa-onnx.node',
+  // A bare specifier is resolved by node itself, which walks up the
+  // node_modules chain. It still finds the platform package when it is
+  // hoisted away from this package, or when the two packages end up at
+  // different depths with different versions.
+  `sherpa-onnx-${platform_arch}`,
 ];
 
 let addon = addonStaticImport;
