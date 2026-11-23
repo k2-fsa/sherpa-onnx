@@ -327,9 +327,7 @@ void OnlineSileroVad::RunVad(OnlineStream **ss, int32_t n) {
       s->VadDropSamples(window_shift_);
       // Records the prediction and, on a confirmed speech -> silence flip,
       // arms the stream's endpoint + end-of-utterance flush.
-      const bool tentative =
-          !is_speech && !s->IsVadTriggered() && s->GetVadTempStart() != 0;
-      s->VadPushPrediction(is_speech, tentative);
+      s->VadPushPrediction(is_speech);
     }
   }
 }

@@ -172,9 +172,7 @@ class OnlineStream {
   void VadDropSamples(int32_t k);
   // Records one window's decision. On a confirmed speech -> silence flip
   // this arms the endpoint and the end-of-utterance flush.
-  // `tentative_onset`: speech above threshold that min_speech_duration has not
-  // confirmed yet.
-  void VadPushPrediction(bool is_speech, bool tentative_onset);
+  void VadPushPrediction(bool is_speech);
   // Model state kept per stream (LSTM state and state-machine counters).
   std::vector<Ort::Value> &GetVadStates();
   void SetVadStates(std::vector<Ort::Value> states);

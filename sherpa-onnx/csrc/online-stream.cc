@@ -161,7 +161,7 @@ class OnlineStream::Impl {
 
   // Called after each scored window. A confirmed speech -> silence flip
   // arms the endpoint and, if supported, the end-of-utterance flush.
-  void VadPushPrediction(bool is_speech, bool tentative_onset) {
+  void VadPushPrediction(bool is_speech) {
     std::lock_guard<std::mutex> lock(mutex_);
     vad_predictions_.Push(is_speech ? 1.0f : 0.0f);
     const int64_t idx = vad_predictions_.NumFramesReady();
@@ -185,13 +185,6 @@ class OnlineStream::Impl {
     }
     vad_is_speech_ = is_speech;
 
-    // First window of a speech onset that is not confirmed yet.
-    if (tentative_onset) {
-      if (vad_tentative_start_frame_ < 0) vad_tentative_start_frame_ = idx - 1;
-    } else {
-      vad_tentative_start_frame_ = -1;
-    }
-
     // Bound memory; only the monotonic NumFramesReady() is read.
     constexpr int32_t kMaxRetainedPredictions = 1000;  // ~32s @ 32ms/window
     constexpr int32_t kTrimToPredictions = 200;        // ~6.4s
@@ -206,9 +199,8 @@ class OnlineStream::Impl {
   }
 
   // One locked read for the silence skip: true if the VAD is in confirmed
-  // silence. `*silence_start` is where it began and `*limit` the frame up to
-  // which skipping is safe (the VAD coverage, or the start of an unconfirmed
-  // speech onset if there is one). Absolute frames.
+  // silence. `*silence_start` is where it began and `*limit` the VAD coverage
+  // (the frame up to which skipping is safe). Absolute frames.
   bool GetVadSkipRange(int64_t *silence_start, int64_t *limit) const {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!vad_enabled_ || vad_is_speech_ || vad_silence_start_frame_ < 0 ||
@@ -219,10 +211,6 @@ class OnlineStream::Impl {
         vad_window_shift_seconds_ * 1000.0f / asr_frame_shift_ms_;
     *silence_start = static_cast<int64_t>(vad_silence_start_frame_ * scale);
     *limit = VadFramesCoveredLocked();
-    if (vad_tentative_start_frame_ >= 0) {
-      *limit = std::min<int64_t>(
-          *limit, static_cast<int64_t>(vad_tentative_start_frame_ * scale));
-    }
     return true;
   }
 
@@ -523,7 +511,6 @@ class OnlineStream::Impl {
   std::deque<std::pair<int64_t, int64_t>> vad_queued_endpoints_;
   int64_t vad_endpoint_boundary_ = 0;       // of the armed endpoint
   int64_t vad_endpoint_silence_start_ = 0;  // of the armed endpoint
-  int64_t vad_tentative_start_frame_ = -1;    // in vad_predictions_ frame units
   bool vad_is_speech_ = false;
   int64_t vad_silence_start_frame_ = -1;  // in vad_predictions_ frame units
   int64_t vad_last_speech_frame_ = -1;
@@ -746,8 +733,8 @@ bool OnlineStream::VadPeekWindow(int32_t win, std::vector<float> *out) const {
 
 void OnlineStream::VadDropSamples(int32_t k) { impl_->VadDropSamples(k); }
 
-void OnlineStream::VadPushPrediction(bool is_speech, bool tentative_onset) {
-  impl_->VadPushPrediction(is_speech, tentative_onset);
+void OnlineStream::VadPushPrediction(bool is_speech) {
+  impl_->VadPushPrediction(is_speech);
 }
 
 std::vector<Ort::Value> &OnlineStream::GetVadStates() {
