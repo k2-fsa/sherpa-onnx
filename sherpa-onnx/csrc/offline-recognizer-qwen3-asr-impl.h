@@ -25,7 +25,7 @@ namespace sherpa_onnx {
 // Full outputs with T >= context_len retain row context_len - 1.
 // Returns -1 for invalid shapes or dimensions outside the int32 sampler range.
 int32_t GetQwen3ASRPrefillLogitsIndex(const std::vector<int64_t> &shape,
-                                    int32_t context_len);
+                                      int32_t context_len);
 
 // Trims trailing near-silent frames from audio_features (shape [1, A, H]).
 // If every frame's energy stays below the silence threshold, the tensor is

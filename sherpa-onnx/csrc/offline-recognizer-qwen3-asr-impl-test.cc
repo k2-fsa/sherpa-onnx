@@ -60,7 +60,7 @@ INSTANTIATE_TEST_SUITE_P(
         {{1, 1, std::numeric_limits<int32_t>::max()}, 8, 0},
     }));
 
-TEST(Qwen3ASRPrefillLogits, SelectedRowContainsEosAndNonEosFallback) {
+TEST(Qwen3ASRPrefillLogits, SelectedRowHasExpectedTokenScores) {
   constexpr int32_t kVocab = 7;
   constexpr int32_t kEos = 6;
   // Context ends at row 1. Row 2 must not be sampled even when T > context.

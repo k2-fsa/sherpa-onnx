@@ -36,7 +36,7 @@
 namespace sherpa_onnx {
 
 int32_t GetQwen3ASRPrefillLogitsIndex(const std::vector<int64_t> &shape,
-                                    int32_t context_len) {
+                                      int32_t context_len) {
   if (shape.size() != 3 || shape[0] != 1 || context_len <= 0 ||
       shape[1] <= 0 || shape[2] <= 0 ||
       shape[1] > std::numeric_limits<int32_t>::max() ||
