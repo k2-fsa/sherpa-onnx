@@ -434,9 +434,9 @@ bool OnlineRecognizer::IsEndpoint(OnlineStream *s) const {
   if (s->HasVad() && s->IsVadEndpoint()) {
     s->GetEndpointRule() = 4;
 
-    int64_t covered = s->GetVadFramesCoveredAbsolute();
+    int64_t covered = 0;
     int64_t last_speech = 0;
-    bool had_speech = s->GetVadConfirmedSilenceStartAbsolute(&last_speech);
+    bool had_speech = s->GetVadEndpointTiming(&last_speech, &covered);
     float frame_shift_s = asr_frame_shift_ms_ / 1000.0f;
     if (had_speech) {
       s->GetSpeechEndTime() = last_speech * frame_shift_s;

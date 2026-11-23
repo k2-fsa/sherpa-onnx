@@ -325,7 +325,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
                              ss[i]->GetVadEndpointFrame();
       if (flush) {
         // End-of-utterance flush: decode the real frames up to the VAD
-        // endpoint and pad the rest of the chunk with silence.
+        // endpoint and pad the rest of the chunk with silence. The endpoint
+        // resets the stream, so the next utterance starts at the endpoint
+        // frame and no chunk_shift overlap is kept.
         const int32_t avail =
             std::max(0, ss[i]->NumFramesReady() - num_processed_frames);
         const int32_t real_frames = std::max(

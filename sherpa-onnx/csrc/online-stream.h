@@ -194,6 +194,10 @@ class OnlineStream {
   // presently silent and a silence run has actually started.
   bool GetVadConfirmedSilenceStartAbsolute(int64_t *out_frame) const;
 
+  // Timing of the currently armed endpoint (absolute frames): where its
+  // silence began and the VAD coverage when it was confirmed.
+  bool GetVadEndpointTiming(int64_t *silence_start, int64_t *boundary) const;
+
   // Atomic version for the silence skip: true in confirmed silence, with the
   // silence start and the frame up to which skipping is safe (absolute).
   bool GetVadSkipRange(int64_t *silence_start, int64_t *limit) const;

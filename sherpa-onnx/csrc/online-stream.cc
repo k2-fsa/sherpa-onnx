@@ -147,8 +147,10 @@ class OnlineStream::Impl {
   }
 
   // mutex_ held. `boundary` is an absolute frame (see VadFramesCoveredLocked).
-  void ArmEndpointLocked(int64_t boundary) {
+  void ArmEndpointLocked(int64_t boundary, int64_t silence_start) {
     vad_endpoint_ = true;
+    vad_endpoint_boundary_ = boundary;
+    vad_endpoint_silence_start_ = silence_start;
     if (vad_flush_supported_) {
       // ASR-relative frame the flush must decode up to.
       vad_endpoint_frame_ = static_cast<int32_t>(
@@ -175,9 +177,9 @@ class OnlineStream::Impl {
         vad_had_speech_ = false;
         const int64_t boundary = VadFramesCoveredLocked();
         if (vad_endpoint_) {
-          vad_queued_endpoints_.push_back(boundary);
+          vad_queued_endpoints_.push_back({boundary, idx});
         } else {
-          ArmEndpointLocked(boundary);
+          ArmEndpointLocked(boundary, idx);
         }
       }
     }
@@ -235,6 +237,20 @@ class OnlineStream::Impl {
     return true;
   }
 
+  // Timing of the armed endpoint, absolute frames: where its silence began and
+  // the coverage when it was confirmed.
+  bool GetVadEndpointTiming(int64_t *silence_start, int64_t *boundary) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!vad_enabled_ || !vad_endpoint_ || asr_frame_shift_ms_ <= 0.0f) {
+      return false;
+    }
+    *silence_start = static_cast<int64_t>(
+        vad_endpoint_silence_start_ * vad_window_shift_seconds_ * 1000.0f /
+        asr_frame_shift_ms_);
+    *boundary = vad_endpoint_boundary_;
+    return true;
+  }
+
   bool IsVadSpeechDetected() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return vad_enabled_ && vad_is_speech_;
@@ -273,9 +289,9 @@ class OnlineStream::Impl {
     vad_flush_pending_ = false;
     vad_endpoint_frame_ = 0;
     if (!vad_queued_endpoints_.empty()) {
-      const int64_t boundary = vad_queued_endpoints_.front();
+      const auto next = vad_queued_endpoints_.front();
       vad_queued_endpoints_.pop_front();
-      ArmEndpointLocked(boundary);
+      ArmEndpointLocked(next.first, next.second);
     }
   }
 
@@ -502,7 +518,11 @@ class OnlineStream::Impl {
 
   OnlineVadBuffer vad_predictions_;  // one entry per VAD window
   bool vad_had_speech_ = false;
-  std::deque<int64_t> vad_queued_endpoints_;  // absolute boundary frames
+  // Endpoints that fired while another was armed: {boundary (absolute frame),
+  // silence start (vad_predictions_ frame units)}.
+  std::deque<std::pair<int64_t, int64_t>> vad_queued_endpoints_;
+  int64_t vad_endpoint_boundary_ = 0;       // of the armed endpoint
+  int64_t vad_endpoint_silence_start_ = 0;  // of the armed endpoint
   int64_t vad_tentative_start_frame_ = -1;    // in vad_predictions_ frame units
   bool vad_is_speech_ = false;
   int64_t vad_silence_start_frame_ = -1;  // in vad_predictions_ frame units
@@ -752,6 +772,11 @@ int64_t OnlineStream::GetVadFramesCoveredAbsolute() const {
 bool OnlineStream::GetVadSkipRange(int64_t *silence_start,
                                    int64_t *limit) const {
   return impl_->GetVadSkipRange(silence_start, limit);
+}
+
+bool OnlineStream::GetVadEndpointTiming(int64_t *silence_start,
+                                       int64_t *boundary) const {
+  return impl_->GetVadEndpointTiming(silence_start, boundary);
 }
 
 bool OnlineStream::GetVadConfirmedSilenceStartAbsolute(
