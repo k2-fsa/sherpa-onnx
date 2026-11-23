@@ -289,6 +289,7 @@ list(APPEND sources
   offline-qwen3-asr-model.cc
   offline-recognizer-qwen3-asr-impl.cc
   qwen-asr-tokenizer.cc
+  qwen3-asr-simulated-streaming.cc
 )
 
 if(SHERPA_ONNX_ENABLE_TTS)
@@ -511,6 +512,8 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-keyword-spotter sherpa-onnx-keyword-spotter.cc)
   add_executable(sherpa-onnx-fa sherpa-onnx-fa.cc)
   add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
+  add_executable(sherpa-onnx-qwen3-asr-simulated-streaming
+    sherpa-onnx-qwen3-asr-simulated-streaming.cc)
   add_executable(sherpa-onnx-offline-audio-tagging sherpa-onnx-offline-audio-tagging.cc)
   add_executable(sherpa-onnx-offline-denoiser sherpa-onnx-offline-denoiser.cc)
   add_executable(sherpa-onnx-offline-diacritization sherpa-onnx-offline-diacritization.cc)
@@ -539,6 +542,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-keyword-spotter
     sherpa-onnx-fa
     sherpa-onnx-offline
+    sherpa-onnx-qwen3-asr-simulated-streaming
     sherpa-onnx-offline-audio-tagging
     sherpa-onnx-offline-denoiser
     sherpa-onnx-offline-diacritization
@@ -844,6 +848,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     offline-recognizer-funasr-nano-impl-test.cc
     offline-recognizer-moonshine-v2-impl-test.cc
     offline-recognizer-qwen3-asr-impl-test.cc
+    qwen3-asr-simulated-streaming-test.cc
     offline-recognizer-shared-rng-test.cc
     offline-recognizer-transducer-impl-test.cc
     offline-stream-test.cc

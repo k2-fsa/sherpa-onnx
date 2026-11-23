@@ -18,6 +18,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/qwen-asr-tokenizer.h"
+#include "sherpa-onnx/csrc/qwen3-asr-continuation.h"
 
 namespace sherpa_onnx {
 
@@ -41,6 +42,12 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override;
 
+  Qwen3ASRContinuationResult DecodeWithPrefix(
+      OfflineStream *snapshot,
+      const Qwen3ASRContinuationRequest &request) const;
+
+  QwenAsrTokenizer &Tokenizer() const { return *tokenizer_; }
+
   OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
@@ -61,9 +68,9 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
                                             float temperature, float top_p,
                                             int64_t avoid_id = -1) const;
 
-  OfflineRecognitionResult GenerateText(Ort::Value audio_features,
-                                        int32_t audio_token_len,
-                                        OfflineStream *stream) const;
+  Qwen3ASRContinuationResult GenerateText(
+      Ort::Value audio_features, int32_t audio_token_len, OfflineStream *stream,
+      const Qwen3ASRContinuationRequest &request) const;
 
   void Decode(OfflineStream *stream) const;
 
