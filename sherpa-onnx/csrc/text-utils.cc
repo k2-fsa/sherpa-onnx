@@ -1672,6 +1672,32 @@ std::vector<std::string> ChunkText(const std::string &text, size_t max_len) {
   return chunks;
 }
 
+std::string PreparePocketTtsText(const std::string &text) {
+  std::u32string u32 = Utf8ToUtf32(Trim(text));
+  if (u32.empty()) return {};
+
+  auto category = utf8proc_category(static_cast<utf8proc_int32_t>(u32.back()));
+  switch (category) {
+    case UTF8PROC_CATEGORY_LU:
+    case UTF8PROC_CATEGORY_LL:
+    case UTF8PROC_CATEGORY_LT:
+    case UTF8PROC_CATEGORY_LM:
+    case UTF8PROC_CATEGORY_LO:
+    case UTF8PROC_CATEGORY_ND:
+    case UTF8PROC_CATEGORY_NL:
+    case UTF8PROC_CATEGORY_NO:
+      u32.push_back(U'.');
+      break;
+    default:
+      break;
+  }
+
+  u32[0] = static_cast<char32_t>(
+      utf8proc_toupper(static_cast<utf8proc_int32_t>(u32[0])));
+
+  return Utf32ToUtf8(u32);
+}
+
 int32_t CountWords(const std::string &text) {
   std::u32string u32 = Utf8ToUtf32(text);
   int32_t count = 0;

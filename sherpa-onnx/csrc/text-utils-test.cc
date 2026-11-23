@@ -266,6 +266,38 @@ TEST(SplitLongSentenceByWords, AdvancesOnSpaceOnlySeparator) {
   EXPECT_EQ(result[1], "bb");
 }
 
+TEST(PreparePocketTtsText, AddsPeriodAndCapitalizes) {
+  EXPECT_EQ(PreparePocketTtsText("thank you for calling"),
+            "Thank you for calling.");
+  EXPECT_EQ(PreparePocketTtsText("  the meeting starts at ten \n"),
+            "The meeting starts at ten.");
+  EXPECT_EQ(PreparePocketTtsText("it costs 10"), "It costs 10.");
+  EXPECT_EQ(PreparePocketTtsText("a"), "A.");
+}
+
+TEST(PreparePocketTtsText, KeepsFinalPunctuation) {
+  EXPECT_EQ(PreparePocketTtsText("Turn left."), "Turn left.");
+  EXPECT_EQ(PreparePocketTtsText("really?"), "Really?");
+  EXPECT_EQ(PreparePocketTtsText("wait!"), "Wait!");
+  EXPECT_EQ(PreparePocketTtsText("first, then"), "First, then.");
+  EXPECT_EQ(PreparePocketTtsText("first,"), "First,");
+  EXPECT_EQ(PreparePocketTtsText("\"Go,\" she said"), "\"Go,\" she said.");
+  EXPECT_EQ(PreparePocketTtsText("she said \"go\""), "She said \"go\"");
+}
+
+TEST(PreparePocketTtsText, NonAscii) {
+  EXPECT_EQ(PreparePocketTtsText("\xc3\xa9lan vital"),
+            "\xc3\x89lan vital.");                                // élan
+  EXPECT_EQ(PreparePocketTtsText("a caf\xc3\xa9"), "A caf\xc3\xa9.");  // café
+  EXPECT_EQ(PreparePocketTtsText("\xc2\xbd"), "\xc2\xbd.");            // ½
+  EXPECT_EQ(PreparePocketTtsText("1 apple"), "1 apple.");
+}
+
+TEST(PreparePocketTtsText, Empty) {
+  EXPECT_EQ(PreparePocketTtsText(""), "");
+  EXPECT_EQ(PreparePocketTtsText("  \n"), "");
+}
+
 TEST(ParseLexiconFile, NewFormat) {
   std::istringstream is(
       "# comment\n"
