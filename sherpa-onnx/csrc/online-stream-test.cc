@@ -30,6 +30,19 @@ TEST(OnlineStream, NemoAdditiveLogGuard) {
   }
 }
 
+TEST(OnlineStream, StreamingNemoAdditiveLogGuard) {
+  // Set by the streaming NeMo CTC and transducer recognizers
+  FeatureExtractorConfig config;
+  config.use_nemo_log_guard = true;
+  OnlineStream stream(config);
+  std::vector<float> audio(16000, 0.0f);
+  stream.AcceptWaveform(16000, audio.data(), audio.size());
+  float expected = std::log(std::numeric_limits<float>::epsilon() / 2);
+  for (float value : stream.GetFrames(0, 2)) {
+    EXPECT_NEAR(value, expected, 1e-5);
+  }
+}
+
 TEST(OnlineStream, NemoFlushesResamplerTail) {
   FeatureExtractorConfig config;
   config.nemo_buffered_capacity = 16;

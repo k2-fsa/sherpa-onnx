@@ -508,6 +508,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     config_.feat_config.remove_dc_offset = false;
     config_.feat_config.window_type = "hann";
     config_.feat_config.dither = 0;
+    config_.feat_config.use_nemo_log_guard = true;
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 

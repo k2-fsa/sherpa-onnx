@@ -90,6 +90,11 @@ struct FeatureExtractorConfig {
   // buffer. Capacity is in feature frames; 0 disables this internal mode.
   int32_t nemo_buffered_capacity = 0;
 
+  // For streaming NeMo models. Set internally; not exposed to users.
+  // If true, use NeMo's additive log-zero guard log(x + 2^-24) instead of
+  // the default hard floor log(max(x, FLT_EPSILON)).
+  bool use_nemo_log_guard = false;
+
   std::string ToString() const;
 
   void Register(ParseOptions *po);
