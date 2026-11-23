@@ -423,9 +423,14 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
           if (IsPunctuation(punct) && !ids.empty() &&
               !ids.back().tokens.empty()) {
             auto it = token_str2id_.find(punct);
+            // ids.back().tokens is wrapped as [PAD, ..., PAD], so the last
+            // token is always the end PAD. Check the token before it and
+            // insert the punctuation before the end PAD, not after it.
+            auto &tokens = ids.back().tokens;
             if (it != token_str2id_.end() &&
-                ids.back().tokens.back() != it->second) {
-              ids.back().tokens.push_back(it->second);
+                (tokens.size() < 2 ||
+                 tokens[tokens.size() - 2] != it->second)) {
+              tokens.insert(tokens.end() - 1, it->second);
             }
           }
         }
