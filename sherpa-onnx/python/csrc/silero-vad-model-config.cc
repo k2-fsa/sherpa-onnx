@@ -41,7 +41,8 @@ void PybindSileroVadModelConfig(py::module *m) {
       .def_readwrite("window_size", &PyClass::window_size)
       .def_readwrite("max_speech_duration", &PyClass::max_speech_duration)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate", static_cast<bool (SileroVadModelConfig::*)() const>(
+                           &PyClass::Validate));
 }
 
 }  // namespace sherpa_onnx
