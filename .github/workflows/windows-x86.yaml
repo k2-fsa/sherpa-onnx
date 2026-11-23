@@ -75,9 +75,6 @@ jobs:
           cd build
           cmake \
             -A Win32 \
-            -DCMAKE_EXE_LINKER_FLAGS=/INCREMENTAL:NO \
-            -DCMAKE_SHARED_LINKER_FLAGS=/INCREMENTAL:NO \
-            -DCMAKE_MODULE_LINKER_FLAGS=/INCREMENTAL:NO \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
             -DSHERPA_ONNX_USE_STATIC_CRT=${{ matrix.use_static_crt }} \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
@@ -277,7 +274,7 @@ jobs:
           echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
           echo "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
       - name: Release pre-compiled binaries and libs for Windows x86
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
