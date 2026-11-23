@@ -13,12 +13,6 @@
 
 namespace sherpa_onnx {
 
-// Normalizes each of the feat_dim bins of features (num_frames rows) to zero
-// mean and unit variance over the utterance, as transformers'
-// SeamlessM4TFeatureExtractor does.
-void NormalizeW2vBertFeatures(float *features, int32_t num_frames,
-                              int32_t feat_dim);
-
 /** A w2v-BERT 2.0 CTC model (transformers' Wav2Vec2BertForCTC) exported by
  * scripts/w2v-bert/export_onnx.py.
  *

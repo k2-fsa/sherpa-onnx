@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -22,6 +21,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
@@ -35,6 +35,26 @@ namespace {
 
 // Two filterbank frames become one input row.
 constexpr int32_t kStack = 2;
+
+// Normalizes each of the feat_dim bins of features (num_frames rows) to zero
+// mean and unit variance over the utterance, as transformers'
+// SeamlessM4TFeatureExtractor does.
+void NormalizeW2vBertFeatures(float *features, int32_t num_frames,
+                              int32_t feat_dim) {
+  if (num_frames < 2) return;
+  using RowMajorMat =
+      Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+  Eigen::Map<RowMajorMat> x(features, num_frames, feat_dim);
+
+  Eigen::RowVectorXf mean = x.colwise().mean();
+  x.rowwise() -= mean;
+
+  // The sample variance, as the feature extractor computes it.
+  Eigen::Array<float, 1, Eigen::Dynamic> var =
+      x.array().square().colwise().sum() / static_cast<float>(num_frames - 1);
+  Eigen::Array<float, 1, Eigen::Dynamic> inv_std = (var + 1e-7f).rsqrt();
+  x.array().rowwise() *= inv_std;
+}
 
 }  // namespace
 
@@ -196,27 +216,6 @@ void OfflineW2vBertCtcModel::NormalizeFeatures(float *features,
                                                int32_t num_frames,
                                                int32_t feat_dim) const {
   NormalizeW2vBertFeatures(features, num_frames, feat_dim);
-}
-
-void NormalizeW2vBertFeatures(float *features, int32_t num_frames,
-                              int32_t feat_dim) {
-  if (num_frames < 2) return;
-  for (int32_t d = 0; d != feat_dim; ++d) {
-    double sum = 0;
-    for (int32_t t = 0; t != num_frames; ++t) sum += features[t * feat_dim + d];
-    double mean = sum / num_frames;
-    double squares = 0;
-    for (int32_t t = 0; t != num_frames; ++t) {
-      double x = features[t * feat_dim + d] - mean;
-      squares += x * x;
-    }
-    // The sample variance, as the feature extractor computes it.
-    double scale = 1.0 / std::sqrt(squares / (num_frames - 1) + 1e-7);
-    for (int32_t t = 0; t != num_frames; ++t) {
-      features[t * feat_dim + d] =
-          static_cast<float>((features[t * feat_dim + d] - mean) * scale);
-    }
-  }
 }
 
 #if __ANDROID_API__ >= 9
