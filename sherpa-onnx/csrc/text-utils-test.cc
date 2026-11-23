@@ -293,9 +293,20 @@ TEST(PreparePocketTtsText, NonAscii) {
   EXPECT_EQ(PreparePocketTtsText("1 apple"), "1 apple.");
 }
 
+TEST(PreparePocketTtsText, UnicodeWhitespace) {
+  // U+00A0 no-break space and U+3000 ideographic space
+  EXPECT_EQ(PreparePocketTtsText("\xc2\xa0hello\xc2\xa0"), "Hello.");
+  EXPECT_EQ(PreparePocketTtsText("\xe3\x80\x80wait!\xe3\x80\x80"), "Wait!");
+  EXPECT_EQ(PreparePocketTtsText("a\xc2\xa0"
+                                 "b"),
+            "A\xc2\xa0"
+            "b.");
+}
+
 TEST(PreparePocketTtsText, Empty) {
   EXPECT_EQ(PreparePocketTtsText(""), "");
   EXPECT_EQ(PreparePocketTtsText("  \n"), "");
+  EXPECT_EQ(PreparePocketTtsText("\xc2\xa0 \xc2\xa0"), "");
 }
 
 TEST(ParseLexiconFile, NewFormat) {

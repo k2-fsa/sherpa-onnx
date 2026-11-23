@@ -1673,7 +1673,27 @@ std::vector<std::string> ChunkText(const std::string &text, size_t max_len) {
 }
 
 std::string PreparePocketTtsText(const std::string &text) {
-  std::u32string u32 = Utf8ToUtf32(Trim(text));
+  // Same as Python's str.isspace(), so that U+00A0 and the like are stripped
+  // like the reference's text.strip() does.
+  auto is_space = [](char32_t c) {
+    if (c == 0x85 || (c >= 0x09 && c <= 0x0d) || (c >= 0x1c && c <= 0x20)) {
+      return true;
+    }
+    auto category = utf8proc_category(static_cast<utf8proc_int32_t>(c));
+    return category == UTF8PROC_CATEGORY_ZS ||
+           category == UTF8PROC_CATEGORY_ZL || category == UTF8PROC_CATEGORY_ZP;
+  };
+
+  std::u32string u32 = Utf8ToUtf32(text);
+  size_t begin = 0;
+  size_t end = u32.size();
+  while (begin < end && is_space(u32[begin])) {
+    ++begin;
+  }
+  while (end > begin && is_space(u32[end - 1])) {
+    --end;
+  }
+  u32 = u32.substr(begin, end - begin);
   if (u32.empty()) return {};
 
   auto category = utf8proc_category(static_cast<utf8proc_int32_t>(u32.back()));
