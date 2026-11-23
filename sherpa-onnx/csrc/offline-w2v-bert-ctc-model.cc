@@ -142,18 +142,6 @@ class OfflineW2vBertCtcModel::Impl {
 
  private:
   void Init() {
-    GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
-    GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);
-    if (input_names_.size() != 2 || output_names_.size() != 2) {
-      SHERPA_ONNX_LOGE(
-          "A w2v-BERT CTC model takes input_features and input_lengths and "
-          "returns logits and logits_lengths. This one has %d inputs and %d "
-          "outputs. Please export it with scripts/w2v-bert/export_onnx.py",
-          static_cast<int32_t>(input_names_.size()),
-          static_cast<int32_t>(output_names_.size()));
-      SHERPA_ONNX_EXIT(-1);
-    }
-
     Ort::ModelMetadata meta_data = sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -166,6 +154,29 @@ class OfflineW2vBertCtcModel::Impl {
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+
+    std::string model_type;
+    SHERPA_ONNX_READ_META_DATA_STR(model_type, "model_type");
+    if (model_type != "w2v-bert-ctc") {
+      SHERPA_ONNX_LOGE(
+          "Expected model type 'w2v-bert-ctc'. Given: '%s'. Please export the "
+          "model with scripts/w2v-bert/export_onnx.py",
+          model_type.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
+    GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);
+    if (input_names_.size() != 2 || output_names_.size() != 2) {
+      SHERPA_ONNX_LOGE(
+          "A w2v-BERT CTC model takes input_features and input_lengths and "
+          "returns logits and logits_lengths. This one has %d inputs and %d "
+          "outputs. Please export it with scripts/w2v-bert/export_onnx.py",
+          static_cast<int32_t>(input_names_.size()),
+          static_cast<int32_t>(output_names_.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
   }
