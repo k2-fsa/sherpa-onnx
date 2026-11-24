@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 
+#include <algorithm>
 #include <ios>
 #include <memory>
 #include <sstream>
@@ -167,6 +168,19 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       config_.feat_config.snip_edges = true;
     }
 
+    if (!config_.model_config.w2v_bert_ctc.model.empty()) {
+      // What transformers' SeamlessM4TFeatureExtractor computes: Kaldi
+      // filterbanks of samples scaled to 16 bits, with no padding at the
+      // edges. The model normalizes and stacks them; see
+      // offline-w2v-bert-ctc-model.h
+      config_.feat_config.feature_dim = 80;
+      config_.feat_config.low_freq = 20;
+      config_.feat_config.high_freq = 0;
+      config_.feat_config.dither = 0;
+      config_.feat_config.snip_edges = true;
+      config_.feat_config.normalize_samples = false;
+    }
+
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 
@@ -248,17 +262,31 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 
       model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
 
+      int32_t row_dim = feat_dim;
+      StackW2vBertFrames(&f, &num_frames, &row_dim);
+
       features_vec[i] = std::move(f);
 
       features_length_vec[i] = num_frames;
 
-      std::array<int64_t, 2> shape = {num_frames, feat_dim};
+      std::array<int64_t, 2> shape = {num_frames, row_dim};
 
       Ort::Value x = Ort::Value::CreateTensor(
           memory_info, features_vec[i].data(), features_vec[i].size(),
           shape.data(), shape.size());
       features.push_back(std::move(x));
     }  // for (int32_t i = 0; i != n; ++i)
+
+    // A w2v-BERT batch with no rows at all (every stream under 35 ms) would
+    // reach the model empty; a shorter stream among longer ones is masked.
+    if (!config_.model_config.w2v_bert_ctc.model.empty() &&
+        *std::max_element(features_length_vec.begin(),
+                          features_length_vec.end()) == 0) {
+      for (int32_t i = 0; i != n; ++i) {
+        ss[i]->SetResult(OfflineRecognitionResult{});
+      }
+      return;
+    }
 
     std::vector<const Ort::Value *> features_pointer(n);
     for (int32_t i = 0; i != n; ++i) {
@@ -318,6 +346,12 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     int32_t num_frames = f.size() / feat_dim;
 
     model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
+    StackW2vBertFrames(&f, &num_frames, &feat_dim);
+    if (!config_.model_config.w2v_bert_ctc.model.empty() && num_frames == 0) {
+      // Under 35 ms: no filterbank frame, or one, which makes no row.
+      s->SetResult(OfflineRecognitionResult{});
+      return;
+    }
 
     std::vector<int64_t> shape = {1, num_frames, feat_dim};
     if (!config_.model_config.omnilingual.model.empty()) {
@@ -346,6 +380,18 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
     s->SetResult(r);
+  }
+
+  // A w2v-BERT model takes each two consecutive frames as one row of
+  // 2 * feat_dim, as SeamlessM4TFeatureExtractor forms them. The frames are
+  // consecutive in memory, so this only drops an odd last frame, as the
+  // feature extractor does, and changes the shape.
+  void StackW2vBertFrames(std::vector<float> *f, int32_t *num_frames,
+                          int32_t *feat_dim) const {
+    if (config_.model_config.w2v_bert_ctc.model.empty()) return;
+    *num_frames /= 2;
+    *feat_dim *= 2;
+    f->resize(static_cast<size_t>(*num_frames) * *feat_dim);
   }
 
  private:

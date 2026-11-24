@@ -88,6 +88,8 @@ set(sources
   offline-transducer-modified-beam-search-decoder.cc
   offline-transducer-modified-beam-search-nemo-decoder.cc
   offline-transducer-nemo-model.cc
+  offline-w2v-bert-ctc-model-config.cc
+  offline-w2v-bert-ctc-model.cc
   offline-wenet-ctc-model-config.cc
   offline-wenet-ctc-model.cc
   offline-whisper-dtw.cc

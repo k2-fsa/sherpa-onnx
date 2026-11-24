@@ -406,6 +406,17 @@ jobs:
           .github/scripts/test-offline-fire-red-asr.sh
           du -h -d1 .
 
+      - name: Test offline w2v-BERT CTC
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-w2v-bert-ctc.sh
+          du -h -d1 .
+
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash

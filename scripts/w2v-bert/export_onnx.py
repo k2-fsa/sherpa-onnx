@@ -27,11 +27,13 @@ The graph takes
 
 and returns
 
-  - logits: float32 (N, T_out, vocab_size)
-  - logits_lengths: int64 (N,), the valid output frames of each utterance.
+  - log_probs: float32 (N, T_out, vocab_size), log-softmax normalized
+    (version 1 exports returned unnormalized "logits")
+  - log_probs_lengths: int64 (N,), the valid output frames of each
+    utterance.
 
 Padding is masked inside the graph, so a zero-padded batch gives each
-utterance the logits it gets alone.
+utterance the log_probs it gets alone.
 """
 
 import argparse
@@ -97,8 +99,8 @@ class Wrapper(torch.nn.Module):
           input_features: (N, T, 160), float32
           input_lengths: (N,), int64
         Returns:
-          logits: (N, T_out, vocab_size), float32
-          logits_lengths: (N,), int64
+          log_probs: (N, T_out, vocab_size), float32, log-softmax normalized
+          log_probs_lengths: (N,), int64
         """
         adapter = self.m.wav2vec2_bert.adapter
         lengths = input_lengths
@@ -116,7 +118,8 @@ class Wrapper(torch.nn.Module):
             )
         mask = length_mask(input_features.shape[1], input_lengths)
         logits = self.m(input_features=input_features, attention_mask=mask).logits
-        return logits, lengths.to(torch.int64)
+        # Normalized in the graph, so the runtime need not.
+        return logits.log_softmax(dim=-1), lengths.to(torch.int64)
 
 
 def subsampling_factor(m) -> int:
@@ -196,12 +199,12 @@ def main():
         (x, x_lengths),
         str(tmp / "model.onnx"),
         input_names=["input_features", "input_lengths"],
-        output_names=["logits", "logits_lengths"],
+        output_names=["log_probs", "log_probs_lengths"],
         dynamic_axes={
             "input_features": {0: "N", 1: "T"},
             "input_lengths": {0: "N"},
-            "logits": {0: "N", 1: "T_out"},
-            "logits_lengths": {0: "N"},
+            "log_probs": {0: "N", 1: "T_out"},
+            "log_probs_lengths": {0: "N"},
         },
         opset_version=17,
         dynamo=False,
@@ -210,7 +213,7 @@ def main():
     filename = "model.onnx"
     meta_data = {
         "model_type": "w2v-bert-ctc",
-        "version": "1",
+        "version": "2",
         "model_author": "facebook",
         "maintainer": "k2-fsa",
         "vocab_size": vocab_size,

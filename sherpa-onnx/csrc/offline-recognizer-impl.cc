@@ -218,7 +218,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(config);
     } else if (!config.model_config.moonshine.encoder.empty() ||
                !config.model_config.moonshine.decoder.empty() ||
-               !config.model_config.moonshine.qnn_config.context_binary.empty()) {
+               !config.model_config.moonshine.qnn_config.context_binary
+                    .empty()) {
       return std::make_unique<OfflineRecognizerMoonshineQnnImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
@@ -261,6 +262,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
       !config.model_config.fire_red_asr_ctc.model.empty() ||
+      !config.model_config.w2v_bert_ctc.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
@@ -587,7 +589,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(mgr, config);
     } else if (!config.model_config.moonshine.encoder.empty() ||
-               !config.model_config.moonshine.qnn_config.context_binary.empty()) {
+               !config.model_config.moonshine.qnn_config.context_binary
+                    .empty()) {
       return std::make_unique<OfflineRecognizerMoonshineQnnImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
@@ -626,6 +629,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
       !config.model_config.fire_red_asr_ctc.model.empty() ||
+      !config.model_config.w2v_bert_ctc.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }

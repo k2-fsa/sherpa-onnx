@@ -30,6 +30,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   medasr.Register(po);
   fire_red_asr_ctc.Register(po);
   qwen3_asr.Register(po);
+  w2v_bert_ctc.Register(po);
 
   po->Register("telespeech-ctc", &telespeech_ctc,
                "Path to model.onnx for telespeech ctc");
@@ -187,6 +188,10 @@ bool OfflineModelConfig::Validate() const {
     return qwen3_asr.Validate();
   }
 
+  if (!w2v_bert_ctc.model.empty()) {
+    return w2v_bert_ctc.Validate();
+  }
+
   if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
     SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
                      telespeech_ctc.c_str());
@@ -210,12 +215,14 @@ bool OfflineModelConfig::Validate() const {
         "--provider=qnn requires QNN offline transducer artifacts (*.so or "
         "--transducer.qnn-context-binary). Given encoder: '%s', decoder: '%s', "
         "joiner: '%s'",
-        transducer.encoder_filename.c_str(), transducer.decoder_filename.c_str(),
+        transducer.encoder_filename.c_str(),
+        transducer.decoder_filename.c_str(),
         transducer.joiner_filename.c_str());
     return false;
   }
 
-  if (!transducer.encoder_filename.empty() || !transducer.decoder_filename.empty() ||
+  if (!transducer.encoder_filename.empty() ||
+      !transducer.decoder_filename.empty() ||
       !transducer.joiner_filename.empty() ||
       !transducer.qnn_config.context_binary.empty()) {
     return transducer.Validate();
@@ -246,6 +253,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "medasr=" << medasr.ToString() << ", ";
   os << "fire_red_asr_ctc=" << fire_red_asr_ctc.ToString() << ", ";
   os << "qwen3_asr=" << qwen3_asr.ToString() << ", ";
+  os << "w2v_bert_ctc=" << w2v_bert_ctc.ToString() << ", ";
   os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
