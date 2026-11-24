@@ -230,6 +230,19 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     sentences = std::move(final_chunks);
 
+    // Each chunk is generated on its own. Without an upper-case first letter
+    // and a final period, the model often drops the first word or repeats
+    // and garbles the last one.
+    std::vector<std::string> prepared;
+    prepared.reserve(sentences.size());
+    for (const auto &s : sentences) {
+      std::string p = PreparePocketTtsText(s);
+      if (!p.empty()) {
+        prepared.push_back(std::move(p));
+      }
+    }
+    sentences = std::move(prepared);
+
     Ort::Value voice_embedding = GetVoiceEmbedding(gen_config);
     if (!voice_embedding) {
       return {};

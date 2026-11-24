@@ -300,6 +300,12 @@ std::vector<std::string> SplitLongSentence(const std::string &sentence,
                                            size_t max_chars);
 std::vector<std::string> ChunkText(const std::string &text, size_t max_len);
 
+// Prepare a sentence for PocketTTS like the reference implementation does
+// before tokenizing it: trim it, append a period if it ends with a letter or
+// a digit, and upper-case its first character. See _tokenize() in
+// https://huggingface.co/KevinAHM/pocket-tts-onnx/blob/355aac5178/pocket_tts_onnx.py
+std::string PreparePocketTtsText(const std::string &text);
+
 // Count words in text. Each CJK character counts as one word.
 // English words are sequences of non-CJK, non-space, non-punctuation chars.
 int32_t CountWords(const std::string &text);
