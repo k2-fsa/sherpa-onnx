@@ -31,7 +31,7 @@ namespace sherpa_onnx {
  * filterbank energies per 10 ms from samples scaled to 16 bits (the
  * recognizer computes these), each bin normalized over the utterance
  * (NormalizeFeatures), and each two consecutive frames joined into one row
- * of 160 (Forward).
+ * of 160 (by the recognizer, offline-recognizer-ctc-impl.h).
  */
 class OfflineW2vBertCtcModel : public OfflineCtcModel {
  public:
@@ -44,10 +44,11 @@ class OfflineW2vBertCtcModel : public OfflineCtcModel {
 
   /** Run the forward method of the model.
    *
-   * @param features  A tensor of shape (N, T, 80), normalized by
-   *                  NormalizeFeatures(). Padding may have any value.
+   * @param features  A tensor of shape (N, T, 160): frames normalized by
+   *                  NormalizeFeatures(), each two consecutive ones joined
+   *                  into one row. Padding may have any value.
    * @param features_length  A 1-D tensor of shape (N,) containing number of
-   *                         valid frames in `features` before padding.
+   *                         valid rows in `features` before padding.
    *                         Its dtype is int64_t.
    *
    * @return Return a vector containing:

@@ -261,11 +261,14 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 
       model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
 
+      int32_t row_dim = feat_dim;
+      StackW2vBertFrames(&f, &num_frames, &row_dim);
+
       features_vec[i] = std::move(f);
 
       features_length_vec[i] = num_frames;
 
-      std::array<int64_t, 2> shape = {num_frames, feat_dim};
+      std::array<int64_t, 2> shape = {num_frames, row_dim};
 
       Ort::Value x = Ort::Value::CreateTensor(
           memory_info, features_vec[i].data(), features_vec[i].size(),
@@ -331,6 +334,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     int32_t num_frames = f.size() / feat_dim;
 
     model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
+    StackW2vBertFrames(&f, &num_frames, &feat_dim);
 
     std::vector<int64_t> shape = {1, num_frames, feat_dim};
     if (!config_.model_config.omnilingual.model.empty()) {
@@ -359,6 +363,18 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
     s->SetResult(r);
+  }
+
+  // A w2v-BERT model takes each two consecutive frames as one row of
+  // 2 * feat_dim, as SeamlessM4TFeatureExtractor forms them. The frames are
+  // consecutive in memory, so this only drops an odd last frame, as the
+  // feature extractor does, and changes the shape.
+  void StackW2vBertFrames(std::vector<float> *f, int32_t *num_frames,
+                          int32_t *feat_dim) const {
+    if (config_.model_config.w2v_bert_ctc.model.empty()) return;
+    *num_frames /= 2;
+    *feat_dim *= 2;
+    f->resize(static_cast<size_t>(*num_frames) * *feat_dim);
   }
 
  private:

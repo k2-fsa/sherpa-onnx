@@ -4,7 +4,6 @@
 
 #include "sherpa-onnx/csrc/offline-w2v-bert-ctc-model.h"
 
-#include <algorithm>
 #include <array>
 #include <memory>
 #include <sstream>
@@ -32,9 +31,6 @@
 namespace sherpa_onnx {
 
 namespace {
-
-// Two filterbank frames become one input row.
-constexpr int32_t kStack = 2;
 
 // Normalizes each of the feat_dim bins of features (num_frames rows) to zero
 // mean and unit variance over the utterance, as transformers'
@@ -86,45 +82,11 @@ class OfflineW2vBertCtcModel::Impl {
 
   std::vector<Ort::Value> Forward(Ort::Value features,
                                   Ort::Value features_length) {
-    auto shape = features.GetTensorTypeAndShapeInfo().GetShape();
-    auto batch = static_cast<int32_t>(shape[0]);
-    auto num_frames = static_cast<int32_t>(shape[1]);
-    auto feat_dim = static_cast<int32_t>(shape[2]);
-    // An odd last frame is dropped, as the feature extractor drops it.
-    int32_t rows = num_frames / kStack;
-    size_t row_size = static_cast<size_t>(feat_dim) * kStack;
-    size_t utterance_size = rows * row_size;
-
-    // Each utterance's frames are consecutive in memory, so joining two
-    // frames into a row only changes the shape, less an odd last frame.
-    std::array<int64_t, 3> stacked_shape = {batch, rows,
-                                            static_cast<int64_t>(row_size)};
-    Ort::Value stacked = Ort::Value::CreateTensor<float>(
-        allocator_, stacked_shape.data(), stacked_shape.size());
-    const float *p = features.GetTensorData<float>();
-    float *q = stacked.GetTensorMutableData<float>();
-
-    std::array<int64_t, 1> length_shape = {batch};
-    Ort::Value length = Ort::Value::CreateTensor<int64_t>(
-        allocator_, length_shape.data(), length_shape.size());
-    int64_t *row_length = length.GetTensorMutableData<int64_t>();
-    const int64_t *frames_length = features_length.GetTensorData<int64_t>();
-
-    for (int32_t b = 0; b != batch; ++b) {
-      const float *src = p + static_cast<size_t>(b) * num_frames * feat_dim;
-      float *dst = q + b * utterance_size;
-      row_length[b] = frames_length[b] / kStack;
-      size_t valid = row_length[b] * row_size;
-      std::copy(src, src + valid, dst);
-      // The model masks the padding; zeroing it keeps the recognizer's
-      // padding value out of the graph.
-      std::fill(dst + valid, dst + utterance_size, 0.0f);
-    }
-
-    // With an int8 model the batch still shares activation quantization
-    // ranges, so a batch can differ slightly from single decoding; see the
-    // class comment.
-    std::array<Ort::Value, 2> inputs = {std::move(stacked), std::move(length)};
+    // The model masks the padding, whatever its value. With an int8 model
+    // the batch still shares activation quantization ranges, so a batch can
+    // differ slightly from single decoding; see the class comment.
+    std::array<Ort::Value, 2> inputs = {std::move(features),
+                                        std::move(features_length)};
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
                    output_names_ptr_.data(), output_names_ptr_.size());
