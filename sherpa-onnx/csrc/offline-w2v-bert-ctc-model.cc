@@ -23,7 +23,6 @@
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -87,15 +86,10 @@ class OfflineW2vBertCtcModel::Impl {
     // differ slightly from single decoding; see the class comment.
     std::array<Ort::Value, 2> inputs = {std::move(features),
                                         std::move(features_length)};
-    auto out =
-        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
-                   output_names_ptr_.data(), output_names_ptr_.size());
-
-    auto out_shape = out[0].GetTensorTypeAndShapeInfo().GetShape();
-    LogSoftmax(out[0].GetTensorMutableData<float>(),
-               static_cast<int32_t>(out_shape[2]),
-               static_cast<int32_t>(out_shape[0] * out_shape[1]));
-    return out;
+    // The graph's logits are log-softmax normalized (Init() checks the
+    // export version).
+    return sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                      output_names_ptr_.data(), output_names_ptr_.size());
   }
 
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
@@ -124,6 +118,18 @@ class OfflineW2vBertCtcModel::Impl {
           "Expected model type 'w2v-bert-ctc'. Given: '%s'. Please export the "
           "model with scripts/w2v-bert/export_onnx.py",
           model_type.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    // Version 2 normalizes the logits in the graph; version 1 did not.
+    int32_t version = 0;
+    SHERPA_ONNX_READ_META_DATA(version, "version");
+    if (version < 2) {
+      SHERPA_ONNX_LOGE(
+          "This w2v-BERT CTC model has export version %d; version 2 or later "
+          "is required. Please export it again with "
+          "scripts/w2v-bert/export_onnx.py",
+          version);
       SHERPA_ONNX_EXIT(-1);
     }
 

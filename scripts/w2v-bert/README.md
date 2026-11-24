@@ -39,8 +39,9 @@ CC BY 4.0.
   with kaldi-native-fbank.
 - `input_lengths`: int64 `(N,)`, the valid rows of each utterance. Pad a
   batch with zeros; the graph masks the padding.
-- `logits`: float32 `(N, T_out, vocab_size)`; the blank is `<blk>`, the
-  checkpoint's padding token.
+- `logits`: float32 `(N, T_out, vocab_size)`, log-softmax normalized (from
+  metadata `version` 2; version 1 exports were not normalized); the blank is
+  `<blk>`, the checkpoint's padding token.
 - `logits_lengths`: int64 `(N,)`.
 
 The metadata `subsampling_factor` counts 10 ms filterbank frames per output

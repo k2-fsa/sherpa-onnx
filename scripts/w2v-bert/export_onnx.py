@@ -27,7 +27,8 @@ The graph takes
 
 and returns
 
-  - logits: float32 (N, T_out, vocab_size)
+  - logits: float32 (N, T_out, vocab_size), log-softmax normalized (log
+    probabilities; version 1 exports were not normalized)
   - logits_lengths: int64 (N,), the valid output frames of each utterance.
 
 Padding is masked inside the graph, so a zero-padded batch gives each
@@ -97,7 +98,7 @@ class Wrapper(torch.nn.Module):
           input_features: (N, T, 160), float32
           input_lengths: (N,), int64
         Returns:
-          logits: (N, T_out, vocab_size), float32
+          logits: (N, T_out, vocab_size), float32, log-softmax normalized
           logits_lengths: (N,), int64
         """
         adapter = self.m.wav2vec2_bert.adapter
@@ -116,7 +117,8 @@ class Wrapper(torch.nn.Module):
             )
         mask = length_mask(input_features.shape[1], input_lengths)
         logits = self.m(input_features=input_features, attention_mask=mask).logits
-        return logits, lengths.to(torch.int64)
+        # Normalized in the graph, so the runtime need not.
+        return logits.log_softmax(dim=-1), lengths.to(torch.int64)
 
 
 def subsampling_factor(m) -> int:
@@ -210,7 +212,7 @@ def main():
     filename = "model.onnx"
     meta_data = {
         "model_type": "w2v-bert-ctc",
-        "version": "1",
+        "version": "2",
         "model_author": "facebook",
         "maintainer": "k2-fsa",
         "vocab_size": vocab_size,

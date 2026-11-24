@@ -132,6 +132,9 @@ def main():
     alone_logits = []
     for w, x in zip(args.waves, features):
         logits, _ = model(x[None], np.array([x.shape[0]], dtype=np.int64))
+        total = np.exp(logits[0]).sum(axis=-1)
+        if not np.allclose(total, 1.0, atol=1e-3):
+            raise SystemExit(f"{w}: logits are not log-softmax normalized")
         alone_logits.append(logits[0])
         alone.append(to_text(greedy(logits[0], model.blank_id), id2token))
         print(f"{w}: {alone[-1]}")
