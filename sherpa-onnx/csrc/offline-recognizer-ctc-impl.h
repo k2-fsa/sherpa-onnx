@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 
+#include <algorithm>
 #include <ios>
 #include <memory>
 #include <sstream>
@@ -276,6 +277,17 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       features.push_back(std::move(x));
     }  // for (int32_t i = 0; i != n; ++i)
 
+    // A w2v-BERT batch with no rows at all (every stream under 35 ms) would
+    // reach the model empty; a shorter stream among longer ones is masked.
+    if (!config_.model_config.w2v_bert_ctc.model.empty() &&
+        *std::max_element(features_length_vec.begin(),
+                          features_length_vec.end()) == 0) {
+      for (int32_t i = 0; i != n; ++i) {
+        ss[i]->SetResult(OfflineRecognitionResult{});
+      }
+      return;
+    }
+
     std::vector<const Ort::Value *> features_pointer(n);
     for (int32_t i = 0; i != n; ++i) {
       features_pointer[i] = &features[i];
@@ -335,6 +347,11 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 
     model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
     StackW2vBertFrames(&f, &num_frames, &feat_dim);
+    if (!config_.model_config.w2v_bert_ctc.model.empty() && num_frames == 0) {
+      // Under 35 ms: no filterbank frame, or one, which makes no row.
+      s->SetResult(OfflineRecognitionResult{});
+      return;
+    }
 
     std::vector<int64_t> shape = {1, num_frames, feat_dim};
     if (!config_.model_config.omnilingual.model.empty()) {
