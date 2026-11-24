@@ -138,6 +138,12 @@ void ContextGraph::FillFailOutput() const {
     auto current_node = node_queue.front();
     node_queue.pop();
     for (auto &kv : current_node->next) {
+      // A phrase added later may have raised the token_score of a shared
+      // prefix node after its descendants were created, so recompute the
+      // scores from the parent here.
+      kv.second->node_score = current_node->node_score + kv.second->token_score;
+      kv.second->output_score =
+          kv.second->is_end ? kv.second->node_score : 0.0f;
       auto fail = current_node->fail;
       if (1 == fail->next.count(kv.first)) {
         fail = fail->next.at(kv.first).get();
