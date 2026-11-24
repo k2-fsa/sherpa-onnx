@@ -5,7 +5,6 @@
 #include "sherpa-onnx/csrc/offline-stream.h"
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <limits>
@@ -255,7 +254,11 @@ class OfflineStream::Impl {
     int32_t n = fbank_  ? fbank_->NumFramesReady()
                 : mfcc_ ? mfcc_->NumFramesReady()
                         : whisper_fbank_->NumFramesReady();
-    assert(n > 0 && "Please first call AcceptWaveform()");
+    // Audio shorter than one frame (25 ms with snip_edges) has none; the
+    // recognizer decides what an empty stream gives.
+    if (n <= 0) {
+      return {};
+    }
 
     if (whisper_align_to_stft_center_) {
       // The half-shift lead-in padding yields extra trailing frames
