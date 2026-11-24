@@ -12,7 +12,7 @@ Usage:
 
 Each wave is decoded alone. With --check-batch, all of them are then
 decoded as one zero-padded batch, which must give the same text and, on
-each wave's valid frames, logits within 1e-3. That holds
+each wave's valid frames, log_probs within 1e-3. That holds
 for model.onnx; model.int8.onnx quantizes activations with ranges taken
 over the whole batch, so a batch can change a character or two.
 """
@@ -83,8 +83,8 @@ def load_tokens(filename: str):
     return id2token
 
 
-def greedy(logits: np.ndarray, blank_id: int) -> List[int]:
-    best = logits.argmax(axis=-1)
+def greedy(log_probs: np.ndarray, blank_id: int) -> List[int]:
+    best = log_probs.argmax(axis=-1)
     return [
         int(t)
         for i, t in enumerate(best)
@@ -110,9 +110,9 @@ class OnnxModel:
 
     def __call__(self, x: np.ndarray, x_lengths: np.ndarray):
         """x: (N, T, 160) float32; x_lengths: (N,) int64.
-        Returns logits (N, T_out, vocab_size) and logits_lengths (N,)."""
+        Returns log_probs (N, T_out, vocab_size) and log_probs_lengths (N,)."""
         return self.model.run(
-            ["logits", "logits_lengths"],
+            ["log_probs", "log_probs_lengths"],
             {"input_features": x, "input_lengths": x_lengths},
         )
 
@@ -129,14 +129,14 @@ def main():
         features.append(compute_features(samples[:, 0], sample_rate))
 
     alone = []
-    alone_logits = []
+    alone_log_probs = []
     for w, x in zip(args.waves, features):
-        logits, _ = model(x[None], np.array([x.shape[0]], dtype=np.int64))
-        total = np.exp(logits[0]).sum(axis=-1)
+        log_probs, _ = model(x[None], np.array([x.shape[0]], dtype=np.int64))
+        total = np.exp(log_probs[0]).sum(axis=-1)
         if not np.allclose(total, 1.0, atol=1e-3):
-            raise SystemExit(f"{w}: logits are not log-softmax normalized")
-        alone_logits.append(logits[0])
-        alone.append(to_text(greedy(logits[0], model.blank_id), id2token))
+            raise SystemExit(f"{w}: log_probs are not log-softmax normalized")
+        alone_log_probs.append(log_probs[0])
+        alone.append(to_text(greedy(log_probs[0], model.blank_id), id2token))
         print(f"{w}: {alone[-1]}")
 
     if not args.check_batch:
@@ -145,26 +145,26 @@ def main():
     batch = np.zeros((len(features), lengths.max(), 160), dtype=np.float32)
     for i, x in enumerate(features):
         batch[i, : x.shape[0]] = x
-    logits, logits_lengths = model(batch, lengths)
+    log_probs, log_probs_lengths = model(batch, lengths)
     worst = 0.0
     for i, w in enumerate(args.waves):
-        valid = logits[i, : logits_lengths[i]]
-        if valid.shape != alone_logits[i].shape:
+        valid = log_probs[i, : log_probs_lengths[i]]
+        if valid.shape != alone_log_probs[i].shape:
             raise SystemExit(
                 f"{w}: {valid.shape[0]} valid frames batched, "
-                f"{alone_logits[i].shape[0]} alone"
+                f"{alone_log_probs[i].shape[0]} alone"
             )
-        diff = float(np.abs(valid - alone_logits[i]).max())
+        diff = float(np.abs(valid - alone_log_probs[i]).max())
         worst = max(worst, diff)
         # A NaN or infinite logit makes diff NaN, which compares false.
         if not np.isfinite(diff) or diff > 1e-3:
-            raise SystemExit(f"{w}: batched logits differ by up to {diff:.2e}")
+            raise SystemExit(f"{w}: batched log_probs differ by up to {diff:.2e}")
         text = to_text(greedy(valid, model.blank_id), id2token)
         if text != alone[i]:
             raise SystemExit(f"{w}: batched decoding gives '{text}'")
     print(
         f"A padded batch of {len(features)} gives the same text, "
-        f"with logits within {worst:.2e} of decoding each alone"
+        f"with log_probs within {worst:.2e} of decoding each alone"
     )
 
 

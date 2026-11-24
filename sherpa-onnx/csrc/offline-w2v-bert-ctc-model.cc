@@ -86,7 +86,7 @@ class OfflineW2vBertCtcModel::Impl {
     // differ slightly from single decoding; see the class comment.
     std::array<Ort::Value, 2> inputs = {std::move(features),
                                         std::move(features_length)};
-    // The graph's logits are log-softmax normalized (Init() checks the
+    // The graph's outputs are log-softmax normalized (Init() checks the
     // export version).
     return sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
                       output_names_ptr_.data(), output_names_ptr_.size());
@@ -121,7 +121,9 @@ class OfflineW2vBertCtcModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Version 2 normalizes the logits in the graph; version 1 did not.
+    // Version 2 normalizes in the graph; version 1 did not. Outputs are
+    // taken by position, so either version 2 output naming (log_probs, or
+    // the first exports' logits) loads.
     int32_t version = 0;
     SHERPA_ONNX_READ_META_DATA(version, "version");
     if (version < 2) {
@@ -138,8 +140,8 @@ class OfflineW2vBertCtcModel::Impl {
     if (input_names_.size() != 2 || output_names_.size() != 2) {
       SHERPA_ONNX_LOGE(
           "A w2v-BERT CTC model takes input_features and input_lengths and "
-          "returns logits and logits_lengths. This one has %d inputs and %d "
-          "outputs. Please export it with scripts/w2v-bert/export_onnx.py",
+          "returns log_probs and log_probs_lengths. This one has %d inputs and "
+          "%d outputs. Please export it with scripts/w2v-bert/export_onnx.py",
           static_cast<int32_t>(input_names_.size()),
           static_cast<int32_t>(output_names_.size()));
       SHERPA_ONNX_EXIT(-1);
