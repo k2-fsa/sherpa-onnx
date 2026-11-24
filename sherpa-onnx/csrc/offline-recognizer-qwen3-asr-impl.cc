@@ -966,6 +966,15 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   const int64_t eos_id = tokenizer_->GetEosTokenId();
 
+  // The model also ends a transcript with <|endoftext|>: its
+  // generation_config.json lists both ("eos_token_id": [151643, 151645]).
+  // Decoding past it returns the token as text, followed by made-up words or
+  // a repetition loop until max_new_tokens. See k2-fsa/sherpa-onnx#4294.
+  const int64_t end_of_text_id = tokenizer_->GetTokenId("<|endoftext|>");
+  auto is_end = [eos_id, end_of_text_id](int64_t id) {
+    return id == eos_id || (end_of_text_id >= 0 && id == end_of_text_id);
+  };
+
   auto log_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
   if (log_shape.size() < 3) {
     result.text = "";
@@ -987,13 +996,13 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   int64_t next_id = SampleTokenFromLogits(logits, last_idx, temperature, top_p);
 
-  if (next_id == eos_id) {
+  if (is_end(next_id)) {
     if (config_.model_config.debug) {
       float abs_max = TensorAbsMax(logits, 1LL << 20);
       SHERPA_ONNX_LOGE(
-          "qwen3-asr: first token is EOS (eos_id=%d). logits_abs_max=%f "
+          "qwen3-asr: first token is EOS (id=%d). logits_abs_max=%f "
           "context_len=%d max_total_len=%d",
-          static_cast<int32_t>(eos_id), abs_max, context_len, max_seq_len);
+          static_cast<int32_t>(next_id), abs_max, context_len, max_seq_len);
     }
 
     const int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
@@ -1014,9 +1023,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
                       reinterpret_cast<const float *>(base) + offset);
 
     next_id = SampleTokenWithTemperatureAndTopP(row, is_fp16, vocab_size,
-                                                temperature, top_p, eos_id);
+                                                temperature, top_p, next_id);
 
-    if (next_id == eos_id) {
+    if (is_end(next_id)) {
       result.text = "";
       return result;
     }
@@ -1079,7 +1088,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
     next_id = SampleTokenFromLogits(logits, time_dim2 - 1, temperature, top_p);
 
-    if (next_id == eos_id) {
+    if (is_end(next_id)) {
       break;
     }
 
