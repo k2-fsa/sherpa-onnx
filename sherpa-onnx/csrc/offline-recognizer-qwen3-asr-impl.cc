@@ -988,6 +988,14 @@ Qwen3ASRContinuationResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       prefix_size + static_cast<size_t>(std::min(max_new_tokens, max_seq_len)));
 
   const int64_t eos_id = tokenizer_->GetEosTokenId();
+  // Qwen3-ASR uses both <|im_end|> and <|endoftext|> as EOS. Only strict
+  // continuation opts in; ordinary offline keeps its existing single-EOS
+  // policy. Look up the token by name rather than assuming a vocabulary ID.
+  const int64_t end_of_text_id =
+      strict ? tokenizer_->GetTokenId("<|endoftext|>") : -1;
+  const auto is_eos = [eos_id, end_of_text_id](int64_t id) {
+    return id == eos_id || (end_of_text_id >= 0 && id == end_of_text_id);
+  };
 
   auto log_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
   if (log_shape.size() < 3) {
@@ -1010,13 +1018,15 @@ Qwen3ASRContinuationResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   int64_t next_id = SampleTokenFromLogits(logits, last_idx, temperature, top_p);
 
-  if (next_id == eos_id && (!strict || request.prefix_ids.empty())) {
+  if (is_eos(next_id) && (!strict || request.prefix_ids.empty())) {
+    const int64_t first_eos_id = next_id;
     if (config_.model_config.debug) {
       float abs_max = TensorAbsMax(logits, 1LL << 20);
       SHERPA_ONNX_LOGE(
           "qwen3-asr: first token is EOS (eos_id=%d). logits_abs_max=%f "
           "context_len=%d max_total_len=%d",
-          static_cast<int32_t>(eos_id), abs_max, context_len, max_seq_len);
+          static_cast<int32_t>(first_eos_id), abs_max, context_len,
+          max_seq_len);
     }
 
     const int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
@@ -1037,16 +1047,17 @@ Qwen3ASRContinuationResult OfflineRecognizerQwen3ASRImpl::GenerateText(
                       reinterpret_cast<const float *>(base) + offset);
 
     next_id = SampleTokenWithTemperatureAndTopP(row, is_fp16, vocab_size,
-                                                temperature, top_p, eos_id);
+                                                temperature, top_p,
+                                                first_eos_id);
 
-    if (next_id == eos_id) {
+    if (!strict && next_id == eos_id) {
       result.text = "";
       return output;
     }
   }
 
   output.stop_reason = Qwen3ASRStopReason::kTokenLimit;
-  if (next_id == eos_id) {
+  if (is_eos(next_id)) {
     output.stop_reason = Qwen3ASRStopReason::kEos;
   } else {
     generated_ids.push_back(next_id);
@@ -1057,7 +1068,7 @@ Qwen3ASRContinuationResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   int32_t cur_len = context_len;
 
   for (int32_t step = 1;
-       step < max_new_tokens && next_id != eos_id &&
+       step < max_new_tokens && !is_eos(next_id) &&
        output.stop_reason != Qwen3ASRStopReason::kRepetitionStopped;
        ++step) {
     if (cur_len >= max_seq_len) {
@@ -1117,7 +1128,7 @@ Qwen3ASRContinuationResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
     next_id = SampleTokenFromLogits(logits, time_dim2 - 1, temperature, top_p);
 
-    if (next_id == eos_id) {
+    if (is_eos(next_id)) {
       output.stop_reason = Qwen3ASRStopReason::kEos;
       break;
     }

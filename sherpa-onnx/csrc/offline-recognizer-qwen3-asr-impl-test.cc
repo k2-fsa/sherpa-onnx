@@ -65,6 +65,68 @@ TEST_F(QwenContinuationTest, NonemptyPrefixAllowsImmediateEos) {
   EXPECT_EQ(Run(impl, {}).result.text, "A");
 }
 
+TEST_F(QwenContinuationTest, AlternateEosPreservesNonemptyPrefix) {
+  config_.model_config.qwen3_asr.decoder = dir_ + "/alt_eos.onnx";
+  OfflineRecognizerQwen3ASRImpl impl(config_);
+  auto r = Run(impl, {32, 33}, "", 512, 3);
+  EXPECT_EQ(r.stop_reason, Qwen3ASRStopReason::kEos);
+  EXPECT_EQ(r.generated_tokens, 0);
+  EXPECT_EQ(r.decoder_calls, 1);
+  EXPECT_EQ(r.raw_output_ids, (std::vector<int64_t>{32, 33}));
+  EXPECT_EQ(r.result.text, "AB");
+}
+
+TEST_F(QwenContinuationTest, AlternateEosKeepsEmptyPrefixFallback) {
+  config_.model_config.qwen3_asr.decoder = dir_ + "/alt_eos.onnx";
+  OfflineRecognizerQwen3ASRImpl impl(config_);
+  auto r = Run(impl, {}, "", 512, 3);
+  EXPECT_EQ(r.stop_reason, Qwen3ASRStopReason::kEos);
+  EXPECT_EQ(r.generated_tokens, 1);
+  EXPECT_EQ(r.decoder_calls, 2);
+  EXPECT_EQ(r.raw_output_ids, (std::vector<int64_t>{32}));
+  EXPECT_EQ(r.result.text, "A");
+}
+
+TEST_F(QwenContinuationTest, EosFallbackCannotAppendAnotherEos) {
+  config_.model_config.qwen3_asr.decoder = dir_ + "/dual_eos.onnx";
+  OfflineRecognizerQwen3ASRImpl impl(config_);
+  auto r = Run(impl, {}, "", 512, 3);
+  EXPECT_EQ(r.stop_reason, Qwen3ASRStopReason::kEos);
+  EXPECT_EQ(r.generated_tokens, 0);
+  EXPECT_EQ(r.decoder_calls, 1);
+  EXPECT_TRUE(r.raw_output_ids.empty());
+  EXPECT_TRUE(r.result.text.empty());
+}
+
+TEST_F(QwenContinuationTest, AlternateEosEndsSuffixAtCapacity) {
+  config_.model_config.qwen3_asr.decoder = dir_ + "/alt_observe.onnx";
+  OfflineRecognizerQwen3ASRImpl impl(config_);
+  auto r = Run(impl, {32, 33}, "", 512, 4);
+  EXPECT_EQ(r.stop_reason, Qwen3ASRStopReason::kEos);
+  EXPECT_EQ(r.generated_tokens, 2);
+  EXPECT_EQ(r.decoder_calls, 3);
+  EXPECT_EQ(r.raw_output_ids, (std::vector<int64_t>{32, 33, 34, 35}));
+  auto one = Run(impl, {34}, "", 512, 3);
+  auto boundary = Run(impl, {34}, "", one.prompt_tokens + 1, 2);
+  EXPECT_EQ(boundary.stop_reason, Qwen3ASRStopReason::kEos);
+  EXPECT_EQ(boundary.generated_tokens, 1);
+  EXPECT_EQ(boundary.raw_output_ids, (std::vector<int64_t>{34, 35}));
+}
+
+TEST_F(QwenContinuationTest, LegacyAlternateEosPolicyIsUnchanged) {
+  config_.model_config.qwen3_asr.decoder = dir_ + "/alt_eos.onnx";
+  OfflineRecognizerQwen3ASRImpl impl(config_);
+  auto s = impl.CreateStream();
+  std::vector<float> pcm(32000, 0.1f);
+  s->AcceptWaveform(16000, pcm.data(), pcm.size());
+  s->SetOption("max_new_tokens", "3");
+  auto r = impl.DecodeWithPrefix(s.get(), {{}, false});
+  EXPECT_EQ(r.stop_reason, Qwen3ASRStopReason::kTokenLimit);
+  EXPECT_EQ(r.generated_tokens, 3);
+  EXPECT_EQ(r.raw_output_ids,
+            (std::vector<int64_t>{151643, 151643, 151643}));
+}
+
 TEST_F(QwenContinuationTest, ExactCapacityKeepsAudioAndPrefix) {
   OfflineRecognizerQwen3ASRImpl impl(config_);
   for (const auto &language : {std::string(), std::string("Chinese")}) {

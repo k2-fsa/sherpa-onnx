@@ -72,6 +72,13 @@ silence (uniform frontend log floor), and modeled silence clear the hypothesis.
 These checks are not a VAD and do not guarantee suppression of noise or
 prompted hallucinations.
 
+Strict continuation recognizes Qwen3-ASR's `<|im_end|>` and `<|endoftext|>`
+end tokens, resolving their IDs from the tokenizer. Neither end token is
+appended to the hypothesis or reused as prefix state. The existing first-token
+fallback for an empty prefix is retained; if its replacement is another EOS,
+decoding ends without adding it. Ordinary offline decoding retains its original
+single-EOS policy and output behavior.
+
 The default and maximum utterance length is 480000 samples (30 s). This is a
 resource bound, not a guarantee that every prompt fits model context. New
 configuration/options throw `std::invalid_argument`; hotwords are bounded to

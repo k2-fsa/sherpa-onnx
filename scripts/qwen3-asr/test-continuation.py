@@ -45,7 +45,8 @@ def fixtures(directory, tokenizer):
                 cs.append(256 + len(cs) - 188)
         # GPT-2 byte-to-Unicode mapping; original visible alphabet has 188 bytes.
         vocab = {chr(c): i for i, c in enumerate(cs)}
-        vocab.update({'<|im_start|>':151644, '<|im_end|>':151645,
+        vocab.update({'<|endoftext|>':151643,
+            '<|im_start|>':151644, '<|im_end|>':151645,
             '<|audio_start|>':151669, '<|audio_end|>':151670,
             '<|audio_pad|>':151676, '<asr_text>':151704})
         (tok / 'vocab.json').write_text(json.dumps(vocab), encoding='utf-8')
@@ -68,14 +69,19 @@ def fixtures(directory, tokenizer):
         value('past_key',T.FLOAT,[1,512,1,1]), value('past_value',T.FLOAT,[1,512,1,1])]
     outputs = [value('logits',T.FLOAT,[1,'seq',151705]),
         value('key_delta',T.FLOAT,[1,'seq',1,1]), value('value_delta',T.FLOAT,[1,'seq',1,1])]
-    for mode in ['eos','observe','repeat']:
+    for mode in ['eos','observe','repeat','alt_eos','alt_observe','dual_eos']:
+        behavior = mode[4:] if mode.startswith('alt_') else mode
+        if mode == 'dual_eos':
+            behavior = 'eos'
         constants = {k:np.array(v,dtype=np.int64) for k,v in {
             'zero':0,'one':1,'two':2,'last':-1,'B':33,'C':34,'D':35,'A':32,
-            'EOS':151645,'vocab_size':151705,'vocab_tail':[151705],
+            'EOS':151643 if mode.startswith('alt_') else 151645,'ALT':151643,
+            'vocab_size':151705,'vocab_tail':[151705],
             'axes':[0,2,3],'row_axes':[0,1],'float_axes':[0],
             'kv_tail':[1,1]}.items()}
         constants.update(high=np.array(10,dtype=np.float32),
-            low=np.array(-100,dtype=np.float32), fallback=np.array(9,dtype=np.float32))
+            low=np.array(-100,dtype=np.float32), fallback=np.array(9,dtype=np.float32),
+            alternate=np.array(9.5 if mode=='dual_eos' else -100,dtype=np.float32))
         nodes = [h.make_node('Shape',['input_ids'],['shape']),
             h.make_node('Gather',['input_ids','last'],['last_id'],axis=1),
             h.make_node('Gather',['cache_position','zero'],['start']),
@@ -98,12 +104,14 @@ def fixtures(directory, tokenizer):
             h.make_node('Where',['is_C','D','EOS'],['after_C']),
             h.make_node('Where',['is_B','C','after_C'],['following']),
             h.make_node('Where',['valid','following','A'],['observed']),
-            h.make_node('Identity',[{'eos':'EOS','repeat':'A','observe':'observed'}[mode]],['chosen']),
+            h.make_node('Identity',[{'eos':'EOS','repeat':'A','observe':'observed'}[behavior]],['chosen']),
             h.make_node('Range',['zero','vocab_size','one'],['vocab']),
             h.make_node('Equal',['vocab','chosen'],['best']),
             h.make_node('Equal',['vocab','A'],['fallback_token']),
             h.make_node('Where',['fallback_token','fallback','low'],['fallback_row']),
-            h.make_node('Where',['best','high','fallback_row'],['row']),
+            h.make_node('Equal',['vocab','ALT'],['alternate_token']),
+            h.make_node('Where',['alternate_token','alternate','fallback_row'],['alternate_row']),
+            h.make_node('Where',['best','high','alternate_row'],['row']),
             h.make_node('Concat',['shape','vocab_tail'],['logits_shape'],axis=0),
             h.make_node('Expand',['row','logits_shape'],['logits']),
             h.make_node('Add',['cache_position','one'],['kv_pos']),
