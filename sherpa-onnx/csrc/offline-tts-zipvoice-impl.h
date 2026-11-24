@@ -157,6 +157,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
    *    Prompt RMS normalization target.
    *  - guidance_scale, float, default from model config.
    *    Classifier-free guidance scale for the decoder.
+   *  - step_progress, int, default 0.
+   *    If 1, text input also calls the callback after each flow-matching
+   *    step with n = 0 samples. Returning 0 stops after that step.
    */
   GeneratedAudio Generate(
       const std::string &text, const GenerationConfig &config,
@@ -198,6 +201,27 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       SHERPA_ONNX_LOGE("Num steps must be > 0. Given: %d", num_steps);
       return {};
     }
+
+    const bool step_progress =
+        callback && config.GetExtraInt("step_progress", 0) != 0;
+    bool stopped = false;
+    // steps + 1: the sentence callback after the vocoder completes a sentence.
+    auto make_step_callback = [&](int32_t index,
+                                  int32_t total) -> ZipvoiceStepCallback {
+      if (!step_progress) {
+        return nullptr;
+      }
+      return [&callback, &stopped, index, total](int32_t finished_steps,
+                                                 int32_t steps) {
+        float progress =
+            (index + static_cast<float>(finished_steps) / (steps + 1)) / total;
+        if (!callback(nullptr, 0, progress)) {
+          stopped = true;
+          return false;
+        }
+        return true;
+      };
+    };
 
     float feat_scale =
         config.GetExtraFloat("feat_scale", config_.model.zipvoice.feat_scale);
@@ -376,7 +400,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
         GeneratedAudio cur =
             Process(tokens, prompt_tokens, prompt_features, speed, num_steps,
-                    feat_scale, t_shift, guidance_scale);
+                    feat_scale, t_shift, guidance_scale, nullptr);
         if (cur.samples.empty()) continue;
         result.samples.insert(result.samples.end(), cur.samples.begin(),
                               cur.samples.end());
@@ -456,9 +480,13 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 #endif
         }
 
-        GeneratedAudio cur =
-            GenerateChunk(sentences[i], prompt_tokens, prompt_features, speed,
-                          num_steps, feat_scale, t_shift, guidance_scale);
+        GeneratedAudio cur = GenerateChunk(
+            sentences[i], prompt_tokens, prompt_features, speed, num_steps,
+            feat_scale, t_shift, guidance_scale, make_step_callback(i, total));
+
+        if (stopped) {
+          break;
+        }
 
         if (cur.samples.empty()) {
           continue;
@@ -611,7 +639,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
                                const std::vector<int64_t> &prompt_tokens,
                                const std::vector<float> &prompt_features,
                                float speed, int32_t num_steps, float feat_scale,
-                               float t_shift, float guidance_scale) const {
+                               float t_shift, float guidance_scale,
+                               const ZipvoiceStepCallback &on_step) const {
     std::vector<int64_t> tokens = TokenizeText(text, config_.model.debug);
 
     if (tokens.empty()) {
@@ -625,7 +654,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     }
 
     return Process(tokens, prompt_tokens, prompt_features, speed, num_steps,
-                   feat_scale, t_shift, guidance_scale);
+                   feat_scale, t_shift, guidance_scale, on_step);
   }
 
   std::vector<float> ComputePromptFeatures(
@@ -656,7 +685,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
                          const std::vector<int64_t> &prompt_tokens,
                          const std::vector<float> &prompt_features, float speed,
                          int32_t num_steps, float feat_scale, float t_shift,
-                         float guidance_scale) const {
+                         float guidance_scale,
+                         const ZipvoiceStepCallback &on_step) const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -687,7 +717,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     Ort::Value mel =
         model_->Run(std::move(tokens_tensor), std::move(prompt_tokens_tensor),
                     std::move(prompt_features_tensor), speed, num_steps,
-                    t_shift, guidance_scale);
+                    t_shift, guidance_scale, on_step);
     if (!mel) {
       return {};
     }

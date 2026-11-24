@@ -5,6 +5,8 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_MODEL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_MODEL_H_
 
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -13,6 +15,11 @@
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-meta-data.h"
 
 namespace sherpa_onnx {
+
+// Called after each flow-matching step with the number of finished steps
+// (1..num_steps). Return false to stop; Run() then returns an empty value.
+using ZipvoiceStepCallback = std::function<bool(
+    int32_t /*finished_steps*/, int32_t /*num_steps*/)>;
 
 class OfflineTtsZipvoiceModel {
  public:
@@ -27,8 +34,8 @@ class OfflineTtsZipvoiceModel {
   // of shape (batch_size, mel_dim, num_frames)
   Ort::Value Run(Ort::Value tokens, Ort::Value prompt_tokens,
                  Ort::Value prompt_features, float speed, int32_t num_steps,
-                 float t_shift = 0.5f,
-                 float guidance_scale = 1.0f) const;
+                 float t_shift = 0.5f, float guidance_scale = 1.0f,
+                 const ZipvoiceStepCallback &on_step = nullptr) const;
 
   const OfflineTtsZipvoiceModelMetaData &GetMetaData() const;
 
