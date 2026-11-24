@@ -245,7 +245,11 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     s->SetResult({});
 
-    s->SetStates(model_->GetEncoderInitStates());
+    // Per-stream option "keep_encoder_states": use 1 or 0. Non-zero keeps the
+    // encoder states, 0 (default) resets them. The decoder is always reset.
+    if (!s->GetOptionInt("keep_encoder_states", 0)) {
+      s->SetStates(model_->GetEncoderInitStates());
+    }
 
     s->SetNeMoDecoderStates(model_->GetDecoderInitStates());
     s->SetNeMoDecoderOut(Ort::Value{nullptr});
