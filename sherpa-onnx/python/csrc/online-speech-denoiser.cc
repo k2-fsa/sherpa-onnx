@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-speech-denoiser.h"
-#include "sherpa-onnx/python/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/python/csrc/offline-speech-denoiser-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-speech-denoiser.h"
 
 namespace sherpa_onnx {
 
@@ -52,7 +52,9 @@ static void PybindOnlineSpeechDenoiserConfig(py::module *m) {
       .def(py::init<const OfflineSpeechDenoiserModelConfig &>(),
            py::arg("model") = OfflineSpeechDenoiserModelConfig{})
       .def_readwrite("model", &PyClass::model)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (OnlineSpeechDenoiserConfig::*)() const>(
+               &PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 

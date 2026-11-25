@@ -37,31 +37,58 @@ void OfflineSpeechDenoiserVoxLockModelConfig::Register(ParseOptions *po) {
       "speech.");
 }
 
-bool OfflineSpeechDenoiserVoxLockModelConfig::Validate() const {
-  if (enroll_model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateVoxLockModelConfig(
+    const OfflineSpeechDenoiserVoxLockModelConfig &config,
+    const Exists &exists) {
+  if (config.enroll_model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --speech-denoiser-voxlock-enroll-model");
     return false;
   }
 
-  if (!FileExists(enroll_model)) {
+  if (!exists(config.enroll_model)) {
     SHERPA_ONNX_LOGE("voxlock enroll model file '%s' does not exist",
-                     enroll_model.c_str());
+                     config.enroll_model.c_str());
     return false;
   }
 
-  if (chunk_model.empty()) {
+  if (config.chunk_model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --speech-denoiser-voxlock-chunk-model");
     return false;
   }
 
-  if (!FileExists(chunk_model)) {
+  if (!exists(config.chunk_model)) {
     SHERPA_ONNX_LOGE("voxlock chunk model file '%s' does not exist",
-                     chunk_model.c_str());
+                     config.chunk_model.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OfflineSpeechDenoiserVoxLockModelConfig::Validate() const {
+  return ValidateVoxLockModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineSpeechDenoiserVoxLockModelConfig::Validate(Manager *mgr) const {
+  return ValidateVoxLockModelConfig(*this, [mgr](const std::string &p) -> bool {
+    return FileExists(mgr, p);
+  });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineSpeechDenoiserVoxLockModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineSpeechDenoiserVoxLockModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineSpeechDenoiserVoxLockModelConfig::ToString() const {
   std::ostringstream os;

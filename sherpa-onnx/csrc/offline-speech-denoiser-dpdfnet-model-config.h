@@ -20,6 +20,12 @@ struct OfflineSpeechDenoiserDpdfNetModelConfig {
   void Register(ParseOptions *po);
   bool Validate() const;
 
+  // Like Validate(), for model files given by a resource manager (Android
+  // asset manager / OHOS native resource manager): `model` is a path
+  // relative to the resource root.
+  template <typename Manager>
+  bool Validate(Manager *mgr) const;
+
   std::string ToString() const;
 };
 

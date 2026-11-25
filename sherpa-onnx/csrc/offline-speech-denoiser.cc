@@ -25,6 +25,20 @@ void OfflineSpeechDenoiserConfig::Register(ParseOptions *po) {
 
 bool OfflineSpeechDenoiserConfig::Validate() const { return model.Validate(); }
 
+template <typename Manager>
+bool OfflineSpeechDenoiserConfig::Validate(Manager *mgr) const {
+  return model.Validate(mgr);
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineSpeechDenoiserConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineSpeechDenoiserConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
+
 std::string OfflineSpeechDenoiserConfig::ToString() const {
   std::ostringstream os;
 

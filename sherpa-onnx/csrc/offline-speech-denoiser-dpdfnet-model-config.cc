@@ -33,27 +33,57 @@ void OfflineSpeechDenoiserDpdfNetModelConfig::Register(ParseOptions *po) {
       "limit.");
 }
 
-bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate() const {
-  if (model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateDpdfNetModelConfig(
+    const OfflineSpeechDenoiserDpdfNetModelConfig &config,
+    const Exists &exists) {
+  if (config.model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --speech-denoiser-dpdfnet-model");
     return false;
   }
 
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("dpdfnet model file '%s' does not exist", model.c_str());
+  if (!exists(config.model)) {
+    SHERPA_ONNX_LOGE("dpdfnet model file '%s' does not exist",
+                     config.model.c_str());
     return false;
   }
 
-  if (std::isnan(attenuation_limit_db) || attenuation_limit_db < 0.0f ||
-      (attenuation_limit_db > 100.0f && !std::isinf(attenuation_limit_db))) {
+  if (std::isnan(config.attenuation_limit_db) ||
+      config.attenuation_limit_db < 0.0f ||
+      (config.attenuation_limit_db > 100.0f &&
+       !std::isinf(config.attenuation_limit_db))) {
     SHERPA_ONNX_LOGE(
         "attenuation_limit_db must be in [0, 100] or infinity. Given: %f",
-        attenuation_limit_db);
+        config.attenuation_limit_db);
     return false;
   }
 
   return true;
 }
+
+bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate() const {
+  return ValidateDpdfNetModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate(Manager *mgr) const {
+  return ValidateDpdfNetModelConfig(*this, [mgr](const std::string &p) -> bool {
+    return FileExists(mgr, p);
+  });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineSpeechDenoiserDpdfNetModelConfig::ToString() const {
   std::ostringstream os;

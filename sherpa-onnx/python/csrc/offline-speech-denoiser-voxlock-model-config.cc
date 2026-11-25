@@ -65,7 +65,9 @@ void PybindOfflineSpeechDenoiserVoxLockModelConfig(py::module *m) {
                      kVoxLockChunkModelDoc)
       .def_readwrite("voice_sample", &PyClass::voice_sample,
                      kVoxLockVoiceSampleDoc)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (OfflineSpeechDenoiserVoxLockModelConfig::*)()
+                           const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
