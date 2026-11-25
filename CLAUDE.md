@@ -40,3 +40,10 @@ make -j$(nproc)
 - VAD: `VadModel` (`silero-vad-model`, `ten-vad-model`) behind `VoiceActivityDetector`, which segments speech using a `CircularBuffer`.
 - `cmake/` holds per-dependency fetch scripts (onnxruntime, kaldi-native-fbank, etc.); dependencies are downloaded at configure time.
 - `scripts/` contains per-model export/conversion scripts (not part of the build); `.github/workflows/` has the large CI matrix (per-platform builds, per-language tests, model export).
+
+## Python style
+
+Python scripts are formatted with **black** (default 88-column line
+length).  After editing any Python file, run `python -m black <file>`
+(or leave it to the editor's on-save hook) and keep
+`python -m black --check` clean — do not fight this formatting.

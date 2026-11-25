@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# Copyright    2026  Xiaomi Corp.        (authors: Fangjun Kuang)
+#
+# Auto generated! Do NOT edit!
+#
+# For every assigned model, upload it to
+# https://huggingface.co/csukuangfj/vosk-models AS SOON AS it has been
+# downloaded -- one model at a time; nothing waits for the whole shard.
+#
+# Models are uploaded $models_per_commit PER COMMIT (each model's zip +
+# info page in the same commit): the HF repo allows only 128 commits
+# per hour, and a commit is atomic -- on success all files land
+# together, on failure none do and the next run retries them from the
+# top.  (The ls -lhR listing is embedded in the info page, so
+# listing/*.txt stays local only.)
+#
+# Per-model state machine:
+#
+#   1. asr/<lang>/<name>.md on HF -> the model is done; skip entirely.
+#   2. otherwise: download the original zip from
+#      https://alphacephei.com/vosk/models, unpack it, record the model
+#      folder listing (ls -lhR) for its info page, then the pair is
+#      uploaded in one commit and the local zips + unpacked folders are
+#      dropped (keeps runner disk usage to about two models).
+#
+# Outputs (consumed by `generate.py --info`):
+#   listing/<name>.txt      -- ls -lhR of the model folder
+#   listing/<name>.tree.txt -- tree -sh of the model folder
+#   release/asr/<lang>/<name>.zip -- zip for upload (dropped after upload)
+#   release/asr/<lang>/<name>.md  -- info page (uploaded as asr/<lang>/<name>.md)
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+die() {
+  log "$*"
+  exit 1
+}
+
+retry() {
+  # retry <cmd> ...: run <cmd> up to 5 times with linear backoff
+  local n=0
+  until "$@"; do
+    n=$((n + 1))
+    [ "$n" -ge 5 ] && return 1
+    log "attempt $n failed: $* -- retrying in $((n * 20))s"
+    sleep $((n * 20))
+  done
+}
+
+: "${HF_TOKEN:?HF_TOKEN must be set to upload to huggingface}"
+
+hf_repo=csukuangfj/vosk-models
+hf_base=https://huggingface.co/$hf_repo/resolve/main
+models_per_commit=3
+
+mkdir -p release models listing
+
+pending=()
+pending_zips=()
+pending_names=()
+npending=0
+
+commit() {
+  # commit <commit message> <local>:<remote> ... -- ONE huggingface
+  # commit for all given files (see the header comment for why)
+  local msg="$1"
+  shift
+  retry python3 ./generate.py --upload "$@" --message "$msg"
+}
+
+{% for model in model_list %}
+name={{ model.name }}
+url={{ model.url }}
+lang={{ model.lang }}
+zip=release/asr/$lang/$name.zip
+md=release/asr/$lang/$name.md
+
+if curl -sIL --fail -o /dev/null "$hf_base/asr/$lang/$name.md"; then
+  log "$name: already on huggingface (asr/$lang/$name.md); skip"
+else
+  if [ ! -f "$zip" ]; then
+    log "downloading $name ({{ model.kind }})"
+    mkdir -p "release/asr/$lang"
+    curl -SL --retry 5 --retry-delay 5 --retry-all-errors -o "$zip" "$url"
+  else
+    log "$name.zip already downloaded; skip"
+  fi
+  if [ ! -d "models/$name" ]; then
+    unzip -q "$zip" -d models/
+  fi
+  log "listing $name"
+  ls -lhR "models/$name" > "listing/$name.txt"
+  tree -sh "models/$name" > "listing/$name.tree.txt"
+  rm -rf "models/$name"
+
+  python3 ./generate.py --info --only "$name"
+  [ -f "$md" ] || die "$md was not rendered"
+
+  pending+=("$zip:asr/$lang/$name.zip" "$md:asr/$lang/$name.md")
+  pending_zips+=("$zip")
+  pending_names+=("$name")
+  npending=$((npending + 1))
+fi
+
+# NOTE: bash array-length syntax (dollar + brace + hash) must not
+# appear anywhere in this file -- jinja2 reads that two-character
+# sequence as the start of a comment and the template fails to render
+# (generate.py compiles this whole file as jinja2).  Count with
+# $npending / $((...)) instead.
+if [ "$npending" -ge "$models_per_commit" ]; then
+  log "uploading $npending models in one commit: ${pending_names[*]}"
+  commit "add ${pending_names[*]}" "${pending[@]}"
+  rm -f "${pending_zips[@]}"
+  pending=()
+  pending_zips=()
+  pending_names=()
+  npending=0
+fi
+{% endfor %}
+
+if [ "$npending" -gt 0 ]; then
+  log "uploading $npending models in one commit: ${pending_names[*]}"
+  commit "add ${pending_names[*]}" "${pending[@]}"
+  rm -f "${pending_zips[@]}"
+fi
+
+log "done"
+ls -lh listing/ 2>/dev/null || true
+du -sh release/asr/* 2>/dev/null || true

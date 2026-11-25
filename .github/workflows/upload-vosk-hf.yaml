@@ -1,0 +1,115 @@
+name: upload-vosk-hf
+
+on:
+  push:
+    branches:
+      - vosk-onnx-2
+  workflow_dispatch:
+
+concurrency:
+  group: upload-vosk-hf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  download:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+        total: ["10"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        # total: ["1"]
+        # index: ["0"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+          python3 -m pip install --upgrade huggingface_hub
+
+      - name: Install tree
+        shell: bash
+        run: |
+          command -v tree || (sudo apt-get update && sudo apt-get install -y tree)
+
+      - name: Generate script
+        shell: bash
+        run: |
+          cd scripts/vosk/upload-hf
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          python3 ./generate.py --total $total --index $index
+          chmod +x ./generate.sh
+
+      - name: Show script
+        shell: bash
+        run: |
+          cd scripts/vosk/upload-hf
+          cat ./generate.sh
+
+      - name: Download and upload models (one by one; skip what is already on huggingface)
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+        run: |
+          cd scripts/vosk/upload-hf
+          ./generate.sh
+
+      - name: Show downloads
+        shell: bash
+        run: |
+          cd scripts/vosk/upload-hf
+          du -sh release/* || true
+
+  readme:
+    needs: download
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: assemble README
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+          python3 -m pip install --upgrade huggingface_hub
+
+      - name: Generate README.md
+        shell: bash
+        run: |
+          cd scripts/vosk/upload-hf
+          python3 ./generate.py --readme
+          head -n 40 README.md
+
+      - name: Publish README to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            cd scripts/vosk/upload-hf
+            python3 ./generate.py --upload README.md:README.md --message "update README"

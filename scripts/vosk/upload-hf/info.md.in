@@ -1,0 +1,17 @@
+# `{{ name }}`
+
+- **Source**: [{{ name }}.zip]({{ url }})
+- **Supports**: {{ supports }}
+- **Contains**: {{ contains }}
+
+Directory structure (`tree -sh`):
+
+```
+{{ tree }}
+```
+
+Files in the zip (`ls -lhR` of the model folder):
+
+```
+{{ listing }}
+```
