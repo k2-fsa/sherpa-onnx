@@ -35,10 +35,13 @@ class SupertonicUnicodeProcessor {
   static void DecomposeCodepoint(uint32_t codepoint,
                                  std::vector<uint16_t> *output);
 
+  // Prepare the text like the reference UnicodeProcessor._preprocess_text,
+  // language tags included. Exposed for testing.
+  static std::string PreprocessText(const std::string &text,
+                                    const std::string &lang);
+
  private:
-  std::string PreprocessText(const std::string &text,
-                             const std::string &lang) const;
-  std::vector<uint16_t> TextToUnicodeValues(const std::string &text) const;
+  static std::vector<uint16_t> TextToUnicodeValues(const std::string &text);
 
   std::vector<int32_t> indexer_;
 };
