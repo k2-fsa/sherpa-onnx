@@ -298,6 +298,9 @@ std::vector<std::string> MergeShortSentences(
     const std::vector<std::string> &sentences, size_t min_chars);
 std::vector<std::string> SplitLongSentence(const std::string &sentence,
                                            size_t max_chars);
+// Split text into chunks of up to max_len codepoints for Supertonic, like
+// chunk_text() in the reference: by paragraph, then by sentence. A sentence
+// longer than max_len is split further.
 std::vector<std::string> ChunkText(const std::string &text, size_t max_len);
 
 // Prepare a sentence for PocketTTS like the reference implementation does
