@@ -16,6 +16,7 @@ namespace sherpa_onnx {
 void VadModelConfig::Register(ParseOptions *po) {
   silero_vad.Register(po);
   ten_vad.Register(po);
+  nomo_pvad.Register(po);
 
   po->Register("vad-sample-rate", &sample_rate,
                "Sample rate expected by the VAD model");
@@ -70,6 +71,10 @@ bool VadModelConfig::Validate() const {
     return ten_vad.Validate();
   }
 
+  if (!nomo_pvad.model.empty()) {
+    return nomo_pvad.Validate();
+  }
+
   SHERPA_ONNX_LOGE("Please provide one VAD model.");
 
   return false;
@@ -87,6 +92,10 @@ bool VadModelConfig::Validate(Manager *mgr) const {
 
   if (!ten_vad.model.empty()) {
     return ten_vad.Validate(mgr);
+  }
+
+  if (!nomo_pvad.model.empty()) {
+    return nomo_pvad.Validate(mgr);
   }
 
   SHERPA_ONNX_LOGE("Please provide one VAD model.");
@@ -108,6 +117,7 @@ std::string VadModelConfig::ToString() const {
   os << "VadModelConfig(";
   os << "silero_vad=" << silero_vad.ToString() << ", ";
   os << "ten_vad=" << ten_vad.ToString() << ", ";
+  os << "nomo_pvad=" << nomo_pvad.ToString() << ", ";
   os << "sample_rate=" << sample_rate << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "provider=\"" << provider << "\", ";

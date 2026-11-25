@@ -17,6 +17,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     ForcedAlignmentResult,
     GenerationConfig,
     HomophoneReplacerConfig,
+    NomoPvadModelConfig,
     OfflineCanaryModelConfig,
     OfflineCohereTranscribeModelConfig,
     OfflineCtcFstDecoderConfig,

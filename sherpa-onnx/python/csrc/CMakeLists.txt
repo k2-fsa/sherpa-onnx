@@ -64,6 +64,7 @@ set(srcs
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
   spoken-language-identification.cc
+  nomo-pvad-model-config.cc
   ten-vad-model-config.cc
   tensorrt-config.cc
   vad-model-config.cc

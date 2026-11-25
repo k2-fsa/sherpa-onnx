@@ -1313,6 +1313,34 @@ static sherpa_onnx::VadModelConfig GetVadModelConfig(
   vad_config.ten_vad.max_speech_duration =
       SHERPA_ONNX_OR(config->ten_vad.max_speech_duration, 20);
 
+  vad_config.nomo_pvad.model =
+      SHERPA_ONNX_OR(config->nomo_pvad.model, "");
+  vad_config.nomo_pvad.speaker_embedding_file =
+      SHERPA_ONNX_OR(config->nomo_pvad.speaker_embedding_file, "");
+
+  if (config->nomo_pvad.speaker_embedding &&
+      config->nomo_pvad.speaker_embedding_dim > 0) {
+    vad_config.nomo_pvad.speaker_embedding.assign(
+        config->nomo_pvad.speaker_embedding,
+        config->nomo_pvad.speaker_embedding +
+            config->nomo_pvad.speaker_embedding_dim);
+  }
+
+  vad_config.nomo_pvad.threshold =
+      SHERPA_ONNX_OR(config->nomo_pvad.threshold, 0.7);
+
+  vad_config.nomo_pvad.min_silence_duration =
+      SHERPA_ONNX_OR(config->nomo_pvad.min_silence_duration, 0.5);
+
+  vad_config.nomo_pvad.min_speech_duration =
+      SHERPA_ONNX_OR(config->nomo_pvad.min_speech_duration, 0.25);
+
+  vad_config.nomo_pvad.max_speech_duration =
+      SHERPA_ONNX_OR(config->nomo_pvad.max_speech_duration, 20);
+
+  vad_config.nomo_pvad.neg_threshold =
+      SHERPA_ONNX_OR(config->nomo_pvad.neg_threshold, -1);
+
   vad_config.sample_rate = SHERPA_ONNX_OR(config->sample_rate, 16000);
   vad_config.num_threads = GetNumThreads(config->num_threads);
   vad_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");

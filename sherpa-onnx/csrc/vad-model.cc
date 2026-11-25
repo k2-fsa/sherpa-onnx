@@ -20,6 +20,7 @@
 #endif
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/nomo-pvad-model.h"
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 #include "sherpa-onnx/csrc/ten-vad-model.h"
 
@@ -51,6 +52,10 @@ std::unique_ptr<VadModel> VadModel::Create(const VadModelConfig &config) {
     return std::make_unique<TenVadModel>(config);
   }
 
+  if (!config.nomo_pvad.model.empty()) {
+    return std::make_unique<NomoPvadModel>(config);
+  }
+
   SHERPA_ONNX_LOGE("Please provide a vad model");
   return nullptr;
 }
@@ -80,6 +85,10 @@ std::unique_ptr<VadModel> VadModel::Create(Manager *mgr,
 
   if (!config.ten_vad.model.empty()) {
     return std::make_unique<TenVadModel>(mgr, config);
+  }
+
+  if (!config.nomo_pvad.model.empty()) {
+    return std::make_unique<NomoPvadModel>(mgr, config);
   }
 
   SHERPA_ONNX_LOGE("Please provide a vad model");

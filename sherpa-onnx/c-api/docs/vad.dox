@@ -1,7 +1,7 @@
 /**
 @page vad Voice Activity Detection (VAD)
 
-sherpa-onnx supports two VAD model families through the
+sherpa-onnx supports three VAD model families through the
 @ref SherpaOnnxCreateVoiceActivityDetector() API. Configure exactly one
 by filling in the corresponding field of @ref SherpaOnnxVadModelConfig.
 
@@ -58,4 +58,46 @@ const SherpaOnnxVoiceActivityDetector *vad =
 Model file: `ten-vad.onnx`
 
 Example source: [vad-whisper-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/vad-whisper-c-api.c)
+
+@section vad_nomo_pvad NOMO-PVAD (target-speaker VAD)
+
+Silero VAD and Ten VAD answer "is anybody talking?". NOMO-PVAD answers "is the
+*enrolled* speaker talking?", so it needs a d-vector of the target speaker in
+addition to the model. Use the 3d-speaker ERes2NetV2 model to compute it, since
+that is the model NOMO-PVAD was trained with.
+
+@code
+// Compute the d-vector of the target speaker once.
+SherpaOnnxSpeakerEmbeddingExtractorConfig ex_config;
+memset(&ex_config, 0, sizeof(ex_config));
+ex_config.model =
+    "./3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx";
+
+const SherpaOnnxSpeakerEmbeddingExtractor *ex =
+    SherpaOnnxCreateSpeakerEmbeddingExtractor(&ex_config);
+
+// const float *target = ... see speaker-identification-c-api.c
+
+SherpaOnnxVadModelConfig config;
+memset(&config, 0, sizeof(config));
+config.nomo_pvad.model = "./nomo-pvad.onnx";
+config.nomo_pvad.speaker_embedding = target;
+config.nomo_pvad.speaker_embedding_dim =
+    SherpaOnnxSpeakerEmbeddingExtractorDim(ex);
+config.nomo_pvad.threshold = 0.7f;
+config.nomo_pvad.min_silence_duration = 0.5f;
+config.nomo_pvad.min_speech_duration = 0.25f;
+config.nomo_pvad.max_speech_duration = 20.0f;
+config.sample_rate = 16000;
+config.num_threads = 1;
+
+const SherpaOnnxVoiceActivityDetector *vad =
+    SherpaOnnxCreateVoiceActivityDetector(&config, 30.0f);
+@endcode
+
+Model file: `nomo-pvad.onnx`, plus a 3d-speaker ERes2NetV2 model for enrollment
+
+Example source: [target-speaker-vad-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/target-speaker-vad-c-api.c)
+
+@see SherpaOnnxNomoPvadModelConfig
 */

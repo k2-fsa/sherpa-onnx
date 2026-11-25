@@ -1011,6 +1011,20 @@ VoiceActivityDetector VoiceActivityDetector::Create(
   c.ten_vad.window_size = config.ten_vad.window_size;
   c.ten_vad.max_speech_duration = config.ten_vad.max_speech_duration;
 
+  c.nomo_pvad.model = config.nomo_pvad.model.c_str();
+  c.nomo_pvad.speaker_embedding_file =
+      config.nomo_pvad.speaker_embedding_file.c_str();
+  if (!config.nomo_pvad.speaker_embedding.empty()) {
+    c.nomo_pvad.speaker_embedding = config.nomo_pvad.speaker_embedding.data();
+    c.nomo_pvad.speaker_embedding_dim =
+        static_cast<int32_t>(config.nomo_pvad.speaker_embedding.size());
+  }
+  c.nomo_pvad.threshold = config.nomo_pvad.threshold;
+  c.nomo_pvad.min_silence_duration = config.nomo_pvad.min_silence_duration;
+  c.nomo_pvad.min_speech_duration = config.nomo_pvad.min_speech_duration;
+  c.nomo_pvad.max_speech_duration = config.nomo_pvad.max_speech_duration;
+  c.nomo_pvad.neg_threshold = config.nomo_pvad.neg_threshold;
+
   c.sample_rate = config.sample_rate;
   c.num_threads = config.num_threads;
   c.provider = config.provider.c_str();

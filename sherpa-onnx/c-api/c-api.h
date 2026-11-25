@@ -1938,18 +1938,90 @@ typedef struct SherpaOnnxTenVadModelConfig {
 } SherpaOnnxTenVadModelConfig;
 
 /**
+ * @brief Configuration for a NOMO-PVAD target-speaker VAD model.
+ *
+ * Unlike Silero VAD and Ten VAD, which detect whether anybody is talking,
+ * this model detects whether the *enrolled* speaker is talking. It therefore
+ * needs an enrollment embedding of the target speaker, which you get from a
+ * speaker embedding extractor, e.g., the 3d-speaker ERes2NetV2 model:
+ *
+ * @code
+ * SherpaOnnxSpeakerEmbeddingExtractorConfig ec;
+ * memset(&ec, 0, sizeof(ec));
+ * ec.model =
+ *     "./3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx";
+ *
+ * const SherpaOnnxSpeakerEmbeddingExtractor *ex =
+ *     SherpaOnnxCreateSpeakerEmbeddingExtractor(&ec);
+ * // feed the enrollment clip to a stream, then
+ * // const float *emb =
+ * //     SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(ex, stream);
+ *
+ * SherpaOnnxNomoPvadModelConfig config;
+ * memset(&config, 0, sizeof(config));
+ * config.model = "./nomo-pvad.onnx";
+ * config.speaker_embedding = emb;
+ * config.speaker_embedding_dim =
+ *     SherpaOnnxSpeakerEmbeddingExtractorDim(ex);
+ * @endcode
+ *
+ * See https://huggingface.co/TuyaNomo/nomo-pvad
+ */
+typedef struct SherpaOnnxNomoPvadModelConfig {
+  /** Path to `nomo-pvad.onnx`. */
+  const char *model;
+  /**
+   * Enrollment embedding of the target speaker.
+   *
+   * It must come from the speaker embedding model that nomo-pvad was trained
+   * with, i.e., 3d-speaker ERes2NetV2, which produces a 192-d vector.
+   */
+  const float *speaker_embedding;
+  /** Number of floats in @c speaker_embedding. It should be 192. */
+  int32_t speaker_embedding_dim;
+  /**
+   * Path to a text file containing the enrollment embedding as whitespace-
+   * or comma-separated floats. Only used when @c speaker_embedding is NULL.
+   */
+  const char *speaker_embedding_file;
+  /**
+   * Probability above which a chunk counts as the target speaker talking.
+   *
+   * 0.7 - 0.85 reduces false acceptance; 0.5 - 0.6 favors recall.
+   */
+  float threshold;
+  /** Minimum silence duration in seconds used to close a speech segment. */
+  float min_silence_duration;
+  /** Minimum speech duration in seconds to keep a detected segment. */
+  float min_speech_duration;
+  /**
+   * Maximum speech duration in seconds.
+   *
+   * When a segment exceeds this value, the detector temporarily uses a higher
+   * threshold to encourage a split.
+   */
+  float max_speech_duration;
+  /**
+   * Threshold for speech -> silence. If negative, we use
+   * max(threshold - 0.15, 0.01), which creates a hysteresis band.
+   */
+  float neg_threshold;
+} SherpaOnnxNomoPvadModelConfig;
+
+/**
  * @brief Configuration shared by voice activity detectors.
  *
  * Exactly one VAD model family should be configured. Set either
- * @c silero_vad.model or @c ten_vad.model.
+ * @c silero_vad.model, @c ten_vad.model or @c nomo_pvad.model.
  *
- * If both are configured, the implementation will choose one of them, and
- * which one is used is implementation-defined. Do not rely on any precedence
- * rule.
+ * If more than one is configured, the implementation will choose one of
+ * them, and which one is used is implementation-defined. Do not rely on any
+ * precedence rule.
  *
  * Example model files:
  * - `./silero_vad.onnx`
  * - `./ten-vad.onnx`
+ * - `./nomo-pvad.onnx`
  *
  * @code
  * SherpaOnnxVadModelConfig config;
@@ -1982,6 +2054,13 @@ typedef struct SherpaOnnxVadModelConfig {
   int32_t debug;
   /** Ten VAD configuration. */
   SherpaOnnxTenVadModelConfig ten_vad;
+  /**
+   * NOMO-PVAD target-speaker VAD configuration.
+   *
+   * It requires an enrollment embedding. See
+   * SherpaOnnxNomoPvadModelConfig.
+   */
+  SherpaOnnxNomoPvadModelConfig nomo_pvad;
 } SherpaOnnxVadModelConfig;
 
 /** @brief Opaque circular-buffer handle used by helper APIs. */

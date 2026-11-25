@@ -31,6 +31,8 @@ set(sources
   lfr.cc
   lodr-fst.cc
   math.cc
+  nomo-pvad-model-config.cc
+  nomo-pvad-model.cc
   normal-data-generator.cc
   offline-canary-model-config.cc
   offline-canary-model.cc
@@ -838,6 +840,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     forced-aligner-test.cc
     lfr-test.cc
     math-test.cc
+    nomo-pvad-model-test.cc
     offline-recognizer-canary-impl-test.cc
     offline-recognizer-cohere-transcribe-impl-test.cc
     offline-recognizer-ctc-impl-test.cc

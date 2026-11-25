@@ -58,6 +58,9 @@ class VoiceActivityDetector::Impl {
       } else if (!config_.ten_vad.model.empty()) {
         model_->SetMinSilenceDuration(config_.ten_vad.min_silence_duration);
         model_->SetThreshold(config_.ten_vad.threshold);
+      } else if (!config_.nomo_pvad.model.empty()) {
+        model_->SetMinSilenceDuration(config_.nomo_pvad.min_silence_duration);
+        model_->SetThreshold(config_.nomo_pvad.threshold);
       } else {
         SHERPA_ONNX_LOGE("Unknown vad model");
         SHERPA_ONNX_EXIT(-1);
@@ -218,6 +221,9 @@ class VoiceActivityDetector::Impl {
     } else if (!config_.ten_vad.model.empty()) {
       max_utterance_length_ =
           config_.sample_rate * config_.ten_vad.max_speech_duration;
+    } else if (!config_.nomo_pvad.model.empty()) {
+      max_utterance_length_ =
+          config_.sample_rate * config_.nomo_pvad.max_speech_duration;
     } else {
       SHERPA_ONNX_LOGE("Unsupported VAD model");
       SHERPA_ONNX_EXIT(-1);

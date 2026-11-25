@@ -1677,6 +1677,35 @@ struct TenVadModelConfig {
 };
 
 /**
+ * @brief NOMO-PVAD target-speaker VAD configuration.
+ *
+ * Unlike the other VAD models, this one answers "is the enrolled speaker
+ * talking?" and therefore needs an enrollment embedding. Compute it once with
+ * a speaker embedding extractor, e.g., the 3d-speaker ERes2NetV2 model.
+ */
+struct NomoPvadModelConfig {
+  /** Model ONNX file. */
+  std::string model;
+  /** 192-d enrollment embedding of the target speaker. */
+  std::vector<float> speaker_embedding;
+  /** Path to a text file with the embedding; used when the vector is empty. */
+  std::string speaker_embedding_file;
+  /** Detection threshold. */
+  float threshold = 0.7;
+  /** Minimum silence duration in seconds. */
+  float min_silence_duration = 0.5;
+  /** Minimum speech duration in seconds. */
+  float min_speech_duration = 0.25;
+  /** Maximum speech duration in seconds before forced split. */
+  float max_speech_duration = 20;
+  /**
+   * Threshold for speech to silence. If negative, we use
+   * max(threshold - 0.15, 0.01).
+   */
+  float neg_threshold = -1;
+};
+
+/**
  * @brief VAD model configuration.
  *
  * Configure exactly one model family. If multiple model families are set, one
@@ -1687,6 +1716,8 @@ struct VadModelConfig {
   SileroVadModelConfig silero_vad;
   /** Ten VAD configuration. */
   TenVadModelConfig ten_vad;
+  /** NOMO-PVAD target-speaker VAD configuration. */
+  NomoPvadModelConfig nomo_pvad;
 
   /** Input sample rate in Hz. */
   int32_t sample_rate = 16000;
