@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -64,6 +65,7 @@ class NomoPvadModel::Impl {
     current_sample_ = 0;
     temp_start_ = 0;
     temp_end_ = 0;
+    has_candidate_ = false;
     triggered_ = false;
 
     keep_ = 0;
@@ -252,23 +254,22 @@ class NomoPvadModel::Impl {
       std::string text(buf.begin(), buf.end());
       if (!SplitStringToFloats(text, ", \t\r\n", /*omit_empty*/ true,
                                &spk_emb_)) {
-        SHERPA_ONNX_LOGE("Failed to parse the enrollment embedding from '%s'",
-                         cfg.speaker_embedding_file.c_str());
-        SHERPA_ONNX_EXIT(-1);
+        throw std::runtime_error(
+            "Failed to parse the enrollment embedding from '" +
+            cfg.speaker_embedding_file + "'");
       }
     } else {
-      SHERPA_ONNX_LOGE(
+      throw std::runtime_error(
           "Please provide the enrollment embedding of the target speaker");
-      SHERPA_ONNX_EXIT(-1);
     }
 
     if (static_cast<int32_t>(spk_emb_.size()) != spk_embed_dim_) {
-      SHERPA_ONNX_LOGE(
-          "Expected a %d-d enrollment embedding. Given: %d. Please use the "
-          "same speaker embedding model that nomo-pvad was trained with, "
-          "i.e., 3d-speaker ERes2NetV2",
-          spk_embed_dim_, static_cast<int32_t>(spk_emb_.size()));
-      SHERPA_ONNX_EXIT(-1);
+      throw std::runtime_error(
+          "Expected a " + std::to_string(spk_embed_dim_) +
+          "-d enrollment embedding. Given: " +
+          std::to_string(spk_emb_.size()) +
+          ". Please use the same speaker embedding model that nomo-pvad was "
+          "trained with, i.e., 3d-speaker ERes2NetV2");
     }
 
     // The FiLM layer starts with a LayerNorm, so the model is scale
@@ -280,8 +281,7 @@ class NomoPvadModel::Impl {
 
     float norm = std::sqrt(sum);
     if (norm <= 0) {
-      SHERPA_ONNX_LOGE("The enrollment embedding is all zeros");
-      SHERPA_ONNX_EXIT(-1);
+      throw std::runtime_error("The enrollment embedding is all zeros");
     }
 
     for (auto &f : spk_emb_) {
@@ -422,16 +422,24 @@ class NomoPvadModel::Impl {
   bool UpdateState(float prob) {
     float threshold = config_.nomo_pvad.threshold;
 
+    // This chunk covers the samples [chunk_start, current_sample_ + chunk).
+    // Use the beginning of the chunk, not its end, as the onset of a
+    // speech candidate, otherwise min_speech_duration is measured from
+    // 160 ms too late.
+    int64_t chunk_start = current_sample_;
     current_sample_ += chunk_samples_;
 
     if (prob >= threshold) {
       temp_end_ = 0;
 
       if (!triggered_) {
-        if (temp_start_ == 0) {
+        if (!has_candidate_) {
           // The target speaker might have started talking. We require that
-          // the speech lasts for at least min_speech_duration.
-          temp_start_ = current_sample_;
+          // the speech lasts for at least min_speech_duration. A separate
+          // flag is used instead of a sentinel value because a candidate
+          // starting at sample 0 is valid.
+          temp_start_ = chunk_start;
+          has_candidate_ = true;
           return false;
         }
 
@@ -464,6 +472,7 @@ class NomoPvadModel::Impl {
       // The target speaker stopped talking.
       temp_start_ = 0;
       temp_end_ = 0;
+      has_candidate_ = false;
       triggered_ = false;
       return false;
     }
@@ -471,6 +480,7 @@ class NomoPvadModel::Impl {
     // Not in speech and prob is low: nothing to do.
     temp_start_ = 0;
     temp_end_ = 0;
+    has_candidate_ = false;
     return false;
   }
 
@@ -521,6 +531,10 @@ class NomoPvadModel::Impl {
   int32_t min_speech_samples_ = 0;
 
   bool triggered_ = false;
+
+  // True if temp_start_ holds the onset of a speech candidate.
+  bool has_candidate_ = false;
+
   int64_t current_sample_ = 0;
   int64_t temp_start_ = 0;
   int64_t temp_end_ = 0;

@@ -678,6 +678,19 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxTenVadModelConfig);
   end;
 
+  TSherpaOnnxNomoPvadModelConfig = record
+    Model: AnsiString;
+    SpeakerEmbedding: array of Single;
+    SpeakerEmbeddingFile: AnsiString;
+    Threshold: Single;
+    MinSilenceDuration: Single;
+    MinSpeechDuration: Single;
+    MaxSpeechDuration: Single;
+    NegThreshold: Single;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxNomoPvadModelConfig);
+  end;
+
   TSherpaOnnxVadModelConfig = record
     SileroVad: TSherpaOnnxSileroVadModelConfig;
     SampleRate: Integer;
@@ -685,6 +698,7 @@ type
     Provider: AnsiString;
     Debug: Boolean;
     TenVad: TSherpaOnnxTenVadModelConfig;
+    NomoPvad: TSherpaOnnxNomoPvadModelConfig;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxVadModelConfig);
   end;
@@ -1223,6 +1237,18 @@ type
     MaxSpeechDuration: cfloat;
   end;
 
+  SherpaOnnxNomoPvadModelConfig = record
+    Model: PAnsiChar;
+    SpeakerEmbedding: pcfloat;
+    SpeakerEmbeddingDim: cint32;
+    SpeakerEmbeddingFile: PAnsiChar;
+    Threshold: cfloat;
+    MinSilenceDuration: cfloat;
+    MinSpeechDuration: cfloat;
+    MaxSpeechDuration: cfloat;
+    NegThreshold: cfloat;
+  end;
+
   SherpaOnnxVadModelConfig = record
     SileroVad: SherpaOnnxSileroVadModelConfig;
     SampleRate: cint32;
@@ -1230,6 +1256,7 @@ type
     Provider: PAnsiChar;
     Debug: cint32;
     TenVad: SherpaOnnxTenVadModelConfig;
+    NomoPvad: SherpaOnnxNomoPvadModelConfig;
   end;
   PSherpaOnnxVadModelConfig = ^SherpaOnnxVadModelConfig;
 
@@ -2814,6 +2841,33 @@ begin
   Dest.MaxSpeechDuration := 5.0;
 end;
 
+function TSherpaOnnxNomoPvadModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxNomoPvadModelConfig(' +
+    'Model := %s, ' +
+    'SpeakerEmbeddingDim := %d, ' +
+    'SpeakerEmbeddingFile := %s, ' +
+    'Threshold := %.2f, ' +
+    'MinSilenceDuration := %.2f, ' +
+    'MinSpeechDuration := %.2f, ' +
+    'MaxSpeechDuration := %.2f, ' +
+    'NegThreshold := %.2f' +
+    ')',
+    [Self.Model, Length(Self.SpeakerEmbedding), Self.SpeakerEmbeddingFile,
+     Self.Threshold, Self.MinSilenceDuration, Self.MinSpeechDuration,
+     Self.MaxSpeechDuration, Self.NegThreshold
+    ]);
+end;
+
+class operator TSherpaOnnxNomoPvadModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxNomoPvadModelConfig);
+begin
+  Dest.Threshold := 0.7;
+  Dest.MinSilenceDuration := 0.5;
+  Dest.MinSpeechDuration := 0.25;
+  Dest.MaxSpeechDuration := 20.0;
+  Dest.NegThreshold := -1.0;
+end;
+
 function TSherpaOnnxVadModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxVadModelConfig(' +
@@ -2822,10 +2876,11 @@ begin
     'NumThreads := %d, ' +
     'Provider := %s, ' +
     'Debug := %s, ' +
-    'TenVad := %s' +
+    'TenVad := %s, ' +
+    'NomoPvad := %s' +
     ')',
     [Self.SileroVad.ToString, Self.SampleRate, Self.NumThreads, Self.Provider,
-     Self.Debug.ToString, Self.TenVad.ToString
+     Self.Debug.ToString, Self.TenVad.ToString, Self.NomoPvad.ToString
     ]);
 end;
 
@@ -2999,6 +3054,25 @@ begin
   C.TenVad.MinSpeechDuration := Config.TenVad.MinSpeechDuration;
   C.TenVad.WindowSize := Config.TenVad.WindowSize;
   C.TenVad.MaxSpeechDuration := Config.TenVad.MaxSpeechDuration;
+
+  C.NomoPvad.Model := PAnsiChar(Config.NomoPvad.Model);
+  C.NomoPvad.SpeakerEmbeddingFile :=
+    PAnsiChar(Config.NomoPvad.SpeakerEmbeddingFile);
+  if Length(Config.NomoPvad.SpeakerEmbedding) > 0 then
+  begin
+    C.NomoPvad.SpeakerEmbedding := @Config.NomoPvad.SpeakerEmbedding[0];
+    C.NomoPvad.SpeakerEmbeddingDim := Length(Config.NomoPvad.SpeakerEmbedding);
+  end
+  else
+  begin
+    C.NomoPvad.SpeakerEmbedding := nil;
+    C.NomoPvad.SpeakerEmbeddingDim := 0;
+  end;
+  C.NomoPvad.Threshold := Config.NomoPvad.Threshold;
+  C.NomoPvad.MinSilenceDuration := Config.NomoPvad.MinSilenceDuration;
+  C.NomoPvad.MinSpeechDuration := Config.NomoPvad.MinSpeechDuration;
+  C.NomoPvad.MaxSpeechDuration := Config.NomoPvad.MaxSpeechDuration;
+  C.NomoPvad.NegThreshold := Config.NomoPvad.NegThreshold;
 
   C.SampleRate := Config.SampleRate;
   C.NumThreads := Config.NumThreads;

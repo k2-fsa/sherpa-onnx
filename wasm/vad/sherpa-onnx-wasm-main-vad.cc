@@ -15,10 +15,12 @@ extern "C" {
 
 static_assert(sizeof(SherpaOnnxSileroVadModelConfig) == 6 * 4, "");
 static_assert(sizeof(SherpaOnnxTenVadModelConfig) == 6 * 4, "");
+static_assert(sizeof(SherpaOnnxNomoPvadModelConfig) == 9 * 4, "");
 
 static_assert(sizeof(SherpaOnnxVadModelConfig) ==
                   sizeof(SherpaOnnxSileroVadModelConfig) + 4 * 4 +
-                      sizeof(SherpaOnnxTenVadModelConfig),
+                      sizeof(SherpaOnnxTenVadModelConfig) +
+                      sizeof(SherpaOnnxNomoPvadModelConfig),
               "");
 void MyPrint(SherpaOnnxVadModelConfig *config) {
   auto silero_vad = &config->silero_vad;

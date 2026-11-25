@@ -68,6 +68,40 @@ class TestNomoPvadModelConfig(unittest.TestCase):
         assert config.nomo_pvad.model == "./nomo-pvad.onnx"
         assert "nomo_pvad" in str(config)
 
+    def test_legacy_positional_constructor(self):
+        """Adding nomo_pvad must not break the old 6-argument constructor."""
+        silero = sherpa_onnx.SileroVadModelConfig()
+        silero.model = "silero_vad.onnx"
+        ten = sherpa_onnx.TenVadModelConfig()
+        ten.model = "ten-vad.onnx"
+
+        config = sherpa_onnx.VadModelConfig(silero, ten, 16000, 1, "cpu", False)
+        assert config.silero_vad.model == "silero_vad.onnx"
+        assert config.ten_vad.model == "ten-vad.onnx"
+        assert config.sample_rate == 16000
+        assert config.num_threads == 1
+        assert config.provider == "cpu"
+        assert not config.debug
+        assert config.nomo_pvad.model == ""
+
+        config2 = sherpa_onnx.VadModelConfig(
+            silero_vad=silero, ten_vad=ten, sample_rate=8000, debug=True
+        )
+        assert config2.sample_rate == 8000
+        assert config2.debug
+        assert config2.nomo_pvad.model == ""
+
+    def test_constructor_with_nomo_pvad(self):
+        silero = sherpa_onnx.SileroVadModelConfig()
+        ten = sherpa_onnx.TenVadModelConfig()
+        nomo = sherpa_onnx.NomoPvadModelConfig(
+            model="./nomo-pvad.onnx", speaker_embedding=[1.0] * 192
+        )
+
+        config = sherpa_onnx.VadModelConfig(silero, ten, nomo, 16000, 1, "cpu", False)
+        assert config.nomo_pvad.model == "./nomo-pvad.onnx"
+        assert config.sample_rate == 16000
+
 
 class TestNomoPvadModel(unittest.TestCase):
     def test_model_meta_data(self):
@@ -84,6 +118,19 @@ class TestNomoPvadModel(unittest.TestCase):
         assert v.window_size() == 2560, v.window_size()
         assert v.min_speech_duration_samples() == 4000
         assert v.min_silence_duration_samples() == 8000
+
+    def test_wrong_embedding_dimension_raises(self):
+        """An invalid embedding must raise instead of terminating the process."""
+        if skip_if_no_model():
+            return
+
+        config = sherpa_onnx.VadModelConfig()
+        config.nomo_pvad.model = model
+        config.nomo_pvad.speaker_embedding = [1.0] * 100
+        config.sample_rate = 16000
+
+        with self.assertRaises(Exception):
+            sherpa_onnx.VoiceActivityDetector(config, buffer_size_in_seconds=60)
 
     def test_digital_silence_has_no_speech(self):
         if skip_if_no_model():

@@ -3,12 +3,24 @@ function freeConfig(config, Module) {
     Module._free(config.buffer);
   }
 
+  if ('extraBuffers' in config) {
+    for (const b of config.extraBuffers) {
+      if (b) {
+        Module._free(b);
+      }
+    }
+  }
+
   if ('sileroVad' in config) {
     freeConfig(config.sileroVad, Module)
   }
 
   if ('tenVad' in config) {
     freeConfig(config.tenVad, Module)
+  }
+
+  if ('nomoPvad' in config) {
+    freeConfig(config.nomoPvad, Module)
   }
 
 
@@ -92,6 +104,67 @@ function initSherpaOnnxTenVadModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxNomoPvadModelConfig(config, Module) {
+  const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
+  const modelBuffer = Module._malloc(modelLen);
+  Module.stringToUTF8(config.model || '', modelBuffer, modelLen);
+
+  const fileLen =
+      Module.lengthBytesUTF8(config.speakerEmbeddingFile || '') + 1;
+  const fileBuffer = Module._malloc(fileLen);
+  Module.stringToUTF8(config.speakerEmbeddingFile || '', fileBuffer, fileLen);
+
+  let embBuffer = 0;
+  let embDim = 0;
+  if (config.speakerEmbedding && config.speakerEmbedding.length > 0) {
+    embDim = config.speakerEmbedding.length;
+    embBuffer = Module._malloc(embDim * 4);
+    for (let i = 0; i < embDim; ++i) {
+      Module.setValue(embBuffer + i * 4, config.speakerEmbedding[i], 'float');
+    }
+  }
+
+  // The order must match SherpaOnnxNomoPvadModelConfig in c-api.h.
+  const len = 9 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+
+  Module.setValue(ptr + offset, modelBuffer, 'i8*');  // model
+  offset += 4;
+
+  Module.setValue(ptr + offset, embBuffer, 'i8*');  // speaker_embedding
+  offset += 4;
+
+  Module.setValue(ptr + offset, embDim, 'i32');  // speaker_embedding_dim
+  offset += 4;
+
+  Module.setValue(ptr + offset, fileBuffer, 'i8*');  // speaker_embedding_file
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.threshold || 0.7, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.minSilenceDuration || 0.5, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.minSpeechDuration || 0.25, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.maxSpeechDuration || 20, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.negThreshold || -1, 'float');
+  offset += 4;
+
+  return {
+    buffer: modelBuffer,
+    extraBuffers: [fileBuffer, embBuffer],
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxVadModelConfig(config, Module) {
   if (!('sileroVad' in config)) {
     config.sileroVad = {
@@ -115,12 +188,28 @@ function initSherpaOnnxVadModelConfig(config, Module) {
     };
   }
 
+  if (!('nomoPvad' in config)) {
+    config.nomoPvad = {
+      model: '',
+      speakerEmbedding: [],
+      speakerEmbeddingFile: '',
+      threshold: 0.70,
+      minSilenceDuration: 0.50,
+      minSpeechDuration: 0.25,
+      maxSpeechDuration: 20,
+      negThreshold: -1,
+    };
+  }
+
   const sileroVad =
       initSherpaOnnxSileroVadModelConfig(config.sileroVad, Module);
 
   const tenVad = initSherpaOnnxTenVadModelConfig(config.tenVad, Module);
 
-  const len = sileroVad.len + 4 * 4 + tenVad.len;
+  const nomoPvad =
+      initSherpaOnnxNomoPvadModelConfig(config.nomoPvad, Module);
+
+  const len = sileroVad.len + 4 * 4 + tenVad.len + nomoPvad.len;
   const ptr = Module._malloc(len);
 
   const providerLen = Module.lengthBytesUTF8(config.provider || 'cpu') + 1;
@@ -146,12 +235,16 @@ function initSherpaOnnxVadModelConfig(config, Module) {
   Module._CopyHeap(tenVad.ptr, tenVad.len, ptr + offset);
   offset += tenVad.len;
 
+  Module._CopyHeap(nomoPvad.ptr, nomoPvad.len, ptr + offset);
+  offset += nomoPvad.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
     len: len,
     sileroVad: sileroVad,
-    tenVad: tenVad
+    tenVad: tenVad,
+    nomoPvad: nomoPvad,
   };
 }
 

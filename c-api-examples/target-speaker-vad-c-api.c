@@ -139,6 +139,17 @@ int32_t main(int32_t argc, char *argv[]) {
 
   int32_t sample_rate = wave->sample_rate;
   int32_t num_samples = wave->num_samples;
+
+  // NOMO-PVAD supports only 16 kHz, which is also what config.sample_rate is
+  // set to above. Resample your audio first if it uses another rate.
+  if (sample_rate != config.sample_rate) {
+    fprintf(stderr, "Expected %d Hz but %s is %d Hz. Please resample it.\n",
+            config.sample_rate, test_wav, sample_rate);
+    SherpaOnnxFreeWave(wave);
+    SherpaOnnxDestroyVoiceActivityDetector(vad);
+    return -1;
+  }
+
   fprintf(stderr, "Processing %s: %.2f seconds at %d Hz\n", test_wav,
           (float)num_samples / sample_rate, sample_rate);
 

@@ -21,6 +21,15 @@ void PybindVadModelConfig(py::module *m) {
   using PyClass = VadModelConfig;
   py::class_<PyClass>(*m, "VadModelConfig")
       .def(py::init<>())
+      // The 6-argument constructor is registered first so that existing
+      // positional calls such as VadModelConfig(silero, ten, 16000, 1,
+      // "cpu", False) keep working.
+      .def(py::init<const SileroVadModelConfig &, const TenVadModelConfig &,
+                    int32_t, int32_t, const std::string &, bool>(),
+           py::arg("silero_vad") = SileroVadModelConfig{},
+           py::arg("ten_vad") = TenVadModelConfig{},
+           py::arg("sample_rate") = 16000, py::arg("num_threads") = 1,
+           py::arg("provider") = "cpu", py::arg("debug") = false)
       .def(py::init<const SileroVadModelConfig &, const TenVadModelConfig &,
                     const NomoPvadModelConfig &, int32_t, int32_t,
                     const std::string &, bool>(),

@@ -756,6 +756,32 @@ final class SherpaOnnxTenVadModelConfig extends Struct {
   external double maxSpeechDuration;
 }
 
+final class SherpaOnnxNomoPvadModelConfig extends Struct {
+  external Pointer<Utf8> model;
+
+  external Pointer<Float> speakerEmbedding;
+
+  @Int32()
+  external int speakerEmbeddingDim;
+
+  external Pointer<Utf8> speakerEmbeddingFile;
+
+  @Float()
+  external double threshold;
+
+  @Float()
+  external double minSilenceDuration;
+
+  @Float()
+  external double minSpeechDuration;
+
+  @Float()
+  external double maxSpeechDuration;
+
+  @Float()
+  external double negThreshold;
+}
+
 final class SherpaOnnxVadModelConfig extends Struct {
   external SherpaOnnxSileroVadModelConfig sileroVad;
 
@@ -771,6 +797,8 @@ final class SherpaOnnxVadModelConfig extends Struct {
   external int debug;
 
   external SherpaOnnxTenVadModelConfig tenVad;
+
+  external SherpaOnnxNomoPvadModelConfig nomoPvad;
 }
 
 final class SherpaOnnxSpeechSegment extends Struct {

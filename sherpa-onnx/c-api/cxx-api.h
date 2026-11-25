@@ -1716,8 +1716,6 @@ struct VadModelConfig {
   SileroVadModelConfig silero_vad;
   /** Ten VAD configuration. */
   TenVadModelConfig ten_vad;
-  /** NOMO-PVAD target-speaker VAD configuration. */
-  NomoPvadModelConfig nomo_pvad;
 
   /** Input sample rate in Hz. */
   int32_t sample_rate = 16000;
@@ -1727,6 +1725,14 @@ struct VadModelConfig {
   std::string provider = "cpu";
   /** Enable verbose debug logging. */
   bool debug = false;
+
+  /**
+   * NOMO-PVAD target-speaker VAD configuration.
+   *
+   * It is appended at the end to keep the order of the existing members,
+   * matching SherpaOnnxVadModelConfig in the C API.
+   */
+  NomoPvadModelConfig nomo_pvad;
 };
 
 /** @brief One speech segment produced by the VAD wrapper. */
