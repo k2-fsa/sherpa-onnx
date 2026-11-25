@@ -1,0 +1,1 @@
+../../../../go-api-examples/non-streaming-w2v-bert-ctc-decode-files/main.go

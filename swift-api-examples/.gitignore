@@ -38,3 +38,4 @@ tts-zipvoice
 source-separation-spleeter
 source-separation-uvr
 cohere-transcribe
+w2v-bert-ctc

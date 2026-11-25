@@ -138,6 +138,10 @@ export class OfflineFireRedAsrCtcModelConfig {
   public model: string = '';
 }
 
+export class OfflineW2vBertCtcModelConfig {
+  public model: string = '';
+}
+
 export class OfflineWhisperModelConfig {
   public encoder: string = '';
   public decoder: string = '';
@@ -200,6 +204,7 @@ export class OfflineModelConfig {
   public funasrNano: OfflineFunASRNanoModelConfig = new OfflineFunASRNanoModelConfig();
   public qwen3Asr: OfflineQwen3AsrModelConfig = new OfflineQwen3AsrModelConfig();
   public fireRedAsrCtc: OfflineFireRedAsrCtcModelConfig = new OfflineFireRedAsrCtcModelConfig();
+  public w2vBertCtc: OfflineW2vBertCtcModelConfig = new OfflineW2vBertCtcModelConfig();
 }
 
 export class OfflineLMConfig {

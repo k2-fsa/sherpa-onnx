@@ -311,6 +311,30 @@ jobs:
           rm $name
           rm -rf sherpa-onnx-fire-*
 
+      - name: Test w2v-BERT 2.0 CTC
+        shell: bash
+        run: |
+          name=w2v-bert-ctc-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+          tar xvf sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+          rm sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm $name
+          rm -rf sherpa-onnx-w2v-bert-*
+
       - name: Test FunASR Nano
         shell: bash
         run: |

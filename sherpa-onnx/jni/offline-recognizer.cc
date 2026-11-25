@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <memory>
+#include <string>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -515,6 +516,15 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.cohere_transcribe.use_itn, useItn,
                             cohere_transcribe_config_cls,
                             cohere_transcribe_config);
+
+  // w2v-bert ctc
+  fid = env->GetFieldID(model_config_cls, "w2vBertCtc",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineW2vBertCtcModelConfig;");
+  jobject w2v_bert_ctc_config = env->GetObjectField(model_config, fid);
+  jclass w2v_bert_ctc_config_cls = env->GetObjectClass(w2v_bert_ctc_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.w2v_bert_ctc.model, model,
+                              w2v_bert_ctc_config_cls, w2v_bert_ctc_config);
 
   fid = env->GetFieldID(model_config_cls, "dolphin",
                         "Lcom/k2fsa/sherpa/onnx/OfflineDolphinModelConfig;");

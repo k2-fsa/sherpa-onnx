@@ -504,6 +504,12 @@ struct OfflineFireRedAsrCtcModelConfig {
   std::string model;
 };
 
+/** @brief Offline w2v-BERT 2.0 CTC model file. */
+struct OfflineW2vBertCtcModelConfig {
+  /** Model ONNX file. */
+  std::string model;
+};
+
 /** @brief Offline TDNN model file. */
 struct OfflineTdnnModelConfig {
   /** Model ONNX file. */
@@ -679,6 +685,8 @@ struct OfflineModelConfig {
   OfflineQwen3ASRModelConfig qwen3_asr;
   /** Cohere Transcribe configuration. */
   OfflineCohereTranscribeModelConfig cohere_transcribe;
+  /** w2v-BERT 2.0 CTC configuration. */
+  OfflineW2vBertCtcModelConfig w2v_bert_ctc;
 };
 
 /** @brief Optional language-model rescoring configuration for offline ASR. */

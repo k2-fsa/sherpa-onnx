@@ -935,6 +935,12 @@ typedef struct SherpaOnnxOfflineFireRedAsrCtcModelConfig {
   const char *model;
 } SherpaOnnxOfflineFireRedAsrCtcModelConfig;
 
+/** @brief Configuration for a w2v-BERT 2.0 CTC model. */
+typedef struct SherpaOnnxOfflineW2vBertCtcModelConfig {
+  /** Path to the ONNX model, exported by scripts/w2v-bert/export_onnx.py. */
+  const char *model;
+} SherpaOnnxOfflineW2vBertCtcModelConfig;
+
 /** @brief Configuration for a Moonshine model. */
 typedef struct SherpaOnnxOfflineMoonshineModelConfig {
   /** Path to the preprocessor ONNX model. */
@@ -1069,7 +1075,7 @@ typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
  * @c whisper, @c tdnn, @c sense_voice, @c moonshine, @c fire_red_asr,
  * @c dolphin, @c zipformer_ctc, @c canary, @c cohere_transcribe,
  * @c wenet_ctc, @c omnilingual, @c medasr, @c funasr_nano,
- * @c fire_red_asr_ctc, or @c qwen3_asr.
+ * @c fire_red_asr_ctc, @c qwen3_asr, or @c w2v_bert_ctc.
  *
  * If multiple model families are configured at the same time, the
  * implementation will choose one of them, and which one is used is
@@ -1129,6 +1135,8 @@ typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineQwen3ASRModelConfig qwen3_asr;
   /** Cohere Transcribe configuration. */
   SherpaOnnxOfflineCohereTranscribeModelConfig cohere_transcribe;
+  /** w2v-BERT 2.0 CTC configuration. */
+  SherpaOnnxOfflineW2vBertCtcModelConfig w2v_bert_ctc;
 } SherpaOnnxOfflineModelConfig;
 
 /**

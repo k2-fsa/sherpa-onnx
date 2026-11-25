@@ -80,6 +80,9 @@ target_link_libraries(fire-red-asr-cxx-api sherpa-onnx-cxx-api)
 add_executable(fire-red-asr-ctc-cxx-api ./fire-red-asr-ctc-cxx-api.cc)
 target_link_libraries(fire-red-asr-ctc-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(w2v-bert-ctc-cxx-api ./w2v-bert-ctc-cxx-api.cc)
+target_link_libraries(w2v-bert-ctc-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(moonshine-cxx-api ./moonshine-cxx-api.cc)
 target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 
@@ -156,6 +159,15 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     portaudio_static
   )
 
+  add_executable(w2v-bert-ctc-simulate-streaming-microphone-cxx-api
+    ./w2v-bert-ctc-simulate-streaming-microphone-cxx-api.cc
+    ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
+  )
+  target_link_libraries(w2v-bert-ctc-simulate-streaming-microphone-cxx-api
+    sherpa-onnx-cxx-api
+    portaudio_static
+  )
+
   add_executable(wenet-ctc-simulate-streaming-microphone-cxx-api
     ./wenet-ctc-simulate-streaming-microphone-cxx-api.cc
     ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
@@ -219,6 +231,14 @@ if(SHERPA_ONNX_HAS_ALSA)
     sherpa-onnx-cxx-api
   )
 
+  add_executable(w2v-bert-ctc-simulate-streaming-alsa-cxx-api
+    ./w2v-bert-ctc-simulate-streaming-alsa-cxx-api.cc
+    ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/alsa.cc
+  )
+  target_link_libraries(w2v-bert-ctc-simulate-streaming-alsa-cxx-api
+    sherpa-onnx-cxx-api
+  )
+
   add_executable(zipformer-ctc-simulate-streaming-alsa-cxx-api
     ./zipformer-ctc-simulate-streaming-alsa-cxx-api.cc
     ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/alsa.cc
@@ -230,10 +250,12 @@ if(SHERPA_ONNX_HAS_ALSA)
   if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
     target_link_libraries(sense-voice-simulate-streaming-alsa-cxx-api -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
     target_link_libraries(fire-red-asr-ctc-simulate-streaming-alsa-cxx-api -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
+    target_link_libraries(w2v-bert-ctc-simulate-streaming-alsa-cxx-api -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
     target_link_libraries(zipformer-ctc-simulate-streaming-alsa-cxx-api -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
   else()
     target_link_libraries(sense-voice-simulate-streaming-alsa-cxx-api asound)
     target_link_libraries(fire-red-asr-ctc-simulate-streaming-alsa-cxx-api asound)
+    target_link_libraries(w2v-bert-ctc-simulate-streaming-alsa-cxx-api asound)
     target_link_libraries(zipformer-ctc-simulate-streaming-alsa-cxx-api asound)
   endif()
 endif()

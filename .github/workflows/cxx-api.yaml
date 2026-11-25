@@ -325,6 +325,30 @@ jobs:
           rm -rf sherpa-onnx-fire-red-*
           rm -v ./$name
 
+      - name: Test w2v-BERT 2.0 CTC
+        shell: bash
+        run: |
+          name=w2v-bert-ctc-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+          tar xvf sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+          rm sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+
+          echo "---"
+
+          ./$name
+
+          rm -rf sherpa-onnx-w2v-bert-*
+          rm -v ./$name
+
       - name: Test Zipformer CTC with an HLG graph
         shell: bash
         run: |

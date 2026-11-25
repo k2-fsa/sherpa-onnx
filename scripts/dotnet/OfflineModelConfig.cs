@@ -36,6 +36,7 @@ namespace SherpaOnnx
             FireRedAsrCtc = new OfflineFireRedAsrCtcModelConfig();
             Qwen3Asr = new OfflineQwen3AsrModelConfig();
             CohereTranscribe = new OfflineCohereTranscribeModelConfig();
+            W2vBertCtc = new OfflineW2vBertCtcModelConfig();
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -78,5 +79,6 @@ namespace SherpaOnnx
         public OfflineFireRedAsrCtcModelConfig FireRedAsrCtc;
         public OfflineQwen3AsrModelConfig Qwen3Asr;
         public OfflineCohereTranscribeModelConfig CohereTranscribe;
+        public OfflineW2vBertCtcModelConfig W2vBertCtc;
     }
 }

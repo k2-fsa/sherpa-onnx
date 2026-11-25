@@ -400,6 +400,10 @@ jobs:
           rm -rf sherpa-onnx-fire-red-asr*
           echo "---"
 
+          ./run-w2v-bert-ctc.sh
+          rm -rf sherpa-onnx-w2v-bert-*
+          echo "---"
+
           ./run-fire-red-asr.sh
           rm -rf sherpa-onnx-fire-red-asr*
           echo "---"

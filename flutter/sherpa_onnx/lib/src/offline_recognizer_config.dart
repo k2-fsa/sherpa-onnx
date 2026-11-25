@@ -192,6 +192,26 @@ class OfflineFireRedAsrCtcModelConfig {
   final String model;
 }
 
+/// Model file for the w2v-BERT 2.0 CTC recognizer.
+class OfflineW2vBertCtcModelConfig {
+  const OfflineW2vBertCtcModelConfig({this.model = ''});
+
+  factory OfflineW2vBertCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineW2vBertCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineW2vBertCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {'model': model};
+
+  final String model;
+}
+
 /// Model files and prompt settings for FunASR-Nano.
 class OfflineFunAsrNanoModelConfig {
   const OfflineFunAsrNanoModelConfig({
@@ -624,6 +644,7 @@ class OfflineModelConfig {
     this.fireRedAsrCtc = const OfflineFireRedAsrCtcModelConfig(),
     this.qwen3Asr = const OfflineQwen3AsrModelConfig(),
     this.cohereTranscribe = const OfflineCohereTranscribeModelConfig(),
+    this.w2vBertCtc = const OfflineW2vBertCtcModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -726,6 +747,11 @@ class OfflineModelConfig {
               json['cohereTranscribe'] as Map<String, dynamic>,
             )
           : const OfflineCohereTranscribeModelConfig(),
+      w2vBertCtc: json['w2vBertCtc'] != null
+          ? OfflineW2vBertCtcModelConfig.fromJson(
+              json['w2vBertCtc'] as Map<String, dynamic>,
+            )
+          : const OfflineW2vBertCtcModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -739,7 +765,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, fireRedAsrCtc: $fireRedAsrCtc, qwen3Asr: $qwen3Asr, cohereTranscribe: $cohereTranscribe, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, fireRedAsrCtc: $fireRedAsrCtc, qwen3Asr: $qwen3Asr, cohereTranscribe: $cohereTranscribe, w2vBertCtc: $w2vBertCtc, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -761,6 +787,7 @@ class OfflineModelConfig {
     'fireRedAsrCtc': fireRedAsrCtc.toJson(),
     'qwen3Asr': qwen3Asr.toJson(),
     'cohereTranscribe': cohereTranscribe.toJson(),
+    'w2vBertCtc': w2vBertCtc.toJson(),
     'tokens': tokens,
     'numThreads': numThreads,
     'debug': debug,
@@ -789,6 +816,7 @@ class OfflineModelConfig {
   final OfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
   final OfflineQwen3AsrModelConfig qwen3Asr;
   final OfflineCohereTranscribeModelConfig cohereTranscribe;
+  final OfflineW2vBertCtcModelConfig w2vBertCtc;
 
   final String tokens;
   final int numThreads;

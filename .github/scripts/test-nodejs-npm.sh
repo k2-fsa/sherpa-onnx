@@ -207,6 +207,13 @@ node ./test-offline-fire-red-asr-ctc.js
 
 rm -rf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
 
+echo "---test w2v-BERT CTC---"
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+
+node ./test-offline-w2v-bert-ctc.js
+
+rm -rf sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20
+
 # curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 # tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 # rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2

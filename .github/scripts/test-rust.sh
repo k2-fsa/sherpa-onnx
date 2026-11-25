@@ -134,6 +134,9 @@ bash ./run-moonshine-v2.sh
 
 bash ./run-fire-red-asr-ctc.sh
 
+bash ./run-w2v-bert-ctc.sh
+rm -rf sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20
+
 bash ./run-paraformer.sh
 rm -rf sherpa-onnx-paraformer-zh-small-2024-03-09
 

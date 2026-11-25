@@ -20,6 +20,7 @@ public class OfflineModelConfig {
     private final OfflineQwen3AsrModelConfig qwen3Asr;
     private final OfflineCanaryModelConfig canary;
     private final OfflineCohereTranscribeModelConfig cohereTranscribe;
+    private final OfflineW2vBertCtcModelConfig w2vBertCtc;
     private final String teleSpeech;
     private final String tokens;
     private final int numThreads;
@@ -48,6 +49,7 @@ public class OfflineModelConfig {
         this.senseVoice = builder.senseVoice;
         this.dolphin = builder.dolphin;
         this.cohereTranscribe = builder.cohereTranscribe;
+        this.w2vBertCtc = builder.w2vBertCtc;
         this.teleSpeech = builder.teleSpeech;
         this.tokens = builder.tokens;
         this.numThreads = builder.numThreads;
@@ -130,6 +132,10 @@ public class OfflineModelConfig {
         return cohereTranscribe;
     }
 
+    public OfflineW2vBertCtcModelConfig getW2vBertCtc() {
+        return w2vBertCtc;
+    }
+
     public String getTokens() {
         return tokens;
     }
@@ -181,6 +187,7 @@ public class OfflineModelConfig {
         private OfflineCanaryModelConfig canary = OfflineCanaryModelConfig.builder().build();
         private OfflineCohereTranscribeModelConfig cohereTranscribe =
                 OfflineCohereTranscribeModelConfig.builder().build();
+        private OfflineW2vBertCtcModelConfig w2vBertCtc = OfflineW2vBertCtcModelConfig.builder().build();
         private String teleSpeech = "";
         private String tokens = "";
         private int numThreads = 1;
@@ -256,6 +263,11 @@ public class OfflineModelConfig {
 
         public Builder setCohereTranscribe(OfflineCohereTranscribeModelConfig cohereTranscribe) {
             this.cohereTranscribe = cohereTranscribe;
+            return this;
+        }
+
+        public Builder setW2vBertCtc(OfflineW2vBertCtcModelConfig w2vBertCtc) {
+            this.w2vBertCtc = w2vBertCtc;
             return this;
         }
 

@@ -381,6 +381,9 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
   c.model_config.fire_red_asr_ctc.model =
       config.model_config.fire_red_asr_ctc.model.c_str();
 
+  c.model_config.w2v_bert_ctc.model =
+      config.model_config.w2v_bert_ctc.model.c_str();
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 

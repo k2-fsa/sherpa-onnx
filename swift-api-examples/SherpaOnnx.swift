@@ -404,6 +404,14 @@ public func sherpaOnnxOfflineFireRedAsrCtcModelConfig(
   )
 }
 
+public func sherpaOnnxOfflineW2vBertCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineW2vBertCtcModelConfig {
+  return SherpaOnnxOfflineW2vBertCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 public func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineNemoEncDecCtcModelConfig {
@@ -623,7 +631,9 @@ public func sherpaOnnxOfflineModelConfig(
   qwen3Asr: SherpaOnnxOfflineQwen3ASRModelConfig =
     sherpaOnnxOfflineQwen3ASRModelConfig(),
   cohereTranscribe: SherpaOnnxOfflineCohereTranscribeModelConfig =
-    sherpaOnnxOfflineCohereTranscribeModelConfig()
+    sherpaOnnxOfflineCohereTranscribeModelConfig(),
+  w2vBertCtc: SherpaOnnxOfflineW2vBertCtcModelConfig =
+    sherpaOnnxOfflineW2vBertCtcModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -651,7 +661,8 @@ public func sherpaOnnxOfflineModelConfig(
     funasr_nano: funasrNano,
     fire_red_asr_ctc: fireRedAsrCtc,
     qwen3_asr: qwen3Asr,
-    cohere_transcribe: cohereTranscribe
+    cohere_transcribe: cohereTranscribe,
+    w2v_bert_ctc: w2vBertCtc
   )
 }
 

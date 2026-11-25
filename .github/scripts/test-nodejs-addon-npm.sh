@@ -252,6 +252,14 @@ node ./test_asr_non_streaming_fire_red_asr_ctc_async.js
 
 rm -rf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
 
+echo "----------w2v-BERT CTC----------"
+download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+
+node ./test_asr_non_streaming_w2v_bert_ctc.js
+node ./test_asr_non_streaming_w2v_bert_ctc_async.js
+
+rm -rf sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20
+
 
 echo "----------non-streaming ASR FunASR Nano----------"
 

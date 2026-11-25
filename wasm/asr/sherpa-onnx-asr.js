@@ -75,6 +75,10 @@ function freeConfig(config, Module) {
     freeConfig(config.cohereTranscribe, Module)
   }
 
+  if ('w2vBertCtc' in config) {
+    freeConfig(config.w2vBertCtc, Module)
+  }
+
   if ('funasrNano' in config) {
     freeConfig(config.funasrNano, Module)
   }
@@ -881,6 +885,25 @@ function initSherpaOnnxOfflineFireRedAsrCtcModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineW2vBertCtcModelConfig(config, Module) {
+  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+
+  const buffer = Module._malloc(n);
+
+  const len = 1 * 4;  // 1 pointer
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, n);
+
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
   const encoderAdaptorLen =
       Module.lengthBytesUTF8(config.encoderAdaptor || '') + 1;
@@ -1407,6 +1430,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('w2vBertCtc' in config)) {
+    config.w2vBertCtc = {
+      model: '',
+    };
+  }
+
   if (!('funasrNano' in config)) {
     config.funasrNano = {
       encoderAdaptor: '',
@@ -1530,11 +1559,14 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const cohereTranscribe = initSherpaOnnxOfflineCohereTranscribeModelConfig(
       config.cohereTranscribe, Module);
 
+  const w2vBertCtc =
+      initSherpaOnnxOfflineW2vBertCtcModelConfig(config.w2vBertCtc, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
       tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
       dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len +
       omnilingual.len + medasr.len + funasrNano.len + fireRedAsrCtc.len +
-      qwen3Asr.len + cohereTranscribe.len;
+      qwen3Asr.len + cohereTranscribe.len + w2vBertCtc.len;
 
   const ptr = Module._malloc(len);
 
@@ -1663,6 +1695,9 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(cohereTranscribe.ptr, cohereTranscribe.len, ptr + offset);
   offset += cohereTranscribe.len;
 
+  Module._CopyHeap(w2vBertCtc.ptr, w2vBertCtc.len, ptr + offset);
+  offset += w2vBertCtc.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
@@ -1684,7 +1719,8 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     funasrNano: funasrNano,
     fireRedAsrCtc: fireRedAsrCtc,
     qwen3Asr: qwen3Asr,
-    cohereTranscribe: cohereTranscribe
+    cohereTranscribe: cohereTranscribe,
+    w2vBertCtc: w2vBertCtc
   };
 }
 

@@ -402,6 +402,13 @@ jobs:
           ./run-non-streaming-decode-file-wenet-ctc.sh
           rm -rf sherpa-onnx-wenet*
 
+      - name:  Run java test (w2v-BERT CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-w2v-bert-ctc.sh
+          rm -rf sherpa-onnx-w2v-bert-*
+
       - name:  Run java test (Streaming T-one)
         shell: bash
         run: |

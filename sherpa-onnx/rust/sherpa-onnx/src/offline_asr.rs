@@ -10,6 +10,7 @@
 //! - `rust-api-examples/examples/nemo_parakeet.rs`
 //! - `rust-api-examples/examples/moonshine_v2.rs`
 //! - `rust-api-examples/examples/fire_red_asr_ctc.rs`
+//! - `rust-api-examples/examples/w2v_bert_ctc.rs`
 //!
 //! ```no_run
 //! use sherpa_onnx::{
@@ -372,6 +373,21 @@ impl OfflineCohereTranscribeModelConfig {
         }
     }
 }
+
+#[derive(Clone, Debug, Default)]
+/// Offline w2v-BERT 2.0 CTC model configuration.
+pub struct OfflineW2vBertCtcModelConfig {
+    pub model: Option<String>,
+}
+
+impl OfflineW2vBertCtcModelConfig {
+    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineW2vBertCtcModelConfig {
+        sys::OfflineW2vBertCtcModelConfig {
+            model: to_c_ptr(&self.model, cstrings),
+        }
+    }
+}
+
 impl OfflineQwen3ASRModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineQwen3ASRModelConfig {
         sys::OfflineQwen3ASRModelConfig {
@@ -468,6 +484,7 @@ pub struct OfflineModelConfig {
     pub fire_red_asr_ctc: OfflineFireRedAsrCtcModelConfig,
     pub qwen3_asr: OfflineQwen3ASRModelConfig,
     pub cohere_transcribe: OfflineCohereTranscribeModelConfig,
+    pub w2v_bert_ctc: OfflineW2vBertCtcModelConfig,
 
     pub tokens: Option<String>,
     pub num_threads: i32,
@@ -535,6 +552,9 @@ impl OfflineModelConfig {
                 .to_sys(cstrings),
             cohere_transcribe: self
                 .cohere_transcribe
+                .to_sys(cstrings),
+            w2v_bert_ctc: self
+                .w2v_bert_ctc
                 .to_sys(cstrings),
 
             tokens: to_c_ptr(&self.tokens, cstrings),

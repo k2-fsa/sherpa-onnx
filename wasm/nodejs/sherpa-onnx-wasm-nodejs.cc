@@ -22,6 +22,7 @@ static_assert(sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) == 13 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineQwen3ASRModelConfig) == 10 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineCohereTranscribeModelConfig) == 5 * 4,
               "");
+static_assert(sizeof(SherpaOnnxOfflineW2vBertCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 7 * 4, "");
@@ -55,7 +56,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) +
                       sizeof(SherpaOnnxOfflineFireRedAsrCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineQwen3ASRModelConfig) +
-                      sizeof(SherpaOnnxOfflineCohereTranscribeModelConfig),
+                      sizeof(SherpaOnnxOfflineCohereTranscribeModelConfig) +
+                      sizeof(SherpaOnnxOfflineW2vBertCtcModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
@@ -179,6 +181,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto fire_red_asr_ctc = &model_config->fire_red_asr_ctc;
   auto qwen3_asr = &model_config->qwen3_asr;
   auto cohere_transcribe = &model_config->cohere_transcribe;
+  auto w2v_bert_ctc = &model_config->w2v_bert_ctc;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -273,6 +276,9 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "language: %s\n", cohere_transcribe->language);
   fprintf(stdout, "use_punct: %d\n", cohere_transcribe->use_punct);
   fprintf(stdout, "use_itn: %d\n", cohere_transcribe->use_itn);
+
+  fprintf(stdout, "----------offline w2v-BERT CTC model config----------\n");
+  fprintf(stdout, "model: %s\n", w2v_bert_ctc->model);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

@@ -65,6 +65,7 @@ downstream ASR and `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 ./run-non-streaming-decode-file-tele-speech-ctc.sh
 ./run-non-streaming-decode-file-transducer-hotwords.sh
 ./run-non-streaming-decode-file-transducer.sh
+./run-non-streaming-decode-file-w2v-bert-ctc.sh
 ./run-non-streaming-decode-file-wenet-ctc.sh
 ./run-non-streaming-decode-file-whisper-multiple.sh
 ./run-non-streaming-decode-file-whisper.sh

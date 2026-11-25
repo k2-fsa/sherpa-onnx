@@ -886,6 +886,28 @@ function testOfflineCohereTranscribe() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineW2vBertCtc() {
+  if [ ! -f ./sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20/tokens.txt ]; then
+    curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+    tar xvf sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+    rm sherpa-onnx-w2v-bert-ctc-gl-int8-2026-11-20.tar.bz2
+  fi
+
+  out_filename=test_offline_w2v_bert_ctc.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_w2v_bert_ctc.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testOfflineWenetCtc() {
   if [ ! -f sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/model.int8.onnx ]; then
     curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
@@ -1108,6 +1130,7 @@ testTtsLexicon
 testTtsPhonemize
 testOfflineSpeakerDiarization
 testOfflineCohereTranscribe
+testOfflineW2vBertCtc
 testOfflineQwen3Asr
 testOfflineMoonshineAsrV2
 testOfflineFireRedAsrCtc
