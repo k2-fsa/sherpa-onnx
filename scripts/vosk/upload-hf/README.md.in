@@ -1,0 +1,36 @@
+# Vosk models
+
+Mirror of the models listed on
+[vosk models](https://alphacephei.com/vosk/models) ("Vosk Speech
+Recognition Models") plus the extras found in the
+[Derur mirror](https://huggingface.co/Derur/vosk-models/tree/main/stt)
+(union of both sources), kept as the **original zips** exactly as the
+site ships them.  Only the **ASR models** are mirrored (no speaker-id or
+text models); each language lives in its own folder under
+[`asr/<lang>/`](asr) (e.g. `asr/cn/`), holding the model's zip and,
+next to it, an info page listing the files inside the zip.
+
+Model folders contain (see the model's info page for the exact files):
+
+| entry | what it is |
+|---|---|
+| `am/` | acoustic model (`final.mdl`; some models ship extras) |
+| `conf/` | configs: `mfcc.conf`, `model.conf`, ... |
+| `graph/` | decoding graph (`HCLG.fst`, or `HCLr.fst` + `Gr.fst` for small models) |
+| `ivector/` | i-vector extractor (speaker adaptation) |
+| `rescore/`, `rnnlm/` | rescoring / RNNLM extras (large models only) |
+| `README` | model notes |
+
+## Table of contents
+
+{% for group in languages %}
+- [{{ group.title }}](#{{ group.anchor }})
+{% endfor %}
+{% for group in languages %}
+## {{ group.title }}
+
+| Model | Source | Supports | Info |
+|---|---|---|---|
+{% for m in group.models %}| [`{{ m.name }}.zip`](asr/{{ m.lang }}/{{ m.name }}.zip) | [zip]({{ m.url }}) | {{ m.supports }} | [files](asr/{{ m.lang }}/{{ m.name }}.md) |
+{% endfor %}
+{% endfor %}
