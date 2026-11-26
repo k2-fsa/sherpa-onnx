@@ -416,6 +416,7 @@ class TestOnlineRecognizer(unittest.TestCase):
 
         for recognizer, samples, sample_rate in tests:
             expected, _ = decode(recognizer, samples, sample_rate, reset=False)
+            self.assertTrue(expected)
 
             # With the encoder states kept, the reset only splits the result
             kept, num_segments = decode(
@@ -426,6 +427,7 @@ class TestOnlineRecognizer(unittest.TestCase):
 
             # By default, the encoder states are reset
             default, _ = decode(recognizer, samples, sample_rate, reset=True)
+            self.assertTrue(default)
             self.assertNotEqual(default, expected)
 
     def test_streaming_paraformer(self):
