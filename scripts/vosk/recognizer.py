@@ -361,12 +361,11 @@ class OnlineStream:
 
         mfcc, engine   -- MFCC extractor + running i-vector; the features
                           live in the extractor (num_frames_ready /
-                          get_frames read them, nothing is cached) and
-                          the i-vector estimate updates inside
-                          accept_waveform() as rows become ready
-        ivector        -- current i-vector estimate [S] (None until the
-                          first frames arrive; final after
-                          input_finished())
+                          get_frames read them, nothing is cached); the
+                          i-vector is fed lazily by update_ivector(), up
+                          to the last frame of the current decode window
+        ivector        -- latest i-vector estimate [S] (None until the
+                          first update_ivector())
         finished       -- set by input_finished(); enables the flush rule
                           in OnlineRecognizer.is_ready
         decoder        -- this utterance's Decoder
@@ -401,6 +400,7 @@ class OnlineStream:
         self.ivector = None
         self.finished = False
         self._iv_frames = 0  # frames already fed to the i-vector
+        self._iv_flushed = False
         # input frames processed (the model rows anchored before this
         # position are computed and fed to the decoder)
         self.num_processed_frames = 0
@@ -416,16 +416,12 @@ class OnlineStream:
                 f"sample rate {sample_rate} != model rate {self.sample_rate}; "
                 f"resample first (the drivers use librosa.load(..., sr=...))"
             )
-        # new feature rows and the running i-vector update as they
-        # become ready
         self.mfcc.accept_waveform(self.sample_rate, (samples * INT16_SCALE).tolist())
-        self._drain()
 
     def input_finished(self):
-        """No more samples; flush the tail features and the i-vector."""
+        """No more samples; flush the tail features (the i-vector is
+        flushed by update_ivector() once the last window reaches the end)."""
         self.mfcc.input_finished()
-        self._drain()
-        self.ivector = self.engine.flush()
         self.finished = True
 
     @property
@@ -438,6 +434,9 @@ class OnlineStream:
         Read straight from the extractor (nothing is cached); frames
         outside the stream are replicated at the edge -- kaldi's edge
         rule -- so callers can ask for any window without clamping."""
+        if n == 0:
+            # empty / too-short audio: zero frames, not np.stack([])
+            return np.zeros((0, self.mfcc_opts.num_ceps), dtype=np.float32)
         last = self.num_frames_ready - 1
         return np.stack([
             np.array(self.mfcc.get_frame(min(max(i, 0), last)), dtype=np.float32)
@@ -447,9 +446,15 @@ class OnlineStream:
     def is_last_frame(self, i):
         return self.finished and i == self.num_frames_ready - 1
 
-    def _drain(self):
-        """Update the running i-vector with any new feature rows."""
-        n = self.num_frames_ready
+    def update_ivector(self, num_frames):
+        """The i-vector estimated from the first `num_frames` frames: a
+        decode step uses the i-vector at the last frame of its window, as
+        kaldi's decodable-online-looped.cc does.  Frames are fed to the
+        estimator only up to there, so the estimate never depends on how
+        the audio was split into accept_waveform() calls.  Once the input
+        is finished and the window reaches the end, the estimator is
+        flushed.  `num_frames` must not decrease between calls."""
+        n = min(num_frames, self.num_frames_ready)
         if n > self._iv_frames:
             self.ivector = self.engine.accept(
                 np.stack([
@@ -458,6 +463,10 @@ class OnlineStream:
                 ])
             )
             self._iv_frames = n
+        if self.finished and n == self.num_frames_ready and not self._iv_flushed:
+            self.ivector = self.engine.flush()
+            self._iv_flushed = True
+        return self.ivector
 
 
 class OfflineStream:
@@ -500,17 +509,26 @@ class OfflineStream:
         self.mfcc.accept_waveform(self.sample_rate, (samples * INT16_SCALE).tolist())
         self.mfcc.input_finished()
         engine = IvectorEngine(self.model_dir, self.max_count)
-        engine.accept(self.get_frames(0, self.num_frames_ready))
+        if self.num_frames_ready > 0:  # empty audio: no frames to score
+            engine.accept(self.get_frames(0, self.num_frames_ready))
         self.ivector = engine.flush()
 
     @property
     def num_frames_ready(self):
         return 0 if self.mfcc is None else self.mfcc.num_frames_ready
 
+    def update_ivector(self, num_frames):
+        """The whole-utterance estimate, for any window (see
+        OnlineStream.update_ivector)."""
+        return self.ivector
+
     def get_frames(self, start, n):
         """[n, F] feature rows starting at row `start` (the AM window),
         with the same edge rule as OnlineStream.get_frames: rows outside
         the utterance are replicated at the edge (kaldi's edge rule)."""
+        if n == 0:
+            # empty / too-short audio: zero frames, not np.stack([])
+            return np.zeros((0, self.mfcc_opts.num_ceps), dtype=np.float32)
         last = self.num_frames_ready - 1
         return np.stack([
             np.array(self.mfcc.get_frame(min(max(i, 0), last)), dtype=np.float32)
@@ -672,11 +690,12 @@ class _RecognizerBase:
         the rows anchored at [t, t + rows*factor) are the step's own.
         (Subsampling lives inside the graph; crop-then-subsample ==
         subsample-then-crop.)"""
+        window_end = t + rows * self.factor + self.right_context
         window = stream.get_frames(
-            t - self._grid_left,
-            self._grid_left + rows * self.factor + self.right_context,
+            t - self._grid_left, window_end - t + self._grid_left
         )
-        window_rows = self.am.run(window, stream.ivector)
+        ivector = stream.update_ivector(window_end)  # at the window's last frame
+        window_rows = self.am.run(window, ivector)
         first_row = self._grid_left // self.factor
         return window_rows[first_row : first_row + rows]
 
@@ -699,6 +718,10 @@ class OnlineRecognizer(_RecognizerBase):
 
     def __init__(self, am, chunk_size, max_count=100.0):
         super().__init__(am, max_count)
+        if chunk_size <= 0:
+            # 0 would spin decode_stream() forever (zero rows per step,
+            # position never advances); negative multiples would rewind it
+            raise ValueError(f"chunk_size={chunk_size} must be positive")
         if chunk_size % self.factor:
             raise ValueError(
                 f"chunk_size={chunk_size} must be a multiple of "
@@ -821,6 +844,10 @@ class OfflineRecognizer(_RecognizerBase):
         DecodeStream): the step spans every row of the stream, so the
         same window/crop convention as streaming applies."""
         rows = ceil_div(stream.num_frames_ready, self.factor)
+        if rows == 0:
+            # empty / too-short audio: no rows, an empty result
+            stream.decoder.finalize()
+            return
         step_rows = self._run_step(stream, 0, rows)
         stream.decoder.accept_loglikes(step_rows)
         stream.decoder.finalize()

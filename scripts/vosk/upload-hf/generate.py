@@ -7,9 +7,10 @@
 # as soon as it is downloaded (see generate.sh.in).
 #
 # Only the ASR models are mirrored (no speaker-id / text models).
-# The list below mirrors the "Vosk Speech Recognition Models" page
-# (that page is the authoritative source; https://huggingface.co/Derur/vosk-models
-# is only an incomplete copy).  To refresh the list:
+# The list below mirrors the "Vosk Speech Recognition Models" page (the
+# authoritative source), plus a few models the page does not list that are
+# found in the https://huggingface.co/Derur/vosk-models mirror (see the kz
+# entries).  To refresh the list from the page:
 #
 #   curl -sL https://alphacephei.com/vosk/models \
 #     | grep -oE 'href="[^"]*\.zip"' | sed 's/href="//;s/"//' | sort -u
@@ -58,7 +59,8 @@ def get_args():
     parser.add_argument(
         "--readme",
         action="store_true",
-        help="Assemble README.md (tables linking to the info/ pages), "
+        help="Assemble README.md (tables linking to the asr/<lang>/<name>.md "
+        "info pages), "
         "instead of rendering generate.sh",
     )
     parser.add_argument(
@@ -73,7 +75,7 @@ def get_args():
         metavar="LOCAL:REMOTE",
         help="Upload the given files to " + HF_REPO + " in ONE commit "
         "(the repo allows only 128 commits per hour, so per-file commits "
-        "do not scale to 78 models x 4 files), then exit",
+        "do not scale to every model's zip + info page), then exit",
     )
     parser.add_argument(
         "--message",
@@ -173,10 +175,6 @@ LANG_NAMES = {
 def lang_of(name: str) -> str:
     """Language code from a model name (vosk-model-small-cn-0.22 -> cn)."""
     parts = name.split("-")
-    if parts[1] == "recasepunc":
-        return parts[2]
-    if parts[1] == "model" and parts[2] == "spk":
-        return "spk"
     i = 2
     if parts[i] == "small":
         i += 1
@@ -219,6 +217,7 @@ def get_ar_models():
         ),
     ]
 
+
 def get_br_models():
     """br (1 models)."""
     return [
@@ -229,6 +228,7 @@ def get_br_models():
         ),
     ]
 
+
 def get_ca_models():
     """ca (1 models)."""
     return [
@@ -238,6 +238,7 @@ def get_ca_models():
             kind="asr",
         ),
     ]
+
 
 def get_cn_models():
     """cn (3 models)."""
@@ -259,6 +260,7 @@ def get_cn_models():
         ),
     ]
 
+
 def get_cs_models():
     """cs (1 models)."""
     return [
@@ -268,6 +270,7 @@ def get_cs_models():
             kind="asr",
         ),
     ]
+
 
 def get_de_models():
     """de (4 models)."""
@@ -294,6 +297,7 @@ def get_de_models():
         ),
     ]
 
+
 def get_el_models():
     """el (1 models)."""
     return [
@@ -303,6 +307,7 @@ def get_el_models():
             kind="asr",
         ),
     ]
+
 
 def get_en_models():
     """en (12 models)."""
@@ -369,6 +374,7 @@ def get_en_models():
         ),
     ]
 
+
 def get_eo_models():
     """eo (1 models)."""
     return [
@@ -378,6 +384,7 @@ def get_eo_models():
             kind="asr",
         ),
     ]
+
 
 def get_es_models():
     """es (2 models)."""
@@ -393,6 +400,7 @@ def get_es_models():
             kind="asr",
         ),
     ]
+
 
 def get_fa_models():
     """fa (4 models)."""
@@ -419,6 +427,7 @@ def get_fa_models():
         ),
     ]
 
+
 def get_fr_models():
     """fr (4 models)."""
     return [
@@ -444,6 +453,7 @@ def get_fr_models():
         ),
     ]
 
+
 def get_gu_models():
     """gu (2 models)."""
     return [
@@ -458,6 +468,7 @@ def get_gu_models():
             kind="asr",
         ),
     ]
+
 
 def get_hi_models():
     """hi (2 models)."""
@@ -474,6 +485,7 @@ def get_hi_models():
         ),
     ]
 
+
 def get_it_models():
     """it (2 models)."""
     return [
@@ -488,6 +500,7 @@ def get_it_models():
             kind="asr",
         ),
     ]
+
 
 def get_ja_models():
     """ja (2 models)."""
@@ -504,6 +517,7 @@ def get_ja_models():
         ),
     ]
 
+
 def get_ka_models():
     """ka (2 models)."""
     return [
@@ -519,6 +533,7 @@ def get_ka_models():
         ),
     ]
 
+
 def get_ko_models():
     """ko (1 models)."""
     return [
@@ -528,6 +543,7 @@ def get_ko_models():
             kind="asr",
         ),
     ]
+
 
 def get_ky_models():
     """ky (2 models)."""
@@ -543,6 +559,7 @@ def get_ky_models():
             kind="asr",
         ),
     ]
+
 
 def get_kz_models():
     """kz (4 models; incl. 2 unlisted, from the Derur mirror)."""
@@ -573,6 +590,7 @@ def get_kz_models():
         ),
     ]
 
+
 def get_nl_models():
     """nl (3 models)."""
     return [
@@ -593,6 +611,7 @@ def get_nl_models():
         ),
     ]
 
+
 def get_pl_models():
     """pl (1 models)."""
     return [
@@ -602,6 +621,7 @@ def get_pl_models():
             kind="asr",
         ),
     ]
+
 
 def get_pt_models():
     """pt (2 models)."""
@@ -617,6 +637,7 @@ def get_pt_models():
             kind="asr",
         ),
     ]
+
 
 def get_ru_models():
     """ru (4 models)."""
@@ -643,6 +664,7 @@ def get_ru_models():
         ),
     ]
 
+
 def get_sv_models():
     """sv (1 models)."""
     return [
@@ -653,6 +675,7 @@ def get_sv_models():
         ),
     ]
 
+
 def get_te_models():
     """te (1 models)."""
     return [
@@ -662,6 +685,7 @@ def get_te_models():
             kind="asr",
         ),
     ]
+
 
 def get_tg_models():
     """tg (2 models)."""
@@ -678,6 +702,7 @@ def get_tg_models():
         ),
     ]
 
+
 def get_tl_models():
     """tl (1 models)."""
     return [
@@ -688,6 +713,7 @@ def get_tl_models():
         ),
     ]
 
+
 def get_tr_models():
     """tr (1 models)."""
     return [
@@ -697,6 +723,7 @@ def get_tr_models():
             kind="asr",
         ),
     ]
+
 
 def get_uk_models():
     """uk (4 models)."""
@@ -723,6 +750,7 @@ def get_uk_models():
         ),
     ]
 
+
 def get_uz_models():
     """uz (1 models)."""
     return [
@@ -732,6 +760,7 @@ def get_uz_models():
             kind="asr",
         ),
     ]
+
 
 def get_vn_models():
     """vn (2 models)."""
@@ -747,6 +776,7 @@ def get_vn_models():
             kind="asr",
         ),
     ]
+
 
 def get_all_models():
     ans = []
@@ -852,12 +882,13 @@ def render_info(all_model_list, listing_dir: Path, only: str = ""):
             )
         )
         made += 1
-    print(f"info/: {made} model pages written")
+    print(f"asr/<lang>/<name>.md: {made} info pages written")
 
 
 def render_readme(all_model_list):
     """README.md: table of contents and one table per language, each row
-    linking to the model's info/ page (which lists the files in its zip)."""
+    linking to the model's asr/<lang>/<name>.md info page (which lists
+    the files in its zip)."""
     by_lang = {}
     for m in all_model_list:
         by_lang.setdefault(lang_of(m.name), []).append(m)

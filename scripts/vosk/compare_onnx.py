@@ -27,12 +27,13 @@
 #     -> kaldifst graph (HCLG, or HCLr+Gr composed) + kaldi_hmm_gmm.TransitionModel
 #     -> decode_utterance_lattice_faster + lattice_best_path -> word ids
 #     -> words.txt -> text
-#   gate: text equals the vosk baseline (python `vosk` package, same model
-#   and wav) after whitespace normalization.
+#   gate: text equals --expect, ignoring whitespace.  The vosk package's
+#   result (same model and wav) is printed for reference only.
 #
 # Usage:
 #   python3 compare_onnx.py --model-dir ./onnx-model-cn \
-#       --wav ./zh.wav [--kaldi-src /path/to/kaldi/src] [--skip-stage1]
+#       --ref-model-dir ./vosk-model-small-cn-0.22 --wav ./zh.wav \
+#       [--kaldi-src /path/to/kaldi/src] [--skip-stage1]
 
 import argparse
 import re
@@ -82,7 +83,7 @@ def stage1_am_parity(
         # kaldi tools take a file path: hand them the librosa-resampled
         # 16 kHz audio (we always resample ourselves)
         y, sr = load_audio(wav, read_meta(model_dir)["sample_rate"])
-        wav16 = Path(tempfile.mkdtemp()) / "wav_16k.wav"
+        wav16 = tmp / "wav_16k.wav"  # removed with tmp
         sf.write(str(wav16), y, sr, subtype="PCM_16")
         (tmp / "w.scp").write_text(f"u {wav16.resolve()}\n")
         feats_ark = tmp / "feats.ark"

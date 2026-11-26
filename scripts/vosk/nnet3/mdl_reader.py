@@ -44,12 +44,19 @@
 
 import re
 import subprocess
+import tempfile
 from typing import List, Optional
 
 import numpy as np
 
 # Relative import: this file is part of the nnet3/ package.
-from .components import COMPONENT_SCHEMAS, Component, Node, Nnet3Spec
+from .components import (
+    COMPONENT_SCHEMAS,
+    Component,
+    Node,
+    Nnet3Spec,
+    output_node_index,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -125,9 +132,17 @@ class _Tokenizer:
 
     def peek_token(self) -> Optional[str]:
         """Look at the next token without consuming it."""
-        saved = (self.buf, self.pos)
+        saved_buf, saved_pos = self.buf, self.pos
         tok = self.next_token()
-        self.buf, self.pos = saved
+        if self.buf is saved_buf:
+            self.pos = saved_pos
+        else:
+            # next_token crossed into a line read from the stream: the
+            # old buffer (only whitespace left) is gone for good, so
+            # rewind within the CURRENT line instead -- the peeked token
+            # is its first one and stays unconsumed.  Restoring the old
+            # buffer here would silently drop the line just read.
+            self.pos = 0
         return tok
 
     def at_line_end(self) -> bool:
@@ -176,6 +191,7 @@ class _Tokenizer:
 #   Append(a, b, ...)          concatenate on the feature axis
 #   Sum(a, b)                  elementwise sum
 #   Scale(c, x)                scalar multiply
+#   Offset(x, o)               time shift: frame t reads x(t + o)
 #   ReplaceIndex(x, t, i)      use time-index t of x for every output frame
 #                              (kaldi: fixes one index; used for the i-vector
 #                              so it is constant over time)
@@ -245,6 +261,50 @@ def parse_descriptor(desc: str) -> tuple:
 # ---------------------------------------------------------------------------
 # Config section (node graph)
 # ---------------------------------------------------------------------------
+
+
+def descriptor_names(tree):
+    """Names a descriptor expression references."""
+    kind = tree[0]
+    if kind == "name":
+        return {tree[1]}
+    if kind in ("append", "sum"):
+        out = set()
+        for t in tree[1]:
+            out |= descriptor_names(t)
+        return out
+    if kind == "scale":
+        return descriptor_names(tree[2])
+    if kind == "offset":
+        return descriptor_names(tree[1])
+    if kind == "replace_index":
+        return descriptor_names(tree[1])
+    return set()
+
+
+def inference_nodes(nodes: List[Node]) -> List[Node]:
+    """The nodes the output-node named OUTPUT_NODE depends on, in config
+    order, ending with that output node.
+
+    Chain models also carry training-only branches (e.g. the output-xent
+    regularizer) that may share the trunk and come anywhere in the config;
+    they are left out, so neither the evaluation nor the decimation plan
+    sees them, whatever their position."""
+    by_name = {n.name: n for n in nodes}
+    out_index = output_node_index(nodes)
+    needed = {nodes[out_index].name}
+    stack = [nodes[out_index].name]
+    while stack:
+        n = by_name[stack.pop()]
+        refs = (
+            descriptor_names(parse_descriptor(n.descriptor)) if n.descriptor else set()
+        )
+        if n.kind == "dim-range" and n.source:
+            refs.add(n.source)
+        for r in refs - needed:
+            needed.add(r)
+            stack.append(r)
+    return [n for n in nodes[: out_index + 1] if n.name in needed]
 
 
 def _parse_config_line(line: str, nodes: List[Node]) -> None:
@@ -425,17 +485,9 @@ def parse_text_dump(stream) -> Nnet3Spec:
         if not (typ.startswith("<") and typ.endswith(">")):
             raise ValueError(f"bad component type token: {typ!r}")
         typ = typ[1:-1]
-        # Unknown types raise; recognized-but-unimplemented (large-en's
-        # TimeHeightConvolution / Permute) raise NotImplementedError until
-        # their parsing is added.
         if typ not in COMPONENT_SCHEMAS:
             raise ValueError(f"unknown component type {typ!r} ({name!r})")
         schema = COMPONENT_SCHEMAS[typ]
-        if schema is None:
-            raise NotImplementedError(
-                f"component type {typ!r} ({name!r}): parsing not implemented "
-                f"yet (large-en model; see)"
-            )
         params = _read_component_params(tok, typ, schema, name)
         components.append(Component(name=name, type=typ, params=params))
 
@@ -461,9 +513,9 @@ def parse_text_dump(stream) -> Nnet3Spec:
     # Determine the I/O dims from the graph.
     input_node = next((n for n in nodes if n.name == "input"), None)
     ivector_node = next((n for n in nodes if n.name == "ivector"), None)
-    output_node = next((n for n in nodes if n.name == "output"), None)
-    if input_node is None or output_node is None:
-        raise ValueError("dump must have 'input' and 'output' nodes")
+    if input_node is None:
+        raise ValueError("dump must have an 'input' node")
+    output_node = nodes[output_node_index(nodes)]
     # 'output' is an output-node: its descriptor names the feeding node (e.g.
     # input=output.affine).  Resolve dims through that node's component.
     out_desc = parse_descriptor(output_node.descriptor)
@@ -504,21 +556,34 @@ def parse_text_dump(stream) -> Nnet3Spec:
 def dump_via_kaldi(mdl_path: str, nnet3_am_copy: str = "nnet3-am-copy") -> Nnet3Spec:
     """Parse ``mdl_path`` by streaming ``nnet3-am-copy --binary=false ... -``.
 
-    This is the v1 entry point of: kaldi is used only
-    as a dumper (locally or in the ghcr.io/csukuangfj/kaldi container); the dump
-    itself is parsed here and never lands on disk.
+    kaldi is used only as a dumper (locally or in the
+    ghcr.io/csukuangfj/kaldi container); the dump itself is parsed here and
+    never lands on disk.
     """
+    # stderr goes to a file, not a pipe: nobody reads it while the dump
+    # streams, and a full stderr pipe would block the tool.  Its tail is
+    # reported if the dump does not parse (e.g. a bad path or binary).
+    stderr = tempfile.TemporaryFile(mode="w+")
     proc = subprocess.Popen(
         [nnet3_am_copy, "--binary=false", mdl_path, "-"],
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        stderr=stderr,
         text=True,
     )
     try:
         # text=True already wraps the pipe in a text stream; do not wrap again
-        spec = parse_text_dump(proc.stdout)
-        return spec
+        return parse_text_dump(proc.stdout)
+    except Exception as e:
+        proc.kill()
+        proc.wait()
+        stderr.seek(0)
+        tail = stderr.read()[-2000:].strip()
+        raise ValueError(
+            f"cannot parse the nnet3-am-copy dump of {mdl_path}: {e}"
+            + (f"\n{nnet3_am_copy} stderr:\n{tail}" if tail else "")
+        ) from e
     finally:
+        stderr.close()
         # Never wait() on a producer whose pipe we stopped reading: with a
         # multi-MB dump it blocks forever on a full pipe.  Kill and drain.
         proc.kill()

@@ -36,7 +36,7 @@ import torch.nn as nn
 
 
 from nnet3.components import Nnet3Spec
-from nnet3.mdl_reader import parse_descriptor
+from nnet3.mdl_reader import inference_nodes, parse_descriptor
 from torch_model import Nnet3Torch
 
 
@@ -228,7 +228,8 @@ def generate_flat_module(spec: Nnet3Spec, source: str = "vosk nnet3 model") -> s
     lines.append("")
     lines.append("        # node graph, in the order kaldi wrote it")
 
-    for node in spec.nodes:
+    # the nodes the output depends on (as Nnet3Torch.nodes)
+    for node in inference_nodes(spec.nodes):
         v = var_of(node.name)
         if node.kind == "input":
             continue  # prologue above
@@ -251,8 +252,6 @@ def generate_flat_module(spec: Nnet3Spec, source: str = "vosk nnet3 model") -> s
             expr = emit_expr(parse_descriptor(node.descriptor), var_of)
             lines.append(f"        out = {expr}   # {node.descriptor}")
             lines.append("        return out")
-            break  # first output node wins (as in
-            # Nnet3Torch.forward)
         else:
             raise ValueError(f"bad node kind {node.kind!r}")
 

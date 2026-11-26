@@ -78,7 +78,7 @@ output-node name=output input=output.affine objective=linear
 </Nnet3> <LeftContext> 26 <RightContext> 14 <Priors> [ ]
 ```
 
-Three line kinds in the config (`input-node`, `component-node`,
+Four line kinds in the config (`input-node`, `component-node`,
 `dim-range-node`, `output-node`), token blocks in the component section, and
 a tail carrying the **receptive field** (`LeftContext`/`RightContext` — kept
 as a sanity check for `model_meta.json`).
@@ -115,7 +115,12 @@ python package at runtime.
    `kPropagateAdds` case for TdnnComponent).  Empty matrices/vectors parse
    as zero-size arrays; the forward pass then simply adds no bias.
 4. **`output-node` lines** in the config have an `objective=...` suffix which
-   must be stripped before parsing the input descriptor.
+   must be stripped before parsing the input descriptor.  Chain models
+   have two of them: `output` (what the decoder consumes) and the
+   training-only `output-xent` branch.  Inference selects the node named
+   `output` and evaluates only the nodes it depends on
+   (`mdl_reader.inference_nodes`), whatever the order of the two in the
+   config -- never "the first output node".
 5. **Pipe deadlock**: `subprocess.wait()` while the producer still has
    megabytes of un-consumed output blocks forever.  `dump_via_kaldi` kills
    and drains the pipe in `finally`.
@@ -210,9 +215,11 @@ They are NOT equivalent (nonlinear layers make replicate-at-input differ from
 replicate-per-layer), and kaldi uses the second one: measured against
 `nnet3-compute` on small-cn, per-layer clamping differs by up to 8.2 at the
 first/last frames, while input extension + crop matches to **1.7e-5
-everywhere**.  `torch_model.Nnet3Torch.forward` therefore pads the features
-by the dump's `LeftContext`/`RightContext` and crops the output; the
-per-layer clamps remain only as a safety net.  (This is also consistent with
+everywhere**.  So the caller extends the input: `torch_model.Nnet3Torch.forward`
+is pure (it computes exactly the rows it is given), and the recognizer's
+windows carry `LeftContext`/`RightContext` frames of real history or
+replicated edge frames, keeping only the inner rows; the per-layer clamps
+remain only as a safety net.  (This is also consistent with
 how kaldi's looped decodable assembles chunks: it feeds clamped *raw* context
 rows and lets the computation produce true intermediate values.)
 
@@ -253,7 +260,7 @@ python3 compare_torch.py --model-dir <vosk-model-dir> --wav x.wav
 
 Verified on `vosk-model-small-cn-0.22`:
 
-* file parse == streamed parse: input 40, ivector 40, output 2112
+* parsed dims: input 40, ivector 40, output 2112
   (= num_pdfs), 91 components, 97 nodes, LeftContext/RightContext 26/14
 * component inventory matches the model's actual contents exactly
   (22 Tdnn, 18 BatchNorm, 14 ReLU, 13 NoOp, 13 GeneralDropout, 5

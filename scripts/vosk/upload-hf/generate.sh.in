@@ -5,7 +5,8 @@
 #
 # For every assigned model, upload it to
 # https://huggingface.co/csukuangfj/vosk-models AS SOON AS it has been
-# downloaded -- one model at a time; nothing waits for the whole shard.
+# downloaded -- in batches of $models_per_commit models; nothing waits
+# for the whole shard.
 #
 # Models are uploaded $models_per_commit PER COMMIT (each model's zip +
 # info page in the same commit): the HF repo allows only 128 commits
@@ -19,9 +20,10 @@
 #   1. asr/<lang>/<name>.md on HF -> the model is done; skip entirely.
 #   2. otherwise: download the original zip from
 #      https://alphacephei.com/vosk/models, unpack it, record the model
-#      folder listing (ls -lhR) for its info page, then the pair is
-#      uploaded in one commit and the local zips + unpacked folders are
-#      dropped (keeps runner disk usage to about two models).
+#      folder listing (ls -lhR) for its info page and drop the unpacked
+#      folder.  Once $models_per_commit models are pending, their zips +
+#      info pages are uploaded in one commit and the local zips are
+#      dropped (keeps runner disk usage to about $models_per_commit zips).
 #
 # Outputs (consumed by `generate.py --info`):
 #   listing/<name>.txt      -- ls -lhR of the model folder
@@ -87,13 +89,19 @@ else
   if [ ! -f "$zip" ]; then
     log "downloading $name ({{ model.kind }})"
     mkdir -p "release/asr/$lang"
-    curl -SL --retry 5 --retry-delay 5 --retry-all-errors -o "$zip" "$url"
+    # download to .part and rename only on success: an interrupted
+    # download never leaves a truncated $zip that a rerun would trust
+    curl -SL --fail --retry 5 --retry-delay 5 --retry-all-errors \
+      -o "$zip.part" "$url"
+    mv "$zip.part" "$zip"
   else
     log "$name.zip already downloaded; skip"
   fi
   if [ ! -d "models/$name" ]; then
-    unzip -q "$zip" -d models/
+    unzip -q -o "$zip" -d models/  # -o: never prompt (non-interactive CI)
   fi
+  # the listing below assumes the zip's top folder is named like the zip
+  [ -d "models/$name" ] || die "$zip did not unpack to models/$name"
   log "listing $name"
   ls -lhR "models/$name" > "listing/$name.txt"
   tree -sh "models/$name" > "listing/$name.tree.txt"

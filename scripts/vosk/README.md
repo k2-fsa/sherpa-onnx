@@ -51,7 +51,10 @@ export KALDI_ROOT="$HOME/kaldi"     # the scripts look for $KALDI_ROOT/src
 `kaldi-decoder >= 0.6.0` is required: older wheels export their bundled
 openfst symbols, whose FST-type registry then breaks reading the vosk
 graph types (`olabel_lookahead`/`ngram` in HCLr.fst/Gr.fst) when loaded
-alongside kaldifst.  0.6.0 hides them; import order no longer matters.
+alongside kaldifst.  0.6.0 hides them.  `kaldi-hmm-gmm` (1.3.5) still
+exports its copy, so `kaldifst` must be imported **before**
+`kaldi_hmm_gmm` (recognizer.py does; otherwise reading HCLr.fst fails with
+`Unknown FST type olabel_lookahead`).
 
 Non-16 kHz audio is resampled with **librosa** (deterministic — the
 sherpa-onnx python-api-examples convention).
@@ -230,6 +233,10 @@ Notes on the intermediate logs:
 * `--no-partial` suppresses the partial lines.
 
 Streaming uses the **online (running) i-vector**, like a real streamer.
+Each decode step uses the estimate at the last frame of its window (as
+kaldi's looped decodable does): the estimator is fed only up to there, so
+the result does not depend on how the audio is split into
+`accept_waveform()` calls (verified bitwise, 0.01 s .. whole-file feeds).
 The `--max-count` flag (default 100, same as the vosk runtime; 0
 disables) tunes how strongly the i-vector prior is scaled with
 accumulating data.  The decode tail is robust to it: verified with
@@ -336,7 +343,7 @@ cut: tdnnf3.noop + tdnnf4.affine -> decimated grid [rows 0::3]
 compute: 3.21M x T -> 1.63M x T MAC   (49% saved, 2.0x AM)
 note: transition rows not exploited in this export (exact row masks would save +4%)
 
-decimation gate (decimated == full-rate[0::3])
+decimation gate (decimated == full-rate[::3])
 
 T= 100: max_abs=0.00e+00   bitwise equal
 T=1000: max_abs=0.00e+00   bitwise equal
@@ -462,7 +469,7 @@ Expected ending:
 ```
 WARNING: ignoring mfcc.conf key allow-upsample=true
 WARNING: ignoring mfcc.conf key allow-downsample=true
-rows 158 max|torch - onnx| = 2.574920654296875e-05
+rows 158 max|torch - onnx| = 1.3709068298339844e-05
 ```
 
 #### (b) Streaming ASR
@@ -743,8 +750,8 @@ in-process).  Test wavs:
   3*(d1-1) + right_context]` (start snapped down to the `0::3` row grid) and keep the rows `[d0, d1)`.  What differs is only the AM
   output's row rate: `decode_onnx_streaming.py` gets one row per `factor` out of
   the graph (they go straight through), while the torch/flat AMs output
-  full-rate (one row per 10 ms frame) and `_emit` picks the `0::3` rows in
-  the same step.
+  full-rate (one row per 10 ms frame) and their `run()` keeps the `0::3`
+  rows.
   The `right_context` also means streaming has that much inherent latency
   (e.g. 140 ms for cn/en).  `frame_subsampling_factor` says output
   row k corresponds to input frame `k*factor` (word times = row

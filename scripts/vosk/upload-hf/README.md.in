@@ -31,6 +31,6 @@ Model folders contain (see the model's info page for the exact files):
 
 | Model | Source | Supports | Info |
 |---|---|---|---|
-{% for m in group.models %}| [`{{ m.name }}.zip`]({{ m.url }}) | [zip]({{ m.url }}) | {{ m.supports }} | [files](asr/{{ m.lang }}/{{ m.name }}.md) |
+{% for m in group.models %}| [`{{ m.name }}.zip`](asr/{{ m.lang }}/{{ m.name }}.zip) | [zip]({{ m.url }}) | {{ m.supports }} | [files](asr/{{ m.lang }}/{{ m.name }}.md) |
 {% endfor %}
 {% endfor %}

@@ -38,8 +38,8 @@ import torch.nn.functional as F
 
 # nnet3/ is imported as a plain subpackage (scripts are run with scripts/vosk
 # as the working directory / on sys.path; see run.sh and the notes).
-from nnet3.components import Component, IDENTITY_TYPES, Node, Nnet3Spec
-from nnet3.mdl_reader import parse_descriptor
+from nnet3.components import IDENTITY_TYPES, Component, Node, Nnet3Spec
+from nnet3.mdl_reader import descriptor_names, inference_nodes, parse_descriptor
 
 
 # ---------------------------------------------------------------------------
@@ -327,25 +327,6 @@ def _descriptor_time_deps(tree):
     return {0}, True  # replace_index or unknown: conservative
 
 
-def _descriptor_names(tree):
-    """Names a descriptor expression references."""
-    kind = tree[0]
-    if kind == "name":
-        return {tree[1]}
-    if kind in ("append", "sum"):
-        out = set()
-        for t in tree[1]:
-            out |= _descriptor_names(t)
-        return out
-    if kind == "scale":
-        return _descriptor_names(tree[2])
-    if kind == "offset":
-        return _descriptor_names(tree[1])
-    if kind == "replace_index":
-        return _descriptor_names(tree[1])
-    return set()
-
-
 def _component_time_deps(c: Component):
     """Time offsets the component's output rows have on its input rows
     (None = unknown semantics)."""
@@ -397,10 +378,8 @@ class DecimationPlan:
         self.factor = factor
         comps = {c.name: c for c in spec.components}
 
-        # only the nodes forward() evaluates: up to the FIRST output node
-        # (later output nodes -- e.g. an xent branch -- are never computed)
-        last = min(i for i, n in enumerate(spec.nodes) if n.kind == "output")
-        nodes = spec.nodes[: last + 1]
+        # only the nodes forward() evaluates (the xent branch is not)
+        nodes = inference_nodes(spec.nodes)
         by_name = {n.name: n for n in nodes}
 
         # -- per-node: dependency offsets / referenced names --------------
@@ -411,7 +390,7 @@ class DecimationPlan:
             doffs, dunknown = (
                 _descriptor_time_deps(desc) if desc is not None else ({0}, False)
             )
-            names = _descriptor_names(desc) if desc is not None else set()
+            names = descriptor_names(desc) if desc is not None else set()
             if n.kind == "dim-range" and n.source:
                 names = names | {n.source}
             refs[n.name] = names
@@ -419,7 +398,7 @@ class DecimationPlan:
                 offsets[n.name] = None
                 continue
             if n.kind == "component":
-                co = _component_time_deps(comps[n.name])
+                co = _component_time_deps(comps[n.component])
                 offsets[n.name] = {c + d for c in co for d in doffs}
             else:  # input / dim-range / output: per-row plus descriptor shifts
                 offsets[n.name] = set(doffs)
@@ -458,7 +437,7 @@ class DecimationPlan:
         def decimatable(n) -> bool:
             if n.kind not in ("component", "dim-range"):
                 return False
-            if n.kind == "component" and comps[n.name].type == (
+            if n.kind == "component" and comps[n.component].type == (
                 "TimeHeightConvolutionComponent"
             ):
                 return False  # zero-pad edges: keep full-rate (conservative)
@@ -491,7 +470,7 @@ class DecimationPlan:
         }
         self.needed_residues = needed
         self.mac = {
-            n.name: _component_mac(comps[n.name]) if n.kind == "component" else 0.0
+            n.name: _component_mac(comps[n.component]) if n.kind == "component" else 0.0
             for n in nodes
         }
         # full-rate values the decimated zone slices at the boundary
@@ -547,7 +526,9 @@ class Nnet3Torch(nn.Module):
             [build_component(c) for c in spec.components]
         )
         self._name_to_idx = {c.name: i for i, c in enumerate(spec.components)}
-        self.nodes: List[Node] = spec.nodes
+        # the nodes the "output" node depends on, ending with it (training
+        # branches such as output-xent are left out; see inference_nodes)
+        self.nodes: List[Node] = inference_nodes(spec.nodes)
         self._plans: Dict[tuple, DecimationPlan] = {}
 
     # -- descriptor evaluation -------------------------------------------
@@ -671,7 +652,7 @@ class Nnet3Torch(nn.Module):
                     node.descriptor, nodes_out, batch, t_len, features, ivector
                 )
                 nodes_out[node.name] = self.component_modules[
-                    self._name_to_idx[node.name]
+                    self._name_to_idx[node.component]
                 ](x)
             elif node.kind == "output":
                 return self._eval_descriptor(
@@ -696,8 +677,15 @@ class Nnet3Torch(nn.Module):
         Pure like forward(): exactly the rows given are computed.  The
         decimated zone runs on the row lattice ``::factor`` of the input
         (time offsets rescaled by factor); values equal
-        ``forward(...)[:, ::factor, :]`` exactly: the same expressions on
-        the same rows, only the row selection differs."""
+        ``forward(...)[:, ::factor, :]`` exactly -- the same expressions
+        on the same rows, only the row selection differs -- FOR ROWS WHOSE
+        READS STAY INSIDE THE INPUT'S RIGHT EDGE.  At the bare right edge
+        the two paths clamp differently (this path clamps a shifted read
+        to the last lattice row; the dense path clamps to frame T-1, a
+        frame that may be off the row grid), so callers must feed a window
+        carrying >= right_context frames beyond the last row they keep --
+        the recognizer's ``_run_step`` window always does (kaldi's own
+        chunked-decode contract).  The left edge is not affected."""
         plan = self.decimation_plan(factor)
         T = features.shape[1]
         batch, t_len = features.shape[0], features.shape[1]
@@ -734,7 +722,7 @@ class Nnet3Torch(nn.Module):
                         :, :, node.dim_offset : node.dim_offset + node.dim
                     ]
             elif node.kind == "component":
-                mod = self.component_modules[self._name_to_idx[node.name]]
+                mod = self.component_modules[self._name_to_idx[node.component]]
                 if node.name in plan.top:
                     x = self._eval_tree_lat(
                         parse_descriptor(node.descriptor), lattice, factor
@@ -807,9 +795,7 @@ class VoskAmWrapper(nn.Module):
     (variable-length input) is preserved.
     """
 
-    def __init__(
-        self, net: Nnet3Torch, frame_subsampling_factor: int = 3
-    ):
+    def __init__(self, net: Nnet3Torch, frame_subsampling_factor: int = 3):
         super().__init__()
         self.net = net
         self.frame_subsampling_factor = frame_subsampling_factor

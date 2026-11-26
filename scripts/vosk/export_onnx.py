@@ -45,7 +45,7 @@
 # sequence lengths and compares against torch at each.
 #
 # METADATA is embedded in both .onnx files as onnx metadata_props (same
-# convention as ../sherpa-onnx/scripts/whisper/export_onnx.py): the key-
+# convention as ../whisper/export_onnx.py): the key-
 # value pairs of am/model_meta.json, readable by the C++ runtime and by
 # onnxruntime's session.get_modelmeta().custom_metadata_map -- no sidecar
 # needed at inference time.
@@ -70,6 +70,9 @@ from recognizer import round_up
 from torch_model import Nnet3Torch, VoskAmWrapper
 
 OPSET = 17
+# time length of the dummy input used for tracing; T is a dynamic axis,
+# so any length works (check_onnx_vs_torch runs several)
+TRACE_NUM_FRAMES = 40
 
 
 def _md_plain(s: str) -> str:
@@ -129,8 +132,7 @@ def get_args():
     p.add_argument(
         "--verbose",
         action="store_true",
-        help="print the per-layer decimation table to stdout too "
-        "(always in log.md)",
+        help="print the per-layer decimation table to stdout too " "(always in log.md)",
     )
     return p.parse_args()
 
@@ -142,7 +144,7 @@ def load_torch_model(am_pt: Path, factor: int):
     computes rows ::factor on the decoder's row lattice (kaldi-style
     row sparsity; factor comes from model_meta.json, never assumed).
     """
-    payload = torch.load(am_pt, weights_only=False)
+    payload = torch.load(am_pt, map_location="cpu", weights_only=False)
     net = Nnet3Torch.from_export_args(payload["args"])
     net.load_state_dict(payload["state_dict"])
     net.eval()
@@ -154,7 +156,7 @@ def load_torch_model(am_pt: Path, factor: int):
 def add_meta_data(filename: Path, meta_data: dict) -> None:
     """Embed key-value metadata into an ONNX model (in-place).
 
-    Same convention as ../sherpa-onnx/scripts/whisper/export_onnx.py: the
+    Same convention as ../whisper/export_onnx.py: the
     pairs land in the model's metadata_props and are read back by the C++
     runtime and by onnxruntime (session.get_modelmeta().
     custom_metadata_map).  Saving folds any external tensors into the one
@@ -182,11 +184,12 @@ def decimation_report(log: Log, model, net, factor: int, verbose: bool):
     --verbose).  Evidence, not claims: offsets and needed rows per node."""
     plan = model.plan
     comps = {c.name: c for c in net.spec.components}
+    nodes = {n.name: n for n in net.spec.nodes}
 
     def offsets_str(name):
-        c = comps.get(name)
-        if c is None or c.type not in ("TdnnComponent",):
-            return "[0]" if name in plan.zones else "-"
+        c = comps.get(nodes[name].component)
+        if c is None or c.type != "TdnnComponent":
+            return "[0]"
         return "[" + ", ".join(str(o) for o in c.params["TimeOffsets"]) + "]"
 
     def where(zone):
@@ -230,24 +233,22 @@ def decimation_report(log: Log, model, net, factor: int, verbose: bool):
     # per-layer evidence: file always, stdout with --verbose
     log.only("per-layer evidence (component offsets and needed rows):")
     log.only("")
-    log.only("```")
-    log.only(
+    table = [
         f"{'component':<32} {'offsets':<14} {'zone':<12} "
         f"{'MAC/row':>10} {'needed rows':>12}"
-    )
+    ]
     for n in plan.nodes:
         if plan.zones[n] == "input":
             continue
-        log.only(
+        table.append(
             f"{n:<32} {offsets_str(n):<14} {plan.zones[n]:<12} "
             f"{plan.mac[n]:>10,.0f} {plan.needed_rows(n):>12}"
         )
     log.only("```")
+    for line in table:
+        log.add(line, echo=verbose)
+    log.only("```")
     log.only("")
-    if verbose:  # echo the same table to stdout
-        for line in log.lines[-(len(plan.nodes) + 3) :]:
-            if line not in ("```", ""):
-                print(line)
 
 
 def decimation_gate(log: Log, model, net, factor: int) -> None:
@@ -290,8 +291,7 @@ def decimation_gate(log: Log, model, net, factor: int) -> None:
         d = float(np.abs(got - want).max())
         worst = max(worst, d)
         log.add(
-            f"T={T:4d}: max_abs={d:.2e}   "
-            f"{'bitwise equal' if d == 0.0 else 'OK'}"
+            f"T={T:4d}: max_abs={d:.2e}   " f"{'bitwise equal' if d == 0.0 else 'OK'}"
         )
     if worst > 1e-6:
         raise SystemExit(f"decimation gate FAILED: max_abs={worst}")
@@ -412,7 +412,7 @@ def _export(args, in_dir, out_dir, meta_in, factor, log):
     copy_model_tree(in_dir, out_dir)
 
     onnx_path = out_dir / "am" / "final.onnx"
-    feats_dummy = torch.zeros(1, 40, model_args["input_dim"])
+    feats_dummy = torch.zeros(1, TRACE_NUM_FRAMES, model_args["input_dim"])
     iv_dummy = torch.zeros(1, model_args["ivector_dim"])
     torch.onnx.export(
         model,
@@ -431,14 +431,26 @@ def _export(args, in_dir, out_dir, meta_in, factor, log):
     log.add("")
 
     # ---- 3. decimation analysis --------------------------------------
-    decimation_report(log, model, model.net, factor, args.verbose)
-    decimation_gate(log, model, model.net, factor)
+    # factor == 1 -> VoskAmWrapper runs the plain full-rate path with
+    # plan=None: nothing to analyze or gate
+    plan = model.plan
+    if plan is not None:
+        decimation_report(log, model, model.net, factor, args.verbose)
+        decimation_gate(log, model, model.net, factor)
+    else:
+        log.add(f"## decimation analysis (output rows 0::{factor})")
+        log.add("")
+        log.add(
+            f"frame_subsampling_factor={factor}: no decimation " f"(compute ratio 1.0)"
+        )
+        log.add("")
 
     # metadata: model_meta.json pairs + the decimation record
     meta = {k: v for k, v in meta_in.items() if k != "components"}
-    plan = model.plan
-    meta["decimated_zone"] = "+".join(plan.boundary) if plan.boundary else "none"
-    meta["compute_ratio"] = f"{plan.compute_ratio:.2f}"
+    meta["decimated_zone"] = (
+        "+".join(plan.boundary) if plan is not None and plan.boundary else "none"
+    )
+    meta["compute_ratio"] = f"{plan.compute_ratio:.2f}" if plan is not None else "1.0"
     add_meta_data(onnx_path, meta)
     (out_dir / "am" / "final.onnx.data").unlink(missing_ok=True)
     # keep the on-disk model_meta.json in sync with the embedded metadata
@@ -457,9 +469,7 @@ def _export(args, in_dir, out_dir, meta_in, factor, log):
     log.add("## checks (onnxruntime vs torch)")
     log.add("")
     log.only("```")
-    check_onnx_vs_torch(
-        onnx_path, model, model_args, factor, args.tolerance, log
-    )
+    check_onnx_vs_torch(onnx_path, model, model_args, factor, args.tolerance, log)
     log.only("```")
     log.add("")
 

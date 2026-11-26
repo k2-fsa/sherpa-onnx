@@ -30,6 +30,11 @@
 #   GeneralDropoutComponent  identity at inference (dropout proportions etc.
 #                            only affect training)
 #   SpecAugmentTimeMaskComponent  identity at inference (data augmentation)
+#   TimeHeightConvolutionComponent  2-D convolution over (time x height),
+#                            zero-padded at the edges (large-en; see the
+#                            torch_model.TimeHeightConvolution docstring)
+#   PermuteComponent         nnet-simple-component.cc: fixed column
+#                            permutation (large-en)
 #
 # See notes.md in this directory for the design write-up.
 
@@ -214,11 +219,6 @@ _SEMANTIC_SCHEMAS = {
     "PermuteComponent": {"ColumnMap": "offsets"},
 }
 
-# large-en: 2-D convolution over (time x height), zero-padded at both
-# edges (see the torch_model.TimeHeightConvolution docstring for the
-# verified semantics) and a plain column permutation.
-_UNIMPLEMENTED_TYPES = set()
-
 
 def _build_schema(semantic: dict) -> dict:
     """Merge the shared training-only tags into a component's schema."""
@@ -228,8 +228,6 @@ def _build_schema(semantic: dict) -> dict:
 
 
 COMPONENT_SCHEMAS = {t: _build_schema(s) for t, s in _SEMANTIC_SCHEMAS.items()}
-for _t in _UNIMPLEMENTED_TYPES:
-    COMPONENT_SCHEMAS[_t] = None  # None = recognized, parser not implemented
 
 
 # ---------------------------------------------------------------------------
@@ -246,14 +244,19 @@ IDENTITY_TYPES = {
 }
 
 
-def component_out_dim(c: Component) -> int:
-    """Output dimension of a component, from its parameters."""
-    if c.type == "TdnnComponent":
-        return c.params["LinearParams"].shape[0]
-    if c.type in ("NaturalGradientAffineComponent", "FixedAffineComponent"):
-        return c.params["LinearParams"].shape[0]
-    if c.type == "LinearComponent":
-        return c.params["Params"].shape[0]
-    if "Dim" in c.params:
-        return int(c.params["Dim"])
-    raise ValueError(f"cannot determine output dim of {c.type} ({c.name})")
+# The network output the decoder consumes.  Chain models also carry other
+# output nodes (e.g. "output-xent", a training-only regularizer branch) that
+# may come anywhere in the config; inference must use this one by NAME, as
+# kaldi's nnet3-compute and the decodables do -- never "the first output
+# node".
+OUTPUT_NODE = "output"
+
+
+def output_node_index(nodes: List[Node]) -> int:
+    """Index of the output-node named OUTPUT_NODE in `nodes`.  Every node
+    the output depends on comes before it (kaldi writes the config
+    topologically sorted), so nodes[: index + 1] is all inference needs."""
+    for i, n in enumerate(nodes):
+        if n.kind == "output" and n.name == OUTPUT_NODE:
+            return i
+    raise ValueError(f"no output-node named {OUTPUT_NODE!r} in the network")

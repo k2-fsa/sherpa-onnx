@@ -58,7 +58,7 @@ import torch
 
 import kaldi_native_io
 
-from recognizer import default_kaldi_src, load_audio, read_meta
+from recognizer import default_kaldi_src, load_audio, read_meta, read_model_conf
 from nnet3.mdl_reader import dump_via_kaldi
 from torch_model import Nnet3Torch
 
@@ -113,11 +113,21 @@ def main():
 
         # ---- 1. features: computed once, used by both sides -------------
         # kaldi tools take a file path: hand them the librosa-resampled
-        # 16 kHz audio (we always resample ourselves)
-        y, sr = load_audio(
-            args.wav, read_meta(Path(args.am_pt).parent.parent)["sample_rate"]
-        )
-        wav16 = Path(tempfile.mkdtemp()) / "wav_16k.wav"
+        # audio at the model's rate (we always resample ourselves)
+        if args.am_pt:
+            sample_rate = read_meta(Path(args.am_pt).parent.parent)["sample_rate"]
+        else:
+            # no exported metadata on the default path: take the rate
+            # from the original model's own config
+            sample_rate = int(
+                float(
+                    read_model_conf(model_dir / "conf" / "mfcc.conf").get(
+                        "sample-frequency", 16000
+                    )
+                )
+            )
+        y, sr = load_audio(args.wav, sample_rate)
+        wav16 = tmp / "wav_16k.wav"  # removed with tmp
         sf.write(str(wav16), y, sr, subtype="PCM_16")
         wav_scp = tmp / "wav.scp"
         wav_scp.write_text(f"utt {wav16.resolve()}\n")
