@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -762,10 +763,12 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
   return vocab_size - 1;
 }
 
-OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
-    Ort::Value audio_features, int32_t audio_token_len,
-    OfflineStream *stream) const {
-  OfflineRecognitionResult result;
+Qwen3ASRContinuationResult OfflineRecognizerQwen3ASRImpl::GenerateText(
+    Ort::Value audio_features, int32_t audio_token_len, OfflineStream *stream,
+    const Qwen3ASRContinuationRequest &request) const {
+  Qwen3ASRContinuationResult output;
+  auto &result = output.result;
+  const bool strict = request.strict_continuation;
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
   const auto &qwen3_config = config_.model_config.qwen3_asr;
@@ -810,8 +813,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   }
 
   if (audio_token_len <= 0) {
+    output.stop_reason = Qwen3ASRStopReason::kNoSpeech;
     result.text = "";
-    return result;
+    return output;
   }
 
   // Optional per-stream hotwords via SetOption("hotwords", comma-separated
@@ -830,14 +834,6 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   std::vector<int64_t> source_ids = BuildSourceIds(
       hotwords, language, audio_token_len, &before_len, &fake_audio_token_len);
 
-  int32_t context_len = static_cast<int32_t>(source_ids.size());
-  if (context_len == 0) {
-    result.text = "";
-    return result;
-  }
-
-  std::vector<std::pair<Ort::Value, Ort::Value>> cache_kv =
-      model_->CreateEmptyKVCache(1);
   const int32_t model_max_len = model_->GetMaxTotalLen();
   int32_t max_seq_len = model_max_len;
   const int32_t max_total_len_opt =
@@ -845,8 +841,31 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   if (max_total_len_opt > 0) {
     max_seq_len = std::min(model_max_len, max_total_len_opt);
   }
+  output.context_limit = max_seq_len;
+  output.prompt_tokens = source_ids.size();
+  if (strict) {
+    // Both operands are bounded by the actual context before addition/copy.
+    if (source_ids.size() >= static_cast<size_t>(max_seq_len) ||
+        request.prefix_ids.size() >=
+            static_cast<size_t>(max_seq_len) - source_ids.size()) {
+      output.prompt_tokens += request.prefix_ids.size();
+      output.stop_reason = Qwen3ASRStopReason::kContextLimit;
+      return output;
+    }
+    source_ids.insert(source_ids.end(), request.prefix_ids.begin(),
+                      request.prefix_ids.end());
+    output.prompt_tokens = source_ids.size();
+  }
+  int32_t context_len = static_cast<int32_t>(source_ids.size());
+  if (context_len == 0) {
+    result.text = "";
+    return output;
+  }
 
-  if (!hotwords.empty()) {
+  std::vector<std::pair<Ort::Value, Ort::Value>> cache_kv =
+      model_->CreateEmptyKVCache(1);
+
+  if (!strict && !hotwords.empty()) {
     const std::string scaffold_no_hw =
         std::string(kQwen3SystemPromptPrefix) + kQwen3SystemPromptSuffix;
     const std::vector<int64_t> base_ids = tokenizer_->Encode(scaffold_no_hw);
@@ -874,7 +893,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     const int32_t one_audio_len = static_cast<int32_t>(audio_pad_ids_.size());
     if (one_audio_len <= 0) {
       result.text = "";
-      return result;
+      return output;
     }
 
     int32_t after_len =
@@ -891,7 +910,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
           before_len, after_len, max_seq_len);
       Qwen3LogMaxTotalLenSuggestions(max_seq_len, model_max_len);
       result.text = "";
-      return result;
+      return output;
     }
 
     if (keep_audio == 0) {
@@ -901,7 +920,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
           max_seq_len, before_len, after_len);
       Qwen3LogMaxTotalLenSuggestions(max_seq_len, model_max_len);
       result.text = "";
-      return result;
+      return output;
     }
 
     if (keep_audio < fake_audio_token_len) {
@@ -956,20 +975,32 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   auto tmp = model_->ForwardLLM(
       std::move(input_ids_tensor), std::move(audio_features_view),
       std::move(attention_mask), cache_position, cache_kv);
+  ++output.decoder_calls;
   Ort::Value logits = std::move(tmp.first);
   auto kv_outputs = std::move(tmp.second);
 
   model_->ApplyKvDeltaInplace(&cache_kv, kv_outputs, cache_position);
 
-  std::vector<int64_t> generated_ids;
-  generated_ids.reserve(static_cast<size_t>(max_new_tokens));
+  std::vector<int64_t> generated_ids =
+      strict ? request.prefix_ids : std::vector<int64_t>{};
+  const size_t prefix_size = generated_ids.size();
+  generated_ids.reserve(
+      prefix_size + static_cast<size_t>(std::min(max_new_tokens, max_seq_len)));
 
   const int64_t eos_id = tokenizer_->GetEosTokenId();
+  // Qwen3-ASR uses both <|im_end|> and <|endoftext|> as EOS. Only strict
+  // continuation opts in; ordinary offline keeps its existing single-EOS
+  // policy. Look up the token by name rather than assuming a vocabulary ID.
+  const int64_t end_of_text_id =
+      strict ? tokenizer_->GetTokenId("<|endoftext|>") : -1;
+  const auto is_eos = [eos_id, end_of_text_id](int64_t id) {
+    return id == eos_id || (end_of_text_id >= 0 && id == end_of_text_id);
+  };
 
   auto log_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
   if (log_shape.size() < 3) {
     result.text = "";
-    return result;
+    return output;
   }
 
   const int32_t time_dim = static_cast<int32_t>(log_shape[1]);
@@ -982,18 +1013,20 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
           time_dim, context_len);
     }
     result.text = "";
-    return result;
+    return output;
   }
 
   int64_t next_id = SampleTokenFromLogits(logits, last_idx, temperature, top_p);
 
-  if (next_id == eos_id) {
+  if (is_eos(next_id) && (!strict || request.prefix_ids.empty())) {
+    const int64_t first_eos_id = next_id;
     if (config_.model_config.debug) {
       float abs_max = TensorAbsMax(logits, 1LL << 20);
       SHERPA_ONNX_LOGE(
           "qwen3-asr: first token is EOS (eos_id=%d). logits_abs_max=%f "
           "context_len=%d max_total_len=%d",
-          static_cast<int32_t>(eos_id), abs_max, context_len, max_seq_len);
+          static_cast<int32_t>(first_eos_id), abs_max, context_len,
+          max_seq_len);
     }
 
     const int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
@@ -1014,23 +1047,36 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
                       reinterpret_cast<const float *>(base) + offset);
 
     next_id = SampleTokenWithTemperatureAndTopP(row, is_fp16, vocab_size,
-                                                temperature, top_p, eos_id);
+                                                temperature, top_p,
+                                                first_eos_id);
 
-    if (next_id == eos_id) {
+    if (!strict && next_id == eos_id) {
       result.text = "";
-      return result;
+      return output;
     }
   }
 
-  generated_ids.push_back(next_id);
+  output.stop_reason = Qwen3ASRStopReason::kTokenLimit;
+  if (is_eos(next_id)) {
+    output.stop_reason = Qwen3ASRStopReason::kEos;
+  } else {
+    generated_ids.push_back(next_id);
+    if (strict && IsDegenerateRepetition(generated_ids)) {
+      output.stop_reason = Qwen3ASRStopReason::kRepetitionStopped;
+    }
+  }
   int32_t cur_len = context_len;
 
-  for (int32_t step = 1; step < max_new_tokens; ++step) {
+  for (int32_t step = 1;
+       step < max_new_tokens && !is_eos(next_id) &&
+       output.stop_reason != Qwen3ASRStopReason::kRepetitionStopped;
+       ++step) {
     if (cur_len >= max_seq_len) {
+      output.stop_reason = Qwen3ASRStopReason::kContextLimit;
       break;
     }
 
-    if (step + 1 == max_new_tokens) {
+    if (!strict && step + 1 == max_new_tokens) {
       SHERPA_ONNX_LOGE(
           "Result is truncated. max_new_tokens %d is too small for "
           "this audio input. Please either use a shorter audio or use a "
@@ -1062,6 +1108,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     auto tmp2 = model_->ForwardLLM(
         std::move(one_tensor), std::move(audio_features_view2),
         std::move(next_attention_mask), next_cache_position, cache_kv);
+    ++output.decoder_calls;
     logits = std::move(tmp2.first);
     auto kv_outputs2 = std::move(tmp2.second);
 
@@ -1069,17 +1116,27 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
     auto log_shape2 = logits.GetTensorTypeAndShapeInfo().GetShape();
     if (log_shape2.size() < 3) {
+      output.stop_reason = Qwen3ASRStopReason::kDecodeError;
       break;
     }
 
     const int32_t time_dim2 = static_cast<int32_t>(log_shape2[1]);
     if (time_dim2 < 1) {
+      output.stop_reason = Qwen3ASRStopReason::kDecodeError;
       break;
     }
 
     next_id = SampleTokenFromLogits(logits, time_dim2 - 1, temperature, top_p);
 
-    if (next_id == eos_id) {
+    if (is_eos(next_id)) {
+      output.stop_reason = Qwen3ASRStopReason::kEos;
+      break;
+    }
+
+    // The final KV slot may confirm EOS for the last permitted text token.
+    // A non-EOS prediction at that point must not exceed the text budget.
+    if (strict && cur_len + 1 >= max_seq_len) {
+      output.stop_reason = Qwen3ASRStopReason::kContextLimit;
       break;
     }
 
@@ -1087,6 +1144,8 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     ++cur_len;
 
     if (IsDegenerateRepetition(generated_ids)) {
+      output.stop_reason = Qwen3ASRStopReason::kRepetitionStopped;
+      if (strict) break;
       // The decoder has collapsed into cycling over a couple of token ids;
       // it will not recover under greedy decoding and would only repeat
       // them until max_new_tokens. Stop, and drop the repetition so the
@@ -1102,6 +1161,13 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     }
   }
 
+  output.raw_output_ids = generated_ids;
+  output.generated_tokens = generated_ids.size() - prefix_size;
+  if (strict) {
+    output.result = FormatQwen3ASRContinuation(
+        generated_ids, language, *tokenizer_, &output.had_invalid_utf8);
+    return output;
+  }
   std::vector<int64_t> cleaned_ids = generated_ids;
   if (!generated_ids.empty()) {
     const size_t prefix_window = std::min<size_t>(16, generated_ids.size());
@@ -1143,7 +1209,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     result.tokens = std::move(all_tokens);
   }
 
-  return result;
+  return output;
 }
 
 void OfflineRecognizerQwen3ASRImpl::DecodeStreams(OfflineStream **ss,
@@ -1154,31 +1220,45 @@ void OfflineRecognizerQwen3ASRImpl::DecodeStreams(OfflineStream **ss,
 }
 
 void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
+  stream->SetResult(DecodeWithPrefix(stream, {}).result);
+}
+
+Qwen3ASRContinuationResult OfflineRecognizerQwen3ASRImpl::DecodeWithPrefix(
+    OfflineStream *stream, const Qwen3ASRContinuationRequest &request) const {
+  const auto started = std::chrono::steady_clock::now();
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
   std::vector<float> f = stream->GetFrames();
   if (f.empty()) {
-    OfflineRecognitionResult r;
-    r.text = "";
-    stream->SetResult(r);
-    return;
+    Qwen3ASRContinuationResult r;
+    r.stop_reason = Qwen3ASRStopReason::kInsufficientFrames;
+    return r;
   }
 
   int32_t num_frames =
       static_cast<int32_t>(f.size() / static_cast<size_t>(kQwen3MelDim));
   if (static_cast<size_t>(num_frames) * static_cast<size_t>(kQwen3MelDim) !=
       f.size()) {
-    OfflineRecognitionResult r;
-    r.text = "";
-    stream->SetResult(r);
-    return;
+    Qwen3ASRContinuationResult r;
+    r.stop_reason = Qwen3ASRStopReason::kDecodeError;
+    return r;
   }
   if (num_frames < 2) {
-    OfflineRecognitionResult r;
-    r.text = "";
-    stream->SetResult(r);
-    return;
+    Qwen3ASRContinuationResult r;
+    r.stop_reason = Qwen3ASRStopReason::kInsufficientFrames;
+    return r;
+  }
+
+  // Digital silence produces a uniform log-floor in this zero-dither frontend.
+  // An encoder with biases need not output zeros for it. Only the strict path
+  // short-circuits here; keep legacy offline silence behavior unchanged.
+  if (request.strict_continuation &&
+      std::all_of(f.begin(), f.end(),
+                  [&](float value) { return value == f.front(); })) {
+    Qwen3ASRContinuationResult r;
+    r.stop_reason = Qwen3ASRStopReason::kNoSpeech;
+    return r;
   }
 
   NormalizeWhisperFeatures(f.data(), num_frames, kQwen3MelDim);
@@ -1197,10 +1277,9 @@ void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
 
   auto conv_shape = conv_output.GetTensorTypeAndShapeInfo().GetShape();
   if (conv_shape.size() < 3 || conv_shape[1] <= 0) {
-    OfflineRecognitionResult r;
-    r.text = "";
-    stream->SetResult(r);
-    return;
+    Qwen3ASRContinuationResult r;
+    r.stop_reason = Qwen3ASRStopReason::kDecodeError;
+    return r;
   }
 
   int32_t conv_num_frames = static_cast<int32_t>(conv_shape[1]);
@@ -1227,12 +1306,15 @@ void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
         feat_frames, conv_num_frames, expected_audio_token_len, valid_frames);
   }
 
-  OfflineRecognitionResult r =
-      GenerateText(std::move(audio_features), valid_frames, stream);
-
-  r.text = ApplyHomophoneReplacer(std::move(r.text));
-
-  stream->SetResult(r);
+  const auto encoded = std::chrono::steady_clock::now();
+  auto r =
+      GenerateText(std::move(audio_features), valid_frames, stream, request);
+  r.encoder_seconds = std::chrono::duration<double>(encoded - started).count();
+  r.decoder_seconds =
+      std::chrono::duration<double>(std::chrono::steady_clock::now() - encoded)
+          .count();
+  r.result.text = ApplyHomophoneReplacer(std::move(r.result.text));
+  return r;
 }
 
 #if __ANDROID_API__ >= 9
