@@ -35,9 +35,13 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install --upgrade pip
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install numpy onnx onnxruntime soundfile librosa \
-             kaldi-native-fbank kaldi-hmm-gmm kaldi-native-io kaldifst \
+             kaldi-native-fbank kaldi-hmm-gmm kaldi-native-io kaldifst onnxscript \
              'kaldi-decoder>=0.6.0'
 ```
+
+`onnxscript` is required by the Dynamo ONNX exporter that `torch.onnx.export`
+uses by default in recent PyTorch (see the
+[PyTorch ONNX exporter docs](https://docs.pytorch.org/docs/stable/onnx_export.html)).
 
 You also need a [kaldi](https://github.com/kaldi-asr/kaldi) build for the
 reference tools (`nnet3-am-copy`, `nnet3-compute`, `compute-mfcc-feats`) —

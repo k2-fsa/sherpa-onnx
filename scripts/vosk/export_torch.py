@@ -104,6 +104,26 @@ def copy_model_tree(in_dir: Path, out_dir: Path) -> None:
 def main():
     args = get_args()
     in_dir, out_dir = Path(args.in_dir), Path(args.out_dir)
+
+    # the decoder's IvectorEngine needs these at runtime (recognizer.py):
+    # fail here, before any output is written, instead of at decode time
+    missing = [
+        f"ivector/{name}"
+        for name in (
+            "final.mat",
+            "global_cmvn.stats",
+            "final.ie",
+            "final.dubm",
+            "splice.conf",
+        )
+        if not (in_dir / "ivector" / name).is_file()
+    ]
+    if missing:
+        raise SystemExit(
+            f"{in_dir} is missing {', '.join(missing)} -- the exported "
+            f"model could not decode without them (IvectorEngine)"
+        )
+
     nnet3_am_copy = args.nnet3_am_copy or (
         f"{args.kaldi_src or default_kaldi_src()}/nnet3bin/nnet3-am-copy"
     )

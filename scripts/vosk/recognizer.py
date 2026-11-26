@@ -130,7 +130,11 @@ def read_model_conf(conf_path):
     """Parse conf/model.conf (kaldi ParseOptions --name=value lines)."""
     out = {}
     for line in Path(conf_path).read_text().splitlines():
-        m = re.match(r"--([A-Za-z0-9._\-]+)=(\S+)$", line.strip())
+        # kaldi's ParseOptions strips inline '#' comments before parsing
+        # (parse-options.cc ReadConfigFile) -- do the same, or a line like
+        # '--sample-frequency=8000 # telephone' is dropped entirely
+        line = line.split("#", 1)[0].strip()
+        m = re.match(r"--([A-Za-z0-9._\-]+)=(\S+)$", line)
         if m:
             out[m.group(1)] = m.group(2)
     return out

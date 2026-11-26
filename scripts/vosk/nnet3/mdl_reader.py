@@ -283,17 +283,26 @@ def descriptor_names(tree):
 
 
 def inference_nodes(nodes: List[Node]) -> List[Node]:
-    """The nodes the output-node named OUTPUT_NODE depends on, in config
-    order, ending with that output node.
+    """The nodes the output-node named OUTPUT_NODE depends on, in
+    dependency order (every producer before its consumers), ending with
+    that output node.
 
     Chain models also carry training-only branches (e.g. the output-xent
     regularizer) that may share the trunk and come anywhere in the config;
     they are left out, so neither the evaluation nor the decimation plan
-    sees them, whatever their position."""
+    sees them, whatever their position.
+
+    Kaldi's config reader resolves forward references on its second pass
+    (Nnet::ReadConfig), so a needed node may be stored AFTER the output
+    node -- it is kept here too (the old nodes[:out_index+1] slice dropped
+    it).  Config order is preserved wherever it already satisfies the
+    dependency order; recurrent descriptors (Offset self-reference) form
+    name cycles, so ties inside a cycle fall back to config order rather
+    than assuming the graph is acyclic."""
     by_name = {n.name: n for n in nodes}
-    out_index = output_node_index(nodes)
-    needed = {nodes[out_index].name}
-    stack = [nodes[out_index].name]
+    out_name = nodes[output_node_index(nodes)].name
+    needed = {out_name}
+    stack = [out_name]
     while stack:
         n = by_name[stack.pop()]
         refs = (
@@ -304,7 +313,31 @@ def inference_nodes(nodes: List[Node]) -> List[Node]:
         for r in refs - needed:
             needed.add(r)
             stack.append(r)
-    return [n for n in nodes[: out_index + 1] if n.name in needed]
+
+    def producers(n: Node) -> set:
+        refs = (
+            descriptor_names(parse_descriptor(n.descriptor)) if n.descriptor else set()
+        )
+        if n.kind == "dim-range" and n.source:
+            refs.add(n.source)
+        return {r for r in refs if r in needed and r != n.name}
+
+    # stable topological sort over the needed nodes: repeatedly emit the
+    # earliest-in-config-order node whose producers are all emitted; a
+    # cycle has no such node, so break it at the earliest one
+    deps = {name: producers(by_name[name]) for name in needed}
+    emitted: List[str] = []
+    remaining = [n.name for n in nodes if n.name in needed]
+    while remaining:
+        for i, name in enumerate(remaining):
+            if deps[name] <= set(emitted):
+                emitted.append(remaining.pop(i))
+                break
+        else:  # cycle: emit the earliest remaining node anyway
+            emitted.append(remaining.pop(0))
+    emitted.remove(out_name)  # the output node is evaluated last
+    emitted.append(out_name)
+    return [by_name[name] for name in emitted]
 
 
 def _parse_config_line(line: str, nodes: List[Node]) -> None:
