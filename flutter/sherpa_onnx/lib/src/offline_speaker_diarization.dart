@@ -6,6 +6,7 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 import './offline_speaker_diarization_config.dart';
+import './offline_stream.dart';
 
 export './offline_speaker_diarization_config.dart';
 
@@ -158,6 +159,103 @@ class OfflineSpeakerDiarization {
       }
     } finally {
       calloc.free(p);
+    }
+  }
+
+  /// Create a stream for one recording. Release it with [OfflineStream.free].
+  OfflineStream createStream() {
+    if (SherpaOnnxBindings
+            .sherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
+    final p = SherpaOnnxBindings
+            .sherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream
+            ?.call(ptr) ??
+        nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
+    return OfflineStream(ptr: p);
+  }
+
+  /// Process [stream] from this diarizer. The caller owns the stream.
+  ///
+  /// Set Pyannote options with [OfflineStream.setOption].
+  /// - `min_active_ratio` is in [0, 1] and defaults to 0.2. Use 0 to cluster
+  ///   all embeddings.
+  /// - `min_duration_on` and `min_duration_off` are nonnegative seconds.
+  /// - `window_shift_ratio` is in (0, 1].
+  ///
+  /// The duration and shift options default to the diarizer's configuration.
+  List<OfflineSpeakerDiarizationSegment> processStream({
+    required OfflineStream stream,
+  }) {
+    if (SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationProcessStream ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return <OfflineSpeakerDiarizationSegment>[];
+    }
+
+    final r = SherpaOnnxBindings
+            .sherpaOnnxOfflineSpeakerDiarizationProcessStream
+            ?.call(ptr, stream.ptr) ??
+        nullptr;
+    try {
+      return _processImpl(r);
+    } finally {
+      if (r != nullptr) {
+        SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
+            ?.call(r);
+      }
+    }
+  }
+
+  /// Run [processStream] with a progress callback.
+  List<OfflineSpeakerDiarizationSegment> processStreamWithCallback({
+    required OfflineStream stream,
+    required int Function(int numProcessedChunks, int numTotalChunks) callback,
+  }) {
+    if (SherpaOnnxBindings
+            .sherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return <OfflineSpeakerDiarizationSegment>[];
+    }
+
+    final wrapper = NativeCallable<
+            SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>.isolateLocal(
+        (int numProcessedChunks, int numTotalChunks) {
+      return callback(numProcessedChunks, numTotalChunks);
+    }, exceptionalReturn: 0);
+    try {
+      final r = SherpaOnnxBindings
+              .sherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg
+              ?.call(ptr, stream.ptr, wrapper.nativeFunction) ??
+          nullptr;
+      try {
+        return _processImpl(r);
+      } finally {
+        if (r != nullptr) {
+          SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
+              ?.call(r);
+        }
+      }
+    } finally {
+      wrapper.close();
     }
   }
 

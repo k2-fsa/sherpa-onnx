@@ -1349,10 +1349,9 @@ SherpaOnnxCreateOfflineStreamWithHotwords(
     const SherpaOnnxOfflineRecognizer *recognizer, const char *hotwords);
 
 /**
- * @brief Destroy a non-streaming ASR stream.
+ * @brief Destroy an offline stream.
  *
- * @param stream A pointer returned by SherpaOnnxCreateOfflineStream() or
- *               SherpaOnnxCreateOfflineStreamWithHotwords().
+ * @param stream An offline stream returned by a stream creation function.
  *
  * @code
  * SherpaOnnxDestroyOfflineStream(stream);
@@ -1364,16 +1363,15 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineStream(
     const SherpaOnnxOfflineStream *stream);
 
 /**
- * @brief Provide the full utterance to an offline ASR stream.
+ * @brief Provide waveform samples to an offline stream.
  *
  * The input is mono floating-point PCM normalized to the range [-1, 1].
- * If @p sample_rate differs from the recognizer feature sample rate,
+ * If @p sample_rate differs from the expected sample rate,
  * sherpa-onnx resamples internally.
  *
- * @warning Call this function at most once for each offline stream. Offline
- * recognition expects the entire utterance in a single call.
+ * @warning For offline ASR, provide the entire utterance in a single call.
  *
- * @param stream A pointer returned by SherpaOnnxCreateOfflineStream().
+ * @param stream An offline stream returned by a stream creation function.
  * @param sample_rate Sample rate of @p samples.
  * @param samples Pointer to @p n samples in the range [-1, 1].
  * @param n Number of samples.
@@ -1387,30 +1385,32 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineStream(
  *                                 wave->samples, wave->num_samples);
  * SherpaOnnxDecodeOfflineStream(recognizer, stream);
  * @endcode
- * @see SherpaOnnxCreateOfflineStream, SherpaOnnxDecodeOfflineStream
+ * @see SherpaOnnxCreateOfflineStream, SherpaOnnxDecodeOfflineStream,
+ *      SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream
  */
 SHERPA_ONNX_API void SherpaOnnxAcceptWaveformOffline(
     const SherpaOnnxOfflineStream *stream, int32_t sample_rate,
     const float *samples, int32_t n);
 
 /**
- * @brief Set a per-stream runtime option for offline ASR.
+ * @brief Set a per-stream runtime option.
  *
- * @param stream A pointer returned by SherpaOnnxCreateOfflineStream().
+ * @param stream An offline stream returned by a stream creation function.
  * @param key Option name.
  * @param value Option value represented as text.
  *
  * @code
  * SherpaOnnxOfflineStreamSetOption(stream, "language", "en");
  * @endcode
+ * @see SherpaOnnxOfflineSpeakerDiarizationProcessStream
  */
 SHERPA_ONNX_API void SherpaOnnxOfflineStreamSetOption(
     const SherpaOnnxOfflineStream *stream, const char *key, const char *value);
 
 /**
- * @brief Get a per-stream runtime option for offline ASR.
+ * @brief Get a per-stream runtime option.
  *
- * @param stream A pointer returned by SherpaOnnxCreateOfflineStream().
+ * @param stream An offline stream returned by a stream creation function.
  * @param key Option name.
  * @return The option value. The returned pointer is owned by the stream, must
  *         not be freed by the caller, and may be invalidated if the option is
@@ -1426,7 +1426,7 @@ SHERPA_ONNX_API const char *SherpaOnnxOfflineStreamGetOption(
 /**
  * @brief Check whether a per-stream runtime option exists.
  *
- * @param stream A pointer returned by SherpaOnnxCreateOfflineStream().
+ * @param stream An offline stream returned by a stream creation function.
  * @param key Option name.
  * @return 1 if the option exists; otherwise 0.
  *
@@ -4526,6 +4526,80 @@ SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarizationResult *
 SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
     const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
     int32_t n,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback);
+
+/**
+ * @brief Create a stream for offline speaker diarization.
+ *
+ * Supply mono PCM with SherpaOnnxAcceptWaveformOffline(). The stream
+ * resamples it to the diarizer's sample rate if needed.
+ *
+ * @param sd A pointer returned by SherpaOnnxCreateOfflineSpeakerDiarization().
+ * @return A newly allocated stream, or NULL on failure. Free it with
+ *         SherpaOnnxDestroyOfflineStream().
+ * @see SherpaOnnxOfflineSpeakerDiarizationProcessStream
+ */
+SHERPA_ONNX_API const SherpaOnnxOfflineStream *
+SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream(
+    const SherpaOnnxOfflineSpeakerDiarization *sd);
+
+/**
+ * @brief Run offline speaker diarization on the stream's waveform.
+ *
+ * Use SherpaOnnxOfflineStreamSetOption() to set Pyannote options per stream:
+ * - `min_active_ratio`: Minimum fraction of a window with clean speech for
+ *   an embedding to be clustered directly. Range [0, 1], default 0.2. Set
+ *   to 0 to cluster all embeddings.
+ * - `min_duration_on` and `min_duration_off`: Nonnegative durations in
+ *   seconds. Default to the diarizer's configuration.
+ * - `window_shift_ratio`: Fraction of the model window in (0, 1].
+ *   Defaults to the diarizer's configuration.
+ *
+ * Invalid values fall back to the corresponding defaults.
+ *
+ * @param sd The diarizer that created @p stream.
+ * @param stream A pointer returned by
+ *        SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream(). The caller
+ *        retains ownership.
+ * @return A newly allocated result, or NULL on failure. Free it with
+ *         SherpaOnnxOfflineSpeakerDiarizationDestroyResult().
+ */
+SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStream(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream);
+
+/**
+ * @brief Run SherpaOnnxOfflineSpeakerDiarizationProcessStream() with a
+ * synchronous progress callback.
+ *
+ * @param sd The diarizer that created @p stream.
+ * @param stream A diarization stream owned by the caller.
+ * @param callback Progress callback, or NULL to omit progress reporting.
+ * @param arg User pointer forwarded to @p callback.
+ * @return A newly allocated result, or NULL on failure. Free it with
+ *         SherpaOnnxOfflineSpeakerDiarizationDestroyResult().
+ */
+SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallback(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallback callback, void *arg);
+
+/**
+ * @brief Run SherpaOnnxOfflineSpeakerDiarizationProcessStream() with a
+ * synchronous progress callback that has no user pointer.
+ *
+ * @param sd The diarizer that created @p stream.
+ * @param stream A diarization stream owned by the caller.
+ * @param callback Progress callback, or NULL to omit progress reporting.
+ * @return A newly allocated result, or NULL on failure. Free it with
+ *         SherpaOnnxOfflineSpeakerDiarizationDestroyResult().
+ */
+SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream,
     SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback);
 
 /**

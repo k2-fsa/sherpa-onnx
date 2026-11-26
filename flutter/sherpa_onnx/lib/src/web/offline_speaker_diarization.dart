@@ -5,6 +5,7 @@
 import 'dart:typed_data';
 
 import '../offline_speaker_diarization_config.dart';
+import 'offline_stream.dart';
 
 export '../offline_speaker_diarization_config.dart';
 
@@ -24,6 +25,20 @@ class OfflineSpeakerDiarization {
       <OfflineSpeakerDiarizationSegment>[];
   List<OfflineSpeakerDiarizationSegment> processWithCallback({
     required Float32List samples,
+    required int Function(int numProcessedChunks, int numTotalChunks) callback,
+  }) =>
+      <OfflineSpeakerDiarizationSegment>[];
+
+  OfflineStream createStream() => throw UnsupportedError(
+      'OfflineSpeakerDiarization is not yet supported on web');
+
+  List<OfflineSpeakerDiarizationSegment> processStream({
+    required OfflineStream stream,
+  }) =>
+      <OfflineSpeakerDiarizationSegment>[];
+
+  List<OfflineSpeakerDiarizationSegment> processStreamWithCallback({
+    required OfflineStream stream,
     required int Function(int numProcessedChunks, int numTotalChunks) callback,
   }) =>
       <OfflineSpeakerDiarizationSegment>[];

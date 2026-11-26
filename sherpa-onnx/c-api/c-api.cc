@@ -3573,6 +3573,49 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
 
   return ans;
 }
+
+const SherpaOnnxOfflineStream *
+SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream(
+    const SherpaOnnxOfflineSpeakerDiarization *sd) {
+  if (!sd) return nullptr;
+  return new SherpaOnnxOfflineStream(sd->impl->CreateStream());
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStream(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream) {
+  return SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallback(
+      sd, stream, nullptr, nullptr);
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallback(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallback callback, void *arg) {
+  if (!sd || !stream) return nullptr;
+  return new SherpaOnnxOfflineSpeakerDiarizationResult{
+      sd->impl->Process(stream->impl.get(), callback, arg)};
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback) {
+  if (!callback) {
+    return SherpaOnnxOfflineSpeakerDiarizationProcessStream(sd, stream);
+  }
+  if (!sd || !stream) return nullptr;
+
+  auto wrapper = [callback](int32_t num_processed_chunks,
+                            int32_t num_total_chunks, void *) {
+    return callback(num_processed_chunks, num_total_chunks);
+  };
+  return new SherpaOnnxOfflineSpeakerDiarizationResult{
+      sd->impl->Process(stream->impl.get(), wrapper)};
+}
 #else
 
 const SherpaOnnxOfflineSpeakerDiarization *
@@ -3654,6 +3697,43 @@ const SherpaOnnxOfflineSpeakerDiarizationResult *
 SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
     const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
     int32_t n,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxOfflineStream *
+SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream(
+    const SherpaOnnxOfflineSpeakerDiarization *sd) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStream(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallback(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallback callback, void *arg) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineStream *stream,
     SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback) {
   SHERPA_ONNX_LOGE(
       "Speaker diarization is not enabled. Please rebuild sherpa-onnx");

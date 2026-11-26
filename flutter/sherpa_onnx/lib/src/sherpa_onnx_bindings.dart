@@ -1213,6 +1213,37 @@ typedef SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg =
       >,
     );
 
+typedef SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStreamNative =
+    Pointer<SherpaOnnxOfflineStream> Function(
+      Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+    );
+
+typedef SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream =
+    SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStreamNative;
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessStreamNative =
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+      Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+      Pointer<SherpaOnnxOfflineStream>,
+    );
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessStream =
+    SherpaOnnxOfflineSpeakerDiarizationProcessStreamNative;
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArgNative =
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+      Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+      Pointer<SherpaOnnxOfflineStream>,
+      Pointer<
+        NativeFunction<
+          SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative
+        >
+      >,
+    );
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg =
+    SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArgNative;
+
 typedef SherpaOnnxOfflineSpeakerDiarizationDestroyResultNative =
     Void Function(Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
 
@@ -2100,6 +2131,12 @@ class SherpaOnnxBindings {
   sherpaOnnxOfflineSpeakerDiarizationDestroyResult;
   static SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg?
   sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg;
+  static SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream?
+  sherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream;
+  static SherpaOnnxOfflineSpeakerDiarizationProcessStream?
+  sherpaOnnxOfflineSpeakerDiarizationProcessStream;
+  static SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg?
+  sherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg;
 
   static SherpaOnnxCreateForcedAligner? sherpaOnnxCreateForcedAligner;
 
@@ -2486,6 +2523,31 @@ class SherpaOnnxBindings {
                 SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArgNative
               >
             >('SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg')
+            .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream ??= dynamicLibrary
+        .lookup<
+          NativeFunction<
+            SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStreamNative
+          >
+        >('SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationProcessStream ??= dynamicLibrary
+        .lookup<
+          NativeFunction<SherpaOnnxOfflineSpeakerDiarizationProcessStreamNative>
+        >('SherpaOnnxOfflineSpeakerDiarizationProcessStream')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg ??=
+        dynamicLibrary
+            .lookup<
+              NativeFunction<
+                SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArgNative
+              >
+            >(
+              'SherpaOnnxOfflineSpeakerDiarizationProcessStreamWithCallbackNoArg',
+            )
             .asFunction();
 
     sherpaOnnxOfflineSpeakerDiarizationDestroyResult ??= dynamicLibrary
