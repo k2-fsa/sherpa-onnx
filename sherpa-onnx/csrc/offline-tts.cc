@@ -265,11 +265,13 @@ std::string OfflineTtsConfig::ToString() const {
 }
 
 OfflineTts::OfflineTts(const OfflineTtsConfig &config)
-    : impl_(OfflineTtsImpl::Create(config)) {}
+    : impl_(OfflineTtsImpl::Create(config)),
+      silence_scale_(config.silence_scale) {}
 
 template <typename Manager>
 OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config)
-    : impl_(OfflineTtsImpl::Create(mgr, config)) {}
+    : impl_(OfflineTtsImpl::Create(mgr, config)),
+      silence_scale_(config.silence_scale) {}
 
 OfflineTts::~OfflineTts() = default;
 
@@ -279,6 +281,7 @@ GeneratedAudio OfflineTts::Generate(
   GenerationConfig config;
   config.sid = static_cast<int32_t>(sid);
   config.speed = speed;
+  config.silence_scale = silence_scale_;
 #if !defined(_WIN32)
   return impl_->Generate(text, config, std::move(callback));
 #else
