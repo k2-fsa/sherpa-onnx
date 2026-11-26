@@ -245,10 +245,11 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     // As we assume each sample contains two bytes, so it is divided by 2 here
     std::vector<int16_t> samples(header.subchunk2_size / 2);
 
-    is.read(reinterpret_cast<char *>(samples.data()),
-            samples.size() * sizeof(int16_t));
+    // A trailing partial sample is not read
+    int32_t num_bytes = static_cast<int32_t>(samples.size() * sizeof(int16_t));
+    is.read(reinterpret_cast<char *>(samples.data()), num_bytes);
     if (!is) {
-      SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
+      SHERPA_ONNX_LOGE("Failed to read %d bytes", num_bytes);
       *is_ok = false;
       return {};
     }
@@ -302,10 +303,11 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     // As we assume each sample contains 4 bytes, so it is divided by 4 here
     std::vector<int32_t> samples(header.subchunk2_size / 4);
 
-    is.read(reinterpret_cast<char *>(samples.data()),
-            samples.size() * sizeof(int32_t));
+    // A trailing partial sample is not read
+    int32_t num_bytes = static_cast<int32_t>(samples.size() * sizeof(int32_t));
+    is.read(reinterpret_cast<char *>(samples.data()), num_bytes);
     if (!is) {
-      SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
+      SHERPA_ONNX_LOGE("Failed to read %d bytes", num_bytes);
       *is_ok = false;
       return {};
     }
@@ -329,10 +331,11 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     // As we assume each sample contains 4 bytes, so it is divided by 4 here
     std::vector<float> samples(header.subchunk2_size / 4);
 
-    is.read(reinterpret_cast<char *>(samples.data()),
-            samples.size() * sizeof(float));
+    // A trailing partial sample is not read
+    int32_t num_bytes = static_cast<int32_t>(samples.size() * sizeof(float));
+    is.read(reinterpret_cast<char *>(samples.data()), num_bytes);
     if (!is) {
-      SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
+      SHERPA_ONNX_LOGE("Failed to read %d bytes", num_bytes);
       *is_ok = false;
       return {};
     }
