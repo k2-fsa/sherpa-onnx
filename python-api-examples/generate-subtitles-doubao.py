@@ -79,7 +79,6 @@ import uuid
 import wave
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import timedelta
 from pathlib import Path
 
 import numpy as np
@@ -201,6 +200,15 @@ def assert_file_exists(filename: str):
     )
 
 
+def format_timestamp(seconds: float) -> str:
+    """Format seconds as an SRT timestamp, i.e., HH:MM:SS,mmm"""
+    ms = round(seconds * 1000)
+    hours, ms = divmod(ms, 3600 * 1000)
+    minutes, ms = divmod(ms, 60 * 1000)
+    seconds, ms = divmod(ms, 1000)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{ms:03d}"
+
+
 @dataclass
 class Segment:
     start: float
@@ -212,19 +220,18 @@ class Segment:
         return self.start + self.duration
 
     def __str__(self):
-        s = f"{timedelta(seconds=self.start)}"[:-3]
+        s = format_timestamp(self.start)
         s += " --> "
-        s += f"{timedelta(seconds=self.end)}"[:-3]
-        s = s.replace(".", ",")
+        s += format_timestamp(self.end)
         s += "  "
         s += self.text
         return s
 
     def to_srt_time(self) -> str:
-        s = f"{timedelta(seconds=self.start)}"[:-3]
+        s = format_timestamp(self.start)
         s += " --> "
-        s += f"{timedelta(seconds=self.end)}"[:-3]
-        return s.replace(".", ",")
+        s += format_timestamp(self.end)
+        return s
 
 
 def samples_to_wav(samples, sample_rate: int) -> bytes:
