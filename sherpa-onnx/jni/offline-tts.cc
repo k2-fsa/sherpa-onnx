@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
