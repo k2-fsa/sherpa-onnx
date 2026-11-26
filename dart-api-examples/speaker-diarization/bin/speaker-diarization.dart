@@ -83,6 +83,14 @@ void main(List<String> arguments) async {
   // Use the following statement if you don't want to use a callback
   // final segments = sd.process(samples: waveData.samples);
 
+  // For per-stream options, replace the callback call below with this block.
+  // final stream = sd.createStream();
+  // stream.setOption(key: 'min_active_ratio', value: '0');
+  // stream.acceptWaveform(
+  //     samples: waveData.samples, sampleRate: waveData.sampleRate);
+  // final segments = sd.processStream(stream: stream);
+  // stream.free();
+
   final segments = sd.processWithCallback(
       samples: waveData.samples,
       callback: (int numProcessedChunk, int numTotalChunks) {

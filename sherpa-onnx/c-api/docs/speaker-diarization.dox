@@ -44,6 +44,25 @@ SherpaOnnxFreeWave(wave);
 SherpaOnnxDestroyOfflineSpeakerDiarization(sd);
 @endcode
 
+With a live diarizer and waveform, create a stream and use
+@ref SherpaOnnxOfflineStreamSetOption(). The example below clusters all
+embeddings by setting `min_active_ratio` to 0. See
+@ref SherpaOnnxOfflineSpeakerDiarizationProcessStream() for the other options.
+
+@code
+const SherpaOnnxOfflineStream *stream =
+    SherpaOnnxOfflineSpeakerDiarizationCreateOfflineStream(sd);
+SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
+                               wave->num_samples);
+SherpaOnnxOfflineStreamSetOption(stream, "min_active_ratio", "0");
+const SherpaOnnxOfflineSpeakerDiarizationResult *result =
+    SherpaOnnxOfflineSpeakerDiarizationProcessStream(sd, stream);
+
+// Read segments as above, then release the result and stream.
+SherpaOnnxOfflineSpeakerDiarizationDestroyResult(result);
+SherpaOnnxDestroyOfflineStream(stream);
+@endcode
+
 Segmentation model: `sherpa-onnx-pyannote-segmentation-3-0/model.onnx`
 
 Embedding model: `3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx`
