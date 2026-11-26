@@ -358,6 +358,78 @@ class TestOnlineRecognizer(unittest.TestCase):
         # About 2.2 s of trailing silence: rule 2 (1.2 s) must have fired
         self.assertTrue(recognizer.is_endpoint(s))
 
+    def test_nemo_keep_encoder_states(self):
+        ctc = f"{d}/sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms"
+        transducer = f"{d}/sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms"
+
+        tests = []
+        if Path(f"{ctc}/model.onnx").is_file():
+            recognizer = sherpa_onnx.OnlineRecognizer.from_nemo_ctc(
+                model=f"{ctc}/model.onnx",
+                tokens=f"{ctc}/tokens.txt",
+                num_threads=1,
+                enable_endpoint_detection=True,
+            )
+            # CTC has no decoder state: two utterances, 2 s of silence (rule 2)
+            samples, sample_rate = read_wave(f"{ctc}/test_wavs/0.wav")
+            silence = np.zeros(2 * sample_rate, dtype=np.float32)
+            samples = np.concatenate([samples, silence, samples, silence])
+            tests.append((recognizer, samples, sample_rate))
+        if Path(f"{transducer}/encoder.onnx").is_file():
+            recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
+                encoder=f"{transducer}/encoder.onnx",
+                decoder=f"{transducer}/decoder.onnx",
+                joiner=f"{transducer}/joiner.onnx",
+                tokens=f"{transducer}/tokens.txt",
+                num_threads=1,
+                enable_endpoint_detection=True,
+            )
+            # The decoder is still reset, so the endpoint has to come before
+            # the first token: 3 s of leading silence (rule 1)
+            samples, sample_rate = read_wave(f"{transducer}/test_wavs/0.wav")
+            silence = np.zeros(3 * sample_rate, dtype=np.float32)
+            samples = np.concatenate([silence, samples, silence[:sample_rate]])
+            tests.append((recognizer, samples, sample_rate))
+        if not tests:
+            print("skipping test_nemo_keep_encoder_states()")
+            return
+
+        def decode(recognizer, samples, sample_rate, reset, keep=None):
+            s = recognizer.create_stream()
+            if keep is not None:
+                s.set_option("keep_encoder_states", keep)
+            s.accept_waveform(sample_rate, samples)
+            results = []
+            while recognizer.is_ready(s):
+                recognizer.decode_stream(s)
+                if reset and recognizer.is_endpoint(s):
+                    results.append(recognizer.get_result_all(s))
+                    recognizer.reset(s)
+            results.append(recognizer.get_result_all(s))
+            # (token, time in seconds from the start of the stream)
+            tokens = [
+                (token, round(r.start_time + t, 2))
+                for r in results
+                for token, t in zip(r.tokens, r.timestamps)
+            ]
+            return tokens, len(results)
+
+        for recognizer, samples, sample_rate in tests:
+            expected, _ = decode(recognizer, samples, sample_rate, reset=False)
+            self.assertTrue(expected)
+
+            # With the encoder states kept, the reset only splits the result
+            kept, num_segments = decode(
+                recognizer, samples, sample_rate, reset=True, keep="1"
+            )
+            self.assertGreater(num_segments, 1)
+            self.assertEqual(kept, expected)
+
+            # By default, the encoder states are reset
+            default, _ = decode(recognizer, samples, sample_rate, reset=True)
+            self.assertTrue(default)
+            self.assertNotEqual(default, expected)
+
     def test_streaming_paraformer(self):
         m = "sherpa-onnx-streaming-paraformer-bilingual-zh-en"
         encoder = f"{d}/{m}/encoder.int8.onnx"

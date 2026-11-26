@@ -263,7 +263,11 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     // states here in the middle of the audio, the first words of the next
     // segment are decoded badly, e.g., spaces between words are lost. So we
     // keep the states for T-one and only clear the decoding result.
-    if (config_.model_config.t_one_ctc.model.empty()) {
+    //
+    // Per-stream option "keep_encoder_states": use 1 or 0. Non-zero keeps the
+    // states of the other CTC models as well. 0 (default) resets them.
+    if (config_.model_config.t_one_ctc.model.empty() &&
+        !s->GetOptionInt("keep_encoder_states", 0)) {
       s->SetStates(model_->GetInitStates());
     }
 

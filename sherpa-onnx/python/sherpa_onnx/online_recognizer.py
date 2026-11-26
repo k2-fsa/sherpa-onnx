@@ -1208,6 +1208,11 @@ class OnlineRecognizer(object):
         Call this after :meth:`is_endpoint` returns True to prepare the
         stream for the next utterance.
 
+        For CTC models (except T-one) and NeMo transducer models, this also
+        resets the encoder states. To keep them for a stream, call
+        ``s.set_option("keep_encoder_states", "1")`` (not supported with
+        RKNN or QNN).
+
         Args:
           s:
             The ``OnlineStream`` to reset.
