@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+# Copyright    2026  Xiaomi Corp.        (authors: Fangjun Kuang)
+#
+# Auto generated! Do NOT edit!
+#
+# For every assigned model: download the original vosk model, export it
+# to ONNX (float32 + int8) with scripts/vosk/, gate the export against
+# kaldi and the vosk runtime, then upload the two zips + the info
+# page to https://huggingface.co/csukuangfj/vosk-models-onnx and the
+# zips to the asr-models GitHub release of k2-fsa/sherpa-onnx.
+#
+# Per-model state machine: run the pipeline for EVERY model in the list --
+# nothing is skipped, even when its info page is already on huggingface.
+# (The check "asr/<lang>/<name>.md on HF -> skip" was removed with the
+# new ONNX contract -- `ivector` is now one i-vector per input frame,
+# [B, T, S] -- which invalidates every already-uploaded model: all of
+# them must be re-exported and re-uploaded.  Restore the check once the
+# uploads are current again if incremental runs are wanted.)
+#
+# Every gate must pass: on any failure this script dies and NO further
+# model is exported ("fail loudly, and stop exporting other models").
+#
+# Outputs (consumed by `generate.py --info`):
+#   listing/<name>.txt           -- ls -lhR of the exported model dir
+#   listing/<name>.tree.txt      -- tree -sh of the exported model dir
+#   listing/<name>.zips.txt      -- ls -lh of the two zips
+#   listing/<name>.io.txt        -- the ONNX input/output signature
+#   release/asr/<lang>/<name>-onnx.zip      -- float32 (am/final.onnx)
+#   release/asr/<lang>/<name>-onnx-int8.zip -- int8 (am/final.int8.onnx)
+#   release/asr/<lang>/<name>.md            -- info page
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+die() {
+  log "$*"
+  exit 1
+}
+
+retry() {
+  # retry <cmd> ...: run <cmd> up to 5 times with linear backoff
+  local n=0
+  until "$@"; do
+    n=$((n + 1))
+    [ "$n" -ge 5 ] && return 1
+    log "attempt $n failed: $* -- retrying in $((n * 20))s"
+    sleep $((n * 20))
+  done
+}
+
+: "${HF_TOKEN:?HF_TOKEN must be set to upload to huggingface}"
+: "${GH_TOKEN:?GH_TOKEN must be set to upload to github releases}"
+
+hf_repo=csukuangfj/vosk-models-onnx
+hf_base=https://huggingface.co/$hf_repo/resolve/main
+gh_repo=k2-fsa/sherpa-onnx
+gh_tag=asr-models
+wav_base=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models
+
+mkdir -p release models listing test-wavs work
+
+{% for model in model_list %}
+name={{ model.name }}
+url={{ model.url }}
+lang={{ model.lang }}
+wav={{ model.wav }}
+zip_float=release/asr/$lang/$name-onnx.zip
+zip_int8=release/asr/$lang/$name-onnx-int8.zip
+md=release/asr/$lang/$name.md
+
+if [ ! -f "test-wavs/$wav" ]; then
+  log "downloading $wav"
+  curl -SL --fail --retry 5 --retry-delay 5 --retry-all-errors \
+    -o "test-wavs/$wav.part" "$wav_base/$wav"
+  mv "test-wavs/$wav.part" "test-wavs/$wav"
+fi
+
+if [ ! -f "models/$name.zip" ]; then
+  log "downloading $name (huggingface; alphacephei as fallback)"
+  # huggingface first: alphacephei.com is flaky from CI runners
+  curl -SL --fail --retry 5 --retry-delay 5 --retry-all-errors \
+    -o "models/$name.zip.part" \
+    "https://huggingface.co/csukuangfj/vosk-models/resolve/main/asr/$lang/$name.zip" \
+    || curl -SL --fail --retry 5 --retry-delay 5 --retry-all-errors \
+      -o "models/$name.zip.part" "$url"
+  mv "models/$name.zip.part" "models/$name.zip"
+fi
+if [ ! -d "models/$name" ]; then
+  unzip -q -o "models/$name.zip" -d models/  # -o: never prompt (CI)
+fi
+[ -d "models/$name" ] || die "models/$name.zip did not unpack to models/$name"
+rm -f "models/$name.zip"
+
+# some models ship the old flat layout (no am/ conf/ graph/ and no
+# model.conf); move the files into the standard layout so every tool
+# below finds them
+python3 ../normalize_model_dir.py --model-dir "models/$name"
+
+# vosk -> torch, gated against kaldi (torch AM == nnet3-compute)
+python3 ../export_torch.py --in-dir "models/$name" \
+  --out-dir "work/$name-torch"
+python3 ../compare_torch.py --model-dir "models/$name" \
+  --wav "test-wavs/$wav" --am-pt "work/$name-torch/am/am.pt"
+
+# torch -> onnx (writes am/final.onnx + am/final.int8.onnx)
+python3 ../export_onnx.py --in-dir "work/$name-torch" \
+  --out-dir "work/$name-onnx"
+rm -rf "work/$name-torch"
+
+# debug files for upload as a CI artifact (mdl/conf/mat/text -- the
+# decoding graphs (*.fst) are too large to upload).  Packed before the
+# gates so a failing gate still leaves something to inspect.
+mkdir -p debug
+tar -czf "debug/$name.tar.gz" \
+  --exclude='*.fst' --exclude='*.zip' --exclude='*.onnx' --exclude='*.pt' \
+  -C models "$name" \
+  -C "../work/$name-onnx" am log.md 2>/dev/null \
+  || tar -czf "debug/$name.tar.gz" --exclude='*.fst' --exclude='*.zip' \
+       --exclude='*.onnx' --exclude='*.pt' -C models "$name"
+
+# onnx vs kaldi (stage 1) + wav -> text (stage 2, informational)
+python3 ../compare_onnx.py --model-dir "work/$name-onnx" \
+  --ref-model-dir "models/$name" --wav "test-wavs/$wav"
+
+# the gate: decoded text == the vosk runtime's 1-best on the original
+# model (dither off; the transcript is printed for information only).
+# float32 decides the job; an int8 mismatch only skips the int8
+# artifact (exit code 2)
+expect='{{ model.expect | replace("'", "'\\''") }}'
+rc=0
+python3 ./test.py --model-dir "work/$name-onnx" \
+  --wav "test-wavs/$wav" --expect "$expect" --ref-model-dir "models/$name" \
+  || rc=$?
+if [ "$rc" -eq 1 ]; then
+  die "$name: text gate failed"
+fi
+rm -rf "models/$name"
+if [ "$rc" -eq 2 ]; then
+  log "$name: int8 check failed -- shipping the float32 model only"
+  rm -f "work/$name-onnx/am/final.int8.onnx"
+fi
+
+# test_wavs/ + README.md inside the exported model dir
+python3 ./generate.py --prepare-dir "$name" --dir "work/$name-onnx" \
+  --wav "test-wavs/$wav"
+
+# listings for the info page (of the shipped content)
+ls -lhR "work/$name-onnx" > "listing/$name.txt"
+tree -sh "work/$name-onnx" > "listing/$name.tree.txt"
+python3 ../describe_onnx.py --model-dir "work/$name-onnx" \
+  > "listing/$name.io.txt"
+
+# zips: <name>-onnx/ (float32) and <name>-onnx-int8/ (int8); the two
+# dirs are identical except for the am onnx file.  Without an int8
+# check pass there is no int8 zip.
+mkdir -p "release/asr/$lang"
+if [ -f "work/$name-onnx/am/final.int8.onnx" ]; then
+  mv "work/$name-onnx/am/final.int8.onnx" "work/final.int8.onnx"
+  (cd work && zip -qr "../release/asr/$lang/$name-onnx.zip" "$name-onnx")
+  rm "work/$name-onnx/am/final.onnx"
+  mv "work/final.int8.onnx" "work/$name-onnx/am/final.int8.onnx"
+  mv "work/$name-onnx" "work/$name-onnx-int8"
+  (cd work && zip -qr "../release/asr/$lang/$name-onnx-int8.zip" \
+    "$name-onnx-int8")
+  rm -rf "work/$name-onnx-int8"
+else
+  (cd work && zip -qr "../release/asr/$lang/$name-onnx.zip" "$name-onnx")
+  rm -rf "work/$name-onnx"
+fi
+ls -lh release/asr/$lang/$name-onnx*.zip > "listing/$name.zips.txt"
+
+python3 ./generate.py --info --only "$name"
+[ -f "$md" ] || die "$md was not rendered"
+
+# upload: HF (zips + info page in ONE commit), then the GitHub release
+upload_pairs=("$zip_float:asr/$lang/$name-onnx.zip" "$md:asr/$lang/$name.md")
+release_pairs=("$zip_float:$name-onnx.zip")
+if [ -f "$zip_int8" ]; then
+  upload_pairs+=("$zip_int8:asr/$lang/$name-onnx-int8.zip")
+  release_pairs+=("$zip_int8:$name-onnx-int8.zip")
+fi
+retry python3 ./generate.py --repo "$hf_repo" --message "add $name" \
+  --upload "${upload_pairs[@]}"
+retry python3 ./generate.py --gh-repo "$gh_repo" --tag "$gh_tag" \
+  --upload-release "${release_pairs[@]}"
+rm -f "$zip_float" "$zip_int8"
+{% endfor %}
+
+log "done"
+ls -lh listing/ 2>/dev/null || true
+du -sh release/asr/* 2>/dev/null || true

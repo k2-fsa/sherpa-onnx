@@ -37,7 +37,15 @@
 # wrong; drift means chunk logic is off; isolated bad rows point at one
 # component.
 #
-# Gates: max abs diff <= --tolerance (default 1e-3; float noise is ~1e-5)
+# kaldi runs the whole utterance as ONE chunk (--frames-per-chunk=1000000):
+# nnet3-compute's default 50-frame chunks restart a recurrent net's LSTM
+# state every chunk (gigaspeech: 9.4 max diff vs one chunk).
+#
+# Gates: max abs diff <= --tolerance (default 1e-3; float noise is ~1e-5).
+# Recurrent (LSTM) nets amplify float noise chaotically over time (kaldi
+# vs kaldi with 7-digit-rounded params differs by 0.42 on gigaspeech), so
+# for them a failing max falls back to: median per-row max <= --tolerance
+# and argmax agreement >= 0.99.
 # and per-row cosine >= 0.9999.
 #
 # Usage:
@@ -184,6 +192,11 @@ def main():
         subprocess.run(
             [
                 f"{kaldi_src}/nnet3bin/nnet3-compute",
+                # ONE chunk for the whole utterance: the default (50 frames)
+                # restarts every recurrence (LSTM state) at each chunk, so
+                # its rows are not those of a continuous forward (nor of
+                # vosk's looped decodable).  Non-recurrent nets: identical.
+                "--frames-per-chunk=1000000",
                 f"--ivectors=ark:{iv_ark}",
                 str(model_dir / "am" / "final.mdl"),
                 f"ark:{feats_ark}",
@@ -206,7 +219,10 @@ def main():
             feats, ((spec.left_context, spec.right_context), (0, 0)), mode="edge"
         )
         with torch.no_grad():
-            ours = net(torch.from_numpy(padded[None]), torch.from_numpy(iv[None]))[
+            # the same i-vector on every frame (nnet3-compute --ivectors
+            # takes one per utterance)
+            iv_rows = np.tile(iv, (padded.shape[0], 1))
+            ours = net(torch.from_numpy(padded[None]), torch.from_numpy(iv_rows[None]))[
                 0
             ].numpy()
         ours = ours[spec.left_context : spec.left_context + T]
@@ -223,8 +239,35 @@ def main():
             + 1e-12
         )
         worst_cos = float(cos.min())
+        # divergence profile: localizes the bug (edge vs state vs core)
+        rowmax = diff.max(axis=1)
+        bad = np.where(rowmax > 1e-3)[0]
+        if len(bad):
+            argmax_ok = float((ref.argmax(axis=1) == ours.argmax(axis=1)).mean())
+            print(
+                f"diff profile: {len(bad)}/{len(ref)} rows off >1e-3; "
+                f"first bad row {int(bad[0])}; argmax agreement {argmax_ok:.3f}"
+            )
+            step = max(1, len(ref) // 20)
+            print(
+                "per-row max|diff|: "
+                + " ".join(f"{k}:{rowmax[k]:.3g}" for k in range(0, len(ref), step))
+            )
 
         ok = worst_abs <= args.tolerance and worst_cos >= 0.9999
+        if not ok and net._recurrent:
+            # A recurrence can amplify float noise chaotically: kaldi vs
+            # kaldi itself with the text-dump-rounded params differs by
+            # ~0.4 at late rows of gigaspeech's lstm2.  Max abs is then no
+            # semantics test; require float-noise rows for the bulk of the
+            # utterance and the same argmax everywhere instead.
+            median_row = float(np.median(rowmax))
+            argmax_ok = float((ref.argmax(axis=1) == ours.argmax(axis=1)).mean())
+            ok = median_row <= args.tolerance and argmax_ok >= 0.99
+            print(
+                f"recurrent net: median row max_abs={median_row:.2e} "
+                f"argmax agreement={argmax_ok:.3f} -> " + ("OK" if ok else "FAIL")
+            )
         print(
             f"rows compared: {ref.shape[0]}   worst max_abs={worst_abs:.6f} "
             f"(row {worst_k})   worst cosine={worst_cos:.6f}"

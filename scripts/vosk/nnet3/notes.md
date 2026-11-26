@@ -147,7 +147,12 @@ All component types used by the supported models are handled, including
 | `Sum(a, b)` | elementwise sum | TDNNF residual connections |
 | `Scale(c, x)` | scalar multiply | `Scale(0.75, x)` in residuals |
 | `Offset(x, t)` | time shift: `out[t] = x[t+t']` for shift t', clamped at edges | the delta (velocity/acceleration) layer |
-| `ReplaceIndex(x, t, i)` | use time-index `i` of `x` at every frame | i-vector: `ReplaceIndex(ivector, t, 0)` — constant over time |
+| `ReplaceIndex(x, t, i)` | use time-index `i` of `x` at every frame | i-vector: `ReplaceIndex(ivector, t, 0)`.  kaldi's online decoders rewrite it to `Round(ivector, chunk)` (one i-vector per chunk); the exported model's ivector input is per frame and this reads row `t` (`torch_model.is_ivector_index`) |
+| `IfDefined(x)` | `x` where it is computable at that row, else **zeros** (see §7b) | LSTM feedback: `IfDefined(Offset(lstm1.c_trunc, -3))` |
+| `Failover(a, b)` | `a` where computable, else `b` | (grammar completeness) |
+| `Const(v, dim)` | constant row | (grammar completeness) |
+| `Round(x, n)` | read row `(t // n) * n` of `x` | (grammar completeness) |
+| `Switch(a, b, ...)` | read option `t % n` | (grammar completeness) |
 | `dim-range-node` | named node slicing dims `[dim_offset, dim_offset+dim)` of a source node | pulling slices of a wider node |
 
 `parse_descriptor` validates and converts these to a nested tuple tree that
@@ -242,6 +247,101 @@ evaluation: feed the window `[t0-L, t1+R)` and keep only rows `[t0, t1)`;
 their receptive fields sit strictly inside the window, so the result is
 identical to the one-shot computation (see README, "Notes on semantics").
 
+## 7b. Recurrent nets (LSTM) — verified on gigaspeech
+
+`vosk-model-en-us-0.42-gigaspeech` is the only recurrent model among the
+32: two clockwork LSTM blocks (`lstm1`, `lstm2`), each wired as a cycle in
+the node graph,
+
+```
+lstm1.W_all      = affine(Append(x, IfDefined(Offset(lstm1.r_trunc, -3))))
+lstm1.lstm_nonlin = LstmNonlinearity(Append(lstm1.W_all,
+                                            IfDefined(Offset(lstm1.c_trunc, -3))))
+lstm1.cr_trunc   = BackpropTruncation(Append(lstm1.c, lstm1.r))   # c/r fed back
+```
+
+i.e. three interleaved recurrences (rows `t ≡ 0, 1, 2 mod 3`), each
+stepping 30 ms.  `Nnet3Torch` evaluates such cycles row by row
+(`_eval_recurrent`); the flat module emits one TorchScript loop module per
+cycle (`_Rec<i>`), which ONNX export keeps as a `Loop`.
+
+**Where the loop starts (the zero state).**  kaldi never invents rows: an
+input row exists only if it was fed, intermediate nodes do not clamp, and
+a row is *computable* only if everything it reads is.  `IfDefined` adds no
+constraint (it reads zeros where its argument is not computable), which
+is what breaks the cycle.  So a loop's zero-state rows are exactly the
+rows below the first computable row of the loop's non-recurrent input --
+**each cycle has its own origin**, deeper cycles start later.  With the
+input padded by `left_context` (84) rows, gigaspeech's lstm1 starts at
+fed row 81 and lstm2 at fed row 84.  `torch_model.first_computable_rows`
+computes this statically (descriptor offsets + each component's own time
+offsets); neither "fed row 0" nor "first real frame" is right in general.
+
+**Reference pitfall: `nnet3-compute` chunks.**  Its default
+`--frames-per-chunk=50` computes each chunk independently and so restarts
+every recurrence each 50 frames: kaldi vs kaldi (50 vs one chunk) differs
+by 9.43, starting exactly at row 50.  The gates therefore run
+`nnet3-compute --frames-per-chunk=1000000` (identical results for
+non-recurrent nets).  A continuous forward pass -- and vosk's looped
+online decodable, which carries the state -- correspond to the
+one-chunk output.
+
+**Float-noise amplification.**  Layer by layer (a kaldi net per node with
+that node as output, unchunked, vs our node with the sub-net's own
+padding), every node from `idct` through lstm1 and `tdnnf18` matches to
+~1e-6 relative.  Only lstm2's `t ≡ 0 (mod 3)` chain drifts after row
+~250 -- and it does so in kaldi too: kaldi on the original `final.mdl` vs
+kaldi on the text dump re-encoded to binary (7 significant digits)
+differs by **0.42 at the same row**.  Any perturbation (rounding, BLAS
+summation order, ORT vs eager kernels) is amplified there, so a 1e-3 max
+gate is unreachable by *any* re-implementation, and parsing the binary
+`final.mdl` would not help.  The gates for recurrent nets (`compare_torch`,
+`compare_onnx`: `model_meta.json` `recurrent=1`) fall back to median
+per-row max <= 1e-3 plus argmax agreement >= 0.99; measured on en.wav:
+median 1.4e-5, argmax 1.000, worst 0.49 (row 360).
+
+**Streaming: the state is an explicit input/output.**  The recognizers
+run the AM on windows `[t - gl, t + n + R)` (`gl` = left context rounded
+up to the row grid, `n` = new frames).  Without a state each window
+would restart the LSTMs, which is badly wrong: on en.wav at chunk 30 the
+rows fed to the decoder then differ from the one-shot run by up to 9.7
+(argmax agreement 0.72 -- that en.wav still decoded correctly was luck).
+
+What makes an exact state possible: a loop's origin in a window is its
+first computable row, which depends only on the window START (lstm1: 81,
+lstm2: 84 for `gl` = 84), and the loop at row `t` reads only the rows
+`t - lag` (lag 3).  So the state is the `state_rows` = 3 rows just
+before the origin of every fed-back node (`recurrent_state_layout`:
+`lstm1.c_trunc, lstm1.r_trunc, lstm2.c_trunc, lstm2.r_trunc` ->
+`[B, 3, 2560]`), injected in place of the blank rows; zeros = the start
+of the utterance.  The next window starts `shift = n` frames later, so
+its state is rows `[origin + n - 3, origin + n)` of this window -- and
+those are fully computable here: they need input up to
+`origin + n - 1 + rx` (rx = the loop input's right context, 57 for
+lstm2), and the window reaches `gl + n + R - 1`.
+
+* torch: `Nnet3Torch.forward_streaming(features, ivector, state, shift)
+  -> (log_probs, state_out)`, `initial_state(batch)`; the generated
+  `FlatAm` has the same methods (its `_Rec<i>` loops read the state).
+* ONNX (recurrent models only): inputs `features, ivector, state`,
+  outputs `log_probs, state_out`; `shift = T - gl - R` is derived from
+  the window length inside the graph -- the recognizer's window layout
+  is the contract.  Metadata: `recurrent=1`, `state_rows`, `state_dim`.
+  Non-recurrent models keep the `features, ivector -> log_probs`
+  interface.
+* recognizer: `stream.am_state` carries the state; every AM backend has
+  `run(feats, ivector, state, shift) -> (rows, state_out)`.
+
+Verified (gigaspeech, en.wav): chaining windows of 15/30/60 frames
+reproduces the one-shot rows **bit-exactly** (max diff 0) for
+`Nnet3Torch`, the flat module, ONNX float32 and ONNX int8 -- both in a
+direct window harness and through `OnlineRecognizer` vs
+`OfflineRecognizer` (i-vector pinned; audio fed in 100 ms pieces).
+`export_onnx.py` gates it: a non-blank state handover onnx-vs-torch
+(4e-5) and chained windows vs one-shot (0.0).  Note that real streaming
+also updates the i-vector per window (like vosk), so its rows
+legitimately differ from the offline run's whole-utterance i-vector.
+
 ## 8. Subsampling lives outside the net
 
 `nnet3-compute` (and `Nnet3Torch`) emit **one row per input frame** (full
@@ -281,6 +381,10 @@ before ONNX export):
 | small-en-us | en.wav | 383 | 1.2e-5 | 1.000000 |
 
 All row-for-row comparisons of the full-rate output pass (float noise only).
+
+Recurrent: `vosk-model-en-us-0.42-gigaspeech` (en.wav, 383 rows): median
+row max_abs 1.4e-5, argmax agreement 1.000, worst 0.49 (float noise
+amplified by lstm2, see §7b); ONNX stage 1 median 1.5e-5, argmax 1.000.
 
 All five supported models (small/large, cn/en/de) parse and pass the
 torch-vs-kaldi and decode checks with this reader; the scripts that consume

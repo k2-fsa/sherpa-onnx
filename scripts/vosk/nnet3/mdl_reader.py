@@ -55,6 +55,7 @@ from .components import (
     Component,
     Node,
     Nnet3Spec,
+    component_out_dim,
     output_node_index,
 )
 
@@ -255,6 +256,34 @@ def parse_descriptor(desc: str) -> tuple:
         if len(args) != 2:
             raise ValueError(f"Offset expects 2 args: {desc!r}")
         return ("offset", parse_descriptor(args[0]), int(args[1]))
+    m = re.match(r"^IfDefined\((.*)\)$", desc, re.S)
+    if m:
+        # IfDefined(x): x where x is computable at the row, else ZERO
+        # (kaldi's edge handling for recurrent offsets, e.g.
+        # IfDefined(Offset(lstm2.c, -3)))
+        return ("if_defined", parse_descriptor(m.group(1)))
+    m = re.match(r"^Failover\((.*)\)$", desc, re.S)
+    if m:
+        args = _split_args(m.group(1))
+        if len(args) != 2:
+            raise ValueError(f"Failover expects 2 args: {desc!r}")
+        return ("failover", parse_descriptor(args[0]), parse_descriptor(args[1]))
+    m = re.match(r"^Const\((.*)\)$", desc, re.S)
+    if m:
+        args = _split_args(m.group(1))
+        if len(args) != 2:
+            raise ValueError(f"Const expects 2 args: {desc!r}")
+        return ("const", float(args[0]), int(args[1]))
+    m = re.match(r"^Round\((.*)\)$", desc, re.S)
+    if m:
+        args = _split_args(m.group(1))
+        if len(args) != 2:
+            raise ValueError(f"Round expects 2 args: {desc!r}")
+        return ("round", parse_descriptor(args[0]), int(args[1]))
+    m = re.match(r"^Switch\((.*)\)$", desc, re.S)
+    if m:
+        # clockwork RNN: choose arg[t % n]
+        return ("switch", [parse_descriptor(a) for a in _split_args(m.group(1))])
     raise ValueError(f"unsupported descriptor: {desc!r}")
 
 
@@ -275,11 +304,18 @@ def descriptor_names(tree):
         return out
     if kind == "scale":
         return descriptor_names(tree[2])
-    if kind == "offset":
+    if kind in ("offset", "replace_index", "if_defined", "round"):
         return descriptor_names(tree[1])
-    if kind == "replace_index":
-        return descriptor_names(tree[1])
-    return set()
+    if kind == "failover":
+        return descriptor_names(tree[1]) | descriptor_names(tree[2])
+    if kind == "switch":
+        out = set()
+        for t in tree[1]:
+            out |= descriptor_names(t)
+        return out
+    if kind == "const":
+        return set()
+    raise ValueError(f"bad descriptor tree {tree!r}")
 
 
 def inference_nodes(nodes: List[Node]) -> List[Node]:
@@ -507,6 +543,7 @@ def parse_text_dump(stream) -> Nnet3Spec:
 
     # Component section: repeated <ComponentName> name <Type> ... </Type>.
     components: List[Component] = []
+    unknown: List[str] = []
     while True:
         t = tok.next_token()
         if t == "</Nnet3>":
@@ -519,10 +556,21 @@ def parse_text_dump(stream) -> Nnet3Spec:
             raise ValueError(f"bad component type token: {typ!r}")
         typ = typ[1:-1]
         if typ not in COMPONENT_SCHEMAS:
-            raise ValueError(f"unknown component type {typ!r} ({name!r})")
+            # skip the block (scan to </Type>) and keep going, so the
+            # error can list ALL unknown types in one pass, not one per
+            # export attempt
+            unknown.append(f"{typ} ({name})")
+            while t not in (None, f"</{typ}>"):
+                t = tok.next_token()
+            if t is None:
+                break
+            continue
         schema = COMPONENT_SCHEMAS[typ]
         params = _read_component_params(tok, typ, schema, name)
         components.append(Component(name=name, type=typ, params=params))
+
+    if unknown:
+        raise ValueError("unknown component types: " + ", ".join(unknown))
 
     if num_components is not None and len(components) != num_components:
         raise ValueError(
@@ -558,17 +606,13 @@ def parse_text_dump(stream) -> Nnet3Spec:
             f"got {output_node.descriptor!r}"
         )
     feed = next(n for n in nodes if n.name == out_desc[1])
-    if feed.kind != "component":
-        raise ValueError(f"output feeds non-component node {feed.name!r}")
-    out_comp = next(c for c in components if c.name == feed.component)
-    if "Dim" in out_comp.params:
-        output_dim = int(out_comp.params["Dim"])
-    elif "LinearParams" in out_comp.params:
-        output_dim = out_comp.params["LinearParams"].shape[0]
-    elif "Params" in out_comp.params:
-        output_dim = out_comp.params["Params"].shape[0]
+    if feed.kind == "dim-range":
+        output_dim = feed.dim
+    elif feed.kind == "component":
+        out_comp = next(c for c in components if c.name == feed.component)
+        output_dim = component_out_dim(out_comp)
     else:
-        raise ValueError(f"cannot determine output dim of {out_comp.type}")
+        raise ValueError(f"output feeds unsupported node {feed.name!r}")
 
     return Nnet3Spec(
         components=components,

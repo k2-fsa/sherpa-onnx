@@ -1,0 +1,46 @@
+# `{{ name }}`
+
+ONNX export of the vosk model [`{{ name }}`]({{ url }}) (see the
+[vosk models page](https://alphacephei.com/vosk/models)).
+
+- **License**: {{ license }}
+- **Supports**: {{ supports }}
+- **Contains**: {{ contains }}
+
+## Downloads
+
+- [`{{ name }}-onnx.zip`]({{ name }}-onnx.zip) -- float32 (`am/final.onnx`)
+{% if int8 %}
+- [`{{ name }}-onnx-int8.zip`]({{ name }}-onnx-int8.zip) -- int8 (`am/final.int8.onnx`)
+
+Both zips unpack to a self-contained model dir (`{{ name }}-onnx/` /
+`{{ name }}-onnx-int8/`); the two dirs are identical except for the
+acoustic model file.  Both were decoded and checked against the `vosk`
+runtime (its 1-best, MFCC dither off) on the test wav in `test_wavs/`
+before upload.
+{% else %}
+(The int8 variant of this model was not shipped: its decode differed
+from the `vosk` runtime's.)
+{% endif %}
+
+Zip sizes (`ls -lh`):
+
+```
+{{ zips }}
+```
+
+## ONNX input / output
+
+{{ io }}
+
+## What the model dir contains
+
+```
+{{ tree }}
+```
+
+## File sizes (`ls -lhR` of the model folder)
+
+```
+{{ listing }}
+```

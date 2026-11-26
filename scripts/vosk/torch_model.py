@@ -29,6 +29,7 @@
 #     sparsity): the decimated zone runs on the row lattice, identical
 #     values at ~1/factor the rows.
 
+import math
 from typing import Dict, List
 
 import numpy as np
@@ -38,7 +39,13 @@ import torch.nn.functional as F
 
 # nnet3/ is imported as a plain subpackage (scripts are run with scripts/vosk
 # as the working directory / on sys.path; see run.sh and the notes).
-from nnet3.components import IDENTITY_TYPES, Component, Node, Nnet3Spec
+from nnet3.components import (
+    IDENTITY_TYPES,
+    Component,
+    Node,
+    Nnet3Spec,
+    component_out_dim,
+)
 from nnet3.mdl_reader import descriptor_names, inference_nodes, parse_descriptor
 
 
@@ -162,6 +169,176 @@ class Tdnn(nn.Module):
         return out
 
 
+class RestrictedAttention(nn.Module):
+    """kaldi RestrictedAttentionComponent (nnet-attention-component.cc).
+
+    Windowed multi-head attention over time: per head the row holds
+    (key, value, query) with query_dim = key_dim + context_dim and
+    context_dim = num_left + 1 + num_right.  For output row t, context
+    position o reads input row t + (o - num_left) * time_stride
+    (zero-padded outside the utterance -- kaldi's rule for this
+    component):
+
+        logit(t, o) = key_scale * q_key(t) . k(t+o) + q_ctx(t, o)
+        c(t, :)     = softmax_o logit(t, :)
+        out(t)      = sum_o c(t, o) * v(t+o)   (+ c(t, :) if output_context)
+
+    Rows outside the utterance are CLAMPED to the edge (kaldi's rule,
+    verified row-by-row against nnet3-compute).  The num_left/right_inputs_required
+    fields only affect the compiled receptive field, not the math.
+    """
+
+    def __init__(self, c: Component):
+        super().__init__()
+        p = c.params
+        self.num_heads = int(p["NumHeads"])
+        self.key_dim = int(p["KeyDim"])
+        self.value_dim = int(p["ValueDim"])
+        self.num_left = int(p["NumLeftInputs"])
+        self.num_right = int(p["NumRightInputs"])
+        self.time_stride = int(p["TimeStride"])
+        self.output_context = bool(p["OutputContext"])
+        self.key_scale = float(p["KeyScale"])
+        self.context_dim = self.num_left + 1 + self.num_right
+
+    def forward(self, x: torch.Tensor, row_step: int = 1) -> torch.Tensor:
+        # x: [B, T, num_heads * (key + value + key + context)]
+        B, T, _ = x.shape
+        kd, vd = self.key_dim, self.value_dim
+        cd = self.context_dim
+        qd = kd + cd
+        head_in = kd + vd + qd
+        outs = []
+        for h in range(self.num_heads):
+            inp = x[:, :, h * head_in : (h + 1) * head_in]
+            k = inp[:, :, :kd]
+            v = inp[:, :, kd : kd + vd]
+            q_key = inp[:, :, kd + vd : kd + vd + kd]
+            q_ctx = inp[:, :, kd + vd + kd :]  # [B, T, cd]
+            ks, vs = [], []
+            for o in range(cd):
+                off = (o - self.num_left) * self.time_stride
+                step = off // row_step
+                assert step * row_step == off, (off, row_step)
+                # clamped gather of row t + step (kaldi clamps the
+                # window to the utterance edges -- verified row-by-row
+                # against nnet3-compute; zero-padding does NOT match)
+                idx = torch.arange(step, T + step, device=x.device)
+                idx = idx.clamp(0, T - 1)
+                ks.append(k.index_select(1, idx))
+                vs.append(v.index_select(1, idx))
+            k_all = torch.stack(ks, dim=2)  # [B, T, cd, kd]
+            v_all = torch.stack(vs, dim=2)  # [B, T, cd, vd]
+            logits = (
+                torch.einsum("btk,btck->btc", q_key, k_all) * self.key_scale + q_ctx
+            )  # [B, T, cd]
+            prob = torch.softmax(logits, dim=-1)
+            out_v = torch.einsum("btc,btck->btk", prob, v_all)  # [B, T, vd]
+            if self.output_context:
+                out = torch.cat([out_v, prob], dim=-1)
+            else:
+                out = out_v
+            outs.append(out)
+        return torch.cat(outs, dim=-1)
+
+
+class Normalize(nn.Module):
+    """kaldi NormalizeComponent (nnet-normalize-component.cc): per-block
+    RMS normalization at inference:
+
+        p        = ||x_block||^2 / (block_dim * target_rms^2)   (floor 2^-66)
+        y_block  = x_block / sqrt(p)
+
+    AddLogStddev appends log(rms(x_block)) to each block."""
+
+    FLOOR = 1.3552527156068805425e-20  # kaldi's 2^-66
+
+    def __init__(self, c: Component):
+        super().__init__()
+        p = c.params
+        self.input_dim = int(p["InputDim"])
+        self.block_dim = int(p.get("BlockDim", self.input_dim))
+        self.target_rms = float(p["TargetRms"])
+        self.add_log_stddev = bool(p["AddLogStddev"])
+        assert self.input_dim % self.block_dim == 0
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: [B, T, D]; D = num_blocks * block_dim, blocks consecutive
+        B, T, D = x.shape
+        nb = D // self.block_dim
+        blocks = x.view(B, T, nb, self.block_dim)
+        p = (blocks * blocks).sum(dim=-1) / (
+            self.block_dim * self.target_rms * self.target_rms
+        )  # [B, T, nb]
+        p = p.clamp(min=self.FLOOR)
+        scale = torch.rsqrt(p).unsqueeze(-1)  # [B, T, nb, 1]
+        out = blocks * scale
+        if self.add_log_stddev:
+            # log(rms(x_block)) = 0.5 log p + log(target_rms) (kaldi)
+            log_col = (0.5 * torch.log(p) + math.log(self.target_rms)).unsqueeze(-1)
+            out = torch.cat([out, log_col], dim=-1)
+        return out.reshape(B, T, -1)
+
+
+class LstmNonlinearity(nn.Module):
+    """kaldi LstmNonlinearityComponent (nnet-combined-component.cc;
+    math per cudamatrix CpuComputeLstmNonlinearity).
+
+    Per row: input [i, f, c, o, c_prev] (5 blocks of cell_dim) ->
+    output [c_t, m_t] (2 blocks):
+
+        i_t = sigmoid(i + w_ic*c_prev);  f_t = sigmoid(f + w_fc*c_prev)
+        c_t = f_t*c_prev + i_t*tanh(c);  o_t = sigmoid(o + w_oc*c_t)
+        m_t = o_t*tanh(c_t)
+
+    Params is [3, cell_dim] = (w_ic, w_fc, w_oc).  The recurrent wiring
+    (feeding c_prev / m_t around) lives in the node graph, so this
+    module is per-row.
+    """
+
+    def __init__(self, c: Component):
+        super().__init__()
+        p = c.params
+        if p.get("UseDropout", False):
+            raise ValueError(
+                f"{c.name}: LstmNonlinearityComponent with UseDropout is "
+                "not supported at inference"
+            )
+        params = np.ascontiguousarray(p["Params"])  # [3, cell_dim]
+        self.cell_dim = params.shape[1]
+        self.weight = nn.Parameter(torch.from_numpy(params), requires_grad=False)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: [B, T, 5*cell]
+        cd = self.cell_dim
+        i = x[..., 0:cd]
+        f = x[..., cd : 2 * cd]
+        g = x[..., 2 * cd : 3 * cd]
+        o = x[..., 3 * cd : 4 * cd]
+        c_prev = x[..., 4 * cd : 5 * cd]
+        w_ic, w_fc, w_oc = self.weight[0], self.weight[1], self.weight[2]
+        i_t = torch.sigmoid(i + w_ic * c_prev)
+        f_t = torch.sigmoid(f + w_fc * c_prev)
+        c_t = f_t * c_prev + i_t * torch.tanh(g)
+        o_t = torch.sigmoid(o + w_oc * c_t)
+        m_t = o_t * torch.tanh(c_t)
+        return torch.cat([c_t, m_t], dim=-1)
+
+
+class BackpropTruncation(nn.Module):
+    """kaldi BackpropTruncationComponent at inference: y = Scale * x
+    (the clipping/zeroing of the truncated-BPTT machinery only affects
+    backprop)."""
+
+    def __init__(self, c: Component):
+        super().__init__()
+        self.scale = float(c.params.get("Scale", 1.0))
+        self.out_dim = int(c.params["Dim"])
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x * self.scale
+
+
 class Affine(nn.Module):
     """y = x @ W^T + b — NaturalGradientAffineComponent (and the bias-less
     LinearComponent); the natural-gradient machinery is training-only."""
@@ -211,8 +388,8 @@ class TimeHeightConvolution(nn.Module):
       * LinearParams [num_filters_out, num_offsets * num_filters_in],
         column block o belongs to Offsets[o] = (time_offset, height_offset);
       * BiasParams [num_filters_out], broadcast over time and height;
-      * for each offset: input row t+dt (ZERO-PAD at time edges -- unlike
-        Tdnn's clamping), input height h_in = h_out*subsample + dh
+      * for each offset: input row t+dt (CLAMPED at time edges, like
+        Tdnn), input height h_in = h_out*subsample + dh
         (skipped when outside [0, height_in) -- zero contribution).
 
     Implemented as patch-gemm: one gather+concat, one matmul per layer.
@@ -240,13 +417,14 @@ class TimeHeightConvolution(nn.Module):
         B, T, _ = x.shape
         x4 = x.reshape(B, T, self.height_in, self.f_in)
 
-        # time-shifted copies with zero padding at the edges
+        # time-shifted copies; rows outside the utterance CLAMP to the
+        # edge (kaldi's rule -- verified row-by-row against nnet3-compute;
+        # zero-padding is wrong at the time edges)
         idx = torch.arange(T, device=x.device)
         parts = []
         for dt, dh in self.offsets:
             src = idx + dt
-            valid_t = ((src >= 0) & (src < T)).to(x.dtype)
-            xt = x4.index_select(1, src.clamp(0, T - 1)) * valid_t.view(1, T, 1, 1)
+            xt = x4.index_select(1, src.clamp(0, T - 1))
             # height rows with zero padding at the edges
             h_idx = torch.arange(self.height_out, device=x.device) * self.subsample + dh
             valid_h = ((h_idx >= 0) & (h_idx < self.height_in)).to(x.dtype)
@@ -292,6 +470,14 @@ def build_component(c: Component) -> nn.Module:
         return Permute(c)
     if c.type == "TimeHeightConvolutionComponent":
         return TimeHeightConvolution(c)
+    if c.type == "RestrictedAttentionComponent":
+        return RestrictedAttention(c)
+    if c.type == "NormalizeComponent":
+        return Normalize(c)
+    if c.type == "LstmNonlinearityComponent":
+        return LstmNonlinearity(c)
+    if c.type == "BackpropTruncationComponent":
+        return BackpropTruncation(c)
     if c.type == "RectifiedLinearComponent":
         return nn.ReLU()
     if c.type == "LogSoftmaxComponent":
@@ -302,6 +488,70 @@ def build_component(c: Component) -> nn.Module:
 # ---------------------------------------------------------------------------
 # Decimation plan -- compute only the rows the decoder reads
 # ---------------------------------------------------------------------------
+
+
+def is_ivector_index(tree) -> bool:
+    """True for ReplaceIndex(<expr of the ivector input only>, t, v).
+
+    kaldi's looped/online decodables rewrite ReplaceIndex(ivector, t, 0) to
+    Round(ivector, chunk_size) (nnet-compile-looped.cc
+    ModifyNnetIvectorPeriod): the i-vector of row t is the one of t's
+    chunk.  The ivector input here is per frame ([B, T, S]; the caller
+    repeats each chunk's i-vector over the chunk's frames), so the
+    rewritten descriptor is simply "read row t" of the ivector input."""
+    return (
+        tree[0] == "replace_index"
+        and tree[2] == "t"
+        and descriptor_names(tree[1]) == {"ivector"}
+    )
+
+
+def check_ivector_rows(ivector: torch.Tensor, t_len: int) -> torch.Tensor:
+    """The ivector input must be per frame: [B, T, S], T == features T."""
+    if ivector.dim() != 3 or ivector.shape[1] != t_len:
+        raise ValueError(
+            f"ivector must be [B, T={t_len}, S] (one i-vector per input "
+            f"frame), got {tuple(ivector.shape)}"
+        )
+    return ivector
+
+
+def nnet_modulus(nodes: List[Node]) -> int:
+    """kaldi's Nnet::Modulus(): the lcm over all descriptors of their
+    time modulus (Round(x, t) -> t, Switch(a, b, ...) -> its number of
+    sources; everything else 1).  kaldi's GetChunkSize rounds the
+    looped decodable's frames_per_chunk up to a multiple of it."""
+
+    def tree_mod(tree) -> int:
+        kind = tree[0]
+        if kind == "name" or kind == "const":
+            return 1
+        if kind in ("append", "sum"):
+            return _lcm_all(tree_mod(x) for x in tree[1])
+        if kind == "switch":
+            return math.lcm(len(tree[1]), _lcm_all(tree_mod(x) for x in tree[1]))
+        if kind == "scale":
+            return tree_mod(tree[2])
+        if kind == "round":
+            return int(tree[2])  # kaldi: t_modulus_ (not combined)
+        if kind == "failover":
+            return math.lcm(tree_mod(tree[1]), tree_mod(tree[2]))
+        if kind in ("offset", "replace_index", "if_defined"):
+            return tree_mod(tree[1])
+        raise ValueError(f"bad descriptor tree {tree!r}")
+
+    ans = 1
+    for n in nodes:
+        if n.kind in ("component", "output"):
+            ans = math.lcm(ans, tree_mod(parse_descriptor(n.descriptor)))
+    return ans
+
+
+def _lcm_all(values) -> int:
+    ans = 1
+    for v in values:
+        ans = math.lcm(ans, v)
+    return ans
 
 
 def _descriptor_time_deps(tree):
@@ -334,7 +584,15 @@ def _component_time_deps(c: Component):
         return {int(o) for o in c.params["TimeOffsets"]}
     if c.type == "TimeHeightConvolutionComponent":
         return {int(t) for t, _h in c.params["Offsets"]}
-    return {0}  # per-row components (affine, batchnorm, relu, ...)
+    if c.type == "RestrictedAttentionComponent":
+        s = int(c.params["TimeStride"])
+        return {
+            o * s
+            for o in range(
+                -int(c.params["NumLeftInputs"]), int(c.params["NumRightInputs"]) + 1
+            )
+        }
+    return {0}  # per-row components (affine, batchnorm, relu, normalize, ...)
 
 
 def _component_mac(c: Component) -> float:
@@ -349,7 +607,185 @@ def _component_mac(c: Component) -> float:
     ):
         w = p.get("LinearParams", p.get("Params"))
         return float(w.shape[0] * w.shape[1])
+    if c.type == "RestrictedAttentionComponent":
+        cd = int(p["NumLeftInputs"]) + 1 + int(p["NumRightInputs"])
+        return float(int(p["NumHeads"]) * cd * (int(p["KeyDim"]) + int(p["ValueDim"])))
     return 0.0
+
+
+def recurrent_names(nodes: List[Node]) -> set:
+    """Names of nodes that take part in a time recurrence (a cycle in the
+    node graph: kaldi wires e.g. c_prev = Offset(c, -1) around
+    LstmNonlinearityComponent)."""
+    by_name = {n.name: n for n in nodes}
+    refs = {}
+    for n in nodes:
+        if n.kind in ("component", "output"):
+            refs[n.name] = descriptor_names(parse_descriptor(n.descriptor))
+        elif n.kind == "dim-range":
+            refs[n.name] = [n.source]
+        else:
+            refs[n.name] = []
+    cyc = set()
+
+    def reaches_self(start: str) -> bool:
+        seen, stack = set(), list(refs.get(start, ()))
+        while stack:
+            x = stack.pop()
+            if x == start:
+                return True
+            if x in seen:
+                continue
+            seen.add(x)
+            stack.extend(refs.get(x, ()))
+        return False
+
+    for n in nodes:
+        if reaches_self(n.name):
+            cyc.add(n.name)
+    return cyc
+
+
+def first_computable_rows(nodes: List[Node], components: List[Component]) -> dict:
+    """kaldi's IsComputable, per node: the first row computable when the
+    input rows start at row 0 (kaldi only feeds input rows it has --
+    nothing before the first fed row exists, and intermediate nodes do
+    NOT clamp).  IfDefined adds no constraint (it yields zeros when its
+    argument is not computable), which is what breaks recurrence cycles:
+    a recurrent loop's blank (zero-state) rows are exactly the rows
+    before the first computable row of the loop's non-recurrent input.
+    Each recurrent cluster therefore has its OWN origin -- deeper
+    clusters start later."""
+    comp_by_name = {c.name: c for c in components}
+    neg = -(10**9)
+    lo = {n.name: neg for n in nodes}
+    for n in nodes:
+        if n.kind == "input":
+            lo[n.name] = 0 if n.name == "input" else neg  # ivector: any row
+
+    def tree_lo(tree):
+        kind = tree[0]
+        if kind == "name":
+            return lo[tree[1]]
+        if kind in ("append", "sum"):
+            return max(tree_lo(x) for x in tree[1])
+        if kind == "switch":
+            return max(tree_lo(x) for x in tree[1])
+        if kind == "scale":
+            return tree_lo(tree[2])
+        if kind == "offset":
+            v = tree_lo(tree[1])
+            return v if v == neg else v - tree[2]
+        if kind == "round":
+            v = tree_lo(tree[1])
+            return v if v == neg else -((-v) // tree[2]) * tree[2]
+        if kind == "failover":
+            return min(tree_lo(tree[1]), tree_lo(tree[2]))
+        if kind in ("if_defined", "const", "replace_index"):
+            return neg
+        raise ValueError(f"bad descriptor tree {tree!r}")
+
+    # monotone fixed point (acyclic once IfDefined edges are dropped)
+    changed = True
+    while changed:
+        changed = False
+        for n in nodes:
+            if n.kind == "component":
+                v = tree_lo(parse_descriptor(n.descriptor))
+                deps = _component_time_deps(comp_by_name[n.component])
+                if v != neg:
+                    v -= min(deps)
+            elif n.kind == "dim-range":
+                v = lo[n.source]
+            elif n.kind == "output":
+                v = tree_lo(parse_descriptor(n.descriptor))
+            else:
+                continue
+            if v > lo[n.name]:
+                lo[n.name] = v
+                changed = True
+    return lo
+
+
+def recurrent_cycles(nodes: List[Node]) -> dict:
+    """recurrent node name -> the names on its cycle (its strongly-
+    connected component in the node graph)."""
+    refs = {}
+    for n in nodes:
+        if n.kind in ("component", "output"):
+            refs[n.name] = descriptor_names(parse_descriptor(n.descriptor))
+        elif n.kind == "dim-range":
+            refs[n.name] = [n.source]
+        else:
+            refs[n.name] = []
+
+    def reach(start):
+        seen, stack = set(), list(refs.get(start, ()))
+        while stack:
+            x = stack.pop()
+            if x not in seen:
+                seen.add(x)
+                stack.extend(refs.get(x, ()))
+        return seen
+
+    reached = {n.name: reach(n.name) for n in nodes}
+    return {
+        a: {b for b in reached[a] if a in reached[b]}
+        for a in reached
+        if a in reached[a]
+    }
+
+
+def descriptor_row_refs(tree, base=0, out=None):
+    """[(name, total_offset)] the descriptor tree reads (IfDefined etc.
+    included)."""
+    if out is None:
+        out = []
+    kind = tree[0]
+    if kind == "name":
+        out.append((tree[1], base))
+    elif kind == "offset":
+        descriptor_row_refs(tree[1], base + tree[2], out)
+    elif kind in ("append", "sum"):
+        for x in tree[1]:
+            descriptor_row_refs(x, base, out)
+    elif kind == "scale":
+        descriptor_row_refs(tree[2], base, out)
+    elif kind == "replace_index":
+        descriptor_row_refs(tree[1], tree[3], out)
+    elif kind in ("if_defined", "round", "failover", "switch"):
+        kids = (
+            tree[1]
+            if kind == "switch"
+            else ([tree[1], tree[2]] if kind == "failover" else [tree[1]])
+        )
+        for x in kids:
+            descriptor_row_refs(x, base, out)
+    elif kind == "const":
+        pass
+    else:
+        raise ValueError(f"bad descriptor tree {tree!r}")
+    return out
+
+
+def recurrent_state_layout(nodes: List[Node]):
+    """The streaming state of a recurrent net: (rows, names).
+
+    names: the recurrent nodes read back across time inside their own
+    cycle (e.g. lstm1.c_trunc via IfDefined(Offset(lstm1.c_trunc, -3))),
+    sorted; rows: the largest such time lag (3 for a clockwork LSTM).
+    The state holds, for each name, the `rows` rows just before the
+    node's first computable row -- exactly what the loop reads there.
+    (rows, []) = (0, []) for a net without recurrence."""
+    cycles = recurrent_cycles(nodes)
+    lag = {}
+    for n in nodes:
+        if n.name not in cycles or n.kind not in ("component", "output"):
+            continue
+        for name, off in descriptor_row_refs(parse_descriptor(n.descriptor)):
+            if name in cycles[n.name] and off < 0:
+                lag[name] = max(lag.get(name, 0), -off)
+    return (max(lag.values()) if lag else 0), sorted(lag)
 
 
 class DecimationPlan:
@@ -529,6 +965,31 @@ class Nnet3Torch(nn.Module):
         # the nodes the "output" node depends on, ending with it (training
         # branches such as output-xent are left out; see inference_nodes)
         self.nodes: List[Node] = inference_nodes(spec.nodes)
+        self._nodes_by_name = {n.name: n for n in self.nodes}
+        # nodes taking part in a time recurrence (evaluated row by row)
+        self._recurrent = recurrent_names(self.nodes)
+        # first computable row per node (recurrent loops start blank below it)
+        self._first_row = first_computable_rows(self.nodes, spec.components)
+        # recurrent node -> all members of its cycle (strongly-connected
+        # component), flushed together by _eval_recurrent
+        self._cycle_of = recurrent_cycles(self.nodes)
+        # streaming state (recurrent nets): `state_rows` rows of each
+        # fed-back node, concatenated on the feature axis -> [B, rows, dim]
+        self.state_rows, names = recurrent_state_layout(self.nodes)
+        self.state_layout = []  # (name, dim_offset, dim)
+        off = 0
+        for name in names:
+            if self._first_row[name] < self.state_rows:
+                raise NotImplementedError(
+                    f"{name}: first computable row {self._first_row[name]} < "
+                    f"state rows {self.state_rows}"
+                )
+            d = self._node_out_dim(name)
+            self.state_layout.append((name, off, d))
+            off += d
+        self.state_dim = off
+        self._state_slot = {n: (o, d) for n, o, d in self.state_layout}
+        self._state_in = None
         self._plans: Dict[tuple, DecimationPlan] = {}
 
     # -- descriptor evaluation -------------------------------------------
@@ -579,11 +1040,34 @@ class Nnet3Torch(nn.Module):
             # ReplaceIndex(x, t, v): use time-index v of x at every output
             # frame (kaldi fixes one index; used for the i-vector).
             x = self._eval_tree(tree[1], nodes_out, batch, t_len, features, ivector)
+            if is_ivector_index(tree):
+                return x  # per-frame i-vector rows (see is_ivector_index)
             _, _expr, index_name, value = tree
             if index_name != "t":
                 raise ValueError(f"unsupported ReplaceIndex axis {index_name!r}")
             t = max(0, min(value, x.shape[1] - 1))
             return x[:, t : t + 1, :].expand(-1, t_len, -1)
+        if kind in ("const", "round", "switch", "if_defined", "failover"):
+            # row-dependent forms: evaluate row by row (rare)
+            cache: Dict[tuple, torch.Tensor] = {}
+            busy = set()
+            return torch.cat(
+                [
+                    self._eval_tree_row(
+                        tree,
+                        t,
+                        cache,
+                        busy,
+                        nodes_out,
+                        batch,
+                        t_len,
+                        features,
+                        ivector,
+                    )
+                    for t in range(t_len)
+                ],
+                dim=1,
+            )
         raise ValueError(f"bad descriptor tree {tree!r}")
 
     def _eval_tree_lat(self, tree, lattice, factor: int):
@@ -615,26 +1099,356 @@ class Nnet3Torch(nn.Module):
             return x.index_select(1, idx)
         raise ValueError(f"decimated zone: unsupported descriptor {tree!r}")
 
+    # -- recurrent evaluation (row by row) -------------------------------
+
+    def _node_out_dim(self, name: str) -> int:
+        node = self._nodes_by_name[name]
+        if node.kind == "dim-range":
+            return node.dim
+        return component_out_dim(self.spec.component(node.component))
+
+    def _tree_defined(self, tree, t: int, t_len: int) -> bool:
+        """kaldi 'IsComputable' for one row: every row the tree reads is
+        inside the utterance (rows outside are UNDEFINED -- IfDefined's
+        zero fallback applies)."""
+        kind = tree[0]
+        if kind == "name":
+            return 0 <= t < t_len
+        if kind == "offset":
+            return self._tree_defined(tree[1], t + tree[2], t_len)
+        if kind == "replace_index":
+            return self._tree_defined(tree[1], tree[3], t_len)
+        if kind in ("append", "sum"):
+            return all(self._tree_defined(x, t, t_len) for x in tree[1])
+        if kind == "scale":
+            return self._tree_defined(tree[2], t, t_len)
+        if kind == "const":
+            return True
+        if kind == "round":
+            return self._tree_defined(tree[1], (t // tree[2]) * tree[2], t_len)
+        if kind == "switch":
+            return self._tree_defined(tree[1][t % len(tree[1])], t, t_len)
+        if kind == "if_defined":
+            return True  # always yields a value (zeros as the fallback)
+        if kind == "failover":
+            return self._tree_defined(tree[1], t, t_len) or self._tree_defined(
+                tree[2], t, t_len
+            )
+        raise ValueError(f"bad descriptor tree {tree!r}")
+
+    def _tree_dim(self, tree) -> int:
+        kind = tree[0]
+        if kind == "name":
+            return self._node_out_dim(tree[1])
+        if kind == "append":
+            return sum(self._tree_dim(x) for x in tree[1])
+        if kind in ("sum", "if_defined", "failover", "round", "offset"):
+            return self._tree_dim(tree[1])
+        if kind == "switch":
+            return self._tree_dim(tree[1][0])
+        if kind == "scale":
+            return self._tree_dim(tree[2])
+        if kind == "const":
+            return tree[2]
+        if kind == "replace_index":
+            return self._tree_dim(tree[1])
+        raise ValueError(f"bad descriptor tree {tree!r}")
+
+    def _eval_row(
+        self, name, t, cache, busy, nodes_out, batch, t_len, features, ivector
+    ):
+        """One row [B, 1, D] of a node -- used for recurrent groups (see
+        _eval_recurrent).  Rows of already-evaluated nodes are gathered
+        with the usual edge clamp.  Rows of a recurrent node below its
+        first computable row (first_computable_rows) are BLANK (zeros):
+        kaldi cannot compute them, so IfDefined reads zeros there -- the
+        zero-initialized LSTM state.  They are still evaluated (then
+        zeroed) so every member of the cycle gets filled, exactly like
+        the flat module's loop."""
+        if name in nodes_out:
+            seq = nodes_out[name]
+            tt = t if 0 <= t < seq.shape[1] else (0 if t < 0 else seq.shape[1] - 1)
+            return seq[:, tt : tt + 1, :]
+        if t < 0:
+            return features.new_zeros(batch, 1, self._node_out_dim(name))
+        key = (name, t)
+        if key in cache:
+            return cache[key]
+        if key in busy:
+            raise ValueError(
+                f"recurrence with non-negative offset at {name!r} row {t} "
+                "(only causal loops are supported)"
+            )
+        busy.add(key)
+        node = self._nodes_by_name[name]
+        if node.kind == "dim-range":
+            row = self._eval_row(
+                node.source, t, cache, busy, nodes_out, batch, t_len, features, ivector
+            )[..., node.dim_offset : node.dim_offset + node.dim]
+        elif node.kind == "component":
+            x = self._eval_tree_row(
+                parse_descriptor(node.descriptor),
+                t,
+                cache,
+                busy,
+                nodes_out,
+                batch,
+                t_len,
+                features,
+                ivector,
+            )
+            mod = self.component_modules[self._name_to_idx[node.component]]
+            row = mod(x)
+        else:
+            raise ValueError(f"recurrent node {name!r}: unsupported kind {node.kind!r}")
+        first = self._first_row[name]
+        if t < first:
+            slot = self._state_slot.get(name)
+            if (
+                self._state_in is not None
+                and slot is not None
+                and t >= first - self.state_rows
+            ):
+                # the carried streaming state (rows just before the loop
+                # origin, computed by the previous window)
+                k = t - (first - self.state_rows)
+                row = self._state_in[:, k : k + 1, slot[0] : slot[0] + slot[1]]
+            else:
+                # not computable in kaldi: a blank row (zero LSTM state)
+                row = torch.zeros_like(row)
+        busy.discard(key)
+        cache[key] = row
+        return row
+
+    def _eval_tree_row(
+        self, tree, t, cache, busy, nodes_out, batch, t_len, features, ivector
+    ):
+        kind = tree[0]
+        if kind == "name":
+            return self._eval_row(
+                tree[1], t, cache, busy, nodes_out, batch, t_len, features, ivector
+            )
+        if kind == "append":
+            return torch.cat(
+                [
+                    self._eval_tree_row(
+                        x, t, cache, busy, nodes_out, batch, t_len, features, ivector
+                    )
+                    for x in tree[1]
+                ],
+                dim=-1,
+            )
+        if kind == "sum":
+            out = self._eval_tree_row(
+                tree[1][0], t, cache, busy, nodes_out, batch, t_len, features, ivector
+            )
+            for x in tree[1][1:]:
+                out = out + self._eval_tree_row(
+                    x, t, cache, busy, nodes_out, batch, t_len, features, ivector
+                )
+            return out
+        if kind == "scale":
+            return tree[1] * self._eval_tree_row(
+                tree[2], t, cache, busy, nodes_out, batch, t_len, features, ivector
+            )
+        if kind == "offset":
+            return self._eval_tree_row(
+                tree[1],
+                t + tree[2],
+                cache,
+                busy,
+                nodes_out,
+                batch,
+                t_len,
+                features,
+                ivector,
+            )
+        if kind == "replace_index":
+            _, expr, index_name, value = tree
+            if index_name != "t":
+                raise ValueError(f"unsupported ReplaceIndex axis {index_name!r}")
+            return self._eval_tree_row(
+                expr,
+                t if is_ivector_index(tree) else value,
+                cache,
+                busy,
+                nodes_out,
+                batch,
+                t_len,
+                features,
+                ivector,
+            )
+        if kind == "const":
+            return features.new_full((batch, 1, tree[2]), tree[1])
+        if kind == "round":
+            return self._eval_tree_row(
+                tree[1],
+                (t // tree[2]) * tree[2],
+                cache,
+                busy,
+                nodes_out,
+                batch,
+                t_len,
+                features,
+                ivector,
+            )
+        if kind == "switch":
+            return self._eval_tree_row(
+                tree[1][t % len(tree[1])],
+                t,
+                cache,
+                busy,
+                nodes_out,
+                batch,
+                t_len,
+                features,
+                ivector,
+            )
+        if kind == "if_defined":
+            if self._tree_defined(tree[1], t, t_len):
+                return self._eval_tree_row(
+                    tree[1],
+                    t,
+                    cache,
+                    busy,
+                    nodes_out,
+                    batch,
+                    t_len,
+                    features,
+                    ivector,
+                )
+            return features.new_zeros(batch, 1, self._tree_dim(tree[1]))
+        if kind == "failover":
+            use = tree[1] if self._tree_defined(tree[1], t, t_len) else tree[2]
+            return self._eval_tree_row(
+                use, t, cache, busy, nodes_out, batch, t_len, features, ivector
+            )
+        raise ValueError(f"bad descriptor tree {tree!r}")
+
+    def _eval_recurrent(self, node, nodes_out, batch, t_len, features, ivector):
+        """Evaluate a node that is part of a time recurrence (kaldi wires
+        e.g. c_prev = Offset(c, -1) around LstmNonlinearityComponent):
+        rows are computed sequentially, on demand across the whole
+        cycle."""
+        cache: Dict[tuple, torch.Tensor] = {}
+        busy = set()
+        rows = [
+            self._eval_row(
+                node.name, t, cache, busy, nodes_out, batch, t_len, features, ivector
+            )
+            for t in range(t_len)
+        ]
+        nodes_out[node.name] = torch.cat(rows, dim=1)
+        # flush every node the recursion filled along the way; rows that
+        # were never demanded (e.g. the last row of a dim-range sliced out
+        # of the group) are computed here
+        for name in sorted(self._cycle_of[node.name]):
+            if name not in nodes_out:
+                nodes_out[name] = torch.cat(
+                    [
+                        self._eval_row(
+                            name,
+                            t,
+                            cache,
+                            busy,
+                            nodes_out,
+                            batch,
+                            t_len,
+                            features,
+                            ivector,
+                        )
+                        for t in range(t_len)
+                    ],
+                    dim=1,
+                )
+
     # -- forward ---------------------------------------------------------
 
     def forward(self, features: torch.Tensor, ivector: torch.Tensor) -> torch.Tensor:
         """
         :param features: [B, T, input_dim] float32 (e.g. 40 MFCC)
-        :param ivector:  [B, ivector_dim] float32 (constant over the
-                         utterance; broadcast in ReplaceIndex)
+        :param ivector:  [B, T, ivector_dim] float32, one i-vector per
+                         input frame (kaldi's online decoders: the
+                         i-vector of each frame's chunk, see
+                         is_ivector_index)
         :return: [B, T, num_pdfs] log-probs, one row per input frame
 
         The net is PURE: it computes exactly the rows it is given.  Edge
         semantics are the caller's job -- to match kaldi at the edges of
         an utterance, feed replicated edge frames beyond the real input
         (kaldi clamps out-of-range input indexes to the edge; the
-        recognizer's streams do this in get_frames).
+        recognizer's streams do this in get_frames), i.e. left_context
+        rows before the real utterance and right_context rows after it.
+
+        Recurrent loops (kaldi wires e.g. c_prev = Offset(c, -3) around
+        LstmNonlinearityComponent) start with BLANK rows (zeros -- the
+        zero-initialized cell state) below the first COMPUTABLE row of
+        each loop node, counted from the first fed row (see
+        first_computable_rows).  With the caller padding by left_context
+        this equals kaldi's unchunked computation (nnet3-compute
+        --frames-per-chunk >= T, and the looped online decodable).
         """
+        return self.node_outputs(features, ivector)["output"]
+
+    def initial_state(self, batch: int = 1) -> torch.Tensor:
+        """The streaming state at the start of an utterance: zeros
+        [batch, state_rows, state_dim] (== the blank rows of kaldi)."""
+        return torch.zeros(batch, self.state_rows, self.state_dim)
+
+    def forward_streaming(
+        self,
+        features: torch.Tensor,
+        ivector: torch.Tensor,
+        state: torch.Tensor,
+        shift: int,
+    ):
+        """One window of a stream with the recurrent state carried over.
+
+        :param features: [B, W, input_dim] -- the window, row 0 = the
+            window's first frame (left context included)
+        :param state: [B, state_rows, state_dim] from the previous window
+            (initial_state() for the first one)
+        :param shift: input frames from this window's start to the next
+            window's start
+        :return: (log-probs [B, W, num_pdfs], state for the next window)
+
+        Each recurrent loop starts at its first computable row of the
+        window (fixed: it only depends on the window start); the rows
+        just before it come from `state` instead of being blank.  The
+        returned state is those rows of the window that starts `shift`
+        frames later -- for windows laid out like a one-shot run's
+        (left context + new frames + right context) the rows are fully
+        computable here, so chaining windows reproduces the one-shot
+        computation (kaldi's looped decodable carries the same state).
+        """
+        nodes = self.node_outputs(features, ivector, state)
+        return nodes["output"], self._state_rows_at(nodes, shift)
+
+    def _state_rows_at(self, nodes: dict, shift: int) -> torch.Tensor:
+        parts = []
+        for name, _off, _dim in self.state_layout:
+            seq = nodes[name]
+            start = self._first_row[name] + shift - self.state_rows
+            idx = (torch.arange(self.state_rows) + start).clamp(0, seq.shape[1] - 1)
+            parts.append(seq.index_select(1, idx))
+        return torch.cat(parts, dim=-1)
+
+    def node_outputs(
+        self,
+        features: torch.Tensor,
+        ivector: torch.Tensor,
+        state: torch.Tensor = None,
+    ) -> dict:
+        """Every node's tensor (debugging aid; forward() returns the
+        'output' entry).  `state`: see forward_streaming (None = blank)."""
+        self._state_in = state
         batch, t_len = features.shape[0], features.shape[1]
-        iv = ivector[:, None, :].expand(-1, t_len, -1)  # [B, T, S]
+        iv = check_ivector_rows(ivector, t_len)  # [B, T, S]
 
         nodes_out: Dict[str, torch.Tensor] = {}
         for node in self.nodes:
+            if node.name in nodes_out:
+                continue  # filled by a recurrent group
             if node.kind == "input":
                 if node.name == "input":
                     nodes_out[node.name] = features
@@ -642,23 +1456,36 @@ class Nnet3Torch(nn.Module):
                     nodes_out[node.name] = iv
                 else:
                     raise ValueError(f"unknown input node {node.name!r}")
-            elif node.kind == "dim-range":
-                src = nodes_out[node.source]
-                nodes_out[node.name] = src[
-                    :, :, node.dim_offset : node.dim_offset + node.dim
-                ]
             elif node.kind == "component":
+                if any(
+                    n not in nodes_out
+                    for n in descriptor_names(parse_descriptor(node.descriptor))
+                ):
+                    self._eval_recurrent(
+                        node, nodes_out, batch, t_len, features, ivector
+                    )
+                    continue
                 x = self._eval_descriptor(
                     node.descriptor, nodes_out, batch, t_len, features, ivector
                 )
                 nodes_out[node.name] = self.component_modules[
                     self._name_to_idx[node.component]
                 ](x)
+            elif node.kind == "dim-range":
+                if node.source not in nodes_out:
+                    self._eval_recurrent(
+                        node, nodes_out, batch, t_len, features, ivector
+                    )
+                    continue
+                src = nodes_out[node.source]
+                nodes_out[node.name] = src[
+                    :, :, node.dim_offset : node.dim_offset + node.dim
+                ]
             elif node.kind == "output":
-                return self._eval_descriptor(
+                nodes_out[node.name] = self._eval_descriptor(
                     node.descriptor, nodes_out, batch, t_len, features, ivector
                 )
-        raise ValueError("no output node evaluated")
+        return nodes_out
 
     # -- decimated forward (output rows only) ----------------------------
 
@@ -689,7 +1516,7 @@ class Nnet3Torch(nn.Module):
         plan = self.decimation_plan(factor)
         T = features.shape[1]
         batch, t_len = features.shape[0], features.shape[1]
-        iv = ivector[:, None, :].expand(-1, t_len, -1)
+        iv = check_ivector_rows(ivector, t_len)
 
         # input row j of the lattice is anchored at input frame j*factor
         window_offset = 0
@@ -728,7 +1555,9 @@ class Nnet3Torch(nn.Module):
                         parse_descriptor(node.descriptor), lattice, factor
                     )
                     lat_out[node.name] = (
-                        mod(x, row_step=factor) if isinstance(mod, Tdnn) else mod(x)
+                        mod(x, row_step=factor)
+                        if isinstance(mod, (Tdnn, RestrictedAttention))
+                        else mod(x)
                     )
                 else:
                     x = self._eval_descriptor(
@@ -801,8 +1630,8 @@ class VoskAmWrapper(nn.Module):
         self.frame_subsampling_factor = frame_subsampling_factor
         self.plan = (
             net.decimation_plan(frame_subsampling_factor)
-            if frame_subsampling_factor > 1
-            else None
+            if frame_subsampling_factor > 1 and not net._recurrent
+            else None  # recurrent nets run full-rate (see recurrent_names)
         )
 
     def forward(self, features: torch.Tensor, ivector: torch.Tensor) -> torch.Tensor:
