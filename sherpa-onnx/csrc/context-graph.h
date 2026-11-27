@@ -69,6 +69,19 @@ class ContextGraph {
       const ContextState *state, int32_t token_id,
       bool strict_mode = true) const;
 
+  // For decoders that can emit more than one token on the same frame, e.g.,
+  // TDT tokens with duration 0 or up to max_symbols_per_frame tokens per
+  // frame. Same as ForwardOneStep(), but only the first token of a frame
+  // (first_on_frame) gets a positive score, so a phrase cannot earn its bonus
+  // again and again without consuming frames. The score that is not given is
+  // kept in *withheld and given back when the match is taken back, so an
+  // unfinished match still adds up to 0. *withheld belongs to the hypothesis
+  // (0 at the start); add it to the score of Finalize().
+  std::tuple<float, const ContextState *, const ContextState *>
+  ForwardOneStepOnFrame(const ContextState *state, int32_t token_id,
+                        bool first_on_frame, float *withheld,
+                        bool strict_mode = true) const;
+
   std::pair<bool, const ContextState *> IsMatched(
       const ContextState *state) const;
 

@@ -178,6 +178,7 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         nc.hyp.ys_probs = c.hyp.ys_probs;
         nc.hyp.context_scores = c.hyp.context_scores;
         nc.hyp.context_state = c.hyp.context_state;
+        nc.hyp.context_withheld = c.hyp.context_withheld;
         nc.hyp.num_trailing_blanks = c.hyp.num_trailing_blanks;
         nc.hyp.log_prob = c.hyp.log_prob + p_logit[token];
 
@@ -203,9 +204,13 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
           nc.frame = c.frame;
           nc.num_symbols = c.num_symbols + 1;
 
+          // Only the first token of a frame gets the hotword bonus: up to
+          // max_symbols_per_frame tokens can be emitted on one frame, and a
+          // hotword could otherwise earn its bonus again and again on it.
           if (context_graph != nullptr) {
-            auto context_res = context_graph->ForwardOneStep(
-                nc.hyp.context_state, token, false /*strict mode*/);
+            auto context_res = context_graph->ForwardOneStepOnFrame(
+                nc.hyp.context_state, token, c.num_symbols == 0,
+                &nc.hyp.context_withheld, false /*strict mode*/);
             nc.hyp.log_prob += std::get<0>(context_res);
             nc.hyp.context_scores.push_back(std::get<0>(context_res));
             nc.hyp.context_state = std::get<1>(context_res);

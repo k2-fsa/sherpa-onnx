@@ -78,6 +78,10 @@ struct Hypothesis {
 
   const ContextState *context_state = nullptr;
 
+  // Context-graph score not given yet, see
+  // ContextGraph::ForwardOneStepOnFrame().
+  float context_withheld = 0;
+
   // TODO(fangjun): Make it configurable
   // the minimum of tokens in a chunk for streaming RNN LM
   int32_t lm_rescore_min_chunk = 2;  // a const
