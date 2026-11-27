@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [null, asr-models, tts-models, kws-models, speaker-recongition-models, audio-tagging-models, punctuation-models, source-separation-models, fa-models]
+        tag: [null, asr-models, tts-models, kws-models, speaker-recongition-models, audio-tagging-models, punctuation-models, source-separation-models, fa-models, asr-models-qnn, asr-models-qnn-2, asr-models-qnn-3, asr-models-qnn-binary, asr-models-qnn-binary-2, asr-models-qnn-binary-3]
     steps:
       - name: Run checksum action
         # Pin by commit SHA: this job uploads release assets with GITHUB_TOKEN write access.
