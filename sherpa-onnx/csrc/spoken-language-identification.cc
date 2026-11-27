@@ -37,31 +37,58 @@ void SpokenLanguageIdentificationWhisperConfig::Register(ParseOptions *po) {
       "so that whisper can detect the eot token. Leave it to -1 to use 1000");
 }
 
-bool SpokenLanguageIdentificationWhisperConfig::Validate() const {
-  if (encoder.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateSpokenLanguageIdentificationWhisperConfig(
+    const SpokenLanguageIdentificationWhisperConfig &config,
+    const Exists &exists) {
+  if (config.encoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --whisper-encoder");
     return false;
   }
 
-  if (!FileExists(encoder)) {
+  if (!exists(config.encoder)) {
     SHERPA_ONNX_LOGE("whisper encoder file '%s' does not exist",
-                     encoder.c_str());
+                     config.encoder.c_str());
     return false;
   }
 
-  if (decoder.empty()) {
+  if (config.decoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --whisper-decoder");
     return false;
   }
 
-  if (!FileExists(decoder)) {
+  if (!exists(config.decoder)) {
     SHERPA_ONNX_LOGE("whisper decoder file '%s' does not exist",
-                     decoder.c_str());
+                     config.decoder.c_str());
     return false;
   }
 
   return true;
 }
+
+bool SpokenLanguageIdentificationWhisperConfig::Validate() const {
+  return ValidateSpokenLanguageIdentificationWhisperConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool SpokenLanguageIdentificationWhisperConfig::Validate(Manager *mgr) const {
+  return ValidateSpokenLanguageIdentificationWhisperConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool SpokenLanguageIdentificationWhisperConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool SpokenLanguageIdentificationWhisperConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string SpokenLanguageIdentificationWhisperConfig::ToString() const {
   std::ostringstream os;
@@ -94,6 +121,25 @@ bool SpokenLanguageIdentificationConfig::Validate() const {
 
   return true;
 }
+
+template <typename Manager>
+bool SpokenLanguageIdentificationConfig::Validate(Manager *mgr) const {
+  if (!whisper.Validate(mgr)) {
+    return false;
+  }
+
+  return true;
+}
+
+#if __ANDROID_API__ >= 9
+template bool SpokenLanguageIdentificationConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool SpokenLanguageIdentificationConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string SpokenLanguageIdentificationConfig::ToString() const {
   std::ostringstream os;
