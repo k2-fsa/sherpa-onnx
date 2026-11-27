@@ -9,9 +9,6 @@ use std::ffi::CString;
 use std::os::raw::c_void;
 use std::slice;
 
-type ProgressCallback = dyn FnMut(i32, i32);
-type BoxedProgressCallback = Box<ProgressCallback>;
-
 #[derive(Clone, Debug)]
 /// Pyannote segmentation model path.
 pub struct OfflineSpeakerSegmentationPyannoteModelConfig {
@@ -209,22 +206,22 @@ impl OfflineSpeakerDiarization {
     /// chunk computes no embedding; the callback then receives `(1, 1)` once,
     /// before the result is built. The C API ignores the callback's
     /// return value, so the callback cannot stop processing early.
+    /// A panic in the callback aborts the process.
     pub fn process_with_callback<F>(
         &self,
         samples: &[f32],
-        callback: F,
+        mut callback: F,
     ) -> Option<OfflineSpeakerDiarizationResult>
     where
         F: FnMut(i32, i32),
     {
-        let mut boxed: BoxedProgressCallback = Box::new(callback);
         let ptr = unsafe {
             sys::SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
                 self.ptr,
                 samples.as_ptr(),
                 samples.len() as i32,
-                Some(progress_callback_trampoline),
-                &mut boxed as *mut BoxedProgressCallback as *mut c_void,
+                Some(progress_callback_trampoline::<F>),
+                &mut callback as *mut F as *mut c_void,
             )
         };
         if ptr.is_null() {
@@ -235,14 +232,38 @@ impl OfflineSpeakerDiarization {
     }
 }
 
-unsafe extern "C" fn progress_callback_trampoline(
+unsafe extern "C" fn progress_callback_trampoline<F>(
     num_processed_chunks: i32,
     num_total_chunks: i32,
     arg: *mut c_void,
-) -> i32 {
-    let cb = &mut *(arg as *mut BoxedProgressCallback);
+) -> i32
+where
+    F: FnMut(i32, i32),
+{
+    // The C function invokes the callback synchronously and does not retain this pointer.
+    let cb = &mut *(arg as *mut F);
     cb(num_processed_chunks, num_total_chunks);
     0
+}
+
+#[cfg(test)]
+mod callback_tests {
+    use super::*;
+
+    #[test]
+    fn trampoline_updates_borrowed_state() {
+        fn invoke<F: FnMut(i32, i32)>(callback: &mut F) {
+            let arg = callback as *mut F as *mut c_void;
+            unsafe {
+                progress_callback_trampoline::<F>(1, 2, arg);
+                progress_callback_trampoline::<F>(2, 2, arg);
+            }
+        }
+
+        let mut progress = Vec::new();
+        invoke(&mut |done, total| progress.push((done, total)));
+        assert_eq!(progress, [(1, 2), (2, 2)]);
+    }
 }
 
 impl Drop for OfflineSpeakerDiarization {

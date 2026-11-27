@@ -557,7 +557,7 @@ fn copy_to_tauri_android_jnilibs(
     let tauri_jni_base = candidates.iter().find(|p| {
         // Check that the parent (main/) exists, meaning
         // `tauri android init` has been run.
-        p.parent().map_or(false, |p| p.exists())
+        p.parent().is_some_and(|p| p.exists())
     });
 
     let tauri_jni_base = match tauri_jni_base {
@@ -593,7 +593,7 @@ fn copy_to_tauri_android_jnilibs(
                         e.path()
                             .file_name()
                             .and_then(OsStr::to_str)
-                            .map_or(false, |n| n.contains(".so"))
+                            .is_some_and(|n| n.contains(".so"))
                     });
                 if has_so {
                     eprintln!("Skipping Tauri Android .so copy: no archive stem but .so files present");

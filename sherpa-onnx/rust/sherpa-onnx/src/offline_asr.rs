@@ -159,6 +159,7 @@ impl OfflineFireRedAsrModelConfig {
 ///
 /// For Moonshine v2, you need 2 models:
 ///  - encoder, merged_decoder
+///
 #[derive(Clone, Debug, Default)]
 /// Offline Moonshine model configuration.
 pub struct OfflineMoonshineModelConfig {

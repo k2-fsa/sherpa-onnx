@@ -197,7 +197,7 @@ impl SpeakerEmbeddingManager {
 
     /// Add multiple embeddings laid out as a flattened slice.
     pub fn add_list_flattened(&self, name: &str, embeddings: &[f32]) -> bool {
-        if embeddings.is_empty() || embeddings.len() % self.dim as usize != 0 {
+        if embeddings.is_empty() || self.dim <= 0 || !embeddings.len().is_multiple_of(self.dim as usize) {
             return false;
         }
 
