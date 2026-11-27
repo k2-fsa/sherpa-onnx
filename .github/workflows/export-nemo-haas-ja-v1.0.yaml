@@ -1,0 +1,146 @@
+name: export-nemo-haas-ja-v1.0
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/nemo/haas-ja-v1.0/**'
+      - '.github/workflows/export-nemo-haas-ja-v1.0.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemo-haas-ja-v1.0-${{ github.ref }}
+  cancel-in-progress: true
+
+# The release and Hugging Face steps use their own tokens from secrets.
+permissions:
+  contents: read
+
+jobs:
+  export-nemo-haas-ja-v1_0:
+    name: export Haas-ja-v1.0
+    # flash-linear-attention needs triton, which has no macOS wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # run.sh installs packages from PyPI; keep the token out of them.
+          persist-credentials: false
+
+      # torch with its CUDA libraries, NeMo, the 1.2 GB checkpoint and the
+      # fp32 export need more than the free space of the runner.
+      - name: Free up disk space
+        shell: bash
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Export and test
+        shell: bash
+        run: |
+          cd scripts/nemo/haas-ja-v1.0
+          ./run.sh
+
+      - name: Collect fp32 files
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          cd scripts/nemo/haas-ja-v1.0
+
+          d=sherpa-onnx-nemo-haas-ja-v1.0
+          mkdir -p $d/test_wavs
+
+          cp -v encoder.onnx encoder.weights decoder.onnx joiner.onnx $d
+          cp -v tokens.txt bpe.vocab README.md $d
+          cp -v *.wav $d/test_wavs/
+
+          ls -lh $d
+          mv $d ../../..
+
+      - name: Collect int8 files
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          cd scripts/nemo/haas-ja-v1.0
+
+          d=sherpa-onnx-nemo-haas-ja-v1.0-int8
+          mkdir -p $d/test_wavs
+
+          cp -v encoder.int8.onnx decoder.int8.onnx joiner.int8.onnx $d
+          cp -v tokens.txt bpe.vocab README.md $d
+          cp -v *.wav $d/test_wavs/
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh *.tar.bz2
+
+          mv $d ../../..
+          mv $d.tar.bz2 ../../..
+
+      # The fp32 weights are over GitHub's 2 GB limit for a release asset,
+      # so only the int8 model is released here; both go to Hugging Face.
+      - name: Release
+        if: github.event_name == 'workflow_dispatch' && (github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Publish to huggingface
+        if: github.event_name == 'workflow_dispatch' && (github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 5
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            # Fail on any error, so a failed push is retried.
+            set -e
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            names=(
+             sherpa-onnx-nemo-haas-ja-v1.0
+             sherpa-onnx-nemo-haas-ja-v1.0-int8
+            )
+            for d in ${names[@]}; do
+              if [ ! -d $d ]; then
+                echo "$d does not exist - skip it"
+                continue;
+              fi
+
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -av $d/* ./huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.weights"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              # A retry after a push that succeeded has nothing to commit.
+              git diff --cached --quiet || git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              cd ..
+            done
