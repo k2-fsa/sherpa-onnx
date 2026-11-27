@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <exception>
 #include <string>
 #include <utility>
 #include <vector>
@@ -182,7 +183,12 @@ for a list of pre-trained models to download.
     ss_pointers.push_back(ss.back().get());
   }
 
-  recognizer.DecodeStreams(ss_pointers.data(), ss_pointers.size());
+  try {
+    recognizer.DecodeStreams(ss_pointers.data(), ss_pointers.size());
+  } catch (const std::exception &e) {
+    fprintf(stderr, "Decoding failed: %s\n", e.what());
+    return 1;
+  }
 
   const auto end = std::chrono::steady_clock::now();
 

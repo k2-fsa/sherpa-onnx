@@ -70,6 +70,7 @@ class OfflineNemoEncDecCtcModel : public OfflineCtcModel {
   std::string FeatureNormalizationMethod() const override;
 
   bool IsGigaAM() const override;
+  bool SupportBatchProcessing() const override;
 
  private:
   class Impl;

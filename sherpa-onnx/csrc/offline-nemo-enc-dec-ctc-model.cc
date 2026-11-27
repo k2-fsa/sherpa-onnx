@@ -4,7 +4,10 @@
 
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 
+#include <algorithm>
+#include <array>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -20,6 +23,9 @@
 #endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
+#if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+#include "sherpa-onnx/csrc/gigaam-coreml-ctc.h"
+#endif
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -33,8 +39,19 @@ class OfflineNemoEncDecCtcModel::Impl {
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_(GetSessionOptions(config)),
         allocator_{} {
+#if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+    if (EndsWith(config.nemo_ctc.model, ".mlmodelc")) {
+      coreml_ = std::make_unique<GigaAmCoremlCtc>(config.nemo_ctc.model,
+                                                  config.provider);
+      is_giga_am_ = 1;
+      fixed_frames_ = coreml_->Frames();
+      vocab_size_ = GigaAmCoremlCtc::kVocabulary;
+      subsampling_factor_ = GigaAmCoremlCtc::kSubsampling;
+      return;
+    }
+#endif
+    sess_opts_ = GetSessionOptions(config);
     sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(config_.nemo_ctc.model), sess_opts_);
     Init(nullptr, 0);
@@ -66,16 +83,13 @@ class OfflineNemoEncDecCtcModel::Impl {
 
     // (B, T, C) -> (B, C, T)
     features = Transpose12(allocator_, &features);
-
-    std::array<Ort::Value, 2> inputs = {std::move(features),
-                                        std::move(features_length)};
-    auto out =
-        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
-                   output_names_ptr_.data(), output_names_ptr_.size());
+    if (fixed_frames_ > 0) {
+      features = PadFeatures(features);
+    }
 
     std::vector<Ort::Value> ans;
     ans.reserve(2);
-    ans.push_back(std::move(out[0]));
+    ans.push_back(RunLogProbs(std::move(features), std::move(features_length)));
     ans.push_back(std::move(out_features_length));
     return ans;
   }
@@ -89,8 +103,48 @@ class OfflineNemoEncDecCtcModel::Impl {
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 
   bool IsGigaAM() const { return is_giga_am_; }
+  bool SupportBatchProcessing() const { return fixed_frames_ == 0; }
 
  private:
+  Ort::Value RunLogProbs(Ort::Value features, Ort::Value features_length) {
+#if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+    if (coreml_) {
+      return coreml_->Forward(
+          features, *features_length.GetTensorData<int64_t>(), allocator_);
+    }
+#endif
+    std::array<Ort::Value, 2> inputs = {std::move(features),
+                                        std::move(features_length)};
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+    return std::move(out[0]);
+  }
+
+  Ort::Value PadFeatures(const Ort::Value &features) {
+    const auto shape = features.GetTensorTypeAndShapeInfo().GetShape();
+    const int64_t frames = shape[2];
+    if (frames > fixed_frames_) {
+      throw std::invalid_argument("GigaAM fixed model accepts at most " +
+                                  std::to_string(fixed_frames_) +
+                                  " feature frames");
+    }
+    const std::array<int64_t, 3> padded_shape{1, shape[1], fixed_frames_};
+    auto padded = Ort::Value::CreateTensor<float>(
+        allocator_, padded_shape.data(), padded_shape.size());
+    const auto *src = features.GetTensorData<float>();
+    auto *dst = padded.GetTensorMutableData<float>();
+    // Keep the original feature lengths for masking and CTC decoding.
+    for (int64_t c = 0; c < shape[1]; ++c) {
+      auto *channel = dst + c * fixed_frames_;
+      if (frames > 0) {
+        std::copy_n(src + c * frames, frames, channel);
+      }
+      std::fill(channel + frames, channel + fixed_frames_, 0.0f);
+    }
+    return padded;
+  }
+
   void Init(void *model_data, size_t model_data_length) {
     if (model_data) {
       sess_ = std::make_unique<Ort::Session>(env_, model_data,
@@ -124,6 +178,15 @@ class OfflineNemoEncDecCtcModel::Impl {
     SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
                                                "normalize_type");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
+    if (is_giga_am_ && input_names_ == std::vector<std::string>{
+                                           "features", "feature_lengths"}) {
+      const auto shape =
+          sess_->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+      if (shape.size() == 3 && shape[0] == 1 && shape[1] == 64 &&
+          shape[2] > 0) {
+        fixed_frames_ = shape[2];
+      }
+    }
 
     if (normalize_type_ == "NA") {
       normalize_type_ = "";
@@ -137,6 +200,9 @@ class OfflineNemoEncDecCtcModel::Impl {
   Ort::AllocatorWithDefaultOptions allocator_;
 
   std::unique_ptr<Ort::Session> sess_;
+#if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+  std::unique_ptr<GigaAmCoremlCtc> coreml_;
+#endif
 
   std::vector<std::string> input_names_;
   std::vector<const char *> input_names_ptr_;
@@ -151,6 +217,7 @@ class OfflineNemoEncDecCtcModel::Impl {
   // it is 1 for models from
   // https://github.com/salute-developers/GigaAM
   int32_t is_giga_am_ = 0;
+  int64_t fixed_frames_ = 0;
 };
 
 OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
@@ -185,6 +252,10 @@ std::string OfflineNemoEncDecCtcModel::FeatureNormalizationMethod() const {
 }
 
 bool OfflineNemoEncDecCtcModel::IsGigaAM() const { return impl_->IsGigaAM(); }
+
+bool OfflineNemoEncDecCtcModel::SupportBatchProcessing() const {
+  return impl_->SupportBatchProcessing();
+}
 
 #if __ANDROID_API__ >= 9
 template OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(

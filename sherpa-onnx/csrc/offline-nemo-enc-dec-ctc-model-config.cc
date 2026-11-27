@@ -6,6 +6,10 @@
 
 #include <string>
 
+#if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+#include <sys/stat.h>
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -25,6 +29,18 @@ void OfflineNemoEncDecCtcModelConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineNemoEncDecCtcModelConfig::Validate() const {
+#if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+  if (EndsWith(model, ".mlmodelc")) {
+    struct stat info{};
+    if (stat(model.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
+      return true;
+    }
+    SHERPA_ONNX_LOGE("Compiled GigaAM Core ML model: '%s' does not exist",
+                     model.c_str());
+    return false;
+  }
+#endif
+
   if (qnn_config.context_binary.empty()) {
     if (model.empty()) {
       SHERPA_ONNX_LOGE("Please provide a NeMo CTC model");
