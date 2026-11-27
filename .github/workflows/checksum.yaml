@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Run checksum action
         # Pin by commit SHA: this job uploads release assets with GITHUB_TOKEN write access.
-        uses: XDcobra/checksum@30233e2332b2f744b8bcf1a2bf399503739a6b80 # v1.1.1
+        uses: XDcobra/checksum@07cdeb7af5bdc1c057c128e52f3759846fcac31a # v1.1.2
         with:
           tag: ${{ matrix.tag }}
         env:
