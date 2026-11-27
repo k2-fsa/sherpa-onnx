@@ -77,6 +77,12 @@ Use `tokens.e2e.txt` with the E2E decoder and joint for formatted text.
 Use `tokens.raw.txt` with the raw decoder and joint for plain text. The
 frontend and encoder are shared. Each recognizer runs one head.
 
+The recognizer checks the head names on the published decoder, joint, and token
+files and rejects a mixed pair. Renamed files without a head suffix and
+`tokens_buf` carry no head name. Keep a published head-identifying name on at
+least one file for raw output, and supply the matching files or token buffer.
+If no name identifies the head, text uses the E2E formatting convention.
+
 ## CLI file smoke test
 
 The CLI submits the WAV as one input. Use the Python example to exercise

@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/online-recognizer-gigaam-v4-impl.cc
+//
+// Copyright (c)  2026  sherpa-onnx contributors
 
 #include "sherpa-onnx/csrc/online-recognizer-gigaam-v4-impl.h"
 
@@ -45,8 +47,8 @@ FeatureExtractorConfig GigaAmFeatures() {
 }
 
 std::string FrontendPath(const std::string &encoder) {
-  for (const std::string suffix : {"_stream_step.int8.onnx",
-                                   "_stream_step.onnx"}) {
+  for (const std::string suffix :
+       {"_stream_step.int8.onnx", "_stream_step.onnx"}) {
     if (EndsWith(encoder, suffix)) {
       return encoder.substr(0, encoder.size() - suffix.size()) +
              "_stream_frontend.onnx";
@@ -55,6 +57,61 @@ std::string FrontendPath(const std::string &encoder) {
 
   throw std::invalid_argument(
       "GigaAM-v4 encoder must be named *_stream_step[.int8].onnx");
+}
+
+enum class Head { kUnknown, kE2e, kRaw };
+
+Head NamedHead(const std::string &path, const std::string &e2e,
+               const std::string &raw) {
+  if (EndsWith(path, e2e)) return Head::kE2e;
+  if (EndsWith(path, raw)) return Head::kRaw;
+  return Head::kUnknown;
+}
+
+bool IsRawModel(const OnlineModelConfig &config) {
+  const auto tokens =
+      config.tokens_buf.empty()
+          ? NamedHead(config.tokens, "tokens.e2e.txt", "tokens.raw.txt")
+          : Head::kUnknown;
+  const auto decoder = NamedHead(config.transducer.decoder, "_e2e_decoder.onnx",
+                                 "_raw_decoder.onnx");
+  const auto joint =
+      NamedHead(config.transducer.joiner, "_e2e_joint.onnx", "_raw_joint.onnx");
+  Head head = Head::kUnknown;
+  for (const auto candidate : {decoder, joint, tokens}) {
+    if (candidate == Head::kUnknown) continue;
+    if (head != Head::kUnknown && head != candidate) {
+      throw std::invalid_argument(
+          "GigaAM-v4 decoder, joint, and tokens must use the same head");
+    }
+    head = candidate;
+  }
+  return head == Head::kRaw;
+}
+
+int64_t ReadEncoderLength(const Ort::Value &length) {
+  if (!length.IsTensor()) {
+    throw std::runtime_error("Unexpected GigaAM-v4 encoder length tensor");
+  }
+  const auto info = length.GetTensorTypeAndShapeInfo();
+  if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 ||
+      info.GetShape() != std::vector<int64_t>{1}) {
+    throw std::runtime_error("Unexpected GigaAM-v4 encoder length tensor");
+  }
+  return length.GetTensorData<int64_t>()[0];
+}
+
+float *CheckedFloatData(Ort::Value *tensor, size_t count,
+                        const char *diagnostic) {
+  if (!tensor->IsTensor()) {
+    throw std::runtime_error(diagnostic);
+  }
+  const auto info = tensor->GetTensorTypeAndShapeInfo();
+  if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+      info.GetElementCount() != count) {
+    throw std::runtime_error(diagnostic);
+  }
+  return tensor->GetTensorMutableData<float>();
 }
 
 class Session {
@@ -82,16 +139,14 @@ class Session {
         if (dim < 0) dim = 1;
       }
       if (info.GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-        auto value = Ort::Value::CreateTensor<float>(
-            allocator, shape.data(), shape.size());
-        std::fill_n(value.GetTensorMutableData<float>(),
-                    value.GetTensorTypeAndShapeInfo().GetElementCount(), 0.0f);
+        auto value = Ort::Value::CreateTensor<float>(allocator, shape.data(),
+                                                     shape.size());
+        Fill(&value, 0.0f);
         state.push_back(std::move(value));
       } else if (info.GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
-        auto value = Ort::Value::CreateTensor<int64_t>(
-            allocator, shape.data(), shape.size());
-        std::fill_n(value.GetTensorMutableData<int64_t>(),
-                    value.GetTensorTypeAndShapeInfo().GetElementCount(), 0);
+        auto value = Ort::Value::CreateTensor<int64_t>(allocator, shape.data(),
+                                                       shape.size());
+        Fill(&value, int64_t{0});
         state.push_back(std::move(value));
       } else {
         throw std::invalid_argument("Unsupported GigaAM-v4 state tensor type");
@@ -141,7 +196,7 @@ struct Stream : OnlineStream {
 
 class Recognizer : public OnlineRecognizerImpl {
  public:
-  explicit Recognizer(const OnlineRecognizerConfig &config)
+  Recognizer(const OnlineRecognizerConfig &config, bool raw)
       : OnlineRecognizerImpl(config),
         options_(GetSessionOptions(config.model_config)),
         frontend_(env_, FrontendPath(config.model_config.transducer.encoder),
@@ -157,8 +212,7 @@ class Recognizer : public OnlineRecognizerImpl {
         endpoint_(config.endpoint_config),
         enable_endpoint_(config.enable_endpoint),
         blank_penalty_(config.blank_penalty),
-        raw_(EndsWith(config.model_config.transducer.decoder,
-                      "_raw_decoder.onnx")) {
+        raw_(raw) {
     if (!symbols_.Contains("<blk>") || symbols_["<blk>"] != kBlank ||
         symbols_.NumSymbols() != kBlank + 1) {
       throw std::invalid_argument(
@@ -178,8 +232,7 @@ class Recognizer : public OnlineRecognizerImpl {
   bool IsReady(OnlineStream *s) const override {
     const int32_t ready = s->NumFramesReady();
     const int32_t remaining = ready - s->GetNumProcessedFrames();
-    return remaining >= kChunk ||
-           (remaining > 0 && s->IsLastFrame(ready - 1));
+    return remaining >= kChunk || (remaining > 0 && s->IsLastFrame(ready - 1));
   }
 
   void DecodeStreams(OnlineStream **streams, int32_t n) const override {
@@ -211,9 +264,9 @@ class Recognizer : public OnlineRecognizerImpl {
   bool IsEndpoint(OnlineStream *stream) const override {
     auto *s = static_cast<Stream *>(stream);
     return enable_endpoint_ &&
-           endpoint_.IsEndpoint(s->GetNumProcessedFrames(),
-                                s->GetResult().num_trailing_blanks * kSubsampling,
-                                0.01f);
+           endpoint_.IsEndpoint(
+               s->GetNumProcessedFrames(),
+               s->GetResult().num_trailing_blanks * kSubsampling, 0.01f);
   }
 
   void Reset(OnlineStream *stream) const override {
@@ -263,7 +316,7 @@ class Recognizer : public OnlineRecognizerImpl {
     AppendState(&inputs, &s->encoder);
     auto encoded = encoder_.Run(inputs);
     KeepState(&s->encoder, &encoded, 2);
-    DecodeEncoderOutput(&encoded[0], encoded[1].GetTensorData<int64_t>()[0], s);
+    DecodeEncoderOutput(encoded[0], ReadEncoderLength(encoded[1]), s);
     processed += static_cast<int32_t>(count);
   }
 
@@ -279,45 +332,58 @@ class Recognizer : public OnlineRecognizerImpl {
     s->predictor = decoder_.Run(inputs);
   }
 
-  void DecodeEncoderOutput(Ort::Value *encoded, int64_t valid, Stream *s) const {
-    const auto shape = encoded->GetTensorTypeAndShapeInfo().GetShape();
-    if (shape.size() != 3 || shape[0] != 1 || shape[1] != kEncoderDim ||
+  int32_t Join(std::array<float, kEncoderDim> *frame, Stream *s) const {
+    std::vector<Ort::Value> inputs;
+    inputs.push_back(Tensor(frame->data(), frame->size(),
+                            std::array<int64_t, 3>{1, kEncoderDim, 1}));
+    auto *prediction =
+        CheckedFloatData(&s->predictor.front(), kPredictionDim,
+                         "Unexpected GigaAM-v4 predictor output");
+    inputs.push_back(Tensor(prediction, kPredictionDim,
+                            std::array<int64_t, 3>{1, kPredictionDim, 1}));
+    auto scores = joiner_.Run(inputs);
+    auto *logits = CheckedFloatData(&scores[0], kBlank + 1,
+                                    "Unexpected GigaAM-v4 joint output");
+    logits[kBlank] -= blank_penalty_;
+    return std::max_element(logits, logits + kBlank + 1) - logits;
+  }
+
+  void DecodeFrame(std::array<float, kEncoderDim> *frame, int32_t timestamp,
+                   Stream *s) const {
+    if (s->predictor.empty()) Predict(kBlank, s);
+    auto &result = s->GetResult();
+    for (int32_t n = 0; n < kMaxSymbols; ++n) {
+      const int32_t token = Join(frame, s);
+      if (token == kBlank) {
+        ++result.num_trailing_blanks;
+        break;
+      }
+      result.tokens.push_back(token);
+      result.timestamps.push_back(timestamp);
+      result.num_trailing_blanks = 0;
+      Predict(token, s);
+    }
+  }
+
+  void DecodeEncoderOutput(const Ort::Value &encoded, int64_t valid,
+                           Stream *s) const {
+    if (!encoded.IsTensor()) {
+      throw std::runtime_error("Unexpected GigaAM-v4 encoder output");
+    }
+    const auto info = encoded.GetTensorTypeAndShapeInfo();
+    const auto shape = info.GetShape();
+    if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+        shape.size() != 3 || shape[0] != 1 || shape[1] != kEncoderDim ||
         valid < 0 || valid > shape[2]) {
       throw std::runtime_error("Unexpected GigaAM-v4 encoder output");
     }
-    const auto *data = encoded->GetTensorData<float>();
-    auto &result = s->GetResult();
+    const auto *data = encoded.GetTensorData<float>();
     for (int32_t i = 0; i < valid; ++i) {
-      if (s->predictor.empty()) Predict(kBlank, s);
       std::array<float, kEncoderDim> frame;
       for (int32_t d = 0; d < kEncoderDim; ++d) {
         frame[d] = data[d * shape[2] + i];
       }
-      for (int32_t n = 0; n < kMaxSymbols; ++n) {
-        std::vector<Ort::Value> inputs;
-        inputs.push_back(Tensor(frame.data(), frame.size(),
-                                std::array<int64_t, 3>{1, kEncoderDim, 1}));
-        auto *prediction = s->predictor.front().GetTensorMutableData<float>();
-        inputs.push_back(Tensor(prediction, kPredictionDim,
-                                std::array<int64_t, 3>{1, kPredictionDim, 1}));
-        auto scores = joiner_.Run(inputs);
-        auto info = scores[0].GetTensorTypeAndShapeInfo();
-        if (info.GetElementCount() != kBlank + 1) {
-          throw std::runtime_error("Unexpected GigaAM-v4 joint output");
-        }
-        auto *logits = scores[0].GetTensorMutableData<float>();
-        logits[kBlank] -= blank_penalty_;
-        const int32_t token =
-            std::max_element(logits, logits + kBlank + 1) - logits;
-        if (token == kBlank) {
-          ++result.num_trailing_blanks;
-          break;
-        }
-        result.tokens.push_back(token);
-        result.timestamps.push_back(s->encoded_frames + i);
-        result.num_trailing_blanks = 0;
-        Predict(token, s);
-      }
+      DecodeFrame(&frame, s->encoded_frames + i, s);
     }
     s->encoded_frames += static_cast<int32_t>(valid);
   }
@@ -341,7 +407,7 @@ std::unique_ptr<OnlineRecognizerImpl> CreateOnlineGigaAmV4(
     throw std::invalid_argument(
         "GigaAM-v4 online supports the CPU provider and greedy_search");
   }
-  return std::make_unique<Recognizer>(config);
+  return std::make_unique<Recognizer>(config, IsRawModel(config.model_config));
 }
 
 }  // namespace sherpa_onnx
