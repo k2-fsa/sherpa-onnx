@@ -266,6 +266,47 @@ def add_meta_data(filename: Path, meta_data: dict) -> None:
     onnx.save(model, str(filename))  # single file, no external data
 
 
+def input_affine_matmuls(filename: Path) -> list:
+    """Names of the graph's input-affine MatMul nodes: the first learned
+    layer(s), i.e. the MatMuls whose input comes straight from the
+    model's features/ivector inputs (no other MatMul in between).
+
+    The input affine is kept OUT of int8 quantization: its input spans
+    raw MFCC + i-vector dimensions of very different scales, so its
+    weights carry large per-channel dynamic ranges (30x on
+    small-en-in-0.4) and one per-tensor int8 scale crushes the small
+    channels.  Quantizing it alone flips most output rows (max_abs 3.1
+    vs <= 0.14 for every other layer) and guts the decode; the rest of
+    the net quantizes cleanly.  Measured on small-en-in-0.4,
+    small-de-zamia-0.3, small-en-us-zamia-0.5, small-fr-pguyot-0.3:
+    excluding the input affine restores the int8 decode to the float32
+    one."""
+    import onnx
+
+    model = onnx.load(str(filename))
+    producer = {}
+    for node in model.graph.node:
+        for out in node.output:
+            producer[out] = node
+
+    def has_matmul_ancestor(tensor, seen):
+        if tensor in seen:
+            return False
+        seen.add(tensor)
+        node = producer.get(tensor)
+        if node is None:
+            return False  # graph input or initializer
+        if node.op_type in ("MatMul", "Gemm"):
+            return True
+        return any(has_matmul_ancestor(i, seen) for i in node.input)
+
+    return [
+        node.name
+        for node in model.graph.node
+        if node.op_type == "MatMul" and not has_matmul_ancestor(node.input[0], set())
+    ]
+
+
 # ---------------------------------------------------------------------------
 # decimation analysis + gate
 # ---------------------------------------------------------------------------
@@ -732,16 +773,22 @@ def _export(args, in_dir, out_dir, meta_in, factor, log):
     from onnxruntime.quantization import QuantType, quantize_dynamic
 
     int8_path = out_dir / "am" / "final.int8.onnx"
+    # keep the input affine in float32 -- its per-channel weight ranges
+    # (raw MFCC + i-vector scales) do not survive one per-tensor int8
+    # scale; quantizing it guts the decode (see input_affine_matmuls)
+    skip = input_affine_matmuls(onnx_path)
     quantize_dynamic(
         model_input=str(onnx_path),
         model_output=str(int8_path),
         weight_type=QuantType.QInt8,
+        nodes_to_exclude=skip,
     )
     add_meta_data(int8_path, meta)  # keep metadata with the model
     log.add("## int8 (quantize_dynamic, QInt8 weights)")
     log.add("")
     log.only("```")
     log.add(f"wrote {int8_path.name} (QInt8)")
+    log.add(f"kept in float32 (input affine): {', '.join(skip) if skip else '(none)'}")
     log.add("int8 check (onnxruntime vs torch, informational):")
     check_onnx_vs_torch(
         int8_path,
