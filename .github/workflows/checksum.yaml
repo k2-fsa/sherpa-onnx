@@ -9,6 +9,8 @@ jobs:
   checksum:
     if: github.repository_owner == 'k2-fsa'
     runs-on: macos-latest
+    permissions:
+      contents: write # upload checksum.txt to the releases
     strategy:
       fail-fast: false
       matrix:
