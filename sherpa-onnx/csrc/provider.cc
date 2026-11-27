@@ -33,6 +33,8 @@ Provider StringToProvider(std::string s) {
     return Provider::kSpacemiT;
   } else if (s == "openvino") {
     return Provider::kOpenVINO;
+  } else if (s == "vulkan") {
+    return Provider::kVulkan;
   } else {
     SHERPA_ONNX_LOGE("Unsupported string: %s. Fallback to cpu", s.c_str());
     return Provider::kCPU;
