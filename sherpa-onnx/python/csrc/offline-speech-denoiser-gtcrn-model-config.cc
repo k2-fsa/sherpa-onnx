@@ -15,7 +15,9 @@ void PybindOfflineSpeechDenoiserGtcrnModelConfig(py::module *m) {
   py::class_<PyClass>(*m, "OfflineSpeechDenoiserGtcrnModelConfig")
       .def(py::init<const std::string &>(), py::arg("model") = "")
       .def_readwrite("model", &PyClass::model)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (OfflineSpeechDenoiserGtcrnModelConfig::*)() const>(
+               &PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 

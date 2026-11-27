@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -26,12 +27,23 @@ void OfflineSpeechDenoiserModelConfig::Register(ParseOptions *po) {
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool OfflineSpeechDenoiserModelConfig::Validate() const {
-  const bool has_voxlock =
-      !voxlock.enroll_model.empty() || !voxlock.chunk_model.empty();
+// Checks that a model is given. Shared by Validate() and Validate(Manager *).
+static bool HasSpeechDenoiserModel(
+    const OfflineSpeechDenoiserModelConfig &config) {
+  const bool has_voxlock = !config.voxlock.enroll_model.empty() ||
+                           !config.voxlock.chunk_model.empty();
 
-  if (gtcrn.model.empty() && dpdfnet.model.empty() && !has_voxlock) {
+  if (config.gtcrn.model.empty() && config.dpdfnet.model.empty() &&
+      !has_voxlock) {
     SHERPA_ONNX_LOGE("Please provide a speech denoising model.");
+    return false;
+  }
+
+  return true;
+}
+
+bool OfflineSpeechDenoiserModelConfig::Validate() const {
+  if (!HasSpeechDenoiserModel(*this)) {
     return false;
   }
 
@@ -45,6 +57,33 @@ bool OfflineSpeechDenoiserModelConfig::Validate() const {
 
   return voxlock.Validate();
 }
+
+template <typename Manager>
+bool OfflineSpeechDenoiserModelConfig::Validate(Manager *mgr) const {
+  if (!HasSpeechDenoiserModel(*this)) {
+    return false;
+  }
+
+  if (!gtcrn.model.empty()) {
+    return gtcrn.Validate(mgr);
+  }
+
+  if (!dpdfnet.model.empty()) {
+    return dpdfnet.Validate(mgr);
+  }
+
+  return voxlock.Validate(mgr);
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineSpeechDenoiserModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineSpeechDenoiserModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineSpeechDenoiserModelConfig::ToString() const {
   std::ostringstream os;

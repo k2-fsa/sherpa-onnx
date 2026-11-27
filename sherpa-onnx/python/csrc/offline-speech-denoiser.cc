@@ -56,7 +56,9 @@ void PybindOfflineSpeechDenoiserConfig(py::module *m) {
            }),
            py::arg("model") = OfflineSpeechDenoiserModelConfig{})
       .def_readwrite("model", &PyClass::model)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (OfflineSpeechDenoiserConfig::*)() const>(
+               &PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
@@ -84,7 +86,8 @@ void PybindOfflineSpeechDenoiser(py::module *m) {
             return self.Run(samples.data(), samples.size(), sample_rate);
           },
           py::arg("samples"), py::arg("sample_rate"),
-          py::call_guard<py::gil_scoped_release>(), kOfflineSpeechDenoiserRunDoc)
+          py::call_guard<py::gil_scoped_release>(),
+          kOfflineSpeechDenoiserRunDoc)
       .def(
           "run",
           [](const PyClass &self, const std::vector<float> &samples,
@@ -92,7 +95,8 @@ void PybindOfflineSpeechDenoiser(py::module *m) {
             return self.Run(samples.data(), samples.size(), sample_rate);
           },
           py::arg("samples"), py::arg("sample_rate"),
-          py::call_guard<py::gil_scoped_release>(), kOfflineSpeechDenoiserRunDoc)
+          py::call_guard<py::gil_scoped_release>(),
+          kOfflineSpeechDenoiserRunDoc)
       .def_property_readonly("sample_rate", &PyClass::GetSampleRate);
 }
 

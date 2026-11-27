@@ -23,7 +23,9 @@ void PybindOfflineSpeechDenoiserDpdfNetModelConfig(py::module *m) {
            py::arg("model") = "", py::arg("attenuation_limit_db") = 0.0f)
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("attenuation_limit_db", &PyClass::attenuation_limit_db)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (OfflineSpeechDenoiserDpdfNetModelConfig::*)()
+                           const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
