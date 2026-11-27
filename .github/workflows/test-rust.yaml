@@ -249,6 +249,27 @@ jobs:
             cargo run --example version
           fi
 
+      # Run the sherpa-onnx crate's own unit + integration tests (serde
+      # round-trips of the config structs, callback trampolines). They are pure
+      # Rust and need no downloaded models, so they run fast and cover the
+      # config plumbing on every matrix entry.
+      - name: Run crate tests
+        shell: bash
+        run: |
+          cd sherpa-onnx/rust
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            if [[ "${{ matrix.os }}" == windows-* ]]; then
+              # build.rs copies the runtime DLLs into target/<profile> and
+              # target/<profile>/examples, but the test binaries run from
+              # target/<profile>/deps where Windows cannot find them. Put the
+              # installed DLL directory on PATH so the tests can load.
+              export PATH="$PWD/../../build/install/lib:$PATH"
+            fi
+            cargo test -p sherpa-onnx --no-default-features --features shared
+          else
+            cargo test -p sherpa-onnx
+          fi
+
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
