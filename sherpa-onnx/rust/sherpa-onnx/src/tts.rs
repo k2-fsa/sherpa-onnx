@@ -49,7 +49,7 @@
 //!     ..Default::default()
 //! };
 //! let audio = tts
-//!     .generate_with_config("Hello from sherpa-onnx", &generation_config, None)
+//!     .generate_with_config("Hello from sherpa-onnx", &generation_config, None::<fn(&[f32], f32) -> bool>)
 //!     .expect("generate");
 //! println!("{}", audio.sample_rate());
 //! ```
@@ -376,7 +376,7 @@ impl OfflineTtsModelConfig {
         let zipvoice = self.zipvoice.to_sys(cstrings);
         let pocket = self.pocket.to_sys(cstrings);
         let supertonic = self.supertonic.to_sys(cstrings);
-        let out = sys::OfflineTtsModelConfig {
+        sys::OfflineTtsModelConfig {
             vits,
             num_threads: self.num_threads,
             debug: self.debug as i32,
@@ -387,8 +387,7 @@ impl OfflineTtsModelConfig {
             zipvoice,
             pocket,
             supertonic,
-        };
-        out
+        }
     }
 }
 
@@ -407,14 +406,13 @@ impl OfflineTtsConfig {
         let model = self.model.to_sys(cstrings);
         let rule_fsts = to_c_ptr(&self.rule_fsts, cstrings);
         let rule_fars = to_c_ptr(&self.rule_fars, cstrings);
-        let out = sys::OfflineTtsConfig {
+        sys::OfflineTtsConfig {
             model,
             rule_fsts,
             max_num_sentences: self.max_num_sentences,
             rule_fars,
             silence_scale: self.silence_scale,
-        };
-        out
+        }
     }
 }
 
