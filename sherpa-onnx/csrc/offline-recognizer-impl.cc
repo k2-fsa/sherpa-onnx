@@ -399,7 +399,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   }
 
   if (model_type == "conformer" || model_type == "zipformer" ||
-      model_type == "zipformer2") {
+      model_type == "zipformer2" || model_type == "zapformer") {
     return std::make_unique<OfflineRecognizerTransducerImpl>(config);
   }
 
@@ -771,7 +771,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   }
 
   if (model_type == "conformer" || model_type == "zipformer" ||
-      model_type == "zipformer2") {
+      model_type == "zipformer2" || model_type == "zapformer") {
     return std::make_unique<OfflineRecognizerTransducerImpl>(mgr, config);
   }
 
