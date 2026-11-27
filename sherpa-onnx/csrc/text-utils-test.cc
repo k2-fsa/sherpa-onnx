@@ -172,6 +172,65 @@ TEST(SplitByAllPunctuation, Empty) {
   EXPECT_EQ(result.size(), 0u);
 }
 
+// The expected chunks below are what chunk_text() in the Supertonic reference
+// returns.
+TEST(ChunkText, KeepsPeriodsInsideWordsAndNumbers) {
+  std::string text =
+      "Visit www.example.com or write to jo@icloud.com. Pi is 3.14 in the "
+      "U.S. today.";
+  EXPECT_EQ(ChunkText(text, 300), std::vector<std::string>{text});
+}
+
+TEST(ChunkText, KeepsClosingQuotes) {
+  std::string text = "He said \"Stop!\" and left. \"Why?\" she asked.";
+  EXPECT_EQ(ChunkText(text, 300), std::vector<std::string>{text});
+}
+
+TEST(ChunkText, KeepsEllipsesAndRepeatedMarks) {
+  std::string text = "Wait... what? Really?! I did not know.";
+  EXPECT_EQ(ChunkText(text, 300), std::vector<std::string>{text});
+}
+
+TEST(ChunkText, NoSentenceEndAfterTitles) {
+  std::vector<std::string> expected = {"Dr. Miller and Mrs. Jones arrived.",
+                                       "Prof. Smith was late, as usual."};
+  EXPECT_EQ(
+      ChunkText(
+          "Dr. Miller and Mrs. Jones arrived. Prof. Smith was late, as usual.",
+          40),
+      expected);
+}
+
+TEST(ChunkText, NoSpaceAddedBetweenJapaneseSentences) {
+  std::string text = "今日は晴れです。明日は雨です。";
+  EXPECT_EQ(ChunkText(text, 120), std::vector<std::string>{text});
+
+  text = "「こんにちは。」と言った。";
+  EXPECT_EQ(ChunkText(text, 120), std::vector<std::string>{text});
+}
+
+// Longer than max_len, so the reference would keep it in one chunk. It is cut
+// after the '。', as on master, and not at a space inside the second sentence.
+TEST(ChunkText, CutsLongJapaneseTextAtSentenceEnds) {
+  std::vector<std::string> expected = {
+      "東京から大阪まで新幹線で行きました。",
+      "会議は 10:30 に始まり、Apple と Google を比べました。"};
+  EXPECT_EQ(ChunkText("東京から大阪まで新幹線で行きました。会議は 10:30 "
+                      "に始まり、Apple と Google を比べました。",
+                      40),
+            expected);
+}
+
+TEST(ChunkText, PacksSentencesUpToMaxLen) {
+  std::vector<std::string> expected = {"One. Two.", "Three."};
+  EXPECT_EQ(ChunkText("One. Two. Three.", 10), expected);
+}
+
+TEST(ChunkText, ChunkEndsWithParagraph) {
+  std::vector<std::string> expected = {"First paragraph.", "Second paragraph."};
+  EXPECT_EQ(ChunkText("First paragraph.\n\nSecond paragraph.", 300), expected);
+}
+
 TEST(CountWords, English) {
   EXPECT_EQ(CountWords("hello world"), 2);
   EXPECT_EQ(CountWords("one two three four five"), 5);

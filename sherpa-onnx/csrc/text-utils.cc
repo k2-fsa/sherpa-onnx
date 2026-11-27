@@ -1470,6 +1470,98 @@ bool IsSpace(char32_t c) {
          c == U'\v';
 }
 
+// Same as Python's str.isspace().
+bool IsPythonSpace(char32_t c) {
+  if (c == 0x85 || (c >= 0x09 && c <= 0x0d) || (c >= 0x1c && c <= 0x20)) {
+    return true;
+  }
+  auto category = utf8proc_category(static_cast<utf8proc_int32_t>(c));
+  return category == UTF8PROC_CATEGORY_ZS || category == UTF8PROC_CATEGORY_ZL ||
+         category == UTF8PROC_CATEGORY_ZP;
+}
+
+// A letter, a number or '_', like \w in a Python regex.
+bool IsPythonWordChar(char32_t c) {
+  if (c == U'_') return true;
+  switch (utf8proc_category(static_cast<utf8proc_int32_t>(c))) {
+    case UTF8PROC_CATEGORY_LU:
+    case UTF8PROC_CATEGORY_LL:
+    case UTF8PROC_CATEGORY_LT:
+    case UTF8PROC_CATEGORY_LM:
+    case UTF8PROC_CATEGORY_LO:
+    case UTF8PROC_CATEGORY_ND:
+    case UTF8PROC_CATEGORY_NL:
+    case UTF8PROC_CATEGORY_NO:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// The Supertonic reference does not end a sentence after these, nor after a
+// single capital letter and a period. See chunk_text() in
+// https://github.com/supertone-inc/supertonic/blob/912c54b4/py/helper.py
+const char32_t *const kSupertonicAbbreviations[] = {
+    U"Mr.",   U"Mrs.",  U"Ms.",  U"Dr.",  U"Prof.", U"Sr.",  U"Jr.",
+    U"Ph.D.", U"etc.",  U"e.g.", U"i.e.", U"vs.",   U"Inc.", U"Ltd.",
+    U"Co.",   U"Corp.", U"St.",  U"Ave.", U"Blvd."};
+
+bool EndsWithSupertonicAbbreviation(const std::u32string &s) {
+  for (const char32_t *abbreviation : kSupertonicAbbreviations) {
+    size_t len = std::char_traits<char32_t>::length(abbreviation);
+    if (s.size() >= len &&
+        s.compare(s.size() - len, len, abbreviation, len) == 0) {
+      return true;
+    }
+  }
+
+  size_t n = s.size();
+  return n >= 2 && s[n - 1] == U'.' && s[n - 2] >= U'A' && s[n - 2] <= U'Z' &&
+         (n == 2 || !IsPythonWordChar(s[n - 3]));
+}
+
+struct SupertonicSentence {
+  std::string text;
+  // Whether whitespace followed the sentence in the text.
+  bool space_after = false;
+};
+
+// Like the reference's chunk_text(): '.', '!' and '?' end a sentence only
+// when whitespace follows them, and not after the abbreviations above. So
+// "3.14", "www.example.com", "U.S." and the period in '"Hi." she said' do not
+// end one. The reference does not split at '。', '！' and '？'. They still end
+// a sentence here, so that CJK text longer than max_len is cut at a sentence
+// end, and space_after says not to add a space when joining the sentences.
+std::vector<SupertonicSentence> SplitSentencesLikeSupertonic(
+    const std::string &text) {
+  std::vector<SupertonicSentence> sentences;
+  std::u32string cur;
+  auto flush = [&](bool space_after) {
+    std::string s = Trim(Utf32ToUtf8(cur));
+    if (!s.empty()) sentences.push_back({std::move(s), space_after});
+    cur.clear();
+  };
+
+  std::u32string u32 = Utf8ToUtf32(text);
+  for (size_t i = 0; i < u32.size(); ++i) {
+    char32_t c = u32[i];
+    cur.push_back(c);
+    bool space_follows = i + 1 < u32.size() && IsPythonSpace(u32[i + 1]);
+    bool ends_sentence =
+        c == U'。' || c == U'！' || c == U'？' ||
+        ((c == U'.' || c == U'!' || c == U'?') && space_follows &&
+         !EndsWithSupertonicAbbreviation(cur));
+    if (ends_sentence) {
+      flush(space_follows);
+      while (i + 1 < u32.size() && IsPythonSpace(u32[i + 1])) {
+        ++i;
+      }
+    }
+  }
+  flush(false);
+  return sentences;
+}
+
 size_t CountCodepoints(const std::string &s) { return Utf8ToUtf32(s).size(); }
 
 bool NeedSpaceBetween(const std::string &left, const std::string &right) {
@@ -1640,18 +1732,23 @@ std::vector<std::string> ChunkText(const std::string &text, size_t max_len) {
 
   auto paragraphs = SplitByBlankLines(text_single);
   for (const auto &para : paragraphs) {
-    auto sentences = SplitByPunctuation(para);
+    auto sentences = SplitSentencesLikeSupertonic(para);
+    bool space_before = false;
     for (const auto &sent : sentences) {
-      auto pieces = SplitLongSentence(sent, max_len);
+      auto pieces = SplitLongSentence(sent.text, max_len);
+      bool first_piece = true;
       for (auto &p : pieces) {
         if (p.empty()) continue;
+
+        // Between two sentences, add a space only where the text has one.
+        bool need_space = first_piece ? space_before : NeedSpaceBetween(cur, p);
+        first_piece = false;
 
         if (cur.empty()) {
           cur = std::move(p);
           continue;
         }
 
-        bool need_space = NeedSpaceBetween(cur, p);
         size_t projected_len =
             CountCodepoints(cur) + CountCodepoints(p) + (need_space ? 1 : 0);
         if (projected_len <= max_len) {
@@ -1664,33 +1761,26 @@ std::vector<std::string> ChunkText(const std::string &text, size_t max_len) {
           cur = std::move(p);
         }
       }
+      space_before = sent.space_after;
     }
+    // Like the reference, a chunk does not go past the end of a paragraph.
+    flush();
   }
 
-  flush();
   if (chunks.empty()) chunks.emplace_back(std::move(text_single));
   return chunks;
 }
 
 std::string PreparePocketTtsText(const std::string &text) {
-  // Same as Python's str.isspace(), so that U+00A0 and the like are stripped
-  // like the reference's text.strip() does.
-  auto is_space = [](char32_t c) {
-    if (c == 0x85 || (c >= 0x09 && c <= 0x0d) || (c >= 0x1c && c <= 0x20)) {
-      return true;
-    }
-    auto category = utf8proc_category(static_cast<utf8proc_int32_t>(c));
-    return category == UTF8PROC_CATEGORY_ZS ||
-           category == UTF8PROC_CATEGORY_ZL || category == UTF8PROC_CATEGORY_ZP;
-  };
-
+  // IsPythonSpace(), so that U+00A0 and the like are stripped like the
+  // reference's text.strip() does.
   std::u32string u32 = Utf8ToUtf32(text);
   size_t begin = 0;
   size_t end = u32.size();
-  while (begin < end && is_space(u32[begin])) {
+  while (begin < end && IsPythonSpace(u32[begin])) {
     ++begin;
   }
-  while (end > begin && is_space(u32[end - 1])) {
+  while (end > begin && IsPythonSpace(u32[end - 1])) {
     --end;
   }
   u32 = u32.substr(begin, end - begin);
