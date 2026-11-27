@@ -88,4 +88,48 @@ TEST(SupertonicUnicodeProcessor, NonBmpIsDropped) {
   EXPECT_TRUE(Decompose(0x1F600).empty());
 }
 
+// The expected strings are what the reference _preprocess_text in
+// supertone-inc/supertonic py/helper.py returns.
+TEST(SupertonicUnicodeProcessor, FullWidthPunctuationIsNormalizedFirst) {
+  EXPECT_EQ(SupertonicUnicodeProcessor::PreprocessText("本当？", "ja"),
+            "<ja>本当?</ja>");
+  EXPECT_EQ(SupertonicUnicodeProcessor::PreprocessText("你好，世界！", "na"),
+            "<na>你好,世界!</na>");
+  EXPECT_EQ(
+      SupertonicUnicodeProcessor::PreprocessText("こんにちは。　", "ja"),
+      "<ja>こんにちは。</ja>");
+  EXPECT_EQ(
+      SupertonicUnicodeProcessor::PreprocessText("Ｈｅｌｌｏ ， world", "en"),
+      "<en>Hello, world.</en>");
+}
+
+TEST(SupertonicUnicodeProcessor, EmojiAreRemoved) {
+  EXPECT_EQ(SupertonicUnicodeProcessor::PreprocessText("Hello there 😀", "en"),
+            "<en>Hello there.</en>");
+  EXPECT_EQ(
+      SupertonicUnicodeProcessor::PreprocessText("Great job! 🎉🎉", "en"),
+      "<en>Great job!</en>");
+  EXPECT_EQ(SupertonicUnicodeProcessor::PreprocessText("Sunny ☀ day", "en"),
+            "<en>Sunny day.</en>");
+  EXPECT_EQ(SupertonicUnicodeProcessor::PreprocessText("Done ✅ ok", "en"),
+            "<en>Done ok.</en>");
+}
+
+TEST(SupertonicUnicodeProcessor, ReplacementsWhoseKeysNfkdChangesStillApply) {
+  EXPECT_EQ(
+      SupertonicUnicodeProcessor::PreprocessText("An e‑mail", "en"),
+      "<en>An e-mail.</en>");
+  EXPECT_EQ(SupertonicUnicodeProcessor::PreprocessText("It´s", "en"),
+            "<en>It's.</en>");
+}
+
+TEST(SupertonicUnicodeProcessor, RunsOfQuotesCollapseToOne) {
+  EXPECT_EQ(SupertonicUnicodeProcessor::PreprocessText(
+                "He said \"\"\"hi\"\"\"", "en"),
+            "<en>He said \"hi\"</en>");
+  EXPECT_EQ(
+      SupertonicUnicodeProcessor::PreprocessText("\"hi\" \"there\"", "en"),
+      "<en>\"hi\" \"there\"</en>");
+}
+
 }  // namespace sherpa_onnx

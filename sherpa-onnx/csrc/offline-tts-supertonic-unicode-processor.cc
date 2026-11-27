@@ -210,8 +210,28 @@ void SupertonicUnicodeProcessor::DecomposeCodepoint(
 }
 
 std::string SupertonicUnicodeProcessor::PreprocessText(
-    const std::string &text, const std::string &lang) const {
-  std::string result = text;
+    const std::string &text, const std::string &lang) {
+  // Like the reference, normalize to NFKD first, so that full-width
+  // punctuation and spaces are plain ASCII by the time the replacements and
+  // the final period check run. Then drop emoji: DecomposeCharacter already
+  // drops everything above the BMP, which leaves U+2600 to U+27BF.
+  //
+  // Two of the replacements below have keys that NFKD changes, so they are
+  // applied first and keep their effect. Otherwise U+2011 would reach the
+  // model as U+2010, which the supertonic and supertonic-2 indexers do not
+  // have, and U+00B4 as a space plus a combining acute.
+  std::string raw = text;
+  ReplaceString(&raw, "´", "'");
+  ReplaceString(&raw, "‑", "-");
+
+  std::string result;
+  result.reserve(raw.size());
+  for (uint16_t cp : TextToUnicodeValues(raw)) {
+    if (cp >= 0x2600 && cp <= 0x27BF) {
+      continue;
+    }
+    result += Utf32ToUtf8(static_cast<char32_t>(cp));
+  }
 
   static constexpr std::array<std::pair<const char *, const char *>, 25>
       replacements = {{
@@ -246,25 +266,6 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
     ReplaceString(&result, repl.first, repl.second);
   }
 
-  // Remove some U+1Fxxx emoji/symbols (4-byte UTF-8 sequences: F0 9F 80-BF
-  // 80-BF). Note: This only removes a subset of emoji (U+1F000-U+1FFFF), not
-  // all emoji. Optimized: manual scanning instead of regex.
-  std::string emoji_removed;
-  emoji_removed.reserve(result.size());
-  for (size_t i = 0; i < result.size();) {
-    if (i + 3 < result.size() &&
-        static_cast<unsigned char>(result[i]) == 0xF0 &&
-        static_cast<unsigned char>(result[i + 1]) == 0x9F &&
-        (static_cast<unsigned char>(result[i + 2]) & 0xC0) == 0x80 &&
-        (static_cast<unsigned char>(result[i + 3]) & 0xC0) == 0x80) {
-      i += 4;  // Skip emoji
-    } else {
-      emoji_removed += result[i];
-      ++i;
-    }
-  }
-  result = std::move(emoji_removed);
-
   // Fix spacing around punctuation (optimized: single pass)
   std::string punct_fixed;
   punct_fixed.reserve(result.size());
@@ -282,27 +283,21 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
   }
   result = std::move(punct_fixed);
 
-  // Collapse adjacent duplicate quotes ("" -> ", '' -> ') while preserving
-  // normal paired quotes. Discard backticks. Single-pass O(n) algorithm.
+  // Collapse each run of the same quote into one ("" -> ", ''' -> '), like
+  // the reference's while loops, while preserving normal paired quotes.
+  // Discard backticks. Single-pass O(n) algorithm.
   std::string quotes_fixed;
   quotes_fixed.reserve(result.size());
-  for (size_t i = 0; i < result.size(); ++i) {
-    if (result[i] == '`') {
+  for (char c : result) {
+    if (c == '`') {
       // Skip backticks
       continue;
     }
-    if (result[i] == '"' && i + 1 < result.size() && result[i + 1] == '"') {
-      // Collapse adjacent double quotes: "" -> "
-      quotes_fixed += '"';
-      ++i;  // Skip the second quote
-    } else if (result[i] == '\'' && i + 1 < result.size() &&
-               result[i + 1] == '\'') {
-      // Collapse adjacent single quotes: '' -> '
-      quotes_fixed += '\'';
-      ++i;  // Skip the second quote
-    } else {
-      quotes_fixed += result[i];
+    if ((c == '"' || c == '\'') && !quotes_fixed.empty() &&
+        quotes_fixed.back() == c) {
+      continue;
     }
+    quotes_fixed += c;
   }
   result = std::move(quotes_fixed);
 
@@ -345,7 +340,7 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
 }
 
 std::vector<uint16_t> SupertonicUnicodeProcessor::TextToUnicodeValues(
-    const std::string &text) const {
+    const std::string &text) {
   std::vector<uint16_t> unicode_values;
   size_t i = 0;
 
