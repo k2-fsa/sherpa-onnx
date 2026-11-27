@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace sherpa_onnx {
@@ -24,6 +25,11 @@ class GigaAMSentencePieceDecoder {
     std::string piece;
     uint64_t type = 1;  // Default ModelProto.SentencePiece type is NORMAL.
   };
+
+  static Token ParsePiece(std::string_view payload);
+  void ReadTrainer(std::string_view payload);
+  void ReadNormalizer(std::string_view payload);
+  const Token &GetToken(int64_t id) const;
 
   std::vector<Token> tokens_;
   std::string unknown_surface_ = " \xe2\x81\x87 ";

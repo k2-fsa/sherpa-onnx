@@ -9,6 +9,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/gigaam-features.h"
@@ -22,14 +23,15 @@ namespace sherpa_onnx {
 
 namespace {
 
-constexpr std::array<const char *, 3> kEncoderInputs{
-    "audio_signal", "length", "language_vector"};
+constexpr std::array<const char *, 3> kEncoderInputs{"audio_signal", "length",
+                                                     "language_vector"};
 constexpr std::array<const char *, 2> kEncoderOutputs{"head_outputs",
                                                       "encoded_len"};
 constexpr std::array<const char *, 2> kAdvanceInputs{"projected", "lengths"};
 constexpr std::array<const char *, 1> kAdvanceOutputs{"tokens"};
 constexpr int32_t kNumLanguages = 32;
 constexpr int32_t kNumHeads = 2;
+constexpr int32_t kProjectionDim = 320;
 constexpr int32_t kMaxDurationSeconds = 30;
 
 template <size_t N, size_t M>
@@ -47,6 +49,35 @@ void CheckGraph(Ort::Session *session,
       !std::is_permutation(output_names.begin(), output_names.end(),
                            outputs.begin(), outputs.end())) {
     throw std::invalid_argument("Unexpected GigaAM RNN-T graph inputs/outputs");
+  }
+}
+
+int64_t ProjectionFrameCount(const Ort::Value &projected) {
+  if (!projected.IsTensor()) {
+    throw std::runtime_error("Unexpected GigaAM encoder projection tensor");
+  }
+  const auto info = projected.GetTensorTypeAndShapeInfo();
+  const auto shape = info.GetShape();
+  if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+      shape.size() != 4 || shape[0] != kNumHeads || shape[1] != 1 ||
+      shape[3] != kProjectionDim) {
+    throw std::runtime_error("Unexpected GigaAM encoder projection tensor");
+  }
+  return shape[2];
+}
+
+void CheckEncodedLength(const Ort::Value &lengths, int64_t frames) {
+  if (!lengths.IsTensor()) {
+    throw std::runtime_error("Unexpected GigaAM encoder lengths tensor");
+  }
+  const auto info = lengths.GetTensorTypeAndShapeInfo();
+  if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 ||
+      info.GetShape() != std::vector<int64_t>{1}) {
+    throw std::runtime_error("Unexpected GigaAM encoder lengths tensor");
+  }
+  const int64_t length = lengths.GetTensorData<int64_t>()[0];
+  if (length < 0 || length > frames) {
+    throw std::runtime_error("GigaAM encoder length is outside projection");
   }
 }
 
@@ -107,8 +138,8 @@ class OfflineRecognizerGigaAMImpl : public OfflineRecognizerImpl {
                                : config_.model_config.gigaam.language;
     const int32_t slot = LanguageSlot(language);
     const auto samples = stream->GetFrames();
-    if (samples.size() > GigaAMFeatureExtractor::kSampleRate *
-                             kMaxDurationSeconds) {
+    if (samples.size() >
+        GigaAMFeatureExtractor::kSampleRate * kMaxDurationSeconds) {
       throw std::invalid_argument("GigaAM expects utterances up to 30 seconds");
     }
 
@@ -118,14 +149,19 @@ class OfflineRecognizerGigaAMImpl : public OfflineRecognizerImpl {
       return;
     }
 
+    const auto tokens = RunGraphs(&features, slot);
+    stream->SetResult(DecodeTokens(tokens));
+  }
+
+  Ort::Value RunGraphs(std::vector<float> *features, int32_t slot) const {
     const auto memory =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
     constexpr int32_t kBins = GigaAMFeatureExtractor::kNumBins;
-    int64_t num_frames = static_cast<int64_t>(features.size() / kBins);
+    int64_t num_frames = static_cast<int64_t>(features->size() / kBins);
     const std::array<int64_t, 3> feature_shape{1, kBins, num_frames};
     constexpr std::array<int64_t, 1> length_shape{1};
     std::array<Ort::Value, 3> inputs{
-        Ort::Value::CreateTensor(memory, features.data(), features.size(),
+        Ort::Value::CreateTensor(memory, features->data(), features->size(),
                                  feature_shape.data(), feature_shape.size()),
         Ort::Value::CreateTensor(memory, &num_frames, 1, length_shape.data(),
                                  length_shape.size()),
@@ -135,27 +171,33 @@ class OfflineRecognizerGigaAMImpl : public OfflineRecognizerImpl {
     if (has_language_input_) {
       language_vector[slot] = 1.0f;
       constexpr std::array<int64_t, 2> shape{1, kNumLanguages};
-      inputs[2] = Ort::Value::CreateTensor(
-          memory, language_vector.data(), language_vector.size(), shape.data(),
-          shape.size());
+      inputs[2] = Ort::Value::CreateTensor(memory, language_vector.data(),
+                                           language_vector.size(), shape.data(),
+                                           shape.size());
     }
 
-    auto encoded = encoder_->Run({}, kEncoderInputs.data(), inputs.data(),
-                                 has_language_input_ ? 3 : 2,
-                                 kEncoderOutputs.data(),
-                                 kEncoderOutputs.size());
-    auto advance = advance_->Run({}, kAdvanceInputs.data(), encoded.data(),
-                                encoded.size(), kAdvanceOutputs.data(),
-                                kAdvanceOutputs.size());
+    auto encoded = encoder_->Run(
+        {}, kEncoderInputs.data(), inputs.data(), has_language_input_ ? 3 : 2,
+        kEncoderOutputs.data(), kEncoderOutputs.size());
+    CheckEncodedLength(encoded[1], ProjectionFrameCount(encoded[0]));
+    auto output =
+        advance_->Run({}, kAdvanceInputs.data(), encoded.data(), encoded.size(),
+                      kAdvanceOutputs.data(), kAdvanceOutputs.size());
+    return std::move(output[0]);
+  }
 
-    const auto info = advance[0].GetTensorTypeAndShapeInfo();
+  OfflineRecognitionResult DecodeTokens(const Ort::Value &tokens) const {
+    if (!tokens.IsTensor()) {
+      throw std::runtime_error("Unexpected GigaAM advance token tensor");
+    }
+    const auto info = tokens.GetTensorTypeAndShapeInfo();
     const auto shape = info.GetShape();
     if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 ||
         shape.size() != 3 || shape[1] != kNumHeads || shape[2] != 1) {
       throw std::runtime_error("Unexpected GigaAM advance token tensor");
     }
 
-    const auto *data = advance[0].GetTensorData<int64_t>();
+    const auto *data = tokens.GetTensorData<int64_t>();
     std::vector<int64_t> ids;
     OfflineRecognitionResult result;
     for (int64_t i = 0; i < shape[0]; ++i) {
@@ -168,7 +210,7 @@ class OfflineRecognizerGigaAMImpl : public OfflineRecognizerImpl {
     result.text = tokenizer_.Decode(ids);
     result.text = ApplyInverseTextNormalization(result.text);
     result.text = ApplyHomophoneReplacer(result.text);
-    stream->SetResult(result);
+    return result;
   }
 
   GigaAMFeatureExtractor features_;

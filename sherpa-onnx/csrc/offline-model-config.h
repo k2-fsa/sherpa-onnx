@@ -14,11 +14,11 @@
 #include "sherpa-onnx/csrc/offline-funasr-nano-model-config.h"
 #include "sherpa-onnx/csrc/offline-gigaam-model-config.h"
 #include "sherpa-onnx/csrc/offline-medasr-ctc-model-config.h"
-#include "sherpa-onnx/csrc/offline-qwen3-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-model-config.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-omnilingual-asr-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-model-config.h"
+#include "sherpa-onnx/csrc/offline-qwen3-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-sense-voice-model-config.h"
 #include "sherpa-onnx/csrc/offline-tdnn-model-config.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
@@ -72,32 +72,30 @@ struct OfflineModelConfig {
   std::string bpe_vocab;
 
   OfflineModelConfig() = default;
-  OfflineModelConfig(const OfflineTransducerModelConfig &transducer,
-                     const OfflineParaformerModelConfig &paraformer,
-                     const OfflineNemoEncDecCtcModelConfig &nemo_ctc,
-                     const OfflineWhisperModelConfig &whisper,
-                     const OfflineFireRedAsrModelConfig &fire_red_asr,
-                     const OfflineTdnnModelConfig &tdnn,
-                     const OfflineZipformerCtcModelConfig &zipformer_ctc,
-                     const OfflineWenetCtcModelConfig &wenet_ctc,
-                     const OfflineSenseVoiceModelConfig &sense_voice,
-                     const OfflineMoonshineModelConfig &moonshine,
-                     const OfflineDolphinModelConfig &dolphin,
-                     const OfflineCanaryModelConfig &canary,
-                     const OfflineCohereTranscribeModelConfig
-                         &cohere_transcribe,
-                     const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
-                     const OfflineFunASRNanoModelConfig &funasr_nano,
-                     const OfflineMedAsrCtcModelConfig &medasr,
-                     const OfflineFireRedAsrCtcModelConfig &fire_red_asr_ctc,
-                     const OfflineQwen3ASRModelConfig &qwen3_asr,
-                     const OfflineW2vBertCtcModelConfig &w2v_bert_ctc,
-                     const std::string &telespeech_ctc,
-                     const std::string &tokens, int32_t num_threads, bool debug,
-                     const std::string &provider, const std::string &model_type,
-                     const std::string &modeling_unit,
-                     const std::string &bpe_vocab,
-                     const OfflineGigaAMModelConfig &gigaam = {})
+  OfflineModelConfig(
+      const OfflineTransducerModelConfig &transducer,
+      const OfflineParaformerModelConfig &paraformer,
+      const OfflineNemoEncDecCtcModelConfig &nemo_ctc,
+      const OfflineWhisperModelConfig &whisper,
+      const OfflineFireRedAsrModelConfig &fire_red_asr,
+      const OfflineTdnnModelConfig &tdnn,
+      const OfflineZipformerCtcModelConfig &zipformer_ctc,
+      const OfflineWenetCtcModelConfig &wenet_ctc,
+      const OfflineSenseVoiceModelConfig &sense_voice,
+      const OfflineMoonshineModelConfig &moonshine,
+      const OfflineDolphinModelConfig &dolphin,
+      const OfflineCanaryModelConfig &canary,
+      const OfflineCohereTranscribeModelConfig &cohere_transcribe,
+      const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
+      const OfflineFunASRNanoModelConfig &funasr_nano,
+      const OfflineMedAsrCtcModelConfig &medasr,
+      const OfflineFireRedAsrCtcModelConfig &fire_red_asr_ctc,
+      const OfflineQwen3ASRModelConfig &qwen3_asr,
+      const OfflineW2vBertCtcModelConfig &w2v_bert_ctc,
+      const std::string &telespeech_ctc, const std::string &tokens,
+      int32_t num_threads, bool debug, const std::string &provider,
+      const std::string &model_type, const std::string &modeling_unit,
+      const std::string &bpe_vocab, const OfflineGigaAMModelConfig &gigaam = {})
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),

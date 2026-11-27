@@ -103,36 +103,22 @@ GigaAMSentencePieceDecoder::GigaAMSentencePieceDecoder(
     if (model.wire != 2) {
       continue;
     }
-    ProtoReader field(model.payload);
-    if (model.number == 1) {
-      Token token;
-      while (field.Next()) {
-        if (field.number == 1 && field.wire == 2) {
-          token.piece = field.payload;
-        } else if (field.number == 3 && field.wire == 0) {
-          token.type = field.integer;
+    switch (model.number) {
+      case 1:
+        tokens_.push_back(ParsePiece(model.payload));
+        break;
+      case 2:
+        ReadTrainer(model.payload);
+        break;
+      case 3:
+        ReadNormalizer(model.payload);
+        break;
+      case 5:
+        if (!model.payload.empty()) {
+          throw std::runtime_error(
+              "Unsupported GigaAM SentencePiece denormalizer");
         }
-      }
-      if (token.piece.empty() || token.type < 1 || token.type > 5) {
-        throw std::runtime_error("Unsupported GigaAM SentencePiece token");
-      }
-      tokens_.push_back(std::move(token));
-    } else if (model.number == 2) {
-      while (field.Next()) {
-        if (field.number == 44 && field.wire == 2) {
-          unknown_surface_ = field.payload;
-        }
-      }
-    } else if (model.number == 3) {
-      while (field.Next()) {
-        if (field.number == 3 && field.wire == 0) {
-          add_dummy_prefix_ = field.integer != 0;
-        } else if (field.number == 4 && field.wire == 0) {
-          remove_extra_whitespaces_ = field.integer != 0;
-        }
-      }
-    } else if (model.number == 5 && !model.payload.empty()) {
-      throw std::runtime_error("Unsupported GigaAM SentencePiece denormalizer");
+        break;
     }
   }
 
@@ -141,8 +127,57 @@ GigaAMSentencePieceDecoder::GigaAMSentencePieceDecoder(
   }
 }
 
+GigaAMSentencePieceDecoder::Token GigaAMSentencePieceDecoder::ParsePiece(
+    std::string_view payload) {
+  Token token;
+  ProtoReader field(payload);
+  while (field.Next()) {
+    if (field.number == 1 && field.wire == 2) {
+      token.piece = field.payload;
+    } else if (field.number == 3 && field.wire == 0) {
+      token.type = field.integer;
+    }
+  }
+  if (token.piece.empty() || token.type < 1 || token.type > 5) {
+    throw std::runtime_error("Unsupported GigaAM SentencePiece token");
+  }
+  return token;
+}
+
+void GigaAMSentencePieceDecoder::ReadTrainer(std::string_view payload) {
+  ProtoReader field(payload);
+  while (field.Next()) {
+    if (field.number == 44 && field.wire == 2) {
+      unknown_surface_ = field.payload;
+    }
+  }
+}
+
+void GigaAMSentencePieceDecoder::ReadNormalizer(std::string_view payload) {
+  ProtoReader field(payload);
+  while (field.Next()) {
+    if (field.wire != 0) {
+      continue;
+    }
+    if (field.number == 3) {
+      add_dummy_prefix_ = field.integer != 0;
+    } else if (field.number == 4) {
+      remove_extra_whitespaces_ = field.integer != 0;
+    }
+  }
+}
+
+const GigaAMSentencePieceDecoder::Token &GigaAMSentencePieceDecoder::GetToken(
+    int64_t id) const {
+  if (id < 0 || static_cast<uint64_t>(id) >= tokens_.size()) {
+    throw std::runtime_error(
+        "GigaAM token ID is outside the selected SentencePiece vocabulary");
+  }
+  return tokens_[id];
+}
+
 const std::string &GigaAMSentencePieceDecoder::Piece(int64_t id) const {
-  return tokens_.at(id).piece;
+  return GetToken(id).piece;
 }
 
 std::string GigaAMSentencePieceDecoder::Decode(
@@ -150,7 +185,7 @@ std::string GigaAMSentencePieceDecoder::Decode(
   std::string text;
   bool at_start = true;
   for (const auto id : ids) {
-    const auto &token = tokens_.at(id);
+    const auto &token = GetToken(id);
     if (token.type == 3) {  // CONTROL pieces have no surface.
       continue;
     }
