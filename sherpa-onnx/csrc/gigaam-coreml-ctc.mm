@@ -9,6 +9,7 @@
 
 #include <array>
 #include <cstring>
+#include <mutex>
 #include <stdexcept>
 
 namespace sherpa_onnx {
@@ -88,6 +89,8 @@ class GigaAmCoremlCtc::Impl {
       if (!inputs) {
         throw CoremlError("Prepare GigaAM CTC inputs", error);
       }
+      // Workers may share this MLModel. Copy its output before the next prediction.
+      std::lock_guard<std::mutex> lock(prediction_mutex_);
       id<MLFeatureProvider> output = [model_ predictionFromFeatures:inputs error:&error];
       if (!output) {
         throw CoremlError("Predict GigaAM CTC", error);
@@ -120,6 +123,7 @@ class GigaAmCoremlCtc::Impl {
   }
 
   MLModel *model_ = nil;
+  mutable std::mutex prediction_mutex_;
   int64_t frames_ = 0;
 };
 
