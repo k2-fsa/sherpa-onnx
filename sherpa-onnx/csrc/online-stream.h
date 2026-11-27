@@ -75,6 +75,9 @@ class OnlineStream {
 
   void Reset();
 
+  // Discard queued input and restart feature extraction for a new utterance.
+  void ResetFeatures();
+
   int32_t FeatureDim() const;
 
   // Return a reference to the number of processed frames so far

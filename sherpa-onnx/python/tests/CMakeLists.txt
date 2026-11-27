@@ -24,6 +24,7 @@ set(py_test_files
   test_keyword_spotter.py
   test_offline_recognizer.py
   test_offline_tts_config.py
+  test_online_gigaam_v4.py
   test_online_recognizer.py
   test_online_transducer_model_config.py
   test_online_unified_recognizer.py
@@ -35,4 +36,7 @@ set(py_test_files
 foreach(source IN LISTS py_test_files)
   sherpa_onnx_add_py_test(${source})
 endforeach()
+
+set_tests_properties(test_online_gigaam_v4_py PROPERTIES
+  SKIP_REGULAR_EXPRESSION "skipped 'Set SHERPA_ONNX_GIGAAM_STREAMING_PACKAGE")
 

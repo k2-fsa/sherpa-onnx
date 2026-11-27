@@ -6,12 +6,69 @@
 
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
+
+TEST(OnlineStream, GigaAMV4LogMel) {
+  FeatureExtractorConfig config;
+  config.feature_dim = 64;
+  config.low_freq = 0;
+  config.high_freq = 8000;
+  config.snip_edges = true;
+  config.frame_length_ms = 20;
+  config.remove_dc_offset = false;
+  config.preemph_coeff = 0;
+  config.window_type = "hann";
+  config.round_to_power_of_two = false;
+  config.is_gigaam = true;
+
+  OnlineStream stream(config);
+  std::vector<float> samples(480, 0.0f);
+  samples[80] = 1.0f;
+  stream.AcceptWaveform(16000, samples.data(), samples.size());
+  ASSERT_EQ(stream.NumFramesReady(), 2);
+  const auto frames = stream.GetFrames(0, 2);
+  ASSERT_EQ(frames.size(), 128);
+
+  // The windowed impulse has power 1/4 at every frequency. With the
+  // reference GigaAM filterbank, each log-mel band is log(sum(weights)/4).
+  EXPECT_NEAR(frames[0], -2.883459, 1e-4);
+  EXPECT_NEAR(frames[31], -0.759192, 1e-4);
+  EXPECT_NEAR(frames[63], 0.478701, 1e-4);
+  for (int32_t i = 64; i < 128; ++i) {
+    EXPECT_NEAR(frames[i], std::log(1e-9f), 1e-5);
+  }
+}
+
+TEST(OnlineRecognizer, GigaAMV4RejectsTokenBuffer) {
+  OnlineRecognizerConfig config;
+  config.model_config.model_type = "gigaam_v4";
+  config.model_config.transducer.encoder = "model_stream_step.onnx";
+  config.model_config.transducer.decoder = "model_raw_decoder.onnx";
+  config.model_config.transducer.joiner = "model_raw_joint.onnx";
+  config.model_config.tokens_buf = "<blk> 1024";
+  EXPECT_THROW({ OnlineRecognizer recognizer(config); }, std::invalid_argument);
+}
+
+TEST(OnlineStream, FbankFlushesResamplerTail) {
+  FeatureExtractorConfig config;
+  config.snip_edges = true;
+  config.frame_length_ms = 20;
+  OnlineStream stream(config);
+  // Exactly one 20 ms frame at 48 kHz. Some samples are held until EOF.
+  std::vector<float> audio(960, 0.1f);
+  stream.AcceptWaveform(48000, audio.data(), audio.size());
+  EXPECT_EQ(stream.NumFramesReady(), 0);
+  stream.InputFinished();
+  ASSERT_EQ(stream.NumFramesReady(), 1);
+  EXPECT_TRUE(stream.IsLastFrame(0));
+}
 
 TEST(OnlineStream, NemoAdditiveLogGuard) {
   std::vector<float> audio(16000, 0.0f);

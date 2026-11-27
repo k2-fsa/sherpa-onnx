@@ -85,6 +85,8 @@ class FeatureExtractor::Impl {
     }
   }
 
+  const FeatureExtractorConfig &Config() const { return config_; }
+
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     if (config_.normalize_samples) {
       AcceptWaveformImpl(sampling_rate, waveform, n);
@@ -147,13 +149,14 @@ class FeatureExtractor::Impl {
 
   void InputFinished() const {
     std::scoped_lock lock(mutex_);
-    if (nemo_buffered_) {
-      if (resampler_) {
-        std::vector<float> tail;
-        resampler_->Resample(nullptr, 0, true, &tail);
-        nemo_buffered_->AcceptWaveform(config_.sampling_rate, tail.data(),
-                                       tail.size());
+    if (resampler_ && (nemo_buffered_ || fbank_)) {
+      std::vector<float> tail;
+      resampler_->Resample(nullptr, 0, true, &tail);
+      if (!tail.empty()) {
+        AcceptWaveformWrapper(config_.sampling_rate, tail.data(), tail.size());
       }
+    }
+    if (nemo_buffered_) {
       nemo_buffered_->InputFinished();
       return;
     } else if (fbank_) {
@@ -350,6 +353,13 @@ class FeatureExtractor::Impl {
 
     opts_.mel_opts.is_librosa = config_.is_librosa;
 
+    if (config_.is_gigaam) {
+      opts_.mel_opts.is_librosa = true;
+      opts_.mel_opts.use_slaney_mel_scale = false;
+      opts_.mel_opts.norm.clear();
+      opts_.eps = 1e-9f;
+    }
+
     if (config_.use_nemo_log_guard) {
       // Same as the offline NeMo features; see offline-stream.cc
       opts_.use_log_floor = false;
@@ -423,6 +433,10 @@ FeatureExtractor::FeatureExtractor(const FeatureExtractorConfig &config /*={}*/)
     : impl_(std::make_unique<Impl>(config)) {}
 
 FeatureExtractor::~FeatureExtractor() = default;
+
+void FeatureExtractor::Reset() {
+  impl_ = std::make_unique<Impl>(impl_->Config());
+}
 
 void FeatureExtractor::AcceptWaveform(int32_t sampling_rate,
                                       const float *waveform, int32_t n) const {
