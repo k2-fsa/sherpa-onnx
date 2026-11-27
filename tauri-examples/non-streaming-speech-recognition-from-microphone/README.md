@@ -11,7 +11,7 @@ Pre-built apps (macOS, Linux, Windows) are available at:
 ## Features
 
 - **62+ ASR models** — SenseVoice, Paraformer, Whisper, Transducer, Moonshine, and more
-- **Live microphone capture** via [cpal](https://github.com/RustAudioGroup/cpal) — works on Linux, macOS, and Windows
+- **Live microphone capture** via [cpal](https://github.com/RustAudio/cpal) — works on Linux, macOS, and Windows
 - **VAD-triggered recognition** — detects when you stop speaking and transcribes each segment
 - **Wall-clock timestamps** — results show real times (e.g., "2026-04-21 18:52:28")
 - **Click-to-seek** — click any row in the results table to jump to that segment in the recording
