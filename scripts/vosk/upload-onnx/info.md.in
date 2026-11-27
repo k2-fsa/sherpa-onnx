@@ -33,6 +33,12 @@ Zip sizes (`ls -lh`):
 
 {{ io }}
 
+{% if words_note %}
+## Note on `graph/words.txt`
+
+{{ words_note }}
+{% endif %}
+
 ## What the model dir contains
 
 ```

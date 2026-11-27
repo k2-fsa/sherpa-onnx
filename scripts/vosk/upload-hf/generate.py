@@ -188,6 +188,8 @@ def hf_commit(pairs, message, repo=HF_REPO):
 def gh_release_upload(pairs, gh_repo, tag):
     """Upload all <local>:<name> pairs to the GitHub release `tag` of
     gh_repo (a same-name asset is overwritten)."""
+    import time
+
     import requests
 
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
@@ -201,24 +203,52 @@ def gh_release_upload(pairs, gh_repo, tag):
     r.raise_for_status()
     release = r.json()
     upload_url = release["upload_url"].split("{")[0]
-    assets = requests.get(
-        f"{api}/releases/{release['id']}/assets", headers=headers
-    ).json()
-    existing = {a["name"]: a["id"] for a in assets}
+
+    def all_assets():
+        """name -> asset id, PAGINATED: the API returns one page
+        (30 by default) and a big release carries hundreds of assets --
+        an unpaged listing misses most names, the delete is skipped
+        and the upload fails 422 'already_exists'."""
+        existing = {}
+        page = 1
+        while True:
+            r = requests.get(
+                f"{api}/releases/{release['id']}/assets",
+                headers=headers,
+                params={"per_page": 100, "page": page},
+            )
+            r.raise_for_status()
+            batch = r.json()
+            if not batch:
+                return existing
+            for a in batch:
+                existing[a["name"]] = a["id"]
+            page += 1
+
     for pair in pairs:
         local, name = pair.split(":", 1)
-        if name in existing:
-            requests.delete(
-                f"{api}/releases/assets/{existing[name]}", headers=headers
-            ).raise_for_status()
-        with open(local, "rb") as f:
-            r = requests.post(
-                upload_url,
-                params={"name": name},
-                headers={**headers, "Content-Type": "application/octet-stream"},
-                data=f,
-            )
-        r.raise_for_status()
+        for attempt in range(3):
+            existing = all_assets()
+            if name in existing:
+                requests.delete(
+                    f"{api}/releases/assets/{existing[name]}", headers=headers
+                ).raise_for_status()
+                time.sleep(1)  # deletion is eventually consistent
+            with open(local, "rb") as f:
+                r = requests.post(
+                    upload_url,
+                    params={"name": name},
+                    headers={**headers, "Content-Type": "application/octet-stream"},
+                    data=f,
+                )
+            if r.status_code != 422:
+                r.raise_for_status()
+                break
+            # 422: the name is still taken (the delete is not visible
+            # yet) -- rescan (paginated) and retry
+            time.sleep(3)
+        else:
+            r.raise_for_status()
         print(f"{local} -> github.com/{gh_repo}/releases/{tag}:{name}")
 
 
@@ -291,7 +321,9 @@ https://alphacephei.com/vosk/models).
 - `test_wavs/` has a test wav and its transcript.
 
 The other files (`conf/`, `ivector/`, `graph/`, `README`) are unchanged
-from the original vosk model.
+from the original vosk model, except `graph/words.txt`, which is
+regenerated from the graph's output symbol table when the original
+ids disagree with it (then the info page says so).
 """
         )
     print(f"{out_dir}: test_wavs/ + README.md added")
@@ -350,6 +382,7 @@ def render_info(all_model_list, listing_dir: Path, only: str = ""):
         zips_p = listing_dir / f"{m.name}.zips.txt"
         zips_text = zips_p.read_text() if zips_p.is_file() else ""
         io_p = listing_dir / f"{m.name}.io.txt"
+        words_p = listing_dir / f"{m.name}.words-note.txt"
         page.write_text(
             template.render(
                 name=m.name,
@@ -365,6 +398,7 @@ def render_info(all_model_list, listing_dir: Path, only: str = ""):
                 io=io_p.read_text().rstrip()
                 if io_p.is_file()
                 else "(signature listing not available)",
+                words_note=words_p.read_text().rstrip() if words_p.is_file() else "",
                 int8="-int8" in zips_text,  # the int8 zip was produced
             )
         )

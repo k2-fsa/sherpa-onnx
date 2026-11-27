@@ -112,6 +112,12 @@ python3 ../export_onnx.py --in-dir "work/$name-torch" \
   --out-dir "work/$name-onnx"
 rm -rf "work/$name-torch"
 
+# graph/words.txt is only correct if its ids match the graph's output
+# symbol table (they can disagree -- e.g. vosk-model-uk-v3-lgraph).
+# Regenerate it when wrong; the note (if any) goes on the info page.
+python3 ../fix_words_txt.py --model-dir "work/$name-onnx" \
+  --note "listing/$name.words-note.txt"
+
 # debug files for upload as a CI artifact (mdl/conf/mat/text -- the
 # decoding graphs (*.fst) are too large to upload).  Packed before the
 # gates so a failing gate still leaves something to inspect.

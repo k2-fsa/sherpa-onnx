@@ -313,8 +313,37 @@ def load_graph(model_dir):
     return kaldifst.lookahead_compose_fst(hcl, gr, disambig)
 
 
+class _FstWords:
+    """Word-id -> text over an FST's embedded SymbolTable (a lazy
+    lookup: lgraph models carry millions of symbols; no dict is
+    materialized)."""
+
+    def __init__(self, fst):
+        # the symbol table is OWNED by the FST and the Python wrapper
+        # does not keep its FST alive -- hold `fst` here or the table
+        # dangles (segfault) once the caller's reference is gone
+        self._fst = fst
+        self.syms = fst.output_symbols
+
+    def get(self, wid, default=None):
+        text = self.syms.find(wid)
+        return default if not text else text
+
+
 def load_words(model_dir, fst):
-    """Word-id -> text (words.txt, else the graph's output symbols)."""
+    """Word-id -> text.
+
+    The graph's embedded output symbol table is AUTHORITATIVE -- word
+    ids in the lattice are FST output labels, and vosk-api maps them
+    the same way (model.cc: `g_fst_->OutputSymbols()` before
+    words.txt).  graph/words.txt is only a fallback for graphs without
+    embedded symbols.  The two tables can DISAGREE:
+    vosk-model-uk-v3-lgraph ships a re-sorted words.txt whose ids do
+    not match its Gr.fst -- preferring words.txt mapped correct
+    decodes to garbage text."""
+    syms = fst.output_symbols
+    if syms is not None:
+        return _FstWords(fst)
     path = Path(model_dir) / "graph" / "words.txt"
     if path.is_file():
         words = {}
@@ -323,10 +352,7 @@ def load_words(model_dir, fst):
             if len(parts) == 2:
                 words[int(parts[1])] = parts[0]  # text id
         return words
-    syms = fst.output_symbols
-    return {
-        wid: syms.find(wid) for wid in range(1, syms.available_key()) if syms.find(wid)
-    }
+    raise SystemExit(f"{model_dir}: no word symbols (graph has none, no words.txt)")
 
 
 # Per-model resources, loaded once per process.  The lazy HCLr o Gr
