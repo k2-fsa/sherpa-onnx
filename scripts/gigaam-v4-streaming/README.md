@@ -70,8 +70,9 @@ print("final", recognizer.get_result(stream))
 ```
 
 `get_result` returns cumulative text for the current utterance.
-`recognizer.reset(stream)` clears caches and discards queued samples from the
-previous utterance. After EOF, create a new stream to begin another input.
+After a detected endpoint, `recognizer.reset(stream)` clears model state and
+keeps queued audio for the next segment. An explicit reset before an endpoint
+discards queued audio. After EOF, create a new stream to begin another input.
 C and C++ clients use the same lifecycle and set `model_config.model_type` to
 `gigaam_v4`.
 
@@ -80,9 +81,9 @@ Use `tokens.raw.txt` with the raw decoder and joint for plain text. The
 frontend and encoder are shared. Each recognizer runs one head.
 
 The recognizer checks the head names on the published decoder, joint, and token
-files and rejects a mixed pair. Renamed files without a head suffix and
-`tokens_buf` carry no head name. Keep a published head-identifying name on at
-least one file for raw output, and supply the matching files or token buffer.
+files and rejects a mixed pair. Provide the matching token file on disk. In-memory token tables
+(`tokens_buf`) are rejected because they do not identify their head. Keep a
+published head-identifying name on at least one file for raw output.
 If no name identifies the head, text uses the E2E formatting convention.
 
 ## CLI file smoke test

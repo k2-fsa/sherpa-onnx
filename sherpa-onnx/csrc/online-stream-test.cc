@@ -6,9 +6,11 @@
 
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
@@ -42,6 +44,30 @@ TEST(OnlineStream, GigaAMV4LogMel) {
   for (int32_t i = 64; i < 128; ++i) {
     EXPECT_NEAR(frames[i], std::log(1e-9f), 1e-5);
   }
+}
+
+TEST(OnlineRecognizer, GigaAMV4RejectsTokenBuffer) {
+  OnlineRecognizerConfig config;
+  config.model_config.model_type = "gigaam_v4";
+  config.model_config.transducer.encoder = "model_stream_step.onnx";
+  config.model_config.transducer.decoder = "model_raw_decoder.onnx";
+  config.model_config.transducer.joiner = "model_raw_joint.onnx";
+  config.model_config.tokens_buf = "<blk> 1024";
+  EXPECT_THROW({ OnlineRecognizer recognizer(config); }, std::invalid_argument);
+}
+
+TEST(OnlineStream, FbankFlushesResamplerTail) {
+  FeatureExtractorConfig config;
+  config.snip_edges = true;
+  config.frame_length_ms = 20;
+  OnlineStream stream(config);
+  // Exactly one 20 ms frame at 48 kHz. Some samples are held until EOF.
+  std::vector<float> audio(960, 0.1f);
+  stream.AcceptWaveform(48000, audio.data(), audio.size());
+  EXPECT_EQ(stream.NumFramesReady(), 0);
+  stream.InputFinished();
+  ASSERT_EQ(stream.NumFramesReady(), 1);
+  EXPECT_TRUE(stream.IsLastFrame(0));
 }
 
 TEST(OnlineStream, NemoAdditiveLogGuard) {

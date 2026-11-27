@@ -49,6 +49,36 @@ class TestOnlineGigaamV4(unittest.TestCase):
         self.assertEqual(recognizer.tokens(stream)[: len(partial)], partial)
         self.assertIn("родион", recognizer.get_result(stream).casefold())
 
+    def test_endpoint_reset_preserves_queued_speech(self):
+        config = {
+            **self.config,
+            "enable_endpoint_detection": True,
+            "rule3_min_utterance_length": 0.5,
+        }
+        recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(**config)
+        samples, rate = read_wave(os.environ["SHERPA_ONNX_GIGAAM_TEST_WAV"])
+        stream = recognizer.create_stream()
+        stream.accept_waveform(rate, [0.0] * 10240)
+        stream.accept_waveform(rate, samples[:5120])
+        recognizer.decode_stream(stream)
+        self.assertTrue(recognizer.is_endpoint(stream))
+        recognizer.reset(stream)
+
+        reference = recognizer.create_stream()
+        reference.accept_waveform(rate, samples[:5120])
+        for current in (stream, reference):
+            current.accept_waveform(rate, samples[5120:10400])
+            self.assertTrue(recognizer.is_ready(current))
+            recognizer.decode_stream(current)
+            current.accept_waveform(rate, samples[10400:])
+            current.input_finished()
+            while recognizer.is_ready(current):
+                recognizer.decode_stream(current)
+
+        expected = recognizer.tokens(reference)
+        self.assertTrue(expected)
+        self.assertEqual(recognizer.tokens(stream), expected)
+
     def test_rejects_mixed_heads(self):
         for arg, filename in (
             ("decoder", "v4_rnnt_640ms_raw_decoder.onnx"),

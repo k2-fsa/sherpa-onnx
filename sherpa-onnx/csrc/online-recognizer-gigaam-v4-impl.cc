@@ -70,10 +70,13 @@ Head NamedHead(const std::string &path, const std::string &e2e,
 }
 
 bool IsRawModel(const OnlineModelConfig &config) {
+  if (!config.tokens_buf.empty()) {
+    throw std::invalid_argument(
+        "GigaAM-v4 requires a token file matching the decoder head; "
+        "tokens_buf is unsupported");
+  }
   const auto tokens =
-      config.tokens_buf.empty()
-          ? NamedHead(config.tokens, "tokens.e2e.txt", "tokens.raw.txt")
-          : Head::kUnknown;
+      NamedHead(config.tokens, "tokens.e2e.txt", "tokens.raw.txt");
   const auto decoder = NamedHead(config.transducer.decoder, "_e2e_decoder.onnx",
                                  "_raw_decoder.onnx");
   const auto joint =
@@ -206,10 +209,7 @@ class Recognizer : public OnlineRecognizerImpl {
                  58),
         decoder_(env_, config.model_config.transducer.decoder, options_, 3, 3),
         joiner_(env_, config.model_config.transducer.joiner, options_, 2, 1),
-        symbols_(config.model_config.tokens_buf.empty()
-                     ? config.model_config.tokens
-                     : config.model_config.tokens_buf,
-                 config.model_config.tokens_buf.empty()),
+        symbols_(config.model_config.tokens),
         endpoint_(config.endpoint_config),
         enable_endpoint_(config.enable_endpoint),
         blank_penalty_(config.blank_penalty),
@@ -273,7 +273,11 @@ class Recognizer : public OnlineRecognizerImpl {
   void Reset(OnlineStream *stream) const override {
     auto *s = static_cast<Stream *>(stream);
     if (!s->GetResult().tokens.empty()) ++s->GetCurrentSegment();
-    s->ResetFeatures();
+    if (IsEndpoint(s)) {
+      s->Reset();  // Keep queued frames for the next segment.
+    } else {
+      s->ResetFeatures();
+    }
     s->frontend.clear();
     s->encoder.clear();
     s->predictor.clear();

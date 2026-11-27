@@ -149,13 +149,14 @@ class FeatureExtractor::Impl {
 
   void InputFinished() const {
     std::scoped_lock lock(mutex_);
-    if (nemo_buffered_) {
-      if (resampler_) {
-        std::vector<float> tail;
-        resampler_->Resample(nullptr, 0, true, &tail);
-        nemo_buffered_->AcceptWaveform(config_.sampling_rate, tail.data(),
-                                       tail.size());
+    if (resampler_ && (nemo_buffered_ || fbank_)) {
+      std::vector<float> tail;
+      resampler_->Resample(nullptr, 0, true, &tail);
+      if (!tail.empty()) {
+        AcceptWaveformWrapper(config_.sampling_rate, tail.data(), tail.size());
       }
+    }
+    if (nemo_buffered_) {
       nemo_buffered_->InputFinished();
       return;
     } else if (fbank_) {
