@@ -132,6 +132,7 @@ set(sources
   online-transducer-nemo-model.cc
   online-wenet-ctc-model-config.cc
   online-wenet-ctc-model.cc
+  online-zapformer-transducer-model.cc
   online-zipformer-transducer-model.cc
   online-zipformer2-ctc-model-config.cc
   online-zipformer2-ctc-model.cc
