@@ -17,6 +17,28 @@
 
 namespace sherpa_onnx {
 
+// espeak-ng outputs "ç" as "c" followed by U+0327 (combining cedilla).
+// The token tables contain "ç" but not U+0327, so without merging the
+// pair the cedilla is skipped and "ç" is read as "c" (e.g., German "ich").
+static std::vector<char32_t> MergeCombiningCedilla(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const std::vector<char32_t> &phonemes) {
+  if (!token2id.count(0x00e7) || token2id.count(0x0327)) {
+    return phonemes;
+  }
+
+  std::vector<char32_t> ans;
+  ans.reserve(phonemes.size());
+  for (auto p : phonemes) {
+    if (p == 0x0327 && !ans.empty() && ans.back() == U'c') {
+      ans.back() = 0x00e7;
+    } else {
+      ans.push_back(p);
+    }
+  }
+  return ans;
+}
+
 std::string TokenIDs::ToString() const {
   std::ostringstream os;
   os << "TokenIDs(";
@@ -90,7 +112,8 @@ std::unordered_map<char32_t, int32_t> ReadPiperTokens(std::istream &is) {
 
 std::vector<int64_t> PiperPhonemesToIdsVits(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<char32_t> &phonemes, bool is_inflect) {
+    const std::vector<char32_t> &phonemes_in, bool is_inflect) {
+  auto phonemes = MergeCombiningCedilla(token2id, phonemes_in);
   // These markers must exist in tokens.txt; look them up defensively so a
   // vocab without them fails cleanly instead of throwing std::out_of_range
   // across the C ABI (which would call std::terminate).
@@ -142,8 +165,9 @@ std::vector<int64_t> PiperPhonemesToIdsVits(
 
 std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<char32_t> &phonemes, bool use_eos_bos,
+    const std::vector<char32_t> &phonemes_in, bool use_eos_bos,
     int32_t max_token_len /*= 400*/) {
+  auto phonemes = MergeCombiningCedilla(token2id, phonemes_in);
   std::vector<std::vector<int64_t>> ans;
   std::vector<int64_t> current;
 
@@ -188,8 +212,9 @@ std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
 
 std::vector<std::vector<int64_t>> PiperPhonemesToIdsKitten(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<char32_t> &phonemes,
+    const std::vector<char32_t> &phonemes_in,
     const OfflineTtsKittenModelMetaData &meta_data) {
+  auto phonemes = MergeCombiningCedilla(token2id, phonemes_in);
   std::vector<std::vector<int64_t>> ans;
   std::vector<int64_t> current;
   current.reserve(phonemes.size());
@@ -233,8 +258,9 @@ std::vector<std::vector<int64_t>> PiperPhonemesToIdsKitten(
 
 std::vector<int64_t> CoquiPhonemesToIds(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<char32_t> &phonemes,
+    const std::vector<char32_t> &phonemes_in,
     const OfflineTtsVitsModelMetaData &vits_meta_data) {
+  auto phonemes = MergeCombiningCedilla(token2id, phonemes_in);
   int32_t use_eos_bos = vits_meta_data.use_eos_bos;
   int32_t bos_id = vits_meta_data.bos_id;
   int32_t eos_id = vits_meta_data.eos_id;
