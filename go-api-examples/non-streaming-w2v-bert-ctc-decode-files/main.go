@@ -24,6 +24,9 @@ func main() {
 
 	log.Println("Initializing recognizer (may take several seconds)")
 	recognizer := sherpa.NewOfflineRecognizer(&config)
+	if recognizer == nil {
+		log.Fatalf("Failed to create the recognizer; check the model paths")
+	}
 	log.Println("Recognizer created!")
 	defer sherpa.DeleteOfflineRecognizer(recognizer)
 
