@@ -10,12 +10,13 @@ jobs:
     if: github.repository_owner == 'k2-fsa'
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
         tag: [null, asr-models, tts-models, kws-models, speaker-recongition-models, audio-tagging-models, punctuation-models, source-separation-models, fa-models]
     steps:
       - name: Run checksum action
         # Pin by commit SHA: this job uploads release assets with GITHUB_TOKEN write access.
-        uses: XDcobra/checksum@672d1f6e3d3c6e2fd68329f450923e84755fdc47 # v1.0.1
+        uses: XDcobra/checksum@811ae33cc282406b6ba3e8cf641da38f86ada1c7 # v1.1.0
         with:
           tag: ${{ matrix.tag }}
         env:
