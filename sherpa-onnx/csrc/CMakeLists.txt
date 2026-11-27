@@ -367,6 +367,22 @@ endif()
 # Always static build
 add_library(sherpa-onnx-core STATIC ${sources})
 
+option(SHERPA_ONNX_ENABLE_GIGAAM_COREML "Load compiled GigaAM CTC Core ML models" OFF)
+if(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    message(FATAL_ERROR "Native GigaAM Core ML currently supports macOS")
+  endif()
+  enable_language(OBJCXX)
+  find_library(GIGAAM_COREML_FRAMEWORK CoreML REQUIRED)
+  find_library(GIGAAM_FOUNDATION_FRAMEWORK Foundation REQUIRED)
+  target_sources(sherpa-onnx-core PRIVATE gigaam-coreml-ctc.mm)
+  set_target_properties(sherpa-onnx-core PROPERTIES OBJCXX_STANDARD 17)
+  set_source_files_properties(gigaam-coreml-ctc.mm PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+  set_source_files_properties(
+    offline-nemo-enc-dec-ctc-model.cc offline-nemo-enc-dec-ctc-model-config.cc
+    PROPERTIES COMPILE_DEFINITIONS SHERPA_ONNX_ENABLE_GIGAAM_COREML)
+  target_link_libraries(sherpa-onnx-core ${GIGAAM_COREML_FRAMEWORK} ${GIGAAM_FOUNDATION_FRAMEWORK})
+endif()
 
 if(WIN32 AND SHERPA_ONNX_LINK_D3D)
     target_link_libraries(sherpa-onnx-core dxguid.lib d3d12.lib dxgi.lib dxcore.lib)
