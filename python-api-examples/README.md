@@ -7,6 +7,8 @@
 - [Orukeet](./orukeet.md) Download and serve the multilingual Orukeet model
   using the existing NeMo transducer runtime. The same server options support
   Parakeet TDT v3.
+- [GigaAM-v4 CTC E2E](./gigaam-v4-ctc.md) Transcribe Russian and English WAV
+  files using the offline NeMo CTC example.
 - [vad-remove-non-speech-segments.py](./vad-remove-non-speech-segments.py) It uses
   [silero-vad](https://github.com/snakers4/silero-vad) to remove non-speech
   segments and concatenate all speech segments into a single one.
