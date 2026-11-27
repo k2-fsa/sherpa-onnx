@@ -34,28 +34,54 @@ void AudioTaggingConfig::Register(ParseOptions *po) {
   po->Register("top-k", &top_k, "Top k events to return in the result");
 }
 
-bool AudioTaggingConfig::Validate() const {
-  if (!model.Validate()) {
+// 'validate_model' and 'exists' check the model config and resolve a path
+// either against the file system or against a resource manager.
+template <typename ValidateModel, typename Exists>
+static bool ValidateAudioTaggingConfig(const AudioTaggingConfig &config,
+                                       const ValidateModel &validate_model,
+                                       const Exists &exists) {
+  if (!validate_model()) {
     return false;
   }
 
-  if (top_k < 1) {
-    SHERPA_ONNX_LOGE("--top-k should be >= 1. Given: %d", top_k);
+  if (config.top_k < 1) {
+    SHERPA_ONNX_LOGE("--top-k should be >= 1. Given: %d", config.top_k);
     return false;
   }
 
-  if (labels.empty()) {
+  if (config.labels.empty()) {
     SHERPA_ONNX_LOGE("Please provide --labels");
     return false;
   }
 
-  if (!FileExists(labels)) {
-    SHERPA_ONNX_LOGE("--labels '%s' does not exist", labels.c_str());
+  if (!exists(config.labels)) {
+    SHERPA_ONNX_LOGE("--labels '%s' does not exist", config.labels.c_str());
     return false;
   }
 
   return true;
 }
+
+bool AudioTaggingConfig::Validate() const {
+  return ValidateAudioTaggingConfig(
+      *this, [this]() -> bool { return model.Validate(); },
+      [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool AudioTaggingConfig::Validate(Manager *mgr) const {
+  return ValidateAudioTaggingConfig(
+      *this, [this, mgr]() -> bool { return model.Validate(mgr); },
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool AudioTaggingConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool AudioTaggingConfig::Validate(NativeResourceManager *mgr) const;
+#endif
 std::string AudioTaggingConfig::ToString() const {
   std::ostringstream os;
 
