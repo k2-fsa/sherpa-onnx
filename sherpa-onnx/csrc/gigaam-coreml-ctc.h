@@ -1,3 +1,7 @@
+// sherpa-onnx/csrc/gigaam-coreml-ctc.h
+//
+// Copyright (c)  2026  sherpa-onnx contributors
+
 #ifndef SHERPA_ONNX_CSRC_GIGAAM_COREML_CTC_H_
 #define SHERPA_ONNX_CSRC_GIGAAM_COREML_CTC_H_
 

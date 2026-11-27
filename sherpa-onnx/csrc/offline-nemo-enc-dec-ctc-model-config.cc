@@ -31,7 +31,7 @@ void OfflineNemoEncDecCtcModelConfig::Register(ParseOptions *po) {
 bool OfflineNemoEncDecCtcModelConfig::Validate() const {
 #if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
   if (EndsWith(model, ".mlmodelc")) {
-    struct stat info {};
+    struct stat info{};
     if (stat(model.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
       return true;
     }

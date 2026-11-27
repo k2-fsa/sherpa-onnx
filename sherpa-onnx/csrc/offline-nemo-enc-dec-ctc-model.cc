@@ -109,12 +109,12 @@ class OfflineNemoEncDecCtcModel::Impl {
   Ort::Value RunLogProbs(Ort::Value features, Ort::Value features_length) {
 #if defined(SHERPA_ONNX_ENABLE_GIGAAM_COREML)
     if (coreml_) {
-      return coreml_->Forward(features, *features_length.GetTensorData<int64_t>(),
-                               allocator_);
+      return coreml_->Forward(
+          features, *features_length.GetTensorData<int64_t>(), allocator_);
     }
 #endif
     std::array<Ort::Value, 2> inputs = {std::move(features),
-                                       std::move(features_length)};
+                                        std::move(features_length)};
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
                    output_names_ptr_.data(), output_names_ptr_.size());
@@ -178,11 +178,12 @@ class OfflineNemoEncDecCtcModel::Impl {
     SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
                                                "normalize_type");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
-    if (is_giga_am_ &&
-        input_names_ == std::vector<std::string>{"features", "feature_lengths"}) {
+    if (is_giga_am_ && input_names_ == std::vector<std::string>{
+                                           "features", "feature_lengths"}) {
       const auto shape =
           sess_->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
-      if (shape.size() == 3 && shape[0] == 1 && shape[1] == 64 && shape[2] > 0) {
+      if (shape.size() == 3 && shape[0] == 1 && shape[1] == 64 &&
+          shape[2] > 0) {
         fixed_frames_ = shape[2];
       }
     }
