@@ -1,29 +1,22 @@
 # GigaAM-v4 streaming RNN-T
 
-This CPU recognizer uses the [GigaAM-v4 640 ms ONNX package](https://huggingface.co/ai-babai/gigaam-v4-onnx/tree/d39e2a200f596315acef7003d246b65a73e9a327/rnnt-streaming-640ms).
+This CPU recognizer uses the [GigaAM-v4 640 ms ONNX package](https://huggingface.co/ai-babai/gigaam-v4-onnx/tree/00936113c4ccdb679da0212ebdef8e52b73aac48/rnnt-streaming-640ms).
 It keeps acoustic and predictor state in each stream. Keep the published
 `*_stream_frontend.onnx` file beside the `*_stream_step.int8.onnx` encoder.
 
-Download the pinned release files and export the E2E SentencePiece vocabulary
-to Sherpa's token-table format. SentencePiece is used only for this preparation
-step. Set `head=raw` to prepare the other vocabulary.
+Use a Sherpa source build containing commit
+`d346c3182c607743849149d2b871daa2adc45770`. The examples were exercised with
+Sherpa 2.0.3 and ONNX Runtime 1.28.2. Install the full Python package from your
+source checkout with `python -m pip install .`.
+
+Download the pinned graphs and both published token tables together.
 
 ```sh
+python -m pip install 'huggingface_hub==1.3.5'
 hf download ai-babai/gigaam-v4-onnx \
-  --revision d39e2a200f596315acef7003d246b65a73e9a327 \
+  --revision 00936113c4ccdb679da0212ebdef8e52b73aac48 \
   --include 'rnnt-streaming-640ms/*' --local-dir gigaam-v4
 cd gigaam-v4/rnnt-streaming-640ms
-
-python -m pip install 'sentencepiece==0.2.2'
-head=e2e
-python -c '
-import sys
-from sentencepiece import SentencePieceProcessor
-sp = SentencePieceProcessor(model_file=sys.argv[1])
-for i in range(sp.get_piece_size()):
-    print(sp.id_to_piece(i), i)
-print("<blk>", sp.get_piece_size())
-' "v4_rnnt_640ms_${head}_tokenizer.model" > "tokens.${head}.txt"
 ```
 
 ## Python streaming API
@@ -80,9 +73,9 @@ previous utterance. After EOF, create a new stream to begin another input.
 C and C++ clients use the same lifecycle and set `model_config.model_type` to
 `gigaam_v4`.
 
-E2E returns formatted text. For raw text, use the raw token table with the
-`*_raw_decoder.onnx` and `*_raw_joint.onnx` files. The frontend and encoder
-are shared. Each recognizer runs one head.
+Use `tokens.e2e.txt` with the E2E decoder and joint for formatted text.
+Use `tokens.raw.txt` with the raw decoder and joint for plain text. The
+frontend and encoder are shared. Each recognizer runs one head.
 
 ## CLI file smoke test
 
