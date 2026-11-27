@@ -17,7 +17,8 @@ class TestOnlineGigaamV4(unittest.TestCase):
     def setUp(self):
         self.package = Path(os.environ["SHERPA_ONNX_GIGAAM_STREAMING_PACKAGE"])
         encoder = os.getenv(
-            "SHERPA_ONNX_GIGAAM_STREAMING_ENCODER", "v4_rnnt_640ms_stream_step.int8.onnx"
+            "SHERPA_ONNX_GIGAAM_STREAMING_ENCODER",
+            "v4_rnnt_640ms_stream_step.int8.onnx",
         )
         self.config = dict(
             tokens=str(self.package / "tokens.e2e.txt"),
