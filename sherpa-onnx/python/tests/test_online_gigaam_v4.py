@@ -62,7 +62,9 @@ class TestOnlineGigaamV4(unittest.TestCase):
         stream.accept_waveform(rate, samples[:5120])
         recognizer.decode_stream(stream)
         self.assertTrue(recognizer.is_endpoint(stream))
+        self.assertEqual(recognizer.start_time(stream), 0.0)
         recognizer.reset(stream)
+        self.assertAlmostEqual(recognizer.start_time(stream), 0.64)
 
         reference = recognizer.create_stream()
         reference.accept_waveform(rate, samples[:5120])

@@ -247,6 +247,7 @@ class Recognizer : public OnlineRecognizerImpl {
     const auto &decoded = s->GetResult();
     OnlineRecognizerResult r;
     r.segment = s->GetCurrentSegment();
+    r.start_time = 0.01f * s->GetNumFramesSinceStart();
     r.num_trailing_blanks = decoded.num_trailing_blanks;
     r.tokens.reserve(decoded.tokens.size());
     r.timestamps.reserve(decoded.tokens.size());
