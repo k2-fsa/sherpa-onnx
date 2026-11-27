@@ -135,13 +135,15 @@ class OfflineTransducerNeMoModel::Impl {
   }
 
   std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) {
-    std::array<int64_t, 3> s0_shape{pred_rnn_layers_, batch_size, pred_hidden_};
+    std::array<int64_t, 3> s0_shape{pred_rnn_layers_, batch_size,
+                                    decoder_state_dim_};
     Ort::Value s0 = Ort::Value::CreateTensor<float>(allocator_, s0_shape.data(),
                                                     s0_shape.size());
 
     Fill<float>(&s0, 0);
 
-    std::array<int64_t, 3> s1_shape{pred_rnn_layers_, batch_size, pred_hidden_};
+    std::array<int64_t, 3> s1_shape{pred_rnn_layers_, batch_size,
+                                    decoder_state_dim_};
 
     Ort::Value s1 = Ort::Value::CreateTensor<float>(allocator_, s1_shape.data(),
                                                     s1_shape.size());
@@ -212,6 +214,14 @@ class OfflineTransducerNeMoModel::Impl {
                                                "normalize_type");
     SHERPA_ONNX_READ_META_DATA(pred_rnn_layers_, "pred_rnn_layers");
     SHERPA_ONNX_READ_META_DATA(pred_hidden_, "pred_hidden");
+
+    // The two decoder states are (pred_rnn_layers, N, decoder_state_dim).
+    // For an LSTM prediction network decoder_state_dim is pred_hidden.
+    // Models with another prediction network (e.g., Haas-ja-v1.0, whose
+    // prediction network uses Kimi Delta Attention) set it in the metadata.
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(decoder_state_dim_,
+                                            "decoder_state_dim", pred_hidden_);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_tdt_, "is_tdt", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(feat_dim_, "feat_dim", -1);
 
@@ -315,6 +325,7 @@ class OfflineTransducerNeMoModel::Impl {
   std::string normalize_type_;
   int32_t pred_rnn_layers_ = -1;
   int32_t pred_hidden_ = -1;
+  int32_t decoder_state_dim_ = -1;
   int32_t is_giga_am_ = 0;
   int32_t is_tdt_ = 0;
 
