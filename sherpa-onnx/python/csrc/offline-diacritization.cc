@@ -43,7 +43,8 @@ static void PybindOfflineDiacritizationModelConfig(py::module *m) {
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
@@ -56,7 +57,8 @@ static void PybindOfflineDiacritizationConfig(py::module *m) {
       .def(py::init<const OfflineDiacritizationModelConfig &>(),
            py::arg("model"))
       .def_readwrite("model", &PyClass::model)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 

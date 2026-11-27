@@ -30,29 +30,57 @@ void OfflineDiacritizationModelConfig::Register(ParseOptions *po) {
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool OfflineDiacritizationModelConfig::Validate() const {
-  if (catt_encoder.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineDiacritizationModelConfig(
+    const OfflineDiacritizationModelConfig &config, const Exists &exists) {
+  if (config.catt_encoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --catt-encoder");
     return false;
   }
 
-  if (catt_decoder.empty()) {
+  if (config.catt_decoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --catt-decoder");
     return false;
   }
 
-  if (!FileExists(catt_encoder)) {
-    SHERPA_ONNX_LOGE("--catt-encoder %s does not exist", catt_encoder.c_str());
+  if (!exists(config.catt_encoder)) {
+    SHERPA_ONNX_LOGE("--catt-encoder %s does not exist",
+                     config.catt_encoder.c_str());
     return false;
   }
 
-  if (!FileExists(catt_decoder)) {
-    SHERPA_ONNX_LOGE("--catt-decoder %s does not exist", catt_decoder.c_str());
+  if (!exists(config.catt_decoder)) {
+    SHERPA_ONNX_LOGE("--catt-decoder %s does not exist",
+                     config.catt_decoder.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OfflineDiacritizationModelConfig::Validate() const {
+  return ValidateOfflineDiacritizationModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineDiacritizationModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineDiacritizationModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineDiacritizationModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineDiacritizationModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineDiacritizationModelConfig::ToString() const {
   std::ostringstream os;

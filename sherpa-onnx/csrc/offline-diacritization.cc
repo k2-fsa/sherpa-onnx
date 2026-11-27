@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-diacritization.h"
 
+#include <string>
+
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -27,6 +29,23 @@ bool OfflineDiacritizationConfig::Validate() const {
   }
   return true;
 }
+
+template <typename Manager>
+bool OfflineDiacritizationConfig::Validate(Manager *mgr) const {
+  if (!model.Validate(mgr)) {
+    return false;
+  }
+  return true;
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineDiacritizationConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineDiacritizationConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineDiacritizationConfig::ToString() const {
   std::ostringstream os;
