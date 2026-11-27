@@ -115,6 +115,7 @@ set(sources
   online-paraformer-model-config.cc
   online-paraformer-model.cc
   online-recognizer-impl.cc
+  online-recognizer-gigaam-v4-impl.cc
   online-recognizer.cc
   online-rnn-lm.cc
   online-stream.cc

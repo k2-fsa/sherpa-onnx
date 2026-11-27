@@ -24,6 +24,7 @@
 #include "sherpa-onnx/csrc/fst-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer-ctc-impl.h"
+#include "sherpa-onnx/csrc/online-recognizer-gigaam-v4-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-nemo-impl.h"
@@ -60,6 +61,10 @@ static bool IsNeMoParakeetUnifiedStreaming(const Ort::Session &decoder_sess) {
 
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     const OnlineRecognizerConfig &config) {
+  if (config.model_config.model_type == "gigaam_v4") {
+    return CreateOnlineGigaAmV4(config);
+  }
+
   if (config.model_config.provider_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
     if (config.model_config.transducer.encoder.empty() &&

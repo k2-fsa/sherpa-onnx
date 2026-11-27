@@ -48,7 +48,7 @@ void OnlineModelConfig::Register(ParseOptions *po) {
   po->Register("model-type", &model_type,
                "Specify it to reduce model initialization time. "
                "Valid values are: conformer, lstm, zipformer, zipformer2, "
-               "wenet_ctc, nemo_ctc. "
+               "wenet_ctc, nemo_ctc, gigaam_v4. "
                "All other values lead to loading the model twice.");
 }
 

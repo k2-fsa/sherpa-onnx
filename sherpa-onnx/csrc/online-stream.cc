@@ -67,6 +67,13 @@ class OnlineStream::Impl {
     num_processed_frames_ = 0;
   }
 
+  void ResetFeatures() {
+    std::scoped_lock lock(mutex_);
+    feat_extractor_.Reset();
+    start_frame_index_ = 0;
+    num_processed_frames_ = 0;
+  }
+
   int32_t &GetNumProcessedFrames() {
     std::scoped_lock lock(mutex_);
     return num_processed_frames_;
@@ -278,6 +285,8 @@ int32_t OnlineStream::NumTrailingSamples() const {
 }
 
 void OnlineStream::Reset() { impl_->Reset(); }
+
+void OnlineStream::ResetFeatures() { impl_->ResetFeatures(); }
 
 int32_t OnlineStream::FeatureDim() const { return impl_->FeatureDim(); }
 

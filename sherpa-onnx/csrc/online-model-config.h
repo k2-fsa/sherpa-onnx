@@ -36,6 +36,7 @@ struct OnlineModelConfig {
   //  - zipformer2, zipformer2 transducer or CTC from icefall
   //  - wenet_ctc, wenet CTC model
   //  - nemo_ctc, NeMo CTC model
+  //  - gigaam_v4, GigaAM-v4 640 ms streaming transducer
   //
   // All other values are invalid and lead to loading the model twice.
   std::string model_type;

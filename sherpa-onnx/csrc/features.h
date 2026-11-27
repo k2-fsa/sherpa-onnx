@@ -86,6 +86,9 @@ struct FeatureExtractorConfig {
 
   bool round_to_power_of_two = true;
 
+  // GigaAM-v4 uses HTK bands interpolated in Hz with no area normalization.
+  bool is_gigaam = false;
+
   // Recompute centered, zero-padded NeMo features over each requested audio
   // buffer. Capacity is in feature frames; 0 disables this internal mode.
   int32_t nemo_buffered_capacity = 0;
@@ -104,6 +107,8 @@ class FeatureExtractor {
  public:
   explicit FeatureExtractor(const FeatureExtractorConfig &config = {});
   ~FeatureExtractor();
+
+  void Reset();
 
   /**
      @param sampling_rate The sampling_rate of the input waveform. If it does
