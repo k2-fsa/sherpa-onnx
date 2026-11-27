@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/offline-fire-red-asr-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-funasr-nano-model-config.h"
+#include "sherpa-onnx/csrc/offline-gigaam-model-config.h"
 #include "sherpa-onnx/csrc/offline-medasr-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-qwen3-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-model-config.h"
@@ -48,6 +49,7 @@ struct OfflineModelConfig {
   OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
   OfflineQwen3ASRModelConfig qwen3_asr;
   OfflineW2vBertCtcModelConfig w2v_bert_ctc;
+  OfflineGigaAMModelConfig gigaam;
   std::string telespeech_ctc;
 
   std::string tokens;
@@ -94,7 +96,8 @@ struct OfflineModelConfig {
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
                      const std::string &modeling_unit,
-                     const std::string &bpe_vocab)
+                     const std::string &bpe_vocab,
+                     const OfflineGigaAMModelConfig &gigaam = {})
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
@@ -114,6 +117,7 @@ struct OfflineModelConfig {
         fire_red_asr_ctc(fire_red_asr_ctc),
         qwen3_asr(qwen3_asr),
         w2v_bert_ctc(w2v_bert_ctc),
+        gigaam(gigaam),
         telespeech_ctc(telespeech_ctc),
         tokens(tokens),
         num_threads(num_threads),

@@ -26,6 +26,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineDolphinModelConfig,
     OfflineFireRedAsrModelConfig,
     OfflineFunASRNanoModelConfig,
+    OfflineGigaAMModelConfig,
     OfflineLMConfig,
     OfflineModelConfig,
     OfflineMoonshineModelConfig,

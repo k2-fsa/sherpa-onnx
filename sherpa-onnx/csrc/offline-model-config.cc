@@ -31,6 +31,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   fire_red_asr_ctc.Register(po);
   qwen3_asr.Register(po);
   w2v_bert_ctc.Register(po);
+  gigaam.Register(po);
 
   po->Register("telespeech-ctc", &telespeech_ctc,
                "Path to model.onnx for telespeech ctc");
@@ -97,6 +98,14 @@ bool OfflineModelConfig::Validate() const {
           sense_voice.model.c_str());
       return false;
     }
+  }
+
+  if (!gigaam.encoder.empty()) {
+    if (provider != "cpu") {
+      SHERPA_ONNX_LOGE("GigaAM requires the CPU provider");
+      return false;
+    }
+    return gigaam.Validate();
   }
 
   // For FunASR-nano and Qwen3-ASR, tokens file is not required (tokenizer is
@@ -254,6 +263,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "fire_red_asr_ctc=" << fire_red_asr_ctc.ToString() << ", ";
   os << "qwen3_asr=" << qwen3_asr.ToString() << ", ";
   os << "w2v_bert_ctc=" << w2v_bert_ctc.ToString() << ", ";
+  os << "gigaam=" << gigaam.ToString() << ", ";
   os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";

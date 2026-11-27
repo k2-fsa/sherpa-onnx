@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 #include <memory>
+#include <stdexcept>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -32,6 +33,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-gigaam-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-v2-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
@@ -80,6 +82,10 @@ namespace sherpa_onnx {
 
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     const OfflineRecognizerConfig &config) {
+  if (!config.model_config.gigaam.encoder.empty()) {
+    return CreateOfflineRecognizerGigaAM(config);
+  }
+
   if (config.model_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
     if (!config.model_config.sense_voice.model.empty()) {
@@ -447,6 +453,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 template <typename Manager>
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     Manager *mgr, const OfflineRecognizerConfig &config) {
+  if (!config.model_config.gigaam.encoder.empty()) {
+    throw std::invalid_argument("GigaAM requires filesystem model paths");
+  }
+
   if (config.model_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
     if (!config.model_config.sense_voice.model.empty()) {
