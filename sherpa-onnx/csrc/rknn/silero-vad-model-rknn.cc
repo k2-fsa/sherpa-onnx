@@ -175,6 +175,29 @@ class SileroVadModelRknn::Impl {
     config_.silero_vad.threshold = threshold;
   }
 
+  VadModelState GetState() const {
+    VadModelState state;
+    state.states = states_;
+    state.state_shapes = state_shapes_;
+    state.triggered = triggered_;
+    state.current_sample = current_sample_;
+    state.temp_start = temp_start_;
+    state.temp_end = temp_end_;
+    return state;
+  }
+
+  void SetState(VadModelState state) {
+    for (size_t i = 0; i < states_.size() && i < state.states.size(); ++i) {
+      size_t n = std::min(states_[i].size(), state.states[i].size());
+      std::memcpy(states_[i].data(), state.states[i].data(),
+                  n * sizeof(float));
+    }
+    triggered_ = state.triggered;
+    current_sample_ = state.current_sample;
+    temp_start_ = state.temp_start;
+    temp_end_ = state.temp_end;
+  }
+
   float Run(const float *samples, int32_t n) {
     std::vector<rknn_input> inputs(input_attrs_.size());
 
@@ -335,6 +358,8 @@ class SileroVadModelRknn::Impl {
     states_[0].resize(h_shape[0] * h_shape[1] * h_shape[2]);
     states_[1].resize(c_shape[0] * c_shape[1] * c_shape[2]);
 
+    state_shapes_ = {h_shape, c_shape};
+
     Reset();
   }
 
@@ -346,6 +371,7 @@ class SileroVadModelRknn::Impl {
   std::vector<rknn_tensor_attr> output_attrs_;
 
   std::vector<std::vector<float>> states_;
+  std::vector<std::vector<int64_t>> state_shapes_;
 
   int64_t sample_rate_;
   int32_t min_silence_samples_;
@@ -393,6 +419,12 @@ void SileroVadModelRknn::SetMinSilenceDuration(float s) {
 
 void SileroVadModelRknn::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+VadModelState SileroVadModelRknn::GetState() const { return impl_->GetState(); }
+
+void SileroVadModelRknn::SetState(VadModelState state) {
+  impl_->SetState(std::move(state));
 }
 
 float SileroVadModelRknn::Compute(const float *samples, int32_t n) {

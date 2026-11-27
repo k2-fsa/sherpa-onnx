@@ -191,6 +191,28 @@ class TenVadModel::Impl {
 
   void SetThreshold(float threshold) { config_.ten_vad.threshold = threshold; }
 
+  VadModelState GetState() const {
+    VadModelState state;
+    CopyToModelState(states_, &state);
+    state.triggered = triggered_;
+    state.current_sample = current_sample_;
+    state.temp_start = temp_start_;
+    state.temp_end = temp_end_;
+    state.last_sample = last_sample_;
+    state.last_features = last_features_;
+    return state;
+  }
+
+  void SetState(VadModelState state) {
+    CopyFromModelState(state, &states_, allocator_);
+    triggered_ = state.triggered;
+    current_sample_ = state.current_sample;
+    temp_start_ = state.temp_start;
+    temp_end_ = state.temp_end;
+    last_sample_ = state.last_sample;
+    last_features_ = std::move(state.last_features);
+  }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     if (sample_rate_ != 16000) {
@@ -482,6 +504,12 @@ void TenVadModel::SetMinSilenceDuration(float s) {
 
 void TenVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+VadModelState TenVadModel::GetState() const { return impl_->GetState(); }
+
+void TenVadModel::SetState(VadModelState state) {
+  impl_->SetState(std::move(state));
 }
 
 float TenVadModel::Compute(const float *samples, int32_t n) {

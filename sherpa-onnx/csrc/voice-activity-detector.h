@@ -8,20 +8,11 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/vad-model-config.h"
+#include "sherpa-onnx/csrc/vad-stream-state.h"
 
 namespace sherpa_onnx {
 
-struct SpeechSegment {
-  // Start of this segment in the input stream, in samples.
-  //
-  // It is an absolute position and keeps increasing during the lifetime of
-  // the detector, so it is 64-bit. 2^63 samples is about 18 million years
-  // at 16 kHz.
-  //
-  // It is -1 if this segment is not valid.
-  int64_t start = -1;
-  std::vector<float> samples;
-};
+class OnlineStream;
 
 class VoiceActivityDetector {
  public:
@@ -36,6 +27,39 @@ class VoiceActivityDetector {
 
   void AcceptWaveform(const float *samples, int32_t n);
   float Compute(const float *samples, int32_t n);
+
+  // The VAD model is shared among the created streams, so several streams
+  // can be processed with one model in memory. The VAD states of each
+  // stream are kept inside the stream. Feed a stream with
+  // stream->AcceptWaveform(), drive it with IsReady()/Process(), and read
+  // its speech segments with the stream variants of Empty()/Front()/Pop()
+  // below. Note that a detector processes either the samples of
+  // AcceptWaveform() above or the streams it has created; do not mix the
+  // two for one detector.
+  //
+  // Threading: different streams of one detector may be driven from
+  // different threads. Process(), Flush(), and Reset() hold a
+  // detector-level lock while they run, so the shared model handles one
+  // window at a time and these calls are serialized across the streams
+  // of a detector. Feeding a stream with AcceptWaveform() and the other
+  // per-stream accessors take a per-stream lock, so one thread can feed
+  // a stream while another thread processes it. No extra locking is
+  // required for feeding and processing. The one thing the locks do not
+  // cover is the caller's use of the reference returned by
+  // Front(stream): the lock is released when Front() returns, and
+  // Reset(stream), Pop(stream), and Clear(stream) destroy the segment
+  // that reference points to and may run on another thread while the
+  // reference is still in use, so synchronize those calls with reading
+  // the segment yourself.
+  std::unique_ptr<OnlineStream> CreateStream() const;
+
+  // Return true if the number of samples in the stream is >= window_size.
+  // Return false otherwise.
+  bool IsReady(const OnlineStream *stream) const;
+
+  // Only process samples of a window size. If IsReady() returns false, do
+  // nothing.
+  void Process(const OnlineStream *stream) const;
 
   bool Empty() const;
   void Pop();
@@ -59,6 +83,32 @@ class VoiceActivityDetector {
   void Flush() const;
 
   const VadModelConfig &GetConfig() const;
+
+  // The following methods operate on a stream created with CreateStream()
+  // and mirror the corresponding methods above.
+
+  bool Empty(const OnlineStream *stream) const;
+  void Pop(const OnlineStream *stream);
+  void Clear(const OnlineStream *stream) const;
+
+  // It is an error to call Front() if Empty(stream) returns true.
+  //
+  // The returned reference is valid until the next call to
+  // Pop(stream), Clear(stream), or Reset(stream) for that stream. If
+  // the stream is used from several threads, synchronize those calls
+  // with your use of the reference; see the threading note above
+  // CreateStream().
+  const SpeechSegment &Front(const OnlineStream *stream) const;
+
+  bool IsSpeechDetected(const OnlineStream *stream) const;
+
+  SpeechSegment CurrentSpeechSegment(const OnlineStream *stream) const;
+
+  void Reset(const OnlineStream *stream) const;
+
+  // At the end of the utterance, you can invoke this method so that the
+  // last speech segment of the stream can be detected.
+  void Flush(const OnlineStream *stream) const;
 
  private:
   class Impl;

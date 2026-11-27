@@ -190,6 +190,24 @@ class SileroVadModel::Impl {
     config_.silero_vad.threshold = threshold;
   }
 
+  VadModelState GetState() const {
+    VadModelState state;
+    CopyToModelState(states_, &state);
+    state.triggered = triggered_;
+    state.current_sample = current_sample_;
+    state.temp_start = temp_start_;
+    state.temp_end = temp_end_;
+    return state;
+  }
+
+  void SetState(VadModelState state) {
+    CopyFromModelState(state, &states_, allocator_);
+    triggered_ = state.triggered;
+    current_sample_ = state.current_sample;
+    temp_start_ = state.temp_start;
+    temp_end_ = state.temp_end;
+  }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     if (model_data) {
@@ -511,6 +529,12 @@ void SileroVadModel::SetMinSilenceDuration(float s) {
 
 void SileroVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+VadModelState SileroVadModel::GetState() const { return impl_->GetState(); }
+
+void SileroVadModel::SetState(VadModelState state) {
+  impl_->SetState(std::move(state));
 }
 
 float SileroVadModel::Compute(const float *samples, int32_t n) {
