@@ -10,6 +10,23 @@ import tarfile
 import tempfile
 
 
+ARTIFACTS = ('english_tn.fst', 'english_symbols.fst')
+
+
+def packaged_manifest(manifest, files):
+    """Record the size and sha256 of the FSTs in this archive.
+
+    The FST bytes depend on the platform that built them, so the repository
+    manifest pins only the sources; the packaged copy describes its own files.
+    """
+    result = dict(manifest)
+    result['artifacts'] = {
+        name: {'bytes': len(files[name]), 'sha256': hashlib.sha256(files[name]).hexdigest()}
+        for name in ARTIFACTS
+    }
+    return result
+
+
 def write_archive(files, output):
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
@@ -38,14 +55,11 @@ def main():
     a = p.parse_args()
     source = pathlib.Path(__file__).parent
     manifest = json.loads((source / 'manifest.json').read_text())
-    files = {}
-    for name, expected in manifest['artifacts'].items():
-        data = (a.bundle / name).read_bytes()
-        assert len(data) == expected['bytes'] and hashlib.sha256(data).hexdigest() == expected['sha256'], name
-        files[name] = data
+    files = {name: (a.bundle / name).read_bytes() for name in ARTIFACTS}
+    manifest = packaged_manifest(manifest, files)
     files['LICENSE-NeMo'] = (source / 'LICENSE-NeMo').read_bytes()
     files['NOTICE'] = (source / 'NOTICE').read_bytes()
-    files['manifest.json'] = (source / 'manifest.json').read_bytes()
+    files['manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode()
     write_archive(files, a.output)
     print(hashlib.sha256(a.output.read_bytes()).hexdigest(), a.output)
 

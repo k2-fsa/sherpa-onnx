@@ -60,7 +60,7 @@ jobs:
           python3 ./build.py --nemo-source ./NeMo-text-processing --output ./english-tn
           python3 ./build_symbols.py ./english-tn/english_symbols.fst
 
-          # package.py checks the size and sha256 of each FST against manifest.json
+          # package.py records the size and sha256 of each FST in the packaged manifest.json
           python3 ./package.py --bundle ./english-tn --output $GITHUB_WORKSPACE/english-tn.tar.bz2
 
           ls -lh ./english-tn $GITHUB_WORKSPACE/english-tn.tar.bz2

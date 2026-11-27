@@ -7,7 +7,9 @@ import tempfile
 import unittest
 from unittest import mock
 
-from package import write_archive
+import hashlib
+
+from package import packaged_manifest, write_archive
 
 
 class PackageTest(unittest.TestCase):
@@ -27,6 +29,16 @@ class PackageTest(unittest.TestCase):
                     self.assertEqual(member.mtime, 0)
                     self.assertEqual(member.mode, 0o644)
             self.assertEqual(list(output.parent.iterdir()), [output])
+
+    def test_packaged_manifest_describes_the_packaged_files(self):
+        source = {'nemo': {'revision': 'abc'}}
+        files = {'english_tn.fst': b'rules', 'english_symbols.fst': b'symbols'}
+        result = packaged_manifest(source, files)
+        self.assertEqual(result['nemo'], {'revision': 'abc'})
+        self.assertNotIn('artifacts', source)
+        for name, data in files.items():
+            self.assertEqual(result['artifacts'][name],
+                             {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
 
     def test_write_failure_preserves_previous_release(self):
         with tempfile.TemporaryDirectory() as directory:

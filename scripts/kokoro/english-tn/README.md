@@ -125,4 +125,5 @@ python python-api-examples/test-offline-tts-kokoro-en-rule-fsts.py \
 ```
 
 NeMo's Apache-2.0 license is retained in `LICENSE-NeMo`. Keep it and `NOTICE`
-with generated rule packs. Source and artifact pins are in `manifest.json`.
+with generated rule packs. Source pins are in `manifest.json`; the copy in the
+release archive also lists the size and sha256 of each FST it contains.
