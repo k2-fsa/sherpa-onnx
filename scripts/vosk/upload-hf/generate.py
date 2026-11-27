@@ -227,6 +227,15 @@ def gh_release_upload(pairs, gh_repo, tag):
 
     for pair in pairs:
         local, name = pair.split(":", 1)
+        # GitHub rejects release assets >= 2 GB (422 only after the
+        # whole file has streamed); such zips are huggingface-only
+        size = os.path.getsize(local)
+        if size >= 2 * 1024 * 1024 * 1024:
+            raise SystemExit(
+                f"{local}: {size / 1024 / 1024 / 1024:.2f} GB >= 2 GB -- "
+                f"GitHub release assets must be smaller "
+                f"(upload to huggingface only)"
+            )
         for attempt in range(3):
             existing = all_assets()
             if name in existing:

@@ -112,6 +112,10 @@ python3 ../export_onnx.py --in-dir "work/$name-torch" \
   --out-dir "work/$name-onnx"
 rm -rf "work/$name-torch"
 
+# show what the export produced (sizes in the CI log)
+ls -lhR "work/$name-onnx"
+tree -sh "work/$name-onnx"
+
 # graph/words.txt is only correct if its ids match the graph's output
 # symbol table (they can disagree -- e.g. vosk-model-uk-v3-lgraph).
 # Regenerate it when wrong; the note (if any) goes on the info page.
@@ -155,9 +159,10 @@ fi
 python3 ./generate.py --prepare-dir "$name" --dir "work/$name-onnx" \
   --wav "test-wavs/$wav"
 
-# listings for the info page (of the shipped content)
-ls -lhR "work/$name-onnx" > "listing/$name.txt"
-tree -sh "work/$name-onnx" > "listing/$name.tree.txt"
+# listings for the info page (of the shipped content); tee: the file
+# sizes go to the CI log too (what is in the model dir, and how big)
+ls -lhR "work/$name-onnx" | tee "listing/$name.txt"
+tree -sh "work/$name-onnx" | tee "listing/$name.tree.txt"
 python3 ../describe_onnx.py --model-dir "work/$name-onnx" \
   > "listing/$name.io.txt"
 
@@ -178,22 +183,40 @@ else
   (cd work && zip -qr "../release/asr/$lang/$name-onnx.zip" "$name-onnx")
   rm -rf "work/$name-onnx"
 fi
-ls -lh release/asr/$lang/$name-onnx*.zip > "listing/$name.zips.txt"
+ls -lh release/asr/$lang/$name-onnx*.zip | tee "listing/$name.zips.txt"
 
 python3 ./generate.py --info --only "$name"
 [ -f "$md" ] || die "$md was not rendered"
 
 # upload: HF (zips + info page in ONE commit), then the GitHub release
 upload_pairs=("$zip_float:asr/$lang/$name-onnx.zip" "$md:asr/$lang/$name.md")
-release_pairs=("$zip_float:$name-onnx.zip")
 if [ -f "$zip_int8" ]; then
   upload_pairs+=("$zip_int8:asr/$lang/$name-onnx-int8.zip")
-  release_pairs+=("$zip_int8:$name-onnx-int8.zip")
 fi
+# GitHub release assets must be < 2 GB (its hard limit); bigger zips
+# are uploaded to huggingface only
+gh_max=$((2 * 1024 * 1024 * 1024))
+release_pairs=()
+n_release=0
+for pair in "$zip_float:$name-onnx.zip" "$zip_int8:$name-onnx-int8.zip"; do
+  f=${pair%%:*}
+  [ -f "$f" ] || continue
+  sz=$(($(wc -c < "$f")))
+  if [ "$sz" -lt "$gh_max" ]; then
+    release_pairs+=("$pair")
+    n_release=$((n_release + 1))
+  else
+    log "$f is $((sz / 1024 / 1024)) MB >= 2GB -- huggingface only (GitHub release asset limit)"
+  fi
+done
 retry python3 ./generate.py --repo "$hf_repo" --message "add $name" \
   --upload "${upload_pairs[@]}"
-retry python3 ./generate.py --gh-repo "$gh_repo" --tag "$gh_tag" \
-  --upload-release "${release_pairs[@]}"
+if [ "$n_release" -gt 0 ]; then
+  retry python3 ./generate.py --gh-repo "$gh_repo" --tag "$gh_tag" \
+    --upload-release "${release_pairs[@]}"
+else
+  log "$name: no zip under 2GB -- GitHub release upload skipped"
+fi
 rm -f "$zip_float" "$zip_int8"
 {% endfor %}
 

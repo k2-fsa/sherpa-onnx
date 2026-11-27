@@ -3,7 +3,10 @@
 [ONNX](https://onnx.ai) exports of the [vosk](https://alphacephei.com/vosk/models)
 ASR models (the acoustic model `am/final.mdl` converted to
 `am/final.onnx` / `am/final.int8.onnx`; `conf/`, `ivector/` and `graph/`
-are unchanged from the original model), produced with
+are unchanged from the original model, except `graph/words.txt`, which
+is regenerated from the graph's output symbol table when the original
+ids disagree with it -- the model's info page says when it was),
+produced with
 [`scripts/vosk/`](https://github.com/k2-fsa/sherpa-onnx/tree/master/scripts/vosk).
 Every export is gated against kaldi (row-by-row AM parity) and against
 the transcript of a test wav before it is uploaded.

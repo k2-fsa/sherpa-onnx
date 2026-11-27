@@ -746,6 +746,16 @@ its bundled kaldi clashes in-process.)  Test wavs:
   decodable; `nnet3/notes.md` §7b).
 * decoding needs the i-vector extractor (`ivector/`) and the
   `am/transition_model.mdl` sidecar at runtime.
+* word ids in the lattice are the graph's OUTPUT LABELS, so the graph's
+  embedded output symbol table is the authoritative id -> word mapping
+  (what vosk-api uses: `g_fst_->OutputSymbols()`, words.txt only as a
+  fallback).  The two can DISAGREE: vosk-model-uk-v3-lgraph ships a
+  re-sorted `words.txt` whose ids do not match its `Gr.fst`, which maps
+  correct decodes to garbage text.  `recognizer.py` therefore maps via
+  the graph's symbols, and `fix_words_txt.py` (run by the upload
+  pipeline after the export) regenerates the shipped
+  `graph/words.txt` from the graph when the provided one is wrong
+  (models without a words.txt are left alone).
 * RNNLM rescoring (`rnnlm/` in large models) is not covered here.
 
 Design details of the nnet3 reader: see `nnet3/notes.md`.
