@@ -69,11 +69,18 @@ Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_newFromAsset(
   SHERPA_ONNX_LOGE("spoken language identification newFromAsset config:\n%s",
                    config.ToString().c_str());
 
-  auto slid = new sherpa_onnx::SpokenLanguageIdentification(
+  sherpa_onnx::SpokenLanguageIdentification *slid = nullptr;
+  try {
+    slid = new sherpa_onnx::SpokenLanguageIdentification(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e,
+                              "Failed to create SpokenLanguageIdentification");
+    return 0;
+  }
   SHERPA_ONNX_LOGE("slid %p", slid);
 
   return (jlong)slid;
@@ -100,7 +107,14 @@ Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_newFromFile(
     return 0;
   }
 
-  auto tagger = new sherpa_onnx::SpokenLanguageIdentification(config);
+  sherpa_onnx::SpokenLanguageIdentification *tagger = nullptr;
+  try {
+    tagger = new sherpa_onnx::SpokenLanguageIdentification(config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e,
+                              "Failed to create SpokenLanguageIdentification");
+    return 0;
+  }
 
   return (jlong)tagger;
 }

@@ -1086,9 +1086,10 @@ const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
 const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStreamWithKeywords(
     const SherpaOnnxKeywordSpotter *spotter, const char *keywords) {
   if (!spotter) return nullptr;
-  SherpaOnnxOnlineStream *stream =
-      new SherpaOnnxOnlineStream(spotter->impl->CreateStream(keywords));
-  return stream;
+  if (!keywords) return nullptr;
+  auto stream = spotter->impl->CreateStream(keywords);
+  if (!stream) return nullptr;
+  return new SherpaOnnxOnlineStream(std::move(stream));
 }
 
 int32_t SherpaOnnxIsKeywordStreamReady(const SherpaOnnxKeywordSpotter *spotter,

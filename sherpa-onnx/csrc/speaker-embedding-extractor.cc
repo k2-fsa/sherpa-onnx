@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -77,12 +78,24 @@ std::string SpeakerEmbeddingExtractorConfig::ToString() const {
 
 SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     const SpeakerEmbeddingExtractorConfig &config)
-    : impl_(SpeakerEmbeddingExtractorImpl::Create(config)) {}
+    : impl_(SpeakerEmbeddingExtractorImpl::Create(config)) {
+  if (!impl_) {
+    throw std::runtime_error(
+        "Failed to create the speaker embedding extractor. Please check your "
+        "model: " + config.model);
+  }
+}
 
 template <typename Manager>
 SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     Manager *mgr, const SpeakerEmbeddingExtractorConfig &config)
-    : impl_(SpeakerEmbeddingExtractorImpl::Create(mgr, config)) {}
+    : impl_(SpeakerEmbeddingExtractorImpl::Create(mgr, config)) {
+  if (!impl_) {
+    throw std::runtime_error(
+        "Failed to create the speaker embedding extractor. Please check your "
+        "model: " + config.model);
+  }
+}
 
 SpeakerEmbeddingExtractor::~SpeakerEmbeddingExtractor() = default;
 

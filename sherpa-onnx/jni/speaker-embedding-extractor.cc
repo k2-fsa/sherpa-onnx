@@ -63,11 +63,18 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromAsset(
     return 0;
   }
 
-  auto extractor = new sherpa_onnx::SpeakerEmbeddingExtractor(
+  sherpa_onnx::SpeakerEmbeddingExtractor *extractor = nullptr;
+  try {
+    extractor = new sherpa_onnx::SpeakerEmbeddingExtractor(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e,
+                              "Failed to create SpeakerEmbeddingExtractor");
+    return 0;
+  }
 
   return (jlong)extractor;
 }
@@ -92,7 +99,14 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromFile(
     return 0;
   }
 
-  auto extractor = new sherpa_onnx::SpeakerEmbeddingExtractor(config);
+  sherpa_onnx::SpeakerEmbeddingExtractor *extractor = nullptr;
+  try {
+    extractor = new sherpa_onnx::SpeakerEmbeddingExtractor(config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e,
+                              "Failed to create SpeakerEmbeddingExtractor");
+    return 0;
+  }
 
   return (jlong)extractor;
 }

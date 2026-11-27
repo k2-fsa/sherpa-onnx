@@ -76,8 +76,9 @@ static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
   SHERPA_ONNX_JNI_READ_FLOAT(ans.clustering.threshold, threshold,
                              clustering_config_cls, clustering_config);
 
-  SHERPA_ONNX_JNI_READ_BOOL(ans.clustering.compute_confidence, computeConfidence,
-                            clustering_config_cls, clustering_config);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.clustering.compute_confidence,
+                            computeConfidence, clustering_config_cls,
+                            clustering_config);
 
   SHERPA_ONNX_JNI_READ_FLOAT(ans.min_duration_on, minDurationOn, cls, config);
 
@@ -112,11 +113,18 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_newFromAsset(
 
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
-  auto sd = new sherpa_onnx::OfflineSpeakerDiarization(
+  sherpa_onnx::OfflineSpeakerDiarization *sd = nullptr;
+  try {
+    sd = new sherpa_onnx::OfflineSpeakerDiarization(
 #if __ANDROID_API__ >= 9
-      mgr,
+        mgr,
 #endif
-      config);
+        config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e,
+                              "Failed to create OfflineSpeakerDiarization");
+    return 0;
+  }
 
   return (jlong)sd;
 }
@@ -141,7 +149,14 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_newFromFile(
     return 0;
   }
 
-  auto sd = new sherpa_onnx::OfflineSpeakerDiarization(config);
+  sherpa_onnx::OfflineSpeakerDiarization *sd = nullptr;
+  try {
+    sd = new sherpa_onnx::OfflineSpeakerDiarization(config);
+  } catch (const std::exception &e) {
+    RethrowCxxExceptionAsJava(env, e,
+                              "Failed to create OfflineSpeakerDiarization");
+    return 0;
+  }
 
   return (jlong)sd;
 }
@@ -198,8 +213,8 @@ static jobjectArray ProcessImpl(
 
   for (int32_t i = 0; i != static_cast<int32_t>(segments.size()); ++i) {
     const auto &s = segments[i];
-    jobject segment =
-        env->NewObject(cls, constructor, s.Start(), s.End(), s.Speaker(), s.Confidence());
+    jobject segment = env->NewObject(cls, constructor, s.Start(), s.End(),
+                                     s.Speaker(), s.Confidence());
     env->SetObjectArrayElement(obj_arr, i, segment);
     env->DeleteLocalRef(segment);
   }
