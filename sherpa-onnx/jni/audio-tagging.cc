@@ -72,6 +72,18 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_newFromAsset(
   SHERPA_ONNX_LOGE("audio tagging newFromAsset config:\n%s",
                    config.ToString().c_str());
 
+#if __ANDROID_API__ >= 9
+  if (!config.Validate(mgr)) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#else
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#endif
+
   auto tagger = new sherpa_onnx::AudioTagging(
 #if __ANDROID_API__ >= 9
       mgr,

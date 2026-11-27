@@ -68,7 +68,8 @@ static void PybindOfflineZipformerAudioTaggingModelConfig(py::module *m) {
       .def(py::init<>())
       .def(py::init<const std::string &>(), py::arg("model"))
       .def_readwrite("model", &PyClass::model)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
@@ -88,7 +89,8 @@ static void PybindAudioTaggingModelConfig(py::module *m) {
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
@@ -105,7 +107,8 @@ static void PybindAudioTaggingConfig(py::module *m) {
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("labels", &PyClass::labels)
       .def_readwrite("top_k", &PyClass::top_k)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 
