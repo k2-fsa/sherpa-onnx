@@ -840,6 +840,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     fa-lexicon-test.cc
     forced-aligner-test.cc
+    gigaam-language-slot-test.cc
     lfr-test.cc
     math-test.cc
     offline-recognizer-canary-impl-test.cc
