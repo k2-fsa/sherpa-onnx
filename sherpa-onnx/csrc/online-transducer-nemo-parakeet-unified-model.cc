@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.cc
 //
 // Copyright (c)  2026  Milan Leonard
+// Copyright (c)  2026  Julian Pscheid
 
 #include "sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.h"
 
@@ -23,6 +24,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/nemo-language-prompt.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -31,7 +33,7 @@
 namespace sherpa_onnx {
 
 static constexpr const char *kStreamingModelType =
-    "nemo_parakeet_unified_streaming";
+    "nemo_parakeet_unified_streaming";  // NOLINT(whitespace/indent_namespace)
 
 class OnlineTransducerNeMoParakeetUnifiedModel::Impl {
  public:
@@ -76,12 +78,23 @@ class OnlineTransducerNeMoParakeetUnifiedModel::Impl {
   }
 
   std::vector<Ort::Value> RunEncoder(Ort::Value features,
-                                     Ort::Value features_length) {
+                                     Ort::Value features_length,
+                                     int64_t prompt_id) {
     // (B, T, C) -> (B, C, T)
     features = Transpose12(allocator_, &features);
 
-    std::array<Ort::Value, 2> inputs = {std::move(features),
-                                        std::move(features_length)};
+    std::vector<Ort::Value> inputs;
+    inputs.push_back(std::move(features));
+    inputs.push_back(std::move(features_length));
+    if (is_multilingual_) {
+      int64_t batch_size = inputs[0].GetTensorTypeAndShapeInfo().GetShape()[0];
+      std::array<int64_t, 1> shape{batch_size};
+      auto prompt = Ort::Value::CreateTensor<int64_t>(allocator_, shape.data(),
+                                                      shape.size());
+      auto data = prompt.GetTensorMutableData<int64_t>();
+      std::fill(data, data + batch_size, prompt_id);
+      inputs.push_back(std::move(prompt));
+    }
 
     return encoder_sess_->Run(
         {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
@@ -145,6 +158,11 @@ class OnlineTransducerNeMoParakeetUnifiedModel::Impl {
                                    joiner_output_names_ptr_.size());
 
     return std::move(logit[0]);
+  }
+
+  int64_t GetLanguagePromptId(const std::string &language) const {
+    return is_multilingual_ ? language_prompt_.GetId(language, true)
+                            : language_prompt_.DefaultId();
   }
 
   int32_t LeftFeatureFrames() const { return left_feature_frames_; }
@@ -233,6 +251,12 @@ class OnlineTransducerNeMoParakeetUnifiedModel::Impl {
                       .GetShape()[1];
     }
 
+    is_multilingual_ =
+        std::find(encoder_input_names_.begin(), encoder_input_names_.end(),
+                  "prompt_index") != encoder_input_names_.end();
+    if (is_multilingual_) {
+      language_prompt_.Init(meta_data, allocator, true);
+    }
     ValidateMetadata();
   }
 
@@ -346,6 +370,9 @@ class OnlineTransducerNeMoParakeetUnifiedModel::Impl {
   std::vector<std::string> joiner_output_names_;
   std::vector<const char *> joiner_output_names_ptr_;
 
+  bool is_multilingual_ = false;
+  NemoLanguagePrompt language_prompt_;
+
   int32_t vocab_size_ = 0;
   int32_t subsampling_factor_ = 8;
   int32_t feat_dim_ = 128;
@@ -365,21 +392,32 @@ class OnlineTransducerNeMoParakeetUnifiedModel::Impl {
 };
 
 OnlineTransducerNeMoParakeetUnifiedModel::
+    // NOLINTNEXTLINE(whitespace/indent_namespace)
     OnlineTransducerNeMoParakeetUnifiedModel(const OnlineModelConfig &config)
+    // NOLINTNEXTLINE(whitespace/indent_namespace)
     : impl_(std::make_unique<Impl>(config)) {}
 
 template <typename Manager>
 OnlineTransducerNeMoParakeetUnifiedModel::
+    // NOLINTNEXTLINE(whitespace/indent_namespace)
     OnlineTransducerNeMoParakeetUnifiedModel(Manager *mgr,
                                              const OnlineModelConfig &config)
+    // NOLINTNEXTLINE(whitespace/indent_namespace)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 
 OnlineTransducerNeMoParakeetUnifiedModel::
+    // NOLINTNEXTLINE(whitespace/indent_namespace)
     ~OnlineTransducerNeMoParakeetUnifiedModel() = default;
 
 std::vector<Ort::Value> OnlineTransducerNeMoParakeetUnifiedModel::RunEncoder(
-    Ort::Value features, Ort::Value features_length) const {
-  return impl_->RunEncoder(std::move(features), std::move(features_length));
+    Ort::Value features, Ort::Value features_length, int64_t prompt_id) const {
+  return impl_->RunEncoder(std::move(features), std::move(features_length),
+                           prompt_id);
+}
+
+int64_t OnlineTransducerNeMoParakeetUnifiedModel::GetLanguagePromptId(
+    const std::string &language) const {
+  return impl_->GetLanguagePromptId(language);
 }
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
@@ -449,12 +487,14 @@ OnlineTransducerNeMoParakeetUnifiedModel::FeatureNormalizationMethod() const {
 
 #if __ANDROID_API__ >= 9
 template OnlineTransducerNeMoParakeetUnifiedModel::
+    // NOLINTNEXTLINE(whitespace/indent_namespace)
     OnlineTransducerNeMoParakeetUnifiedModel(AAssetManager *mgr,
                                              const OnlineModelConfig &config);
 #endif
 
 #if __OHOS__
 template OnlineTransducerNeMoParakeetUnifiedModel::
+    // NOLINTNEXTLINE(whitespace/indent_namespace)
     OnlineTransducerNeMoParakeetUnifiedModel(NativeResourceManager *mgr,
                                              const OnlineModelConfig &config);
 #endif

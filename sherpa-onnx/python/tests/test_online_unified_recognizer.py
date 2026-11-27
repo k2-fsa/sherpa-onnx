@@ -3,8 +3,10 @@
 
 """Exercise the real unified runtime with small deterministic ONNX models."""
 
+import json
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -39,7 +41,7 @@ def save_graph(path, nodes, inputs, outputs, initializers, metadata=None):
     onnx.save(model, path)
 
 
-def create_models(directory, window_length=False):
+def create_models(directory, multilingual, window_length=False):
     # Only encoder frame zero emits a word. All subsequent frames emit blank.
     # This detects fixed left padding and accidental restarts of encoder context.
     meta = dict(
@@ -57,6 +59,8 @@ def create_models(directory, window_length=False):
         chunk_encoder_frames=7,
         right_encoder_frames=7,
         feat_dim=128,
+        prompt_dictionary=json.dumps({"auto": 3, "en": 0, "de": 1, "fr": 2}),
+        auto_prompt_id=3,
     )
     enc_inputs = [
         h.make_tensor_value_info("audio", T.FLOAT, [1, 128, "T"]),
@@ -69,7 +73,10 @@ def create_models(directory, window_length=False):
         tensor("round_up", np.array([7], np.int64)),
         tensor("factor", np.array([8], np.int64)),
     ]
-    init.append(tensor("prompt_index", np.array([0], np.int64)))
+    if multilingual:
+        enc_inputs.append(h.make_tensor_value_info("prompt_index", T.INT64, [1]))
+    else:
+        init.append(tensor("prompt_index", np.array([0], np.int64)))
     tail = np.zeros((1, 5, 199), np.float32)
     tail[:, 4, :] = 2
     init.append(tensor("tail", tail))
@@ -86,6 +93,19 @@ def create_models(directory, window_length=False):
             h.make_node("Cast", ["short"], ["word_index"], to=T.INT64),
         ]
         prompt_name = "word_index"
+        if multilingual:
+            # Automatic mode emits only blank while the test warms up context.
+            init += [
+                tensor("automatic", np.array([3], np.int64)),
+                tensor("blank_word", np.array([4], np.int64)),
+            ]
+            nodes += [
+                h.make_node("Equal", ["prompt_index", "automatic"], ["warming"]),
+                h.make_node(
+                    "Where", ["warming", "blank_word", "word_index"], ["choice"]
+                ),
+            ]
+            prompt_name = "choice"
     nodes += [
         h.make_node("OneHot", [prompt_name, "depth", "values"], ["word"], axis=-1),
         h.make_node("Reshape", ["word", "shape"], ["first"]),
@@ -186,7 +206,7 @@ class TestOnlineUnifiedRecognizer(unittest.TestCase):
     def test_english_encoder_without_prompt_input(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)
-            create_models(directory)
+            create_models(directory, False)
             rec = self.create_recognizer(directory)
             stream = rec.create_stream()
             stream.accept_waveform(16000, np.ones(20000, np.float32) * 0.1)
@@ -195,7 +215,7 @@ class TestOnlineUnifiedRecognizer(unittest.TestCase):
     def test_zero_lookahead_keeps_partial_hop(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)
-            create_models(directory)
+            create_models(directory, False)
             encoder = onnx.load(directory / "encoder.onnx")
             meta = {m.key: m.value for m in encoder.metadata_props}
             meta.update(
@@ -265,10 +285,72 @@ class TestOnlineUnifiedRecognizer(unittest.TestCase):
             stream.accept_waveform(16000, np.zeros(57 * 160, np.float32))
             self.assertTrue(rec.is_ready(stream))
 
+    def test_independent_language_options_and_aliases(self):
+        with tempfile.TemporaryDirectory() as d:
+            directory = Path(d)
+            create_models(directory, True)
+            rec = self.create_recognizer(directory)
+            languages = [
+                ("en-US", "en"),
+                ("'DE_de'", "de"),
+                ("<fr>", "fr"),
+                ("", "auto"),
+                ("auto", "auto"),
+                ("unknown", "auto"),
+            ]
+            streams = []
+            for language, expected in languages:
+                stream = rec.create_stream()
+                stream.set_option("language", language)
+                stream.accept_waveform(16000, np.ones(20000, np.float32) * 0.1)
+                streams.append((stream, expected))
+            order = list(reversed(streams))
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                actual = list(pool.map(lambda item: self.finish(rec, item[0]), order))
+            self.assertEqual(actual, [expected for _, expected in order])
+
+    def test_metadata_alias_and_explicit_auto_id(self):
+        for alias_only in (True, False):
+            with self.subTest(
+                alias_only=alias_only
+            ), tempfile.TemporaryDirectory() as d:
+                directory = Path(d)
+                create_models(directory, True)
+                model = onnx.load(directory / "encoder.onnx")
+                for prop in model.metadata_props:
+                    if prop.key == "prompt_dictionary":
+                        if alias_only:
+                            prop.key = "language_prompt_ids"
+                        else:
+                            prop.value = json.dumps({"en": 0, "de": 1, "fr": 2})
+                onnx.save(model, directory / "encoder.onnx")
+                rec = self.create_recognizer(directory)
+                stream = rec.create_stream()
+                stream.set_option("language", "fr" if alias_only else "")
+                stream.accept_waveform(16000, np.ones(20000, np.float32) * 0.1)
+                self.assertEqual(
+                    self.finish(rec, stream), "fr" if alias_only else "auto"
+                )
+
+    def test_final_window_keeps_capacity_after_reset(self):
+        with tempfile.TemporaryDirectory() as d:
+            directory = Path(d)
+            create_models(directory, True, window_length=True)
+            rec = self.create_recognizer(directory)
+            stream = rec.create_stream()
+            stream.set_option("language", "auto")
+            # Reach full left context, then leave a short chunk plus look-ahead.
+            stream.accept_waveform(16000, np.ones(130160, np.float32) * 0.1)
+            while rec.is_ready(stream):
+                rec.decode_stream(stream)
+            rec.reset(stream)
+            stream.set_option("language", "en")
+            self.assertEqual(self.finish(rec, stream), "en")
+
     def test_partial_hop_after_complete_step(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)
-            create_models(directory)
+            create_models(directory, False)
             rec = self.create_recognizer(directory)
             stream = rec.create_stream()
             stream.accept_waveform(16000, np.ones(112 * 160 + 1, np.float32) * 0.1)
@@ -282,7 +364,7 @@ class TestOnlineUnifiedRecognizer(unittest.TestCase):
     def test_final_slice_with_partial_hop(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)
-            create_models(directory)
+            create_models(directory, False)
             encoder = onnx.load(directory / "encoder.onnx")
             # Frame 83 lies beyond all regular seven-frame center slices.
             # A partial-hop EOF shifts left context from frame 77 to frame 76,
@@ -316,9 +398,10 @@ class TestOnlineUnifiedRecognizer(unittest.TestCase):
     def test_reset_retains_predictor_context(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)
-            create_models(directory, window_length=True)
+            create_models(directory, True, window_length=True)
             rec = self.create_recognizer(directory)
             stream = rec.create_stream()
+            stream.set_option("language", "fr")
             stream.accept_waveform(16000, np.ones(20000, np.float32) * 0.1)
             while rec.is_ready(stream):
                 rec.decode_stream(stream)
@@ -329,7 +412,7 @@ class TestOnlineUnifiedRecognizer(unittest.TestCase):
     def test_reset_retains_recurrent_states(self):
         with tempfile.TemporaryDirectory() as d:
             directory = Path(d)
-            create_models(directory, window_length=True)
+            create_models(directory, False, window_length=True)
             encoder = onnx.load(directory / "encoder.onnx")
             for value in encoder.graph.initializer:
                 if value.name == "capacity":
