@@ -188,25 +188,29 @@ void OnlineZapformerTransducerModel::InitEncoder(void *model_data,
       SHERPA_ONNX_EXIT(-1);
     }
 
+    // The norm caches must start from the learned values in the metadata;
+    // zero init gives wrong encoder output, so a missing entry is an error.
     st.init_value = 0;
+    const std::vector<float> *init = nullptr;
+    const char *key = nullptr;
     int32_t idx = LayerIndex(st.name, "cached_norm_stats_");
     if (idx >= 0) {
-      if (idx < static_cast<int32_t>(norm_init_stats.size())) {
-        st.init_value = norm_init_stats[idx];
-      } else if (!norm_init_stats.empty()) {
-        SHERPA_ONNX_LOGE("norm_init_stats has no entry for %s",
-                         st.name.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
+      init = &norm_init_stats;
+      key = "norm_init_stats";
+    } else if ((idx = LayerIndex(st.name, "cached_norm_len_")) >= 0) {
+      init = &norm_init_len;
+      key = "norm_init_len";
     }
-    idx = LayerIndex(st.name, "cached_norm_len_");
-    if (idx >= 0) {
-      if (idx < static_cast<int32_t>(norm_init_len.size())) {
-        st.init_value = norm_init_len[idx];
-      } else if (!norm_init_len.empty()) {
-        SHERPA_ONNX_LOGE("norm_init_len has no entry for %s", st.name.c_str());
+    if (init) {
+      if (idx >= static_cast<int32_t>(init->size())) {
+        SHERPA_ONNX_LOGE(
+            "Encoder metadata '%s' has no entry for state %s (%d entries). "
+            "Please re-export the model with the latest "
+            "zapformer/export-onnx-streaming.py from icefall.",
+            key, st.name.c_str(), static_cast<int32_t>(init->size()));
         SHERPA_ONNX_EXIT(-1);
       }
+      st.init_value = (*init)[idx];
     }
     states_info_.push_back(std::move(st));
   }
