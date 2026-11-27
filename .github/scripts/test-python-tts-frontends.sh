@@ -88,7 +88,21 @@ download_and_extract https://github.com/k2-fsa/sherpa-onnx/releases/download/tts
 download $LEXICON
 run test-offline-tts-kitten-lexicon.py test-kitten-lexicon.wav
 run test-offline-tts-kitten-phonemize.py test-kitten-phonemize.wav
-rm -rf kitten-micro-en-v0_8 lexicon-en-us.txt
+
+# Unit tests that need a TTS model look for it in /tmp/icefall-models
+mkdir -p /tmp/icefall-models
+rm -rf /tmp/icefall-models/kitten-micro-en-v0_8 /tmp/icefall-models/lexicon-en-us.txt
+mv kitten-micro-en-v0_8 lexicon-en-us.txt /tmp/icefall-models/
+_sherpa_register_cleanup /tmp/icefall-models/kitten-micro-en-v0_8
+_sherpa_register_cleanup /tmp/icefall-models/lexicon-en-us.txt
+for t in test_offline_tts_callback.py test_offline_tts_silence_scale.py; do
+  t=sherpa-onnx/python/tests/$t
+  if [ -f $t ]; then
+    log "Run $t"
+    python3 $t --verbose
+  fi
+done
+rm -rf /tmp/icefall-models/kitten-micro-en-v0_8 /tmp/icefall-models/lexicon-en-us.txt
 
 log "------------------------------------------------------------"
 log "kokoro en"

@@ -1672,6 +1672,7 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
   sherpa_onnx::GenerationConfig config;
   config.sid = sid;
   config.speed = speed;
+  config.silence_scale = tts->impl->SilenceScale();
 
   sherpa_onnx::GeneratedAudio audio =
       tts->impl->Generate(text, config, callback);
@@ -1738,7 +1739,9 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
         config->reference_audio + config->reference_audio_len);
   }
 
-  cfg.silence_scale = SHERPA_ONNX_OR(config->silence_scale, 0.2);
+  // 0 means unset: use OfflineTtsConfig::silence_scale
+  cfg.silence_scale =
+      SHERPA_ONNX_OR(config->silence_scale, tts->impl->SilenceScale());
   cfg.speed = SHERPA_ONNX_OR(config->speed, 1.0);
   cfg.sid = config->sid;
 

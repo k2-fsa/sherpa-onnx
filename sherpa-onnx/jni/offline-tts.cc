@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -593,12 +594,14 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(
   // tokens instead. JStringToUtf8 returns an empty string for null.
   std::string s_text = JStringToUtf8(env, text);
 
+  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
+
   sherpa_onnx::GenerationConfig config;
   config.sid = sid;
   config.speed = speed;
+  config.silence_scale = tts->SilenceScale();
 
-  auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      s_text, config);
+  auto audio = tts->Generate(s_text, config);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
@@ -617,6 +620,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
   sherpa_onnx::GenerationConfig config;
   config.sid = sid;
   config.speed = speed;
+  config.silence_scale = tts->SilenceScale();
 
   sherpa_onnx::GeneratedAudio audio;
 

@@ -167,8 +167,13 @@ class OfflineTts {
   // Language/voice of the model, e.g., "en-us". Empty if not available.
   std::string Lang() const;
 
+  // OfflineTtsConfig::silence_scale. Entry points that take only sid and
+  // speed use it for GenerationConfig::silence_scale.
+  float SilenceScale() const { return silence_scale_; }
+
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;
+  float silence_scale_ = 0.2;
 };
 
 }  // namespace sherpa_onnx

@@ -24,6 +24,7 @@ set(py_test_files
   test_keyword_spotter.py
   test_offline_recognizer.py
   test_offline_tts_config.py
+  test_offline_tts_silence_scale.py
   test_online_recognizer.py
   test_online_transducer_model_config.py
   test_online_unified_recognizer.py

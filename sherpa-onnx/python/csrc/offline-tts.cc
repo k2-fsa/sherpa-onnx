@@ -129,6 +129,7 @@ void PybindOfflineTts(py::module *m) {
               GenerationConfig config;
               config.sid = sid;
               config.speed = speed;
+              config.silence_scale = self.SilenceScale();
               return self.Generate(text, config);
             }
 
@@ -150,6 +151,7 @@ void PybindOfflineTts(py::module *m) {
             GenerationConfig config;
             config.sid = sid;
             config.speed = speed;
+            config.silence_scale = self.SilenceScale();
             return self.Generate(text, config, callback_wrapper);
           },
           py::arg("text"), py::arg("sid") = 0, py::arg("speed") = 1.0,
