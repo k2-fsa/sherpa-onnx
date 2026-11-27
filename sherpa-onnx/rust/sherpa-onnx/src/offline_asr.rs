@@ -37,11 +37,12 @@
 //! ```
 
 use crate::utils::to_c_ptr;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline transducer model configuration.
 ///
 /// This is used for transducer-style models such as the Parakeet example in
@@ -62,7 +63,8 @@ impl OfflineTransducerModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Paraformer model configuration.
 pub struct OfflineParaformerModelConfig {
     pub model: Option<String>,
@@ -76,7 +78,8 @@ impl OfflineParaformerModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline NeMo CTC model configuration.
 pub struct OfflineNemoEncDecCtcModelConfig {
     pub model: Option<String>,
@@ -90,7 +93,8 @@ impl OfflineNemoEncDecCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Whisper model configuration.
 pub struct OfflineWhisperModelConfig {
     pub encoder: Option<String>,
@@ -116,7 +120,8 @@ impl OfflineWhisperModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Canary model configuration.
 pub struct OfflineCanaryModelConfig {
     pub encoder: Option<String>,
@@ -138,7 +143,8 @@ impl OfflineCanaryModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline FireRed ASR transducer configuration.
 pub struct OfflineFireRedAsrModelConfig {
     pub encoder: Option<String>,
@@ -160,7 +166,8 @@ impl OfflineFireRedAsrModelConfig {
 /// For Moonshine v2, you need 2 models:
 ///  - encoder, merged_decoder
 ///
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Moonshine model configuration.
 pub struct OfflineMoonshineModelConfig {
     pub preprocessor: Option<String>,
@@ -182,7 +189,8 @@ impl OfflineMoonshineModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline TDNN model configuration.
 pub struct OfflineTdnnModelConfig {
     pub model: Option<String>,
@@ -196,7 +204,8 @@ impl OfflineTdnnModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Optional external language model configuration for offline ASR.
 pub struct OfflineLMConfig {
     pub model: Option<String>,
@@ -219,7 +228,8 @@ impl OfflineLMConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline SenseVoice model configuration.
 pub struct OfflineSenseVoiceModelConfig {
     pub model: Option<String>,
@@ -237,7 +247,8 @@ impl OfflineSenseVoiceModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Dolphin model configuration.
 pub struct OfflineDolphinModelConfig {
     pub model: Option<String>,
@@ -251,7 +262,8 @@ impl OfflineDolphinModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Zipformer CTC model configuration.
 pub struct OfflineZipformerCtcModelConfig {
     pub model: Option<String>,
@@ -265,7 +277,8 @@ impl OfflineZipformerCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline WeNet CTC model configuration.
 pub struct OfflineWenetCtcModelConfig {
     pub model: Option<String>,
@@ -279,7 +292,8 @@ impl OfflineWenetCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline omnilingual CTC model configuration.
 pub struct OfflineOmnilingualAsrCtcModelConfig {
     pub model: Option<String>,
@@ -293,7 +307,8 @@ impl OfflineOmnilingualAsrCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline MedASR CTC model configuration.
 pub struct OfflineMedAsrCtcModelConfig {
     pub model: Option<String>,
@@ -307,7 +322,8 @@ impl OfflineMedAsrCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline FireRed ASR CTC model configuration.
 pub struct OfflineFireRedAsrCtcModelConfig {
     pub model: Option<String>,
@@ -321,7 +337,8 @@ impl OfflineFireRedAsrCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Qwen3 ASR model configuration.
 pub struct OfflineQwen3ASRModelConfig {
     pub conv_frontend: Option<String>,
@@ -352,7 +369,8 @@ impl Default for OfflineQwen3ASRModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline Cohere Transcribe model configuration.
 pub struct OfflineCohereTranscribeModelConfig {
     pub encoder: Option<String>,
@@ -389,7 +407,8 @@ impl OfflineQwen3ASRModelConfig {
         }
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Offline FunASR Nano model configuration.
 pub struct OfflineFunASRNanoModelConfig {
     pub encoder_adaptor: Option<String>,
@@ -445,7 +464,8 @@ impl OfflineFunASRNanoModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Aggregate model configuration for offline recognition.
 ///
 /// Configure exactly one model family for typical use. Shared options such as
@@ -550,12 +570,14 @@ impl OfflineModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`OfflineRecognizer`].
 ///
 /// Use [`Default`] as a starting point, then fill the fields for the model you
 /// want to run.
 pub struct OfflineRecognizerConfig {
+    #[serde(with = "crate::utils::FeatureConfigDef")]
     pub feat_config: sys::FeatureConfig,
     pub model_config: OfflineModelConfig,
     pub lm_config: OfflineLMConfig,
@@ -570,7 +592,8 @@ pub struct OfflineRecognizerConfig {
     pub ctc_fst_decoder_config: OfflineCtcFstDecoderConfig,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// FST decoder options for CTC models.
 pub struct OfflineCtcFstDecoderConfig {
     pub graph: Option<String>,
@@ -813,5 +836,80 @@ impl OfflineStream {
 impl Drop for OfflineStream {
     fn drop(&mut self) {
         unsafe { sys::SherpaOnnxDestroyOfflineStream(self.ptr) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{from_value, json, to_value};
+
+    #[test]
+    fn offline_model_catalogue_keeps_defaults() {
+        let config: OfflineModelConfig = from_value(json!({
+            "whisper": {"encoder": "e.onnx", "decoder": "d.onnx"},
+            "tokens": "t.txt",
+            "num_threads": 2
+        }))
+        .unwrap();
+        let mut expected = to_value(OfflineModelConfig::default()).unwrap();
+        expected["whisper"]["encoder"] = json!("e.onnx");
+        expected["whisper"]["decoder"] = json!("d.onnx");
+        expected["tokens"] = json!("t.txt");
+        expected["num_threads"] = json!(2);
+        assert_eq!(to_value(config).unwrap(), expected);
+    }
+
+    #[test]
+    fn partial_offline_nested_configs_keep_custom_defaults() {
+        let config: OfflineRecognizerConfig = from_value(json!({
+            "lm_config": {"model": "lm.onnx"},
+            "ctc_fst_decoder_config": {"graph": "graph.fst"},
+            "model_config": {
+                "qwen3_asr": {"encoder": "qwen.onnx"},
+                "funasr_nano": {"llm": "llm.onnx"}
+            }
+        }))
+        .unwrap();
+        assert_eq!(config.max_active_paths, 4);
+        let mut expected = to_value(OfflineRecognizerConfig::default()).unwrap();
+        expected["lm_config"]["model"] = json!("lm.onnx");
+        expected["ctc_fst_decoder_config"]["graph"] = json!("graph.fst");
+        expected["model_config"]["qwen3_asr"]["encoder"] = json!("qwen.onnx");
+        expected["model_config"]["funasr_nano"]["llm"] = json!("llm.onnx");
+        assert_eq!(to_value(config).unwrap(), expected);
+    }
+
+    #[test]
+    fn offline_feat_config_defaults_and_round_trip() {
+        let config: OfflineRecognizerConfig = from_value(json!({
+            "feat_config": {"feature_dim": 128}
+        }))
+        .unwrap();
+        let feat = config.feat_config;
+        assert_eq!(feat.feature_dim, 128);
+        assert_eq!(feat.sample_rate, 16000);
+
+        let config = OfflineRecognizerConfig {
+            feat_config: sys::FeatureConfig {
+                sample_rate: 8000,
+                feature_dim: 128,
+            },
+            ..Default::default()
+        };
+        let value = to_value(config).unwrap();
+        assert_eq!(
+            value["feat_config"],
+            json!({"sample_rate": 8000, "feature_dim": 128})
+        );
+        let restored: OfflineRecognizerConfig = from_value(value.clone()).unwrap();
+        assert_eq!(to_value(restored).unwrap(), value);
+    }
+
+    #[test]
+    fn empty_offline_recognizer_is_default() {
+        let config: OfflineRecognizerConfig = from_value(json!({})).unwrap();
+        let expected = to_value(OfflineRecognizerConfig::default()).unwrap();
+        assert_eq!(to_value(config).unwrap(), expected);
     }
 }

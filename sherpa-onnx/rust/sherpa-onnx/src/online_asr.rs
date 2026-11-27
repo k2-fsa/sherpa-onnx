@@ -39,13 +39,14 @@
 //! ```
 
 use crate::utils::to_c_ptr;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::ffi::{CStr, CString};
 use std::ptr;
 
 use sherpa_onnx_sys as sys;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Online transducer model configuration.
 pub struct OnlineTransducerModelConfig {
     pub encoder: Option<String>,
@@ -63,7 +64,8 @@ impl OnlineTransducerModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Online Paraformer model configuration.
 pub struct OnlineParaformerModelConfig {
     pub encoder: Option<String>,
@@ -79,7 +81,8 @@ impl OnlineParaformerModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Online Zipformer2 CTC model configuration.
 pub struct OnlineZipformer2CtcModelConfig {
     pub model: Option<String>,
@@ -93,7 +96,8 @@ impl OnlineZipformer2CtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Online NeMo CTC model configuration.
 pub struct OnlineNemoCtcModelConfig {
     pub model: Option<String>,
@@ -107,7 +111,8 @@ impl OnlineNemoCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Online Tone CTC model configuration.
 pub struct OnlineToneCtcModelConfig {
     pub model: Option<String>,
@@ -121,7 +126,8 @@ impl OnlineToneCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Aggregate model configuration for streaming recognition.
 ///
 /// Configure exactly one model family for typical use.
@@ -207,7 +213,8 @@ impl OnlineModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// FST decoder options for CTC models.
 pub struct OnlineCtcFstDecoderConfig {
     pub graph: Option<String>,
@@ -233,7 +240,8 @@ impl OnlineCtcFstDecoderConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Optional homophone replacement resources.
 pub struct HomophoneReplacerConfig {
     pub lexicon: Option<String>,
@@ -250,9 +258,11 @@ impl HomophoneReplacerConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`OnlineRecognizer`].
 pub struct OnlineRecognizerConfig {
+    #[serde(with = "crate::utils::FeatureConfigDef")]
     pub feat_config: sys::FeatureConfig,
     pub model_config: OnlineModelConfig,
 
@@ -507,5 +517,37 @@ impl OnlineStream {
 impl Drop for OnlineStream {
     fn drop(&mut self) {
         unsafe { sys::SherpaOnnxDestroyOnlineStream(self.ptr) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{from_value, json, to_value};
+
+    #[test]
+    fn partial_online_recognizer_keeps_defaults() {
+        let config: OnlineRecognizerConfig = from_value(json!({
+            "model_config": {
+                "transducer": {"encoder": "e.onnx", "decoder": "d.onnx", "joiner": "j.onnx"},
+                "tokens": "t.txt"
+            },
+            "feat_config": {"feature_dim": 128}
+        }))
+        .unwrap();
+        let mut expected = to_value(OnlineRecognizerConfig::default()).unwrap();
+        expected["model_config"]["transducer"] = json!({
+            "encoder": "e.onnx", "decoder": "d.onnx", "joiner": "j.onnx"
+        });
+        expected["model_config"]["tokens"] = json!("t.txt");
+        expected["feat_config"]["feature_dim"] = json!(128);
+        assert_eq!(to_value(config).unwrap(), expected);
+    }
+
+    #[test]
+    fn empty_online_recognizer_is_default() {
+        let config: OnlineRecognizerConfig = from_value(json!({})).unwrap();
+        let expected = to_value(OnlineRecognizerConfig::default()).unwrap();
+        assert_eq!(to_value(config).unwrap(), expected);
     }
 }

@@ -7,12 +7,14 @@
 //! - `rust-api-examples/examples/offline_speech_enhancement_dpdfnet.rs`
 
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::CString;
 use std::ptr;
 use std::slice;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// GTCRN model path for offline denoising.
 pub struct OfflineSpeechDenoiserGtcrnModelConfig {
     pub model: Option<String>,
@@ -29,7 +31,8 @@ impl OfflineSpeechDenoiserGtcrnModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// DPDFNet model path for offline denoising.
 pub struct OfflineSpeechDenoiserDpdfNetModelConfig {
     pub model: Option<String>,
@@ -49,7 +52,8 @@ impl OfflineSpeechDenoiserDpdfNetModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// VoxLock target-speaker voice isolation.
 ///
 /// VoxLock keeps the voice of one speaker (the caller) and removes the other
@@ -87,7 +91,8 @@ impl OfflineSpeechDenoiserVoxLockModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Aggregate model configuration for [`OfflineSpeechDenoiser`].
 ///
 /// Configure exactly one model family in normal use.
@@ -171,7 +176,8 @@ impl DenoisedAudio {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`OfflineSpeechDenoiser`].
 pub struct OfflineSpeechDenoiserConfig {
     pub model: OfflineSpeechDenoiserModelConfig,

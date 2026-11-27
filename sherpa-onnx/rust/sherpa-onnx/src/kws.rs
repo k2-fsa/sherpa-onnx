@@ -34,6 +34,7 @@
 
 use crate::online_asr::{OnlineModelConfig, OnlineStream};
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{c_char, CStr, CString};
 use std::slice;
@@ -50,9 +51,11 @@ fn c_ptr_to_string(ptr: *const c_char) -> String {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Configuration for [`KeywordSpotter`].
 pub struct KeywordSpotterConfig {
+    #[serde(with = "crate::utils::FeatureConfigDef")]
     pub feat_config: sys::FeatureConfig,
     pub model_config: OnlineModelConfig,
     pub max_active_paths: i32,
@@ -248,5 +251,24 @@ impl Drop for KeywordSpotter {
                 sys::SherpaOnnxDestroyKeywordSpotter(self.ptr);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{from_value, json, to_value};
+
+    #[test]
+    fn partial_keyword_spotter_feat_config_keeps_defaults() {
+        let config: KeywordSpotterConfig = from_value(json!({
+            "keywords_file": "k.txt",
+            "feat_config": {"sample_rate": 8000}
+        }))
+        .unwrap();
+        let mut expected = to_value(KeywordSpotterConfig::default()).unwrap();
+        expected["keywords_file"] = json!("k.txt");
+        expected["feat_config"]["sample_rate"] = json!(8000);
+        assert_eq!(to_value(config).unwrap(), expected);
     }
 }

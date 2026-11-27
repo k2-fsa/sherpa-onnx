@@ -35,11 +35,13 @@
 
 use crate::offline_asr::OfflineStream;
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Alignment options of a forced aligner. A stream can override any of
 /// them before the alignment is computed.
 pub struct ForcedAlignmentOptions {
@@ -76,7 +78,8 @@ impl Default for ForcedAlignmentOptions {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Configuration of a [`ForcedAligner`].
 pub struct ForcedAlignerConfig {
     /// Directory of one forced-alignment acoustic model. Required files:
@@ -309,5 +312,27 @@ fn c_string_to_string(ptr: *const c_char) -> String {
         CStr::from_ptr(ptr)
             .to_string_lossy()
             .into_owned()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{from_value, json, to_value};
+
+    #[test]
+    fn partial_forced_aligner_options_keep_defaults() {
+        let config: ForcedAlignerConfig = from_value(json!({
+            "model_dir": "./english-mfa-v3.1.0",
+            "options": {"beam": 20.0}
+        }))
+        .unwrap();
+        let mut expected = to_value(ForcedAlignerConfig::default()).unwrap();
+        expected["model_dir"] = json!("./english-mfa-v3.1.0");
+        expected["options"]["beam"] = json!(20.0);
+        assert_eq!(to_value(&config).unwrap(), expected);
+        let options = &config.options;
+        assert_eq!(options.retry_beam, 40.0);
+        assert_eq!(options.acoustic_scale, 0.1);
     }
 }

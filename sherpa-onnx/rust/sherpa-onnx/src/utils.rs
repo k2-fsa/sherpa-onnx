@@ -1,7 +1,26 @@
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
+
+/// Lets config structs serialize and deserialize the FFI feature config.
+#[derive(Serialize, Deserialize)]
+#[serde(remote = "sys::FeatureConfig")]
+pub(crate) struct FeatureConfigDef {
+    #[serde(default = "default_sample_rate")]
+    pub sample_rate: i32,
+    #[serde(default = "default_feature_dim")]
+    pub feature_dim: i32,
+}
+
+fn default_sample_rate() -> i32 {
+    16000
+}
+
+fn default_feature_dim() -> i32 {
+    80
+}
 
 /// Safely convert a C string pointer to a `'static` Rust string slice.
 ///

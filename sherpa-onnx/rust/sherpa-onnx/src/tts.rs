@@ -55,6 +55,7 @@
 //! ```
 
 use crate::utils::to_c_ptr;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -67,7 +68,8 @@ type BoxedProgressCallback = Box<ProgressCallback>;
 
 // --- Model config structs ---
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// VITS model configuration.
 pub struct OfflineTtsVitsModelConfig {
     pub model: Option<String>,
@@ -112,7 +114,8 @@ impl OfflineTtsVitsModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Matcha model configuration.
 pub struct OfflineTtsMatchaModelConfig {
     pub acoustic_model: Option<String>,
@@ -157,7 +160,8 @@ impl OfflineTtsMatchaModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Kokoro model configuration.
 pub struct OfflineTtsKokoroModelConfig {
     pub model: Option<String>,
@@ -202,7 +206,8 @@ impl OfflineTtsKokoroModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Kitten model configuration.
 pub struct OfflineTtsKittenModelConfig {
     pub model: Option<String>,
@@ -241,7 +246,8 @@ impl OfflineTtsKittenModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// ZipVoice model configuration.
 pub struct OfflineTtsZipvoiceModelConfig {
     pub tokens: Option<String>,
@@ -293,7 +299,8 @@ impl OfflineTtsZipvoiceModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Pocket TTS model configuration.
 pub struct OfflineTtsPocketModelConfig {
     pub lm_flow: Option<String>,
@@ -321,7 +328,8 @@ impl OfflineTtsPocketModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Supertonic model configuration.
 pub struct OfflineTtsSupertonicModelConfig {
     pub duration_predictor: Option<String>,
@@ -349,7 +357,8 @@ impl OfflineTtsSupertonicModelConfig {
 
 // --- Aggregate config structs ---
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Aggregate model configuration for [`OfflineTts`].
 ///
 /// Configure exactly one model family for typical use.
@@ -391,7 +400,8 @@ impl OfflineTtsModelConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
 /// Top-level configuration for [`OfflineTts`].
 pub struct OfflineTtsConfig {
     pub model: OfflineTtsModelConfig,
@@ -418,7 +428,8 @@ impl OfflineTtsConfig {
 
 // --- Generation config ---
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Per-request generation options for [`OfflineTts::generate_with_config`].
 pub struct GenerationConfig {
     pub silence_scale: f32,
@@ -743,5 +754,23 @@ unsafe extern "C" fn progress_callback_trampoline(
         1
     } else {
         0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{from_value, json, to_value};
+
+    #[test]
+    fn partial_tts_keeps_defaults() {
+        let config: OfflineTtsConfig = from_value(json!({
+            "model": {"kokoro": {"model": "kokoro.onnx", "voices": "voices.bin"}}
+        }))
+        .unwrap();
+        let mut expected = to_value(OfflineTtsConfig::default()).unwrap();
+        expected["model"]["kokoro"]["model"] = json!("kokoro.onnx");
+        expected["model"]["kokoro"]["voices"] = json!("voices.bin");
+        assert_eq!(to_value(config).unwrap(), expected);
     }
 }

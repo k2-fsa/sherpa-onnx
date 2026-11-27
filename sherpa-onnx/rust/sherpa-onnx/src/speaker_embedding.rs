@@ -7,12 +7,14 @@
 //! - `rust-api-examples/examples/speaker_embedding_cosine_similarity.rs`
 
 use crate::{online_asr::OnlineStream, utils::to_c_ptr};
+use serde::{Deserialize, Serialize};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 use std::ptr;
 use std::slice;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 /// Configuration for [`SpeakerEmbeddingExtractor`].
 pub struct SpeakerEmbeddingExtractorConfig {
     pub model: Option<String>,
