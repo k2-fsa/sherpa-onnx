@@ -17,6 +17,24 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
+bool ValidateHead(const std::string &head, const std::string &tokenizer) {
+  if (head != "e2e" && head != "raw") {
+    SHERPA_ONNX_LOGE("Invalid GigaAM head: '%s'", head.c_str());
+    return false;
+  }
+  if ((head == "e2e" && EndsWith(tokenizer, "_raw_tokenizer.model")) ||
+      (head == "raw" && EndsWith(tokenizer, "_e2e_tokenizer.model"))) {
+    SHERPA_ONNX_LOGE("GigaAM tokenizer '%s' does not match head '%s'",
+                     tokenizer.c_str(), head.c_str());
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
+
 int32_t GigaAMLanguageSlot(const std::string &language) {
   constexpr std::array<std::string_view, 22> kLanguages = {
       "auto", "ru", "en", "kk", "ky", "uz", "be", "fr", "es", "ba", "ka",
@@ -44,14 +62,7 @@ bool OfflineGigaAMModelConfig::Validate() const {
     }
   }
 
-  if (head != "e2e" && head != "raw") {
-    SHERPA_ONNX_LOGE("Invalid GigaAM head: '%s'", head.c_str());
-    return false;
-  }
-  if ((head == "e2e" && EndsWith(tokenizer, "_raw_tokenizer.model")) ||
-      (head == "raw" && EndsWith(tokenizer, "_e2e_tokenizer.model"))) {
-    SHERPA_ONNX_LOGE("GigaAM tokenizer '%s' does not match head '%s'",
-                     tokenizer.c_str(), head.c_str());
+  if (!ValidateHead(head, tokenizer)) {
     return false;
   }
   if (GigaAMLanguageSlot(language) < 0) {
