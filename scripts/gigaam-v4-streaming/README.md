@@ -1,13 +1,15 @@
 # GigaAM-v4 streaming RNN-T
 
 This CPU recognizer uses the [GigaAM-v4 640 ms ONNX package](https://huggingface.co/ai-babai/gigaam-v4-onnx/tree/00936113c4ccdb679da0212ebdef8e52b73aac48/rnnt-streaming-640ms).
-It keeps acoustic and predictor state in each stream. Keep the published
-`*_stream_frontend.onnx` file beside the `*_stream_step.int8.onnx` encoder.
+It keeps acoustic and predictor state in each stream. Keep the matching
+`*_stream_frontend.onnx` file beside the encoder. The encoder filename can
+end in `_stream_step.onnx`, `_stream_step.int8.onnx`,
+`_stream_step.int4.onnx`, or `_stream_step.fp16.onnx`. The exported tensor
+interface must be the same for each precision.
 
-Use a Sherpa source build containing commit
-`d346c3182c607743849149d2b871daa2adc45770`. The examples were exercised with
-Sherpa 2.0.3 and ONNX Runtime 1.28.2. Install the full Python package from your
-source checkout with `python -m pip install .`.
+Use a Sherpa source build with the `gigaam_v4` model type. The examples were
+exercised with Sherpa 2.0.3 and ONNX Runtime 1.28.2. Install the full Python
+package from your source checkout with `python -m pip install .`.
 
 Download the pinned graphs and both published token tables together.
 
@@ -97,3 +99,27 @@ sherpa-onnx --model-type=gigaam_v4 --provider=cpu --num-threads=3 \
   --decoder=v4_rnnt_640ms_e2e_decoder.onnx \
   --joiner=v4_rnnt_640ms_e2e_joint.onnx speech.wav
 ```
+
+## Streaming regression test
+
+From the source checkout, download the pinned package above without changing
+directories. Configure CMake with `SHERPA_ONNX_ENABLE_PYTHON=ON` and
+`SHERPA_ONNX_ENABLE_TESTS=ON`, build `_sherpa_onnx`, and install NumPy in
+the Python environment used by the build.
+
+```sh
+mkdir -p sherpa-onnx/python/sherpa_onnx/lib
+cp build/lib/_sherpa_onnx*.so sherpa-onnx/python/sherpa_onnx/lib/
+curl -fL -o gigaam-v4/test.wav \
+  https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/2408de4949741cb03b444a8edbc3d38acd769927/test_wavs/russian/test.wav
+export SHERPA_ONNX_GIGAAM_STREAMING_PACKAGE="$PWD/gigaam-v4/rnnt-streaming-640ms"
+export SHERPA_ONNX_GIGAAM_TEST_WAV="$PWD/gigaam-v4/test.wav"
+ctest --test-dir build -R '^test_online_gigaam_v4_py$' --output-on-failure
+```
+
+The WAV SHA-256 is `d6e768803b3bc3afcb08326677f3bb872c9beeed29af40d3579bcc14e74484f8`.
+The test checks partial output, EOF draining, a word from the transcript,
+and mixed-head rejection.
+CTest skips it if the fixture variables are unset. To test a released INT4
+package, point the package variable at that directory and set
+`SHERPA_ONNX_GIGAAM_STREAMING_ENCODER=v4_rnnt_640ms_stream_step.int4.onnx`.

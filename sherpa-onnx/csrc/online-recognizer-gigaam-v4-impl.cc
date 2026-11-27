@@ -48,7 +48,8 @@ FeatureExtractorConfig GigaAmFeatures() {
 
 std::string FrontendPath(const std::string &encoder) {
   for (const std::string suffix :
-       {"_stream_step.int8.onnx", "_stream_step.onnx"}) {
+       {"_stream_step.int8.onnx", "_stream_step.int4.onnx",
+        "_stream_step.fp16.onnx", "_stream_step.onnx"}) {
     if (EndsWith(encoder, suffix)) {
       return encoder.substr(0, encoder.size() - suffix.size()) +
              "_stream_frontend.onnx";
@@ -56,7 +57,7 @@ std::string FrontendPath(const std::string &encoder) {
   }
 
   throw std::invalid_argument(
-      "GigaAM-v4 encoder must be named *_stream_step[.int8].onnx");
+      "GigaAM-v4 encoder must be named *_stream_step[.int8|.int4|.fp16].onnx");
 }
 
 enum class Head { kUnknown, kE2e, kRaw };
