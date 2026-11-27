@@ -54,8 +54,9 @@ TEST(ContextGraph, TestBasic) {
 
 TEST(ContextGraph, TestBasicNonStrict) {
   auto queries = std::map<std::string, float>{
-      {"HEHERSHE", 7}, {"HERSHE", 5}, {"HISHE", 5},   {"SHED", 3}, {"SHELF", 3},
-      {"HELL", 2},     {"HELLO", 2},  {"DHRHISQ", 3}, {"THEN", 2}};
+      {"HEHERSHE", 10}, {"HERSHE", 8},  {"HISHE", 5},
+      {"SHED", 6},      {"SHELF", 6},   {"HELL", 2},
+      {"HELLO", 7},     {"DHRHISQ", 3}, {"THEN", 2}};
   TestHelper(queries, 0, false);
 }
 
@@ -69,10 +70,41 @@ TEST(ContextGraph, TestCustomize) {
 
 TEST(ContextGraph, TestCustomizeNonStrict) {
   auto queries = std::map<std::string, float>{
-      {"HEHERSHE", 20}, {"HERSHE", 15},    {"HISHE", 10.84},
-      {"SHED", 10},     {"SHELF", 10},     {"HELL", 5},
-      {"HELLO", 5},     {"DHRHISQ", 5.84}, {"THEN", 5}};
+      {"HEHERSHE", 22.5}, {"HERSHE", 17.5},  {"HISHE", 10.84},
+      {"SHED", 18.34},    {"SHELF", 18.34},  {"HELL", 5},
+      {"HELLO", 13},      {"DHRHISQ", 5.84}, {"THEN", 5}};
   TestHelper(queries, 5, false);
+}
+
+// In non-strict mode, a phrase that is a prefix of another one must not stop
+// the longer one from matching.
+TEST(ContextGraph, TestPrefixNonStrict) {
+  std::vector<std::string> contexts_str({"CAT", "CATCH"});
+  std::vector<std::vector<int32_t>> contexts;
+  for (const auto &c : contexts_str) {
+    contexts.emplace_back(c.begin(), c.end());
+  }
+  auto context_graph = ContextGraph(contexts, 1);
+
+  auto score = [&context_graph](const std::string &query, bool strict_mode) {
+    float total_scores = 0;
+    auto state = context_graph.Root();
+    for (auto q : query) {
+      auto res = context_graph.ForwardOneStep(state, q, strict_mode);
+      total_scores += std::get<0>(res);
+      state = std::get<1>(res);
+    }
+    return total_scores + context_graph.Finalize(state).first;
+  };
+
+  // CATCH gets its own bonus (5) on top of CAT's (3). An unfinished CATCH
+  // keeps only CAT's bonus, and so does CAT followed by something else.
+  auto queries = std::map<std::string, float>{
+      {"CAT", 3}, {"CATS", 3}, {"CATC", 3}, {"CATCH", 8}, {"CATCHES", 8}};
+  for (const auto &iter : queries) {
+    EXPECT_EQ(score(iter.first, false), iter.second) << iter.first;
+    EXPECT_EQ(score(iter.first, true), iter.second) << iter.first;
+  }
 }
 
 TEST(ContextGraph, Benchmark) {
