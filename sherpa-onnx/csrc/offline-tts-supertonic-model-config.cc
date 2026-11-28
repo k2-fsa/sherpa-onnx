@@ -30,78 +30,104 @@ void OfflineTtsSupertonicModelConfig::Register(ParseOptions *po) {
                "select)");
 }
 
-bool OfflineTtsSupertonicModelConfig::Validate() const {
-  if (duration_predictor.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineTtsSupertonicModelConfig(
+    const OfflineTtsSupertonicModelConfig &config, const Exists &exists) {
+  if (config.duration_predictor.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-duration-predictor");
     return false;
   }
-  if (!FileExists(duration_predictor)) {
+  if (!exists(config.duration_predictor)) {
     SHERPA_ONNX_LOGE("--supertonic-duration-predictor '%s' does not exist",
-                     duration_predictor.c_str());
+                     config.duration_predictor.c_str());
     return false;
   }
 
-  if (text_encoder.empty()) {
+  if (config.text_encoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-text-encoder");
     return false;
   }
-  if (!FileExists(text_encoder)) {
+  if (!exists(config.text_encoder)) {
     SHERPA_ONNX_LOGE("--supertonic-text-encoder '%s' does not exist",
-                     text_encoder.c_str());
+                     config.text_encoder.c_str());
     return false;
   }
 
-  if (vector_estimator.empty()) {
+  if (config.vector_estimator.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-vector-estimator");
     return false;
   }
-  if (!FileExists(vector_estimator)) {
+  if (!exists(config.vector_estimator)) {
     SHERPA_ONNX_LOGE("--supertonic-vector-estimator '%s' does not exist",
-                     vector_estimator.c_str());
+                     config.vector_estimator.c_str());
     return false;
   }
 
-  if (vocoder.empty()) {
+  if (config.vocoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-vocoder");
     return false;
   }
-  if (!FileExists(vocoder)) {
+  if (!exists(config.vocoder)) {
     SHERPA_ONNX_LOGE("--supertonic-vocoder '%s' does not exist",
-                     vocoder.c_str());
+                     config.vocoder.c_str());
     return false;
   }
 
-  if (tts_json.empty()) {
+  if (config.tts_json.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-tts-json");
     return false;
   }
-  if (!FileExists(tts_json)) {
+  if (!exists(config.tts_json)) {
     SHERPA_ONNX_LOGE("--supertonic-tts-json '%s' does not exist",
-                     tts_json.c_str());
+                     config.tts_json.c_str());
     return false;
   }
 
-  if (unicode_indexer.empty()) {
+  if (config.unicode_indexer.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-unicode-indexer");
     return false;
   }
-  if (!FileExists(unicode_indexer)) {
+  if (!exists(config.unicode_indexer)) {
     SHERPA_ONNX_LOGE("--supertonic-unicode-indexer '%s' does not exist",
-                     unicode_indexer.c_str());
+                     config.unicode_indexer.c_str());
     return false;
   }
 
-  if (voice_style.empty()) {
+  if (config.voice_style.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-voice-style");
     return false;
   }
-  if (!FileExists(voice_style)) {
+  if (!exists(config.voice_style)) {
     SHERPA_ONNX_LOGE("--supertonic-voice-style '%s' does not exist",
-                     voice_style.c_str());
+                     config.voice_style.c_str());
     return false;
   }
   return true;
 }
+
+bool OfflineTtsSupertonicModelConfig::Validate() const {
+  return ValidateOfflineTtsSupertonicModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineTtsSupertonicModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsSupertonicModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsSupertonicModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsSupertonicModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsSupertonicModelConfig::ToString() const {
   std::ostringstream os;

@@ -524,6 +524,18 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
 #endif
   }
 
+#if __ANDROID_API__ >= 9
+  if (!config.Validate(mgr)) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#else
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#endif
+
   auto tts = new sherpa_onnx::OfflineTts(
 #if __ANDROID_API__ >= 9
       mgr,

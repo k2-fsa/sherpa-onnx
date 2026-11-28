@@ -47,6 +47,12 @@ struct OfflineTtsSupertonicModelConfig {
   void Register(ParseOptions *po);
   bool Validate() const;
 
+  // Like Validate(), for files given by a resource manager (Android asset
+  // manager / OHOS native resource manager): paths are relative to the
+  // resource root.
+  template <typename Manager>
+  bool Validate(Manager *mgr) const;
+
   std::string ToString() const;
 };
 

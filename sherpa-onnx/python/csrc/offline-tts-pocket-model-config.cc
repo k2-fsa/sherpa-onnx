@@ -32,7 +32,8 @@ void PybindOfflineTtsPocketModelConfig(py::module *m) {
       .def_readwrite("token_scores_json", &PyClass::token_scores_json)
       .def_readwrite("voice_embedding_cache_capacity",
                      &PyClass::voice_embedding_cache_capacity)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 

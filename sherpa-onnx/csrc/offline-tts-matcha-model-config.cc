@@ -35,40 +35,45 @@ void OfflineTtsMatchaModelConfig::Register(ParseOptions *po) {
                "Speech speed. Larger->Slower; Smaller->faster.");
 }
 
-bool OfflineTtsMatchaModelConfig::Validate() const {
-  if (acoustic_model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineTtsMatchaModelConfig(
+    const OfflineTtsMatchaModelConfig &config, const Exists &exists) {
+  if (config.acoustic_model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --matcha-acoustic-model");
     return false;
   }
 
-  if (!FileExists(acoustic_model)) {
+  if (!exists(config.acoustic_model)) {
     SHERPA_ONNX_LOGE("--matcha-acoustic-model: '%s' does not exist",
-                     acoustic_model.c_str());
+                     config.acoustic_model.c_str());
     return false;
   }
 
-  if (tokens.empty()) {
+  if (config.tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --matcha-tokens");
     return false;
   }
 
-  if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("--matcha-tokens: '%s' does not exist", tokens.c_str());
+  if (!exists(config.tokens)) {
+    SHERPA_ONNX_LOGE("--matcha-tokens: '%s' does not exist",
+                     config.tokens.c_str());
     return false;
   }
 
-  if (!data_dir.empty()) {
+  if (!config.data_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "WARNING: --matcha-data-dir is deprecated. Please use "
         "--matcha-lexicon or GenerationConfig.phoneme_codepoints with an "
         "external phonemizer (e.g. piper_phonemize) instead.");
   }
 
-  if (!lexicon.empty()) {
+  if (!config.lexicon.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(lexicon, ",", false, &files);
+    SplitStringToVector(config.lexicon, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE(
             "lexicon '%s' does not exist. Please re-check --matcha-lexicon",
             f.c_str());
@@ -77,7 +82,7 @@ bool OfflineTtsMatchaModelConfig::Validate() const {
     }
   }
 
-  if (!dict_dir.empty()) {
+  if (!config.dict_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "From sherpa-onnx v1.12.15, you don't need to provide dict_dir for "
         "this model. Ignore it");
@@ -85,6 +90,27 @@ bool OfflineTtsMatchaModelConfig::Validate() const {
 
   return true;
 }
+
+bool OfflineTtsMatchaModelConfig::Validate() const {
+  return ValidateOfflineTtsMatchaModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineTtsMatchaModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsMatchaModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsMatchaModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsMatchaModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsMatchaModelConfig::ToString() const {
   std::ostringstream os;

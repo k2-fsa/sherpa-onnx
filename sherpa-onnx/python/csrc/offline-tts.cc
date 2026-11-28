@@ -60,7 +60,8 @@ static void PybindOfflineTtsConfig(py::module *m) {
       .def_readwrite("rule_fars", &PyClass::rule_fars)
       .def_readwrite("max_num_sentences", &PyClass::max_num_sentences)
       .def_readwrite("silence_scale", &PyClass::silence_scale)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 

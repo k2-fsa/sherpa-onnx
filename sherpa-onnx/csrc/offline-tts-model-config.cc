@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -29,44 +30,67 @@ void OfflineTtsModelConfig::Register(ParseOptions *po) {
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool OfflineTtsModelConfig::Validate() const {
-  if (num_threads < 1) {
-    SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
+// 'validate' checks the selected model config either against the file
+// system or against a resource manager.
+template <typename ValidateModel>
+static bool ValidateOfflineTtsModelConfig(const OfflineTtsModelConfig &config,
+                                          const ValidateModel &validate) {
+  if (config.num_threads < 1) {
+    SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", config.num_threads);
     return false;
   }
 
-  if (!vits.model.empty()) {
-    return vits.Validate();
+  if (!config.vits.model.empty()) {
+    return validate(config.vits);
   }
 
-  if (!matcha.acoustic_model.empty()) {
-    return matcha.Validate();
+  if (!config.matcha.acoustic_model.empty()) {
+    return validate(config.matcha);
   }
 
-  if (!zipvoice.decoder.empty()) {
-    return zipvoice.Validate();
+  if (!config.zipvoice.decoder.empty()) {
+    return validate(config.zipvoice);
   }
 
-  if (!kokoro.model.empty()) {
-    return kokoro.Validate();
+  if (!config.kokoro.model.empty()) {
+    return validate(config.kokoro);
   }
 
-  if (!kitten.model.empty()) {
-    return kitten.Validate();
+  if (!config.kitten.model.empty()) {
+    return validate(config.kitten);
   }
 
-  if (!pocket.lm_flow.empty()) {
-    return pocket.Validate();
+  if (!config.pocket.lm_flow.empty()) {
+    return validate(config.pocket);
   }
 
-  if (!supertonic.tts_json.empty()) {
-    return supertonic.Validate();
+  if (!config.supertonic.tts_json.empty()) {
+    return validate(config.supertonic);
   }
 
   SHERPA_ONNX_LOGE("Please provide exactly one tts model.");
 
   return false;
 }
+
+bool OfflineTtsModelConfig::Validate() const {
+  return ValidateOfflineTtsModelConfig(
+      *this, [](const auto &c) -> bool { return c.Validate(); });
+}
+
+template <typename Manager>
+bool OfflineTtsModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsModelConfig(
+      *this, [mgr](const auto &c) -> bool { return c.Validate(mgr); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsModelConfig::Validate(NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsModelConfig::ToString() const {
   std::ostringstream os;
