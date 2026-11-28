@@ -718,6 +718,20 @@ It uses the C API of sherpa-onnx (`SherpaOnnxOfflineTts`) with Piper VITS voices
 - [Releases](https://github.com/whispem/ambivox/releases)
 - Docker images for x86-64 and arm64 · MIT
 
+### [Onigio](https://onigio.com)
+
+> A desktop AI agent for Windows and Linux with hands-free voice conversation:
+> it keeps listening, answers out loud, and you can interrupt it at any time.
+> Speech runs on the device.
+
+It uses the Rust bindings of sherpa-onnx for speech recognition with SenseVoice and Paraformer,
+streaming recognition, voice activity detection with Silero VAD, wake-word spotting,
+speaker embeddings and Kokoro text-to-speech.
+
+- [Website](https://onigio.com)
+- [Download](https://onigio.com/download)
+- [Voice conversation docs](https://github.com/stareing/onigio/blob/main/docs/voice.md)
+
 [sherpa-onnx-node]: https://www.npmjs.com/package/sherpa-onnx-node
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
