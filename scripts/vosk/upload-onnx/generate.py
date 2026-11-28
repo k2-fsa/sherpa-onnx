@@ -1,0 +1,1 @@
+../upload-hf/generate.py

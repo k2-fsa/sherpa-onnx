@@ -152,7 +152,8 @@ def main():
     # ---- 3. sanity forward before saving -----------------------------
     rng = np.random.default_rng(0)
     feats = rng.standard_normal((1, 40, spec.input_dim)).astype(np.float32)
-    iv = (rng.standard_normal((1, spec.ivector_dim)) * 0.1).astype(np.float32)
+    # one i-vector per frame (the model's ivector input is [B, T, S])
+    iv = (rng.standard_normal((1, 40, spec.ivector_dim)) * 0.1).astype(np.float32)
     with torch.no_grad():
         out = net(torch.from_numpy(feats), torch.from_numpy(iv))
     assert out.shape == (1, 40, spec.output_dim), out.shape
@@ -169,7 +170,7 @@ def main():
     worst = 0.0
     for t_len in (1, 7, 40, 137):
         feats = torch.randn(2, t_len, spec.input_dim)
-        iv = 0.1 * torch.randn(2, spec.ivector_dim)
+        iv = 0.1 * torch.randn(2, t_len, spec.ivector_dim)
         worst = max(worst, check_parity(net, flat, feats, iv))
     assert worst < 1e-6, f"flat module parity failed: {worst:.2e}"
     print(f"flat module parity OK (max diff {worst:.2e})")

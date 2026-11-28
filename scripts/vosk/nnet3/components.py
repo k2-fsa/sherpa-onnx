@@ -35,6 +35,18 @@
 #                            torch_model.TimeHeightConvolution docstring)
 #   PermuteComponent         nnet-simple-component.cc: fixed column
 #                            permutation (large-en)
+#   RestrictedAttentionComponent  nnet3/nnet-attention-component.cc:
+#                            windowed multi-head attention over time
+#                            (large-en, fr-linto; math in the schema
+#                            comment below)
+#   NormalizeComponent       nnet3/nnet-normalize-component.cc: per-block
+#                            RMS normalization (aspire)
+#   LstmNonlinearityComponent  nnet3/nnet-combined-component.cc: LSTM cell
+#                            nonlinearity (gigaspeech; math in the schema
+#                            comment below)
+#   BackpropTruncationComponent  nnet3/nnet-general-component.cc: y =
+#                            Scale * x at inference (gigaspeech wires it
+#                            on the recurrent edge)
 #
 # See notes.md in this directory for the design write-up.
 
@@ -217,6 +229,76 @@ _SEMANTIC_SCHEMAS = {
         "RankInOut": "ignore",
     },
     "PermuteComponent": {"ColumnMap": "offsets"},
+    # windowed multi-head attention over time
+    # (nnet3/nnet-attention-component.cc + attention.cc):
+    #   context_dim = NumLeftInputs + 1 + NumRightInputs; per head the row
+    #   holds (key, value, query) with query_dim = key_dim + context_dim;
+    #   for output row t, context position o reads input row
+    #   t + (o - NumLeftInputs) * TimeStride (zero-padded at the edges):
+    #     logit(t, o) = KeyScale * q_key(t).k(t+o) + q_ctx(t, o)
+    #     c(t, :)     = softmax_o logit(t, :)
+    #     out(t)      = sum_o c(t, o) * v(t+o)  (+ c(t, :) if OutputContext)
+    #   rows outside the utterance CLAMP to the edge (verified row-by-row
+    #   against nnet3-compute -- NOT zero-padded).  NumLeft/RightInputsRequired
+    #   only affect the compiled receptive field, not the math.
+    #   <StatsCount>/<EntropyStats>/<PosteriorStats> are training statistics.
+    "RestrictedAttentionComponent": {
+        "NumHeads": "num",
+        "KeyDim": "num",
+        "ValueDim": "num",
+        "NumLeftInputs": "num",
+        "NumRightInputs": "num",
+        "TimeStride": "num",
+        "NumLeftInputsRequired": "num",
+        "NumRightInputsRequired": "num",
+        "OutputContext": "bool",
+        "KeyScale": "num",
+        "StatsCount": "ignore",
+        "EntropyStats": "vec",
+        "PosteriorStats": "mat",
+    },
+    # per-block RMS normalization (nnet3/nnet-normalize-component.cc):
+    #   p = ||x_block||^2 / (BlockDim * TargetRms^2)   (floored at 2^-66)
+    #   y_block = x_block / sqrt(p); AddLogStddev appends log(rms(x_block))
+    "NormalizeComponent": {
+        "InputDim": "num",
+        "BlockDim": "num",
+        "TargetRms": "num",
+        "AddLogStddev": "bool",
+    },
+    # LSTM cell nonlinearity (nnet3/nnet-combined-component.cc;
+    # cudamatrix/cu-math.cc CpuComputeLstmNonlinearity).  Per row the
+    # input is [i, f, c, o, c_prev] (5 * CellDim), the output [c_t, m_t]
+    # (2 * CellDim):
+    #   i_t = sigmoid(i + w_ic*c_prev);  f_t = sigmoid(f + w_fc*c_prev)
+    #   c_t = f_t*c_prev + i_t*tanh(c);  o_t = sigmoid(o + w_oc*c_t)
+    #   m_t = o_t*tanh(c_t)
+    # Params is [3, CellDim] = (w_ic, w_fc, w_oc).  UseDropout (rows
+    # carrying per-row dropout scales in 3 extra columns) is not
+    # supported at inference.
+    "LstmNonlinearityComponent": {
+        "Params": "mat",
+        "SelfRepairConfig": "ignore",
+        "SelfRepairProb": "ignore",
+        "UseDropout": "bool",
+    },
+    # truncated-BPTT gradient utility (nnet3/nnet-general-component.cc):
+    # Propagate is out = Scale * in (Scale defaults to 1.0); the
+    # clipping/zeroing of the RecurrenceInterval machinery only affects
+    # training-time backprop
+    "BackpropTruncationComponent": {
+        "Dim": "num",
+        "Scale": "num",
+        "ClippingThreshold": "ignore",
+        "ZeroingThreshold": "ignore",
+        "ZeroingInterval": "ignore",
+        "RecurrenceInterval": "ignore",
+        "NumElementsClipped": "ignore",
+        "NumElementsZeroed": "ignore",
+        "NumElementsProcessed": "ignore",
+        "NumZeroingBoundaries": "ignore",
+        "Zeroing": "ignore",
+    },
 }
 
 
@@ -250,6 +332,37 @@ IDENTITY_TYPES = {
 # kaldi's nnet3-compute and the decodables do -- never "the first output
 # node".
 OUTPUT_NODE = "output"
+
+
+def component_out_dim(c: Component) -> int:
+    """Output dim of one component, from its parsed params (inference)."""
+    p = c.params
+    if c.type in (
+        "FixedAffineComponent",
+        "NaturalGradientAffineComponent",
+        "TdnnComponent",
+    ):
+        return int(p["LinearParams"].shape[0])
+    if c.type == "LinearComponent":
+        return int(p["Params"].shape[0])
+    if c.type == "PermuteComponent":
+        return len(p["ColumnMap"])
+    if c.type == "BatchNormComponent":
+        return int(p["Dim"])
+    if c.type == "NormalizeComponent":
+        d, bd = int(p["InputDim"]), int(p.get("BlockDim", p["InputDim"]))
+        return d + (d // bd if p.get("AddLogStddev") else 0)
+    if c.type == "RestrictedAttentionComponent":
+        cd = int(p["NumLeftInputs"]) + 1 + int(p["NumRightInputs"])
+        out = int(p["ValueDim"]) + (cd if p.get("OutputContext", True) else 0)
+        return int(p["NumHeads"]) * out
+    if c.type == "LstmNonlinearityComponent":
+        return 2 * int(p["Params"].shape[1])
+    if c.type == "BackpropTruncationComponent":
+        return int(p["Dim"])
+    if "Dim" in p:  # identity-family (NoOp, dropout, relu, ...)
+        return int(p["Dim"])
+    raise ValueError(f"cannot determine the output dim of {c.type!r} ({c.name})")
 
 
 def output_node_index(nodes: List[Node]) -> int:

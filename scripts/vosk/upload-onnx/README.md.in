@@ -1,0 +1,35 @@
+# Vosk models, ONNX
+
+[ONNX](https://onnx.ai) exports of the [vosk](https://alphacephei.com/vosk/models)
+ASR models (the acoustic model `am/final.mdl` converted to
+`am/final.onnx` / `am/final.int8.onnx`; `conf/`, `ivector/` and `graph/`
+are unchanged from the original model, except `graph/words.txt`, which
+is regenerated from the graph's output symbol table when the original
+ids disagree with it -- the model's info page says when it was),
+produced with
+[`scripts/vosk/`](https://github.com/k2-fsa/sherpa-onnx/tree/master/scripts/vosk).
+Every export is gated against kaldi (row-by-row AM parity) and against
+the transcript of a test wav before it is uploaded.
+
+Each language lives in its own folder under [`asr/<lang>/`](asr); per
+model you find:
+
+| file | what it is |
+|---|---|
+| `<name>-onnx.zip` | the model with the float32 AM (`am/final.onnx`) |
+| `<name>-onnx-int8.zip` | the model with the quantized AM (`am/final.int8.onnx`) |
+| `<name>.md` | info page: contents (`tree`), file sizes (`ls -lh`), license |
+
+## Table of contents
+
+{% for group in languages %}
+- [{{ group.title }}](#{{ group.anchor }})
+{% endfor %}
+{% for group in languages %}
+## {{ group.title }}
+
+| Model | Source | License | Downloads | Info |
+|---|---|---|---|---|
+{% for m in group.models %}| [`{{ m.name }}`]({{ m.url }}) | [vosk]({{ m.url }}) | {{ m.license or "(see the info page)" }} | [float32](asr/{{ m.lang }}/{{ m.name }}-onnx.zip) / [int8](asr/{{ m.lang }}/{{ m.name }}-onnx-int8.zip) | [files](asr/{{ m.lang }}/{{ m.name }}.md) |
+{% endfor %}
+{% endfor %}
