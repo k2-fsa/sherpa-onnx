@@ -6,7 +6,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <limits>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -16,6 +19,8 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/online-stream.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -45,21 +50,49 @@ Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
   return decoder_input;
 }
 
+template <typename Model>
+void EnsurePredictor(const Model *model, int32_t blank_id, Hypothesis *hyp) {
+  if (hyp->nemo_decoder_out.value) {
+    return;
+  }
+
+  // Non-blank extensions consume their last token only after pruning.
+  int32_t last_token =
+      hyp->ys.empty() ? blank_id : static_cast<int32_t>(hyp->ys.back());
+  auto decoder_result =
+      model->RunDecoder(BuildDecoderInput(last_token, model->Allocator()),
+                        Convert(std::move(hyp->nemo_decoder_states)));
+  hyp->nemo_decoder_out = std::move(decoder_result.first);
+  hyp->nemo_decoder_states = Convert(std::move(decoder_result.second));
+}
+
+template <typename Model>
 void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
-               OnlineTransducerNeMoModel *model, int32_t max_active_paths,
+               const Model *model, int32_t max_active_paths,
                float blank_penalty, OnlineStream *s) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+  constexpr bool kUnified =
+      std::is_same_v<Model, OnlineTransducerNeMoParakeetUnifiedModel>;
 
   OrtAllocator *allocator = model->Allocator();
 
   int32_t vocab_size = model->VocabSize();
+  if (vocab_size <= 0) {
+    SHERPA_ONNX_LOGE("Invalid NeMo transducer vocabulary size.");
+    SHERPA_ONNX_EXIT(-1);
+  }
   int32_t blank_id = vocab_size - 1;
   int32_t max_symbols_per_frame = 10;
 
   auto &r = s->GetResult();
   const auto &context_graph = s->GetContextGraph();
   int32_t frame_offset = r.frame_offset;
+  if (frame_offset < 0 ||
+      num_rows > std::numeric_limits<int32_t>::max() - frame_offset) {
+    SHERPA_ONNX_LOGE("NeMo transducer frame offset is out of range.");
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   std::vector<Candidate> cur;
 
@@ -70,6 +103,18 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     c.hyp.context_state =
         context_graph != nullptr ? context_graph->Root() : nullptr;
     c.hyp.nemo_decoder_states = Convert(model->GetDecoderInitStates());
+    if constexpr (kUnified) {
+      auto &committed_out = s->GetNeMoDecoderOut();
+      if (committed_out) {
+        // Reset committed the previous result. Decode a fresh suffix from
+        // its predictor state, which is independent of the visible tokens.
+        c.hyp.nemo_decoder_out = Clone(allocator, &committed_out);
+        c.hyp.nemo_decoder_states.clear();
+        for (const auto &state : s->GetNeMoDecoderStates()) {
+          c.hyp.nemo_decoder_states.emplace_back(Clone(allocator, &state));
+        }
+      }
+    }
     cur.push_back(std::move(c));
   } else {
     cur.reserve(r.hyps.Size());
@@ -81,6 +126,7 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     r.hyps.Clear();
   }
 
+  bool reported_invalid_scores = false;
   while (true) {
     // Hypotheses can be at different frames since a non-blank emission does
     // not advance the frame. Always expand the ones that are furthest behind.
@@ -94,6 +140,7 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     }
 
     std::vector<std::pair<double, Candidate>> all_candidates;
+    std::vector<std::pair<double, Candidate>> skipped_candidates;
 
     for (auto &c : cur) {
       if (c.frame > min_frame) {
@@ -113,40 +160,60 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         continue;
       }
 
-      if (!c.hyp.nemo_decoder_out.value) {
-        // Consume the most recently emitted token (or the initial blank) to
-        // obtain the decoder output of this hypothesis. It is cached on the
-        // hypothesis, so blank transitions and later frames reuse it without
-        // running the decoder again; the decoder thus runs only for tokens
-        // whose hypothesis survived pruning.
-        int32_t last_token =
-            c.hyp.ys.empty() ? blank_id
-                             : static_cast<int32_t>(c.hyp.ys.back());
-
-        auto decoder_result =
-            model->RunDecoder(BuildDecoderInput(last_token, allocator),
-                              Convert(std::move(c.hyp.nemo_decoder_states)));
-
-        c.hyp.nemo_decoder_out =
-            CopyableOrtValue(std::move(decoder_result.first));
-        c.hyp.nemo_decoder_states = Convert(std::move(decoder_result.second));
-      }
+      EnsurePredictor(model, blank_id, &c.hyp);
 
       std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
 
       Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
-          memory_info, const_cast<float *>(encoder_out) + c.frame * num_cols,
+          memory_info,
+          const_cast<float *>(encoder_out) +
+              static_cast<size_t>(c.frame) * num_cols,
           num_cols, encoder_shape.data(), encoder_shape.size());
 
       Ort::Value logit = model->RunJoiner(
           View(&cur_encoder_out), View(&c.hyp.nemo_decoder_out.value));
 
+      if constexpr (kUnified) {
+        const auto info = logit.GetTensorTypeAndShapeInfo();
+        if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+            info.GetElementCount() != static_cast<size_t>(vocab_size)) {
+          SHERPA_ONNX_LOGE("Invalid Parakeet Unified joiner output.");
+          SHERPA_ONNX_EXIT(-1);
+        }
+      }
       float *p_logit = logit.GetTensorMutableData<float>();
       if (blank_penalty > 0) {
         p_logit[blank_id] -= blank_penalty;
       }
 
+      int32_t top_token = -1;
+      if constexpr (kUnified) {
+        if (max_active_paths == 1) {
+          // Match greedy selection even if log-softmax rounds two scores
+          // to the same value. Use the normalized score for accumulation.
+          top_token = MaxElementIndex(p_logit, vocab_size);
+        }
+      }
+
       LogSoftmax(p_logit, vocab_size);
+      if constexpr (kUnified) {
+        if (std::any_of(p_logit, p_logit + vocab_size,
+                        [](float score) { return std::isnan(score); })) {
+          if (!reported_invalid_scores) {
+            SHERPA_ONNX_LOGE(
+                "Skipping invalid Parakeet Unified joiner scores in this "
+                "chunk.");
+            reported_invalid_scores = true;
+          }
+          // Advance without changing the predictor. An invalid row breaks
+          // the run of valid blank frames used for endpointing.
+          ++c.frame;
+          c.num_symbols = 0;
+          c.hyp.num_trailing_blanks = 0;
+          skipped_candidates.emplace_back(c.hyp.log_prob, std::move(c));
+          continue;
+        }
+      }
 
       // Boost hotword continuations by their context-graph transition score
       // before the top-k selection, so that they have a chance to be selected
@@ -165,7 +232,9 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         }
       }
 
-      auto top_k = TopkIndex(p_logit, vocab_size, max_active_paths);
+      auto top_k = top_token >= 0
+                       ? std::vector<int32_t>{top_token}
+                       : TopkIndex(p_logit, vocab_size, max_active_paths);
 
       for (const auto &b : boosted) {
         p_logit[b.first] = b.second;
@@ -180,6 +249,10 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         nc.hyp.context_state = c.hyp.context_state;
         nc.hyp.num_trailing_blanks = c.hyp.num_trailing_blanks;
         nc.hyp.log_prob = c.hyp.log_prob + p_logit[token];
+        if constexpr (kUnified) {
+          nc.hyp.nemo_alignment_log_prob =
+              c.hyp.nemo_alignment_log_prob + p_logit[token];
+        }
 
         if (token == blank_id) {
           // Keep the decoder output and states, advance the frame
@@ -217,18 +290,25 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
       }
     }
 
+    if constexpr (kUnified) {
+      // Use zero-cost skips only if no candidate with a finite score can
+      // continue. Top-k can also retain zero-probability paths.
+      if (!skipped_candidates.empty() &&
+          std::none_of(all_candidates.begin(), all_candidates.end(),
+                       [](const auto &p) { return std::isfinite(p.first); })) {
+        all_candidates = std::move(skipped_candidates);
+      }
+    }
+
     // Recombine candidates that have an identical token sequence at the
-    // same frame with the same per-frame symbol count, keeping only the
-    // best-scoring alignment (Viterbi-style). Their decoder states and
+    // same frame with the same per-frame symbol count. Their decoder states and
     // context states are identical, since both are deterministic functions
     // of the emitted tokens. Without recombination, the beam fills up with
     // alignments of one and the same token sequence, and paths that emit
     // tokens in low-confidence regions get pruned in favor of blank-only
-    // paths, which causes deletions on long audio. Keeping the maximum
-    // instead of summing (marginalizing over emission positions) matches
-    // the offline decoder and greedy search; summing would let a weak but
-    // consistent token accumulate mass across all possible emission
-    // positions and beat silence on noise-only audio.
+    // paths. Unified sums their probability for ranking and keeps metadata
+    // from the highest-scoring alignment. Using only that alignment's
+    // score can favor a blank-only path over well-supported speech.
     {
       std::unordered_map<std::string, size_t> index;
       std::vector<std::pair<double, Candidate>> merged;
@@ -246,7 +326,16 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
         }
 
         auto &dst = merged[it->second];
-        if (p.second.hyp.log_prob > dst.second.hyp.log_prob) {
+        if constexpr (kUnified) {
+          const double total =
+              LogAdd<double>()(dst.second.hyp.log_prob, p.second.hyp.log_prob);
+          if (p.second.hyp.nemo_alignment_log_prob >
+              dst.second.hyp.nemo_alignment_log_prob) {
+            dst = std::move(p);
+          }
+          dst.first = total;
+          dst.second.hyp.log_prob = total;
+        } else if (p.second.hyp.log_prob > dst.second.hyp.log_prob) {
           dst = std::move(p);
         }
       }
@@ -270,9 +359,8 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
     }
   }
 
-  // Persist the hypotheses for the next chunk. Hypotheses with an identical
-  // token sequence are merged; their decoder states are identical since the
-  // prediction network is a deterministic function of the emitted tokens.
+  // All survivors reached (num_rows, 0), so the last recombination already
+  // made their token sequences unique. Persist them for the next chunk.
   Hypotheses hyps;
   for (auto &c : cur) {
     hyps.Add(std::move(c.hyp));
@@ -285,6 +373,26 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
   // noise-only audio.
   Hypothesis best = hyps.GetMostProbable(false /*length_norm*/);
 
+  if constexpr (kUnified) {
+    // Publish the predictor from the same path as the visible result. It
+    // survives Reset(), while the segment's hypotheses are cleared.
+    if (!best.nemo_decoder_out.value) {
+      // A forced advance at the symbol limit can leave the last token
+      // pending. Cache its output on the retained path as well.
+      EnsurePredictor(model, blank_id, &best);
+      const auto key = best.Key();
+      for (auto &entry : hyps) {
+        if (entry.first == key) {
+          entry.second.nemo_decoder_out = best.nemo_decoder_out;
+          entry.second.nemo_decoder_states = best.nemo_decoder_states;
+          break;
+        }
+      }
+    }
+    s->SetNeMoDecoderOut(std::move(best.nemo_decoder_out.value));
+    s->SetNeMoDecoderStates(Convert(std::move(best.nemo_decoder_states)));
+  }
+
   r.hyps = std::move(hyps);
   r.tokens = std::move(best.ys);
   r.timestamps = std::move(best.timestamps);
@@ -294,30 +402,52 @@ void DecodeOne(const float *encoder_out, int32_t num_rows, int32_t num_cols,
   r.frame_offset += num_rows;
 }
 
+template <typename Model>
+void DecodeBatch(const Ort::Value &encoder_out, OnlineStream **ss, int32_t n,
+                 const Model *model, int32_t max_active_paths,
+                 float blank_penalty) {
+  const auto info = encoder_out.GetTensorTypeAndShapeInfo();
+  const auto shape = info.GetShape();
+  if (shape.size() != 3 || n < 0 || shape[0] != n || shape[1] < 0 ||
+      shape[1] > std::numeric_limits<int32_t>::max() || shape[2] <= 0 ||
+      shape[2] > std::numeric_limits<int32_t>::max() ||
+      info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+    SHERPA_ONNX_LOGE("Invalid NeMo transducer encoder output.");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (n == 0 || shape[1] == 0) {
+    return;
+  }
+
+  const auto dim1 = static_cast<int32_t>(shape[1]);  // T
+  const auto dim2 = static_cast<int32_t>(shape[2]);  // encoder_out_dim
+  const auto per_stream = info.GetElementCount() / static_cast<size_t>(n);
+  if (per_stream / static_cast<size_t>(dim2) != static_cast<size_t>(dim1) ||
+      per_stream % static_cast<size_t>(dim2) != 0) {
+    SHERPA_ONNX_LOGE("Invalid NeMo transducer encoder output size.");
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  const float *p = encoder_out.GetTensorData<float>();
+
+  for (int32_t i = 0; i != n; ++i) {
+    const float *this_p = p + per_stream * i;
+
+    DecodeOne(this_p, dim1, dim2, model, max_active_paths, blank_penalty,
+              ss[i]);
+  }
+}
+
 }  // namespace
 
 void OnlineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     Ort::Value encoder_out, OnlineStream **ss, int32_t n) const {
-  auto shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
-  int32_t batch_size = static_cast<int32_t>(shape[0]);
-
-  if (batch_size != n) {
-    SHERPA_ONNX_LOGE("Size mismatch! encoder_out.size(0) %d, n: %d",
-                     static_cast<int32_t>(shape[0]), n);
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  int32_t dim1 = static_cast<int32_t>(shape[1]);  // T
-  int32_t dim2 = static_cast<int32_t>(shape[2]);  // encoder_out_dim
-
-  const float *p = encoder_out.GetTensorData<float>();
-
-  for (int32_t i = 0; i != batch_size; ++i) {
-    const float *this_p = p + dim1 * dim2 * i;
-
-    DecodeOne(this_p, dim1, dim2, model_, max_active_paths_, blank_penalty_,
-              ss[i]);
-  }
+  std::visit(
+      [&](const auto *model) {
+        DecodeBatch(encoder_out, ss, n, model, max_active_paths_,
+                    blank_penalty_);
+      },
+      model_);
 }
 
 }  // namespace sherpa_onnx

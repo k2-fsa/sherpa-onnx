@@ -37,4 +37,31 @@ time $EXE \
   --joiner=$repo/joiner.onnx \
   $repo/test_wavs/0.wav
 
+case "${EXE##*/}" in
+  sherpa-onnx|sherpa-onnx.exe)
+    log "Test NeMo transducer with modified beam search"
+    args=(
+      "--tokens=$repo/tokens.txt"
+      "--encoder=$repo/encoder.onnx"
+      "--decoder=$repo/decoder.onnx"
+      "--joiner=$repo/joiner.onnx"
+      --num-threads=2
+      --decoding-method=modified_beam_search
+    )
+    "$EXE" "${args[@]}" "$repo/test_wavs/0.wav"
+
+    # This fixture's tokens form a BPE vocabulary. The matched words should
+    # carry context scores, even if the text itself does not change.
+    awk '{print $1 "\t-1.0"}' "$repo/tokens.txt" > "$repo/bpe.vocab"
+    printf '%s\n' the and that > "$repo/hotwords.txt"
+    "$EXE" "${args[@]}" --modeling-unit=bpe --bpe-vocab="$repo/bpe.vocab" \
+      --hotwords-file="$repo/hotwords.txt" --hotwords-score=1.5 \
+      "$repo/test_wavs/0.wav" > "$repo/hotwords.log" 2>&1
+    cat "$repo/hotwords.log"
+    grep -Eq \
+      '"context_scores"[[:space:]]*:[[:space:]]*\[([^]]*,)?[[:space:]]*1\.500000[[:space:]]*(,|\])' \
+      "$repo/hotwords.log"
+    ;;
+esac
+
 rm -rf $repo

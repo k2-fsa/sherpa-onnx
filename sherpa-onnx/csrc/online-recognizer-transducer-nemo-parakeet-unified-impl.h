@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -19,6 +20,8 @@
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-parakeet-unified-decoder.h"
+#include "sherpa-onnx/csrc/online-transducer-modified-beam-search-nemo-decoder.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
@@ -74,6 +77,12 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
     InitOnlineStream(stream.get());
     return stream;
+  }
+
+  std::unique_ptr<OnlineStream> CreateStream(
+      const std::string &) const override {
+    SHERPA_ONNX_LOGE("Hotwords are not supported for Parakeet Unified.");
+    SHERPA_ONNX_EXIT(-1);
   }
 
   bool IsReady(OnlineStream *s) const override {
@@ -156,6 +165,32 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
       decoder_ = std::make_unique<
           OnlineTransducerGreedySearchNeMoParakeetUnifiedDecoder>(
           model_.get(), config_.blank_penalty);
+    } else if (config_.decoding_method == "modified_beam_search") {
+      if (config_.max_active_paths < 1 || config_.max_active_paths > 32) {
+        SHERPA_ONNX_LOGE(
+            "Unified modified_beam_search requires max_active_paths in "
+            "[1, 32].");
+        SHERPA_ONNX_EXIT(-1);
+      }
+      if (!std::isfinite(config_.blank_penalty)) {
+        SHERPA_ONNX_LOGE(
+            "Unified modified_beam_search requires a finite blank_penalty.");
+        SHERPA_ONNX_EXIT(-1);
+      }
+      if (!config_.hotwords_file.empty() || !config_.hotwords_buf.empty()) {
+        SHERPA_ONNX_LOGE("Hotwords are not supported for Parakeet Unified.");
+        SHERPA_ONNX_EXIT(-1);
+      }
+      if (!config_.lm_config.model.empty() ||
+          !config_.lm_config.lodr_fst.empty()) {
+        SHERPA_ONNX_LOGE(
+            "LM fusion is not supported for Parakeet Unified "
+            "modified_beam_search.");
+        SHERPA_ONNX_EXIT(-1);
+      }
+      decoder_ =
+          std::make_unique<OnlineTransducerModifiedBeamSearchNeMoDecoder>(
+              model_.get(), config_.max_active_paths, config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -315,8 +350,7 @@ class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
   OnlineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OnlineTransducerNeMoParakeetUnifiedModel> model_;
-  std::unique_ptr<OnlineTransducerGreedySearchNeMoParakeetUnifiedDecoder>
-      decoder_;
+  std::unique_ptr<OnlineTransducerNeMoDecoder> decoder_;
   Endpoint endpoint_;
 };
 

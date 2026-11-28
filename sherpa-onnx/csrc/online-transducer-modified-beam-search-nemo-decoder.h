@@ -5,10 +5,14 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_MODIFIED_BEAM_SEARCH_NEMO_DECODER_H_
 #define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_MODIFIED_BEAM_SEARCH_NEMO_DECODER_H_
 
+#include <variant>
+
 #include "sherpa-onnx/csrc/online-transducer-nemo-decoder.h"
-#include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
 
 namespace sherpa_onnx {
+
+class OnlineTransducerNeMoModel;
+class OnlineTransducerNeMoParakeetUnifiedModel;
 
 // Streaming port of OfflineTransducerModifiedBeamSearchNeMoDecoder.
 //
@@ -26,11 +30,21 @@ class OnlineTransducerModifiedBeamSearchNeMoDecoder
         max_active_paths_(max_active_paths),
         blank_penalty_(blank_penalty) {}
 
+  OnlineTransducerModifiedBeamSearchNeMoDecoder(
+      OnlineTransducerNeMoParakeetUnifiedModel *model, int32_t max_active_paths,
+      float blank_penalty)
+      : model_(model),
+        max_active_paths_(max_active_paths),
+        blank_penalty_(blank_penalty) {}
+
   void Decode(Ort::Value encoder_out, OnlineStream **ss,
               int32_t n) const override;
 
  private:
-  OnlineTransducerNeMoModel *model_;  // Not owned
+  // The recognizer owns the model.
+  std::variant<OnlineTransducerNeMoModel *,
+               OnlineTransducerNeMoParakeetUnifiedModel *>
+      model_;
 
   int32_t max_active_paths_;
   float blank_penalty_;
