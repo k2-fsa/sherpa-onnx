@@ -43,21 +43,26 @@ void HomophoneReplacerConfig::Register(ParseOptions *po) {
                "are separated by a comma. E.g., a.fst,b.fst,c.fst");
 }
 
-bool HomophoneReplacerConfig::Validate() const {
-  if (!dict_dir.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateHomophoneReplacerConfig(
+    const HomophoneReplacerConfig &config, const Exists &exists) {
+  if (!config.dict_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "From sherpa-onnx v1.12.15, you don't need to provide dict_dir for "
         "this model. Ignore it");
   }
 
-  if (!lexicon.empty() && !FileExists(lexicon)) {
-    SHERPA_ONNX_LOGE("--hr-lexicon: '%s' does not exist", lexicon.c_str());
+  if (!config.lexicon.empty() && !exists(config.lexicon)) {
+    SHERPA_ONNX_LOGE("--hr-lexicon: '%s' does not exist",
+                     config.lexicon.c_str());
     return false;
   }
 
-  if (!rule_fsts.empty()) {
+  if (!config.rule_fsts.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(rule_fsts, ",", false, &files);
+    SplitStringToVector(config.rule_fsts, ",", false, &files);
 
     if (files.size() > 1) {
       SHERPA_ONNX_LOGE("Only 1 file is supported now.");
@@ -65,7 +70,7 @@ bool HomophoneReplacerConfig::Validate() const {
     }
 
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE("Rule fst '%s' does not exist. ", f.c_str());
         return false;
       }
@@ -74,6 +79,27 @@ bool HomophoneReplacerConfig::Validate() const {
 
   return true;
 }
+
+bool HomophoneReplacerConfig::Validate() const {
+  return ValidateHomophoneReplacerConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool HomophoneReplacerConfig::Validate(Manager *mgr) const {
+  return ValidateHomophoneReplacerConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool HomophoneReplacerConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool HomophoneReplacerConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string HomophoneReplacerConfig::ToString() const {
   std::ostringstream os;

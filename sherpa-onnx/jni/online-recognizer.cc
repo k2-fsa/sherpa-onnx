@@ -276,6 +276,18 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
 #endif
   }
 
+#if __ANDROID_API__ >= 9
+  if (!config.Validate(mgr)) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#else
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
+  }
+#endif
+
   sherpa_onnx::OnlineRecognizer *recognizer = nullptr;
   try {
     recognizer = new sherpa_onnx::OnlineRecognizer(
