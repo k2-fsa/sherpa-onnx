@@ -4,13 +4,85 @@
 
 #include "sherpa-onnx/csrc/offline-recognizer-qwen3-asr-impl.h"
 
+#include <algorithm>
 #include <array>
 #include <cstring>
+#include <limits>
+#include <utility>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
+
+struct PrefillLogitsCase {
+  std::vector<int64_t> shape;
+  int32_t context_len;
+  int32_t expected;
+};
+
+class Qwen3ASRPrefillLogitsIndexTest
+    : public ::testing::TestWithParam<PrefillLogitsCase> {};
+
+TEST_P(Qwen3ASRPrefillLogitsIndexTest, SelectsOrRejectsShape) {
+  const auto &test = GetParam();
+  EXPECT_EQ(GetQwen3ASRPrefillLogitsIndex(test.shape, test.context_len),
+            test.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Layouts, Qwen3ASRPrefillLogitsIndexTest,
+    ::testing::ValuesIn(std::vector<PrefillLogitsCase>{
+        {{1, 8, 7}, 8, 7},
+        {{1, 10, 7}, 8, 7},
+        {{1, 1, 7}, 8, 0},
+        {{1, 1, 7}, 1, 0},
+        {{1, 4, 7}, 8, -1},
+        {{1, 0, 7}, 8, -1},
+        {{1, 1, 0}, 8, -1},
+        {{}, 8, -1},
+        {{1}, 8, -1},
+        {{1, 7}, 8, -1},
+        {{1, 1, 7, 1}, 8, -1},
+        {{0, 8, 7}, 8, -1},
+        {{2, 8, 7}, 8, -1},
+        {{-1, 8, 7}, 8, -1},
+        {{1, -1, 7}, 8, -1},
+        {{1, 8, -1}, 8, -1},
+        {{1, int64_t{std::numeric_limits<int32_t>::max()} + 1, 7}, 8, -1},
+        {{1, 8, int64_t{std::numeric_limits<int32_t>::max()} + 1}, 8, -1},
+        {{1, std::numeric_limits<int64_t>::max(), 7}, 8, -1},
+        {{1, 8, std::numeric_limits<int64_t>::max()}, 8, -1},
+        {{1, 1, 7}, 0, -1},
+        {{1, 1, 7}, -1, -1},
+        {{1, std::numeric_limits<int32_t>::max(), 7}, 8, 7},
+        {{1, 1, std::numeric_limits<int32_t>::max()}, 8, 0},
+    }));
+
+TEST(Qwen3ASRPrefillLogits, SelectedRowHasExpectedTokenScores) {
+  constexpr int32_t kVocab = 7;
+  constexpr int32_t kEos = 6;
+  // Context ends at row 1. Row 2 must not be sampled even when T > context.
+  const std::vector<float> full{20, 0, 0, 0, 0, 0, 0,
+                                0, 0, 0, 8, 0, 0, 9,
+                                0, 30, 0, 0, 0, 0, 0};
+  const std::vector<float> last{0, 0, 0, 8, 0, 0, 9};
+  for (const auto &logits : {full, last}) {
+    const std::vector<int64_t> shape{
+        1, static_cast<int64_t>(logits.size() / kVocab), kVocab};
+    const int32_t index = GetQwen3ASRPrefillLogitsIndex(shape, 2);
+    ASSERT_GE(index, 0);
+    const auto begin = logits.begin() + static_cast<size_t>(index) * kVocab;
+    EXPECT_EQ(std::max_element(begin, begin + kVocab) - begin, kEos);
+    // This verifies row access, not the recognizer's private EOS policy.
+    std::vector<float> fallback(begin, begin + kVocab);
+    fallback[kEos] = -std::numeric_limits<float>::infinity();
+    EXPECT_EQ(std::max_element(fallback.begin(), fallback.end()) -
+                  fallback.begin(),
+              3);
+  }
+}
 
 // Regression test for https://github.com/k2-fsa/sherpa-onnx/issues/3509
 //

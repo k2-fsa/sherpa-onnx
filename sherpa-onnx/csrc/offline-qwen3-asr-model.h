@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
@@ -52,8 +53,9 @@ class OfflineQwen3ASRModel {
    * int64.
    * @param cache_kv  Fixed-size KV cache, vector of (key, value) pairs.
    * @return Return tuple (logits, kv_outputs...). Logits shape (N, T,
-   * vocab_size), float32. kv_outputs is a vector of (key_delta, value_delta)
-   * pairs for each layer.
+   * vocab_size), or (N, 1, vocab_size) for last-position-only projection,
+   * float32. kv_outputs is a vector of (key_delta, value_delta) pairs for
+   * each layer, always of shape (N, T, kv_h, hd) for the full input T.
    */
   std::pair<Ort::Value, std::vector<std::pair<Ort::Value, Ort::Value>>>
   ForwardLLM(Ort::Value input_ids, Ort::Value audio_features,

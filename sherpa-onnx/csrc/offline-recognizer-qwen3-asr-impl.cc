@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cinttypes>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -33,6 +34,20 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
+
+int32_t GetQwen3ASRPrefillLogitsIndex(const std::vector<int64_t> &shape,
+                                      int32_t context_len) {
+  if (shape.size() != 3 || shape[0] != 1 || context_len <= 0 ||
+      shape[1] <= 0 || shape[2] <= 0 ||
+      shape[1] > std::numeric_limits<int32_t>::max() ||
+      shape[2] > std::numeric_limits<int32_t>::max()) {
+    return -1;
+  }
+  if (shape[1] >= context_len) {
+    return context_len - 1;
+  }
+  return shape[1] == 1 ? 0 : -1;
+}
 
 namespace {
 
@@ -976,19 +991,19 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   };
 
   auto log_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
-  if (log_shape.size() < 3) {
-    result.text = "";
-    return result;
-  }
-
-  const int32_t time_dim = static_cast<int32_t>(log_shape[1]);
-  const int32_t last_idx = context_len - 1;
-  if (last_idx >= time_dim) {
+  const int32_t last_idx =
+      GetQwen3ASRPrefillLogitsIndex(log_shape, context_len);
+  if (last_idx < 0) {
     if (config_.model_config.debug) {
       SHERPA_ONNX_LOGE(
-          "qwen3-asr: logits time_dim (%d) < context_len (%d); "
-          "cannot sample first token",
-          time_dim, context_len);
+          "qwen3-asr: invalid prefill logits shape: rank=%d batch=%" PRId64
+          " time=%" PRId64 " vocab=%" PRId64
+          " context_len=%d; cannot sample first token",
+          static_cast<int32_t>(log_shape.size()),
+          log_shape.empty() ? int64_t{-1} : log_shape[0],
+          log_shape.size() > 1 ? log_shape[1] : int64_t{-1},
+          log_shape.size() > 2 ? log_shape[2] : int64_t{-1},
+          context_len);
     }
     result.text = "";
     return result;
