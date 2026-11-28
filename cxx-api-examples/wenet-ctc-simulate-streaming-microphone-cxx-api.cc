@@ -9,8 +9,8 @@
 //
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
-// tar xvf sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
-// rm sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
+// tar xvf sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2  // NOLINT
+// rm sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2  // NOLINT
 //
 // clang-format on
 
@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>              // NOLINT
 #include <condition_variable>  // NOLINT
 #include <iostream>
@@ -34,12 +35,11 @@
 std::queue<std::vector<float>> samples_queue;
 std::condition_variable condition_variable;
 std::mutex mutex;
-bool stop = false;
+std::atomic<bool> stop{false};
 
 static void Handler(int32_t /*sig*/) {
+  // Only async-signal-safe work here: the main loop polls `stop`.
   stop = true;
-  condition_variable.notify_one();
-  fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
 }
 
 static int32_t RecordCallback(const void *input_buffer,
@@ -82,8 +82,12 @@ static sherpa_onnx::cxx::OfflineRecognizer CreateOfflineRecognizer() {
   OfflineRecognizerConfig config;
 
   // clang-format off
-  config.model_config.wenet_ctc.model = "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/model.int8.onnx";
-  config.model_config.tokens = "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/tokens.txt";
+  config.model_config.wenet_ctc.model =
+      "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-"
+      "cantonese-int8-2025-09-10/model.int8.onnx";
+  config.model_config.tokens =
+      "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-"
+      "cantonese-int8-2025-09-10/tokens.txt";
   // clang-format on
 
   config.model_config.num_threads = 2;
@@ -162,7 +166,7 @@ int32_t main() {
     {
       std::unique_lock<std::mutex> lock(mutex);
       while (samples_queue.empty() && !stop) {
-        condition_variable.wait(lock);
+        condition_variable.wait_for(lock, std::chrono::milliseconds(100));
       }
 
       if (stop) {
@@ -235,6 +239,10 @@ int32_t main() {
       offset = 0;
       speech_started = false;
     }
+  }
+
+  if (stop) {
+    fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
   }
 
   return 0;
