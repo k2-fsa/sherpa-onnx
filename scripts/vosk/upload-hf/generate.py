@@ -318,8 +318,9 @@ https://alphacephei.com/vosk/models).
 - License: {license_}
 - Converted with `scripts/vosk/` (`export_torch.py` + `export_onnx.py`);
   `am/model_meta.json` describes the model dims and receptive field.
-{recurrent_note}- `am/final.onnx` is the float32 acoustic model, `am/final.int8.onnx` the
-  dynamically quantized (int8) variant; each ships in its own zip.
+{recurrent_note}- `am/final.onnx` is the float32 acoustic model, `am/final.int8.onnx`
+  the quantized (int8) variant (QInt8 weights, per-channel; the input
+  affine stays float32); each ships in its own zip.
 - Inputs/outputs: `features` [B, T, {input_dim}] and `ivector`
   [B, T, {ivector_dim}] -- one i-vector per input frame (kaldi's online
   decoders give each 24-frame chunk its own i-vector; repeat that chunk's

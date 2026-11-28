@@ -251,7 +251,8 @@ artifact):
 ├── am/
 │   ├── final.onnx            # float32 AM (opset 17, dynamic batch+time;
 │   │                         #   single file, metadata embedded)
-│   ├── final.int8.onnx       # dynamically quantized AM (QInt8 weights)
+│   ├── final.int8.onnx       # quantized AM (QInt8 weights, per-channel;
+│   │                         #   the input affine stays float32)
 │   ├── model_meta.json       # dims, frame_subsampling_factor,
 │   │                         #   left/right context, decimation fields
 │   └── transition_model.mdl  # HMM side of final.mdl (decoder needs it)
@@ -303,9 +304,10 @@ B=1 T=100: out (1, 34, 2112)  onnx-vs-torch max_abs=1.05e-05  OK
 B=2 T=1000: out (2, 334, 2112)  onnx-vs-torch max_abs=1.35e-05  OK
 B=1 T=33: out (1, 11, 2112)  onnx-vs-torch max_abs=9.06e-06  OK
 
-int8 (quantize_dynamic, QInt8 weights)
+int8 (quantize_dynamic, QInt8 weights, per-channel)
 
-wrote final.int8.onnx (QInt8)
+wrote final.int8.onnx (QInt8, per-channel)
+kept in float32 (input affine): /component_modules.0/MatMul
 int8 check (onnxruntime vs torch, informational):
 B=1 T=100: out (1, 34, 2112)  onnx-vs-torch max_abs=6.43e-01  OK
 B=2 T=1000: out (2, 334, 2112)  onnx-vs-torch max_abs=1.06e+00  info
@@ -383,8 +385,10 @@ metadata** (`metadata_props`, same convention as
 `Nnet::Modulus()`: the chunk is rounded up to a multiple of it), ...  The
 Python recognizers read them back via
 `session.get_modelmeta().custom_metadata_map`.  `final.int8.onnx` is
-`quantize_dynamic` output (QInt8 weights); on the test models the
-recognition result is usually identical to float32 (see 4(d)) —
+`quantize_dynamic` output (QInt8 weights, per-channel; the input
+affine is kept float32 -- see `input_affine_matmuls`); the
+recognition result is identical to float32 on every shipped model
+(see 4(d)) —
 `decode_onnx_*.py --int8` selects it.
 
 ### 4. Use the ONNX model
@@ -494,10 +498,14 @@ run 3: 0.07 s  RTF=0.014  -> 不要 问 你 的 国家 能 为你 做 什么 而
 audio: 4.76 s, chunk: 24 frames (240 ms, one i-vector per chunk), L/R context: 26/14 (260/140 ms)
 ```
 
-That is not guaranteed: quantization can flip words of a weak model (it
-does for small-ko, small-uk-v3-nano, small-vn), which is why the upload
-pipeline (`upload-onnx/test.py`) checks int8 against vosk too and ships
-it only when it matches.
+That is by design, not luck: the weights are quantized per-channel and
+the input affine stays float32 (`input_affine_matmuls`), which makes
+the int8 decode identical to the float32 one on every shipped model.
+The upload pipeline (`upload-onnx/test.py`) enforces it -- int8 must
+match the float32/vosk decode exactly or it is not shipped.  The one
+known exception is small-ko-0.22: its float32 decode is a weak
+near-tie mess and int8 still flips single tokens on it, so its int8
+variant is not shipped (float32-only).
 
 ### File sizes (vosk-model-small-cn-0.22)
 

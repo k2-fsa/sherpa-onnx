@@ -775,19 +775,24 @@ def _export(args, in_dir, out_dir, meta_in, factor, log):
     int8_path = out_dir / "am" / "final.int8.onnx"
     # keep the input affine in float32 -- its per-channel weight ranges
     # (raw MFCC + i-vector scales) do not survive one per-tensor int8
-    # scale; quantizing it guts the decode (see input_affine_matmuls)
+    # scale; quantizing it guts the decode (see input_affine_matmuls).
+    # per_channel: one scale per output channel instead of per matrix --
+    # measured on small-uk-v3-nano this (plus the exclusion) is what
+    # makes the int8 decode identical to the float32 one; per-tensor
+    # leaves one-word near-misses even with the input affine excluded
     skip = input_affine_matmuls(onnx_path)
     quantize_dynamic(
         model_input=str(onnx_path),
         model_output=str(int8_path),
         weight_type=QuantType.QInt8,
         nodes_to_exclude=skip,
+        per_channel=True,
     )
     add_meta_data(int8_path, meta)  # keep metadata with the model
-    log.add("## int8 (quantize_dynamic, QInt8 weights)")
+    log.add("## int8 (quantize_dynamic, QInt8 weights, per-channel)")
     log.add("")
     log.only("```")
-    log.add(f"wrote {int8_path.name} (QInt8)")
+    log.add(f"wrote {int8_path.name} (QInt8, per-channel)")
     log.add(f"kept in float32 (input affine): {', '.join(skip) if skip else '(none)'}")
     log.add("int8 check (onnxruntime vs torch, informational):")
     check_onnx_vs_torch(

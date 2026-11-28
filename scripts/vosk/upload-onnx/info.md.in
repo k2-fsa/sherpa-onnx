@@ -20,7 +20,8 @@ runtime (its 1-best, MFCC dither off) on the test wav in `test_wavs/`
 before upload.
 {% else %}
 (The int8 variant of this model was not shipped: its decode differed
-from the `vosk` runtime's.)
+from the float32 one's.  int8 is shipped only when it decodes exactly
+as float32.)
 {% endif %}
 
 Zip sizes (`ls -lh`):
