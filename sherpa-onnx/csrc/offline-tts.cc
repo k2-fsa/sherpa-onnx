@@ -218,38 +218,64 @@ void OfflineTtsConfig::Register(ParseOptions *po) {
                "value leads to a shorter pause. Must be in [0.01, 10].");
 }
 
-bool OfflineTtsConfig::Validate() const {
-  if (!rule_fsts.empty()) {
+// 'exists' resolves a rule file and 'validate_model' checks the model config,
+// either against the file system or against a resource manager.
+template <typename Exists, typename ValidateModel>
+static bool ValidateOfflineTtsConfig(const OfflineTtsConfig &config,
+                                     const Exists &exists,
+                                     const ValidateModel &validate_model) {
+  if (!config.rule_fsts.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(rule_fsts, ",", false, &files);
+    SplitStringToVector(config.rule_fsts, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE("Rule fst '%s' does not exist. ", f.c_str());
         return false;
       }
     }
   }
 
-  if (!rule_fars.empty()) {
+  if (!config.rule_fars.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(rule_fars, ",", false, &files);
+    SplitStringToVector(config.rule_fars, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE("Rule far '%s' does not exist. ", f.c_str());
         return false;
       }
     }
   }
 
-  if (!(silence_scale >= kMinSilenceScale &&
-        silence_scale <= kMaxSilenceScale)) {
+  if (!(config.silence_scale >= kMinSilenceScale &&
+        config.silence_scale <= kMaxSilenceScale)) {
     SHERPA_ONNX_LOGE("--tts-silence-scale '%.3f' is not in [%.2f, %.2f]",
-                     silence_scale, kMinSilenceScale, kMaxSilenceScale);
+                     config.silence_scale, kMinSilenceScale, kMaxSilenceScale);
     return false;
   }
 
-  return model.Validate();
+  return validate_model();
 }
+
+bool OfflineTtsConfig::Validate() const {
+  return ValidateOfflineTtsConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); },
+      [this]() -> bool { return model.Validate(); });
+}
+
+template <typename Manager>
+bool OfflineTtsConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsConfig(
+      *this, [mgr](const std::string &p) -> bool { return FileExists(mgr, p); },
+      [this, mgr]() -> bool { return model.Validate(mgr); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsConfig::Validate(NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsConfig::ToString() const {
   std::ostringstream os;

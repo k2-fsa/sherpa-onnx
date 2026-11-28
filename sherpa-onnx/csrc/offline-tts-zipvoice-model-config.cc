@@ -38,48 +38,53 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
       "(default: 1.0)");
 }
 
-bool OfflineTtsZipvoiceModelConfig::Validate() const {
-  if (tokens.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineTtsZipvoiceModelConfig(
+    const OfflineTtsZipvoiceModelConfig &config, const Exists &exists) {
+  if (config.tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --zipvoice-tokens");
     return false;
   }
-  if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("--zipvoice-tokens: '%s' does not exist", tokens.c_str());
+  if (!exists(config.tokens)) {
+    SHERPA_ONNX_LOGE("--zipvoice-tokens: '%s' does not exist",
+                     config.tokens.c_str());
     return false;
   }
 
-  if (encoder.empty()) {
+  if (config.encoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --zipvoice-encoder");
     return false;
   }
-  if (!FileExists(encoder)) {
+  if (!exists(config.encoder)) {
     SHERPA_ONNX_LOGE("--zipvoice-encoder: '%s' does not exist",
-                     encoder.c_str());
+                     config.encoder.c_str());
     return false;
   }
 
-  if (decoder.empty()) {
+  if (config.decoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --zipvoice-decoder");
     return false;
   }
-  if (!FileExists(decoder)) {
+  if (!exists(config.decoder)) {
     SHERPA_ONNX_LOGE("--zipvoice-decoder: '%s' does not exist",
-                     decoder.c_str());
+                     config.decoder.c_str());
     return false;
   }
 
-  if (vocoder.empty()) {
+  if (config.vocoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --zipvoice-vocoder");
     return false;
   }
 
-  if (!FileExists(vocoder)) {
+  if (!exists(config.vocoder)) {
     SHERPA_ONNX_LOGE("--zipvoice-vocoder: '%s' does not exist",
-                     vocoder.c_str());
+                     config.vocoder.c_str());
     return false;
   }
 
-  if (!data_dir.empty()) {
+  if (!config.data_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "WARNING: --zipvoice-data-dir is deprecated and ignored in "
         "sherpa-onnx >= v2.0.0. Please use --zipvoice-lexicon or "
@@ -87,11 +92,11 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
         "phonemizer (e.g. piper_phonemize) instead.");
   }
 
-  if (!lexicon.empty()) {
+  if (!config.lexicon.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(lexicon, ",", false, &files);
+    SplitStringToVector(config.lexicon, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE(
             "lexicon '%s' does not exist. Please check --zipvoice-lexicon",
             f.c_str());
@@ -100,32 +105,53 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     }
   }
 
-  if (feat_scale <= 0) {
+  if (config.feat_scale <= 0) {
     SHERPA_ONNX_LOGE("--zipvoice-feat-scale must be positive. Given: %f",
-                     feat_scale);
+                     config.feat_scale);
     return false;
   }
 
-  if (t_shift < 0) {
+  if (config.t_shift < 0) {
     SHERPA_ONNX_LOGE("--zipvoice-t-shift must be non-negative. Given: %f",
-                     t_shift);
+                     config.t_shift);
     return false;
   }
 
-  if (target_rms <= 0) {
+  if (config.target_rms <= 0) {
     SHERPA_ONNX_LOGE("--zipvoice-target-rms must be positive. Given: %f",
-                     target_rms);
+                     config.target_rms);
     return false;
   }
 
-  if (guidance_scale <= 0) {
+  if (config.guidance_scale <= 0) {
     SHERPA_ONNX_LOGE("--zipvoice-guidance-scale must be positive. Given: %f",
-                     guidance_scale);
+                     config.guidance_scale);
     return false;
   }
 
   return true;
 }
+
+bool OfflineTtsZipvoiceModelConfig::Validate() const {
+  return ValidateOfflineTtsZipvoiceModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineTtsZipvoiceModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsZipvoiceModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsZipvoiceModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsZipvoiceModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsZipvoiceModelConfig::ToString() const {
   std::ostringstream os;

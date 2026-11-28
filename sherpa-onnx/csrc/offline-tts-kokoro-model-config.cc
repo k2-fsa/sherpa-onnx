@@ -41,42 +41,49 @@ void OfflineTtsKokoroModelConfig::Register(ParseOptions *po) {
                "Speech speed. Larger->Slower; Smaller->faster.");
 }
 
-bool OfflineTtsKokoroModelConfig::Validate() const {
-  if (model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineTtsKokoroModelConfig(
+    const OfflineTtsKokoroModelConfig &config, const Exists &exists) {
+  if (config.model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --kokoro-model");
     return false;
   }
 
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--kokoro-model: '%s' does not exist", model.c_str());
+  if (!exists(config.model)) {
+    SHERPA_ONNX_LOGE("--kokoro-model: '%s' does not exist",
+                     config.model.c_str());
     return false;
   }
 
-  if (tokens.empty()) {
+  if (config.tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --kokoro-tokens");
     return false;
   }
 
-  if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("--kokoro-tokens: '%s' does not exist", tokens.c_str());
+  if (!exists(config.tokens)) {
+    SHERPA_ONNX_LOGE("--kokoro-tokens: '%s' does not exist",
+                     config.tokens.c_str());
     return false;
   }
 
-  if (voices.empty()) {
+  if (config.voices.empty()) {
     SHERPA_ONNX_LOGE("Please provide --kokoro-voices");
     return false;
   }
 
-  if (!FileExists(voices)) {
-    SHERPA_ONNX_LOGE("--kokoro-voices: '%s' does not exist", voices.c_str());
+  if (!exists(config.voices)) {
+    SHERPA_ONNX_LOGE("--kokoro-voices: '%s' does not exist",
+                     config.voices.c_str());
     return false;
   }
 
-  if (!lexicon.empty()) {
+  if (!config.lexicon.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(lexicon, ",", false, &files);
+    SplitStringToVector(config.lexicon, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE(
             "lexicon '%s' does not exist. Please re-check --kokoro-lexicon",
             f.c_str());
@@ -85,7 +92,7 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
     }
   }
 
-  if (!data_dir.empty()) {
+  if (!config.data_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "WARNING: --kokoro-data-dir is deprecated and ignored in "
         "sherpa-onnx >= v2.0.0. Please use --kokoro-lexicon or "
@@ -93,14 +100,14 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
         "phonemizer (e.g. piper_phonemize) instead.");
   }
 
-  if (!lang.empty()) {
+  if (!config.lang.empty()) {
     SHERPA_ONNX_LOGE(
         "WARNING: --kokoro-lang is deprecated and ignored in "
         "sherpa-onnx >= v2.0.0. espeak-ng is no longer used. "
         "Language is determined by the lexicon files you provide.");
   }
 
-  if (!dict_dir.empty()) {
+  if (!config.dict_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
         "dictDir for this model. Ignore this value.");
@@ -108,6 +115,27 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
 
   return true;
 }
+
+bool OfflineTtsKokoroModelConfig::Validate() const {
+  return ValidateOfflineTtsKokoroModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineTtsKokoroModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsKokoroModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsKokoroModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsKokoroModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsKokoroModelConfig::ToString() const {
   std::ostringstream os;

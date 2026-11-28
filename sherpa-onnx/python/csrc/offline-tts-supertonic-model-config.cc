@@ -30,7 +30,8 @@ void PybindOfflineTtsSupertonicModelConfig(py::module *m) {
       .def_readwrite("unicode_indexer", &PyClass::unicode_indexer)
       .def_readwrite("voice_style", &PyClass::voice_style)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate));
 }
 
 }  // namespace sherpa_onnx

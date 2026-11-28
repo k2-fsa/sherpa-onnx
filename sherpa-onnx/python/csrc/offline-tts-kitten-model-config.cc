@@ -29,7 +29,8 @@ void PybindOfflineTtsKittenModelConfig(py::module *m) {
                      "Deprecated. Ignored since v2.0.0: espeak-ng is no longer used. Use lexicon, or GenerationConfig.phoneme_codepoints / tokens with an external phonemizer instead.")
       .def_readwrite("length_scale", &PyClass::length_scale)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate));
 }
 
 }  // namespace sherpa_onnx

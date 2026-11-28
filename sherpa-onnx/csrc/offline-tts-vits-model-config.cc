@@ -29,33 +29,39 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
                "Speech speed. Larger->Slower; Smaller->faster.");
 }
 
-bool OfflineTtsVitsModelConfig::Validate() const {
-  if (model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineTtsVitsModelConfig(
+    const OfflineTtsVitsModelConfig &config, const Exists &exists) {
+  if (config.model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --vits-model");
     return false;
   }
 
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--vits-model: '%s' does not exist", model.c_str());
+  if (!exists(config.model)) {
+    SHERPA_ONNX_LOGE("--vits-model: '%s' does not exist", config.model.c_str());
     return false;
   }
 
-  if (tokens.empty()) {
+  if (config.tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --vits-tokens");
     return false;
   }
 
-  if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("--vits-tokens: '%s' does not exist", tokens.c_str());
+  if (!exists(config.tokens)) {
+    SHERPA_ONNX_LOGE("--vits-tokens: '%s' does not exist",
+                     config.tokens.c_str());
     return false;
   }
 
-  if (!lexicon.empty() && !FileExists(lexicon)) {
-    SHERPA_ONNX_LOGE("--vits-lexicon: '%s' does not exist", lexicon.c_str());
+  if (!config.lexicon.empty() && !exists(config.lexicon)) {
+    SHERPA_ONNX_LOGE("--vits-lexicon: '%s' does not exist",
+                     config.lexicon.c_str());
     return false;
   }
 
-  if (!data_dir.empty()) {
+  if (!config.data_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "WARNING: --vits-data-dir is deprecated and ignored in "
         "sherpa-onnx >= v2.0.0. Please use GenerationConfig.phoneme_codepoints "
@@ -63,7 +69,7 @@ bool OfflineTtsVitsModelConfig::Validate() const {
         "See python-api-examples/test-offline-tts-piper-phonemize.py");
   }
 
-  if (!dict_dir.empty()) {
+  if (!config.dict_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "From sherpa-onnx v1.12.15, you don't need to provide dict_dir for "
         "this model. Ignore it");
@@ -71,6 +77,27 @@ bool OfflineTtsVitsModelConfig::Validate() const {
 
   return true;
 }
+
+bool OfflineTtsVitsModelConfig::Validate() const {
+  return ValidateOfflineTtsVitsModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineTtsVitsModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsVitsModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsVitsModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsVitsModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsVitsModelConfig::ToString() const {
   std::ostringstream os;

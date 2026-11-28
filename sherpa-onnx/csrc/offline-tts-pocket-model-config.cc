@@ -29,89 +29,118 @@ void OfflineTtsPocketModelConfig::Register(ParseOptions *po) {
                "Default: 50. 0 disables caching.");
 }
 
-bool OfflineTtsPocketModelConfig::Validate() const {
-  if (lm_flow.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineTtsPocketModelConfig(
+    const OfflineTtsPocketModelConfig &config, const Exists &exists) {
+  if (config.lm_flow.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-lm-flow");
     return false;
   }
 
-  if (!FileExists(lm_flow)) {
-    SHERPA_ONNX_LOGE("--pocket-lm-flow '%s' does not exist", lm_flow.c_str());
+  if (!exists(config.lm_flow)) {
+    SHERPA_ONNX_LOGE("--pocket-lm-flow '%s' does not exist",
+                     config.lm_flow.c_str());
     return false;
   }
 
-  if (lm_main.empty()) {
+  if (config.lm_main.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-lm-main");
     return false;
   }
 
-  if (!FileExists(lm_main)) {
-    SHERPA_ONNX_LOGE("--pocket-lm-main '%s' does not exist", lm_main.c_str());
+  if (!exists(config.lm_main)) {
+    SHERPA_ONNX_LOGE("--pocket-lm-main '%s' does not exist",
+                     config.lm_main.c_str());
     return false;
   }
 
-  if (encoder.empty()) {
+  if (config.encoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-encoder");
     return false;
   }
 
-  if (!FileExists(encoder)) {
-    SHERPA_ONNX_LOGE("--pocket-encoder '%s' does not exist", encoder.c_str());
+  if (!exists(config.encoder)) {
+    SHERPA_ONNX_LOGE("--pocket-encoder '%s' does not exist",
+                     config.encoder.c_str());
     return false;
   }
 
-  if (decoder.empty()) {
+  if (config.decoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-decoder");
     return false;
   }
 
-  if (!FileExists(decoder)) {
-    SHERPA_ONNX_LOGE("--pocket-decoder '%s' does not exist", decoder.c_str());
+  if (!exists(config.decoder)) {
+    SHERPA_ONNX_LOGE("--pocket-decoder '%s' does not exist",
+                     config.decoder.c_str());
     return false;
   }
 
-  if (text_conditioner.empty()) {
+  if (config.text_conditioner.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-text-conditioner");
     return false;
   }
 
-  if (!FileExists(text_conditioner)) {
+  if (!exists(config.text_conditioner)) {
     SHERPA_ONNX_LOGE("--pocket-text-conditioner '%s' does not exist",
-                     text_conditioner.c_str());
+                     config.text_conditioner.c_str());
     return false;
   }
 
-  if (vocab_json.empty()) {
+  if (config.vocab_json.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-vocab-json");
     return false;
   }
 
-  if (!FileExists(vocab_json)) {
+  if (!exists(config.vocab_json)) {
     SHERPA_ONNX_LOGE("--pocket-vocab-json '%s' does not exist",
-                     vocab_json.c_str());
+                     config.vocab_json.c_str());
     return false;
   }
 
-  if (token_scores_json.empty()) {
+  if (config.token_scores_json.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-token-scores-json");
     return false;
   }
 
-  if (!FileExists(token_scores_json)) {
+  if (!exists(config.token_scores_json)) {
     SHERPA_ONNX_LOGE("--pocket-token-scores-json '%s' does not exist",
-                     token_scores_json.c_str());
+                     config.token_scores_json.c_str());
     return false;
   }
 
-  if (voice_embedding_cache_capacity < 0) {
+  if (config.voice_embedding_cache_capacity < 0) {
     SHERPA_ONNX_LOGE(
         "voice_embedding_cache_capacity must be non-negative. Given: %d",
-        voice_embedding_cache_capacity);
+        config.voice_embedding_cache_capacity);
     return false;
   }
 
   return true;
 }
+
+bool OfflineTtsPocketModelConfig::Validate() const {
+  return ValidateOfflineTtsPocketModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineTtsPocketModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsPocketModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsPocketModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsPocketModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsPocketModelConfig::ToString() const {
   std::ostringstream os;

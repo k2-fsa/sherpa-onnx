@@ -36,7 +36,8 @@ void PybindOfflineTtsZipvoiceModelConfig(py::module *m) {
       .def_readwrite("target_rms", &PyClass::target_rms)
       .def_readwrite("guidance_scale", &PyClass::guidance_scale)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate));
 }
 
 }  // namespace sherpa_onnx

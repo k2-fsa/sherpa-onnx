@@ -29,38 +29,45 @@ void OfflineTtsKittenModelConfig::Register(ParseOptions *po) {
                "Inverse of speech speed. Larger->Slower; Smaller->faster.");
 }
 
-bool OfflineTtsKittenModelConfig::Validate() const {
-  if (model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineTtsKittenModelConfig(
+    const OfflineTtsKittenModelConfig &config, const Exists &exists) {
+  if (config.model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --kitten-model");
     return false;
   }
 
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--kitten-model: '%s' does not exist", model.c_str());
+  if (!exists(config.model)) {
+    SHERPA_ONNX_LOGE("--kitten-model: '%s' does not exist",
+                     config.model.c_str());
     return false;
   }
 
-  if (voices.empty()) {
+  if (config.voices.empty()) {
     SHERPA_ONNX_LOGE("Please provide --kitten-voices");
     return false;
   }
 
-  if (!FileExists(voices)) {
-    SHERPA_ONNX_LOGE("--kitten-voices: '%s' does not exist", voices.c_str());
+  if (!exists(config.voices)) {
+    SHERPA_ONNX_LOGE("--kitten-voices: '%s' does not exist",
+                     config.voices.c_str());
     return false;
   }
 
-  if (tokens.empty()) {
+  if (config.tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --kitten-tokens");
     return false;
   }
 
-  if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("--kitten-tokens: '%s' does not exist", tokens.c_str());
+  if (!exists(config.tokens)) {
+    SHERPA_ONNX_LOGE("--kitten-tokens: '%s' does not exist",
+                     config.tokens.c_str());
     return false;
   }
 
-  if (!data_dir.empty()) {
+  if (!config.data_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "WARNING: --kitten-data-dir is deprecated and ignored in "
         "sherpa-onnx >= v2.0.0. Please use GenerationConfig.phoneme_codepoints "
@@ -68,11 +75,11 @@ bool OfflineTtsKittenModelConfig::Validate() const {
         "See python-api-examples/test-offline-tts-kitten-phonemize.py");
   }
 
-  if (!lexicon.empty()) {
+  if (!config.lexicon.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(lexicon, ",", false, &files);
+    SplitStringToVector(config.lexicon, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE(
             "lexicon '%s' does not exist. Please re-check --kitten-lexicon",
             f.c_str());
@@ -81,16 +88,37 @@ bool OfflineTtsKittenModelConfig::Validate() const {
     }
   }
 
-  if (length_scale <= 0) {
+  if (config.length_scale <= 0) {
     SHERPA_ONNX_LOGE(
         "Please provide a positive length_scale for --kitten-length-scale. "
         "Given: %.3f",
-        length_scale);
+        config.length_scale);
     return false;
   }
 
   return true;
 }
+
+bool OfflineTtsKittenModelConfig::Validate() const {
+  return ValidateOfflineTtsKittenModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineTtsKittenModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineTtsKittenModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineTtsKittenModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineTtsKittenModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineTtsKittenModelConfig::ToString() const {
   std::ostringstream os;
