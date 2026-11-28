@@ -17,14 +17,40 @@ void OnlineNeMoCtcModelConfig::Register(ParseOptions *po) {
                "https://github.com/k2-fsa/sherpa-onnx/pull/843");
 }
 
-bool OnlineNeMoCtcModelConfig::Validate() const {
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("NeMo CTC model '%s' does not exist", model.c_str());
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOnlineNeMoCtcModelConfig(
+    const OnlineNeMoCtcModelConfig &config, const Exists &exists) {
+  if (!exists(config.model)) {
+    SHERPA_ONNX_LOGE("NeMo CTC model '%s' does not exist",
+                     config.model.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OnlineNeMoCtcModelConfig::Validate() const {
+  return ValidateOnlineNeMoCtcModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OnlineNeMoCtcModelConfig::Validate(Manager *mgr) const {
+  return ValidateOnlineNeMoCtcModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineNeMoCtcModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineNeMoCtcModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineNeMoCtcModelConfig::ToString() const {
   std::ostringstream os;

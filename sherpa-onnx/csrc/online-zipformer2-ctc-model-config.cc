@@ -17,20 +17,46 @@ void OnlineZipformer2CtcModelConfig::Register(ParseOptions *po) {
                "https://github.com/k2-fsa/icefall/pull/1413");
 }
 
-bool OnlineZipformer2CtcModelConfig::Validate() const {
-  if (model.empty()) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOnlineZipformer2CtcModelConfig(
+    const OnlineZipformer2CtcModelConfig &config, const Exists &exists) {
+  if (config.model.empty()) {
     SHERPA_ONNX_LOGE("--zipformer2-ctc-model is empty!");
     return false;
   }
 
-  if (!FileExists(model)) {
+  if (!exists(config.model)) {
     SHERPA_ONNX_LOGE("--zipformer2-ctc-model '%s' does not exist",
-                     model.c_str());
+                     config.model.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OnlineZipformer2CtcModelConfig::Validate() const {
+  return ValidateOnlineZipformer2CtcModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OnlineZipformer2CtcModelConfig::Validate(Manager *mgr) const {
+  return ValidateOnlineZipformer2CtcModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineZipformer2CtcModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineZipformer2CtcModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineZipformer2CtcModelConfig::ToString() const {
   std::ostringstream os;
