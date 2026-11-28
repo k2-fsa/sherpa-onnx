@@ -86,6 +86,9 @@ class OnlineStream {
 
   int32_t GetNumFramesSinceStart() const;
 
+  // Process-unique stream id, for logging.
+  int64_t Id() const;
+
   int32_t &GetCurrentSegment();
 
   void SetResult(const OnlineTransducerDecoderResult &r);
@@ -142,6 +145,94 @@ class OnlineStream {
   int32_t GetOptionInt(const std::string &key, int32_t default_value = 0) const;
   float GetOptionFloat(const std::string &key,
                        float default_value = 0.0f) const;
+
+  // ---- VAD ----
+  //
+  // AcceptWaveform() only appends a copy of the incoming audio to a separate
+  // buffer. Silero inference runs when OnlineRecognizer::VadProcess() is
+  // called (the websocket server does this from its own timer).
+
+  // Enables VAD on this stream; the model is shared, the stream keeps its
+  // own state. `window_shift`/`window_size` are in samples at
+  // `vad_sample_rate`. `flush_supported`: the decoder can run the
+  // end-of-utterance flush (see IsVadFlushPending()).
+  void InitVad(int32_t vad_sample_rate, int32_t window_shift,
+               int32_t window_size, float asr_frame_shift_ms,
+               bool flush_supported);
+
+  // True if InitVad() was called on this stream.
+  bool HasVad() const;
+
+  // ---- used by the shared OnlineVadModel (VAD thread) ----
+  // Raw samples (VAD sample rate) not yet scored.
+  int32_t VadPendingSize() const;
+  // Copies the first `win` pending samples; false if fewer are buffered.
+  bool VadPeekWindow(int32_t win, std::vector<float> *out) const;
+  // Drops `k` scored samples from the front.
+  void VadDropSamples(int32_t k);
+  // Records one window's decision. On a confirmed speech -> silence flip
+  // this arms the endpoint and the end-of-utterance flush.
+  void VadPushPrediction(bool is_speech);
+  // Model state kept per stream (LSTM state and state-machine counters).
+  std::vector<Ort::Value> &GetVadStates();
+  void SetVadStates(std::vector<Ort::Value> states);
+  bool &IsVadTriggered();
+  int32_t &GetVadCurrentSample();
+  int32_t &GetVadTempStart();
+  int32_t &GetVadTempEnd();
+
+  // Total ASR-feature-frame-equivalent audio the VAD buffer has actually
+  // scored so far, in the same absolute frame space as
+  // GetNumFramesSinceStart() + GetNumProcessedFrames() (never reset by
+  // Reset()/ResetVad()). 0 if no VAD is configured.
+  int64_t GetVadFramesCoveredAbsolute() const;
+
+  // True + the absolute frame (same space as above) where the VAD
+  // buffer's current confirmed-silence run began, if the VAD is
+  // presently silent and a silence run has actually started.
+  bool GetVadConfirmedSilenceStartAbsolute(int64_t *out_frame) const;
+
+  // Timing of the currently armed endpoint (absolute frames): where its
+  // silence began and the VAD coverage when it was confirmed.
+  bool GetVadEndpointTiming(int64_t *silence_start, int64_t *boundary) const;
+
+  // Atomic version for the silence skip: true in confirmed silence, with the
+  // silence start and the frame up to which skipping is safe (absolute).
+  bool GetVadSkipRange(int64_t *silence_start, int64_t *limit) const;
+
+  // True if the VAD buffer currently considers this stream to contain
+  // speech (sticky through its own min-silence-duration hangover).
+  bool IsVadSpeechDetected() const;
+
+  // True once the VAD confirmed the end of speech AND the end-of-utterance
+  // flush (if any) has been decoded: the endpoint can be reported.
+  bool IsVadEndpoint() const;
+
+  // True from when the VAD arms the endpoint until ResetVad().
+  bool IsVadEndpointArmed() const;
+
+  // True while the end-of-utterance flush chunk is still to be decoded.
+  bool IsVadFlushPending() const;
+
+  // ASR-relative frame (same space as GetNumProcessedFrames()) the flush
+  // must decode up to.
+  int32_t GetVadEndpointFrame() const;
+
+  void ClearVadFlushPending();
+
+  // Clears the per-segment VAD bookkeeping (seen speech, endpoint, flush).
+  // Does not drop the VAD buffer's own continuous state.
+  void ResetVad();
+
+  // True once InputFinished() has been called on this stream.
+  bool IsInputFinished() const;
+
+  // Which endpoint rule last fired for this stream's current segment: 0
+  // none, 1 blank-based (rule1/2/3, undistinguished), 4 VAD-based. Reset
+  // to 0 by OnlineRecognizer::Reset().
+  int32_t &GetEndpointRule();
+  float &GetEndpointDelay();
+  float &GetSpeechEndTime();
 
  private:
   class Impl;

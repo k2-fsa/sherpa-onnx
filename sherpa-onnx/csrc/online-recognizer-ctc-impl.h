@@ -118,6 +118,11 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
            s->NumFramesReady();
   }
 
+  int32_t GetChunkSizeForVad() const override {
+    return model_->ChunkLength();
+  }
+  int32_t GetChunkShiftForVad() const override { return model_->ChunkShift(); }
+
   void DecodeStreams(OnlineStream **ss, int32_t n) const override {
     if (n == 1 || !model_->SupportBatchProcessing()) {
       for (int32_t i = 0; i != n; ++i) {
