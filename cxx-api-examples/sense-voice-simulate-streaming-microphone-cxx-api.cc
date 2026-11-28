@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>              // NOLINT
 #include <condition_variable>  // NOLINT
 #include <iostream>
@@ -35,12 +36,11 @@
 std::queue<std::vector<float>> samples_queue;
 std::condition_variable condition_variable;
 std::mutex mutex;
-bool stop = false;
+std::atomic<bool> stop{false};
 
 static void Handler(int32_t /*sig*/) {
+  // Only async-signal-safe work here: the main loop polls `stop`.
   stop = true;
-  condition_variable.notify_one();
-  fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
 }
 
 static int32_t RecordCallback(const void *input_buffer,
@@ -83,7 +83,8 @@ static sherpa_onnx::cxx::OfflineRecognizer CreateOfflineRecognizer() {
   OfflineRecognizerConfig config;
 
   config.model_config.sense_voice.model =
-      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx";
+      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/"
+      "model.int8.onnx";
   config.model_config.sense_voice.use_itn = false;
   config.model_config.sense_voice.language = "auto";
   config.model_config.tokens =
@@ -165,7 +166,7 @@ int32_t main() {
     {
       std::unique_lock<std::mutex> lock(mutex);
       while (samples_queue.empty() && !stop) {
-        condition_variable.wait(lock);
+        condition_variable.wait_for(lock, std::chrono::milliseconds(100));
       }
 
       if (stop) {
@@ -238,6 +239,10 @@ int32_t main() {
       offset = 0;
       speech_started = false;
     }
+  }
+
+  if (stop) {
+    fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
   }
 
   return 0;
