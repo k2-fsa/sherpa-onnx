@@ -131,69 +131,110 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "Done in `Reset()` method, after an endpoint was detected.");
 }
 
-bool OnlineRecognizerConfig::Validate() const {
-  if (decoding_method == "modified_beam_search") {
-    if (max_active_paths <= 0) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager. 'validate_lm', 'validate_hr' and 'validate_model' validate
+// the sub-configs the same way.
+template <typename Exists, typename ValidateLM, typename ValidateHR,
+          typename ValidateModel>
+static bool ValidateOnlineRecognizerConfig(
+    const OnlineRecognizerConfig &config, const Exists &exists,
+    const ValidateLM &validate_lm, const ValidateHR &validate_hr,
+    const ValidateModel &validate_model) {
+  if (config.decoding_method == "modified_beam_search") {
+    if (config.max_active_paths <= 0) {
       SHERPA_ONNX_LOGE("max_active_paths must be > 0. Given: %d",
-                       max_active_paths);
+                       config.max_active_paths);
       return false;
     }
   }
 
-  if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
-    if (!lm_config.Validate()) {
+  if (config.decoding_method == "modified_beam_search" &&
+      !config.lm_config.model.empty()) {
+    if (!validate_lm()) {
       return false;
     }
   }
 
-  if (!hotwords_file.empty() && decoding_method != "modified_beam_search") {
+  if (!config.hotwords_file.empty() &&
+      config.decoding_method != "modified_beam_search") {
     SHERPA_ONNX_LOGE(
         "Please use --decoding-method=modified_beam_search if you"
         " provide --hotwords-file. Given --decoding-method=%s",
-        decoding_method.c_str());
+        config.decoding_method.c_str());
     return false;
   }
 
-  if (!ctc_fst_decoder_config.graph.empty() &&
-      !ctc_fst_decoder_config.Validate()) {
+  // The CTC FST graph is always read from the file system, also when the
+  // recognizer is created from a resource manager.
+  if (!config.ctc_fst_decoder_config.graph.empty() &&
+      !config.ctc_fst_decoder_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in ctc_fst_decoder_config");
     return false;
   }
 
-  if (!hotwords_file.empty() && !FileExists(hotwords_file)) {
+  if (!config.hotwords_file.empty() && !exists(config.hotwords_file)) {
     SHERPA_ONNX_LOGE("--hotwords-file: '%s' does not exist",
-                     hotwords_file.c_str());
+                     config.hotwords_file.c_str());
     return false;
   }
 
-  if (!rule_fsts.empty()) {
+  if (!config.rule_fsts.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(rule_fsts, ",", false, &files);
+    SplitStringToVector(config.rule_fsts, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE("Rule fst '%s' does not exist. ", f.c_str());
         return false;
       }
     }
   }
 
-  if (!rule_fars.empty()) {
+  if (!config.rule_fars.empty()) {
     std::vector<std::string> files;
-    SplitStringToVector(rule_fars, ",", false, &files);
+    SplitStringToVector(config.rule_fars, ",", false, &files);
     for (const auto &f : files) {
-      if (!FileExists(f)) {
+      if (!exists(f)) {
         SHERPA_ONNX_LOGE("Rule far '%s' does not exist. ", f.c_str());
         return false;
       }
     }
   }
 
-  if (!hr.lexicon.empty() && !hr.rule_fsts.empty() && !hr.Validate()) {
+  if (!config.hr.lexicon.empty() && !config.hr.rule_fsts.empty() &&
+      !validate_hr()) {
     return false;
   }
 
-  return model_config.Validate();
+  return validate_model();
 }
+
+bool OnlineRecognizerConfig::Validate() const {
+  return ValidateOnlineRecognizerConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); },
+      [this]() -> bool { return lm_config.Validate(); },
+      [this]() -> bool { return hr.Validate(); },
+      [this]() -> bool { return model_config.Validate(); });
+}
+
+template <typename Manager>
+bool OnlineRecognizerConfig::Validate(Manager *mgr) const {
+  return ValidateOnlineRecognizerConfig(
+      *this, [mgr](const std::string &p) -> bool { return FileExists(mgr, p); },
+      // The recognizer does not load the RNN LM from a resource manager yet
+      // (see OnlineRecognizerTransducerImpl), so there is nothing to check.
+      []() -> bool { return true; },
+      [this, mgr]() -> bool { return hr.Validate(mgr); },
+      [this, mgr]() -> bool { return model_config.Validate(mgr); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineRecognizerConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineRecognizerConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineRecognizerConfig::ToString() const {
   std::ostringstream os;
