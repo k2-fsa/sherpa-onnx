@@ -18,19 +18,46 @@ void OnlineParaformerModelConfig::Register(ParseOptions *po) {
                "Path to decoder.onnx of paraformer.");
 }
 
-bool OnlineParaformerModelConfig::Validate() const {
-  if (!FileExists(encoder)) {
-    SHERPA_ONNX_LOGE("Paraformer encoder '%s' does not exist", encoder.c_str());
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOnlineParaformerModelConfig(
+    const OnlineParaformerModelConfig &config, const Exists &exists) {
+  if (!exists(config.encoder)) {
+    SHERPA_ONNX_LOGE("Paraformer encoder '%s' does not exist",
+                     config.encoder.c_str());
     return false;
   }
 
-  if (!FileExists(decoder)) {
-    SHERPA_ONNX_LOGE("Paraformer decoder '%s' does not exist", decoder.c_str());
+  if (!exists(config.decoder)) {
+    SHERPA_ONNX_LOGE("Paraformer decoder '%s' does not exist",
+                     config.decoder.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OnlineParaformerModelConfig::Validate() const {
+  return ValidateOnlineParaformerModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OnlineParaformerModelConfig::Validate(Manager *mgr) const {
+  return ValidateOnlineParaformerModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineParaformerModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineParaformerModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineParaformerModelConfig::ToString() const {
   std::ostringstream os;

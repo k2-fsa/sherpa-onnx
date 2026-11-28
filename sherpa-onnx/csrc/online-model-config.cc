@@ -52,7 +52,13 @@ void OnlineModelConfig::Register(ParseOptions *po) {
                "All other values lead to loading the model twice.");
 }
 
-bool OnlineModelConfig::Validate() const {
+// 'exists' resolves a path either against the file system or against a
+// resource manager, and 'validate_model' validates the config of the model
+// type in use in the same way.
+template <typename Exists, typename ValidateModel>
+static bool ValidateOnlineModelConfig(const OnlineModelConfig &config,
+                                      const Exists &exists,
+                                      const ValidateModel &validate_model) {
   // For RK NPU, we reinterpret num_threads:
   //
   // For RK3588 only
@@ -62,138 +68,168 @@ bool OnlineModelConfig::Validate() const {
   // num_threads == -2 -> Use NPU core 2
   // num_threads == -3 -> Use NPU core 0 and core 1
   // num_threads == -4 -> Use NPU core 0, core 1, and core 2
-  if (provider_config.provider != "rknn" &&
-      provider_config.provider != "qnn") {
-    if (num_threads < 1) {
-      SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
+  if (config.provider_config.provider != "rknn" &&
+      config.provider_config.provider != "qnn") {
+    if (config.num_threads < 1) {
+      SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d",
+                       config.num_threads);
       return false;
     }
   }
 
-  if (provider_config.provider != "rknn") {
-    if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".rknn") ||
-                                        EndsWith(transducer.decoder, ".rknn") ||
-                                        EndsWith(transducer.joiner, ".rknn"))) {
+  if (config.provider_config.provider != "rknn") {
+    if (!config.transducer.encoder.empty() &&
+        (EndsWith(config.transducer.encoder, ".rknn") ||
+         EndsWith(config.transducer.decoder, ".rknn") ||
+         EndsWith(config.transducer.joiner, ".rknn"))) {
       SHERPA_ONNX_LOGE(
           "--provider is %s, which is not rknn, but you pass rknn model "
           "filenames. encoder: '%s', decoder: '%s', joiner: '%s'",
-          provider_config.provider.c_str(), transducer.encoder.c_str(),
-          transducer.decoder.c_str(), transducer.joiner.c_str());
+          config.provider_config.provider.c_str(),
+          config.transducer.encoder.c_str(), config.transducer.decoder.c_str(),
+          config.transducer.joiner.c_str());
       return false;
     }
 
-    if (!zipformer2_ctc.model.empty() &&
-        EndsWith(zipformer2_ctc.model, ".rknn")) {
+    if (!config.zipformer2_ctc.model.empty() &&
+        EndsWith(config.zipformer2_ctc.model, ".rknn")) {
       SHERPA_ONNX_LOGE(
           "--provider is %s, which is not rknn, but you pass rknn model "
           "filename for zipformer2_ctc: '%s'",
-          provider_config.provider.c_str(), zipformer2_ctc.model.c_str());
+          config.provider_config.provider.c_str(),
+          config.zipformer2_ctc.model.c_str());
       return false;
     }
   }
 
-  if (provider_config.provider != "qnn") {
-    if ((!transducer.encoder.empty() &&
-         (EndsWith(transducer.encoder, ".so") ||
-          EndsWith(transducer.decoder, ".so") ||
-          EndsWith(transducer.joiner, ".so"))) ||
-        !transducer.qnn_config.context_binary.empty()) {
+  if (config.provider_config.provider != "qnn") {
+    if ((!config.transducer.encoder.empty() &&
+         (EndsWith(config.transducer.encoder, ".so") ||
+          EndsWith(config.transducer.decoder, ".so") ||
+          EndsWith(config.transducer.joiner, ".so"))) ||
+        !config.transducer.qnn_config.context_binary.empty()) {
       SHERPA_ONNX_LOGE(
           "--provider is %s, which is not qnn, but you pass QNN model "
           "filenames or QNN context binaries. encoder: '%s', decoder: '%s', "
           "joiner: '%s', context_binary: '%s'",
-          provider_config.provider.c_str(), transducer.encoder.c_str(),
-          transducer.decoder.c_str(), transducer.joiner.c_str(),
-          transducer.qnn_config.context_binary.c_str());
+          config.provider_config.provider.c_str(),
+          config.transducer.encoder.c_str(), config.transducer.decoder.c_str(),
+          config.transducer.joiner.c_str(),
+          config.transducer.qnn_config.context_binary.c_str());
       return false;
     }
   }
 
-  if (provider_config.provider == "rknn") {
-    if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".onnx") ||
-                                        EndsWith(transducer.decoder, ".onnx") ||
-                                        EndsWith(transducer.joiner, ".onnx"))) {
+  if (config.provider_config.provider == "rknn") {
+    if (!config.transducer.encoder.empty() &&
+        (EndsWith(config.transducer.encoder, ".onnx") ||
+         EndsWith(config.transducer.decoder, ".onnx") ||
+         EndsWith(config.transducer.joiner, ".onnx"))) {
       SHERPA_ONNX_LOGE(
           "--provider is rknn, but you pass onnx model "
           "filenames. encoder: '%s', decoder: '%s', joiner: '%s'",
-          transducer.encoder.c_str(), transducer.decoder.c_str(),
-          transducer.joiner.c_str());
+          config.transducer.encoder.c_str(), config.transducer.decoder.c_str(),
+          config.transducer.joiner.c_str());
       return false;
     }
 
-    if (!zipformer2_ctc.model.empty() &&
-        EndsWith(zipformer2_ctc.model, ".onnx")) {
+    if (!config.zipformer2_ctc.model.empty() &&
+        EndsWith(config.zipformer2_ctc.model, ".onnx")) {
       SHERPA_ONNX_LOGE(
           "--provider rknn, but you pass onnx model filename for "
           "zipformer2_ctc: '%s'",
-          zipformer2_ctc.model.c_str());
+          config.zipformer2_ctc.model.c_str());
       return false;
     }
   }
 
-  if (provider_config.provider == "qnn") {
-    if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".onnx") ||
-                                        EndsWith(transducer.decoder, ".onnx") ||
-                                        EndsWith(transducer.joiner, ".onnx"))) {
+  if (config.provider_config.provider == "qnn") {
+    if (!config.transducer.encoder.empty() &&
+        (EndsWith(config.transducer.encoder, ".onnx") ||
+         EndsWith(config.transducer.decoder, ".onnx") ||
+         EndsWith(config.transducer.joiner, ".onnx"))) {
       SHERPA_ONNX_LOGE(
           "--provider is qnn, but you pass onnx model filenames. "
           "encoder: '%s', decoder: '%s', joiner: '%s'",
-          transducer.encoder.c_str(), transducer.decoder.c_str(),
-          transducer.joiner.c_str());
+          config.transducer.encoder.c_str(), config.transducer.decoder.c_str(),
+          config.transducer.joiner.c_str());
       return false;
     }
   }
 
-  if (!tokens_buf.empty() && FileExists(tokens)) {
+  if (!config.tokens_buf.empty() && exists(config.tokens)) {
     SHERPA_ONNX_LOGE(
         "you can not provide a tokens_buf and a tokens file: '%s', "
         "at the same time, which is confusing",
-        tokens.c_str());
+        config.tokens.c_str());
     return false;
   }
 
-  if (tokens_buf.empty() && !FileExists(tokens)) {
+  if (config.tokens_buf.empty() && !exists(config.tokens)) {
     SHERPA_ONNX_LOGE(
         "tokens: '%s' does not exist, you should provide "
         "either a tokens buffer or a tokens file",
-        tokens.c_str());
+        config.tokens.c_str());
     return false;
   }
 
-  if (!modeling_unit.empty() &&
-      (modeling_unit == "bpe" || modeling_unit == "cjkchar+bpe")) {
-    if (!FileExists(bpe_vocab)) {
-      SHERPA_ONNX_LOGE("bpe_vocab: '%s' does not exist", bpe_vocab.c_str());
+  if (!config.modeling_unit.empty() &&
+      (config.modeling_unit == "bpe" ||
+       config.modeling_unit == "cjkchar+bpe")) {
+    if (!exists(config.bpe_vocab)) {
+      SHERPA_ONNX_LOGE("bpe_vocab: '%s' does not exist",
+                       config.bpe_vocab.c_str());
       return false;
     }
   }
 
-  if (!provider_config.Validate()) {
+  if (!config.provider_config.Validate()) {
     return false;
   }
 
-  if (!paraformer.encoder.empty()) {
-    return paraformer.Validate();
+  if (!config.paraformer.encoder.empty()) {
+    return validate_model(config.paraformer);
   }
 
-  if (!wenet_ctc.model.empty()) {
-    return wenet_ctc.Validate();
+  if (!config.wenet_ctc.model.empty()) {
+    return validate_model(config.wenet_ctc);
   }
 
-  if (!zipformer2_ctc.model.empty()) {
-    return zipformer2_ctc.Validate();
+  if (!config.zipformer2_ctc.model.empty()) {
+    return validate_model(config.zipformer2_ctc);
   }
 
-  if (!nemo_ctc.model.empty()) {
-    return nemo_ctc.Validate();
+  if (!config.nemo_ctc.model.empty()) {
+    return validate_model(config.nemo_ctc);
   }
 
-  if (!t_one_ctc.model.empty()) {
-    return t_one_ctc.Validate();
+  if (!config.t_one_ctc.model.empty()) {
+    return validate_model(config.t_one_ctc);
   }
 
-  return transducer.Validate();
+  return validate_model(config.transducer);
 }
+
+bool OnlineModelConfig::Validate() const {
+  return ValidateOnlineModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); },
+      [](const auto &model) -> bool { return model.Validate(); });
+}
+
+template <typename Manager>
+bool OnlineModelConfig::Validate(Manager *mgr) const {
+  return ValidateOnlineModelConfig(
+      *this, [mgr](const std::string &p) -> bool { return FileExists(mgr, p); },
+      [mgr](const auto &model) -> bool { return model.Validate(mgr); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineModelConfig::Validate(NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineModelConfig::ToString() const {
   std::ostringstream os;

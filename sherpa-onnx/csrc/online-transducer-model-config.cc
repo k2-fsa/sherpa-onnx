@@ -46,12 +46,40 @@ void OnlineTransducerModelConfig::Register(ParseOptions *po) {
   qnn_config.Register(&p);
 }
 
-bool OnlineTransducerModelConfig::Validate() const {
-  bool uses_qnn = IsQnnModelLibFile(encoder) || IsQnnModelLibFile(decoder) ||
-                  IsQnnModelLibFile(joiner) ||
-                  !qnn_config.context_binary.empty();
+static bool UsesQnn(const OnlineTransducerModelConfig &config) {
+  return IsQnnModelLibFile(config.encoder) ||
+         IsQnnModelLibFile(config.decoder) ||
+         IsQnnModelLibFile(config.joiner) ||
+         !config.qnn_config.context_binary.empty();
+}
 
-  if (uses_qnn) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOnlineTransducerModelFiles(
+    const OnlineTransducerModelConfig &config, const Exists &exists) {
+  if (!exists(config.encoder)) {
+    SHERPA_ONNX_LOGE("transducer encoder: '%s' does not exist",
+                     config.encoder.c_str());
+    return false;
+  }
+
+  if (!exists(config.decoder)) {
+    SHERPA_ONNX_LOGE("transducer decoder: '%s' does not exist",
+                     config.decoder.c_str());
+    return false;
+  }
+
+  if (!exists(config.joiner)) {
+    SHERPA_ONNX_LOGE("joiner: '%s' does not exist", config.joiner.c_str());
+    return false;
+  }
+
+  return true;
+}
+
+bool OnlineTransducerModelConfig::Validate() const {
+  if (UsesQnn(*this)) {
     std::vector<std::string> context_binaries;
     if (!ValidateQnnContextBinaries(qnn_config.context_binary,
                                     context_binaries)) {
@@ -106,25 +134,34 @@ bool OnlineTransducerModelConfig::Validate() const {
     return qnn_config.Validate();
   }
 
-  if (!FileExists(encoder)) {
-    SHERPA_ONNX_LOGE("transducer encoder: '%s' does not exist",
-                     encoder.c_str());
-    return false;
-  }
-
-  if (!FileExists(decoder)) {
-    SHERPA_ONNX_LOGE("transducer decoder: '%s' does not exist",
-                     decoder.c_str());
-    return false;
-  }
-
-  if (!FileExists(joiner)) {
-    SHERPA_ONNX_LOGE("joiner: '%s' does not exist", joiner.c_str());
-    return false;
-  }
-
-  return true;
+  return ValidateOnlineTransducerModelFiles(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
 }
+
+template <typename Manager>
+bool OnlineTransducerModelConfig::Validate(Manager *mgr) const {
+  // The QNN models are loaded from the file system only.
+  if (UsesQnn(*this)) {
+    SHERPA_ONNX_LOGE(
+        "QNN transducer models cannot be loaded from a resource manager. "
+        "Please copy all files from assets to SD card and set assetManager to "
+        "null");
+    return false;
+  }
+
+  return ValidateOnlineTransducerModelFiles(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineTransducerModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineTransducerModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineTransducerModelConfig::ToString() const {
   std::ostringstream os;

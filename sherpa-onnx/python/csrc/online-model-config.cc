@@ -99,7 +99,8 @@ void PybindOnlineModelConfig(py::module *m) {
       .def_readwrite("model_type", &PyClass::model_type)
       .def_readwrite("modeling_unit", &PyClass::modeling_unit)
       .def_readwrite("bpe_vocab", &PyClass::bpe_vocab)
-      .def("validate", &PyClass::Validate)
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate))
       .def("__str__", &PyClass::ToString);
 }
 }  // namespace sherpa_onnx

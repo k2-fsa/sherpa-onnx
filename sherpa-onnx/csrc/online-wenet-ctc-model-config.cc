@@ -21,31 +21,57 @@ void OnlineWenetCtcModelConfig::Register(ParseOptions *po) {
                "Number of left chunks after subsampling used for decoding.");
 }
 
-bool OnlineWenetCtcModelConfig::Validate() const {
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("WeNet CTC model '%s' does not exist", model.c_str());
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOnlineWenetCtcModelConfig(
+    const OnlineWenetCtcModelConfig &config, const Exists &exists) {
+  if (!exists(config.model)) {
+    SHERPA_ONNX_LOGE("WeNet CTC model '%s' does not exist",
+                     config.model.c_str());
     return false;
   }
 
-  if (chunk_size <= 0) {
+  if (config.chunk_size <= 0) {
     SHERPA_ONNX_LOGE(
         "Please specify a positive value for --wenet-ctc-chunk-size. Currently "
         "given: %d",
-        chunk_size);
+        config.chunk_size);
     return false;
   }
 
-  if (num_left_chunks <= 0) {
+  if (config.num_left_chunks <= 0) {
     SHERPA_ONNX_LOGE(
         "Please specify a positive value for --wenet-ctc-num-left-chunks. "
         "Currently given: %d. Note that if you want to use -1, please consider "
         "using a non-streaming model.",
-        num_left_chunks);
+        config.num_left_chunks);
     return false;
   }
 
   return true;
 }
+
+bool OnlineWenetCtcModelConfig::Validate() const {
+  return ValidateOnlineWenetCtcModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OnlineWenetCtcModelConfig::Validate(Manager *mgr) const {
+  return ValidateOnlineWenetCtcModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineWenetCtcModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineWenetCtcModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineWenetCtcModelConfig::ToString() const {
   std::ostringstream os;

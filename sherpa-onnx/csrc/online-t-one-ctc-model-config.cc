@@ -17,14 +17,40 @@ void OnlineToneCtcModelConfig::Register(ParseOptions *po) {
                "https://github.com/k2-fsa/sherpa-onnx/pull/2571");
 }
 
-bool OnlineToneCtcModelConfig::Validate() const {
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("T-one CTC model '%s' does not exist", model.c_str());
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOnlineToneCtcModelConfig(
+    const OnlineToneCtcModelConfig &config, const Exists &exists) {
+  if (!exists(config.model)) {
+    SHERPA_ONNX_LOGE("T-one CTC model '%s' does not exist",
+                     config.model.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OnlineToneCtcModelConfig::Validate() const {
+  return ValidateOnlineToneCtcModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OnlineToneCtcModelConfig::Validate(Manager *mgr) const {
+  return ValidateOnlineToneCtcModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OnlineToneCtcModelConfig::Validate(AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OnlineToneCtcModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OnlineToneCtcModelConfig::ToString() const {
   std::ostringstream os;
