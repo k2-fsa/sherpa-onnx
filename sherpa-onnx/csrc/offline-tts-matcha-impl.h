@@ -129,6 +129,12 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
         SHERPA_ONNX_EXIT(-1);
       }
 
+      if (!FileExists(mgr, config.model.matcha.vocoder)) {
+        SHERPA_ONNX_LOGE("The vocoder '%s' does not exist",
+                         config.model.matcha.vocoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+
       vocoder_ = Vocoder::Create(mgr, config.model);
     } else if (!config.model.matcha.vocoder.empty()) {
       SHERPA_ONNX_LOGE(
