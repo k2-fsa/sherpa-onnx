@@ -54,3 +54,6 @@
 
 - [zipvoice-tts-play.py](./zipvoice-tts-play.py) It shows how to use ZipVoice
   for zero-shot TTS and plays the generated audio while it is being synthesized.
+
+- [GigaAM offline RNN-T](./gigaam-offline-rnnt.md) Transcribe one WAV with
+  GigaAM-v4 or Multilingual-v2 using the native offline recognizer.

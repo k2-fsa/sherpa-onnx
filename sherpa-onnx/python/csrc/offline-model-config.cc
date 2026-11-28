@@ -94,6 +94,8 @@ Args:
     The modeling unit used by the model (e.g., ``cjkchar``, ``bpe``).
   bpe_vocab:
     Path to the BPE vocabulary file.
+  gigaam:
+    Config for a GigaAM-v4 or GigaAM Multilingual-v2 RNN-T model.
 )doc";
 
 void PybindOfflineModelConfig(py::module *m) {
@@ -117,6 +119,17 @@ void PybindOfflineModelConfig(py::module *m) {
   PybindOfflineQwen3ASRModelConfig(m);
   PybindOfflineW2vBertCtcModelConfig(m);
 
+  using GigaAMConfig = OfflineGigaAMModelConfig;
+  py::class_<GigaAMConfig>(*m, "OfflineGigaAMModelConfig")
+      .def(py::init<>())
+      .def_readwrite("encoder", &GigaAMConfig::encoder)
+      .def_readwrite("advance", &GigaAMConfig::advance)
+      .def_readwrite("tokenizer", &GigaAMConfig::tokenizer)
+      .def_readwrite("language", &GigaAMConfig::language)
+      .def_readwrite("head", &GigaAMConfig::head)
+      .def("validate", &GigaAMConfig::Validate)
+      .def("__str__", &GigaAMConfig::ToString);
+
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")
       .def(py::init<const OfflineTransducerModelConfig &,
@@ -137,10 +150,10 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineMedAsrCtcModelConfig &,
                     const OfflineFireRedAsrCtcModelConfig &,
                     const OfflineQwen3ASRModelConfig &,
-                    const OfflineW2vBertCtcModelConfig &,
-                    const std::string &, const std::string &, int32_t, bool,
+                    const OfflineW2vBertCtcModelConfig &, const std::string &,
+                    const std::string &, int32_t, bool, const std::string &,
                     const std::string &, const std::string &,
-                    const std::string &, const std::string &>(),
+                    const std::string &, const OfflineGigaAMModelConfig &>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
            py::arg("nemo_ctc") = OfflineNemoEncDecCtcModelConfig(),
@@ -153,8 +166,7 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("moonshine") = OfflineMoonshineModelConfig(),
            py::arg("dolphin") = OfflineDolphinModelConfig(),
            py::arg("canary") = OfflineCanaryModelConfig(),
-           py::arg("cohere_transcribe") =
-               OfflineCohereTranscribeModelConfig(),
+           py::arg("cohere_transcribe") = OfflineCohereTranscribeModelConfig(),
            py::arg("omnilingual") = OfflineOmnilingualAsrCtcModelConfig(),
            py::arg("funasr_nano") = OfflineFunASRNanoModelConfig(),
            py::arg("medasr") = OfflineMedAsrCtcModelConfig(),
@@ -165,6 +177,7 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "",
            py::arg("modeling_unit") = "cjkchar", py::arg("bpe_vocab") = "",
+           py::arg("gigaam") = OfflineGigaAMModelConfig(),
            kOfflineModelConfigInitDoc)
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
@@ -193,6 +206,7 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("model_type", &PyClass::model_type)
       .def_readwrite("modeling_unit", &PyClass::modeling_unit)
       .def_readwrite("bpe_vocab", &PyClass::bpe_vocab)
+      .def_readwrite("gigaam", &PyClass::gigaam)
       .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }

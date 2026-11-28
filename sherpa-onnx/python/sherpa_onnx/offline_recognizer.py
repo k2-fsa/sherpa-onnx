@@ -9,6 +9,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineCanaryModelConfig,
     OfflineCohereTranscribeModelConfig,
     OfflineFunASRNanoModelConfig,
+    OfflineGigaAMModelConfig,
     OfflineQwen3ASRModelConfig,
     OfflineOmnilingualAsrCtcModelConfig,
     OfflineMedAsrCtcModelConfig,
@@ -52,6 +53,7 @@ class OfflineRecognizer(object):
     - :meth:`from_moonshine` -- Moonshine
     - :meth:`from_dolphin` -- Dolphin CTC
     - :meth:`from_nemo_ctc` -- NeMo CTC
+    - :meth:`from_gigaam` -- GigaAM-v4 and Multilingual-v2 RNN-T
     - :meth:`from_zipformer2_ctc` -- Zipformer CTC
 
     Example using SenseVoice::
@@ -1106,6 +1108,43 @@ class OfflineRecognizer(object):
                 max_active=ctc_max_active,
             ),
         )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_gigaam(
+        cls,
+        encoder: str,
+        advance: str,
+        tokenizer: str,
+        language: str = "auto",
+        head: str = "e2e",
+        num_threads: int = 1,
+    ):
+        """Create a CPU recognizer for the full-context GigaAM RNN-T export.
+
+        Provide the released encoder, advance graph and SentencePiece model
+        matching the selected head. Use "e2e" for formatted text and "raw"
+        for plain text. Language codes are only supported by Multilingual-v2.
+        A stream's "language" option overrides the configured default.
+        """
+        for path in (encoder, advance, tokenizer):
+            _assert_file_exists(path)
+
+        model = OfflineGigaAMModelConfig()
+        model.encoder = encoder
+        model.advance = advance
+        model.tokenizer = tokenizer
+        model.language = language
+        model.head = head
+
+        feat_config = FeatureExtractorConfig(sampling_rate=16000, feature_dim=64)
+        model_config = OfflineModelConfig(gigaam=model, num_threads=num_threads)
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config, model_config=model_config
+        )
+        self = cls.__new__(cls)
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
         return self

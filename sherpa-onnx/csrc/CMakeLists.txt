@@ -24,6 +24,8 @@ set(sources
   forced-aligner-impl.cc
   forced-aligner.cc
   fst-utils.cc
+  gigaam-features.cc
+  gigaam-sentencepiece-decoder.cc
   homophone-replacer.cc
   hypothesis.cc
   keyword-spotter-impl.cc
@@ -48,6 +50,7 @@ set(sources
   offline-fire-red-asr-greedy-search-decoder.cc
   offline-fire-red-asr-model-config.cc
   offline-fire-red-asr-model.cc
+  offline-gigaam-model-config.cc
   offline-lm-config.cc
   offline-lm.cc
   offline-medasr-ctc-model-config.cc
@@ -65,6 +68,7 @@ set(sources
   offline-paraformer-greedy-search-decoder.cc
   offline-paraformer-model-config.cc
   offline-paraformer-model.cc
+  offline-recognizer-gigaam-impl.cc
   offline-recognizer-impl.cc
   offline-recognizer.cc
   offline-rnn-lm.cc
@@ -836,6 +840,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     fa-lexicon-test.cc
     forced-aligner-test.cc
+    gigaam-language-slot-test.cc
     lfr-test.cc
     math-test.cc
     offline-recognizer-canary-impl-test.cc

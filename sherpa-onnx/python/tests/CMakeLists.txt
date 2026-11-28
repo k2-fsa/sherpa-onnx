@@ -21,6 +21,7 @@ endfunction()
 set(py_test_files
   test_fast_clustering.py
   test_feature_extractor_config.py
+  test_gigaam_offline.py
   test_keyword_spotter.py
   test_offline_recognizer.py
   test_offline_tts_config.py
@@ -35,4 +36,7 @@ set(py_test_files
 foreach(source IN LISTS py_test_files)
   sherpa_onnx_add_py_test(${source})
 endforeach()
+
+set_tests_properties(test_gigaam_offline_py PROPERTIES
+  SKIP_REGULAR_EXPRESSION "skipped 'Set SHERPA_ONNX_GIGAAM_OFFLINE_PACKAGE")
 
