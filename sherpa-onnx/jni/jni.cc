@@ -22,6 +22,14 @@ jobject NewInteger(JNIEnv *env, int32_t value) {
   return obj;
 }
 
+jobject NewLong(JNIEnv *env, int64_t value) {
+  jclass cls = env->FindClass("java/lang/Long");
+  jmethodID constructor = env->GetMethodID(cls, "<init>", "(J)V");
+  jobject obj = env->NewObject(cls, constructor, static_cast<jlong>(value));
+  env->DeleteLocalRef(cls);
+  return obj;
+}
+
 jobject NewFloat(JNIEnv *env, float value) {
   jclass cls = env->FindClass("java/lang/Float");
   jmethodID constructor = env->GetMethodID(cls, "<init>", "(F)V");

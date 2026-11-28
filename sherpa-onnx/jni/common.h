@@ -144,6 +144,7 @@
 
 // defined in jni.cc
 jobject NewInteger(JNIEnv *env, int32_t value);
+jobject NewLong(JNIEnv *env, int64_t value);
 jobject NewFloat(JNIEnv *env, float value);
 
 // Create a Java string from UTF-8 text. Invalid UTF-8 byte sequences are
