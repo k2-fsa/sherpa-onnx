@@ -34,13 +34,11 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/normal-data-generator.h"
+#include "sherpa-onnx/csrc/offline-tts-supertonic-duration.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 namespace {
-
-// Minimum duration (in seconds) to prevent zero-length audio
-constexpr float kMinDuration = 0.1f;
 
 // Maximum latent length to prevent excessive memory allocation and OOM.
 constexpr int32_t kMaxLatentLen = 10000;
@@ -341,12 +339,14 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(
   }
   auto *dur_data = dp_output.GetTensorMutableData<float>();
   std::vector<float> duration(dur_data, dur_data + 1);
-  if (speed != 1.0f) {
-    for (auto &dur : duration) {
-      dur /= speed;
-      if (dur < kMinDuration) {
-        dur = kMinDuration;
-      }
+  for (auto &dur : duration) {
+    float raw_dur = dur;
+    if (!AdjustSupertonicDuration(speed, &dur)) {
+      SHERPA_ONNX_LOGE(
+          "Invalid duration from the duration predictor: %f (speed: %f). "
+          "Text: \"%s\"",
+          raw_dur, speed, text.c_str());
+      return {};
     }
   }
 
@@ -370,26 +370,26 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(
   auto *text_emb_data = text_enc_output.GetTensorMutableData<float>();
   auto text_emb_shape = text_emb_info.GetShape();
 
-  float wav_len_max =
-      *std::max_element(duration.begin(), duration.end()) * cfg.ae.sample_rate;
+  int32_t chunk_size = cfg.ae.base_chunk_size * cfg.ttl.chunk_compress_factor;
+  // Cap the wave lengths together with the latent length so that the latent
+  // mask, the latent and the output buffer all agree on the capped size.
+  const int64_t max_wav_len = static_cast<int64_t>(kMaxLatentLen) * chunk_size;
   std::vector<int64_t> wav_lengths;
   wav_lengths.reserve(bsz);
   for (float d : duration) {
-    int64_t wav_len = static_cast<int64_t>(d * cfg.ae.sample_rate);
-    if (wav_len < 1) {
-      wav_len = 1;
+    if (static_cast<double>(d) * cfg.ae.sample_rate > max_wav_len) {
+      SHERPA_ONNX_LOGE(
+          "Duration (%f s) exceeds maximum latent length (%d), capping to "
+          "prevent OOM",
+          d, kMaxLatentLen);
     }
-    wav_lengths.push_back(wav_len);
+    wav_lengths.push_back(
+        SupertonicDurationToWavLength(d, cfg.ae.sample_rate, max_wav_len));
   }
-  int32_t chunk_size = cfg.ae.base_chunk_size * cfg.ttl.chunk_compress_factor;
+  int64_t wav_len_max =
+      *std::max_element(wav_lengths.begin(), wav_lengths.end());
   int32_t latent_len =
       static_cast<int32_t>((wav_len_max + chunk_size - 1) / chunk_size);
-  if (latent_len > kMaxLatentLen) {
-    SHERPA_ONNX_LOGE(
-        "Latent length (%d) exceeds maximum (%d), capping to prevent OOM",
-        latent_len, kMaxLatentLen);
-    latent_len = kMaxLatentLen;
-  }
 
   int32_t latent_dim = cfg.ttl.latent_dim * cfg.ttl.chunk_compress_factor;
   size_t latent_total_size = static_cast<size_t>(bsz) *

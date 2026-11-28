@@ -871,6 +871,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     list(APPEND sherpa_onnx_test_srcs
       offline-tts-frontend-test.cc
       sentence-piece-tokenizer-test.cc
+      offline-tts-supertonic-duration-test.cc
       offline-tts-supertonic-unicode-processor-test.cc
     )
   endif()
