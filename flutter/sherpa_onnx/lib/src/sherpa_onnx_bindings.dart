@@ -422,6 +422,10 @@ final class SherpaOnnxOfflineFireRedAsrCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineW2vBertCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOfflineFunAsrNanoModelConfig extends Struct {
   external Pointer<Utf8> encoderAdaptor;
   external Pointer<Utf8> llm;
@@ -579,6 +583,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
   external SherpaOnnxOfflineQwen3AsrModelConfig qwen3Asr;
   external SherpaOnnxOfflineCohereTranscribeModelConfig cohereTranscribe;
+  external SherpaOnnxOfflineW2vBertCtcModelConfig w2vBertCtc;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {

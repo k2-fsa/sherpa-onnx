@@ -239,7 +239,7 @@ jobs:
           - os: macos-latest
             arch: arm64
             index: 2
-            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+            tests: "non-streaming-fire-red-asr-ctc-decode-files non-streaming-w2v-bert-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
           - os: macos-latest
             arch: arm64
             index: 3
@@ -280,7 +280,7 @@ jobs:
           - os: macos-15-intel
             arch: amd64
             index: 2
-            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+            tests: "non-streaming-fire-red-asr-ctc-decode-files non-streaming-w2v-bert-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
           - os: macos-15-intel
             arch: amd64
             index: 3
@@ -321,7 +321,7 @@ jobs:
           - os: ubuntu-latest
             arch: amd64
             index: 2
-            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+            tests: "non-streaming-fire-red-asr-ctc-decode-files non-streaming-w2v-bert-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
           - os: ubuntu-latest
             arch: amd64
             index: 3
@@ -362,7 +362,7 @@ jobs:
           - os: ubuntu-22.04-arm
             arch: arm64
             index: 2
-            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+            tests: "non-streaming-fire-red-asr-ctc-decode-files non-streaming-w2v-bert-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
           - os: ubuntu-22.04-arm
             arch: arm64
             index: 3
@@ -403,7 +403,7 @@ jobs:
           - os: windows-2022
             arch: x64
             index: 2
-            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+            tests: "non-streaming-fire-red-asr-ctc-decode-files non-streaming-w2v-bert-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
           - os: windows-2022
             arch: x64
             index: 3
@@ -444,7 +444,7 @@ jobs:
           - os: windows-2022
             arch: x86
             index: 2
-            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+            tests: "non-streaming-fire-red-asr-ctc-decode-files non-streaming-w2v-bert-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
           - os: windows-2022
             arch: x86
             index: 3
@@ -485,7 +485,7 @@ jobs:
           - os: windows-11-arm
             arch: arm64
             index: 2
-            tests: "non-streaming-fire-red-asr-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
+            tests: "non-streaming-fire-red-asr-ctc-decode-files non-streaming-w2v-bert-ctc-decode-files zero-shot-pocket-tts zero-shot-zipvoice-tts non-streaming-funasr-nano-decode-files"
           - os: windows-11-arm
             arch: arm64
             index: 3

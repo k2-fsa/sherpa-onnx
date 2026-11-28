@@ -150,6 +150,10 @@ echo '----------FireRedASR CTC----------'
 ./run-fire-red-asr-ctc.sh
 rm -rf sherpa-onnx-*
 
+echo '----------w2v-BERT CTC----------'
+./run-w2v-bert-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------FunASR Nano----------'
 ./run-funasr-nano.sh
 rm -rf sherpa-onnx-*

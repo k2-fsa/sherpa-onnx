@@ -116,6 +116,10 @@ data class OfflineCohereTranscribeModelConfig(
     var useItn: Boolean = true,
 )
 
+data class OfflineW2vBertCtcModelConfig(
+    var model: String = "",
+)
+
 data class OfflineFireRedAsrModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -160,6 +164,7 @@ data class OfflineModelConfig(
     var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
     var cohereTranscribe: OfflineCohereTranscribeModelConfig =
         OfflineCohereTranscribeModelConfig(),
+    var w2vBertCtc: OfflineW2vBertCtcModelConfig = OfflineW2vBertCtcModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,

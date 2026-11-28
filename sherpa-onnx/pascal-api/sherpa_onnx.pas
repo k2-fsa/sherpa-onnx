@@ -417,6 +417,11 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineW2vBertCtcModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineQwen3ASRModelConfig = record
     ConvFrontend: AnsiString;
     Encoder: AnsiString;
@@ -544,6 +549,7 @@ type
     FireRedAsrCtc: TSherpaOnnxOfflineFireRedAsrCtcModelConfig;
     Qwen3Asr: TSherpaOnnxOfflineQwen3ASRModelConfig;
     CohereTranscribe: TSherpaOnnxOfflineCohereTranscribeModelConfig;
+    W2vBertCtc: TSherpaOnnxOfflineW2vBertCtcModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -1096,6 +1102,9 @@ type
   SherpaOnnxOfflineFireRedAsrCtcModelConfig = record
     Model: PAnsiChar;
   end;
+  SherpaOnnxOfflineW2vBertCtcModelConfig = record
+    Model: PAnsiChar;
+  end;
   SherpaOnnxOfflineQwen3ASRModelConfig = record
     ConvFrontend: PAnsiChar;
     Encoder: PAnsiChar;
@@ -1181,6 +1190,7 @@ type
     FireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig;
     Qwen3Asr: SherpaOnnxOfflineQwen3ASRModelConfig;
     CohereTranscribe: SherpaOnnxOfflineCohereTranscribeModelConfig;
+    W2vBertCtc: SherpaOnnxOfflineW2vBertCtcModelConfig;
   end;
 
   SherpaOnnxOfflineCtcFstDecoderConfig = record
@@ -2202,6 +2212,12 @@ begin
     [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineW2vBertCtcModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineW2vBertCtcModelConfig(Model := %s)',
+    [Self.Model]);
+end;
+
 function TSherpaOnnxOfflineQwen3ASRModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineQwen3ASRModelConfig(' +
@@ -2359,6 +2375,7 @@ begin
      ', FireRedAsrCtc := %s' +
      ', Qwen3Asr := %s' +
      ', CohereTranscribe := %s' +
+     ', W2vBertCtc := %s' +
      ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
@@ -2369,7 +2386,8 @@ begin
      Self.ZipformerCtc.ToString, Self.Canary.ToString, Self.WenetCtc.ToString,
      Self.Omnilingual.ToString, Self.MedAsr.ToString,
      Self.FunAsrNano.ToString, Self.FireRedAsrCtc.ToString,
-     Self.Qwen3Asr.ToString, Self.CohereTranscribe.ToString
+     Self.Qwen3Asr.ToString, Self.CohereTranscribe.ToString,
+     Self.W2vBertCtc.ToString
       ]);
 end;
 
@@ -2488,6 +2506,8 @@ begin
   C.ModelConfig.CohereTranscribe.Language := PAnsiChar(Config.ModelConfig.CohereTranscribe.Language);
   C.ModelConfig.CohereTranscribe.UsePunct := Ord(Config.ModelConfig.CohereTranscribe.UsePunct);
   C.ModelConfig.CohereTranscribe.UseItn := Ord(Config.ModelConfig.CohereTranscribe.UseItn);
+
+  C.ModelConfig.W2vBertCtc.Model := PAnsiChar(Config.ModelConfig.W2vBertCtc.Model);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;

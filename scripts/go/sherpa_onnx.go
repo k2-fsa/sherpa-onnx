@@ -513,6 +513,10 @@ type OfflineCohereTranscribeModelConfig struct {
 	UseInverseTextNormalization int
 }
 
+type OfflineW2vBertCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineFireRedAsrModelConfig struct {
 	Encoder string
 	Decoder string
@@ -595,6 +599,7 @@ type OfflineModelConfig struct {
 	FireRedAsrCtc    OfflineFireRedAsrCtcModelConfig
 	Qwen3ASR         OfflineQwen3ASRModelConfig
 	CohereTranscribe OfflineCohereTranscribeModelConfig
+	W2vBertCtc       OfflineW2vBertCtcModelConfig
 	Tokens           string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -738,6 +743,8 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.qwen3_asr.seed = C.int(config.ModelConfig.Qwen3ASR.Seed)
 	c.model_config.qwen3_asr.hotwords = C.CString(config.ModelConfig.Qwen3ASR.Hotwords)
 
+	c.model_config.w2v_bert_ctc.model = C.CString(config.ModelConfig.W2vBertCtc.Model)
+
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
 	c.model_config.num_threads = C.int(config.ModelConfig.NumThreads)
@@ -822,6 +829,7 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.qwen3_asr.decoder,
 		&c.model_config.qwen3_asr.tokenizer,
 		&c.model_config.qwen3_asr.hotwords,
+		&c.model_config.w2v_bert_ctc.model,
 		&c.model_config.omnilingual.model,
 		&c.model_config.tokens,
 		&c.model_config.provider,

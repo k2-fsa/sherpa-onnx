@@ -145,6 +145,9 @@ cd ../offline-decode-files
 ./run-fire-red-asr-ctc.sh
 rm -rf sherpa-onnx-fire-*
 
+./run-w2v-bert-ctc.sh
+rm -rf sherpa-onnx-w2v-*
+
 ./run-medasr-ctc.sh
 rm -rf sherpa-onnx-*
 

@@ -105,6 +105,9 @@ rm -rf sherpa-onnx-moonshine-*
 ./run-fire-red-asr-ctc.sh
 rm -rf sherpa-onnx-fire-red-*
 
+./run-w2v-bert-ctc.sh
+rm -rf sherpa-onnx-w2v-bert-*
+
 ./run-medasr-ctc-asr.sh
 rm -rf sherpa-onnx-medasr-*
 

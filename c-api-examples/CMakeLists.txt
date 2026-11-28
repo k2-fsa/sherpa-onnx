@@ -161,6 +161,9 @@ target_link_libraries(medasr-ctc-c-api sherpa-onnx-c-api)
 add_executable(fire-red-asr-ctc-c-api fire-red-asr-ctc-c-api.c)
 target_link_libraries(fire-red-asr-ctc-c-api sherpa-onnx-c-api)
 
+add_executable(w2v-bert-ctc-c-api w2v-bert-ctc-c-api.c)
+target_link_libraries(w2v-bert-ctc-c-api sherpa-onnx-c-api)
+
 add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
 target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)
 

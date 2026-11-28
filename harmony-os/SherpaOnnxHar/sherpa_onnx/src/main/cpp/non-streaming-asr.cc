@@ -204,6 +204,22 @@ GetOfflineCohereTranscribeModelConfig(Napi::Object obj) {
   return c;
 }
 
+static SherpaOnnxOfflineW2vBertCtcModelConfig GetOfflineW2vBertCtcModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineW2vBertCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("w2vBertCtc") || !obj.Get("w2vBertCtc").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("w2vBertCtc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
 static SherpaOnnxOfflineDolphinModelConfig GetOfflineDolphinModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineDolphinModelConfig c;
@@ -379,6 +395,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.fire_red_asr_ctc = GetOfflineFireRedAsrCtcModelConfig(o);
   c.qwen3_asr = GetOfflineQwen3AsrModelConfig(o);
   c.cohere_transcribe = GetOfflineCohereTranscribeModelConfig(o);
+  c.w2v_bert_ctc = GetOfflineW2vBertCtcModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -508,6 +525,8 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.cohere_transcribe.language);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr_ctc.model);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.w2v_bert_ctc.model);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);

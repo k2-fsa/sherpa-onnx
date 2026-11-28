@@ -300,6 +300,12 @@
  */
 
 /**
+ * Offline w2v-BERT 2.0 CTC model config
+ * @typedef {Object} OfflineW2vBertCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
  * Offline model config.
  * @typedef {Object} OfflineModelConfig
  * @property {OfflineTransducerModelConfig} [transducer]
@@ -317,6 +323,7 @@
  * @property {OfflineTdnnModelConfig} [tdnn]
  * @property {OfflineSenseVoiceModelConfig} [senseVoice]
  * @property {OfflineCohereTranscribeModelConfig} [cohereTranscribe]
+ * @property {OfflineW2vBertCtcModelConfig} [w2vBertCtc]
  * @property {string} [tokens]
  * @property {number} [numThreads]
  * @property {boolean|number} [debug]

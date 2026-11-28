@@ -285,6 +285,9 @@ class OfflineRecognizer {
     c.ref.model.cohereTranscribe.useItn =
         config.model.cohereTranscribe.useItn ? 1 : 0;
 
+    c.ref.model.w2vBertCtc.model = config.model.w2vBertCtc.model
+        .toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -334,6 +337,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.w2vBertCtc.model);
     calloc.free(c.ref.model.qwen3Asr.hotwords);
     calloc.free(c.ref.model.qwen3Asr.tokenizer);
     calloc.free(c.ref.model.qwen3Asr.decoder);

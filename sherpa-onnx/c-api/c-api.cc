@@ -632,6 +632,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.fire_red_asr_ctc.model =
       SHERPA_ONNX_OR(config->model_config.fire_red_asr_ctc.model, "");
 
+  recognizer_config.model_config.w2v_bert_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.w2v_bert_ctc.model, "");
+
   recognizer_config.model_config.qwen3_asr.conv_frontend =
       SHERPA_ONNX_OR(config->model_config.qwen3_asr.conv_frontend, "");
   recognizer_config.model_config.qwen3_asr.encoder =

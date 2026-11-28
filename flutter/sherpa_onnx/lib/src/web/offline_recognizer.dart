@@ -198,6 +198,11 @@ JSObject _buildModelConfig(OfflineModelConfig model) {
   fireRedAsrCtc['model'] = model.fireRedAsrCtc.model.toJS;
   jsModel['fireRedAsrCtc'] = fireRedAsrCtc;
 
+  // w2v-BERT 2.0 CTC.
+  final w2vBertCtc = JSObject();
+  w2vBertCtc['model'] = model.w2vBertCtc.model.toJS;
+  jsModel['w2vBertCtc'] = w2vBertCtc;
+
   // Whisper.
   final whisper = JSObject();
   whisper['encoder'] = model.whisper.encoder.toJS;
