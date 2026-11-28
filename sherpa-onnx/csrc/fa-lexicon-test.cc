@@ -66,6 +66,33 @@ TEST(FaLexiconTest, ParseMultiPronunciation) {
   EXPECT_EQ(unk[0].phones, (std::vector<std::string>{"spn"}));
 }
 
+TEST(FaLexiconTest, ParseNumericKeys) {
+  FaLexicon lexicon = FaLexicon::LoadFromString(
+      "nan 0.99 0.12 1.0 1.0 n æ n\n"
+      "n ɛ n\n"
+      "2000 0.5 t uw\n"
+      "inf ɪ n f\n");
+
+  EXPECT_TRUE(lexicon.Contains("nan"));
+  const auto &nan = lexicon.Get("nan");
+  ASSERT_EQ(nan.size(), 1u);
+  EXPECT_EQ(nan[0].phones, (std::vector<std::string>{"n", "æ", "n"}));
+
+  const auto &n = lexicon.Get("n");
+  ASSERT_EQ(n.size(), 1u);
+  EXPECT_EQ(n[0].phones, (std::vector<std::string>{"ɛ", "n"}));
+
+  EXPECT_TRUE(lexicon.Contains("2000"));
+  const auto &year = lexicon.Get("2000");
+  ASSERT_EQ(year.size(), 1u);
+  EXPECT_EQ(year[0].phones, (std::vector<std::string>{"t", "uw"}));
+
+  EXPECT_TRUE(lexicon.Contains("inf"));
+  const auto &inf = lexicon.Get("inf");
+  ASSERT_EQ(inf.size(), 1u);
+  EXPECT_EQ(inf[0].phones, (std::vector<std::string>{"ɪ", "n", "f"}));
+}
+
 TEST(FaLexiconTest, ParseGroupsAndDeduplication) {
   std::string path = WriteTempFile(
       "fa-lexicon-parse2.dict",
