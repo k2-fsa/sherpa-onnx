@@ -246,17 +246,49 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_processWithCallback(
                       void *data) -> int {
     jclass cls = env->GetObjectClass(callback);
 
+    // The Java API and Kotlin lambdas compiled to classes provide
+    // invoke(IIJ)Ljava/lang/Integer;. Kotlin lambdas compiled with
+    // invokedynamic (the default since Kotlin 2.0) only provide the erased
+    // kotlin.jvm.functions.Function3.invoke, so fall back to it.
+    jobject ret = nullptr;
     jmethodID mid = env->GetMethodID(cls, "invoke", "(IIJ)Ljava/lang/Integer;");
-    if (mid == nullptr) {
-      SHERPA_ONNX_LOGE("Failed to get the callback. Ignore it.");
-      env->DeleteLocalRef(cls);
-      return 0;
+    if (mid != nullptr) {
+      ret = env->CallObjectMethod(callback, mid, num_processed_chunks,
+                                  num_total_chunks, (jlong)data);
+    } else {
+      env->ExceptionClear();
+      mid = env->GetMethodID(cls, "invoke",
+                             "(Ljava/lang/Object;Ljava/lang/Object;"
+                             "Ljava/lang/Object;)Ljava/lang/Object;");
+      if (mid == nullptr) {
+        env->ExceptionClear();
+        SHERPA_ONNX_LOGE("Failed to get the callback. Ignore it.");
+        env->DeleteLocalRef(cls);
+        return 0;
+      }
+
+      jobject processed = NewInteger(env, num_processed_chunks);
+      jobject total = NewInteger(env, num_total_chunks);
+      jobject arg = NewLong(env, (jlong)data);
+
+      ret = env->CallObjectMethod(callback, mid, processed, total, arg);
+
+      env->DeleteLocalRef(arg);
+      env->DeleteLocalRef(total);
+      env->DeleteLocalRef(processed);
     }
     env->DeleteLocalRef(cls);
 
-    jobject ret = env->CallObjectMethod(callback, mid, num_processed_chunks,
-                                        num_total_chunks, (jlong)data);
     if (ret == nullptr) {
+      return 0;
+    }
+
+    // The erased invoke can return any object; only an Integer is unboxed.
+    jclass integer_cls = env->FindClass("java/lang/Integer");
+    jboolean is_integer = env->IsInstanceOf(ret, integer_cls);
+    env->DeleteLocalRef(integer_cls);
+    if (!is_integer) {
+      env->DeleteLocalRef(ret);
       return 0;
     }
 

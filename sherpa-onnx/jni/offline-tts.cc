@@ -470,15 +470,36 @@ static int32_t CallCallback(JNIEnv *env, jobject callback,
     return 1;
   }
 
+  // The Java API and Kotlin lambdas compiled to classes provide
+  // invoke([F)Ljava/lang/Integer;. Kotlin lambdas compiled with
+  // invokedynamic (the default since Kotlin 2.0) only provide the erased
+  // kotlin.jvm.functions.Function1.invoke, so fall back to it.
   jmethodID invoke_mid =
       env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
   if (env->ExceptionCheck() || !invoke_mid) {
+    env->ExceptionClear();
+    invoke_mid = env->GetMethodID(cls, "invoke",
+                                  "(Ljava/lang/Object;)Ljava/lang/Object;");
+  }
+  if (env->ExceptionCheck() || !invoke_mid) {
+    env->ExceptionClear();
+    SHERPA_ONNX_LOGE("Failed to get the callback. Ignore it.");
     env->DeleteLocalRef(cls);
     return 1;
   }
 
   jobject result = env->CallObjectMethod(callback, invoke_mid, samples_arr);
   if (env->ExceptionCheck() || !result) {
+    env->DeleteLocalRef(cls);
+    return 1;
+  }
+
+  // The erased invoke can return any object; only an Integer is unboxed.
+  jclass boxed_cls = env->FindClass("java/lang/Integer");
+  jboolean is_integer = env->IsInstanceOf(result, boxed_cls);
+  env->DeleteLocalRef(boxed_cls);
+  if (!is_integer) {
+    env->DeleteLocalRef(result);
     env->DeleteLocalRef(cls);
     return 1;
   }
