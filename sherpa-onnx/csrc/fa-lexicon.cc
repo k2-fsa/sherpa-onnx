@@ -59,8 +59,10 @@ FaLexicon FaLexicon::LoadFromString(const std::string &contents) {
     std::vector<std::string> tokens;
     std::string tok;
     while (iss >> tok) {
-      // Skip optional probability columns between the key and the phones.
-      if (IsNumericToken(tok)) {
+      // The first token is always the key (it may be a number, or a word such
+      // as "nan" or "inf" that ConvertStringToReal also accepts); numeric
+      // tokens after it are probability columns and are skipped.
+      if (!tokens.empty() && IsNumericToken(tok)) {
         continue;
       }
       tokens.push_back(tok);

@@ -47,8 +47,9 @@ struct FaLexicon {
   // as long as the lexicon is not modified.
   const std::vector<FaPronunciation> &Get(const std::string &key) const;
 
-  // Parses the dictionary file. Numeric columns between the key and the
-  // phones (optional probability columns) are ignored; " || " separates the
+  // Parses the dictionary file. The first token of a line is always the key,
+  // even if it is a number or a word such as "nan" or "inf"; numeric columns
+  // after it (optional probability columns) are ignored; " || " separates the
   // per-character phone groups. Throws std::runtime_error if the file cannot
   // be read or contains no valid entry.
   static FaLexicon Load(const std::string &filename);
