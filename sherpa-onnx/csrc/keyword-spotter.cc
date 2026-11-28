@@ -99,6 +99,17 @@ void KeywordSpotterConfig::Register(ParseOptions *po) {
       "你 好 世 界");
 }
 
+// The keyword spotter reads keywords that are already split into tokens and
+// never builds a BPE encoder, so unlike the streaming recognizer it does not
+// need bpe_vocab. Clearing modeling_unit skips that check and keeps every
+// other check of the model config.
+static OnlineModelConfig ModelConfigToValidate(
+    const OnlineModelConfig &config) {
+  OnlineModelConfig ans = config;
+  ans.modeling_unit.clear();
+  return ans;
+}
+
 // 'validate_model' validates the model config, and 'exists' resolves a path,
 // either against the file system or against a resource manager.
 template <typename ValidateModel, typename Exists>
@@ -136,14 +147,20 @@ static bool ValidateKeywordSpotterConfig(const KeywordSpotterConfig &config,
 
 bool KeywordSpotterConfig::Validate() const {
   return ValidateKeywordSpotterConfig(
-      *this, [this]() -> bool { return model_config.Validate(); },
+      *this,
+      [this]() -> bool {
+        return ModelConfigToValidate(model_config).Validate();
+      },
       [](const std::string &p) -> bool { return FileExists(p); });
 }
 
 template <typename Manager>
 bool KeywordSpotterConfig::Validate(Manager *mgr) const {
   return ValidateKeywordSpotterConfig(
-      *this, [this, mgr]() -> bool { return model_config.Validate(mgr); },
+      *this,
+      [this, mgr]() -> bool {
+        return ModelConfigToValidate(model_config).Validate(mgr);
+      },
       [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
 }
 
