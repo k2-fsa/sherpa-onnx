@@ -21,22 +21,50 @@ void OfflineSpeakerSegmentationPyannoteModelConfig::Register(ParseOptions *po) {
       "overlap, higher quality, and slower processing.");
 }
 
-bool OfflineSpeakerSegmentationPyannoteModelConfig::Validate() const {
-  if (!(window_shift_ratio > 0 && window_shift_ratio <= 1)) {
+// 'exists' resolves a path either against the file system or against a
+// resource manager.
+template <typename Exists>
+static bool ValidateOfflineSpeakerSegmentationPyannoteModelConfig(
+    const OfflineSpeakerSegmentationPyannoteModelConfig &config,
+    const Exists &exists) {
+  if (!(config.window_shift_ratio > 0 && config.window_shift_ratio <= 1)) {
     SHERPA_ONNX_LOGE(
         "--pyannote-window-shift-ratio must be in (0, 1]. Given: %f",
-        window_shift_ratio);
+        config.window_shift_ratio);
     return false;
   }
 
-  if (!FileExists(model)) {
+  if (!exists(config.model)) {
     SHERPA_ONNX_LOGE("Pyannote segmentation model: '%s' does not exist",
-                     model.c_str());
+                     config.model.c_str());
     return false;
   }
 
   return true;
 }
+
+bool OfflineSpeakerSegmentationPyannoteModelConfig::Validate() const {
+  return ValidateOfflineSpeakerSegmentationPyannoteModelConfig(
+      *this, [](const std::string &p) -> bool { return FileExists(p); });
+}
+
+template <typename Manager>
+bool OfflineSpeakerSegmentationPyannoteModelConfig::Validate(
+    Manager *mgr) const {
+  return ValidateOfflineSpeakerSegmentationPyannoteModelConfig(
+      *this,
+      [mgr](const std::string &p) -> bool { return FileExists(mgr, p); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineSpeakerSegmentationPyannoteModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineSpeakerSegmentationPyannoteModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineSpeakerSegmentationPyannoteModelConfig::ToString() const {
   std::ostringstream os;

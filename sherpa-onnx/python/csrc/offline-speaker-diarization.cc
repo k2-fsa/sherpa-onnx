@@ -56,7 +56,8 @@ static void PybindOfflineSpeakerSegmentationPyannoteModelConfig(py::module *m) {
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("window_shift_ratio", &PyClass::window_shift_ratio)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate));
 }
 
 static void PybindOfflineSpeakerSegmentationModelConfig(py::module *m) {
@@ -74,7 +75,8 @@ static void PybindOfflineSpeakerSegmentationModelConfig(py::module *m) {
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate));
 }
 
 static void PybindOfflineSpeakerDiarizationConfig(py::module *m) {
@@ -93,7 +95,8 @@ static void PybindOfflineSpeakerDiarizationConfig(py::module *m) {
       .def_readwrite("min_duration_on", &PyClass::min_duration_on)
       .def_readwrite("min_duration_off", &PyClass::min_duration_off)
       .def("__str__", &PyClass::ToString)
-      .def("validate", &PyClass::Validate);
+      .def("validate",
+           static_cast<bool (PyClass::*)() const>(&PyClass::Validate));
 }
 
 void PybindOfflineSpeakerDiarization(py::module *m) {

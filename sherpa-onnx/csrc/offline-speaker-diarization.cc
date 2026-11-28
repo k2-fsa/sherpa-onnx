@@ -41,31 +41,57 @@ void OfflineSpeakerDiarizationConfig::Register(ParseOptions *po) {
                "single segment. We do it recursively.");
 }
 
-bool OfflineSpeakerDiarizationConfig::Validate() const {
-  if (!segmentation.Validate()) {
+// 'validate_models' checks the segmentation and embedding configs either
+// against the file system or against a resource manager.
+template <typename ValidateModels>
+static bool ValidateOfflineSpeakerDiarizationConfig(
+    const OfflineSpeakerDiarizationConfig &config,
+    const ValidateModels &validate_models) {
+  if (!validate_models()) {
     return false;
   }
 
-  if (!embedding.Validate()) {
+  if (!config.clustering.Validate()) {
     return false;
   }
 
-  if (!clustering.Validate()) {
+  if (config.min_duration_on < 0) {
+    SHERPA_ONNX_LOGE("min_duration_on %.3f is negative",
+                     config.min_duration_on);
     return false;
   }
 
-  if (min_duration_on < 0) {
-    SHERPA_ONNX_LOGE("min_duration_on %.3f is negative", min_duration_on);
-    return false;
-  }
-
-  if (min_duration_off < 0) {
-    SHERPA_ONNX_LOGE("min_duration_off %.3f is negative", min_duration_off);
+  if (config.min_duration_off < 0) {
+    SHERPA_ONNX_LOGE("min_duration_off %.3f is negative",
+                     config.min_duration_off);
     return false;
   }
 
   return true;
 }
+
+bool OfflineSpeakerDiarizationConfig::Validate() const {
+  return ValidateOfflineSpeakerDiarizationConfig(*this, [this]() -> bool {
+    return segmentation.Validate() && embedding.Validate();
+  });
+}
+
+template <typename Manager>
+bool OfflineSpeakerDiarizationConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineSpeakerDiarizationConfig(*this, [this, mgr]() -> bool {
+    return segmentation.Validate(mgr) && embedding.Validate(mgr);
+  });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineSpeakerDiarizationConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineSpeakerDiarizationConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineSpeakerDiarizationConfig::ToString() const {
   std::ostringstream os;

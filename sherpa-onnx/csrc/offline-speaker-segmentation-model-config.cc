@@ -6,6 +6,15 @@
 #include <sstream>
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -23,17 +32,23 @@ void OfflineSpeakerSegmentationModelConfig::Register(ParseOptions *po) {
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool OfflineSpeakerSegmentationModelConfig::Validate() const {
-  if (num_threads < 1) {
-    SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
+// 'validate_pyannote' checks the pyannote config either against the file
+// system or against a resource manager.
+template <typename ValidatePyannote>
+static bool ValidateOfflineSpeakerSegmentationModelConfig(
+    const OfflineSpeakerSegmentationModelConfig &config,
+    const ValidatePyannote &validate_pyannote) {
+  if (config.num_threads < 1) {
+    SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d",
+                     config.num_threads);
     return false;
   }
 
-  if (!pyannote.model.empty()) {
-    return pyannote.Validate();
+  if (!config.pyannote.model.empty()) {
+    return validate_pyannote();
   }
 
-  if (pyannote.model.empty()) {
+  if (config.pyannote.model.empty()) {
     SHERPA_ONNX_LOGE(
         "You have to provide at least one speaker segmentation model");
     return false;
@@ -41,6 +56,27 @@ bool OfflineSpeakerSegmentationModelConfig::Validate() const {
 
   return true;
 }
+
+bool OfflineSpeakerSegmentationModelConfig::Validate() const {
+  return ValidateOfflineSpeakerSegmentationModelConfig(
+      *this, [this]() -> bool { return pyannote.Validate(); });
+}
+
+template <typename Manager>
+bool OfflineSpeakerSegmentationModelConfig::Validate(Manager *mgr) const {
+  return ValidateOfflineSpeakerSegmentationModelConfig(
+      *this, [this, mgr]() -> bool { return pyannote.Validate(mgr); });
+}
+
+#if __ANDROID_API__ >= 9
+template bool OfflineSpeakerSegmentationModelConfig::Validate(
+    AAssetManager *mgr) const;
+#endif
+
+#if __OHOS__
+template bool OfflineSpeakerSegmentationModelConfig::Validate(
+    NativeResourceManager *mgr) const;
+#endif
 
 std::string OfflineSpeakerSegmentationModelConfig::ToString() const {
   std::ostringstream os;
